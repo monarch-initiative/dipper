@@ -15,14 +15,16 @@ class Genotype():
 
     #TODO turn this into a proper dictionary
     #classes and relationships
-    has_disposition = "GENO:0000208"
     intrinsic_genotype = "http://purl.obolibrary.org/obo/GENO_0000000"
     allele_base_type = 'http://purl.obolibrary.org/obo/GENO_0000008'
     gene_base_type = 'http://purl.obolibrary.org/obo/SO_0000704'
-    derives_from = 'http://purl.obolibrary.org/obo/RO_0001000'
-    is_mutant_of = URIRef('http://purl.obolibrary.org/obo/GENO_0000440')
-    has_zygosity=URIRef('http://purl.obolibrary.org/obo/GENO_0000400')
 
+    #relationships
+    relationship = {
+        'is_mutant_of' : 'http://purl.obolibrary.org/obo/GENO_0000440',
+#        'has_zygosity' : 'http://purl.obolibrary.org/obo/GENO_0000400',
+        'derives_from' : 'http://purl.obolibrary.org/obo/RO_0001000'
+    }
 
     CLASS = "owl:Class"
     IND = "owl:NamedIndividual"
@@ -42,6 +44,8 @@ class Genotype():
         self.geno = URIRef(genotype_id)
         self.addNode(genotype_id, genotype_label, self.intrinsic_genotype)
 
+        for rel in self.relationship.keys():
+            self.g.add((URIRef(self.relationship[rel]), RDF['type'], OWL['ObjectProperty']))
         return
 
     def addAllele(self, allele_id, allele_label, allele_type=None, allele_description=None):
@@ -67,7 +71,7 @@ class Genotype():
         return
 
     def addAlleleDerivesFromConstruct(self, allele_id, construct_id):
-        self.g.add((URIRef(allele_id), URIRef(self.derives_from), URIRef(construct_id)))
+        self.g.add((URIRef(allele_id), URIRef(self.relationship['derives_from']), URIRef(construct_id)))
         return
 
 
@@ -86,7 +90,7 @@ class Genotype():
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
         rel=rel_id
         if (rel_id is None):
-            rel=self.is_mutant_of
+            rel=self.relationship['is_mutant_of']
         self.g.add((URIRef(allele_id), URIRef(rel), URIRef(gene_id)))
 
         return
