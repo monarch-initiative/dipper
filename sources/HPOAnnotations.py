@@ -63,19 +63,24 @@ class HPOAnnotations(Source):
         self.load_bindings()
 
         self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
-        self.dataset.setFileAccessUrl(self.ANNOT_URL)
-        st = os.stat(self.rawfile)
 
-        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-        #get the latest build from jenkins
-        jenkins_info=eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
-        version=jenkins_info['number']
-        self.dataset.setVersion(filedate,str(version))
 
         return
 
     def fetch(self):
         self.fetch_from_url(self.ANNOT_URL,self.rawfile)
+
+        self.dataset.setFileAccessUrl(self.ANNOT_URL)
+
+        st = os.stat(self.rawfile)
+        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+
+        #get the latest build from jenkins
+        jenkins_info=eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
+        version=jenkins_info['number']
+        self.dataset.setVersion(filedate,str(version))
+
+
         return
 
     def load_bindings(self):

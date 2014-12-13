@@ -31,12 +31,6 @@ class ZFIN(Source):
         self.namespaces.update(Assoc.namespaces)
 
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
-        self.dataset.setFileAccessUrl(self.GENOTYPES_URL)
-        #zfin versions are set by the date of download
-        st = os.stat(self.genofile)
-
-        #self.dataset.setVersion(datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d"),datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d_%H:%M:%S"))
-        self.dataset.setVersion(datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d"))
 
         return
 
@@ -52,6 +46,13 @@ class ZFIN(Source):
         self.fetch_from_url(self.GENOTYPES_URL, self.genofile)
 
         self.scrub()
+
+        self.dataset.setFileAccessUrl(self.GENOTYPES_URL)
+        #zfin versions are set by the date of download
+        st = os.stat(self.genofile)
+
+        self.dataset.setVersion(datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d"))
+
 
         return
 
