@@ -80,7 +80,7 @@ class DispositionAssoc(Assoc):
             g.add((o,RDF['type'],self.OWLCLASS))
             g.add((s,p,o))
 
-            g.add((node, RDF['type'],self.OWLANNOT))
+            g.add((node, RDF['type'],URIRef(self.cu.get_uri('Annotation:'))))
             g.add((node, OWL['hasSubject'], s))
             g.add((node, OWL['hasObject'], o))
             if (self.pub_id.strip() == ''):

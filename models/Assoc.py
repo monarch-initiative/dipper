@@ -12,7 +12,8 @@ class Assoc:
         'ECO': 'http://purl.obolibrary.org/obo/ECO_',
         'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/PMID_',
         'RO' : 'http://purl.obolibrary.org/obo/RO_',
-        'OBO' : 'http://purl.obolibrary.org/obo/'
+        'OBO' : 'http://purl.obolibrary.org/obo/',
+        'Annotation' : 'http://www.w3.org/ns/oa#Annotation'
     }
 
     relationships = {
@@ -23,7 +24,7 @@ class Assoc:
 
     OWLCLASS=OWL['Class']
     OWLIND=OWL['NamedIndividual']
-    OWLANNOT=OWL['Annotation']
+#    OWLANNOT=OWL['Annotation']
     OWLPROP=OWL['ObjectProperty']
     OWLSUBCLASS=OWL['subclassOf']
 
