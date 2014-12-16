@@ -10,6 +10,7 @@ from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
 from rdflib import Namespace
 from models.Dataset import Dataset
+from models.Assoc import Assoc
 
 '''
 #see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
@@ -43,9 +44,9 @@ class HPOAnnotations(Source):
         "TAS": "ECO:0000304"   #Traceable Author Statement
     }
     disease_prefixes = {
-        'OMIM' : 'http://omim.org/entry/',
-        'DECIPHER' : 'http://www.monarchinitiative.org/',
-        'ORPHANET' : 'http://www.monarchinitiative.org/'
+        'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_',
+        'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_',
+        'ORPHANET' : 'http://purl.obolibrary.org/obo/ORPHANET_'
     }
 
 
@@ -56,9 +57,9 @@ class HPOAnnotations(Source):
         self.datasetfile = self.outdir + '/' + self.name + '_dataset.ttl'
 
         print("Setting outfile to", self.outfile)
-        self.namespaces = D2PAssoc.namespaces.copy()
-        self.namespaces.update(DispositionAssoc.namespaces)
-        self.namespaces.update(self.disease_prefixes)
+        self.curie_map = D2PAssoc.curie_map.copy()
+        self.curie_map.update(DispositionAssoc.curie_map)
+        self.curie_map.update(self.disease_prefixes)
 
         self.load_bindings()
 
@@ -85,8 +86,8 @@ class HPOAnnotations(Source):
 
     def load_bindings(self):
         self.load_core_bindings()
-        for k in self.namespaces.keys():
-            v=self.namespaces[k]
+        for k in self.curie_map.keys():
+            v=self.curie_map[k]
             self.graph.bind(k, Namespace(v))
 #            print("bound ", k, " to ", v)
         return
@@ -102,6 +103,7 @@ class HPOAnnotations(Source):
         #todo move this into super
 
         self._process_phenotype_tab(self.rawfile,self.outfile,self.graph,limit)
+        Assoc().loadObjectProperties(self.graph)
 
         #TODO add negative phenotype statements
         # http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab
@@ -109,6 +111,7 @@ class HPOAnnotations(Source):
 
         filewriter = open(self.outfile, 'w')
         self.load_bindings()
+        print("Finished parsing",self.rawfile, ". Writing turtle to",self.outfile)
         print(self.graph.serialize(format="turtle").decode(),file=filewriter)
         filewriter.close()
 
@@ -116,7 +119,7 @@ class HPOAnnotations(Source):
         print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
         filewriter.close()
 
-        print("Wrote", self.triple_count, "things")
+        print("Wrote", len(self.graph), "nodes")
         return
 
     def sanity_checks(self):
@@ -155,14 +158,14 @@ class HPOAnnotations(Source):
                     assoc = None
                     # we want to do things differently depending on the aspect of the annotation
                     if (asp == 'O' or asp == 'M'):  #organ abnormality or mortality
-                        assoc = D2PAssoc(assoc_id, disease_id, pheno_id, onset, freq, pub, self._map_evidence_to_codes(eco))
+                        assoc = D2PAssoc(assoc_id, disease_id, pheno_id, onset, freq, pub, self._map_evidence_to_codes(eco), self.curie_map)
                         g = assoc.addAssociationNodeToGraph(g)
                     elif (asp == 'I'):  #inheritance patterns for the whole disease
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco))
+                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco), self.curie_map)
                         g = assoc.addAssociationNodeToGraph(g)
                     elif (asp == 'C'):  #clinical course / onset
                         #FIXME is it correct for these to be dispositions?
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco))
+                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco), self.curie_map)
                         g = assoc.addAssociationNodeToGraph(g)
                     else:
                         #TODO throw an error?
@@ -176,3 +179,10 @@ class HPOAnnotations(Source):
                    break
 
         return
+
+    def verify(self):
+        status = True
+        self._verify(self.outfile)
+        #verify some kind of relationship that should be in the file
+
+        return status

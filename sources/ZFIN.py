@@ -3,6 +3,7 @@ from utils import pysed
 import os, datetime
 from datetime import datetime
 from stat import *
+from rdflib import Graph
 
 
 from sources.Source import Source
@@ -85,7 +86,7 @@ class ZFIN(Source):
         print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
         filewriter.close()
 
-        print("Wrote", self.triple_count, "things")
+        print("Wrote", len(self.graph), "nodes")
         return
 
     def _process_genotype_features(self, raw, out, g, limit=None):
@@ -160,3 +161,11 @@ class ZFIN(Source):
 
         return type
 
+
+    def verify(self):
+        status = True
+        self._verify(self.outfile)
+        #verify some kind of relationship that should be in the file
+
+        self._verifyowl(self.outfile)
+        return status

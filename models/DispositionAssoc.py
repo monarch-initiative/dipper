@@ -4,6 +4,8 @@ from rdflib import BNode, ConjunctiveGraph, Literal, RDF, OWL, extras, Namespace
 from rdflib.namespace import FOAF, RDFS, DC
 
 from models.Assoc import Assoc
+from utils.CurieUtil import CurieUtil
+
 import re
 import urllib
 
@@ -11,23 +13,20 @@ import urllib
 #This one is specific for making a disease-to-phenotype
 class DispositionAssoc(Assoc):
         #FIXME init might not require all these elements
-        has_disposition="GENO:0000208"
-        CLASS="owl:Class"
-        IND="owl:NamedIndividual"
-        monarch_namespace = Namespace('http://www.monarchinitiative.org/')
+        has_disposition="http://purl.obolibrary.org/obo/GENO_0000208"
 
-        prefixes={'OMIM','http://www.omim.org/',
-                  'DECIPHER','http://www.decipher.org/',
-                  'ORPHANET','http://www.orpha.net/',
-                  'HP','http://purl.obolibrary.org/obo/'}
+        relationships={'has_disposition','http://purl.obolibrary.org/obo/GENO_0000208'}
 
-        def __init__(self,annot_id,entity_id,heritability_id,pub,evidence_code):
+        def __init__(self,annot_id,entity_id,heritability_id,pub,evidence_code, curie_map):
             self.annot_id = annot_id
             self.entity_id = entity_id
             self.heritability_id = heritability_id
             self.pub_id = pub
             self.evidence = evidence_code
             self.rel = self.has_disposition  #default to has_disposition
+            self.curie_map = curie_map
+            self.cu = CurieUtil(self.curie_map)
+
             return
 
         def set_relationship(self,rel):
@@ -58,28 +57,42 @@ class DispositionAssoc(Assoc):
             return numStatements
 
         def addAssociationNodeToGraph(self,g):
-            namespaces = self.namespaces
+            namespaces = self.curie_map
             n = Namespace(namespaces['MONARCH'])
             node = n[self.annot_id]
             s = n[self.entity_id.replace(':','_')]
-            p = n[self.rel]
+            s = URIRef(self.cu.get_uri(self.entity_id))
+            p = URIRef(self.rel)
             o = Namespace(namespaces['HP'])[self.heritability_id.replace('HP:','')]
 
             if (re.compile('http').match(self.pub_id)):
                 source = URIRef(urllib.parse.quote_plus(self.pub_id))
             elif (re.compile('PMID').match(self.pub_id)):
-                source = Namespace(namespaces['PMID'])[self.pub_id.replace('PMID:','')]
+#                source = Namespace(namespaces['PMID'])[self.pub_id.replace('PMID:','')]
+                source = URIRef(self.cu.get_uri(self.pub_id))
             else:
-                source = Literal(self.pub_id)
-            evidence = Namespace(namespaces['ECO'])[self.evidence.replace('ECO:','')]
+                source = URIRef(self.cu.get_uri(self.pub_id))
 
-            g.add((s,RDF['type'],OWL['class']))
-            g.add((o,RDF['type'],OWL['class']))
-            g.add((node, RDF['type'],OWL['annotation']))
+            #evidence = Namespace(namespaces['ECO'])[self.evidence.replace('ECO:','')]
+            evidence = URIRef(self.cu.get_uri(self.evidence))
+
+            g.add((s,RDF['type'],self.OWLCLASS))
+            g.add((o,RDF['type'],self.OWLCLASS))
+            g.add((s,p,o))
+
+            g.add((node, RDF['type'],self.OWLANNOT))
             g.add((node, OWL['hasSubject'], s))
             g.add((node, OWL['hasObject'], o))
-            g.add((node, DC['source'], source))
-            g.add((node, DC['evidence'], evidence))
-            g.add((s,p,o))
+            if (self.pub_id.strip() == ''):
+                print("WARN:",self.entity_id,'+',self.heritability_id,'has no source information for the association (',self.evidence,')')
+            else:
+                g.add((node, DC['source'], source))
+                g.add((source, RDF['type'], self.OWLIND))
+
+            if (self.evidence.strip() == ''):
+                print("WARN:",self.entity_id,'+',self.heritability_id,'has no evidence code')
+            else:
+                g.add((node, DC['evidence'], evidence))
+
 
             return g

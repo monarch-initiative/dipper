@@ -5,22 +5,21 @@ __author__ = 'nlw'
 from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 
+source_to_class_map={
+    'hpoa' : HPOAnnotations,
+#    'zfin' : ZFIN
+}
 
-#the following is the registry of data to process
-all_sources = ('hpoa','other')
-
-#TODO the subset of sources will either be all, or eventually configurable on the commandline
-sources=all_sources
+#TODO subset of sources will eventually be configurable on the commandline
 #iterate through all the sources
-
-mysource = HPOAnnotations()
-#mysource.whoami()
-mysource.fetch()
-mysource.parse(1000)
-
-mysource = ZFIN()
-mysource.fetch()
-mysource.parse(10)
+for source in source_to_class_map.keys():
+    mysource = source_to_class_map[source]()
+    mysource.fetch()
+    mysource.parse()
+    status = mysource.verify()
+    if status is not True:
+        print('ERROR: Source',source,'did not pass verification tests.')
+    print('***** Finished with',source,'*****')
 
 print("All done.")
 

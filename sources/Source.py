@@ -6,6 +6,8 @@ from urllib import request
 from datetime import datetime
 from stat import *
 import hashlib
+import subprocess
+from subprocess import check_call
 
 
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
@@ -117,6 +119,33 @@ class Source:
         st = os.stat(localfile)
         print("file size:", st[ST_SIZE])
         print("file created:", time.asctime(time.localtime(st[ST_CTIME])))
+        return
+
+
+    def verify(self):
+        status = False
+
+        return status
+
+    def _verify(self,f):
+        '''
+         a simple test to see if the turtle file can be loaded into a graph and parsed
+        :param f: file of ttl
+        :return:  Boolean status (passed: True; did not pass: False)
+        '''
+        vg = Graph()
+        vg.parse(f, format="turtle")
+        print ('Graph nodes:',len(vg))
+        return
+
+    def _verifyowl(self,f):
+        '''
+        test if the ttl can be parsed by owlparser
+        this expects owltools to be accessible from commandline
+        :param f: file of ttl
+        :return: Boolean status (passed: True; did not pass: False)
+        '''
+        check_call(["owltools", f],stderr=subprocess.STDOUT)
         return
 
 #store.add((donna, RDF.type, FOAF.Person))
