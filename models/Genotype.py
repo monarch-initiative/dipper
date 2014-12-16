@@ -7,6 +7,8 @@ from rdflib.namespace import FOAF, RDFS, DC
 from models.Assoc import Assoc
 import re
 import urllib
+from utils.CurieUtil import CurieUtil
+from models.Assoc import Assoc
 
 # The first of many associations
 #This one is specific for making a disease-to-phenotype
@@ -15,49 +17,51 @@ class Genotype():
 
     #TODO turn this into a proper dictionary
     #classes and relationships
-    intrinsic_genotype = "http://purl.obolibrary.org/obo/GENO_0000000"
-    allele_base_type = 'http://purl.obolibrary.org/obo/GENO_0000008'
-    gene_base_type = 'http://purl.obolibrary.org/obo/SO_0000704'
+    curie_map = {
+        'GENO': 'http://purl.obolibrary.org/obo/GENO_',
+        'SO' : 'http://purl.obolibrary.org/obo/SO_'
+    }
+
+    genoparts = {
+        'intrinsic_genotype' : 'GENO:0000000',
+        'allele_base_type' : 'GENO:0000008',
+        'gene_base_type' : 'SO:0000704'
+    }
 
     #relationships
     relationship = {
-        'is_mutant_of' : 'http://purl.obolibrary.org/obo/GENO_0000440',
-#        'has_zygosity' : 'http://purl.obolibrary.org/obo/GENO_0000400',
-        'derives_from' : 'http://purl.obolibrary.org/obo/RO_0001000'
+        'is_mutant_of' : 'GENO:0000440',
+        'derives_from' : 'RO:0001000'
     }
 
-    CLASS = "owl:Class"
-    IND = "owl:NamedIndividual"
-    monarch_namespace = Namespace('http://www.monarchinitiative.org/')
 
-    prefixes = {'OMIM', 'http://www.omim.org/',
-                'DECIPHER', 'http://www.decipher.org/',
-                'ORPHANET', 'http://www.orpha.net/',
-                'HP', 'http://purl.obolibrary.org/obo/'}
+    def __init__(self, genotype_id, genotype_label, curie_map):
 
-    def __init__(self, genotype_id, genotype_label, description=None):
+        self.curie_map.update(curie_map)
+        self.cu = CurieUtil(self.curie_map)
 
         self.g = Graph()
 
         #create the genotype and add it to the graph
         #TODO this makes the assumption that it is an intrinsic_genotype; need to generalize
-        self.geno = URIRef(genotype_id)
-        self.addNode(genotype_id, genotype_label, self.intrinsic_genotype)
+        self.geno = URIRef(self.cu.get_uri(genotype_id))
+        self.addNode(genotype_id, genotype_label, self.genoparts['intrinsic_genotype'])
 
         for rel in self.relationship.keys():
-            self.g.add((URIRef(self.relationship[rel]), RDF['type'], OWL['ObjectProperty']))
+            self.g.add((URIRef(self.cu.get_uri(self.relationship[rel])), RDF['type'], Assoc.OWLPROP))
+
         return
 
     def addAllele(self, allele_id, allele_label, allele_type=None, allele_description=None):
         if (allele_type is None):
-            allele_type = self.allele_base_type
+            allele_type = self.genoparts['allele_base_type']
         self.addNode(allele_id, allele_label, allele_type, allele_description)
 
         return
 
     def addGene(self, gene_id, gene_label, gene_type=None, gene_description=None):
         if (gene_type is None):
-            gene_type = self.gene_base_type
+            gene_type = self.genoparts['gene_base_type']
         self.addNode(gene_id, gene_label, gene_type, gene_description)
 
         return
@@ -71,18 +75,19 @@ class Genotype():
         return
 
     def addAlleleDerivesFromConstruct(self, allele_id, construct_id):
-        self.g.add((URIRef(allele_id), URIRef(self.relationship['derives_from']), URIRef(construct_id)))
+        rel = self.cu.get_uri(self.relationship['derives_from'])
+        self.g.add((URIRef(self.cu.get_uri(allele_id)), URIRef(rel), URIRef(self.cu.get_uri(construct_id))))
         return
 
 
     def addNode(self, id, label, type=None, description=None):
-        n = URIRef(id)
+        n = URIRef(self.cu.get_uri(id))
 
-        self.g.add((n, RDF['type'], OWL['class']))
+        self.g.add((n, RDF['type'], Assoc.OWLCLASS))
         self.g.add((n, RDFS['label'], Literal(label)))
         if (type is not None):
-            t = URIRef(type)
-            self.g.add((n, OWL['subclassOf'], t))
+            t = URIRef(self.cu.get_uri(type))
+            self.g.add((n, Assoc.OWLSUBCLASS, t))
         if (description is not None):
             self.g.add((n, DC['description'], Literal(description)))
         return
@@ -91,14 +96,14 @@ class Genotype():
         rel=rel_id
         if (rel_id is None):
             rel=self.relationship['is_mutant_of']
-        self.g.add((URIRef(allele_id), URIRef(rel), URIRef(gene_id)))
+        self.g.add((URIRef(self.cu.get_uri(allele_id)), URIRef(self.cu.get_uri(rel)), URIRef(self.cu.get_uri(gene_id))))
 
         return
 
     def addAlleleToGenotype(self, allele_id, genotype_id):
         #TODO perhaps here is where we'll build the other genotype parts?
         #for now, just keep it simple and add the allele to the genotype atomically
-        self.g.add((URIRef(genotype_id), OWL['hasPart'], URIRef(allele_id)))
+        self.g.add((URIRef(self.cu.get_uri(genotype_id)), OWL['hasPart'], URIRef(self.cu.get_uri(allele_id))))
         return
 
     def getGraph(self):

@@ -19,8 +19,7 @@ class ZFIN(Source):
 
     namespaces = {
         'ZP': 'http://purl.obolibrary.org/obo/ZP_',
-        'ZFIN': 'http://zfin.org/',
-        'GENO': 'http://purl.obolibrary.org/obo/GENO_',
+        'ZFIN': 'http://zfin.org/'
     }
 
     def __init__(self):
@@ -29,8 +28,8 @@ class ZFIN(Source):
         self.datasetfile = self.outdir + '/' + self.name + '_dataset.ttl'
         self.genofile = ('/').join((self.rawdir, self.GENOTYPES_FILE))
         print("Setting outfile to", self.outfile)
-        self.namespaces.update(Assoc.namespaces)
-
+        self.namespaces.update(Assoc.curie_map)
+        self.namespaces.update(Genotype.curie_map)
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
 
         return
@@ -100,22 +99,22 @@ class ZFIN(Source):
                  allele_type, allele_disp_type, gene_symbol, gene_id, zygosity,
                  construct_name, construct_id, other) = row
 
-                genotype_id = 'http://www.zfin.org/' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name)
+                genotype_id = 'ZFIN:'+genotype_id.strip()
+                geno = Genotype(genotype_id, genotype_name, self.namespaces)
 
                 #reassign the allele_type to a proper GENO or SO class
                 allele_type = self._map_allele_type_to_geno(allele_type)
 
-                allele_id = 'http://www.zfin.org/' + allele_id.strip()
+                allele_id = 'ZFIN:'+allele_id.strip()
                 geno.addAllele(allele_id, allele_name, allele_type)
 
                 if (gene_id is not None and gene_id.strip() != ''):
-                    gene_id = 'http://www.zfin.org/' + gene_id.strip()
+                    gene_id = 'ZFIN:' + gene_id.strip()
                     geno.addGene(gene_id, gene_symbol)
 
                     #if it's a transgenic construct, then we'll have to get the other bits
                     if (construct_id is not None and construct_id.strip() != ''):
-                        construct_id = 'http://www.zfin.org/' + construct_id.strip()
+                        construct_id = 'ZFIN:' + construct_id.strip()
                         geno.addAlleleDerivesFromConstruct(allele_id, construct_id)
 
                     #allele to gene
@@ -153,7 +152,8 @@ class ZFIN(Source):
             #            'unspecified' : None
         }
         if (allele_type.strip() in type_map):
-            type = 'http://purl.obolibrary.org/obo/' + type_map.get(allele_type)
+            type = type_map.get(allele_type)
+            #type = 'http://purl.obolibrary.org/obo/' + type_map.get(allele_type)
 #            print("Mapped: ", allele_type, "to", type)
         else:
             #TODO add logging

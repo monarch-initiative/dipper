@@ -25,6 +25,7 @@ class Assoc:
     OWLIND=OWL['NamedIndividual']
     OWLANNOT=OWL['Annotation']
     OWLPROP=OWL['ObjectProperty']
+    OWLSUBCLASS=OWL['subclassOf']
 
 
     def __init__(self):
