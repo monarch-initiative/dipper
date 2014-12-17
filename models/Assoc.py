@@ -4,7 +4,11 @@ from rdflib import Namespace, OWL, RDF, URIRef
 
 
 class Assoc:
-    ###### Namespaces ######
+    '''
+    An abstract class for Monarch-style associations, to enable attribution of source and evidence
+    on statements.
+    '''
+
     # TODO turn this into a dictionary from the context file
     curie_map = {
         'MONARCH': 'http://www.monarchinitiative.org/MONARCH_',
@@ -17,16 +21,13 @@ class Assoc:
         '' : 'http://www.monarchinitiative.org/'  #base
     }
 
-
     relationships = {
         'has_disposition':'http://purl.obolibrary.org/obo/GENO_0000208',
         'has_phenotype':'http://purl.obolibrary.org/obo/RO_0002200'
     }
 
-
     OWLCLASS=OWL['Class']
     OWLIND=OWL['NamedIndividual']
-#    OWLANNOT=OWL['Annotation']
     OWLPROP=OWL['ObjectProperty']
     OWLSUBCLASS=OWL['subclassOf']
     BASE=Namespace(curie_map[''])
@@ -42,11 +43,17 @@ class Assoc:
         return self.relationships
 
     def createAssociationNode(self, g):
-        #todo make a general association object following our pattern
+        #TODO make a general association object following our pattern
 
         return
 
     def loadObjectProperties(self,g):
+        '''
+        Given a graph, it will load any of the items in relationships dictionary
+        as owl['ObjectProperty'] types
+        :param g: a graph
+        :return: None
+        '''
         for k in self.relationships:
             g.add((URIRef(self.relationships[k]),RDF['type'],self.OWLPROP))
         return

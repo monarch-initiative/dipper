@@ -65,6 +65,7 @@ class HPOAnnotations(Source):
 
         self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
 
+        print("WARN: note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
 
         return
 
