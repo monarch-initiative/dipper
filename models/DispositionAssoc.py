@@ -81,8 +81,8 @@ class DispositionAssoc(Assoc):
             g.add((s,p,o))
 
             g.add((node, RDF['type'],URIRef(self.cu.get_uri('Annotation:'))))
-            g.add((node, OWL['hasSubject'], s))
-            g.add((node, OWL['hasObject'], o))
+            g.add((node, self.BASE['hasSubject'], s))
+            g.add((node, self.BASE['hasObject'], o))
             if (self.pub_id.strip() == ''):
                 print("WARN:",self.entity_id,'+',self.heritability_id,'has no source information for the association (',self.evidence,')')
             else:

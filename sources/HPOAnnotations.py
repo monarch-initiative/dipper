@@ -183,6 +183,7 @@ class HPOAnnotations(Source):
     def verify(self):
         status = True
         self._verify(self.outfile)
-        #verify some kind of relationship that should be in the file
+        self._verifyowl(self.outfile)
+        #TODO verify some kind of relationship that should be in the file
 
         return status

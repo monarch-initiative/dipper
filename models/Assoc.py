@@ -13,8 +13,10 @@ class Assoc:
         'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/PMID_',
         'RO' : 'http://purl.obolibrary.org/obo/RO_',
         'OBO' : 'http://purl.obolibrary.org/obo/',
-        'Annotation' : 'http://www.w3.org/ns/oa#Annotation'
+        'Annotation' : 'http://www.w3.org/ns/oa#Annotation',
+        '' : 'http://www.monarchinitiative.org/'  #base
     }
+
 
     relationships = {
         'has_disposition':'http://purl.obolibrary.org/obo/GENO_0000208',
@@ -27,6 +29,7 @@ class Assoc:
 #    OWLANNOT=OWL['Annotation']
     OWLPROP=OWL['ObjectProperty']
     OWLSUBCLASS=OWL['subclassOf']
+    BASE=Namespace(curie_map[''])
 
 
     def __init__(self):

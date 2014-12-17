@@ -91,8 +91,8 @@ class D2PAssoc(Assoc):
             g.add((s,p,o))
 
             g.add((node, RDF['type'],URIRef(self.cu.get_uri('Annotation:'))))
-            g.add((node, OWL['hasSubject'], s))
-            g.add((node, OWL['hasObject'], o))
+            g.add((node, self.BASE['hasSubject'], s))
+            g.add((node, self.BASE['hasObject'], o))
 
             if (self.pub_id.strip() == ''):
                 print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
@@ -107,10 +107,10 @@ class D2PAssoc(Assoc):
 
             if (self.frequency is not None and self.frequency != ''):
                 #FIXME what is the real predicate here?
-                g.add((node, OWL['frequencyOfPhenotype'],Literal(self.frequency)))
+                g.add((node, self.BASE['frequencyOfPhenotype'],Literal(self.frequency)))
             if (self.onset is not None and self.onset != ''):
                 #FIXME what is the real predicate here?
-                g.add((node,OWL['onset'],n[self.onset]))
+                g.add((node,self.BASE['onset'],n[self.onset]))
 
 #            print(g.serialize(format="turtle").decode())
             return g

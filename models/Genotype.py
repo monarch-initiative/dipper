@@ -11,17 +11,21 @@ from utils.CurieUtil import CurieUtil
 from models.Assoc import Assoc
 
 # The first of many associations
-#This one is specific for making a disease-to-phenotype
 class Genotype():
-    #FIXME init might not require all these elements
+    '''
+    This defines Genotype objects and their parts
+    You should create one "Genotype" model/object per genotype that you are looping through,
+    so that each genotype itself is a graph.
+    Then merge all the genotypes together to create a big merged graph for a single resource.
+    '''
 
-    #TODO turn this into a proper dictionary
     #classes and relationships
     curie_map = {
         'GENO': 'http://purl.obolibrary.org/obo/GENO_',
         'SO' : 'http://purl.obolibrary.org/obo/SO_'
     }
 
+    #special genotype parts mapped to their GENO and SO classes that we explicitly reference here
     genoparts = {
         'intrinsic_genotype' : 'GENO:0000000',
         'allele_base_type' : 'GENO:0000008',
@@ -47,12 +51,21 @@ class Genotype():
         self.geno = URIRef(self.cu.get_uri(genotype_id))
         self.addNode(genotype_id, genotype_label, self.genoparts['intrinsic_genotype'])
 
+        #add all the relationships as ObjectProperties into the graph
         for rel in self.relationship.keys():
             self.g.add((URIRef(self.cu.get_uri(self.relationship[rel])), RDF['type'], Assoc.OWLPROP))
 
         return
 
     def addAllele(self, allele_id, allele_label, allele_type=None, allele_description=None):
+        '''
+        Make an allele object
+        :param allele_id: curie for allele (required)
+        :param allele_label: label for allele (required)
+        :param allele_type:
+        :param allele_description:
+        :return:
+        '''
         if (allele_type is None):
             allele_type = self.genoparts['allele_base_type']
         self.addNode(allele_id, allele_label, allele_type, allele_description)
