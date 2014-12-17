@@ -15,12 +15,13 @@ source_to_class_map={
 for source in source_to_class_map.keys():
     mysource = source_to_class_map[source]()
     mysource.fetch()
-    mysource.parse(10)
+    mysource.parse()
     status = mysource.verify()
     if status is not True:
         print('ERROR: Source',source,'did not pass verification tests.')
     print('***** Finished with',source,'*****')
-
+#    mysource.write("out/hpo_raw.rdf")
+#    mysource.write()
 print("All done.")
 
 #TODO command-line args:

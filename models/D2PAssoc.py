@@ -83,6 +83,7 @@ class D2PAssoc(Assoc):
                 source = URIRef(self.cu.get_uri(self.pub_id))
             else:
                 source = URIRef(self.cu.get_uri(self.pub_id))
+#            print("SOURCE: ",source)
             evidence = URIRef(self.cu.get_uri(self.evidence))
             frequency = onset = None
 
@@ -94,11 +95,15 @@ class D2PAssoc(Assoc):
             g.add((node, self.BASE['hasSubject'], s))
             g.add((node, self.BASE['hasObject'], o))
 
-            if (self.pub_id.strip() == ''):
-                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
-            else:
-                g.add((node, DC['source'], source))
-                g.add((source, RDF['type'], self.OWLIND))
+            if (self.pub_id.strip() != ''):
+                if (source != URIRef('[]')):
+                    g.add((node, DC['source'], source))
+                    g.add((source, RDF['type'], self.OWLIND))
+                else:
+                    print("WARN: source as a literal -- is this ok?")
+                    g.add((node, DC['source'], Literal(self.pub_id)))
+#            else:
+#                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
 
             if (self.evidence.strip() == ''):
                 print("WARN:",self.entity_id,'+',self.phenotype_id,'has no evidence code')

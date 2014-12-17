@@ -24,8 +24,11 @@ class CurieUtil:
     def get_uri(self, curie):
         parts = curie.split(':')
         if 1 == len(parts):
+            if (curie != ''):
+                print ("ERROR: Not a properly formed curie: \"",curie,"\"",sep='')
             return []
         prefix = parts[0]
         if prefix in self.curie_map:
             return '%s%s' % (self.curie_map.get(prefix), curie[(curie.index(':') + 1):])
+        print("ERROR: Curie prefix not defined for",curie)
         return []

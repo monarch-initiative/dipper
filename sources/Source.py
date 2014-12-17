@@ -62,14 +62,18 @@ class Source:
         '''
         return
 
-    def write(self):
+    def write(self, file=None):
         '''
-        a basic graph writer (to stdout) for any of the sources, using the turtle serializer
+        a basic graph writer (to stdout) for any of the sources, writing raw triples
         :return:
         '''
-        for s, p, o in self.graph:
-            print(s, p, o)
-        print(self.graph.serialize(format="turtle"))
+        if (file is not None):
+            filewriter = open(file, 'w')
+            print("Writing raw triples to ",file)
+            print(self.graph.serialize(format="rdfxml").decode(), file=filewriter)
+            filewriter.close()
+        else:
+            print(self.graph.serialize(format="rdfxml").decode())
         return
 
     def whoami(self):

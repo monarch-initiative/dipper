@@ -2,6 +2,7 @@ import csv, os, datetime
 from datetime import datetime
 from stat import *
 import urllib
+from utils import pysed
 
 
 from sources.Source import Source
@@ -49,6 +50,9 @@ class HPOAnnotations(Source):
         'ORPHANET' : 'http://purl.obolibrary.org/obo/ORPHANET_'
     }
 
+    curie_map = {
+        'HPO' : 'http://human-phenotype-ontology.org/'
+    }
 
     def __init__(self):
         Source.__init__(self, 'hpoa')
@@ -57,7 +61,7 @@ class HPOAnnotations(Source):
         self.datasetfile = self.outdir + '/' + self.name + '_dataset.ttl'
 
         print("Setting outfile to", self.outfile)
-        self.curie_map = D2PAssoc.curie_map.copy()
+        self.curie_map.update(D2PAssoc.curie_map)
         self.curie_map.update(DispositionAssoc.curie_map)
         self.curie_map.update(self.disease_prefixes)
 
@@ -82,7 +86,26 @@ class HPOAnnotations(Source):
         version=jenkins_info['number']
         self.dataset.setVersion(filedate,str(version))
 
+        self.scrub()
 
+        return
+
+    def scrub(self):
+        # scrub file of the oddities...lots of publication rewriting
+        print('INFO: scrubbing PubMed:12345 --> PMID:12345')
+        pysed.replace("PubMed", 'PMID', self.rawfile)
+
+        print('INFO: scrubbing pmid:12345 --> PMID:12345')
+        pysed.replace("pmid", 'PMID', self.rawfile)
+
+        print('INFO: scrubbing PMID12345 --> PMID:12345')
+        pysed.replace("PMID([0-9][0-9]*)", 'PMID:\\1', self.rawfile)
+
+        print('INFO: scrubbing MIM12345 --> OMIM:12345')
+        pysed.replace('MIM([0-9][0-9]*)', 'OMIM:\\1', self.rawfile)
+
+        print('INFO: scrubbing MIM:12345 --> OMIM:12345')
+        pysed.replace(";MIM",";OMIM", self.rawfile)
         return
 
     def load_bindings(self):
