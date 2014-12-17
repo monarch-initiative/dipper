@@ -31,36 +31,6 @@ class D2PAssoc(Assoc):
             self.rel = rel
             return
 
-        def printTypes(self,filewriter=None):
-            numStatements = 4
-            print(self.entity_id,"rdf:type",self.CLASS,file=filewriter)
-            print(self.phenotype_id,"rdf:type",self.CLASS,file=filewriter)
-            print(self.pub_id,"rdf:type",self.IND,file=filewriter)
-            print(self.evidence,"rdf:type",self.CLASS,file=filewriter)
-            return numStatements
-
-        def printAssociation(self,filewriter=None):
-            numStatements = 6
-            #note we are making the assumption that all classes will have their
-            #labels printed elsewhere
-            #this will return the number of statements printed
-            print(self.entity_id,self.rel,self.phenotype_id,".", sep=" ",file=filewriter)
-            #TODO is this "type" correct?
-            #TODO do we need the relationship as a predicate here?
-            print(self.annot_id, "rdf:type","Annotation:",".", sep=" ",file=filewriter)
-            print(self.annot_id, ":hasSubject", self.entity_id, sep=" ",file=filewriter)
-            print(self.annot_id, ":hasObject", self.phenotype_id, sep=" ",file=filewriter)
-            print(self.annot_id, "dc:source", self.pub_id, sep=" ",file=filewriter)
-            print(self.annot_id, "dc:evidence", self.evidence, sep=" ", file=filewriter)
-            if (self.frequency is not None and self.frequency != ''):
-                #FIXME what is the real predicate here?
-                print(self.annot_id, ":frequencyOfPhenotype", self.frequency,file=filewriter)
-                numStatements += 1
-            if (self.onset is not None and self.onset != ''):
-                print(self.annot_id, ":onset", self.onset,file=filewriter)
-                numStatements += 1
-            return numStatements
-
         def addAssociationNodeToGraph(self,g):
             namespaces = self.curie_map
             n = Namespace(namespaces['MONARCH'])
