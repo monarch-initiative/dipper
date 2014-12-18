@@ -1,22 +1,18 @@
 __author__ = 'nicole'
 
-from rdflib import BNode, Graph, Literal, RDF, OWL, extras, Namespace, URIRef
-from rdflib.namespace import FOAF, RDFS, DC
+from rdflib import Graph, Literal, RDF, OWL, URIRef
+from rdflib.namespace import RDFS, DC
 
 
-from models.Assoc import Assoc
-import re
-import urllib
 from utils.CurieUtil import CurieUtil
 from models.Assoc import Assoc
 
-# The first of many associations
 class Genotype():
     '''
     This defines Genotype objects and their parts
     You should create one "Genotype" model/object per genotype that you are looping through,
-    so that each genotype itself is a graph.
-    Then merge all the genotypes together to create a big merged graph for a single resource.
+    so that each genotype itself is a graph, then merge all the genotypes together
+    to create a big merged graph for a single resource.
     '''
 
     #classes and relationships
@@ -59,11 +55,11 @@ class Genotype():
 
     def addAllele(self, allele_id, allele_label, allele_type=None, allele_description=None):
         '''
-        Make an allele object
+        Make an allele object. If no allele_type is added, it will default to a geno:allele
         :param allele_id: curie for allele (required)
         :param allele_label: label for allele (required)
-        :param allele_type:
-        :param allele_description:
+        :param allele_type: id for an allele type (optional, recommended SO or GENO class)
+        :param allele_description: a free-text description of the allele
         :return:
         '''
         if (allele_type is None):
@@ -94,6 +90,18 @@ class Genotype():
 
 
     def addNode(self, id, label, type=None, description=None):
+        '''
+        Any node added to the graph will get at least 3 triples:
+        *(node,type,owl:Class) and
+        *(node,label,literal(label))
+        *if a type is added, then the node will be an OWL:subclassOf that the type
+        *if a description is provided, it will also get added as a dc:description
+        :param id:
+        :param label:
+        :param type:
+        :param description:
+        :return:
+        '''
         n = URIRef(self.cu.get_uri(id))
 
         self.g.add((n, RDF['type'], Assoc.OWLCLASS))
@@ -116,7 +124,7 @@ class Genotype():
     def addAlleleToGenotype(self, allele_id, genotype_id):
         #TODO perhaps here is where we'll build the other genotype parts?
         #for now, just keep it simple and add the allele to the genotype atomically
-        self.g.add((URIRef(self.cu.get_uri(genotype_id)), OWL['hasPart'], URIRef(self.cu.get_uri(allele_id))))
+        self.g.add((URIRef(self.cu.get_uri(allele_id)), URIRef(OWL['hasPart']), URIRef(self.cu.get_uri(genotype_id))))
         return
 
     def getGraph(self):

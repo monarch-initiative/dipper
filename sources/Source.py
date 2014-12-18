@@ -30,6 +30,13 @@ class Source:
         self.triple_count = 0
         self.outdir = 'out'
         self.rawdir = 'raw'
+
+        self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
+        print("Setting outfile to", self.outfile)
+
+        self.datasetfile = ('/').join((self.outdir,self.name + '_dataset.ttl'))
+        print("Setting dataset file to", self.datasetfile)
+
         return
 
     def load_core_bindings(self):
@@ -164,6 +171,8 @@ class Source:
         :return: True if all tests pass
         '''
         status = False
+        self._verify(self.outfile)
+        status = self._verifyowl(self.outfile)
 
         return status
 
@@ -185,6 +194,6 @@ class Source:
         :param f: file of ttl
         :return: Boolean status (passed: True; did not pass: False)
         '''
-        check_call(["owltools", f],stderr=subprocess.STDOUT)
-        return
+        status = check_call(["owltools", f],stderr=subprocess.STDOUT)
+        return status
 

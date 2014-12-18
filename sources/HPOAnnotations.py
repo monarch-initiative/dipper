@@ -33,8 +33,15 @@ from models.Assoc import Assoc
 '''
 
 class HPOAnnotations(Source):
-    ANNOT_URL = "http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab"
-    ANNOT_FILE = "phenotype_annotation.tab"
+
+    files = {
+        'annot' : {'file' : 'phenotype_annotation.tab',
+                   'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab'
+        },
+#        'neg_annot' : {'file' : 'phenotype_annotation.tab',
+#                   'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab'
+#        },
+    }
 
     #note, two of these codes are awaiting term requests
     #https://code.google.com/p/evidenceontology/issues/detail?id=32
@@ -51,16 +58,12 @@ class HPOAnnotations(Source):
     }
 
     curie_map = {
-        'HPO' : 'http://human-phenotype-ontology.org/'
+        'HPO' : 'http://human-phenotype-ontology.org/' #used for HPO-person identifiers, but they don't resolve
     }
 
     def __init__(self):
         Source.__init__(self, 'hpoa')
-        self.outfile = self.outdir+'/'+self.name + ".ttl"
-        self.rawfile = ('/').join((self.rawdir,self.ANNOT_FILE))
-        self.datasetfile = self.outdir + '/' + self.name + '_dataset.ttl'
 
-        print("Setting outfile to", self.outfile)
         self.curie_map.update(D2PAssoc.curie_map)
         self.curie_map.update(DispositionAssoc.curie_map)
         self.curie_map.update(self.disease_prefixes)
@@ -69,28 +72,40 @@ class HPOAnnotations(Source):
 
         self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
 
+        #data-source specific warnings (will be removed when issues are cleared)
         print("WARN: note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
 
         return
 
     def fetch(self):
-        self.fetch_from_url(self.ANNOT_URL,self.rawfile)
-
-        self.dataset.setFileAccessUrl(self.ANNOT_URL)
+        for f in self.files.keys():
+            file = self.files.get(f)
+            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.dataset.setFileAccessUrl(file['url'])
+            # zfin versions are set by the date of download.
+            st = os.stat(('/').join((self.rawdir,file['file'])))
 
         st = os.stat(self.rawfile)
         filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
+        self.scrub()
+
         #get the latest build from jenkins
         jenkins_info=eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
         version=jenkins_info['number']
-        self.dataset.setVersion(filedate,str(version))
 
-        self.scrub()
+        self.dataset.setVersion(filedate,str(version))
 
         return
 
     def scrub(self):
+        '''
+        Perform various data-scrubbing on the raw data files prior to parsing.
+        For this resource, this currently includes:
+        * revise errors in identifiers for some OMIM and PMIDs
+        :return: None
+        '''
+
         # scrub file of the oddities...lots of publication rewriting
         print('INFO: scrubbing PubMed:12345 --> PMID:12345')
         pysed.replace("PubMed", 'PMID', self.rawfile)
@@ -113,29 +128,29 @@ class HPOAnnotations(Source):
         for k in self.curie_map.keys():
             v=self.curie_map[k]
             self.graph.bind(k, Namespace(v))
-#            print("bound ", k, " to ", v)
         return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
     # we can investigate doing this line-by-line later
     #supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
-        Source.parse(self)
         if (limit is not None):
             print("Only parsing first", limit, "rows")
-        line_counter = 0
-        #todo move this into super
 
-        self._process_phenotype_tab(self.rawfile,self.outfile,self.graph,limit)
+
+        print("Parsing files...")
+        self._process_phenotype_tab(('/').join((self.rawdir,self.files['annot']['file'])),self.outfile,self.graph,limit)
         Assoc().loadObjectProperties(self.graph)
 
         #TODO add negative phenotype statements
-        # http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab
         #self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
 
+        print("Finished parsing.")
+
+        ##### Write it out #####
         filewriter = open(self.outfile, 'w')
         self.load_bindings()
-        print("Finished parsing",self.rawfile, ". Writing turtle to",self.outfile)
+        print("Finished parsing files. Writing turtle to",self.outfile)
         print(self.graph.serialize(format="turtle").decode(),file=filewriter)
         filewriter.close()
 
@@ -146,23 +161,14 @@ class HPOAnnotations(Source):
         print("Wrote", len(self.graph), "nodes")
         return
 
-    def sanity_checks(self):
-        #TODO syntactic checking in the file
-        #will return False if any of the conditions are not satisfied
-
-        #check if there's any evidence codes not in our dictionary
-
-        #check if there's "aspect" codes not in our dictionary
-
-        return True
-
-
 
     def _map_evidence_to_codes(self, code_string):
-        #the following evidence codes are used as literals: ICE, IEA, PCS, TAS
-        #here, we map them to the ECO
-
-
+        '''
+        A simple mapping of the code_string to it's ECO class using the dictionary defined here
+        Currently includes ICE, IEA, PCS, TAS
+        :param code_string:
+        :return:
+        '''
         return self.eco_dict.get(code_string)
 
     def _process_phenotype_tab(self, raw, out, g, limit=None):
@@ -206,8 +212,6 @@ class HPOAnnotations(Source):
 
     def verify(self):
         status = True
-        self._verify(self.outfile)
-        self._verifyowl(self.outfile)
         #TODO verify some kind of relationship that should be in the file
 
         return status

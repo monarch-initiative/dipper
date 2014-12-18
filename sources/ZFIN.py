@@ -17,17 +17,13 @@ from utils.CurieUtil import CurieUtil
 
 
 class ZFIN(Source):
-    GENOTYPES_URL = "http://zfin.org/downloads/genotype_features.txt"
-    GENOTYPES_FILE = "genotype_features.txt"
 
-    G2P_URL = "http://zfin.org/downloads/phenotype.txt"
-    G2P_FILE = "phenotype.txt"
-
-    PUBMAP_URL = "http://zfin.org/downloads/zfinpubs.txt"
-    PUBMAP_FILE = "zfinpubs.txt"
-
-    MAPPING_URL = 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt'
-    MAPPING_FILE = 'zp-mapping.txt'
+    files = {
+        'geno' : {'file' : 'genotype_features.txt', 'url' : 'http://zfin.org/downloads/genotype_features.txt'},
+        'pheno' : {'file' : 'phenotype.txt', 'url' : 'http://zfin.org/downloads/phenotype.txt'},
+        'pubs' : {'file' : 'zfinpubs.txt', 'url' : 'http://zfin.org/downloads/zfinpubs.txt'},
+        'zpmap' : {'file' : 'zp-mapping.txt', 'url' : 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt'},
+    }
 
     namespaces = {
         'ZP': 'http://purl.obolibrary.org/obo/ZP_',
@@ -38,16 +34,18 @@ class ZFIN(Source):
 
     def __init__(self):
         Source.__init__(self, 'zfin')
-        self.outfile = self.outdir + '/' + self.name + ".ttl"
-        self.datasetfile = self.outdir + '/' + self.name + '_dataset.ttl'
-        self.genofile = ('/').join((self.rawdir, self.GENOTYPES_FILE))
-        self.phenofile = ('/').join((self.rawdir, self.G2P_FILE))
-        self.pubfile = ('/').join((self.rawdir,self.PUBMAP_FILE))
-        self.zpmapfile = ('/').join((self.rawdir,self.MAPPING_FILE))
-        print("Setting outfile to", self.outfile)
+
+        #assemble all the curie mappings from the imported models
         self.namespaces.update(Assoc.curie_map)
         self.namespaces.update(Genotype.curie_map)
+
+        #update the dataset object with details about this resource
+        #TODO put this into a conf file?
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
+
+        #source-specific warnings.  will be cleared when resolved.
+        print("WARN: we are filtering G2P on the wild-type environment data for now")
+
         return
 
     def load_bindings(self):
@@ -59,26 +57,31 @@ class ZFIN(Source):
         return
 
     def fetch(self):
-        self.fetch_from_url(self.GENOTYPES_URL, self.genofile)
-        self.fetch_from_url(self.G2P_URL, self.phenofile)
-        self.fetch_from_url(self.PUBMAP_URL, self.pubfile)
-        self.fetch_from_url(self.MAPPING_URL, self.zpmapfile)
 
+        #fetch all the files
+        for f in self.files.keys():
+            file = self.files.get(f)
+            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.dataset.setFileAccessUrl(file['url'])
+            # zfin versions are set by the date of download.
+            st = os.stat(('/').join((self.rawdir,file['file'])))
         self.scrub()
 
-        self.dataset.setFileAccessUrl(self.GENOTYPES_URL)
-        self.dataset.setFileAccessUrl(self.G2P_URL)
-        self.dataset.setFileAccessUrl(self.PUBMAP_URL)
-        self.dataset.setFileAccessUrl(self.MAPPING_URL)
-        # zfin versions are set by the date of download
-        st = os.stat(self.genofile)
+        #this will set the version based on the last-ingested file.
+        #TODO should be a date-stamp for each file?  how to track that prov?
         self.dataset.setVersion(datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d"))
 
         return
 
     def scrub(self):
+        '''
+        Perform various data-scrubbing on the raw data files prior to parsing.
+        For this resource, this currently includes:
+        * remove oddities where there are "\" instead of empty strings
+        :return: None
+        '''
         # scrub file of the oddities where there are "\" instead of empty strings
-        pysed.replace("\\\\", '', self.genofile)
+        pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
 
         return
 
@@ -86,24 +89,23 @@ class ZFIN(Source):
     # we can investigate doing this line-by-line later
     # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
-        print("Parsing files...")
-        Source.parse(self)
         if (limit is not None):
             print("Only parsing first", limit, "rows of each file")
+        print("Parsing files...")
 
-        self._process_genotype_features(self.genofile, self.outfile, self.graph, limit)
-
-        print("WARN: we are filtering on the wild-type environment data for now")
         self._load_zp_mappings()
-        self._process_g2p(self.phenofile, self.outfile, self.graph, limit)
 
+        self._process_genotype_features(('/').join((self.rawdir,self.files['geno']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
+        self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
 
-        self._process_pubinfo(self.pubfile, self.outfile, self.graph, limit)
+        print("Finished parsing.")
 
         self.load_bindings()
         Assoc().loadObjectProperties(self.graph)
 
-        print("Finished parsing.")
+
+        ##### Write it out #####
 
         filewriter = open(self.outfile, 'w')
         print(self.graph.serialize(format="turtle").decode(), file=filewriter)
@@ -192,6 +194,8 @@ class ZFIN(Source):
 
     def _process_g2p(self, raw, out, g, limit=None):
         '''
+        This module currently filters for only wild-type environments, which clearly excludes application
+        of morpholinos.  Very stringent filter.  To be updated at a later time.
         :param raw:
         :param out:
         :param g:
@@ -277,8 +281,10 @@ class ZFIN(Source):
                 self.graph.add((URIRef(cu.get_uri(pubmed_id)), RDF['type'], Assoc.OWLIND))
                 if (pubmed_id != '' and pubmed_id is not None):
                     self.graph.add((URIRef(cu.get_uri(pub_id)), OWL['sameAs'], URIRef(cu.get_uri(pubmed_id))))
+
                 #build a label for now
                 pub_label = ('; ').join((authors, title, journal, year, vol, pages))
+                #TODO should the label only be added if there is no pubmed mapping?
                 self.graph.add((URIRef(cu.get_uri(pub_id)), RDFS['label'], Literal(pub_label)))
 
                 if (limit is not None and line_counter > limit):
@@ -288,11 +294,11 @@ class ZFIN(Source):
 
 
     def verify(self):
-        status = True
+        status = False
         self._verify(self.outfile)
-        # verify some kind of relationship that should be in the file
+        status = self._verifyowl(self.outfile)
 
-        self._verifyowl(self.outfile)
+        # verify some kind of relationship that should be in the file
         return status
 
     def _map_sextuple_to_phenotype(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
@@ -339,7 +345,8 @@ class ZFIN(Source):
         self.zp_map = {}
         print("Loading ZP-to-EQ mappings")
         line_counter = 0
-        with open(self.zpmapfile, 'r', encoding="utf-8") as csvfile:
+        file=('/').join((self.rawdir,self.files['zpmap']['file']))
+        with open(file, 'r', encoding="utf-8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1

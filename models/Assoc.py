@@ -1,6 +1,7 @@
 __author__ = 'nicole'
 
 from rdflib import Namespace, OWL, RDF, URIRef
+from utils.CurieUtil import CurieUtil
 
 
 class Assoc:
@@ -14,20 +15,21 @@ class Assoc:
         'MONARCH': 'http://www.monarchinitiative.org/MONARCH_',
         'HP': 'http://purl.obolibrary.org/obo/HP_',
         'ECO': 'http://purl.obolibrary.org/obo/ECO_',
-        'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/PMID_',
+        'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/',
         'ISBN-10' : 'http://www.monarchinitiative.org/ISBN_',
         'ISBN-13' : 'http://www.monarchinitiative.org/ISBN_',
         'ISBN-15' : 'http://www.monarchinitiative.org/ISBN_',
         'ISBN' : 'http://www.monarchinitiative.org/ISBN_',
         'RO' : 'http://purl.obolibrary.org/obo/RO_',
+        'GENO' : 'http://purl.obolibrary.org/obo/GENO_',
         'OBO' : 'http://purl.obolibrary.org/obo/',
         'Annotation' : 'http://www.w3.org/ns/oa#Annotation',
         '' : 'http://www.monarchinitiative.org/'  #base
     }
 
     relationships = {
-        'has_disposition':'http://purl.obolibrary.org/obo/GENO_0000208',
-        'has_phenotype':'http://purl.obolibrary.org/obo/RO_0002200'
+        'has_disposition':'GENO:0000208',
+        'has_phenotype':'RO:0002200'
     }
 
     OWLCLASS=OWL['Class']
@@ -58,6 +60,7 @@ class Assoc:
         :param g: a graph
         :return: None
         '''
+        cu = CurieUtil(self.curie_map)
         for k in self.relationships:
-            g.add((URIRef(self.relationships[k]),RDF['type'],self.OWLPROP))
+            g.add((URIRef(cu.get_uri(self.relationships[k])),RDF['type'],self.OWLPROP))
         return
