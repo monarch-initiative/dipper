@@ -6,8 +6,8 @@ from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 
 source_to_class_map={
-    'hpoa' : HPOAnnotations,
-#    'zfin' : ZFIN
+#    'hpoa' : HPOAnnotations,
+    'zfin' : ZFIN
 }
 
 #TODO subset of sources will eventually be configurable on the commandline
@@ -15,10 +15,10 @@ source_to_class_map={
 for source in source_to_class_map.keys():
     mysource = source_to_class_map[source]()
     mysource.fetch()
-    mysource.parse()
-    status = mysource.verify()
-    if status is not True:
-        print('ERROR: Source',source,'did not pass verification tests.')
+    mysource.parse(250)
+#    status = mysource.verify()
+#    if status is not True:
+#        print('ERROR: Source',source,'did not pass verification tests.')
     print('***** Finished with',source,'*****')
 #    mysource.write("out/hpo_raw.rdf")
 #    mysource.write()
