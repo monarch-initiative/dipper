@@ -118,25 +118,27 @@ class Source:
             return True
         #get remote file details
         d = urllib.request.urlopen(remote)
-        last_modified = d.info()['Last-Modified']
-        print("Remote file date:",last_modified)
-        #Thu, 07 Aug 2008 16:20:19 GMT
-        dt_obj = datetime.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
-
         size=d.info()['Content-Length']
 
-        #get local file details
         st = os.stat(local)
         print("Local file date:",datetime.utcfromtimestamp(st[ST_CTIME]))
 
-        #check date on local vs remote file
-        if (dt_obj > datetime.utcfromtimestamp(st[ST_CTIME])):
-            #check if file size is different
-            if (st[ST_SIZE] != size):
-                print("Newer file exists on remote server")
-                return True
-            else:
-                print("Remote file has same filesize--will not download")
+        last_modified = d.info()['Last-Modified']
+        if (last_modified is not None):
+            #Thu, 07 Aug 2008 16:20:19 GMT
+            dt_obj = datetime.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+            #get local file details
+
+            #check date on local vs remote file
+            if (dt_obj > datetime.utcfromtimestamp(st[ST_CTIME])):
+                #check if file size is different
+                if (st[ST_SIZE] != size):
+                    print("Newer file exists on remote server")
+                    return True
+                else:
+                    print("Remote file has same filesize--will not download")
+        elif (st[ST_SIZE] != size):
+            print("Object on server is same size as local file; assuming unchanged")
         return False
 
     def fetch_from_url(self,remotefile,localfile):
