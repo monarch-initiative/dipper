@@ -5,6 +5,7 @@ from rdflib.namespace import RDFS, DC
 
 
 from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
 from models.Assoc import Assoc
 
 class Genotype():
@@ -38,6 +39,7 @@ class Genotype():
     def __init__(self, genotype_id, genotype_label, curie_map):
 
         self.curie_map.update(curie_map)
+        self.gu = GraphUtils(self.curie_map)
         self.cu = CurieUtil(self.curie_map)
 
         self.g = Graph()
@@ -90,27 +92,7 @@ class Genotype():
 
 
     def addNode(self, id, label, type=None, description=None):
-        '''
-        Any node added to the graph will get at least 3 triples:
-        *(node,type,owl:Class) and
-        *(node,label,literal(label))
-        *if a type is added, then the node will be an OWL:subclassOf that the type
-        *if a description is provided, it will also get added as a dc:description
-        :param id:
-        :param label:
-        :param type:
-        :param description:
-        :return:
-        '''
-        n = URIRef(self.cu.get_uri(id))
-
-        self.g.add((n, RDF['type'], Assoc.OWLCLASS))
-        self.g.add((n, RDFS['label'], Literal(label)))
-        if (type is not None):
-            t = URIRef(self.cu.get_uri(type))
-            self.g.add((n, Assoc.OWLSUBCLASS, t))
-        if (description is not None):
-            self.g.add((n, DC['description'], Literal(description)))
+        self.gu.addClassToGraph(self.g,id,label,type,description)
         return
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
