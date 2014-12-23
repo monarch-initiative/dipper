@@ -4,5 +4,4 @@
 **  ./raw
 * The basic verification step requires (this can be turned off)
 [owltools](https://code.google.com/p/owltools/wiki/InstallOWLTools) be available on your path
-* Please see the wiki documentation for now
 

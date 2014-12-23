@@ -6,12 +6,15 @@ import config
 from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 from sources.OMIM import OMIM
+from sources.BioGrid import BioGrid
 
 
 source_to_class_map={
 #    'hpoa' : HPOAnnotations,
 #    'zfin' : ZFIN,
-    'omim' : OMIM
+#    'omim' : OMIM,
+    'biogrid' : BioGrid,
+
 }
 
 #load configuration parameters
@@ -24,10 +27,10 @@ for source in source_to_class_map.keys():
     mysource = source_to_class_map[source]()
     mysource.fetch()
     mysource.parse(100)
-    status = mysource.verify()
-    if status is not True:
-        print('ERROR: Source',source,'did not pass verification tests.')
-    print('***** Finished with',source,'*****')
+#    status = mysource.verify()
+#    if status is not True:
+#        print('ERROR: Source',source,'did not pass verification tests.')
+#    print('***** Finished with',source,'*****')
 print("All done.")
 
 #TODO command-line args:
