@@ -30,6 +30,9 @@ class D2PAssoc(Assoc):
         self.curie_map = curie_map
         self.cu = CurieUtil(self.curie_map)
 
+        self.setSubject(entity_id)
+        self.setObject(phenotype_id)
+
         return
 
     def set_relationship(self, rel):
@@ -46,44 +49,13 @@ class D2PAssoc(Assoc):
         :return:
         '''
         namespaces = self.curie_map
-        #FIXME generalize for outside the monarch namespace?
+
+        #add the basic association nodes
+        self.addAssociationToGraph(g)
+
+        #add the specific attributes for this association type
         n = Namespace(namespaces['MONARCH'])
         node = n[self.annot_id]
-        s = URIRef(self.cu.get_uri(self.entity_id))
-        p = URIRef(self.rel)
-        o = URIRef(self.cu.get_uri(self.phenotype_id))
-
-        if (re.compile('http').match(self.pub_id)):
-            source = URIRef(self.pub_id)
-        else: (re.compile('PMID').match(self.pub_id))
-
-        evidence = URIRef(self.cu.get_uri(self.evidence))
-        frequency = onset = None
-
-        g.add((s, RDF['type'], self.OWLCLASS))
-        g.add((o, RDF['type'], self.OWLCLASS))
-        g.add((s, p, o))
-
-        g.add((node, RDF['type'], URIRef(self.cu.get_uri('Annotation:'))))
-        g.add((node, self.BASE['hasSubject'], s))
-        g.add((node, self.BASE['hasObject'], o))
-
-        #this is handling the occasional messy pubs that are sometimes literals
-        if (self.pub_id.strip() != ''):
-            if (source != URIRef('[]')):
-                g.add((node, DC['source'], source))
-                g.add((source, RDF['type'], self.OWLIND))
-            else:
-                print("WARN: source as a literal -- is this ok?")
-                g.add((node, DC['source'], Literal(self.pub_id)))
-            #            else:
-            #                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
-
-        if (self.evidence is None or self.evidence.strip() == ''):
-            print("WARN:", self.entity_id, '+', self.phenotype_id, 'has no evidence code')
-        else:
-            g.add((node, DC['evidence'], evidence))
-
         if (self.frequency is not None and self.frequency != ''):
             #FIXME what is the real predicate here?
             g.add((node, self.BASE['frequencyOfPhenotype'], Literal(self.frequency)))

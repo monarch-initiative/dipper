@@ -85,7 +85,6 @@ class HPOAnnotations(Source):
             # zfin versions are set by the date of download.
             st = os.stat(('/').join((self.rawdir,file['file'])))
 
-        st = os.stat(self.rawfile)
         filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
         self.scrub()
@@ -105,22 +104,22 @@ class HPOAnnotations(Source):
         * revise errors in identifiers for some OMIM and PMIDs
         :return: None
         '''
-
         # scrub file of the oddities...lots of publication rewriting
+        f = ('/').join((self.rawdir,self.files['annot']['file']))
         print('INFO: scrubbing PubMed:12345 --> PMID:12345')
-        pysed.replace("PubMed", 'PMID', self.rawfile)
+        pysed.replace("PubMed", 'PMID', f)
 
         print('INFO: scrubbing pmid:12345 --> PMID:12345')
-        pysed.replace("pmid", 'PMID', self.rawfile)
+        pysed.replace("pmid", 'PMID', f)
 
         print('INFO: scrubbing PMID12345 --> PMID:12345')
-        pysed.replace("PMID([0-9][0-9]*)", 'PMID:\\1', self.rawfile)
+        pysed.replace("PMID([0-9][0-9]*)", 'PMID:\\1', f)
 
         print('INFO: scrubbing MIM12345 --> OMIM:12345')
-        pysed.replace('MIM([0-9][0-9]*)', 'OMIM:\\1', self.rawfile)
+        pysed.replace('MIM([0-9][0-9]*)', 'OMIM:\\1', f)
 
         print('INFO: scrubbing MIM:12345 --> OMIM:12345')
-        pysed.replace(";MIM",";OMIM", self.rawfile)
+        pysed.replace(";MIM",";OMIM", f)
         return
 
     def load_bindings(self):

@@ -1,7 +1,9 @@
 __author__ = 'nicole'
 
-from rdflib import Namespace, OWL, RDF, URIRef
+from rdflib import Namespace, URIRef, Literal
+from rdflib.namespace import RDF,DC,OWL
 from utils.CurieUtil import CurieUtil
+import re
 
 
 class Assoc:
@@ -51,6 +53,61 @@ class Assoc:
     def createAssociationNode(self, g):
         #TODO make a general association object following our pattern
 
+        return
+
+    def addAssociationToGraph(self,g):
+        namespaces = self.curie_map
+
+        #first, add the direct triple
+        s = URIRef(self.cu.get_uri(self.sub))
+        p = URIRef(self.cu.get_uri(self.rel))
+        o = URIRef(self.cu.get_uri(self.obj))
+
+        g.add((s, RDF['type'], self.OWLCLASS))
+        g.add((o, RDF['type'], self.OWLCLASS))
+        g.add((s, p, o))
+
+        #now, create the reified relationship with our annotation pattern
+        n = Namespace(namespaces['MONARCH'])
+        node = n[self.annot_id]
+        g.add((node, RDF['type'], URIRef(self.cu.get_uri('Annotation:'))))
+        g.add((node, self.BASE['hasSubject'], s))
+        g.add((node, self.BASE['hasObject'], o))
+
+        #this is handling the occasional messy pubs that are sometimes literals
+        if (re.compile('http').match(self.pub_id)):
+            source = URIRef(self.pub_id)
+        else:
+            source = URIRef(self.cu.get_uri(self.pub_id))
+
+        evidence = URIRef(self.cu.get_uri(self.evidence))
+        if (self.pub_id.strip() != ''):
+            if (source != URIRef('[]')):
+                g.add((node, DC['source'], source))
+                g.add((source, RDF['type'], self.OWLIND))
+            else:
+                print("WARN: source as a literal -- is this ok?")
+                g.add((node, DC['source'], Literal(self.pub_id)))
+            #            else:
+            #                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
+
+        if (self.evidence is None or self.evidence.strip() == ''):
+            print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
+        else:
+            g.add((node, DC['evidence'], evidence))
+
+        return
+
+    def setSubject(self,identifier):
+        self.sub = identifier
+        return
+
+    def setObject(self,identifier):
+        self.obj = identifier
+        return
+
+    def setRelationship(self,identifier):
+        self.rel = identifier
         return
 
     def loadObjectProperties(self,g):
