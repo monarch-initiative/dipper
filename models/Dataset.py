@@ -61,6 +61,9 @@ class Dataset:
         self.graph.add((self.identifier, DCTERMS['issued'], Literal(date_issued)))
         self.graph.add((self.version, DCTERMS['isVersionOf'], self.identifier))
         self.graph.add((self.version, PAV['version'], Literal(version_id)))
+
+        print("INFO: setting version to",version_id)
+
         return
 
     def setFileAccessUrl(self, url):
