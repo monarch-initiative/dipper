@@ -26,6 +26,9 @@ class G2PAssoc(Assoc):
         self.rel = self.relationships['has_phenotype']  # default to has_phenotype
         self.curie_map = curie_map
         self.cu = CurieUtil(self.curie_map)
+
+        self.setSubject(entity_id)
+        self.setObject(phenotype_id)
         return
 
     def set_relationship(self, rel):
@@ -37,7 +40,6 @@ class G2PAssoc(Assoc):
         self.end_stage_id = end_stage_id
         return
 
-    #Todo this should be generalized into the Assoc superclass
     def addAssociationNodeToGraph(self, g):
         '''
         The reified relationship between a genotype (or any genotype part) and a phenotype
@@ -49,43 +51,7 @@ class G2PAssoc(Assoc):
         :return:
         '''
 
-        namespaces = self.curie_map
-        n = Namespace(namespaces['MONARCH'])
-        node = n[self.annot_id]
-        s = URIRef(self.cu.get_uri(self.entity_id))
-        p = URIRef(self.rel)
-        # TODO generalize mapping curie to namespace
-        o = URIRef(self.cu.get_uri(self.phenotype_id))
-
-        if (re.compile('http').match(self.pub_id)):
-            source = URIRef(self.pub_id)
-        else:
-            source = URIRef(self.cu.get_uri(self.pub_id))
-        evidence = URIRef(self.cu.get_uri(self.evidence))
-        frequency = onset = None
-
-        g.add((s, RDF['type'], self.OWLCLASS))
-        g.add((o, RDF['type'], self.OWLCLASS))
-        g.add((s, p, o))
-
-        g.add((node, RDF['type'], URIRef(self.cu.get_uri('Annotation:'))))
-        g.add((node, self.BASE['hasSubject'], s))
-        g.add((node, self.BASE['hasObject'], o))
-
-        if (self.pub_id.strip() != ''):
-            if (source != URIRef('[]')):
-                g.add((node, DC['source'], source))
-                g.add((source, RDF['type'], self.OWLIND))
-            else:
-                print("WARN: source as a literal -- is this ok?")
-                g.add((node, DC['source'], Literal(self.pub_id)))
-            #            else:
-            #                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
-
-        if (self.evidence.strip() == ''):
-            print("WARN:", self.entity_id, '+', self.phenotype_id, 'has no evidence code')
-        else:
-            g.add((node, DC['evidence'], evidence))
+        self.addAssociationToGraph(g)
 
         #TODO add staging information here
         #if (self.start_stage_id is not None):
