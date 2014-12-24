@@ -49,7 +49,7 @@ class BioGrid(Source):
         self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/')
 
         #data-source specific warnings (will be removed when issues are cleared)
-
+        print("WARN: several MI experimental codes do not exactly map to ECO; using approximations.")
         return
 
     def fetch(self):
@@ -152,6 +152,7 @@ class BioGrid(Source):
                  taxid_a, taxid_b, interaction_type,
                  source_db, interaction_id, confidence_val) = line.split('\t')
 
+                #TODO proper testing/catching of these search/match methods
                 #get the actual gene ids, typically formated like: gene/locuslink:351|BIOGRID:106848
                 gene_a='NCBIGene:'+re.search('locuslink\:(\d+)\|',interactor_a).groups()[0]
                 gene_b='NCBIGene:'+re.search('locuslink\:(\d+)\|',interactor_b).groups()[0]
@@ -164,18 +165,13 @@ class BioGrid(Source):
                 #scrub pubmed-->PMID prefix
                 pub_id = re.sub('pubmed','PMID',pub_id)
 
+                #get the method, and convert to evidence code
                 det_code=re.search('MI:\d+',detection_method).group()
                 evidence=self._map_MI_to_ECO(det_code)
 
                 assoc = InteractionAssoc(interaction_id,gene_a,gene_b,pub_id,evidence,self.curie_map)
                 assoc.setRelationship(rel)
                 assoc.addInteractionAssociationToGraph(self.graph)
-
-#                print(interaction_id,gene_a,gene_b, int_type,pub_id)
-
-#                gene_a = 'NCBIGene:'+gene_a
-#                gene_b = 'NCBIGene:'+gene_b
-#                line=line.decode().strip()
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -202,13 +198,13 @@ class BioGrid(Source):
         return ro_id
 
     def _map_MI_to_ECO(self,mi_id):
-        eco_id = 'ECO:0000006' #experimental evidence
+        eco_id = 'ECO:0000006' #default to experimental evidence
         mi_to_eco_map = {
             'MI:0018' : 'ECO:0000068', #yeast two-hybrid
             'MI:0004' : 'ECO:0000079', #affinity chromatography
             'MI:0047' : 'ECO:0000076', #far western blotting
             'MI:0055' : 'ECO:0000021', #should be FRET, but using physical_interaction FIXME
-            'MI:0090' : 'ECO:0000012', #desired protein complementation, using functional complementation
+            'MI:0090' : 'ECO:0000012', #desired: protein complementation, using: functional complementation
             'MI:0096' : 'ECO:0000085', #desired: pull down, using: immunoprecipitation
             'MI:0114' : 'ECO:0000324', #desired: x-ray crystallography, using: imaging assay
             'MI:0254' : 'ECO:0000011', #desired: genetic interference, using: genetic interaction evidence
