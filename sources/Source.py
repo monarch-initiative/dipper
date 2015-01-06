@@ -2,7 +2,7 @@ import psycopg2
 
 __author__ = 'nicole'
 
-from rdflib import BNode, ConjunctiveGraph, Literal, RDF, Graph
+from rdflib import BNode, ConjunctiveGraph, Literal, RDF, Graph, Namespace
 from rdflib.namespace import FOAF, DC, RDFS, OWL
 
 import urllib, csv, os, time
@@ -25,6 +25,9 @@ class Source:
     then parse() it into a graph.  The graph will then be written out to
     a single self.name().ttl file.
     '''
+
+    namespaces = {}
+
     def __init__(self,args=[]):
         self.name = args
         self.path = ""
@@ -55,8 +58,10 @@ class Source:
         return
 
     def load_bindings(self):
-        #should each source provide it's own binding dictionary?
-        #or should it be a universal one, like the current context file?
+        self.load_core_bindings()
+        for k in self.namespaces.keys():
+            v = self.namespaces[k]
+            self.graph.bind(k, Namespace(v))
         return
 
     def fetch(self):

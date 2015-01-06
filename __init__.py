@@ -16,7 +16,6 @@ source_to_class_map={
 #    'omim' : OMIM,
 #    'biogrid' : BioGrid,
     'mgi' : MGI
-
 }
 
 #load configuration parameters
@@ -26,6 +25,8 @@ source_to_class_map={
 #TODO subset of sources will eventually be configurable on the commandline
 #iterate through all the sources
 for source in source_to_class_map.keys():
+    print()
+    print("*******",source,"*******")
     mysource = source_to_class_map[source]()
     mysource.fetch()
     mysource.parse(100)
@@ -33,6 +34,7 @@ for source in source_to_class_map.keys():
 #    if status is not True:
 #        print('ERROR: Source',source,'did not pass verification tests.')
 #    print('***** Finished with',source,'*****')
+
 print("All done.")
 
 #TODO command-line args:

@@ -227,6 +227,7 @@ class OMIM(Source):
         print("INFO: Obtaining OMIM record identifiers")
         line_counter=0
         omimfile=('/').join((self.rawdir,self.files['all']['file']))
+        print("FILE:",omimfile)
         with gzip.open(omimfile, 'rb') as f:
             for line in f:
                 line=line.decode().strip()

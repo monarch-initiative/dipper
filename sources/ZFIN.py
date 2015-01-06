@@ -48,13 +48,6 @@ class ZFIN(Source):
 
         return
 
-    def load_bindings(self):
-        self.load_core_bindings()
-        for k in self.namespaces.keys():
-            v = self.namespaces[k]
-            self.graph.bind(k, Namespace(v))
-
-        return
 
     def fetch(self):
 
