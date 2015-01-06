@@ -25,14 +25,48 @@ class Genotype():
     #special genotype parts mapped to their GENO and SO classes that we explicitly reference here
     genoparts = {
         'intrinsic_genotype' : 'GENO:0000000',
-        'allele_base_type' : 'GENO:0000008',
-        'gene_base_type' : 'SO:0000704'
+        'effective_genotype' : 'GENO:0000525',
+        'genomic_background' : 'GENO:0000010',
+        'genomic_variation_complement' : 'GENO:0000009',
+        'variant_single_locus_complement' : 'GENO:0000030',
+        'alternate_locus' : 'GENO:0000512',
+        'allele' : 'GENO:0000008',
+        'gene' : 'SO:0000704',  #GENO:0000014 ?
+        'QTL' : 'SO:0000771',
+        'transgene' : 'SO:0000902',
+        'pseudogene' : 'SO:0000336',
+        'cytogenetic marker' : 'SO:0000341',  #chr band
+        'sequence_feature' : 'SO:0000110',
+        'sequence_alteration' : 'SO:0001059',
+        'insertion' : 'SO:0000667',
+        'deletion' : 'SO:0000159',
+        'substitution' : 'SO:1000002',
+        'duplication' : 'SO:1000035',
+        'translocation' : 'SO:0000199',
+        'inversion' : 'SO:1000036',
+        'tandem_duplication' : 'SO:1000173',
+        'point_mutation' : 'SO:1000008'
     }
 
-    #relationships
     relationship = {
         'is_mutant_of' : 'GENO:0000440',
-        'derives_from' : 'RO:0001000'
+        'derives_from' : 'RO:0001000',
+        'has_alternate_part' : 'GENO:0000382',
+        'has_reference_part' : 'GENO:0000385',
+        'in_taxon' : 'RO:0000216',
+        'has_zygosity' : 'GENO:0000608',   #what exactly "has zygosity"?  is it the allele?  genotype?
+        'is_sequence_variant_instance_of' : 'GENO:0000408',
+    }
+
+    zygosity = {
+        'homoplasmic' : 'GENO:0000602',
+        'heterozygous' : 'GENO:0000135',
+        'indeterminate' : 'GENO:0000137',
+        'heteroplasmic' : 'GENO:0000603',
+        'hemizygous-y' : 'GENO:0000604',
+        'hemizygous-x' : 'GENO:0000605',
+        'homozygous' : 'GENO:0000136',
+        'hemizygous' : 'GENO:0000606'
     }
 
 
@@ -65,14 +99,14 @@ class Genotype():
         :return:
         '''
         if (allele_type is None):
-            allele_type = self.genoparts['allele_base_type']
+            allele_type = self.genoparts['allele']
         self.addNode(allele_id, allele_label, allele_type, allele_description)
 
         return
 
     def addGene(self, gene_id, gene_label, gene_type=None, gene_description=None):
         if (gene_type is None):
-            gene_type = self.genoparts['gene_base_type']
+            gene_type = self.genoparts['gene']
         self.addNode(gene_id, gene_label, gene_type, gene_description)
 
         return
