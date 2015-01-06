@@ -7,13 +7,15 @@ from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 from sources.OMIM import OMIM
 from sources.BioGrid import BioGrid
+from sources.MGI import MGI
 
 
 source_to_class_map={
 #    'hpoa' : HPOAnnotations,
 #    'zfin' : ZFIN,
 #    'omim' : OMIM,
-    'biogrid' : BioGrid,
+#    'biogrid' : BioGrid,
+    'mgi' : MGI
 
 }
 
