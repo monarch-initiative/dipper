@@ -84,9 +84,11 @@ class MGI(Source):
         cxn = config.get_config()['dbauth']['mgi']
         cxn.update({'host' : 'adhoc.informatics.jax.org', 'database' : 'mgd', 'port' : 5432 })
 
+        self.dataset.setFileAccessUrl(('').join(('jdbc:postgresql://',cxn['host'],':',str(cxn['port']),'/',cxn['database'])))
+
         #process the tables
-        #self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        self.fetch_from_pgdb(self.tables,cxn)
+        self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
+        #self.fetch_from_pgdb(self.tables,cxn)
 
         datestamp=ver=None
         #get the resource version information from table mgi_dbinfo, already fetched above

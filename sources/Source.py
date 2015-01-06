@@ -191,7 +191,7 @@ class Source:
                 self._getcols(cur,t)
                 query=(' ').join(("SELECT * FROM",t))
                 if (limit is not None):
-                    query=(' ').join((query,"LIMIT",limit))
+                    query=(' ').join((query,"LIMIT",str(limit)))
                 print("COMMAND:",query)
                 cur.execute(query)
 
