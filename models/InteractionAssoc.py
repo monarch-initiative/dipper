@@ -35,7 +35,6 @@ class InteractionAssoc(Assoc):
 
         return
 
-
     def addInteractionAssociationToGraph(self,g):
 
         self.addAssociationToGraph(g)

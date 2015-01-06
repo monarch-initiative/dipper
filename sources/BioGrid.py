@@ -94,6 +94,7 @@ class BioGrid(Source):
 
         self.load_bindings()
 
+
         ##### Write it out #####
         filewriter = open(self.outfile, 'w')
         self.load_bindings()
@@ -137,7 +138,7 @@ class BioGrid(Source):
         myzip = ZipFile(f,'r')
         #assume that the first entry is the item
         fname=myzip.namelist()[0]
-
+        matchcounter=0
         with myzip.open(fname,'r') as csvfile:
             for line in csvfile:
                 #skip comment lines
@@ -152,6 +153,16 @@ class BioGrid(Source):
                  taxid_a, taxid_b, interaction_type,
                  source_db, interaction_id, confidence_val) = line.split('\t')
 
+                #TODO remove these filters, or parameterize them
+                #for testing, keep only our favorite animals
+                #taxids = [9606,10090,10116,7227,7955,6239,8355]
+                taxids = [9606] #human
+                if (not (taxids.__contains__(int(re.sub('taxid:','', taxid_a.rstrip()))) or
+                    taxids.__contains__(int(re.sub('taxid:','', taxid_b.rstrip()))) )):
+                    continue
+                else:
+                    matchcounter += 1
+
                 #TODO proper testing/catching of these search/match methods
                 #get the actual gene ids, typically formated like: gene/locuslink:351|BIOGRID:106848
                 gene_a='NCBIGene:'+re.search('locuslink\:(\d+)\|',interactor_a).groups()[0]
@@ -164,6 +175,8 @@ class BioGrid(Source):
 
                 #scrub pubmed-->PMID prefix
                 pub_id = re.sub('pubmed','PMID',pub_id)
+                #remove bogus whitespace
+                pub_id = pub_id.strip()
 
                 #get the method, and convert to evidence code
                 det_code=re.search('MI:\d+',detection_method).group()
@@ -171,12 +184,13 @@ class BioGrid(Source):
 
                 assoc = InteractionAssoc(interaction_id,gene_a,gene_b,pub_id,evidence,self.curie_map)
                 assoc.setRelationship(rel)
+                assoc.loadObjectProperties(self.graph)
                 assoc.addInteractionAssociationToGraph(self.graph)
-
                 if (limit is not None and line_counter > limit):
                     break
 
         myzip.close()
+        print("INFO: found",str(matchcounter),"matching rows")
 
         return
 
@@ -212,7 +226,7 @@ class BioGrid(Source):
             'MI:0415' : 'ECO:0000005', #desired: enzymatic study, using: enzyme assay evidence
             'MI:0428' : 'ECO:0000324', #imaging
             'MI:0686' : 'ECO:0000006', #desired: unspecified, using: experimental evidence
-#            'MI:1313' : None #BioID????
+            'MI:1313' : 'ECO:0000006'  #None?
         }
         if (mi_id in mi_to_eco_map):
             eco_id = mi_to_eco_map.get(mi_id)
