@@ -109,7 +109,7 @@ class Source:
         #FIXME for now, this will do md5.  probably not the best long-term solution
         #note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
         byte_string = long_string.encode("utf-8")
-        return hashlib.md5(byte_string).hexdigest()
+        return (':').join(('MONARCH',hashlib.md5(byte_string).hexdigest()))
 
 
     def checkIfRemoteIsNewer(self,remote,local):

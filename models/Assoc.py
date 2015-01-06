@@ -68,8 +68,7 @@ class Assoc:
         g.add((s, p, o))
 
         #now, create the reified relationship with our annotation pattern
-        n = Namespace(namespaces['MONARCH'])
-        node = n[self.annot_id]
+        node = URIRef(self.cu.get_uri(self.annot_id))
         g.add((node, RDF['type'], URIRef(self.cu.get_uri('Annotation:'))))
         g.add((node, self.BASE['hasSubject'], s))
         g.add((node, self.BASE['hasObject'], o))
