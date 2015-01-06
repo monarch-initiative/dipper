@@ -1,3 +1,5 @@
+import psycopg2
+
 __author__ = 'nicole'
 
 from rdflib import BNode, ConjunctiveGraph, Literal, RDF, Graph
@@ -29,7 +31,12 @@ class Source:
         self.graph = ConjunctiveGraph()
         self.triple_count = 0
         self.outdir = 'out'
-        self.rawdir = 'raw'
+        self.rawdir = 'raw/'+self.name
+
+        #if raw data dir doesn't exist, create it
+        if not os.path.exists(self.rawdir):
+            print("INFO: creating raw directory for resource "+self.name)
+            os.makedirs(self.rawdir)
 
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
         print("Setting outfile to", self.outfile)
@@ -165,6 +172,54 @@ class Source:
         print("file created:", time.asctime(time.localtime(st[ST_CTIME])))
         return
 
+
+    def fetch_from_pgdb(self,tables,cxn,limit=None):
+        '''
+        Will fetch all Postgres tables from the specified database in the cxn connection parameters.
+        This will save them to a local file named the same as the table, in tab-delimited format, including a header.
+        :param tables: Names of tables to fetch
+        :param cxn: database connection details
+        :param limit: A max row count to fetch for each table
+        :return: None
+        '''
+        try:
+            con = None
+            con = psycopg2.connect(host=cxn['host'],database=cxn['database'],port=cxn['port'], user=cxn['user'], password=cxn['password'])
+            cur = con.cursor()
+            for t in self.tables:
+                print("Fetching data from table",t)
+                self._getcols(cur,t)
+                query=(' ').join(("SELECT * FROM",t))
+                if (limit is not None):
+                    query=(' ').join((query,"LIMIT",limit))
+                print("COMMAND:",query)
+                cur.execute(query)
+
+                outfile=('/').join((self.rawdir,t))
+
+                #check local copy.  assume that if the # rows are the same, that the table is the same
+                #TODO may want to fix this assumption
+                filerowcount=-1
+                if os.path.exists(outfile):
+                    #get rows in the file
+                    filerowcount=self.file_len(outfile)
+                    print("INFO: rows in local file: ",filerowcount)
+
+                #get rows in the table
+                tablerowcount=cur.rowcount
+                if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
+                    print("INFO: local data different from remote; fetching.")
+                    #download the file
+                    outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
+                    with open(outfile, 'w') as f:
+                        cur.copy_expert(outputquery, f)
+                else:
+                    print("INFO: local data same as remote; reusing.")
+
+        finally:
+            if con:
+                con.close()
+        return
 
     def verify(self):
         '''
