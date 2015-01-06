@@ -42,10 +42,10 @@ class Source:
             os.makedirs(self.rawdir)
 
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
-        print("Setting outfile to", self.outfile)
+        print("INFO: Setting outfile to", self.outfile)
 
         self.datasetfile = ('/').join((self.outdir,self.name + '_dataset.ttl'))
-        print("Setting dataset file to", self.datasetfile)
+        print("INFO: Setting dataset file to", self.datasetfile)
 
         return
 
@@ -88,7 +88,7 @@ class Source:
         '''
         if (file is not None):
             filewriter = open(file, 'w')
-            print("Writing raw triples to ",file)
+            print("INFO: Writing raw triples to ",file)
             print(self.graph.serialize(format="rdfxml").decode(), file=filewriter)
             filewriter.close()
         else:
@@ -122,18 +122,18 @@ class Source:
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
         '''
-        print("Checking if remote file is newer...")
+        print("INFO: Checking if remote file is newer...")
         #check if local file exists
         #if no local file, then remote is newer
         if (not os.path.exists(local)):
-            print("File does not exist locally")
+            print("INFO: File does not exist locally")
             return True
         #get remote file details
         d = urllib.request.urlopen(remote)
         size=d.info()['Content-Length']
 
         st = os.stat(local)
-        print("Local file date:",datetime.utcfromtimestamp(st[ST_CTIME]))
+        print("INFO: Local file date:",datetime.utcfromtimestamp(st[ST_CTIME]))
 
         last_modified = d.info()['Last-Modified']
         if (last_modified is not None):
@@ -145,12 +145,12 @@ class Source:
             if (dt_obj > datetime.utcfromtimestamp(st[ST_CTIME])):
                 #check if file size is different
                 if (st[ST_SIZE] != size):
-                    print("Newer file exists on remote server")
+                    print("INFO: Newer file exists on remote server")
                     return True
                 else:
-                    print("Remote file has same filesize--will not download")
+                    print("INFO: Remote file has same filesize--will not download")
         elif (st[ST_SIZE] != size):
-            print("Object on server is same size as local file; assuming unchanged")
+            print("INFO: Object on server is same size as local file; assuming unchanged")
         return False
 
     def fetch_from_url(self,remotefile,localfile):
@@ -164,17 +164,17 @@ class Source:
         :return: None
         '''
         if (self.checkIfRemoteIsNewer(remotefile, localfile)):
-            print("Fetching from ", remotefile)
+            print("INFO: Fetching from ", remotefile)
             # TODO url verification, etc
             annotation_file = urllib.request
             annotation_file.urlretrieve(remotefile, localfile)
-            print("Finished.  Wrote file to", localfile)
+            print("INFO: Finished.  Wrote file to", localfile)
         else:
-            print("Using existing file.")
+            print("INFO: Using existing file", localfile)
 
         st = os.stat(localfile)
-        print("file size:", st[ST_SIZE])
-        print("file created:", time.asctime(time.localtime(st[ST_CTIME])))
+        print("INFO: file size:", st[ST_SIZE])
+        print("INFO: file created:", time.asctime(time.localtime(st[ST_CTIME])))
         return
 
 
@@ -192,7 +192,7 @@ class Source:
             con = psycopg2.connect(host=cxn['host'],database=cxn['database'],port=cxn['port'], user=cxn['user'], password=cxn['password'])
             cur = con.cursor()
             for t in self.tables:
-                print("Fetching data from table",t)
+                print("INFO: Fetching data from table",t)
                 self._getcols(cur,t)
                 query=(' ').join(("SELECT * FROM",t))
                 if (limit is not None):
