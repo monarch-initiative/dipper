@@ -154,14 +154,15 @@ class BioGrid(Source):
                  source_db, interaction_id, confidence_val) = line.split('\t')
 
                 #TODO remove these filters, or parameterize them
-                #for testing, keep only our favorite animals
-                #taxids = [9606,10090,10116,7227,7955,6239,8355]
-                taxids = [9606] #human
-                if (not (taxids.__contains__(int(re.sub('taxid:','', taxid_a.rstrip()))) or
-                    taxids.__contains__(int(re.sub('taxid:','', taxid_b.rstrip()))) )):
-                    continue
-                else:
-                    matchcounter += 1
+                #uncomment the following codeblock if you want to filter based on taxid
+                #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
+                #taxids = [9606] #human
+                #if (not (taxids.__contains__(int(re.sub('taxid:','', taxid_a.rstrip()))) or
+                #    taxids.__contains__(int(re.sub('taxid:','', taxid_b.rstrip()))) )):
+                #    continue
+                #else:
+                #    matchcounter += 1
+
 
                 #TODO proper testing/catching of these search/match methods
                 #get the actual gene ids, typically formated like: gene/locuslink:351|BIOGRID:106848
@@ -182,7 +183,11 @@ class BioGrid(Source):
                 det_code=re.search('MI:\d+',detection_method).group()
                 evidence=self._map_MI_to_ECO(det_code)
 
-                assoc = InteractionAssoc(interaction_id,gene_a,gene_b,pub_id,evidence,self.curie_map)
+                #note that the interaction_id is some kind of internal biogrid identifier that does not
+                #map to a public URI.  we will construct a monarch identifier from this
+                assoc_id = self.make_id(interaction_id)
+
+                assoc = InteractionAssoc(assoc_id,gene_a,gene_b,pub_id,evidence,self.curie_map)
                 assoc.setRelationship(rel)
                 assoc.loadObjectProperties(self.graph)
                 assoc.addInteractionAssociationToGraph(self.graph)
@@ -190,7 +195,7 @@ class BioGrid(Source):
                     break
 
         myzip.close()
-        print("INFO: found",str(matchcounter),"matching rows")
+        #print("INFO: found",str(matchcounter),"matching rows")  #for testing
 
         return
 
