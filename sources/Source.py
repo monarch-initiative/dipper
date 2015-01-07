@@ -27,6 +27,7 @@ class Source:
     '''
 
     namespaces = {}
+    files = {}
 
     def __init__(self,args=[]):
         self.name = args
@@ -152,6 +153,27 @@ class Source:
         elif (st[ST_SIZE] != size):
             print("INFO: Object on server is same size as local file; assuming unchanged")
         return False
+
+    def get_files(self):
+        '''
+        Given a set of files for this source, it will go fetch them, and add
+        set a default version by date.  If you need to set the version number
+        by another method, then it can be set again.
+        :return:
+        '''
+
+        for f in self.files.keys():
+            file = self.files.get(f)
+            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.dataset.setFileAccessUrl(file['url'])
+
+            st = os.stat(('/').join((self.rawdir,file['file'])))
+
+        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+
+        self.dataset.setVersion(filedate)
+
+        return
 
     def fetch_from_url(self,remotefile,localfile):
         '''
