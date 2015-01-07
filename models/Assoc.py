@@ -74,13 +74,14 @@ class Assoc:
         g.add((node, self.BASE['hasObject'], o))
 
         #this is handling the occasional messy pubs that are sometimes literals
-        if (re.compile('http').match(self.pub_id)):
-            source = URIRef(self.pub_id)
-        else:
-            source = URIRef(self.cu.get_uri(self.pub_id))
+        if (self.pub_id is not None):
+            if (re.compile('http').match(self.pub_id)):
+                source = URIRef(self.pub_id)
+            else:
+                source = URIRef(self.cu.get_uri(self.pub_id))
 
         evidence = URIRef(self.cu.get_uri(self.evidence))
-        if (self.pub_id.strip() != ''):
+        if (self.pub_id is not None and self.pub_id.strip() != ''):
             if (source != URIRef('[]')):
                 g.add((node, DC['source'], source))
                 g.add((source, RDF['type'], self.OWLIND))
