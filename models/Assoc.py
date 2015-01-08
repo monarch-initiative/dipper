@@ -37,6 +37,7 @@ class Assoc:
         'replaced_by' : 'IAO:0100001',
         'consider' : 'OIO:consider',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
+        'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
         'definition' : 'IAO:0000115'
     }
 
