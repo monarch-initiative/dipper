@@ -55,7 +55,6 @@ class Panther(Source):
         'DATA' : 'http://purl.obolibrary.org/DATA_',
     }
 
-
     def __init__(self,args=[]):
         Source.__init__(self, 'panther')
 
@@ -66,7 +65,6 @@ class Panther(Source):
         self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships', 'http://pantherdb.org/')
 
         #data-source specific warnings (will be removed when issues are cleared)
-
 
         return
 
@@ -144,7 +142,7 @@ class Panther(Source):
 
             #assume that the first entry is the item
             fname=mytar.getmembers()[0]
-            print("INFO: Parsing",fname)
+            print("INFO: Parsing",fname.name)
             with mytar.extractfile(fname) as csvfile:
                 for line in csvfile:
                     #skip comment lines
@@ -155,35 +153,41 @@ class Panther(Source):
                     line=line.decode().strip()
                     #print(line)
 
+                    #parse each row
                     # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6	LDO	Euarchontoglires	PTHR15964
-
                     (a, b, orthology_class, ancestor_taxon,panther_id) = line.split('\t')
                     (species_a,gene_a,protein_a) = a.split('|')
                     (species_b,gene_b,protein_b) = b.split('|')
 
-                    gene_a = re.sub('=',':',gene_a)
-                    gene_b = re.sub('=',':',gene_b)
-
-                    gene_a = self._clean_up_gene_id(gene_a,species_a)
-                    gene_b = self._clean_up_gene_id(gene_b,species_b)
-
+                    #map the taxon abbreviations to ncbi taxon ids
                     taxon_a = self._map_taxon_abbr_to_id(species_a)
                     taxon_b = self._map_taxon_abbr_to_id(species_b)
 
                     #TODO remove these filters, or parameterize them
                     ###uncomment the following code block if you want to filter based on taxid
-                    taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
-                    #taxids = [9606,10090] #human/mouse only
+                    #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
+                    taxids = [9606,10090] #human/mouse only  takes about 15m
                     #taxids = [9606] #human only
                     #retain only those orthologous relationships to genes in the specified taxids
                     #using AND will get you only those associations where gene1 AND gene2 are in the taxid list (most-filter)
                     #using OR will get you any associations where gene1 OR gene2 are in the taxid list (some-filter)
+                    #print("INFO: restricting taxa to ids:",taxids)
                     if (not (taxids.__contains__(int(re.sub('NCBITaxon:','', taxon_a.rstrip()))) and
                         taxids.__contains__(int(re.sub('NCBITaxon:','', taxon_b.rstrip()))) )):
                         continue
                     else:
                         matchcounter += 1
+                        if (limit is not None and matchcounter > limit):
+                            break
+
                     ###end code block for filtering on taxon
+
+                    #fix the gene identifiers
+                    gene_a = re.sub('=',':',gene_a)
+                    gene_b = re.sub('=',':',gene_b)
+
+                    gene_a = self._clean_up_gene_id(gene_a,species_a)
+                    gene_b = self._clean_up_gene_id(gene_b,species_b)
 
                     rel=self._map_orthology_code_to_RO(orthology_class)
 
@@ -192,12 +196,13 @@ class Panther(Source):
                     #note that the panther_id references a group of orthologs, and is not 1:1 with the rest
                     assoc_id = self.make_id(('').join((panther_id,species_a,gene_a,protein_a,species_b,gene_b,protein_b,orthology_class)))
 
+                    #add the association and relevant nodes to graph
                     assoc = OrthologyAssoc(assoc_id,gene_a,gene_b,None,evidence,self.namespaces)
                     assoc.setRelationship(rel)
                     assoc.loadObjectProperties(self.graph)
                     assoc.addAssociationToGraph(self.graph)
 
-                    #note this is incomplete... it won't construct the full family hierarchy
+                    #note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
                     assoc.addGeneFamilyToGraph(self.graph,(':').join(('PANTHER:',panther_id)))
 
                     if (limit is not None and line_counter > limit):
