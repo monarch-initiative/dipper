@@ -26,12 +26,18 @@ class Assoc:
         'GENO' : 'http://purl.obolibrary.org/obo/GENO_',
         'OBO' : 'http://purl.obolibrary.org/obo/',
         'Annotation' : 'http://www.w3.org/ns/oa#Annotation',
-        '' : 'http://www.monarchinitiative.org/'  #base
+        'OIO' : 'http://www.geneontology.org/formats/oboInOwl#',
+        'IAO' : 'http://purl.obolibrary.org/obo/IAO_',
+        '' : 'http://www.monarchinitiative.org/',  #base,
     }
 
     relationships = {
         'has_disposition':'GENO:0000208',
-        'has_phenotype':'RO:0002200'
+        'has_phenotype':'RO:0002200',
+        'replaced_by' : 'IAO:0100001',
+        'consider' : 'OIO:consider',
+        'hasExactSynonym' : 'OIO:hasExactSynonym',
+        'definition' : 'IAO:0000115'
     }
 
     OWLCLASS=OWL['Class']
