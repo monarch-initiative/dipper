@@ -136,7 +136,8 @@ class OMIM(Source):
         if (limit is not None):
             #just in case the limit is larger than the number of records, max it out
             max = min((limit,omimids.__len__()))
-
+        else:
+            max=omimids.__len__()
         #max = 10 #for testing
 
         #TODO write the json to local files - make the assumption that downloads within 24 hrs are the same
@@ -147,13 +148,22 @@ class OMIM(Source):
             omimparams.update({'mimNumber' : (',').join(omimids[it:end])})
             p = urllib.parse.urlencode(omimparams)
             url = ('/').join((self.OMIM_API,'entry'))+'?%s' % p
-            print ('fetching:',(',').join(omimids[it:end]))
             #print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
-            it+=groupsize
 
+            ### if you want to test a specific entry number, uncomment the following code block
+            #if ('270400' in omimids[it:end]):
+            #    print("FOUND IT in",omimids[it:end])
+            #else:
+            #   #testing very specific record
+            #    it+=groupsize
+            #    continue
+            ### end code block for testing
+
+            print ('fetching:',(',').join(omimids[it:end]))
             d = urllib.request.urlopen(url)
             resp = d.read().decode()
             request_time = datetime.now()
+            it+=groupsize
 
             myjson = json.loads(resp)
             entries = myjson['omim']['entryList']
@@ -164,19 +174,46 @@ class OMIM(Source):
                 omimnum = e['entry']['mimNumber']
                 titles = e['entry']['titles']
                 label = titles['preferredTitle']
+
+                #remove the abbreviation (comes after the ;) from the preferredTitle, and add it as a synonym
+                abbrev = None
+                if (len(re.split(';',label)) > 1):
+                    abbrev = (re.split(';',label)[1].strip())
+                label = re.split(';',label)[0]
+
                 description = self._get_description(e['entry'])
+                omimid='OMIM:'+str(omimnum)
+                n = URIRef(cu.get_uri(omimid))
 
                 if (e['entry']['status'] == 'removed'):
-                    n = URIRef(cu.get_uri('OMIM:'+str(omimnum)))
-                    #make this a deprecated class
-                    g.add((n,RDF['type'],OWL['DeprecatedClass']))
+                    gu.addDeprecatedClass(g,omimid)
                 else:
-                    gu.addClassToGraph(g,'OMIM:'+str(omimnum),label,None,description)
+                    gu.addClassToGraph(g,omimid,label,None,description)
+                    if (abbrev is not None):
+                        g.add((n,URIRef(cu.get_uri(Assoc.relationships['hasExactSynonym'])),Literal(abbrev)))
 
-                    #check if moved, if so, make it an equivalent class to the other thing
+                    #check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
+                    #some entries have been moved to multiple other entries and use the joining raw word "and"
+                    #612479 is movedto:  "603075 and 603029"  OR
+                    #others use a comma-delimited list, like:
+                    #610402 is movedto: "609122,300870"
                     if (e['entry']['status'] == 'moved'):
-                        gu.addEquivalentClass(g,'OMIM:'+str(omimnum),'OMIM:'+str(e['entry']['movedTo']))
+                        if (re.search('and',str(e['entry']['movedTo']))):
+                            #split the movedTo entry on 'and'
+                            newids=re.split('and',str(e['entry']['movedTo']))
+                        elif(len(str(e['entry']['movedTo']).split(',')) > 0):
+                            #split on the comma
+                            newids = str(e['entry']['movedTo']).split(',')
+                        else:
+                            #make a list of one
+                            newids = [str(e['entry']['movedTo'])]
+                        #cleanup whitespace and add OMIM prefix to numeric portion
+                        fixedids = []
+                        for i in newids:
+                            fixedids.append('OMIM:'+i.strip())
 
+                        gu.addDeprecatedClass(g,omimid,fixedids)
+                ###end iterating over batch of entries
 
             #can't have more than 4 req per sec,
             #so wait the remaining time, if necessary
