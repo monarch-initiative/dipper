@@ -8,14 +8,16 @@ from sources.ZFIN import ZFIN
 from sources.OMIM import OMIM
 from sources.BioGrid import BioGrid
 from sources.MGI import MGI
+from sources.Panther import Panther
 
 
 source_to_class_map={
-#    'hpoa' : HPOAnnotations,
+#    'hpoa' : HPOAnnotations, ~3 min
 #    'zfin' : ZFIN,
-#    'omim' : OMIM,
-#    'biogrid' : BioGrid,
-    'mgi' : MGI
+#    'omim' : OMIM,  #full file takes ~15 min, due to required throttling
+    'biogrid' : BioGrid,  #interactions file takes <10 minutes
+#    'mgi' : MGI,
+#    'panther' : Panther  #this takes a very long time, ~1hr to map 7 species-worth of associations
 }
 
 #load configuration parameters
@@ -28,8 +30,8 @@ for source in source_to_class_map.keys():
     print()
     print("*******",source,"*******")
     mysource = source_to_class_map[source]()
-    mysource.fetch()
-    mysource.parse(100)
+    #mysource.fetch()
+    mysource.parse()
 #    status = mysource.verify()
 #    if status is not True:
 #        print('ERROR: Source',source,'did not pass verification tests.')
@@ -42,6 +44,7 @@ print("All done.")
 # *specify the source
 # *parse only without writing
 # *parse only X lines of original file
+# *quiet mode (with proper logging methods)
 
 ###########################
 
