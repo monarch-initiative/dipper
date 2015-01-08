@@ -72,3 +72,9 @@ class GraphUtils:
                     n = URIRef(self.cu.get_uri(i.strip()))
                     g.add((n1,consider,n))
         return
+
+    def addSynonym(self,g,cid,synonym,synonym_type=None):
+        n = URIRef(self.cu.get_uri(cid))
+        if (synonym_type is None):
+            synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
+        g.add((n, synonym_type, Literal(synonym)))
