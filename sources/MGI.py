@@ -40,8 +40,8 @@ class MGI(Source):
 
     namespaces = {
         'MP': 'http://purl.obolibrary.org/obo/MP_',
-        'MGI': 'http://www.informatics.jax.org/',  #FIXME
         'MA': 'http://purl.obolibrary.org/obo/MA_',
+        'MGI' : 'http://www.informatics.jax.org/accession/MGI:'  #note that MGI genotypes will not resolve at this address
     }
 
     def __init__(self):
