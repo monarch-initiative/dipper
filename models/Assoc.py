@@ -38,7 +38,8 @@ class Assoc:
         'consider' : 'OIO:consider',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
         'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
-        'definition' : 'IAO:0000115'
+        'definition' : 'IAO:0000115',
+        'in_taxon' : 'RO:0002162'
     }
 
     OWLCLASS=OWL['Class']
