@@ -82,18 +82,23 @@ class Source:
         '''
         return
 
-    def write(self, file=None):
+    def write(self, format=None, file=None):
         '''
-        a basic graph writer (to stdout) for any of the sources, writing raw triples
-        :return:
+         a basic graph writer (to stdout) for any of the sources.  this will write
+         raw triples in rdfxml, unless specified.
+         to write turtle, specify format='turtle'
+         an optional file can be supplied instead of stdout
+        :return: None
         '''
+        if (format is None):
+            format = 'rdfxml'
         if (file is not None):
             filewriter = open(file, 'w')
             print("INFO: Writing raw triples to ",file)
-            print(self.graph.serialize(format="rdfxml").decode(), file=filewriter)
+            print(self.graph.serialize(format=format).decode(), file=filewriter)
             filewriter.close()
         else:
-            print(self.graph.serialize(format="rdfxml").decode())
+            print(self.graph.serialize(format=format).decode())
         return
 
     def whoami(self):
