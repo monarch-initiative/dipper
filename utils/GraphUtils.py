@@ -31,7 +31,8 @@ class GraphUtils:
         n = URIRef(self.cu.get_uri(id))
 
         g.add((n, RDF['type'], Assoc.OWLCLASS))
-        g.add((n, RDFS['label'], Literal(label)))
+        if (label is not None):
+            g.add((n, RDFS['label'], Literal(label)))
         if (type is not None):
             t = URIRef(self.cu.get_uri(type))
             g.add((n, Assoc.OWLSUBCLASS, t))
@@ -40,9 +41,10 @@ class GraphUtils:
         return g
 
     def addEquivalentClass(self,g,id1,id2):
-        n1 = URIRef(self.cu.get_uri(id1))
-        n2 = URIRef(self.cu.get_uri(id2))
-        g.add((n1,OWL['equivalentClass'],n2))
+        if (self.cu.get_uri(id1) is not None and self.cu.get_uri(id2) is not None):
+            n1 = URIRef(self.cu.get_uri(id1))
+            n2 = URIRef(self.cu.get_uri(id2))
+            g.add((n1,OWL['equivalentClass'],n2))
         return
 
     def addDeprecatedClass(self,g,oldid,newids=None):
