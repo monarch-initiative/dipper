@@ -21,11 +21,7 @@ import config
 
 class NCBIGene(Source):
     '''
-     OMIM is an unusual source.  We can get lots of the disease-gene associations, including allelic variants
-     from their ftp site, which is obtainable anonymously.  However, more detailed information is available
-     via their API.  So, we pull the basic files from their ftp site, extract the omim identifiers,
-     then query their API in batch.  (Note this requires an apiKey, which is not stored in the repo,
-     but in a separate conf.json file.)
+
     '''
 
     files = {
@@ -47,15 +43,26 @@ class NCBIGene(Source):
         'NCBIGene' : 'http://ncbi.nlm.nih.gov/gene/',
         'faldo' : 'http://biohackathon.org/resource/faldo#',
         'NCBITaxon' : 'http://ncbi.nlm.nih.gov/taxonomy/',
-        'SO' : 'http://purl.obolibrary.org/obo/SO_'
+        'SO' : 'http://purl.obolibrary.org/obo/SO_',
+        'OMIM' : 'http://omim.org/entry/',
+        'HGNC' : 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:',
+        'HPRD' : 'http://www.hprd.org/protein/',
+        'ENSEMBL' : 'http://identifiers.org/ENSEMBL:',
+        'miRBase' : 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=',
+        'MGI': 'http://www.informatics.jax.org/accession/MGI:',  #All MGI ids are genes in this case
     }
 
     curie_map = {}
 
+    relationships = {
+        'gene_product_of' : 'RO:0002204',
+        'has_gene_product' : 'RO:0002205'
+    }
+
 
     def __init__(self):
         Source.__init__(self, 'ncbigene')
-
+        self.curie_map.update(Assoc.curie_map)
         self.curie_map.update(D2PAssoc.curie_map)
         self.curie_map.update(DispositionAssoc.curie_map)
         self.curie_map.update(self.prefixes)
@@ -125,9 +132,17 @@ class NCBIGene(Source):
         return
 
     def _get_gene_info(self,limit):
-        exact=URIRef(Assoc.relationships['hasExactSynonym'])
-        related=URIRef(Assoc.relationships['hasRelatedSynonym'])
-        intaxon=URIRef(Assoc.relationships['in_taxon'])
+        gu = GraphUtils(self.curie_map)
+        cu = CurieUtil(self.curie_map)
+
+        exact=URIRef(cu.get_uri(Assoc.relationships['hasExactSynonym']))
+        related=URIRef(cu.get_uri(Assoc.relationships['hasRelatedSynonym']))
+        intaxon=URIRef(cu.get_uri(Assoc.relationships['in_taxon']))
+        begin = URIRef(cu.get_uri('faldo:begin'))
+        end = URIRef(cu.get_uri('faldo:end'))
+        region = URIRef(cu.get_uri('faldo:Region'))
+        loc = URIRef(cu.get_uri('faldo:location'))
+        bagofregions = URIRef(cu.get_uri('faldo:BagOfRegions'))
 
         #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
         #not unzipping the file
@@ -147,37 +162,73 @@ class NCBIGene(Source):
                  gtype,authority_symbol,name,
                  nomenclature_status,other_designations,modification_date) = line.split('\t')
 
+                ##### uncomment the next few lines to apply a taxon filter
+                taxids = [9606,10090]
+                if (int(tax_num) not in taxids):
+                #if (gene_num != '1'):  #for testing, apply a specific gene filter
+                    continue
+                ##### end taxon filter
 
                 gene_id = (':').join(('NCBIGene',gene_num))
                 tax_id = (':').join(('NCBITaxon',tax_num))
                 gene_type_id = self._map_type_of_gene(gtype)
 
-                gu = GraphUtils(self.curie_map)
-                cu = CurieUtil(self.curie_map)
                 n = URIRef(cu.get_uri(gene_id))
                 t = URIRef(cu.get_uri(gene_type_id))
-                gu.addClassToGraph(self.graph,gene_id,symbol,None,desc)
+                if (symbol == 'NEWENTRY'):
+                    label = None
+                else:
+                    label = symbol
+                gu.addClassToGraph(self.graph,gene_id,label,None,desc)
 
                 #we are making genes classes, not instances.  so add it as a subclass here
                 self.graph.add((n,Assoc.OWLSUBCLASS,t))
-                self.graph.add((n,exact,Literal(name)))
-                for s in synonyms:
-                    self.graph.add((n,related,Literal(s)))
+                if (name != '-'):
+                    self.graph.add((n,exact,Literal(name)))
+                if (synonyms.strip() != '-'):
+                    for s in synonyms.split('|'):
+                        self.graph.add((n,related,Literal(s.strip())))
+                if (other_designations.strip() != '-'):
+                    for s in other_designations.split('|'):
+                        self.graph.add((n,related,Literal(s.strip())))
                 self.graph.add((n,intaxon,URIRef(cu.get_uri(tax_id))))
 
+                #deal with the xrefs
+                #MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
+                if (xrefs.strip() != '-'):
+                    for r in xrefs.strip().split('|'):
+                        fixedr = self._cleanup_id(r)
+                        if ((fixedr is not None) and (fixedr.strip() != '')):
+                            if (re.match('HPRD',fixedr)):
+                                self.graph.add((n,URIRef(cu.get_uri(self.relationships['has_gene_product'])),URIRef(cu.get_uri(fixedr))))
+                            else:
+                                if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
+                                    gu.addEquivalentClass(self.graph,gene_id,fixedr)
+                        #todo, make sure to not make protein ids equivalent!  for example, HPRD==protein id
+                        #use gene_product_of RO:0002204
+
+                #we don't get actual coords, just chr and band
+                #make them blank nodes for now
+                #TODO what kind of URI would i make for chromosomes???
+                if (str(chr) != '-'):
+                    mychrom=('').join((tax_num,'chr',str(chr)))
+                    chrom = BNode(mychrom)
+                    self.graph.add((chrom,RDF['type'],bagofregions))
+                    self.graph.add((chrom,loc,Literal(chr)))  #should probably be a reference?
+                    if (map_loc != '-'):
+                        band = BNode(map_loc)
+                        self.graph.add((n,loc,band))
+                        self.graph.add((band,RDF['type'],region))
+                        self.graph.add((band,loc,chrom))
+                        self.graph.add((n,loc,Literal(map_loc)))
 
                 #deal with coordinate information:
-                begin = URIRef(cu.get_uri('faldo:begin'))
-                end = URIRef(cu.get_uri('faldo:end'))
-                region = URIRef(cu.get_uri('faldo:Region'))
-                loc = URIRef(cu.get_uri('faldo:location'))
                 #make blank nodes for the regions, and positions
-
-                generegion = BNode((':').join((chr,map_loc)))
-                self.graph.add((n,loc,generegion))
-                self.graph.add((generegion,RDF['type'],region))
-                self.graph.add((generegion,begin,Literal(map_loc)))
-                self.graph.add((generegion,end,Literal(map_loc)))
+                #generegion = BNode((':').join((chr,map_loc)))
+                #self.graph.add((n,loc,generegion))
+                #self.graph.add((generegion,RDF['type'],region))
+                #self.graph.add((generegion,begin,Literal(map_loc)))
+                #self.graph.add((generegion,end,Literal(map_loc)))
 
                 #todo add reference and strand info
 
@@ -197,7 +248,8 @@ class NCBIGene(Source):
             'snRNA': 'SO:0001268',
             'snoRNA': 'SO:0001267',
             'tRNA': 'SO:0001272',
-            'unknown': 'SO:0000704'
+            'unknown': 'SO:0000704',
+            'scRNA' : 'SO:0000013'
         }
 
         if (type in type_to_so_map):
@@ -209,3 +261,19 @@ class NCBIGene(Source):
 
 
         return so_id
+
+    def _cleanup_id(self,i):
+        cleanid = i
+        #MIM:123456 --> #OMIM:123456
+        cleanid = re.sub('^MIM','OMIM',cleanid)
+
+        #HGNC:HGNC --> HGNC
+        cleanid = re.sub('^HGNC:HGNC','HGNC',cleanid)
+
+        #Ensembl --> ENSEMBL
+        cleanid = re.sub('^Ensembl','ENSEMBL',cleanid)
+
+        #MGI:MGI --> MGI
+        cleanid = re.sub('^MGI:MGI','MGI',cleanid)
+
+        return cleanid
