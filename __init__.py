@@ -9,15 +9,16 @@ from sources.OMIM import OMIM
 from sources.BioGrid import BioGrid
 from sources.MGI import MGI
 from sources.Panther import Panther
-
+from sources.NCBIGene import NCBIGene
 
 source_to_class_map={
 #    'hpoa' : HPOAnnotations, ~3 min
 #    'zfin' : ZFIN,
 #    'omim' : OMIM,  #full file takes ~15 min, due to required throttling
-    'biogrid' : BioGrid,  #interactions file takes <10 minutes
+#    'biogrid' : BioGrid,  #interactions file takes <10 minutes
 #    'mgi' : MGI,
-#    'panther' : Panther  #this takes a very long time, ~1hr to map 7 species-worth of associations
+#    'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
+    'ncbigene' : NCBIGene  #takes about 4 minutes to process 2 species
 }
 
 #load configuration parameters
