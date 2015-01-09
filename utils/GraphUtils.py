@@ -80,3 +80,22 @@ class GraphUtils:
         if (synonym_type is None):
             synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
         g.add((n, synonym_type, Literal(synonym)))
+
+    def write(self, graph, format=None, file=None):
+        '''
+         a basic graph writer (to stdout) for any of the sources.  this will write
+         raw triples in rdfxml, unless specified.
+         to write turtle, specify format='turtle'
+         an optional file can be supplied instead of stdout
+        :return: None
+        '''
+        if (format is None):
+            format = 'rdfxml'
+        if (file is not None):
+            filewriter = open(file, 'w')
+            print("INFO: Writing triples in",format,"to",file)
+            print(graph.serialize(format=format).decode(), file=filewriter)
+            filewriter.close()
+        else:
+            print(graph.serialize(format=format).decode())
+        return

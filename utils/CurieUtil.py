@@ -9,8 +9,9 @@ class CurieUtil:
     def __init__(self, curie_map):
         self.curie_map = curie_map
         self.uri_map = {}
-        for key, value in curie_map.items():
-            self.uri_map[value] = key
+        if (curie_map is not None):
+            for key, value in curie_map.items():
+                self.uri_map[value] = key
         return
 
     # Get a CURIE from a uri

@@ -13,6 +13,7 @@ import hashlib
 import subprocess
 from subprocess import check_call
 
+from utils.GraphUtils import GraphUtils
 
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
@@ -82,23 +83,44 @@ class Source:
         '''
         return
 
-    def write(self, format=None, file=None):
+    def write(self, format='rdfxml', stream=None):
         '''
-         a basic graph writer (to stdout) for any of the sources.  this will write
-         raw triples in rdfxml, unless specified.
-         to write turtle, specify format='turtle'
-         an optional file can be supplied instead of stdout
+        This convenience method will write out all of the graphs associated with the source.
+        Right now these are hardcoded to be a single "graph" and a "dataset".
+        If you do not supply stream='stdout' it will default write these to files
         :return: None
         '''
-        if (format is None):
-            format = 'rdfxml'
-        if (file is not None):
-            filewriter = open(file, 'w')
-            print("INFO: Writing raw triples to ",file)
-            print(self.graph.serialize(format=format).decode(), file=filewriter)
-            filewriter.close()
+        format_to_xtn = {
+            'rdfxml' : 'xml', 'turtle' : 'ttl'
+        }
+
+        #make the regular graph output file
+        file=('/').join((self.outdir,self.name))
+        if (format in format_to_xtn):
+            file=('.').join((file,format_to_xtn.get(format)))
         else:
-            print(self.graph.serialize(format=format).decode())
+            file=('.').join((file,format))
+
+        #make the datasetfile name
+        datasetfile=('/').join((self.outdir,self.name+'_dataset'))
+        if (format in format_to_xtn):
+            datasetfile=('.').join((datasetfile,format_to_xtn.get(format)))
+        else:
+            datasetfile=('.').join((datasetfile,format))
+
+        graphs = [
+            {'g':self.graph,'file':file},
+            {'g':self.dataset.getGraph(),'file':datasetfile}
+        ]
+        gu = GraphUtils(None)
+        #loop through each of the graphs and print them out
+        for g in graphs:
+            if (stream is None):
+                gu.write(g['g'],format,file=g['file'])
+            elif(stream.lowercase().strip() != 'stdout'):
+                gu.write(g['g'],format)
+            else:
+                print("ERROR: I don't understand your stream.")
         return
 
     def whoami(self):
