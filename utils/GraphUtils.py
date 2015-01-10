@@ -81,6 +81,13 @@ class GraphUtils:
             synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
         g.add((n, synonym_type, Literal(synonym)))
 
+    def addDefinition(self,g,cid,definition):
+        n = URIRef(self.cu.get_uri(cid))
+        p = URIRef(self.cu.get_uri(Assoc.relationships['definition']))
+        g.add((n,p,Literal(definition)))
+
+        return
+
     def write(self, graph, format=None, file=None):
         '''
          a basic graph writer (to stdout) for any of the sources.  this will write
