@@ -15,6 +15,7 @@ from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
 from models.Dataset import Dataset
 from models.Assoc import Assoc
+from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
@@ -41,10 +42,10 @@ class OMIM(Source):
         #    'file': 'genemapkey.txt',
         #    'url' : 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/genemap.key'
         #},
-        #'morbidmap' : {
-        #   'file': 'morbidmap.txt',
-        #    'url' : 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/morbidmap'
-        #}
+        'morbidmap' : {
+           'file': 'morbidmap.txt',
+            'url' : 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/morbidmap'
+        }
     }
 
     disease_prefixes = {
@@ -110,6 +111,55 @@ class OMIM(Source):
 
         print("Parsing files...")
 
+        #self._process_all(limit)
+        self._process_morbidmap(limit)
+
+        self.load_core_bindings()
+        self.load_bindings()
+
+        print("Done parsing.")
+
+
+        return
+
+
+    def _get_description(self,entry):
+        d = None
+        if entry is not None:
+            #print(entry)
+            if 'textSectionList' in entry:
+                textSectionList = entry['textSectionList']
+                for ts in textSectionList:
+                    if ts['textSection']['textSectionName'] == 'description':
+                        d = ts['textSection']['textSectionContent']
+                        #there are internal references to OMIM identifiers in the description, I am
+                        #formatting them in our style.
+                        d = re.sub('{(\\d+)}','OMIM:\\1',d)
+                        break
+        return d
+
+    def _get_omim_ids(self):
+        omimids = []
+
+        #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
+        #not unzipping the file
+        print("INFO: Obtaining OMIM record identifiers")
+        line_counter=0
+        omimfile=('/').join((self.rawdir,self.files['all']['file']))
+        print("FILE:",omimfile)
+        with gzip.open(omimfile, 'rb') as f:
+            for line in f:
+                line=line.decode().strip()
+                if (line=="*FIELD* NO"):
+                   line_counter += 1
+                   #read the next line
+                   number=f.readline().decode().strip()
+                   omimids.append(number)
+
+        print("INFO: Done.  I found",omimids.__len__(),"omim ids")
+        return omimids
+
+    def _process_all(self,limit):
         omimids = []  #to store the set of omim identifiers
         omimids = self._get_omim_ids()
 
@@ -223,56 +273,66 @@ class OMIM(Source):
                 print("INFO: waiting",str(rem),'s')
                 time.sleep(rem/1000)
 
-        ##### Write it out #####
-        filewriter = open(self.outfile, 'w')
-        self.load_core_bindings()
-        self.load_bindings()
+        return
 
-        print("Finished parsing files. Writing turtle to",self.outfile)
-        print(g.serialize(format="turtle").decode(),file=filewriter)
-        filewriter.close()
+    def _process_morbidmap(self,limit):
+
+        #1  - Disorder, <disorder MIM no.> (<phene mapping key>)
+        #2  - Gene/locus symbols
+        #3  - Gene/locus MIM no.
+        #4  - cytogenetic location
+        line_counter = 0
+        with open(('/').join((self.rawdir,self.files['morbidmap']['file']))) as f:
+            for line in f:
+                line = line.strip()
+                line_counter += 1
+                (disorder,gene_symbols,gene_num,loc) = line.split('|')
+
+                #disorder = disorder label , number (mapping key)
+                #3-M syndrome 1, 273750 (3)|CUL7, 3M1|609577|6p21.1
+                disorder_search = re.search('(.*), (\d+) \((\d+)\)',disorder)
+                if (disorder_search is not None):
+                    disorder_parts = disorder_search.groups()
+                    if (len(disorder_parts) == 3):
+                        (disorder_label,disorder_num,phene_key) = disorder_parts
+                    else:
+                        print("WARN: I couldn't parse disorder string:",disorder)
+                        continue
+                gene_symbols = gene_symbols.split(', ')
+                gene_id = (':').join(('OMIM',gene_num))
+                disorder_id = (':').join(('OMIM',disorder_num))
+
+                evidence = self._map_phene_mapping_code_to_eco(phene_key)
+
+
+                assoc_id = self.make_id((disorder_id+gene_id+phene_key))
+                assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence,self.curie_map)
+                assoc.loadObjectProperties(self.graph)
+                assoc.addAssociationToGraph(self.graph)
+
+                if (limit is not None and line_counter > limit):
+                    break
 
 
         return
 
-    def verify(self):
-        status = True
-        #TODO verify some kind of relationship that should be in the file
+    def _map_phene_mapping_code_to_eco(self,code):
+        #phenotype mapping code
+        #1 - the disorder is placed on the map based on its association with a gene, but the underlying defect is not known.
+        #2 - the disorder has been placed on the map by linkage; no mutation has been found.
+        #3 - the molecular basis for the disorder is known; a mutation has been found in the gene.
+        #4 - a contiguous gene deletion or duplication syndrome, multiple genes are deleted or duplicated causing the phenotype.
+        eco_code = 'ECO:0000000' #generic evidence
+        phene_code_to_eco = {
+            '1' : 'ECO:0000306', #inference from background scientific knowledge used in manual assertion
+            '2' : 'ECO:0000177', #genomic context evidence
+            '3' : 'ECO:0000220', #sequencing assay evidence
+            '4' : 'ECO:0000220'  #sequencing assay evidence
+        }
 
-        return status
+        if (str(code) in phene_code_to_eco):
+            eco_code = phene_code_to_eco.get(code)
+        else:
+            print("ERROR: unmapped phene code",code)
 
-    def _get_description(self,entry):
-        d = None
-        if entry is not None:
-            #print(entry)
-            if 'textSectionList' in entry:
-                textSectionList = entry['textSectionList']
-                for ts in textSectionList:
-                    if ts['textSection']['textSectionName'] == 'description':
-                        d = ts['textSection']['textSectionContent']
-                        #there are internal references to OMIM identifiers in the description, I am
-                        #formatting them in our style.
-                        d = re.sub('{(\\d+)}','OMIM:\\1',d)
-                        break
-        return d
-
-    def _get_omim_ids(self):
-        omimids = []
-
-        #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
-        #not unzipping the file
-        print("INFO: Obtaining OMIM record identifiers")
-        line_counter=0
-        omimfile=('/').join((self.rawdir,self.files['all']['file']))
-        print("FILE:",omimfile)
-        with gzip.open(omimfile, 'rb') as f:
-            for line in f:
-                line=line.decode().strip()
-                if (line=="*FIELD* NO"):
-                   line_counter += 1
-                   #read the next line
-                   number=f.readline().decode().strip()
-                   omimids.append(number)
-
-        print("INFO: Done.  I found",omimids.__len__(),"omim ids")
-        return omimids
+        return eco_code
