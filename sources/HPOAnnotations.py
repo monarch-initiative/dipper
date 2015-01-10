@@ -136,7 +136,6 @@ class HPOAnnotations(Source):
         if (limit is not None):
             print("Only parsing first", limit, "rows")
 
-
         print("Parsing files...")
         self._process_phenotype_tab(('/').join((self.rawdir,self.files['annot']['file'])),self.outfile,self.graph,limit)
         Assoc().loadObjectProperties(self.graph)
@@ -146,18 +145,7 @@ class HPOAnnotations(Source):
 
         print("Finished parsing.")
 
-        ##### Write it out #####
-        filewriter = open(self.outfile, 'w')
-        self.load_bindings()
-        print("Finished parsing files. Writing turtle to",self.outfile)
-        print(self.graph.serialize(format="turtle").decode(),file=filewriter)
-        filewriter.close()
-
-        filewriter = open(self.datasetfile,'w')
-        print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
-        filewriter.close()
-
-        print("Wrote", len(self.graph), "nodes")
+        print("Loaded", len(self.graph), "nodes")
         return
 
 
@@ -209,8 +197,3 @@ class HPOAnnotations(Source):
 
         return
 
-    def verify(self):
-        status = True
-        #TODO verify some kind of relationship that should be in the file
-
-        return status
