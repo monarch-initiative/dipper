@@ -91,20 +91,7 @@ class Panther(Source):
 
         self.load_bindings()
 
-
-        ##### Write it out #####
-        filewriter = open(self.outfile, 'w')
-        self.load_bindings()
-        print("INFO: Finished parsing files. Writing turtle to",self.outfile)
-        print(self.graph.serialize(format="turtle").decode(),file=filewriter)
-        filewriter.close()
-
-
-        filewriter = open(self.datasetfile,'w')
-        print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
-        filewriter.close()
-
-        print("INFO: Wrote", len(self.graph), "nodes")
+        print("INFO: Found", len(self.graph), "nodes")
 
 
         return

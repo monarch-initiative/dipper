@@ -127,18 +127,7 @@ class MGI(Source):
         self.load_bindings()
         Assoc().loadObjectProperties(self.graph)
 
-
-        ##### Write it out #####
-
-        filewriter = open(self.outfile, 'w')
-        print(self.graph.serialize(format="turtle").decode(), file=filewriter)
-        filewriter.close()
-
-        filewriter = open(self.datasetfile, 'w')
-        print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
-        filewriter.close()
-
-        print("Wrote", len(self.graph), "nodes")
+        print("Loaded", len(self.graph), "nodes")
         return
 
     def _process_genotype_features(self, raw, out, g, limit=None):
