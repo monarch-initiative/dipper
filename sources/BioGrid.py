@@ -102,24 +102,9 @@ class BioGrid(Source):
         #self._get_interactions(limit)
 
         self._get_identifiers(limit)
-
         self.load_bindings()
 
-
-        ##### Write it out #####
-        filewriter = open(self.outfile, 'w')
-        self.load_bindings()
-        print("Finished parsing files. Writing turtle to",self.outfile)
-        print(self.graph.serialize(format="turtle").decode(),file=filewriter)
-        filewriter.close()
-
-
-        filewriter = open(self.datasetfile,'w')
-        print(self.dataset.getGraph().serialize(format="turtle").decode(), file=filewriter)
-        filewriter.close()
-
-        print("Wrote", len(self.graph), "nodes")
-
+        print("Loaded", len(self.graph), "nodes")
 
         return
 
@@ -130,18 +115,6 @@ class BioGrid(Source):
             self.graph.bind(k, Namespace(v))
         return
 
-
-    def verify(self):
-        '''
-        abstract method to verify the integrity of the data fetched and turned into triples
-        this should be overridden by tests in subclasses
-        :return: True if all tests pass
-        '''
-        status = False
-        self._verify(self.outfile)
-        status = self._verifyowl(self.outfile)
-
-        return status
 
     def _get_interactions(self,limit):
         line_counter = 0
