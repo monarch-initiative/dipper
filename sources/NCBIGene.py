@@ -9,8 +9,9 @@ import gzip,os.path
 import json
 from rdflib import Graph, Literal, URIRef, Namespace, BNode
 from rdflib.namespace import RDF, RDFS, OWL, DC,XSD
-from sources.Source import Source
+import unicodedata
 
+from sources.Source import Source
 from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
 from models.Dataset import Dataset
@@ -111,23 +112,12 @@ class NCBIGene(Source):
 
         print("Parsing files...")
 
-
-        g = self.graph
-
-        gu = GraphUtils(self.curie_map)
-        cu = CurieUtil(self.curie_map)
-
         self._get_gene_info(limit)
 
-        ##### Write it out #####
-        filewriter = open(self.outfile, 'w')
         self.load_core_bindings()
         self.load_bindings()
 
-        print("Finished parsing files. Writing turtle to",self.outfile)
-        print(g.serialize(format="turtle").decode(),file=filewriter)
-        filewriter.close()
-
+        print("Done parsing files.")
 
         return
 
@@ -162,10 +152,11 @@ class NCBIGene(Source):
                  gtype,authority_symbol,name,
                  nomenclature_status,other_designations,modification_date) = line.split('\t')
 
-                ##### uncomment the next few lines to apply a taxon filter
+                ##### uncomment the next few lines to apply a taxon or gene filter
                 taxids = [9606,10090]
+                geneids = [17151,100008564,17005,11834,14169]
                 if (int(tax_num) not in taxids):
-                #if (gene_num != '1'):  #for testing, apply a specific gene filter
+                #if (int(gene_num) not in geneids):  #for testing, apply a specific gene filter
                     continue
                 ##### end taxon filter
 
@@ -211,12 +202,16 @@ class NCBIGene(Source):
                 #make them blank nodes for now
                 #TODO what kind of URI would i make for chromosomes???
                 if (str(chr) != '-'):
-                    mychrom=('').join((tax_num,'chr',str(chr)))
+                    chrid = re.sub('\W+', '', str(chr))
+                    mychrom=('').join((tax_num,'chr',chrid))
                     chrom = BNode(mychrom)
                     self.graph.add((chrom,RDF['type'],bagofregions))
                     self.graph.add((chrom,loc,Literal(chr)))  #should probably be a reference?
                     if (map_loc != '-'):
-                        band = BNode(map_loc)
+                        #can't have spaces in the id, so scrub those out and replace with a dash
+                        #remove any non-alphanumeric chars for the identifier
+                        maploc_id = re.sub('\W+', '', map_loc)
+                        band = BNode(maploc_id)
                         self.graph.add((n,loc,band))
                         self.graph.add((band,RDF['type'],region))
                         self.graph.add((band,loc,chrom))
@@ -249,7 +244,8 @@ class NCBIGene(Source):
             'snoRNA': 'SO:0001267',
             'tRNA': 'SO:0001272',
             'unknown': 'SO:0000704',
-            'scRNA' : 'SO:0000013'
+            'scRNA' : 'SO:0000013',
+            'miscRNA' : 'SO:0000233' #mature transcript - there is no good mapping
         }
 
         if (type in type_to_so_map):
@@ -277,3 +273,7 @@ class NCBIGene(Source):
         cleanid = re.sub('^MGI:MGI','MGI',cleanid)
 
         return cleanid
+
+
+    def remove_control_characters(self,s):
+        return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
