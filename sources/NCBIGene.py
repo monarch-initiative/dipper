@@ -170,18 +170,16 @@ class NCBIGene(Source):
                     label = None
                 else:
                     label = symbol
-                gu.addClassToGraph(self.graph,gene_id,label,None,desc)
+                gu.addClassToGraph(self.graph,gene_id,label,gene_type_id,desc)
 
-                #we are making genes classes, not instances.  so add it as a subclass here
-                self.graph.add((n,Assoc.OWLSUBCLASS,t))
                 if (name != '-'):
-                    self.graph.add((n,exact,Literal(name)))
+                    gu.addSynonym(self.graph,gene_id,name)
                 if (synonyms.strip() != '-'):
                     for s in synonyms.split('|'):
-                        self.graph.add((n,related,Literal(s.strip())))
+                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.relationships['hasRelatedSynonym'])
                 if (other_designations.strip() != '-'):
                     for s in other_designations.split('|'):
-                        self.graph.add((n,related,Literal(s.strip())))
+                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.relationships['hasRelatedSynonym'])
                 self.graph.add((n,intaxon,URIRef(cu.get_uri(tax_id))))
 
                 #deal with the xrefs
@@ -191,12 +189,11 @@ class NCBIGene(Source):
                         fixedr = self._cleanup_id(r)
                         if ((fixedr is not None) and (fixedr.strip() != '')):
                             if (re.match('HPRD',fixedr)):
+                                #proteins are not == genes.
                                 self.graph.add((n,URIRef(cu.get_uri(self.relationships['has_gene_product'])),URIRef(cu.get_uri(fixedr))))
                             else:
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
                                     gu.addEquivalentClass(self.graph,gene_id,fixedr)
-                        #todo, make sure to not make protein ids equivalent!  for example, HPRD==protein id
-                        #use gene_product_of RO:0002204
 
                 #we don't get actual coords, just chr and band
                 #make them blank nodes for now
