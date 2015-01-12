@@ -95,9 +95,10 @@ class GraphUtils:
         return
 
     def addDefinition(self,g,cid,definition):
-        n = URIRef(self.cu.get_uri(cid))
-        p = URIRef(self.cu.get_uri(Assoc.relationships['definition']))
-        g.add((n,p,Literal(definition)))
+        if (definition is not None):
+            n = URIRef(self.cu.get_uri(cid))
+            p = URIRef(self.cu.get_uri(Assoc.relationships['definition']))
+            g.add((n,p,Literal(definition)))
 
         return
 
