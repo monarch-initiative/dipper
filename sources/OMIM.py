@@ -19,6 +19,9 @@ from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
+from utils.romanplus import romanNumeralPattern,fromRoman, toRoman
+
+import roman
 
 class OMIM(Source):
     '''
@@ -111,7 +114,7 @@ class OMIM(Source):
 
         print("Parsing files...")
 
-        #self._process_all(limit)
+        self._process_all(limit)
         self._process_morbidmap(limit)
 
         self.load_core_bindings()
@@ -122,21 +125,6 @@ class OMIM(Source):
 
         return
 
-
-    def _get_description(self,entry):
-        d = None
-        if entry is not None:
-            #print(entry)
-            if 'textSectionList' in entry:
-                textSectionList = entry['textSectionList']
-                for ts in textSectionList:
-                    if ts['textSection']['textSectionName'] == 'description':
-                        d = ts['textSection']['textSectionContent']
-                        #there are internal references to OMIM identifiers in the description, I am
-                        #formatting them in our style.
-                        d = re.sub('{(\\d+)}','OMIM:\\1',d)
-                        break
-        return d
 
     def _get_omim_ids(self):
         omimids = []
@@ -201,12 +189,12 @@ class OMIM(Source):
             #print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
 
             ### if you want to test a specific entry number, uncomment the following code block
-            #if ('270400' in omimids[it:end]):
-            #    print("FOUND IT in",omimids[it:end])
-            #else:
-            #   #testing very specific record
-            #    it+=groupsize
-            #    continue
+            if ('100070' in omimids[it:end]):
+                print("FOUND IT in",omimids[it:end])
+            else:
+               #testing very specific record
+                it+=groupsize
+                continue
             ### end code block for testing
 
             print ('fetching:',(',').join(omimids[it:end]))
@@ -229,7 +217,7 @@ class OMIM(Source):
                 abbrev = None
                 if (len(re.split(';',label)) > 1):
                     abbrev = (re.split(';',label)[1].strip())
-                label = re.split(';',label)[0]
+                newlabel = self._cleanup_label(label)
 
                 description = self._get_description(e['entry'])
                 omimid='OMIM:'+str(omimnum)
@@ -238,9 +226,16 @@ class OMIM(Source):
                 if (e['entry']['status'] == 'removed'):
                     gu.addDeprecatedClass(g,omimid)
                 else:
-                    gu.addClassToGraph(g,omimid,label,None,description)
+                    #this uses our cleaned-up label
+                    gu.addClassToGraph(g,omimid,newlabel)
+
+                    #add the original OMIM label as a synonym
+                    gu.addSynonym(g,omimid,label)
+
+                    #for OMIM, we're adding the description as a definition
+                    gu.addDefinition(g,omimid,description)
                     if (abbrev is not None):
-                        g.add((n,URIRef(cu.get_uri(Assoc.relationships['hasExactSynonym'])),Literal(abbrev)))
+                        gu.addSynonym(g,omimid,abbrev)
 
                     #check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
                     #some entries have been moved to multiple other entries and use the joining raw word "and"
@@ -316,6 +311,32 @@ class OMIM(Source):
 
         return
 
+    def _get_description(self,entry):
+        '''
+        Get the description of the omim entity from the textSection called 'description'.
+        Note that some of these descriptions have linebreaks.  If printed in turtle syntax,
+        they will appear to be triple-quoted.
+        :param entry:
+        :return:
+        '''
+        d = None
+        if entry is not None:
+            #print(entry)
+            if 'textSectionList' in entry:
+                textSectionList = entry['textSectionList']
+                for ts in textSectionList:
+                    if ts['textSection']['textSectionName'] == 'description':
+                        d = ts['textSection']['textSectionContent']
+                        #there are internal references to OMIM identifiers in the description, I am
+                        #formatting them in our style.
+                        d = re.sub('{(\\d+)}','OMIM:\\1',d)
+
+                        #TODO reformat the citations in the description with PMIDs
+                        break
+
+
+        return d
+
     def _map_phene_mapping_code_to_eco(self,code):
         #phenotype mapping code
         #1 - the disorder is placed on the map based on its association with a gene, but the underlying defect is not known.
@@ -336,3 +357,48 @@ class OMIM(Source):
             print("ERROR: unmapped phene code",code)
 
         return eco_code
+
+    def _cleanup_label(self,label):
+        '''
+        Reformat the ALL CAPS OMIM labels to something more pleasant to read.  This will:
+        1.  remove the abbreviation suffixes
+        2.  convert the roman numerals to integer numbers
+        3.  make the text title case, except for conjunctions/prepositions/articles
+        :param label:
+        :return:
+        '''
+        #remove the abbreviation
+
+        conjunctions = ['and','but','yet','for','nor','so']
+        little_preps = ['at', 'by', 'in', 'of', 'on', 'to', 'up', 'as', 'it', 'or']
+        articles = ['a', 'an', 'the']
+
+        l = re.split(';',label)[0]
+
+        #convert roman numbers into actual numbers
+        fixedwords = []
+        i=0
+        for w in l.split():
+            i += 1
+            if re.match(romanNumeralPattern,w):
+                n = fromRoman(w)
+                #make the assumption that the number of syndromes are <100
+                #this allows me to retain "SYNDROME C" and not convert it to "SYNDROME 100"
+                if (0 < n < 100):
+                    #get the non-roman suffix, if present.  for example, IIIB or IVA
+                    suffix = w.replace(toRoman(n),'',1)
+                    fixed = ('').join((str(n),suffix))
+                    w = fixed
+
+            #capitalize first letter
+            w = w.title()
+
+            #replace interior conjunctions, prepositions, and articles with lowercase
+            if ((w.lower() in (conjunctions+little_preps+articles)) and (i != 1)):
+                w = w.lower()
+
+            fixedwords.append(w)
+
+        l=(' ').join(fixedwords)
+        #print (label,'-->',l)
+        return l
