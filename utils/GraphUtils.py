@@ -35,7 +35,7 @@ class GraphUtils:
             g.add((n, RDFS['label'], Literal(label)))
         if (type is not None):
             t = URIRef(self.cu.get_uri(type))
-            g.add((n, Assoc.OWLSUBCLASS, t))
+            g.add((n, Assoc.SUBCLASS, t))
         if (description is not None):
             g.add((n, DC['description'], Literal(description)))
         return g
@@ -76,10 +76,23 @@ class GraphUtils:
         return
 
     def addSynonym(self,g,cid,synonym,synonym_type=None):
+        '''
+        Add the synonym as a property of the class cid.  Assume it is an exact synonym, unless
+        otherwise specified
+        :param g:
+        :param cid: class id
+        :param synonym: the literal synonym label
+        :param synonym_type: the CURIE of the synonym type (not the URI)
+        :return:
+        '''
         n = URIRef(self.cu.get_uri(cid))
         if (synonym_type is None):
             synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
+        else:
+            synonym_type = URIRef(self.cu.get_uri(synonym_type))
+
         g.add((n, synonym_type, Literal(synonym)))
+        return
 
     def addDefinition(self,g,cid,definition):
         n = URIRef(self.cu.get_uri(cid))
