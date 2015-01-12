@@ -1,7 +1,7 @@
 __author__ = 'nicole'
 
 from rdflib import Namespace, URIRef, Literal
-from rdflib.namespace import RDF,DC,OWL
+from rdflib.namespace import RDF,DC,OWL,RDFS
 from utils.CurieUtil import CurieUtil
 import re
 
@@ -45,7 +45,7 @@ class Assoc:
     OWLCLASS=OWL['Class']
     OWLIND=OWL['NamedIndividual']
     OWLPROP=OWL['ObjectProperty']
-    OWLSUBCLASS=OWL['subclassOf']
+    SUBCLASS=RDFS['subClassOf']
     BASE=Namespace(curie_map[''])
 
 
