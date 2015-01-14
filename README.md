@@ -8,6 +8,8 @@
 * Required python packages:
     * [psycopg2](http://initd.org/psycopg/)
     * [rdflib](https://code.google.com/p/rdflib/)
+    * isodate
+    * roman
 
 * right now this runs completely through the __init__() method.  you can select the sources to process
 by commenting them on/off.
