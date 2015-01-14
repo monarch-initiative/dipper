@@ -101,6 +101,12 @@ class ZFIN(Source):
         return
 
     def _process_genotype_features(self, raw, out, g, limit=None):
+
+        #TODO make this more efficient
+        #the problem with this implementation is that it creates many genotypes over and over, if the
+        #same genotype has many features (on many rows) then the same genotype is recreated, then it must be
+        #merged.  We should probably just create the genotype once, and then find the other
+        #items that belong to that genotype.
         print("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -131,7 +137,6 @@ class ZFIN(Source):
                         geno.addAlleleDerivesFromConstruct(allele_id, construct_id)
 
                     # allele to gene
-                    #FIXME i don't know why, but this shows up as ns1:GENO_0000440 instead of the URI
                     geno.addAlleleOfGene(allele_id, gene_id)
 
 
@@ -146,11 +151,13 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
+                #add the specific genotype subgraph to the overall graph
                 self.graph = geno.getGraph().__iadd__(self.graph)
+            print("INFO: Done with genotypes")
         return
 
     def _map_allele_type_to_geno(self, allele_type):
-        type = None
+        type = 'SO:0001059'  #default: sequence_alteration
         type_map = {
             'complex_substitution': 'SO:1000005',  # complex substitution
             'deficiency': 'SO:1000029',  # incomplete chromosome
@@ -162,15 +169,13 @@ class ZFIN(Source):
             'transgenic_insertion': 'SO:0001218',  #transgenic insertion
             'transgenic_unspecified': 'SO:0000781',  #transgenic unspecified
             'transloc': 'SO:0000199',  #translocation
-            #            'unspecified' : None
+            'unspecified' : 'SO:0001059' #sequence alteration
         }
         if (allele_type.strip() in type_map):
             type = type_map.get(allele_type)
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(allele_type)
-        # print("Mapped: ", allele_type, "to", type)
         else:
             # TODO add logging
-            print("ERROR: Allele Type (", allele_type, "not mapped")
+            print("ERROR: Allele Type (", allele_type, ") not mapped")
 
         return type
 
