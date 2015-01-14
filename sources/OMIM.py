@@ -148,6 +148,13 @@ class OMIM(Source):
         return omimids
 
     def _process_all(self,limit):
+        '''
+        This takes the list of omim identifiers from the omim.txt.gz file,
+        and iteratively queries the omim api for the json-formatted data.
+        This will create OMIM classes, with the label, definition, and some synonyms.
+        :param limit:
+        :return:
+        '''
         omimids = []  #to store the set of omim identifiers
         omimids = self._get_omim_ids()
 
@@ -189,12 +196,12 @@ class OMIM(Source):
             #print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
 
             ### if you want to test a specific entry number, uncomment the following code block
-            if ('100070' in omimids[it:end]):
-                print("FOUND IT in",omimids[it:end])
-            else:
-               #testing very specific record
-                it+=groupsize
-                continue
+            #if ('100600' in omimids[it:end]):
+            #    print("FOUND IT in",omimids[it:end])
+            #else:
+            #   #testing very specific record
+            #    it+=groupsize
+            #    continue
             ### end code block for testing
 
             print ('fetching:',(',').join(omimids[it:end]))
@@ -380,7 +387,9 @@ class OMIM(Source):
         i=0
         for w in l.split():
             i += 1
-            if re.match(romanNumeralPattern,w):
+            #convert the roman numerals to numbers, but assume that the first word is not
+            #a roman numeral (this permits things like "X inactivation"
+            if ((i>1) and (re.match(romanNumeralPattern,w))):
                 n = fromRoman(w)
                 #make the assumption that the number of syndromes are <100
                 #this allows me to retain "SYNDROME C" and not convert it to "SYNDROME 100"
