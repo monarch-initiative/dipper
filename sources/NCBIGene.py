@@ -41,11 +41,11 @@ class NCBIGene(Source):
     }
 
     prefixes = {
-        'NCBIGene' : 'http://ncbi.nlm.nih.gov/gene/',
+        'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/',
         'faldo' : 'http://biohackathon.org/resource/faldo#',
-        'NCBITaxon' : 'http://ncbi.nlm.nih.gov/taxonomy/',
+        'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/',
         'SO' : 'http://purl.obolibrary.org/obo/SO_',
-        'OMIM' : 'http://omim.org/entry/',
+        'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_',
         'HGNC' : 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:',
         'HPRD' : 'http://www.hprd.org/protein/',
         'ENSEMBL' : 'http://identifiers.org/ENSEMBL:',
