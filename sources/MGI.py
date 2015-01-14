@@ -401,24 +401,24 @@ class MGI(Source):
         type = None
         type_map = {
             'Deletion': 'SO:0000159',  # deletion
-            'Disruption caused by insertion of vector': 'SO:XXXXXXX',
-            'Duplication': 'SO:XXXXXXX',
-            'Insertion': 'SO:XXXXXXX',
-            'Insertion of gene trap vector': 'SO:XXXXXXX',
-            'Intergenic deletion': 'SO:XXXXXXX',
-            'Intragenic deletion': 'SO:XXXXXXX',
-            'Inversion': 'SO:XXXXXXX',
-            'Not Applicable': 'SO:XXXXXXX',
-            'Not Specified': 'SO:XXXXXXX',
-            'Nucleotide repeat expansion': 'SO:XXXXXXX',
-            'Nucleotide substitutions': 'SO:XXXXXXX',
-            'Other': 'SO:XXXXXXX',
-            'Single point mutation': 'SO:1000008',  #point_mutation
-            'Translocation': 'SO:0000199',  #translocation
-            'Transposon insertion': 'SO:XXXXXXX',
-            'Undefined': 'SO:XXXXXXX',
-            'Viral insertion': 'SO:XXXXXXX',
-            'wild type': 'SO:XXXXXXX'
+            'Disruption caused by insertion of vector': 'SO:0000667',  # insertion - correct?
+            'Duplication': 'SO:1000035',  # duplication
+            'Insertion': 'SO:0000667',  # insertion
+            'Insertion of gene trap vector': 'SO:0000667',  # insertion - correct?
+            'Intergenic deletion': 'SO:0000159',  # deletion
+            'Intragenic deletion': 'SO:0000159',  # deletion
+            'Inversion': 'SO:1000036',  # inversion
+            'Not Applicable': 'SO:0001060',  # sequence variant - correct?
+            'Not Specified': 'SO:0001060',  # sequence variant - correct?
+            'Nucleotide repeat expansion': 'SO:0000667',  # insertion - correct?
+            'Nucleotide substitutions': 'SO:1000002',  # substitution - Correct? Or another term indicating more than one?
+            'Other': 'SO:0001060',  # sequence variant - correct?
+            'Single point mutation': 'SO:1000008',  # point_mutation
+            'Translocation': 'SO:0000199',  # translocation
+            'Transposon insertion': 'SO:0000101',  # transposable_element
+            'Undefined': 'SO:0001060',  # sequence variant - correct?
+            'Viral insertion': 'SO:0000667',  # insertion - correct?
+            'wild type': 'SO:0000817'  # wild type
 
 
 
