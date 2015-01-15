@@ -71,7 +71,11 @@ class DispositionAssoc(Assoc):
 #                source = Namespace(namespaces['PMID'])[self.pub_id.replace('PMID:','')]
                 source = URIRef(self.cu.get_uri(self.pub_id))
             else:
-                source = URIRef(self.cu.get_uri(self.pub_id))
+                u = self.cu.get_uri(self.pub_id)
+                if (u is not None):
+                    source = URIRef(u)
+                else:
+                    source = None
 
             #evidence = Namespace(namespaces['ECO'])[self.evidence.replace('ECO:','')]
             evidence = URIRef(self.cu.get_uri(self.evidence))
@@ -83,7 +87,7 @@ class DispositionAssoc(Assoc):
             g.add((node, RDF['type'],URIRef(self.cu.get_uri('Annotation:'))))
             g.add((node, self.BASE['hasSubject'], s))
             g.add((node, self.BASE['hasObject'], o))
-            if (self.pub_id.strip() == ''):
+            if (self.pub_id is None or self.pub_id.strip() == ''):
                 print("WARN:",self.entity_id,'+',self.heritability_id,'has no source information for the association (',self.evidence,')')
             else:
                 g.add((node, DC['source'], source))

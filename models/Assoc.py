@@ -86,11 +86,15 @@ class Assoc:
             if (re.compile('http').match(self.pub_id)):
                 source = URIRef(self.pub_id)
             else:
-                source = URIRef(self.cu.get_uri(self.pub_id))
+                u = self.cu.get_uri(self.pub_id)
+                if (u is not None):
+                    source = URIRef(u)
+                else:
+                    source = None
 
         evidence = URIRef(self.cu.get_uri(self.evidence))
         if (self.pub_id is not None and self.pub_id.strip() != ''):
-            if (source != URIRef('[]')):
+            if (source is not None and source != URIRef('[]')):
                 g.add((node, DC['source'], source))
                 g.add((source, RDF['type'], self.OWLIND))
             else:
