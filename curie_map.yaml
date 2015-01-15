@@ -1,0 +1,63 @@
+# base
+'': 'http://www.monarchinitiative.org/'
+'MONARCH': 'http://www.monarchinitiative.org/MONARCH_'
+
+
+# ontologies
+'HP': 'http://purl.obolibrary.org/obo/HP_'
+'ECO': 'http://purl.obolibrary.org/obo/ECO_'
+'RO': 'http://purl.obolibrary.org/obo/RO_'
+'GENO': 'http://purl.obolibrary.org/obo/GENO_'
+'OBO': 'http://purl.obolibrary.org/obo/'
+'OIO': 'http://www.geneontology.org/formats/oboInOwl#'
+'IAO': 'http://purl.obolibrary.org/obo/IAO_'
+'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
+'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'
+'ORPHANET' : 'http://purl.obolibrary.org/obo/ORPHANET_'
+'faldo' : 'http://biohackathon.org/resource/faldo#'
+'SO' : 'http://purl.obolibrary.org/obo/SO_'
+'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
+'DATA' : 'http://purl.obolibrary.org/DATA_'
+'MP': 'http://purl.obolibrary.org/obo/MP_'
+'MA': 'http://purl.obolibrary.org/obo/MA_'
+'ZP': 'http://purl.obolibrary.org/obo/ZP_'
+'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'
+'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'
+'BFO': 'http://purl.obolibrary.org/obo/BFO_'
+'DOID': 'http://purl.obolibrary.org/obo/DOID_'
+'MESH': 'http://purl.obolibrary.org/obo/MESH_'
+'RO': 'http://purl.obolibrary.org/obo/RO_'
+
+# publication/reference sources
+'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
+'ISBN-10': 'http://www.monarchinitiative.org/ISBN_'
+'ISBN-13': 'http://www.monarchinitiative.org/ISBN_'
+'ISBN-15': 'http://www.monarchinitiative.org/ISBN_'
+'ISBN': 'http://www.monarchinitiative.org/ISBN_'
+
+# other
+'Annotation': 'http://www.w3.org/ns/oa#Annotation'
+'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
+'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/'
+'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
+
+# genes
+'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
+'HGNC' : 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'
+'HPRD' : 'http://www.hprd.org/protein/'
+'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
+'miRBase' : 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='
+'MGI': 'http://www.informatics.jax.org/accession/MGI:'  #Note this will work for marker(gene) and allele, but not genotype
+'BIOGRID' : 'http://thebiogrid.org/'
+'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
+'ZFIN' : 'http://zfin.org/'
+'dictyBase' : 'http://dictybase.org/gene/'
+'TAIR' : 'http://identifiers.org/TAIR:'
+'FlyBase' : 'http://identifiers.org/FB:'
+'PomBase' : 'http://identifiers.org/PomBase:'
+'WormBase' : 'http://identifiers.org/WormBase:'
+'SGD' : 'http://identifiers.org/SGD:'
+
+
+# proteins
+'UniProtKB' : 'http://identifiers.org/UniProt:'
