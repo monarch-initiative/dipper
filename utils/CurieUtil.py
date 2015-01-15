@@ -23,6 +23,8 @@ class CurieUtil:
 
     # Get a URI from a CURIE
     def get_uri(self, curie):
+        if (curie is None):
+            return None
         parts = curie.split(':')
         if 1 == len(parts):
             if (curie != ''):
