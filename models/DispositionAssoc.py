@@ -5,6 +5,7 @@ from rdflib.namespace import FOAF, RDFS, DC
 
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
+import curie_map
 
 import re
 import urllib
@@ -17,15 +18,14 @@ class DispositionAssoc(Assoc):
 
         relationships={'has_disposition','http://purl.obolibrary.org/obo/GENO_0000208'}
 
-        def __init__(self,annot_id,entity_id,heritability_id,pub,evidence_code, curie_map):
+        def __init__(self,annot_id,entity_id,heritability_id,pub,evidence_code):
             self.annot_id = annot_id
             self.entity_id = entity_id
             self.heritability_id = heritability_id
             self.pub_id = pub
             self.evidence = evidence_code
             self.rel = self.has_disposition  #default to has_disposition
-            self.curie_map = curie_map
-            self.cu = CurieUtil(self.curie_map)
+            self.cu = CurieUtil(curie_map.get())
 
             return
 

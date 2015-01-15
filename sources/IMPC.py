@@ -14,6 +14,7 @@ from models.G2PAssoc import G2PAssoc
 from rdflib import Namespace, URIRef
 import re
 from utils.CurieUtil import CurieUtil
+import curie_map
 
 
 class IMPC(Source):
@@ -27,18 +28,9 @@ class IMPC(Source):
                  'url' : 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'}
     }
 
-    namespaces = {
-        'MP': 'http://purl.obolibrary.org/obo/MP_',
-        'MA': 'http://purl.obolibrary.org/obo/MA_',
-        'MGI' : 'http://www.informatics.jax.org/accession/MGI:'  #IMPC uses MGI identifiers for markers...
-    }
 
     def __init__(self):
         Source.__init__(self, 'impc')
-
-        #assemble all the curie mappings from the imported models
-        self.namespaces.update(Assoc.curie_map)
-        self.namespaces.update(Genotype.curie_map)
 
         #update the dataset object with details about this resource
         #TODO put this into a conf file?

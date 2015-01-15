@@ -14,6 +14,7 @@ from models.G2PAssoc import G2PAssoc
 from rdflib import Namespace, URIRef
 import re
 from utils.CurieUtil import CurieUtil
+import curie_map
 
 
 class ZFIN(Source):
@@ -25,19 +26,10 @@ class ZFIN(Source):
         'zpmap' : {'file' : 'zp-mapping.txt', 'url' : 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt'},
     }
 
-    namespaces = {
-        'ZP': 'http://purl.obolibrary.org/obo/ZP_',
-        'ZFIN': 'http://zfin.org/',
-        'ZFA': 'http://purl.obolibrary.org/obo/ZFA_',
-        'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'
-    }
 
     def __init__(self):
         Source.__init__(self, 'zfin')
 
-        #assemble all the curie mappings from the imported models
-        self.namespaces.update(Assoc.curie_map)
-        self.namespaces.update(Genotype.curie_map)
 
         #update the dataset object with details about this resource
         #TODO put this into a conf file?
@@ -119,7 +111,7 @@ class ZFIN(Source):
                  construct_name, construct_id, other) = row
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name, self.namespaces)
+                geno = Genotype(genotype_id, genotype_name)
 
                 # reassign the allele_type to a proper GENO or SO class
                 allele_type = self._map_allele_type_to_geno(allele_type)
@@ -219,7 +211,7 @@ class ZFIN(Source):
                     continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name, self.namespaces)
+                geno = Genotype(genotype_id, genotype_name)
                 self.graph.__iadd__(geno.getGraph())
 
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
@@ -232,7 +224,7 @@ class ZFIN(Source):
                 if (not re.match('^normal', modifier)):
                     assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
                     pub_id = 'ZFIN:' + pub_id.strip()
-                    assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id, self.namespaces)
+                    assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id)
                     self.graph = assoc.addAssociationNodeToGraph(self.graph)
                 else:
                     #add normal phenotypes
@@ -254,7 +246,7 @@ class ZFIN(Source):
         :return:
         '''
         line_counter = 0
-        cu = CurieUtil(self.namespaces)
+        cu = CurieUtil(curie_map.get())
 
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')

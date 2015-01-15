@@ -19,6 +19,7 @@ from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
+import curie_map
 
 class NCBIGene(Source):
     '''
@@ -40,20 +41,8 @@ class NCBIGene(Source):
         #},
     }
 
-    prefixes = {
-        'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/',
-        'faldo' : 'http://biohackathon.org/resource/faldo#',
-        'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/',
-        'SO' : 'http://purl.obolibrary.org/obo/SO_',
-        'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_',
-        'HGNC' : 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:',
-        'HPRD' : 'http://www.hprd.org/protein/',
-        'ENSEMBL' : 'http://identifiers.org/ENSEMBL:',
-        'miRBase' : 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=',
-        'MGI': 'http://www.informatics.jax.org/accession/MGI:',  #All MGI ids are genes in this case
-    }
 
-    curie_map = {}
+
 
     relationships = {
         'gene_product_of' : 'RO:0002204',
@@ -63,10 +52,6 @@ class NCBIGene(Source):
 
     def __init__(self):
         Source.__init__(self, 'ncbigene')
-        self.curie_map.update(Assoc.curie_map)
-        self.curie_map.update(D2PAssoc.curie_map)
-        self.curie_map.update(DispositionAssoc.curie_map)
-        self.curie_map.update(self.prefixes)
 
         self.load_bindings()
 
@@ -99,12 +84,6 @@ class NCBIGene(Source):
         '''
         return
 
-    def load_bindings(self):
-        self.load_core_bindings()
-        for k in self.curie_map.keys():
-            v=self.curie_map[k]
-            self.graph.bind(k, Namespace(v))
-        return
 
     def parse(self, limit=None):
         if (limit is not None):
@@ -122,8 +101,8 @@ class NCBIGene(Source):
         return
 
     def _get_gene_info(self,limit):
-        gu = GraphUtils(self.curie_map)
-        cu = CurieUtil(self.curie_map)
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
 
         exact=URIRef(cu.get_uri(Assoc.relationships['hasExactSynonym']))
         related=URIRef(cu.get_uri(Assoc.relationships['hasRelatedSynonym']))

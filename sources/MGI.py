@@ -18,6 +18,7 @@ from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 import config
+import curie_map
 from utils.GraphUtils import GraphUtils
 
 
@@ -43,12 +44,6 @@ class MGI(Source):
 #        'all_allele_mutation_view'
     ]
 
-    namespaces = {
-        'MP': 'http://purl.obolibrary.org/obo/MP_',
-        'MA': 'http://purl.obolibrary.org/obo/MA_',
-        'MGI' : 'http://www.informatics.jax.org/accession/MGI:',  #note that MGI genotypes will not resolve at this address
-        'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/',
-    }
 
     relationship = {
         'is_mutant_of' : 'GENO:0000440',
@@ -63,11 +58,11 @@ class MGI(Source):
 
     def __init__(self):
         Source.__init__(self, 'mgi')
-
+        self.namespaces.update(curie_map.get())
         #assemble all the curie mappings from the imported models
-        self.namespaces.update(Assoc.curie_map)
-        self.namespaces.update(Genotype.curie_map)
-        self.namespaces.update(G2PAssoc.curie_map)
+        #self.namespaces.update(Assoc.curie_map)
+        #self.namespaces.update(Genotype.curie_map)
+        #self.namespaces.update(G2PAssoc.curie_map)
 
         #update the dataset object with details about this resource
         self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/')
@@ -366,8 +361,8 @@ class MGI(Source):
         #7.  strainkey is a class (or an instance?)
 
         has_reference_part = 'GENO:0000385'
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
         line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
@@ -394,9 +389,9 @@ class MGI(Source):
 
         return
 
-    def _process_gxd_genotype_summary_view(self,raw,limit):
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+    def _process_gxd_genotype_summary_view(self,raw,limit=None):
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
         line_counter = 0
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip

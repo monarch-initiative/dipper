@@ -5,6 +5,7 @@ from rdflib.namespace import RDF, DC
 from utils.CurieUtil import CurieUtil
 import re
 from models.Assoc import Assoc
+import curie_map
 
 class OrthologyAssoc(Assoc):
 
@@ -19,25 +20,15 @@ class OrthologyAssoc(Assoc):
         'has_member' : 'RO:0002351'
         }
 
-    ns = {
-        'DATA' : 'http://purl.obolibrary.org/obo/DATA_'
-    }
 
-    def __init__(self,assoc_id, gene1, gene2, pub, evidence_code, curie_map):
-        if (self.curie_map is None):
-            self.curie_map = curie_map
-        else:
-            self.curie_map.update(curie_map)
-        self.curie_map.update(self.ns)
-        self.cu = CurieUtil(curie_map)
+    def __init__(self,assoc_id, gene1, gene2, pub, evidence_code):
+        self.cu = CurieUtil(curie_map.get())
         self.annot_id = assoc_id
         self.gene1 = gene1
         self.gene2 = gene2
         self.pub_id = pub
         self.evidence = evidence_code
         self.rel = self.relationships['orthologous']  # default
-        self.curie_map = curie_map
-        self.cu = CurieUtil(self.curie_map)
 
         self.setSubject(gene1)
         self.setObject(gene2)

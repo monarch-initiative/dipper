@@ -12,6 +12,7 @@ from models.DispositionAssoc import DispositionAssoc
 from rdflib import Namespace
 from models.Dataset import Dataset
 from models.Assoc import Assoc
+import curie_map
 
 '''
 #see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
@@ -51,22 +52,9 @@ class HPOAnnotations(Source):
         "PCS": "ECO:0000269",  #FIXME currently using "experimental evidence used in manual assertion"
         "TAS": "ECO:0000304"   #Traceable Author Statement
     }
-    disease_prefixes = {
-        'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_',
-        'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_',
-        'ORPHANET' : 'http://purl.obolibrary.org/obo/ORPHANET_'
-    }
-
-    curie_map = {
-        'HPO' : 'http://human-phenotype-ontology.org/' #used for HPO-person identifiers, but they don't resolve
-    }
 
     def __init__(self):
         Source.__init__(self, 'hpoa')
-
-        self.curie_map.update(D2PAssoc.curie_map)
-        self.curie_map.update(DispositionAssoc.curie_map)
-        self.curie_map.update(self.disease_prefixes)
 
         self.load_bindings()
 
@@ -122,12 +110,6 @@ class HPOAnnotations(Source):
         pysed.replace(";MIM",";OMIM", f)
         return
 
-    def load_bindings(self):
-        self.load_core_bindings()
-        for k in self.curie_map.keys():
-            v=self.curie_map[k]
-            self.graph.bind(k, Namespace(v))
-        return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
     # we can investigate doing this line-by-line later
@@ -175,14 +157,14 @@ class HPOAnnotations(Source):
                     assoc = None
                     # we want to do things differently depending on the aspect of the annotation
                     if (asp == 'O' or asp == 'M'):  #organ abnormality or mortality
-                        assoc = D2PAssoc(assoc_id, disease_id, pheno_id, onset, freq, pub, self._map_evidence_to_codes(eco), self.curie_map)
+                        assoc = D2PAssoc(assoc_id, disease_id, pheno_id, onset, freq, pub, self._map_evidence_to_codes(eco))
                         g = assoc.addAssociationNodeToGraph(g)
                     elif (asp == 'I'):  #inheritance patterns for the whole disease
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco), self.curie_map)
+                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco))
                         g = assoc.addAssociationNodeToGraph(g)
                     elif (asp == 'C'):  #clinical course / onset
                         #FIXME is it correct for these to be dispositions?
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco), self.curie_map)
+                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, self._map_evidence_to_codes(eco))
                         g = assoc.addAssociationNodeToGraph(g)
                     else:
                         #TODO throw an error?

@@ -7,6 +7,7 @@ from rdflib.namespace import RDFS, DC
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 from models.Assoc import Assoc
+import curie_map
 
 class Genotype():
     '''
@@ -15,12 +16,6 @@ class Genotype():
     so that each genotype itself is a graph, then merge all the genotypes together
     to create a big merged graph for a single resource.
     '''
-
-    #classes and relationships
-    curie_map = {
-        'GENO': 'http://purl.obolibrary.org/obo/GENO_',
-        'SO' : 'http://purl.obolibrary.org/obo/SO_'
-    }
 
     #special genotype parts mapped to their GENO and SO classes that we explicitly reference here
     genoparts = {
@@ -70,11 +65,12 @@ class Genotype():
     }
 
 
-    def __init__(self, genotype_id, genotype_label, curie_map):
+    def __init__(self, genotype_id, genotype_label):
 
-        self.curie_map.update(curie_map)
-        self.gu = GraphUtils(self.curie_map)
-        self.cu = CurieUtil(self.curie_map)
+        self.cm = curie_map.get()
+
+        self.gu = GraphUtils(self.cm)
+        self.cu = CurieUtil(self.cm)
 
         self.g = Graph()
 

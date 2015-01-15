@@ -6,6 +6,7 @@ import re
 import urllib
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
+import curie_map
 
 # This one is specific for making a disease-to-phenotype
 class D2PAssoc(Assoc):
@@ -18,7 +19,7 @@ class D2PAssoc(Assoc):
 
     '''
 
-    def __init__(self, assoc_id, entity_id, phenotype_id, onset, frequency, pub, evidence_code, curie_map):
+    def __init__(self, assoc_id, entity_id, phenotype_id, onset, frequency, pub, evidence_code):
         self.annot_id = assoc_id
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -27,8 +28,7 @@ class D2PAssoc(Assoc):
         self.pub_id = pub
         self.evidence = evidence_code
         self.rel = self.relationships['has_phenotype']
-        self.curie_map = curie_map
-        self.cu = CurieUtil(self.curie_map)
+        self.cu = CurieUtil(curie_map.get())
 
         self.setSubject(entity_id)
         self.setObject(phenotype_id)
@@ -48,7 +48,7 @@ class D2PAssoc(Assoc):
         :param g:
         :return:
         '''
-        namespaces = self.curie_map
+        namespaces = curie_map.get()
 
         #add the basic association nodes
         self.addAssociationToGraph(g)

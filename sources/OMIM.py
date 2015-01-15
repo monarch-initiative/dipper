@@ -20,8 +20,8 @@ from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
 from utils.romanplus import romanNumeralPattern,fromRoman, toRoman
+import curie_map
 
-import roman
 
 class OMIM(Source):
     '''
@@ -51,20 +51,11 @@ class OMIM(Source):
         }
     }
 
-    disease_prefixes = {
-        'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_',
-    }
-
-    curie_map = {}
 
     OMIM_API = "http://api.omim.org:8000/api"
 
     def __init__(self):
         Source.__init__(self, 'omim')
-
-        self.curie_map.update(D2PAssoc.curie_map)
-        self.curie_map.update(DispositionAssoc.curie_map)
-        self.curie_map.update(self.disease_prefixes)
 
         self.load_bindings()
 
@@ -101,12 +92,6 @@ class OMIM(Source):
         '''
         return
 
-    def load_bindings(self):
-        self.load_core_bindings()
-        for k in self.curie_map.keys():
-            v=self.curie_map[k]
-            self.graph.bind(k, Namespace(v))
-        return
 
     def parse(self, limit=None):
         if (limit is not None):
@@ -170,8 +155,8 @@ class OMIM(Source):
 
         g = self.graph
 
-        gu = GraphUtils(self.curie_map)
-        cu = CurieUtil(self.curie_map)
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
 
         it=0  #for counting
 
@@ -308,7 +293,7 @@ class OMIM(Source):
 
 
                 assoc_id = self.make_id((disorder_id+gene_id+phene_key))
-                assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence,self.curie_map)
+                assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence)
                 assoc.loadObjectProperties(self.graph)
                 assoc.addAssociationToGraph(self.graph)
 

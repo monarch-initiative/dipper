@@ -37,28 +37,8 @@ class Panther(Source):
         }
     }
 
-    namespaces = {
-        'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/',
-        'BIOGRID' : 'http://thebiogrid.org/',
-        'ENSEMBL' : 'http://identifiers.org/ENSEMBL:',
-        'MGI': 'http://www.informatics.jax.org/accession/MGI:',  #All MGI ids are genes in this case
-        'UniProtKB' : 'http://identifiers.org/UniProt:',
-        'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id=',
-        'ZFIN' : 'http://zfin.org/',
-        'dictyBase' : 'http://dictybase.org/gene/',
-        'TAIR' : 'http://identifiers.org/TAIR:',
-        'FlyBase' : 'http://identifiers.org/FB:',
-        'PomBase' : 'http://identifiers.org/PomBase:',
-        'WormBase' : 'http://identifiers.org/WormBase:',
-        'SGD' : 'http://identifiers.org/SGD:',
-        'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession=',
-        'DATA' : 'http://purl.obolibrary.org/DATA_',
-    }
-
     def __init__(self,args=[]):
         Source.__init__(self, 'panther')
-
-        self.namespaces.update(Assoc().get_namespaces())
 
         self.load_bindings()
 
@@ -184,7 +164,7 @@ class Panther(Source):
                     assoc_id = self.make_id(('').join((panther_id,species_a,gene_a,protein_a,species_b,gene_b,protein_b,orthology_class)))
 
                     #add the association and relevant nodes to graph
-                    assoc = OrthologyAssoc(assoc_id,gene_a,gene_b,None,evidence,self.namespaces)
+                    assoc = OrthologyAssoc(assoc_id,gene_a,gene_b,None,evidence)
                     assoc.setRelationship(rel)
                     assoc.loadObjectProperties(self.graph)
                     assoc.addAssociationToGraph(self.graph)

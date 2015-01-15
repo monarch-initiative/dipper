@@ -1,6 +1,3 @@
-from utils.CurieUtil import CurieUtil
-from utils.GraphUtils import GraphUtils
-
 __author__ = 'nicole'
 
 from rdflib import Namespace
@@ -16,9 +13,14 @@ from subprocess import check_call
 from zipfile import ZipFile
 import re
 
-from models.InteractionAssoc import InteractionAssoc
+import curie_map
 from sources.Source import Source
+from models.InteractionAssoc import InteractionAssoc
 from models.Dataset import Dataset
+from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
+
+
 
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
@@ -38,19 +40,8 @@ class BioGrid(Source):
         }
     }
 
-    curie_map = {
-        'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/',
-        'BIOGRID' : 'http://thebiogrid.org/',
-        'WormBase' : 'http://identifiers.org/WormBase:',
-        'MGI' : 'http://www.informatics.jax.org/accession/MGI:',
-        'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
-    }
-
-
     def __init__(self,args=[]):
         Source.__init__(self, 'biogrid')
-
-        self.curie_map.update(InteractionAssoc.curie_map)
 
         self.load_bindings()
 
@@ -99,20 +90,13 @@ class BioGrid(Source):
         '''
 
         #TODO make each of these items an option... we may want to process them separately
-        #self._get_interactions(limit)
+        self._get_interactions(limit)
 
-        self._get_identifiers(limit)
+        #self._get_identifiers(limit)
         self.load_bindings()
 
         print("Loaded", len(self.graph), "nodes")
 
-        return
-
-    def load_bindings(self):
-        self.load_core_bindings()
-        for k in self.curie_map.keys():
-            v=self.curie_map[k]
-            self.graph.bind(k, Namespace(v))
         return
 
 
@@ -171,7 +155,7 @@ class BioGrid(Source):
                 #map to a public URI.  we will construct a monarch identifier from this
                 assoc_id = self.make_id(interaction_id)
 
-                assoc = InteractionAssoc(assoc_id,gene_a,gene_b,pub_id,evidence,self.curie_map)
+                assoc = InteractionAssoc(assoc_id,gene_a,gene_b,pub_id,evidence)
                 assoc.setRelationship(rel)
                 assoc.loadObjectProperties(self.graph)
                 assoc.addInteractionAssociationToGraph(self.graph)
@@ -212,8 +196,8 @@ class BioGrid(Source):
                 (biogrid_num,id_num,id_type,organism_label) = line.split('\t')
 
                 #for each one of these, create the node and add equivalent classes
-                cu = CurieUtil(self.curie_map)
-                gu = GraphUtils(self.curie_map)
+                cu = CurieUtil(curie_map.get())
+                gu = GraphUtils(curie_map.get())
                 g = self.graph
                 biogrid_id='BIOGRID:'+biogrid_num
                 prefix = self._map_idtype_to_prefix(id_type)

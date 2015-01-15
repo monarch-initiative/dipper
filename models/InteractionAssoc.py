@@ -5,6 +5,7 @@ from rdflib.namespace import RDF, DC
 from utils.CurieUtil import CurieUtil
 import re
 from models.Assoc import Assoc
+import curie_map
 
 class InteractionAssoc(Assoc):
 
@@ -16,20 +17,15 @@ class InteractionAssoc(Assoc):
         'ubiquitinates' : 'RO:0002480'
     }
 
-    def __init__(self,assoc_id, gene1, gene2, pub, evidence_code, curie_map):
-        if (self.curie_map is None):
-            self.curie_map = curie_map
-        else:
-            self.curie_map.update(curie_map)
-        self.cu = CurieUtil(curie_map)
+    def __init__(self,assoc_id, gene1, gene2, pub, evidence_code):
+        self.cu = CurieUtil(curie_map.get())
         self.annot_id = assoc_id
         self.gene1 = gene1
         self.gene2 = gene2
         self.pub_id = pub
         self.evidence = evidence_code
         self.rel = self.relationships['interacts_with']  # default
-        self.curie_map = curie_map
-        self.cu = CurieUtil(self.curie_map)
+        self.cu = CurieUtil(curie_map.get())
 
         self.setSubject(gene1)
         self.setObject(gene2)

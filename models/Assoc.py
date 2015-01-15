@@ -4,6 +4,7 @@ from rdflib import Namespace, URIRef, Literal
 from rdflib.namespace import RDF,DC,OWL,RDFS
 from utils.CurieUtil import CurieUtil
 import re
+import curie_map
 
 
 class Assoc:
@@ -11,25 +12,6 @@ class Assoc:
     An abstract class for Monarch-style associations, to enable attribution of source and evidence
     on statements.
     '''
-
-    # TODO turn this into a dictionary from the context file
-    curie_map = {
-        'MONARCH': 'http://www.monarchinitiative.org/MONARCH_',
-        'HP': 'http://purl.obolibrary.org/obo/HP_',
-        'ECO': 'http://purl.obolibrary.org/obo/ECO_',
-        'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/',
-        'ISBN-10' : 'http://www.monarchinitiative.org/ISBN_',
-        'ISBN-13' : 'http://www.monarchinitiative.org/ISBN_',
-        'ISBN-15' : 'http://www.monarchinitiative.org/ISBN_',
-        'ISBN' : 'http://www.monarchinitiative.org/ISBN_',
-        'RO' : 'http://purl.obolibrary.org/obo/RO_',
-        'GENO' : 'http://purl.obolibrary.org/obo/GENO_',
-        'OBO' : 'http://purl.obolibrary.org/obo/',
-        'Annotation' : 'http://www.w3.org/ns/oa#Annotation',
-        'OIO' : 'http://www.geneontology.org/formats/oboInOwl#',
-        'IAO' : 'http://purl.obolibrary.org/obo/IAO_',
-        '' : 'http://www.monarchinitiative.org/',  #base,
-    }
 
     relationships = {
         'has_disposition':'GENO:0000208',
@@ -46,14 +28,18 @@ class Assoc:
     OWLIND=OWL['NamedIndividual']
     OWLPROP=OWL['ObjectProperty']
     SUBCLASS=RDFS['subClassOf']
-    BASE=Namespace(curie_map[''])
+    BASE=Namespace(curie_map.get()[''])
 
 
     def __init__(self):
+        self.cu = CurieUtil(curie_map.get())
         return
 
     def get_namespaces(self):
-        return self.curie_map
+        if (self.namespaces):
+            return self.namespaces
+
+        return None
 
     def get_relationships(self):
         return self.relationships
@@ -64,20 +50,20 @@ class Assoc:
         return
 
     def addAssociationToGraph(self,g):
-        namespaces = self.curie_map
+        cu = self.cu
 
         #first, add the direct triple
-        s = URIRef(self.cu.get_uri(self.sub))
-        p = URIRef(self.cu.get_uri(self.rel))
-        o = URIRef(self.cu.get_uri(self.obj))
+        s = URIRef(cu.get_uri(self.sub))
+        p = URIRef(cu.get_uri(self.rel))
+        o = URIRef(cu.get_uri(self.obj))
 
         g.add((s, RDF['type'], self.OWLCLASS))
         g.add((o, RDF['type'], self.OWLCLASS))
         g.add((s, p, o))
 
         #now, create the reified relationship with our annotation pattern
-        node = URIRef(self.cu.get_uri(self.annot_id))
-        g.add((node, RDF['type'], URIRef(self.cu.get_uri('Annotation:'))))
+        node = URIRef(cu.get_uri(self.annot_id))
+        g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
         g.add((node, self.BASE['hasSubject'], s))
         g.add((node, self.BASE['hasObject'], o))
 
@@ -86,13 +72,13 @@ class Assoc:
             if (re.compile('http').match(self.pub_id)):
                 source = URIRef(self.pub_id)
             else:
-                u = self.cu.get_uri(self.pub_id)
+                u = cu.get_uri(self.pub_id)
                 if (u is not None):
                     source = URIRef(u)
                 else:
                     source = None
 
-        evidence = URIRef(self.cu.get_uri(self.evidence))
+        evidence = URIRef(cu.get_uri(self.evidence))
         if (self.pub_id is not None and self.pub_id.strip() != ''):
             if (source is not None and source != URIRef('[]')):
                 g.add((node, DC['source'], source))
@@ -129,7 +115,7 @@ class Assoc:
         :param g: a graph
         :return: None
         '''
-        cu = CurieUtil(self.curie_map)
+        cu = self.cu
         for k in self.relationships:
             g.add((URIRef(cu.get_uri(self.relationships[k])),RDF['type'],self.OWLPROP))
         return
