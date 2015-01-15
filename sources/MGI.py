@@ -8,7 +8,7 @@ import psycopg2
 
 from rdflib import Literal
 from rdflib.namespace import RDFS, OWL, RDF
-from rdflib import Namespace, URIRef
+from rdflib import Namespace, URIRef, BNode
 
 from utils import pysed
 from sources.Source import Source
@@ -18,6 +18,7 @@ from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 import config
+from utils.GraphUtils import GraphUtils
 
 
 class MGI(Source):
@@ -37,16 +38,28 @@ class MGI(Source):
         'mgi_dbinfo',
         'gxd_genotype_view',
         'gxd_genotype_summary_view',
-        'gxd_allelepair_view',
-        'all_summary_view',
-        'all_allele_mutation_view'
+#        'gxd_allelepair_view',
+#        'all_summary_view',
+#        'all_allele_mutation_view'
     ]
 
     namespaces = {
         'MP': 'http://purl.obolibrary.org/obo/MP_',
         'MA': 'http://purl.obolibrary.org/obo/MA_',
-        'MGI' : 'http://www.informatics.jax.org/accession/MGI:'  #note that MGI genotypes will not resolve at this address
+        'MGI' : 'http://www.informatics.jax.org/accession/MGI:',  #note that MGI genotypes will not resolve at this address
+        'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/',
     }
+
+    relationship = {
+        'is_mutant_of' : 'GENO:0000440',
+        'derives_from' : 'RO:0001000',
+        'has_alternate_part' : 'GENO:0000382',
+        'has_reference_part' : 'GENO:0000385',
+        'in_taxon' : 'RO:0000216',
+        'has_zygosity' : 'GENO:0000608',   #what exactly "has zygosity"?  is it the allele?  genotype?
+        'is_sequence_variant_instance_of' : 'GENO:0000408',
+    }
+
 
     def __init__(self):
         Source.__init__(self, 'mgi')
@@ -135,9 +148,10 @@ class MGI(Source):
 
 
 
-        self._process_genotype_features(('/').join((self.rawdir,self.tables[1])), self.outfile, self.graph, limit)
+        #self._process_genotype_features(('/').join((self.rawdir,self.tables[1])), self.outfile, self.graph, limit)
 
-
+        self._process_genotypes_new(('/').join((self.rawdir,'gxd_genotype_view')),limit)
+        self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)
 
 
         print("Finished parsing.")
@@ -339,13 +353,72 @@ class MGI(Source):
 
         f1.close()
 
+        return
 
+    def _process_genotypes_new(self, raw, limit=None):
+        #need to make triples:
+        #1.  genotype is a class  (or instance?)
+        #2.  genotype has equivalentClass mgi internal identifier?  -- maybe make the internal identifier an anonymous node?
+        #3.  genotype subclass of intrinsic_genotype
+        #4.  genotype has_genomic_background strain_key
+        #5.  strainkey has_label strain
+        #6.  strainkey in_taxon taxon_id  #not part of this table
+        #7.  strainkey is a class (or an instance?)
 
+        has_reference_part = 'GENO:0000385'
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f1:
+            f1.readline()  # read the header row; skip
+            for line in f1:
+                line_counter += 1
+                (genotype_key,strain_key,isconditional,note,existsas_key,createdby_key,modifiedby_key,creation_date,
+                 modification_date,strain,mgiid,dbname,createdbymodifiedby,existsas,empty) = line.split('\t')
 
+                #we can make these proper methods later
+                gt = URIRef(cu.get_uri(mgiid))
+                igt = BNode('genotypekey'+genotype_key)
+                self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
+                self.graph.add((gt,OWL['equivalentClass'],igt))
+                self.graph.add((gt,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000000'))))
+                istrain = BNode('strainkey'+strain_key)
+                self.graph.add((istrain,RDF['type'],Assoc.OWLCLASS))
+                self.graph.add((istrain,RDFS['label'],Literal(strain)))
+                self.graph.add((gt,URIRef(cu.get_uri(has_reference_part)),istrain))
+                #temporary assignment to Mus musculus
+                self.graph.add((istrain,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri('NCBITaxon:10090'))))
 
+                if (limit is not None and line_counter > limit):
+                    break
 
         return
 
+    def _process_gxd_genotype_summary_view(self,raw,limit):
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,createdby_key,modifiedby_key,
+                 creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
+                #note the short_description is the GVC
+
+                #we can make these proper methods later
+                gt = URIRef(cu.get_uri(mgiid))
+                igt = BNode('genotypekey'+object_key)
+                self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
+                self.graph.add((gt,OWL['equivalentClass'],igt))
+                self.graph.add((gt,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000000'))))
+                self.graph.add((gt,RDFS['label'],Literal(description)))  #the 'description' is the full genotype label
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
 
 
     def _process_g2p(self, raw, out, g, limit=None):
