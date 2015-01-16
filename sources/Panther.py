@@ -139,8 +139,8 @@ class Panther(Source):
                     #using AND will get you only those associations where gene1 AND gene2 are in the taxid list (most-filter)
                     #using OR will get you any associations where gene1 OR gene2 are in the taxid list (some-filter)
                     #print("INFO: restricting taxa to ids:",taxids)
-                    if (not (taxids.__contains__(int(re.sub('NCBITaxon:','', taxon_a.rstrip()))) and
-                        taxids.__contains__(int(re.sub('NCBITaxon:','', taxon_b.rstrip()))) )):
+                    if ((int(re.sub('NCBITaxon:','', taxon_a.rstrip())) not in taxids ) and
+                        (int(re.sub('NCBITaxon:','', taxon_b.rstrip())) not in taxids ) ):
                         continue
                     else:
                         matchcounter += 1
