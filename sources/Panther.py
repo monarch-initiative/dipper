@@ -170,7 +170,7 @@ class Panther(Source):
                     assoc.addAssociationToGraph(self.graph)
 
                     #note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
-                    assoc.addGeneFamilyToGraph(self.graph,(':').join(('PANTHER:',panther_id)))
+                    assoc.addGeneFamilyToGraph(self.graph,(':').join(('PANTHER',panther_id)))
 
                     if (limit is not None and line_counter > limit):
                         break
