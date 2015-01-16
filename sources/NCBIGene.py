@@ -29,16 +29,16 @@ class NCBIGene(Source):
     files = {
         'gene_info' : {
             'file' : 'gene_info.gz',
-            'url' : 'ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz'
+            'url' : 'http://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz'
         },
-        #'gene_history' : {
-        #    'file': 'gene_history.gz',
-        #    'url' : 'ftp://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz'
-        #},
-        #'gene2pubmed' : {
-        #    'file': 'gene2pubmed.gz',
-        #    'url' : 'ftp://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
-        #},
+        'gene_history' : {
+            'file': 'gene_history.gz',
+            'url' : 'http://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz'
+        },
+        'gene2pubmed' : {
+            'file': 'gene2pubmed.gz',
+            'url' : 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
+        },
     }
 
 
@@ -46,7 +46,8 @@ class NCBIGene(Source):
 
     relationships = {
         'gene_product_of' : 'RO:0002204',
-        'has_gene_product' : 'RO:0002205'
+        'has_gene_product' : 'RO:0002205',
+        'is_about' : 'IAO:00000136'
     }
 
 
@@ -58,6 +59,15 @@ class NCBIGene(Source):
         self.dataset = Dataset('ncbigene', 'National Center for Biotechnology Information', 'http://ncbi.nih.nlm.gov/gene')
         #data-source specific warnings (will be removed when issues are cleared)
         #print()
+
+        self.filters = {
+            'taxids' : [9606,10090],
+            'geneids' : [17151,100008564,17005,11834,14169]
+        }
+
+        #this filter will be applied to all parsing/outputing...
+        #set to None if you don't want to apply a filter
+        self.filter = 'taxids'
 
         return
 
@@ -92,6 +102,8 @@ class NCBIGene(Source):
         print("Parsing files...")
 
         self._get_gene_info(limit)
+        self._get_gene_history(limit)
+        self._get_gene2pubmed(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -101,6 +113,14 @@ class NCBIGene(Source):
         return
 
     def _get_gene_info(self,limit):
+        '''
+        Currently loops through the gene_info file and creates the genes as classes, typed with SO.  It will add their
+        label, any alternate labels as synonyms, alternate ids as equivlaent classes.  HPRDs get added as
+        protein products.  The chromosome and chr band get added as blank node regions, and the gene is faldo:located
+        on the chr band.
+        :param limit:
+        :return:
+        '''
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
 
@@ -123,7 +143,6 @@ class NCBIGene(Source):
             for line in f:
                 #skip comments
                 line=line.decode().strip()
-                line_counter += 1
                 if (re.match('^#',line)):
                     continue
                 (tax_num,gene_num,symbol,locustag,
@@ -131,13 +150,15 @@ class NCBIGene(Source):
                  gtype,authority_symbol,name,
                  nomenclature_status,other_designations,modification_date) = line.split('\t')
 
-                ##### uncomment the next few lines to apply a taxon or gene filter
-                taxids = [9606,10090]
-                geneids = [17151,100008564,17005,11834,14169]
-                if (int(tax_num) not in taxids):
-                #if (int(gene_num) not in geneids):  #for testing, apply a specific gene filter
-                    continue
-                ##### end taxon filter
+                ##### set filter=None in init if you don't want to have a filter
+                if self.filter is not None:
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
+                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                        continue
+                ##### end filter
+
+
+                line_counter += 1
 
                 gene_id = (':').join(('NCBIGene',gene_num))
                 tax_id = (':').join(('NCBITaxon',tax_num))
@@ -193,15 +214,106 @@ class NCBIGene(Source):
                         self.graph.add((band,loc,chrom))
                         self.graph.add((n,loc,Literal(map_loc)))
 
-                #deal with coordinate information:
-                #make blank nodes for the regions, and positions
-                #generegion = BNode((':').join((chr,map_loc)))
-                #self.graph.add((n,loc,generegion))
-                #self.graph.add((generegion,RDF['type'],region))
-                #self.graph.add((generegion,begin,Literal(map_loc)))
-                #self.graph.add((generegion,end,Literal(map_loc)))
+                if (limit is not None and line_counter > limit):
+                    break
 
-                #todo add reference and strand info
+        return
+
+
+    def _get_gene_history(self,limit):
+        '''
+        Loops through the gene_history file and adds the old gene ids as deprecated classes, where the new
+        gene id is the replacement for it.  The old gene symbol is added as a synonym to the gene.
+        :param limit:
+        :return:
+        '''
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
+
+        print("INFO: Processing Gene records")
+        line_counter=0
+        myfile=('/').join((self.rawdir,self.files['gene_history']['file']))
+        print("FILE:",myfile)
+        with gzip.open(myfile, 'rb') as f:
+            for line in f:
+                #skip comments
+                line=line.decode().strip()
+                if (re.match('^#',line)):
+                    continue
+                (tax_num,gene_num,discontinued_num,discontinued_symbol,discontinued_date) = line.split('\t')
+
+                ##### set filter=None in init if you don't want to have a filter
+                if self.filter is not None:
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
+                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                        continue
+                ##### end filter
+
+                if (gene_num == '-' or discontinued_num =='-'):
+                    continue
+                line_counter += 1
+                gene_id = (':').join(('NCBIGene',gene_num))
+                discontinued_gene_id = (':').join(('NCBIGene',discontinued_num))
+                tax_id = (':').join(('NCBITaxon',tax_num))
+
+                #add the two genes
+                gu.addClassToGraph(self.graph,gene_id,None)
+                gu.addClassToGraph(self.graph,discontinued_gene_id,discontinued_symbol)
+
+                #add the new gene id to replace the old gene id
+                gu.addDeprecatedClass(self.graph,discontinued_gene_id,[gene_id])
+
+                #also add the old symbol as a synonym of the new gene
+                gu.addSynonym(self.graph,gene_id,discontinued_symbol)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+    def _get_gene2pubmed(self,limit):
+        '''
+        Loops through the gene2pubmed file and adds a simple triple to say that a given publication
+        is_about a gene.  Publications are added as NamedIndividuals.
+        :param limit:
+        :return:
+        '''
+
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
+        is_about = URIRef(cu.get_uri(self.relationships['is_about']))
+
+        print("INFO: Processing Gene records")
+        line_counter=0
+        myfile=('/').join((self.rawdir,self.files['gene2pubmed']['file']))
+        print("FILE:",myfile)
+        with gzip.open(myfile, 'rb') as f:
+            for line in f:
+                #skip comments
+                line=line.decode().strip()
+                if (re.match('^#',line)):
+                    continue
+                (tax_num,gene_num,pubmed_num) = line.split('\t')
+
+                ##### set filter=None in init if you don't want to have a filter
+                if self.filter is not None:
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
+                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                        continue
+                ##### end filter
+
+                if (gene_num == '-' or pubmed_num =='-'):
+                    continue
+                line_counter += 1
+                gene_id = (':').join(('NCBIGene',gene_num))
+                pubmed_id = (':').join(('PMID',pubmed_num))
+                tax_id = (':').join(('NCBITaxon',tax_num))
+
+                #add the gene, in case it hasn't before
+                gu.addClassToGraph(self.graph,gene_id,None)
+                #add the publication as a NamedIndividual
+                self.graph.add((URIRef(cu.get_uri(pubmed_id)),RDF['type'],Assoc.OWLIND))
+                self.graph.add((URIRef(cu.get_uri(pubmed_id)),is_about,URIRef(cu.get_uri(gene_id))))
 
                 if (limit is not None and line_counter > limit):
                     break

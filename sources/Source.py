@@ -12,6 +12,7 @@ from stat import *
 import hashlib
 import subprocess
 from subprocess import check_call
+import curie_map
 
 from utils.GraphUtils import GraphUtils
 
@@ -63,6 +64,10 @@ class Source:
         self.load_core_bindings()
         for k in self.namespaces.keys():
             v = self.namespaces[k]
+            self.graph.bind(k, Namespace(v))
+
+        for k in curie_map.get().keys():
+            v = curie_map.get()[k]
             self.graph.bind(k, Namespace(v))
         return
 
