@@ -39,8 +39,9 @@ class MGI(Source):
         'mgi_dbinfo',
         'gxd_genotype_view',
         'gxd_genotype_summary_view',
-#        'gxd_allelepair_view',
-#        'all_summary_view',
+        'gxd_allelepair_view',
+        'all_summary_view',
+        'all_allele_view'
 #        'all_allele_mutation_view'
     ]
 
@@ -118,11 +119,14 @@ class MGI(Source):
         return
 
     def scrub(self):
+        #TODO any scrubbing needed for this resource?
         '''
         Perform various data-scrubbing on the raw data files prior to parsing.
         For this resource, this currently includes: (none)
         :return: None
         '''
+
+        #Should the wild type alleles be removed?
 
         return
 
@@ -147,6 +151,9 @@ class MGI(Source):
 
         self._process_genotypes_new(('/').join((self.rawdir,'gxd_genotype_view')),limit)
         self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)
+        self._process_all_summary_view(('/').join((self.rawdir,'all_summary_view')),limit)
+        self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit)
+        #self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
 
 
         print("Finished parsing.")
@@ -160,20 +167,10 @@ class MGI(Source):
     def _process_genotype_features(self, raw, out, g, limit=None):
         print("Processing Genotypes")
         #TODO
-        # Genotype basics: Grab the genotype ID (mgiid) and create the genotype label
-        # Will need to process the genotype label based on zygosity? No, MGI has allele pairs, just need to combine them,
-        # and combine if there is more than one set of allele pairs for a genotype (more than one locus)
-        # Grab data from the gdx_allelepair_view and process, allele1 and allele 2 to get the genotype label
-        # Add in background? Assuming so, assuming we want the level of intrinsic/effective genotype.
-        # Need to handle multiple loci (perhaps make an array, where entry 0 is the ID, append all additional entries, combine all additional entries with ';' when passing to genotype_label variable)
-
-        # Update: Just creating a temporary genotype label for now. Will have to figure out how to get it later and in the right format.
-
-        # NOTE: If this nested loop approach is the best route to go, see about adding breaks to speed up the processing
 
 
-        #Is this the most efficient method? Requires looping through the allelepair data once for every genotype...
-        #Requires > 4.8 billion allele loops so far...
+
+
         line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
@@ -182,171 +179,9 @@ class MGI(Source):
                 cols = line.split('\t')
                 genotype_key = cols[0]  # genotype key for connecting with alleles, first column.
                 genotype_id = cols[10]  # mgiid, column 11.
+                genotype_label = 'temporary label'
                 #print("Capture", genotype_id, "and", genotype_key)
-
-                # Map the genotype ID to the genotype label (temporary)
-                table = (('/').join((self.rawdir,self.tables[2])))  # gxd_genotype_summary_view
-                with open(table, 'r') as f2:
-                    f2.readline()  # read the header row; skip
-                    line_counter2 = 0
-                    genotype_label = "Not specified"
-                    for line in f2:
-                        line_counter2 += 1
-                        cols2 = line.split('\t')
-                        #print(cols)
-                        genotype_id_match = cols2[13]  # mgiid, column 14. Temporarily used for genotype label matching.
-                        #print("Genotype ID", genotype_id, "GenotypeID Match", genotype_id_match)
-                        genotype_label_match = cols2[16]
-
-
-
-                        if len(genotype_label_match.strip()) != 0 and genotype_id == genotype_id_match.strip() :
-                            #genotype_label = cols2[16] #short_description is column 17, which will work for a temporary genotype label.
-                            genotype_label = genotype_label_match
-
-                            #print("Genotype ID", genotype_label)
-                            genotype_label = genotype_label.strip()
-                            #print("Captured", genotype_id, "for genotype", genotype_label)
-
-
-                    #print("Captured", genotype_id, "for genotype", genotype_label)
-                    geno = Genotype(genotype_id, genotype_label, self.namespaces)
-                    #self.graph.__iadd__(geno.getGraph())
-
-                f2.close()
-
-
-                #Add alleles (aka sequence alterations not variant locus, although they are the same for this resource)
-                #Use the allelepair_view to bring in allele data for each genotype.
-                #Can grab the two alleles for a locus, and the zygosity label.
-                #However, this table does not have the official MGI ID used in the view in DISCO.
-                #sequence_alteration_id/variant_locus_id (which are the same) are obtained from all_summary_view table,
-                #which can be used for the allele id.
-
-                # Could create an allele object first. Can do this from the all_summary_view
-                # Has mgiid (column 14, for sequence_alteration_id/variant_locus_id),
-                # a label (short_description, column 17),
-                # and an allele subtype (column 15) which could be converted to an allele type. (NOT IDEAL)
-
-                # Need to get from the _genotype_key -> _allele_key
-                # Get mgiid from the all_summary_view as allele_id
-                # Get short_description from all_summary_view as allele_name, stripping out the text before the <XYZ>.
-                # Question: Do we keep the wild type alleles?
-                # Get mutation from the all_allele_mutation_view as allele_type, map to GO/SO terms
-
-                # Connect _genotype_key to _genotype_key in gxd_allele_pair_view
-                # Capture allele1_key and allele2_key, use to match individually to all_summary_view (_object_key) and all_allele_mutation_view (_allele_key)
-                # Connect gxd_allelepair_view to all_summary_view on _allele_key = _object_key for allele_id and allele_name
-                # Connect gxd_allelepair_view to all_allele_mutation_view on _allele_key = _allele_key for allele_type
-                # Map allele_type
-                #TODO Zygosity label.
-
-
-
-
-                table = (('/').join((self.rawdir,self.tables[3]))) #gxd_allelepair_view
-                with open(table, 'r') as f2:
-                    f2.readline()  # read the header row; skip
-                    for line in f2:
-                        allele1_key = ''
-                        allele2_key = ''
-                        allele1_id = ''
-                        allele2_id = ''
-                        allele1_name = ''
-                        allele2_name = ''
-                        allele1_type = ''
-                        allele2_type = ''
-                        cols2 = line.split('\t')
-                        genotype_key_match = cols2[1]  # _genotype_key, column 2
-                        if genotype_key == genotype_key_match:
-                            allele1_key = cols2[2]  # _allele_key_1, column 3
-                            allele2_key = cols2[3]  # _allele_key_2, column 4
-
-                            #Note: Filter out the nulls for allele 2 at some point
-
-                            #Next, match each allele_key to the all_summary_view table for allele_name and allele_id
-                            table = (('/').join((self.rawdir,self.tables[4]))) #all_summary_view
-                            with open(table, 'r') as f3:
-                                f3.readline()  # read the header row; skip
-                                for line in f3:
-                                    cols3 = line.split('\t')
-                                    allele_match = cols3[5]  # _object_key, column 6
-                                    if allele1_key == allele_match:
-                                        allele1_id = cols3[13]  # mgiid, column 14
-                                        allele1_name = cols3[16]  # short_description, column 17
-                                        allele1_name = allele1_name.strip()
-                                    if allele2_key == allele_match:
-                                        allele2_id = cols3[13]  # mgiid, column 14
-                                        allele2_name = cols3[16]  # short_description, column 17
-                                        allele2_name = allele2_name.strip()
-                            f3.close()
-
-
-
-
-                            #Next, match each allele_key to the all_allele_mutation_view for allele_type
-                            table = (('/').join((self.rawdir,self.tables[5]))) #all_allele_mutation_view
-                            with open(table, 'r') as f4:
-                                f4.readline()  # read the header row; skip
-                                for line in f4:
-                                    cols4 = line.split('\t')
-                                    allele_match = cols4[0]
-                                    if allele1_key == allele_match:
-                                        allele1_type = cols4[4]
-                                    if allele2_key == allele_match:
-                                        allele2_type = cols4[4]
-                            f4.close()
-
-
-
-                            #Map the allele types to GENO/SO terms and add to genotype
-                            #How should we handle wild type alleles?
-                            #print("Allele_1_Type", allele1_type, "Allele_2_Type", allele2_type)
-                            allele1_type = self._map_allele_type_to_geno(allele1_type)
-                            geno.addAllele(allele1_id, allele1_name, allele1_type)
-                            geno.addAlleleToGenotype(genotype_id, allele1_id)
-
-
-
-
-                            if allele2_id is not None and len(allele2_id.strip()) != 0:
-                                #print('allele2_id is', allele2_id, 'allele2_name is', allele2_name, 'allele2_type is ', allele2_type)
-                                if allele2_type.strip() != '':
-                                    allele2_type = self._map_allele_type_to_geno(allele2_type)
-                                #FIXME leaving allele type empty is throwing an error: TypeError: argument of type 'NoneType' is not iterable
-                                #Setting empty types to wild type for the moment.
-                                else:
-                                    allele2_type = 'wild type'
-                                    allele2_type = self._map_allele_type_to_geno(allele2_type)
-                                #print('allele2_id is', allele2_id, 'allele2_name is', allele2_name, 'allele2_type is ', allele2_type)
-                                geno.addAllele(allele2_id, allele2_name, allele2_type)
-                                geno.addAlleleToGenotype(genotype_id, allele2_id)
-
-
-                            #Add each allele to the genotype object
-
-
-
-                            #if len(allele2_id.strip()) != 0:
-
-
-
-                        #allele_id = cols2[13]  # mgiid for the allele, 14th column
-                        #allele_label = cols2[16]  # short_description, 17th column
-                        #allele_type = cols2[14]  # subtype, 15th column, not ideal but will use temporarily.
-                        # Proper allele type needs to be extracted from all_allele_mutation_view,
-                        # match using the _allele_key
-
-                    #Create the add the alleles to the genotype
-
-
-                f2.close()
-                self.graph.__iadd__(geno.getGraph())
-
-
-
-
-        f1.close()
+                geno = Genotype(genotype_id, genotype_label, self.namespaces)
 
         return
 
@@ -401,6 +236,128 @@ class MGI(Source):
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,createdby_key,modifiedby_key,
                  creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
                 #note the short_description is the GVC
+
+                #we can make these proper methods later
+                gt = URIRef(cu.get_uri(mgiid))
+                igt = BNode('genotypekey'+object_key)
+                self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
+                self.graph.add((gt,OWL['equivalentClass'],igt))
+                self.graph.add((gt,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000000'))))
+                self.graph.add((gt,RDFS['label'],Literal(description)))  #the 'description' is the full genotype label
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+    #NOTE: might be best to process alleles initially from the all_allele_view, as this does not have any repeats of alleles!
+    def _process_all_summary_view(self,raw,limit):
+        #Things to process:
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
+                 createdby_key,modifiedby_key,creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
+                #NOTE:May want to filter alleles based on the preferred field (preferred = 1) or will get duplicates
+                ## (24288, to be exact... Reduced to 480 if filtered on preferred = 1)
+                #NOTE:Decision to make: use the short_description here or use the labels from the allelepair_view?
+                #Use this table. allelepair_view will have more repititions of alleles due to inclusion in genotypes.
+
+                #we can make these proper methods later
+                #If we want to filter on preferred, use this if statement:
+                if preferred == '1':
+                    allele = URIRef(cu.get_uri(mgiid))
+                    iallele = BNode('allelekey'+object_key)
+                    self.graph.add((iallele,OWL['equivalentClass'],allele))
+                    #self.graph.add(allele,RDFS['label'],Literal(short_description))
+                    #This above statement isn't needed, as it would be redundant with the label provided for the allele Bnode, correct?
+                    self.graph.add((allele,RDF['type'],Assoc.OWLCLASS))
+                    #self.graph.add((al,OWL['equivalentClass'],ial)) #redundant, yes?
+                    self.graph.add((allele,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000008'))))  # GENO:0000008 = allele
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
+    def _process_all_allele_view(self,raw,limit):
+        #Need to make triples:
+        variant_of = 'GENO:0000408' #FIXME:is_sequence_variant_instance_of. Is this correct?
+        #GENO:0000440=is_mutant_of
+        reference_of = 'GENO:0000409'#FIXME:is_reference_locus_instance_of. Is this correct?
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (allele_key,marker_key,strain_key,mode_key,allele_type_key,allele_status_key,transmission_key,
+                 collection_key,symbol,name,nomensymbol,iswildtype,isextinct,ismixed,createdby_key,modifiedby_key,
+                 approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,createby,modifiedby,approvedby) = line.split('\t')
+                #NOTE:
+
+                #we can make these proper methods later
+
+                #Process the  alleles
+
+                #al = URIRef(cu.get_uri(mgiid))
+                iallele = BNode('allelekey'+allele_key)
+                imarker = BNode('markerkey'+marker_key)
+                if iswildtype == '0':
+                    self.graph.add((iallele,URIRef(cu.get_uri(variant_of)),imarker))
+                elif iswildtype == '1':
+                    self.graph.add((iallele,URIRef(cu.get_uri(reference_of)),imarker))
+
+                if re.match(".*<.*>.*", symbol):
+                    #print(symbol)
+                    symbol = re.sub(".*<", "<", symbol)
+                    #print(symbol)
+                    self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+                elif re.match("\+", symbol):
+                    #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
+                    symbol = '<+>'
+                    print(symbol)
+                    self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+                else:
+                    #print(symbol)
+                    self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+
+                self.graph.add((iallele,OWL['OIO:hasExactSynonym'],Literal(symbol))) #FIXME: syntax correct for the OIO statement?)
+                    #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
+                    #Handling by regex matching at the moment, but need to confirm that the format is dependent on subtype...
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
+
+    def _process_gxd_allele_pair_view(self,raw,limit):
+        #Things to process:
+        #allele_pair_key, genotype_key, allele1_key, allele2_key, allele_state
+        #should already have symbol from the all_allele_view. marker_key?
+        #Process the locus by combining allele1/allele2, with processing of those labels, or use the allele_keys to
+        # link to the graph, grabbing the label there?
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (allelepair_key,genotype_key,allele_key_1,allele_key_2,marker_key,mutantcellline_key_1,mutantcellline_key_2,
+                 pairstate_key,compound_key,sequencenum,createdby_key,modifiedby_key,creation_date,modification_date,symbol,
+                 chromosome,allele1,allele2,allelestate,compound) = line.split('\t')
+                #NOTE: symbol = gene/marker, allele1 + allele2 = VSLC, allele1/allele2 = variant locus, allelestate = zygosity
+                #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
 
                 #we can make these proper methods later
                 gt = URIRef(cu.get_uri(mgiid))
@@ -487,22 +444,6 @@ class MGI(Source):
             'Undefined': 'SO:0001060',  # sequence variant - correct?
             'Viral insertion': 'SO:0000667',  # insertion - correct?
             'wild type': 'SO:0000817'  # wild type
-
-
-
-
-            #'complex_substitution': 'SO:1000005',  # complex substitution
-            #'deficiency': 'SO:1000029',  # incomplete chromosome
-            #'deletion': 'SO:0000159',  # deletion
-            #'indel': 'SO:1000032',  #indel
-            #'insertion': 'SO:0000667',  #insertion
-            #'point_mutation': 'SO:1000008',  #point_mutation
-            #'sequence_variant': 'SO:0001060',  #sequence variant
-            #'transgenic_insertion': 'SO:0001218',  #transgenic insertion
-            #'transgenic_unspecified': 'SO:0000781',  #transgenic unspecified
-            #'transloc': 'SO:0000199',  #translocation
-            #            'unspecified' : None
-
         }
         if (allele_type.strip() in type_map):
             type = type_map.get(allele_type)

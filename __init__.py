@@ -17,8 +17,8 @@ source_to_class_map={
 #   'zfin' : ZFIN,
 #    'omim' : OMIM,  #full file takes ~15 min, due to required throttling
 #    'biogrid' : BioGrid,  #interactions file takes <10 minutes
-    #'mgi' : MGI,
-    'impc' : IMPC,
+    'mgi' : MGI,
+#    'impc' : IMPC,
 #    'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
 #    'ncbigene' : NCBIGene  #takes about 4 minutes to process 2 species
 }
@@ -33,8 +33,8 @@ for source in source_to_class_map.keys():
     print()
     print("*******",source,"*******")
     mysource = source_to_class_map[source]()
-    mysource.fetch()
-    mysource.parse(1000)
+    #mysource.fetch()
+    mysource.parse(100)
     mysource.write(format='turtle')
     #status = mysource.verify()
 #    if status is not True:
