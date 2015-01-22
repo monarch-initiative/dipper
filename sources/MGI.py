@@ -322,14 +322,12 @@ class MGI(Source):
         #8. sequence alteration has description name
         #9. sequence alteration in strain
 
-
         # Extra: strain_key, map along the lines of "allele (allele_key -> Bnode) in strain (strain_key -> Bnode)?"
         # Strain label available. Marker label available. Better to map those through their primary tables, correct?
         #TODO
         # Allele type key also available. Need to locate related table
         # transmission_key -> inheritance? Need to locate related table.
         # strain: sequence_alteration in strain?
-
 
         variant_of = 'GENO:0000408' #FIXME:is_sequence_variant_instance_of. Is this correct?
         #GENO:0000440=is_mutant_of
@@ -349,9 +347,7 @@ class MGI(Source):
                 (allele_key,marker_key,strain_key,mode_key,allele_type_key,allele_status_key,transmission_key,
                  collection_key,symbol,name,nomensymbol,iswildtype,isextinct,ismixed,createdby_key,modifiedby_key,
                  approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,createby,modifiedby,approvedby) = line.split('\t')
-                #NOTE:
 
-                #Process the  alleles
                 iallele = BNode('allelekey'+allele_key)
                 imarker = BNode('markerkey'+marker_key)
                 iseqalt = BNode('seqaltkey'+allele_key)  # Any issues with reusing the allele_key as long as we use a different prefix?
@@ -392,32 +388,11 @@ class MGI(Source):
                 #sequence alteration has description name
                 self.graph.add((iseqalt,DC['description'],Literal(name)))
 
-
                 #sequence alteration in strain
                 #FIXME: Is this correct? Also, should wild type alleles be excluded?
-                self.graph.add((iseqalt,URIRef(cu.get_uri(self.relationship['in_strain'])),istrain))
+                #self.graph.add((iseqalt,URIRef(cu.get_uri(self.relationship['in_strain'])),istrain))
 
 
-
-
-
-
-
-
-
-
-                #self.graph.add((iallele,URIRef(cu.get_uri(has_disposition)),URIRef(cu.get_uri(zygosity))))
-
-                #Should this type of data scrubbing be moved to the scrub function,
-                #or is it specific to the current function?
-                #Convert symbol to allele label
-
-                # internalAllele has label symbol (after reformatting)
-                self.graph.add((iallele,RDFS['label'],Literal(sa_label)))
-
-
-
-                #self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
 
                 #self.graph.add((iallele,cu.get_uri('OIO:hasExactSynonym'),Literal(symbol))) #FIXME: syntax correct for the OIO statement?)
                     #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
