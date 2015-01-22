@@ -7,7 +7,7 @@ import psycopg2
 
 
 from rdflib import Literal
-from rdflib.namespace import RDFS, OWL, RDF
+from rdflib.namespace import RDFS, OWL, RDF, DC
 from rdflib import Namespace, URIRef, BNode
 
 from utils import pysed
@@ -228,6 +228,12 @@ class MGI(Source):
         return
 
     def _process_gxd_genotype_summary_view(self,raw,limit=None):
+        #need to make triples:
+        #1. genotype is a class - redundant?
+        #2. genotype has equivalent class internalGenotypeID
+        #3. genotype subclass of intrinsic_genotype - redundant?
+        #4. genotype has label description
+
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
         line_counter = 0
@@ -255,10 +261,14 @@ class MGI(Source):
 
     #NOTE: might be best to process alleles initially from the all_allele_view, as this does not have any repeats of alleles!
     def _process_all_summary_view(self,raw,limit):
-        #Things to process:
-        #1. mgiid as alleleID (URIRef)
-        #2. allele type as class
-        #3. allele as subclass?
+        #Need to make triples:
+        #1. allele is a class (or subclass?)
+        #2. internalAlleleID has equivalent class as allele
+        #3. allele has label short_description: Better to use symbol from all_allele_view?
+        #4. allele has description description
+
+        #TODO: allele subtype
+
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
         line_counter = 0
@@ -272,20 +282,27 @@ class MGI(Source):
                 #NOTE:May want to filter alleles based on the preferred field (preferred = 1) or will get duplicates
                 ## (24288, to be exact... Reduced to 480 if filtered on preferred = 1)
                 #NOTE:Decision to make: use the short_description here or use the labels from the allelepair_view?
-                #Use this table. allelepair_view will have more repititions of alleles due to inclusion in genotypes.
+                #Use this table. allelepair_view will have more repetitions of alleles due to inclusion in genotypes.
 
-                #we can make these proper methods later
-                #If we want to filter on preferred, use this if statement:
+                #If we want to filter on preferred:
                 if preferred == '1':
                     allele = URIRef(cu.get_uri(mgiid))
                     iallele = BNode('allelekey'+object_key)
-                    #map the alleleID to the hidden Bnode for the allele.
-                    self.graph.add((iallele,OWL['equivalentClass'],allele))
-                    #self.graph.add(allele,RDFS['label'],Literal(short_description))
-                    #This above statement isn't needed, as it would be redundant with the label provided for the allele Bnode, correct?
+
+                    #allele is a class
                     self.graph.add((allele,RDF['type'],Assoc.OWLCLASS))
-                    #self.graph.add((al,OWL['equivalentClass'],ial)) #redundant, yes?
+                    #FIXME:allele as subclass - both a class and a subclass? Or one or the other?
                     self.graph.add((allele,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000008'))))  # GENO:0000008 = allele
+                    #internalAlleleID has an equivalent class allele.
+                    self.graph.add((iallele,OWL['equivalentClass'],allele))
+                    #allele has label short_description
+                    #FIXME:Can pull the short_description as a label here, but using the symbol variable in the all_allele_view may be preferable
+                    #self.graph.add((allele,RDFS['label'],Literal(short_description)))
+
+                    #4. allele has description description
+                    self.graph.add((allele,DC['description'],Literal(description)))
+
+
                 if (limit is not None and line_counter > limit):
                     break
 
@@ -293,20 +310,33 @@ class MGI(Source):
 
 
     def _process_all_allele_view(self,raw,limit):
-        #Things to process:
-        #1. Allele (allele_key -> Bnode) is variant_of/reference_of marker (marker_key -> Bnode)
-        #2. Format symbol, add as allele label.
-        #3. Map allele to marker Bnode
-        #4. Allele (allele_key -> Bnode) has exact synonym Symbol
-        #5.
+        #NOTE: allele == variant locus
+        #Need triples:
+        #1. (variant) allele is a subclass of variant_locus
+        #2. (variant) allele is variant_of gene/marker
+        #3. (wild type) allele is a subclass of reference_locus
+        #4. (wild type) allele is reference_of gene/marker
+        #5. allele has label symbol (any reformatting?)
+        #6. sequence alteration is a class
+        #7. sequence alteration is a subclass of SO:0001059
+        #8. sequence alteration has description name
+        #9. sequence alteration in strain
+
+
         # Extra: strain_key, map along the lines of "allele (allele_key -> Bnode) in strain (strain_key -> Bnode)?"
         # Strain label available. Marker label available. Better to map those through their primary tables, correct?
-        # Name as allele description?
-        # Allele type key also available.
+        #TODO
+        # Allele type key also available. Need to locate related table
+        # transmission_key -> inheritance? Need to locate related table.
+        # strain: sequence_alteration in strain?
+
 
         variant_of = 'GENO:0000408' #FIXME:is_sequence_variant_instance_of. Is this correct?
         #GENO:0000440=is_mutant_of
         reference_of = 'GENO:0000409'#FIXME:is_reference_locus_instance_of. Is this correct?
+        variant_locus = 'GENO:0000481'
+        reference_locus = 'GENO:0000036'
+        sequence_alteration = 'SO:0001059'
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -321,30 +351,73 @@ class MGI(Source):
                  approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,createby,modifiedby,approvedby) = line.split('\t')
                 #NOTE:
 
-                #we can make these proper methods later
-
                 #Process the  alleles
-
-                #al = URIRef(cu.get_uri(mgiid))
                 iallele = BNode('allelekey'+allele_key)
                 imarker = BNode('markerkey'+marker_key)
+                iseqalt = BNode('seqaltkey'+allele_key)  # Any issues with reusing the allele_key as long as we use a different prefix?
+                istrain = BNode('strainkey'+strain_key)
+                # for non-wild type alleles:
                 if iswildtype == '0':
+                    # allele is a subclass of variant_locus
+                    self.graph.add((iallele,Assoc.SUBCLASS,URIRef(cu.get_uri(variant_locus))))
+                    # allele is variant of gene/marker
                     self.graph.add((iallele,URIRef(cu.get_uri(variant_of)),imarker))
+                #for wild type alleles:
                 elif iswildtype == '1':
+                    # allele is a subclass of reference_locus
+                    self.graph.add((iallele,Assoc.SUBCLASS,URIRef(cu.get_uri(reference_locus))))
+                    # allele is reference of gene/marker
                     self.graph.add((iallele,URIRef(cu.get_uri(reference_of)),imarker))
+
+                #allele has label symbol (any reformatting?)
+                #TODO: Need to process symbols not in the %<%> format for the allele symbol
+                self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+
+                #sequence alteration has label reformatted(symbol)
+                sa_label = symbol
+                if re.match(".*<.*>.*", symbol):
+                    #print(sa_label)
+                    sa_label = re.sub(".*<", "<", symbol)
+                    #print(sa_label)
+                elif re.match("\+", symbol):
+                    #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
+                    sa_label = '<+>'
+                    #print(sa_label)
+                self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+
+                #sequence alteration is a class
+                self.graph.add((iseqalt,RDF['type'],Assoc.OWLCLASS))
+                #sequence alteration is a subclass of SO:0001059
+                self.graph.add((iseqalt,Assoc.SUBCLASS,URIRef(cu.get_uri(sequence_alteration))))
+                #sequence alteration has description name
+                self.graph.add((iseqalt,DC['description'],Literal(name)))
+
+
+                #sequence alteration in strain
+                #FIXME: Is this correct? Also, should wild type alleles be excluded?
+                self.graph.add((iseqalt,URIRef(cu.get_uri(self.relationship['in_strain'])),istrain))
+
+
+
+
+
+
+
+
+
+
+                #self.graph.add((iallele,URIRef(cu.get_uri(has_disposition)),URIRef(cu.get_uri(zygosity))))
 
                 #Should this type of data scrubbing be moved to the scrub function,
                 #or is it specific to the current function?
-                if re.match(".*<.*>.*", symbol):
-                    #print(symbol)
-                    symbol = re.sub(".*<", "<", symbol)
-                    #print(symbol)
-                elif re.match("\+", symbol):
-                    #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
-                    symbol = '<+>'
-                    #print(symbol)
+                #Convert symbol to allele label
 
-                self.graph.add((iallele,RDFS['label'],Literal(symbol)))
+                # internalAllele has label symbol (after reformatting)
+                self.graph.add((iallele,RDFS['label'],Literal(sa_label)))
+
+
+
+                #self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
 
                 #self.graph.add((iallele,cu.get_uri('OIO:hasExactSynonym'),Literal(symbol))) #FIXME: syntax correct for the OIO statement?)
                     #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
