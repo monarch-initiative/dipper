@@ -469,6 +469,7 @@ class MGI(Source):
                 # Also, in my concept map I had zygosity as GENO:0000608 - has_zygosity,
                 # but I don't see it in my geno.owl file.
                 self.graph.add((ivslc,URIRef(cu.get_uri(has_disposition)),URIRef(cu.get_uri(zygosity))))
+                #print('zygosity is ',zygosity)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -476,15 +477,9 @@ class MGI(Source):
         return
 
     def _process_all_allele_mutation_view(self,raw,limit):
-        #Table has allele_key, mutation_key, and mutation.
-        #Map allele_key to mutation, but do we need the mutation_key as an intermediate Bnode
-        # or just map directly to mutation?
-
-        #Things to process:
-        #1. allele_key (Bnode) -> mutation
-        #Alternatively:
-        #1. allele_key (Bnode) -> mutation_key (Bnode)
-        #2. mutation_key (Bnode) -> mutation
+        #Need triples:
+        #. sequence_alteration has_type mutation
+        #. sequence_alteration_type_label?
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -496,19 +491,14 @@ class MGI(Source):
 
                 (allele_key,mutation_key,creation_date,modification_date,mutation) = line.split('\t')
 
-                iallele = BNode('allelekey'+allele_key)
-                allele_type = self._map_allele_type_to_allele(mutation)
-                self.graph.add((iallele,RDF['type'],Assoc.OWLCLASS))
+                iseqalt = BNode('seqaltkey'+allele_key)
 
+                #map the sequence_alteration_type
+                seq_alt_type = self._map_seq_alt_type(mutation)
+                #seq_alt_type is of type mapped(seq_alt_type)
+                self.graph.add((iseqalt,RDF['type'],URIRef(cu.get_uri(seq_alt_type))))
 
-                #allele_type = sequence_alteration_type
-                #self.graph.add((allele_type,RDF['type'],Assoc.OWLCLASS))
-
-
-
-                #FIXME: Is there an additional mapping, like shown below, or is the type and label all that is needed?
-                #self.graph.add((iallele,URIRef(cu.get_uri(has_reference_part)),allele_type))
-
+                #FIXME: Do we want to map the sequence alteration type to a label?
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -603,7 +593,7 @@ class MGI(Source):
 
 
     #TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
-    def _map_allele_type_to_allele(self, allele_type):
+    def _map_seq_alt_type(self, sequence_alteration_type):
         type = None
         type_map = {
             'Deletion': 'SO:0000159',  # deletion
@@ -626,13 +616,13 @@ class MGI(Source):
             'Viral insertion': 'SO:0000667',  # insertion - correct?
             'wild type': 'SO:0000817'  # wild type
         }
-        if (allele_type.strip() in type_map):
-            type = type_map.get(allele_type)
+        if (sequence_alteration_type.strip() in type_map):
+            type = type_map.get(sequence_alteration_type.strip())
             # type = 'http://purl.obolibrary.org/obo/' + type_map.get(allele_type)
-        # print("Mapped: ", allele_type, "to", type)
+            # print("Mapped: ", sequence_alteration_type, "to", type)
         else:
             # TODO add logging
-            print("ERROR: Allele Type (", allele_type, ") not mapped")
+            print("ERROR: Sequence Alteration Type (", sequence_alteration_type, ") not mapped")
 
         return type
 
