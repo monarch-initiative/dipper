@@ -55,7 +55,10 @@ class MGI(Source):
         'in_taxon' : 'RO:0000216',
         'has_zygosity' : 'GENO:0000608',   #what exactly "has zygosity"?  is it the allele?  genotype?
         'is_sequence_variant_instance_of' : 'GENO:0000408',
+        'hasExactSynonym' : 'OIO:hasExactSynonym',
     }
+#FIXME: Does it make sense to have a global list of terms to call for scripts,as needed?
+
 
 
     def __init__(self):
@@ -212,10 +215,10 @@ class MGI(Source):
                 #we can make these proper methods later
                 gt = URIRef(cu.get_uri(mgiid))
                 igt = BNode('genotypekey'+genotype_key)
-                self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
                 self.graph.add((gt,OWL['equivalentClass'],igt))
-                self.graph.add((gt,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000000'))))
+                self.graph.add((gt,RDF['type'],URIRef(cu.get_uri('GENO:0000000'))))
                 istrain = BNode('strainkey'+strain_key)
+                #FIXME: change strain from class to term. Background?
                 self.graph.add((istrain,RDF['type'],Assoc.OWLCLASS))
                 self.graph.add((istrain,RDFS['label'],Literal(strain)))
                 self.graph.add((gt,URIRef(cu.get_uri(has_reference_part)),istrain))
@@ -249,9 +252,8 @@ class MGI(Source):
                 #we can make these proper methods later
                 gt = URIRef(cu.get_uri(mgiid))
                 igt = BNode('genotypekey'+object_key)
-                self.graph.add((gt,RDF['type'],Assoc.OWLCLASS))
                 self.graph.add((gt,OWL['equivalentClass'],igt))
-                self.graph.add((gt,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000000'))))
+                self.graph.add((gt,RDF['type'],URIRef(cu.get_uri('GENO:0000000'))))
                 self.graph.add((gt,RDFS['label'],Literal(description)))  #the 'description' is the full genotype label
 
                 if (limit is not None and line_counter > limit):
@@ -289,10 +291,10 @@ class MGI(Source):
                     allele = URIRef(cu.get_uri(mgiid))
                     iallele = BNode('allelekey'+object_key)
 
-                    #allele is a class
-                    self.graph.add((allele,RDF['type'],Assoc.OWLCLASS))
+                    #allele is a class - No longer needed
+                    #self.graph.add((allele,RDF['type'],Assoc.OWLCLASS))
                     #FIXME:allele as subclass - both a class and a subclass? Or one or the other?
-                    self.graph.add((allele,Assoc.SUBCLASS,URIRef(cu.get_uri('GENO:0000008'))))  # GENO:0000008 = allele
+                    self.graph.add((allele,RDF['type'],URIRef(cu.get_uri('GENO:0000008'))))  # GENO:0000008 = allele
                     #internalAlleleID has an equivalent class allele.
                     self.graph.add((iallele,OWL['equivalentClass'],allele))
                     #allele has label short_description
@@ -329,6 +331,8 @@ class MGI(Source):
         # transmission_key -> inheritance? Need to locate related table.
         # strain: sequence_alteration in strain?
 
+        #Instead of a function-specific set of variables, should these instead be added
+        # to the relationship table at the top?
         variant_of = 'GENO:0000408' #FIXME:is_sequence_variant_instance_of. Is this correct?
         #GENO:0000440=is_mutant_of
         reference_of = 'GENO:0000409'#FIXME:is_reference_locus_instance_of. Is this correct?
@@ -354,14 +358,14 @@ class MGI(Source):
                 istrain = BNode('strainkey'+strain_key)
                 # for non-wild type alleles:
                 if iswildtype == '0':
-                    # allele is a subclass of variant_locus
-                    self.graph.add((iallele,Assoc.SUBCLASS,URIRef(cu.get_uri(variant_locus))))
+                    # allele is of type: variant_locus
+                    self.graph.add((iallele,RDF['type'],URIRef(cu.get_uri(variant_locus))))
                     # allele is variant of gene/marker
                     self.graph.add((iallele,URIRef(cu.get_uri(variant_of)),imarker))
                 #for wild type alleles:
                 elif iswildtype == '1':
-                    # allele is a subclass of reference_locus
-                    self.graph.add((iallele,Assoc.SUBCLASS,URIRef(cu.get_uri(reference_locus))))
+                    # allele is of type: reference_locus
+                    self.graph.add((iallele,RDF['type'],URIRef(cu.get_uri(reference_locus))))
                     # allele is reference of gene/marker
                     self.graph.add((iallele,URIRef(cu.get_uri(reference_of)),imarker))
 
@@ -381,10 +385,8 @@ class MGI(Source):
                     #print(sa_label)
                 self.graph.add((iallele,RDFS['label'],Literal(symbol)))
 
-                #sequence alteration is a class
-                self.graph.add((iseqalt,RDF['type'],Assoc.OWLCLASS))
                 #sequence alteration is a subclass of SO:0001059
-                self.graph.add((iseqalt,Assoc.SUBCLASS,URIRef(cu.get_uri(sequence_alteration))))
+                self.graph.add((iseqalt,RDF['type'],URIRef(cu.get_uri(sequence_alteration))))
                 #sequence alteration has description name
                 self.graph.add((iseqalt,DC['description'],Literal(name)))
 
@@ -392,14 +394,15 @@ class MGI(Source):
                 #FIXME: Is this correct? Also, should wild type alleles be excluded?
                 #self.graph.add((iseqalt,URIRef(cu.get_uri(self.relationship['in_strain'])),istrain))
 
-
-
-                #self.graph.add((iallele,cu.get_uri('OIO:hasExactSynonym'),Literal(symbol))) #FIXME: syntax correct for the OIO statement?)
-                    #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
-                    #Handling by regex matching at the moment, but need to confirm that the format is dependent on subtype...
-
-
-                #Add statement for variant locus
+                #FIXME: syntax correct for the OIO statement? Tried a few different approaches.
+                #Is it better to add OIO:hasExactSynonym to the MGI.py relationships,
+                # or call through the Assoc.relationships? Current implementation works, but is it the best/most efficient?
+                # My current syntax for the Assoc.relationships results in an error.
+                #FIXME: Should the hasExactSynonym be for the allele or the sequence alteration?
+                self.graph.add((iallele,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(name)))
+                #self.graph.add((iallele,OIO['hasExactSynonym'],Literal(symbol)))
+                #self.graph.add(iallele,Assoc.relationships('hasExactSynonym'),Literal(symbol))
+                #self.graph.add((iallele,cu.get_uri('OIO:hasExactSynonym'),Literal(symbol)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -409,18 +412,20 @@ class MGI(Source):
 
 
     def _process_gxd_allele_pair_view(self,raw,limit):
-        #Things to process:
-        #1. Map genotype (Bnode) to each allele (Bnode)
-        #2. Zygosity: tie to allele_pair_key? (VSLC_ID Bnode?)
-        #allele_pair_key, genotype_key, allele1_key, allele2_key, allele_state
-        #allele_pair_key as VSLC_ID Bnode? allele_pair_key does not map to any other table though.
-        # VSLC ID is constructed from other IDs in the DISCO view.
-        #should already have symbol from the all_allele_view. marker_key?
-        #Process the locus by combining allele1/allele2, with processing of those labels, or use the allele_keys to
-        # link to the graph, grabbing the label there?
+        #Need triples:
+        #. vslc is of type: vslc
+        #. genotype has vslc allele_pair_key
+        #. vslc has label processed(vslc_label)
+        #. vslc has_part allele1
+        #. vslc has_part allele2
+        #. vslc has_disposition mapped(allelestate)
+
+
+        #Additional stuff: chromosome, compound? (entries: Top, Not Applicable, Bottom)
 
         has_zygosity = 'GENO:0000608'
         has_disposition = 'GENO:0000208'
+        vslc = 'GENO:0000030'
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
         line_counter = 0
@@ -435,33 +440,35 @@ class MGI(Source):
                 #NOTE: symbol = gene/marker, allele1 + allele2 = VSLC, allele1/allele2 = variant locus, allelestate = zygosity
                 #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
 
-                #we can make these proper methods later
-
                 igt = BNode('genotypekey'+genotype_key)
                 iallele1 = BNode('allelekey'+allele_key_1)
                 iallele2 = BNode('allelekey'+allele_key_2)
                 #Need to map the allelestate to a zygosity term
                 zygosity = self._map_zygosity(allelestate)
                 ivslc = BNode('vslckey'+allelepair_key)
+                #FIXME: VSLC label likely needs processing similar to the processing in the all_allele_view
+                #FIXME: Handle null alleles for allele2
+                vslc_label = (allele1+'/'+allele2)
+                #print(vslc_label)
 
-                #Attach the internal VSLC ID to the internal genotype ID
+                #. vslc is of type: vslc
+                self.graph.add((ivslc,RDF['type'],URIRef(cu.get_uri(vslc))))
+
+                #. vslc has label processed(vslc_label)
+                self.graph.add((ivslc,RDFS['label'],Literal(vslc_label)))
+
+                #genotype has part vslc
                 self.graph.add((igt,URIRef(OWL['hasPart']),ivslc))
 
-                #Attach the internal allele IDs to the internal VSLC ID, which infers back to the internal genotype iD.
+                #vslc has parts allele1/allele2
                 self.graph.add((ivslc,URIRef(OWL['hasPart']),iallele1))
                 self.graph.add((ivslc,URIRef(OWL['hasPart']),iallele2))
 
-
-                #How to handle zygosity? Note that zygosity is for the allele pair, not a single allele.
-                # Tie to allele_pair_key? Genotype? But if there is more than one variant locus, you will have an issue.
-                #Possible handling of zygosity:
-                #In order to go this route, do we need to map the ivslc to each allele as well?
-                #pairstate_key can be used as a zygosity Bnode, if needed.
-
-                self.graph.add((ivslc,URIRef(cu.get_uri(has_disposition)),URIRef(cu.get_uri(zygosity))))#FIXME: Is this correct?
-
-
-                #self.graph.add((ivslc,RDFS['label'],Literal(zygosity)))
+                #vslc has disposition mapped(allelestate)
+                #FIXME: Is this correct?
+                # Also, in my concept map I had zygosity as GENO:0000608 - has_zygosity,
+                # but I don't see it in my geno.owl file.
+                self.graph.add((ivslc,URIRef(cu.get_uri(has_disposition)),URIRef(cu.get_uri(zygosity))))
 
                 if (limit is not None and line_counter > limit):
                     break
