@@ -152,7 +152,7 @@ class MGI(Source):
         self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit)
         self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
         self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
-        #self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
+        self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
 
 
         print("Finished parsing.")
@@ -317,7 +317,7 @@ class MGI(Source):
 
                 (allele_key,marker_key,strain_key,mode_key,allele_type_key,allele_status_key,transmission_key,
                  collection_key,symbol,name,nomensymbol,iswildtype,isextinct,ismixed,createdby_key,modifiedby_key,
-                 approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,createby,modifiedby,approvedby) = line.split('\t')
+                 approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,collection,createdby,modifiedby,approvedby) = line.split('\t')
 
                 iallele = BNode('allelekey'+allele_key)
                 imarker = BNode('markerkey'+marker_key)
@@ -472,28 +472,10 @@ class MGI(Source):
         #. marker is type class
         #. marker has subclass mapped(markertype)
         #. marker has label symbol
-        #. marker in_taxon latin_name
-        #TODO: process based on status? (official, withdrawn, interim)
-        #. map marker_type
-        #. marker is of type mapped(markertype)
-
-
-        #Do we need to process this table? Things that we will gain:
-        #marker/gene name (should that be brought in through NCBI Gene?)
-        #organism for the marker/gene, including taxon (latin_name)
-
-        #The mgiid for the marker is in the mrk_summary_view. Many duplications
-
-        #Table has
-        #marker_key is primary key, no duplicates.
-        #May want to filter on status (interim, official, withdrawn)
-        #May want to filter on markertype: (Gene, DNA Segment, Pseudogene, QTL, Transgene, Cytogenetic Marker,
-        # BAC/YAC end,Complex/Cluster/Region,Other Genome Feature)
-        #Make sublcass of markertype
-
-
-        #Things to process:
-        #1. marker
+        #. marker has synonym name
+        #. or marker has description name?
+        #Process based on status? (official, withdrawn, interim)
+        #Do we want the chromosome number?
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -509,12 +491,25 @@ class MGI(Source):
 
                 imarker = BNode('markerkey'+marker_key)
                 mapped_marker_type = self._map_marker_type(marker_type)
+                #iorganism = BNode('organismkey'+organism_key)
 
-
+                #. marker is type class
                 self.graph.add((imarker,RDF['type'],Assoc.OWLCLASS))
-                #self.graph.add((imarker,Assoc.SUBCLASS,URIRef(self.cu.get_uri(construct_id))))
-                self.graph.add((imarker,RDFS['label'],Literal(strain)))
-                self.graph.add((gt,URIRef(cu.get_uri(has_reference_part)),istrain))
+                #. marker has subclass mapped(markertype)
+                self.graph.add((imarker,Assoc.SUBCLASS,URIRef(cu.get_uri(mapped_marker_type))))
+                #. marker has label symbol
+                self.graph.add((imarker,RDFS['label'],Literal(symbol)))
+                #. marker has synonym name
+                self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(name)))
+                #. or marker has description name?
+                #self.graph.add((imarker,DC['description'],Literal(name)))
+                #TODO: Think it would make more sense to map the taxon using one of the organism tables.
+                # map taxon
+                taxon = self._map_taxon(latin_name)
+                #. marker in_taxon mapped(latin_name) #FIXME: is 'in_taxon' the correct relationship?
+                self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon))))
+                #TODO: If mapping to taxon using an organism table, map to the organism BNode
+                #self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),iorganism))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -538,6 +533,13 @@ class MGI(Source):
         eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
 
         #TODO
+        #Need: evidence, publication, association ID, entity ID, phenotype ID
+        #Evidence: voc_evidence_view:evidencecode
+        #Publication:voc_evidence_view:refs_key ->
+        #AssociationID:voc_annot_view?:annot_key. NOTE: ZFIN assembles the assoc_id: assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
+        #EntityID:genotype_id
+        #PhenotypeID:voc_annot_view?:accid
+
 
 
         return
@@ -648,5 +650,43 @@ class MGI(Source):
         else:
             # TODO add logging
             print("ERROR: Marker Type (", marker_type, ") not mapped")
+
+        return type
+
+    def _map_taxon(self, taxon_name):
+        type = None
+        type_map = {
+            'Bos taurus': 'NCBITaxon:9913',
+            'Canis familiaris': 'NCBITaxon:9615',
+            'Capra hircus': 'NCBITaxon:9925',
+            'Cavia porcellus': 'NCBITaxon:10141',
+            'Cricetulus griseus': 'NCBITaxon:10029',
+            'Danio rerio': 'NCBITaxon:7955',
+            'Equus caballus': 'NCBITaxon:9796',
+            'Felis catus': 'NCBITaxon:9685',
+            'Gallus gallus': 'NCBITaxon:9031',
+            'Gorilla gorilla': 'NCBITaxon:9593',
+            'Homo sapiens': 'NCBITaxon:9606',
+            'Macaca mulatta': 'NCBITaxon:9544',
+            'Macropus eugenii': 'NCBITaxon:9315',
+            'Mesocricetus auratus': 'NCBITaxon:10036',
+            'Microcebus murinus': 'NCBITaxon:30608',
+            'Mus musculus/domesticus': 'NCBITaxon:10090',  # 10090=Mus musculus, 10092=Mus musculus domesticus
+            'Ornithorhynchus anatinus': 'NCBITaxon:9258',
+            'Oryctolagus cuniculus': 'NCBITaxon:9986',
+            'Ovis aries': 'NCBITaxon:9940',
+            'Pan troglodytes': 'NCBITaxon:9598',
+            'Pongo pygmaeus': 'NCBITaxon:9600',
+            'Rattus norvegicus': 'NCBITaxon:10116',
+            'Sus scrofa domestica L.': 'NCBITaxon:9823',  # 9823=Sus scrofa, 9825=Sus scrofa domestica
+            'Xenopus (Silurana) tropicalis': 'NCBITaxon:8364',
+        }
+        if (taxon_name.strip() in type_map):
+            type = type_map.get(taxon_name)
+            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
+        # print("Mapped: ", allele_type, "to", type)
+        else:
+            # TODO add logging
+            print("ERROR: Taxon Name (", taxon_name, ") not mapped")
 
         return type
