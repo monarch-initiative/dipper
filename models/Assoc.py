@@ -21,7 +21,9 @@ class Assoc:
         'hasExactSynonym' : 'OIO:hasExactSynonym',
         'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
         'definition' : 'IAO:0000115',
-        'in_taxon' : 'RO:0002162'
+        'in_taxon' : 'RO:0002162',
+        'has_quality' : 'RO:0000086',
+        'towards' : 'RO:0002503'
     }
 
     OWLCLASS=OWL['Class']
@@ -78,7 +80,6 @@ class Assoc:
                 else:
                     source = None
 
-        evidence = URIRef(cu.get_uri(self.evidence))
         if (self.pub_id is not None and self.pub_id.strip() != ''):
             if (source is not None and source != URIRef('[]')):
                 g.add((node, DC['source'], source))
@@ -92,6 +93,7 @@ class Assoc:
         if (self.evidence is None or self.evidence.strip() == ''):
             print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
+            evidence = URIRef(cu.get_uri(self.evidence))
             g.add((node, DC['evidence'], evidence))
 
         return

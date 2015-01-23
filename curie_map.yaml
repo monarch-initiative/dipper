@@ -27,6 +27,7 @@
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
 'RO': 'http://purl.obolibrary.org/obo/RO_'
+'PATO': 'http://purl.obolibrary.org/obo/PATO_'
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
@@ -40,6 +41,8 @@
 'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
 'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/'
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
+'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
+'DrugBank' : 'http://www.drugbank.ca/drugs/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
