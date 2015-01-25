@@ -40,6 +40,20 @@ class GraphUtils:
             g.add((n, DC['description'], Literal(description)))
         return g
 
+    def addIndividualToGraph(self, g, id, label, type=None, description=None):
+        n = URIRef(self.cu.get_uri(id))
+
+        if (label is not None):
+            g.add((n, RDFS['label'], Literal(label)))
+        if (type is not None):
+            t = URIRef(self.cu.get_uri(type))
+            g.add((n, RDF['type'], t))
+        else:
+            g.add((n, RDF['type'], Assoc.OWLIND))
+        if (description is not None):
+            g.add((n, DC['description'], Literal(description)))
+        return g
+
     def addEquivalentClass(self,g,id1,id2):
         if (self.cu.get_uri(id1) is not None and self.cu.get_uri(id2) is not None):
             n1 = URIRef(self.cu.get_uri(id1))
