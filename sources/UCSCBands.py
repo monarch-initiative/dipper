@@ -47,6 +47,8 @@ class UCSCBands(Source):
     intermediate/parent regions
 
     TODO: any species by commandline argument
+
+    TODO: abstract this out into a model
     '''
 
     files = {
@@ -133,6 +135,8 @@ class UCSCBands(Source):
         myfile=('/').join((self.rawdir,data['file']))
         print("FILE:",myfile)
         taxon = data['taxon']
+        mybands = {}
+
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 #skip comments
@@ -166,7 +170,7 @@ class UCSCBands(Source):
                 parents = list(self._make_parent_bands(band,set()))
                 #alphabetical sort will put them in smallest to biggest
                 parents.sort(reverse=True)
-                print('parents of',chrom,band,':',parents)
+                #print('parents of',chrom,band,':',parents)
 
                 #add the parents to the graph, in order
                 #TODO this is somewhat inefficient due to re-adding upper-level nodes when iterating over the file
@@ -192,11 +196,31 @@ class UCSCBands(Source):
                 firstpid = URIRef(cu.get_uri(cid+parents[0]))
                 self.graph.add((myband,subsequence,firstpid))
 
+                #Here, we add to a hashmap of chr bands to propagate the chromosomal coords
+                for p in parents:
+                    k = chrom+p
+                    sta=int(start)
+                    sto=int(stop)
+                    if k not in mybands.keys():
+                        b = {'min' : min(sta,sto), 'max' : max(sta,sto)}
+                        mybands[k] = b
+                    else:
+                        b = mybands.get(k)
+                        b['min'] = min(sta,sto,b['min'])
+                        b['max'] = max(sta,sto,b['max'])
+                        mybands[k] = b
+
+
                 if (limit is not None and line_counter > limit):
                     break
 
-        return
+        #add the band locations to the graph.
+        for b in mybands.keys():
+            myband = URIRef(cu.get_uri(':'+taxon+b))
+            self.graph.add((myband,begin,Literal(mybands.get(b)['min'], datatype=XSD.int)))
+            self.graph.add((myband,end,Literal(mybands.get(b)['max'], datatype=XSD.int)))
 
+        return
 
     def _make_parent_bands(self,band,child_bands):
         '''
@@ -251,24 +275,3 @@ class UCSCBands(Source):
 
         return so_id
 
-
-
-    def _cleanup_id(self,i):
-        cleanid = i
-        #MIM:123456 --> #OMIM:123456
-        cleanid = re.sub('^MIM','OMIM',cleanid)
-
-        #HGNC:HGNC --> HGNC
-        cleanid = re.sub('^HGNC:HGNC','HGNC',cleanid)
-
-        #Ensembl --> ENSEMBL
-        cleanid = re.sub('^Ensembl','ENSEMBL',cleanid)
-
-        #MGI:MGI --> MGI
-        cleanid = re.sub('^MGI:MGI','MGI',cleanid)
-
-        return cleanid
-
-
-    def remove_control_characters(self,s):
-        return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
