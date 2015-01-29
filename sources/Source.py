@@ -231,10 +231,31 @@ class Source:
         print("INFO: file created:", time.asctime(time.localtime(st[ST_CTIME])))
         return
 
+    def fetch_files(self, files=dict):
+        """
+        Given a files dict containing a key pointing to a remote url
+        and local filename downloads and stores the file on the local os
+        :param files: dict containing the filename and url
+            Example: files = {'interactions': {'file': 'filename.csv',
+                                               'url': 'http://ctdbase.org/'
+                                                      'filename.csv'}
+                     }
+        :return: date as a string
+        """
+        for f in files.keys():
+            file = files.get(f)
+            self.fetch_from_url(file['url'], '/'.join((self.rawdir, file['file'])))
+            self.dataset.setFileAccessUrl(file['url'])
+
+            st = os.stat('/'.join((self.rawdir, file['file'])))
+
+        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+
+        return filedate
 
     def fetch_from_pgdb(self,tables,cxn,limit=None):
         '''
-        Will fetch all Postgres tables from the specified database in the cxn connection parameters.
+        Will fetch all Postgres tables fom the specified database in the cxn connection parameters.
         This will save them to a local file named the same as the table, in tab-delimited format, including a header.
         :param tables: Names of tables to fetch
         :param cxn: database connection details

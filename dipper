@@ -15,6 +15,7 @@ from sources.IMPC import IMPC
 from sources.Panther import Panther
 from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
+from sources.CTD import CTD
 
 def main():
     source_to_class_map={
@@ -26,7 +27,8 @@ def main():
         'impc' : IMPC,
         'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
         'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
-        'ucscbands' : UCSCBands
+        'ucscbands' : UCSCBands,
+        'ctd' : CTD
     }
 
 
@@ -52,6 +54,7 @@ def main():
         print("*******", source, "*******")
         source = source.lower()
         mysource = source_to_class_map[source]()
+        mysource.fetch()
         mysource.parse(args.limit)
         if args.parse_only is False:
             mysource.write(format='turtle')
