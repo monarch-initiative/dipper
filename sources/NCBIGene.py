@@ -20,6 +20,7 @@ from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
 import curie_map
+from models.Features import Feature,makeChromID
 
 class NCBIGene(Source):
     '''
@@ -124,14 +125,7 @@ class NCBIGene(Source):
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
 
-        exact=URIRef(cu.get_uri(Assoc.relationships['hasExactSynonym']))
-        related=URIRef(cu.get_uri(Assoc.relationships['hasRelatedSynonym']))
         intaxon=URIRef(cu.get_uri(Assoc.relationships['in_taxon']))
-        begin = URIRef(cu.get_uri('faldo:begin'))
-        end = URIRef(cu.get_uri('faldo:end'))
-        region = URIRef(cu.get_uri('faldo:Region'))
-        loc = URIRef(cu.get_uri('faldo:location'))
-        bagofregions = URIRef(cu.get_uri('faldo:BagOfRegions'))
 
         #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
         #not unzipping the file
@@ -165,12 +159,16 @@ class NCBIGene(Source):
                 gene_type_id = self._map_type_of_gene(gtype)
 
                 n = URIRef(cu.get_uri(gene_id))
-                t = URIRef(cu.get_uri(gene_type_id))
+
                 if (symbol == 'NEWENTRY'):
                     label = None
                 else:
                     label = symbol
                 gu.addClassToGraph(self.graph,gene_id,label,gene_type_id,desc)
+
+                #todo use feature for refactor
+                #we have to do special things here for genes, because they're classes not individuals
+                f = Feature(gene_id,label,gene_type_id,desc)
 
                 if (name != '-'):
                     gu.addSynonym(self.graph,gene_id,name)
@@ -180,7 +178,7 @@ class NCBIGene(Source):
                 if (other_designations.strip() != '-'):
                     for s in other_designations.split('|'):
                         gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.relationships['hasRelatedSynonym'])
-                self.graph.add((n,intaxon,URIRef(cu.get_uri(tax_id))))
+                f.addTaxonToFeature(self.graph,tax_id)
 
                 #deal with the xrefs
                 #MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
@@ -195,24 +193,34 @@ class NCBIGene(Source):
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
                                     gu.addEquivalentClass(self.graph,gene_id,fixedr)
 
-                #we don't get actual coords, just chr and band
-                #make them blank nodes for now
-                #TODO what kind of URI would i make for chromosomes???
                 if (str(chr) != '-'):
-                    chrid = re.sub('\W+', '', str(chr))
-                    mychrom=('').join((tax_num,'chr',chrid))
-                    chrom = BNode(mychrom)
-                    self.graph.add((chrom,RDF['type'],bagofregions))
-                    self.graph.add((chrom,loc,Literal(chr)))  #should probably be a reference?
+                    if (re.search('\|',str(chr))):
+                        #this means that there's uncertainty in the mapping.  skip it
+                        #TODO we'll need to figure out how to deal with >1 loc mapping
+                        print(gene_id,'is non-uniquely mapped to',str(chr),'.  Skipping for now.')
+                        continue
+                    #if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
+                    #    print('odd chr=',str(chr))
+
+                    mychrom = makeChromID(str(chr),tax_num)
+                    chrom = Feature(mychrom,str(chr),Feature.types['chromosome'])
+                    chrom.addFeatureToGraph(self.graph)
                     if (map_loc != '-'):
-                        #can't have spaces in the id, so scrub those out and replace with a dash
-                        #remove any non-alphanumeric chars for the identifier
-                        maploc_id = re.sub('\W+', '', map_loc)
-                        band = BNode(maploc_id)
-                        self.graph.add((n,loc,band))
-                        self.graph.add((band,RDF['type'],region))
-                        self.graph.add((band,loc,chrom))
-                        self.graph.add((n,loc,Literal(map_loc)))
+                        #this matches the regular kind of chrs, so make that kind of band
+                        #not sure why this matches? chrX|Y or 10090chr12|Un"
+                        if re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$',map_loc):
+                            #the maploc_id already has the numeric chromosome in it, strip it first
+                            bid = re.sub('^'+str(chr),'',map_loc)
+                            maploc_id = mychrom+bid
+                            #print(map_loc,'-->',bid,'-->',maploc_id)
+                            band = Feature(maploc_id,map_loc,Feature.types['chromosome_part'])  #FIXME
+                            band.addFeatureToGraph(self.graph)
+                            f.addSubsequenceOfFeature(self.graph,maploc_id)  #add band as the containing feature
+                        else:
+                            #TODO handle these cases
+                            #examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
+                            ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
+                            print('not regular band pattern for',gene_id,':',map_loc)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -333,7 +341,11 @@ class NCBIGene(Source):
             'tRNA': 'SO:0001272',
             'unknown': 'SO:0000704',
             'scRNA' : 'SO:0000013',
-            'miscRNA' : 'SO:0000233' #mature transcript - there is no good mapping
+            'miscRNA' : 'SO:0000233', #mature transcript - there is no good mapping
+            'chromosome' : 'SO:0000340',
+            'chromosome_arm' : 'SO:0000105',
+            'chromosome_band' : 'SO:0000341',
+            'chromosome_part' : 'SO:0000830'
         }
 
         if (type in type_to_so_map):

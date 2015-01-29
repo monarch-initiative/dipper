@@ -14,6 +14,7 @@ import unicodedata
 from sources.Source import Source
 from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
+from models.Features import Feature,makeChromID
 from models.Dataset import Dataset
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
@@ -117,19 +118,8 @@ class UCSCBands(Source):
         :param limit:
         :return:
         '''
-        gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
 
-        intaxon=URIRef(cu.get_uri(Assoc.relationships['in_taxon']))
-        begin = URIRef(cu.get_uri('faldo:begin'))
-        end = URIRef(cu.get_uri('faldo:end'))
-        region = URIRef(cu.get_uri('faldo:Region'))
-        loc = URIRef(cu.get_uri('faldo:location'))
-        bagofregions = URIRef(cu.get_uri('faldo:BagOfRegions'))
-        subsequence=URIRef(cu.get_uri(self.relationships['is_subsequence_of']))
-
-        #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
-        #not unzipping the file
         print("INFO: Processing Chr bands from",)
         line_counter=0
         myfile=('/').join((self.rawdir,data['file']))
@@ -148,23 +138,24 @@ class UCSCBands(Source):
                 (chrom,start,stop,band,rtype) = line.split('\t')
                 line_counter += 1
 
-                cid = ':'+taxon+chrom
+                cid = makeChromID(chrom,taxon)
                 tax_id = (':').join(('NCBITaxon',taxon))
                 region_type_id = self._map_type_of_region(rtype)
 
                 #add the chr
-                gu.addIndividualToGraph(self.graph,cid,chrom,self._map_type_of_region('chromosome'))
-                self.graph.add((URIRef(cu.get_uri(cid)),RDF['type'],region))
-                self.graph.add((URIRef(cu.get_uri(cid)),intaxon,URIRef(cu.get_uri(tax_id))))
-                #TODO add genome build as reference to the chromosomes (or at minimum to the dataset)
+                cfeature = Feature(cid,chrom,self._map_type_of_region('chromosome'))
+                cfeature.addFeatureToGraph(self.graph) #fixme - should probably only add this at the end?
+                cfeature.addTaxonToFeature(self.graph,tax_id)
+                #add the chr to the hashmap of coordinates
+                if chrom not in mybands.keys():
+                    mybands[chrom] = {'min' : 0, 'max' : 0 }
 
+                #TODO add genome build as reference to the chromosomes (or at minimum to the dataset)
                 #add the region and it's location
                 maploc_id = cid+band
-                myband = URIRef(cu.get_uri(maploc_id))
-                gu.addIndividualToGraph(self.graph,maploc_id,chrom+band,region_type_id,rtype)
-                self.graph.add((myband,RDF['type'],region))
-                self.graph.add((myband,begin,Literal(start, datatype=XSD.int)))
-                self.graph.add((myband,end,Literal(stop, datatype=XSD.int)))
+                bfeature = Feature(maploc_id,chrom+band,region_type_id,rtype)
+                bfeature.addFeatureToGraph(self.graph)
+                bfeature.addCoordinatesOfFeature(self.graph,start,stop)
 
                 #get the parent bands, and make them unique
                 parents = list(self._make_parent_bands(band,set()))
@@ -172,7 +163,7 @@ class UCSCBands(Source):
                 parents.sort(reverse=True)
                 #print('parents of',chrom,band,':',parents)
 
-                #add the parents to the graph, in order
+                #add the parents to the graph, in hierarchical order
                 #TODO this is somewhat inefficient due to re-adding upper-level nodes when iterating over the file
                 for i in range(len(parents)):
                     pid = cid+parents[i]
@@ -181,22 +172,21 @@ class UCSCBands(Source):
                     else:
                         #FIXME there really ought to be a feature that is broader than a band, but part of an arm
                         rti = self._map_type_of_region('chromosome_part')
-                    gu.addIndividualToGraph(self.graph,pid,chrom+parents[i],rti)
-                    self.graph.add((URIRef(cu.get_uri(pid)),RDF['type'],region))
 
+                    pfeature = Feature(pid,chrom+parents[i],rti)
+                    pfeature.addFeatureToGraph(self.graph)
                     #add the relationships to the parent
                     if (i < len(parents)-1):
                         ppid = cid+parents[i+1]
-                        self.graph.add((URIRef(cu.get_uri(pid)),subsequence,URIRef(cu.get_uri(ppid))))
+                        pfeature.addSubsequenceOfFeature(self.graph,ppid)
                     else:
                         #add the last one (p or q usually) as attached to the chromosome
-                        self.graph.add((URIRef(cu.get_uri(pid)),subsequence,URIRef(cu.get_uri(cid))))
+                        pfeature.addSubsequenceOfFeature(self.graph,cid)
 
                 #connect the band here to the first one in the parent list
-                firstpid = URIRef(cu.get_uri(cid+parents[0]))
-                self.graph.add((myband,subsequence,firstpid))
+                bfeature.addSubsequenceOfFeature(self.graph,cid+parents[0])
 
-                #Here, we add to a hashmap of chr bands to propagate the chromosomal coords
+                #Here, we add the parents to a hashmap of chr bands to propagate the chromosomal coords
                 for p in parents:
                     k = chrom+p
                     sta=int(start)
@@ -209,17 +199,19 @@ class UCSCBands(Source):
                         b['min'] = min(sta,sto,b['min'])
                         b['max'] = max(sta,sto,b['max'])
                         mybands[k] = b
-
+                        #also, set the max for the chrom
+                        c = mybands.get(chrom)
+                        c['max'] = max(sta,sto,c['max'])
+                        mybands[chrom] = c
 
                 if (limit is not None and line_counter > limit):
                     break
 
         #add the band locations to the graph.
         for b in mybands.keys():
-            myband = URIRef(cu.get_uri(':'+taxon+b))
-            self.graph.add((myband,begin,Literal(mybands.get(b)['min'], datatype=XSD.int)))
-            self.graph.add((myband,end,Literal(mybands.get(b)['max'], datatype=XSD.int)))
-
+            bid = makeChromID(b,taxon)
+            bfeature = Feature(bid,None,None)  #for now, hopefully it won't overwrite
+            bfeature.addCoordinatesOfFeature(self.graph,mybands.get(b)['min'],mybands.get(b)['max'])
         return
 
     def _make_parent_bands(self,band,child_bands):
