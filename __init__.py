@@ -13,6 +13,7 @@ from sources.IMPC import IMPC
 from sources.Panther import Panther
 from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
+from sources.GeneReviews import GeneReviews
 
 source_to_class_map={
     'hpoa' : HPOAnnotations, # ~3 min
@@ -23,7 +24,8 @@ source_to_class_map={
     'impc' : IMPC,
     'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
     'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
-    'ucscbands' : UCSCBands
+    'ucscbands' : UCSCBands,
+    'genereviews' : GeneReviews
 }
 
 
