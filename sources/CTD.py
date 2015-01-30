@@ -18,11 +18,11 @@ class CTD(Source):
         self.load_bindings()
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
 
-    def fetch(self):
+    def fetch(self, is_dl_forced):
         """
         :return: None
         """
-        fetchdate = self.fetch_files(self.files)
+        fetchdate = self.get_files(is_dl_forced)
         self.fetchdate = fetchdate
         return
 
@@ -56,7 +56,8 @@ class CTD(Source):
                 if is_versioned is False:
                     match = re.match(version_pattern, ' '.join(row))
                     if match:
-                        self._set_version(match.group(1))
+                        version = re.sub(r'\s|:', '-', match.group(1))
+                        self.dataset.setVersion(self.fetchdate, version)
                         is_versioned = True
                 elif re.match('^#', ' '.join(row)):
                     next
@@ -68,17 +69,6 @@ class CTD(Source):
                     row_count += 1
                     if limit is not None and row_count >= limit:
                         break
-
-    def _set_version(self, version):
-        """
-        Replace whitespace and colons with dashes
-        and set the dataset version
-        :param version: string containing version ID
-        :return:None
-        """
-        version = re.sub(r'\s|:', '-', version)
-        self.dataset.setVersion(self.fetchdate, version)
-        return
 
     def _add_evidence_associations(self, subject, object):
         """

@@ -186,7 +186,7 @@ class Source:
             print("INFO: Object on server is same size as local file; assuming unchanged")
         return False
 
-    def get_files(self):
+    def get_files(self, is_dl_forced):
         '''
         Given a set of files for this source, it will go fetch them, and add
         set a default version by date.  If you need to set the version number
@@ -196,7 +196,9 @@ class Source:
 
         for f in self.files.keys():
             file = self.files.get(f)
-            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.fetch_from_url(file['url'],
+                                ('/').join((self.rawdir,file['file'])),
+                                is_dl_forced)
             self.dataset.setFileAccessUrl(file['url'])
 
             st = os.stat(('/').join((self.rawdir,file['file'])))
@@ -207,7 +209,7 @@ class Source:
 
         return
 
-    def fetch_from_url(self,remotefile,localfile):
+    def fetch_from_url(self, remotefile, localfile, is_dl_forced):
         '''
         Given a remote url and a local filename, this will first verify
         if the remote file is newer; if it is, this will pull the remote file
@@ -217,7 +219,8 @@ class Source:
         :param localfile: pathname of file to save locally
         :return: None
         '''
-        if (self.checkIfRemoteIsNewer(remotefile, localfile)):
+        if ((is_dl_forced is True) or
+           (self.checkIfRemoteIsNewer(remotefile, localfile))):
             print("INFO: Fetching from ", remotefile)
             # TODO url verification, etc
             annotation_file = urllib.request
@@ -230,28 +233,6 @@ class Source:
         print("INFO: file size:", st[ST_SIZE])
         print("INFO: file created:", time.asctime(time.localtime(st[ST_CTIME])))
         return
-
-    def fetch_files(self, files=dict):
-        """
-        Given a files dict containing a key pointing to a remote url
-        and local filename downloads and stores the file on the local os
-        :param files: dict containing the filename and url
-            Example: files = {'interactions': {'file': 'filename.csv',
-                                               'url': 'http://ctdbase.org/'
-                                                      'filename.csv'}
-                     }
-        :return: date as a string
-        """
-        for f in files.keys():
-            file = files.get(f)
-            self.fetch_from_url(file['url'], '/'.join((self.rawdir, file['file'])))
-            self.dataset.setFileAccessUrl(file['url'])
-
-            st = os.stat('/'.join((self.rawdir, file['file'])))
-
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        return filedate
 
     def fetch_from_pgdb(self,tables,cxn,limit=None):
         '''

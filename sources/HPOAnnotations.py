@@ -65,10 +65,12 @@ class HPOAnnotations(Source):
 
         return
 
-    def fetch(self):
+    def fetch(self, is_dl_forced):
         for f in self.files.keys():
             file = self.files.get(f)
-            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.fetch_from_url(file['url'],
+                                ('/').join((self.rawdir,file['file'])),
+                                is_dl_forced)
             self.dataset.setFileAccessUrl(file['url'])
             # zfin versions are set by the date of download.
             st = os.stat(('/').join((self.rawdir,file['file'])))

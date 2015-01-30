@@ -48,12 +48,12 @@ class Panther(Source):
 
         return
 
-    def fetch(self):
+    def fetch(self, is_dl_forced):
         '''
         :return: None
         '''
 
-        self.get_files()
+        self.get_files(is_dl_forced)
         #TODO the version number is tricky to get...we can't get it from redirects of the url
         #TODO use the remote timestamp of the file?
 

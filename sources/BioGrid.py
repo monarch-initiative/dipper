@@ -51,14 +51,16 @@ class BioGrid(Source):
         print("WARN: several MI experimental codes do not exactly map to ECO; using approximations.")
         return
 
-    def fetch(self):
+    def fetch(self, is_dl_forced):
         '''
         :return: None
         '''
 
         for f in self.files.keys():
             file = self.files.get(f)
-            self.fetch_from_url(file['url'],('/').join((self.rawdir,file['file'])))
+            self.fetch_from_url(file['url'],
+                                ('/').join((self.rawdir,file['file'])),
+                                is_dl_forced)
             self.dataset.setFileAccessUrl(file['url'])
 
             st = os.stat(('/').join((self.rawdir,file['file'])))
