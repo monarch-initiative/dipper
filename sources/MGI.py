@@ -614,8 +614,10 @@ class MGI(Source):
         # What relationship is needed for the evidence_code_symbol? Not a label... Not a name... Is it a type?
 
         #Need triples:
-        #. ievidence is an instance of evidence?
-        #. iphenotype has dc:evidence ievidence
+        #. evidence is an instance of evidence?
+        #. evidence has label evidence_code
+        #. evidence hasExactSynonym evidence_label
+        #. iphenotype has dc:evidence evidence
         #.
 
 
@@ -630,21 +632,32 @@ class MGI(Source):
                 (annot_evidence_key,annot_key,evidence_term_key,refs_key,inferred_from,created_by_key,modified_by_key,
                 creation_date,modification_date,evidence_code,evidence_seq_num,jnumid,jnum,short_citation,created_by,modified_by)= line.split('\t')
 
-                evidence_code = evidence_code
-                ievidence = BNode('evidencekey'+annot_evidence_key)
+
+                ievidence = BNode('evidencekey'+annot_evidence_key)  # Not needed if no other tables need to map to evidence.
                 iphenotype = BNode('phenotypekey'+annot_key)
                 ipublication = BNode('publicationkey'+refs_key)
 
-                #. ievidence is an instance of evidence
-                self.graph.add((ievidence,RDF['type'],URIRef(cu.get_uri(self.terms['evidence']))))
 
-                #. iphenotype has evidence ievidence
+                # Only 18 evidence codes used in MGI, so create a mapping function to map the label and the ID.
+                evidence_id = self._map_evidence_id(evidence_code)
+                evidence_label = self._map_evidence_label(evidence_code)
+                evidence = URIRef(cu.get_uri(evidence_id))
+
+                #. evidence is an instance of evidence
+                self.graph.add((evidence,RDF['type'],URIRef(cu.get_uri(self.terms['evidence']))))
+
+                #evidence has an equivalent class internalEvidenceID.
+                self.graph.add((evidence,OWL['sameAs'],ievidence))
+
+                #. evidence hasExactSynonym evidence_label
+                self.graph.add((evidence,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(evidence_label)))
+
+                #. evidence has label evidence_code
+                self.graph.add((evidence,RDFS['label'],Literal(evidence_code)))
+
+                #. iphenotype has evidence evidence
                 #FIXME: this usage (DC['evidence']) doesn't seem right, especially if 'evidence' refers to 'monarch:evidence' from the terms table
-                self.graph.add((iphenotype,DC['evidence'],Literal(ievidence)))
-
-                #. ievidence has symbol? evidence_code
-                #FIXME: what relationship goes here?
-                #self.graph.add((ievidence,,evidence_code))
+                self.graph.add((iphenotype,DC['evidence'],Literal(evidence)))
 
                 #. iphenotype has reference ipublication
                 self.graph.add((iphenotype,DC['publication'],Literal(ipublication)))
@@ -900,5 +913,69 @@ class MGI(Source):
         else:
             # TODO add logging
             print("ERROR: Taxon Name (", taxon_name, ") not mapped")
+
+        return type
+
+    def _map_evidence_id(self, evidence_code):
+        type = None
+        type_map = {
+            'EXP': 'ECO:0000006',
+            'IBA': 'ECO:0000318',
+            'IC': 'ECO:0000001',
+            'IDA': 'ECO:0000314', #FIXME does this map to ECO:0000002 - direct assay evidence or ECO:0000314 - direct assay evidence used in manual assertion?
+            'IEA': 'ECO:0000501',
+            'IEP': 'ECO:0000008',
+            'IGI': 'ECO:0000316',
+            'IKR': 'ECO:0000320',
+            'IMP': 'ECO:0000315',  # Correct?
+            'IPI': 'ECO:0000353',
+            'ISA': 'ECO:0000200',
+            'ISM': 'ECO:0000202',
+            'ISO': 'ECO:0000201',
+            'ISS': 'ECO:0000250',  # FIXME: Or ECO:0000044 - sequence similarity evidence?
+            'NAS': 'ECO:0000303',
+            'ND': 'ECO:0000035',
+            'RCA': 'ECO:0000245',
+            'TAS': 'ECO:0000304'
+        }
+        if (evidence_code.strip() in type_map):
+            type = type_map.get(evidence_code)
+            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
+        # print("Mapped: ", allele_type, "to", type)
+        else:
+            # TODO add logging
+            print("ERROR: Taxon Name (", evidence_code, ") not mapped")
+
+        return type
+
+    def _map_evidence_label(self, evidence_code):
+        type = None
+        type_map = {
+            'EXP': 'experimental evidence',
+            'IBA': 'biological aspect of ancestor evidence used in manual assertion',
+            'IC': 'inference from background scientific knowledge',
+            'IDA': 'direct assay evidence used in manual assertion', #FIXME: does this map to ECO:0000002 - direct assay evidence or ECO:0000314 - direct assay evidence used in manual assertion?
+            'IEA': 'evidence used in automatic assertion',
+            'IEP': 'expression pattern evidence',
+            'IGI': 'genetic interaction evidence used in manual assertion',
+            'IKR': 'phylogenetic determination of loss of key residues evidence used in manual assertion',
+            'IMP': 'mutant phenotype evidence used in manual assertion',  # Correct?
+            'IPI': 'physical interaction evidence used in manual assertion',
+            'ISA': 'sequence alignment evidence',
+            'ISM': 'match to sequence model evidence',
+            'ISO': 'sequence orthology evidence',
+            'ISS': 'sequence similarity evidence used in manual assertion',  # FIXME: Or ECO:0000044 - sequence similarity evidence?
+            'NAS': 'non-traceable author statement used in manual assertion',
+            'ND': 'no biological data found',
+            'RCA': 'computational combinatorial evidence used in manual assertion',
+            'TAS': 'traceable author statement used in manual assertion'
+        }
+        if (evidence_code.strip() in type_map):
+            type = type_map.get(evidence_code)
+            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
+        # print("Mapped: ", allele_type, "to", type)
+        else:
+            # TODO add logging
+            print("ERROR: Taxon Name (", evidence_code, ") not mapped")
 
         return type
