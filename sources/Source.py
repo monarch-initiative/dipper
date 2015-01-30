@@ -255,7 +255,7 @@ class Source:
 
     def fetch_from_pgdb(self,tables,cxn,limit=None):
         '''
-        Will fetch all Postgres tables fom the specified database in the cxn connection parameters.
+        Will fetch all Postgres tables from the specified database in the cxn connection parameters.
         This will save them to a local file named the same as the table, in tab-delimited format, including a header.
         :param tables: Names of tables to fetch
         :param cxn: database connection details
