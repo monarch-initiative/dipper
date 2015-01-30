@@ -30,11 +30,34 @@ class MGI(Source):
       }
     '''
 # tables in existing interop
-# mgi_organism_acc_view mgi_organism_view gxd_genotype_view gxd_allelepair_view mrk_marker_view
-# mgi_reference_allele_view bib_acc_view voc_annot_view gxd_genotype_summary_view voc_evidence_view
-# all_allele_cellline_view voc_term_view all_allele_view all_allele_mutation_view prb_strain_view
-# all_summary_view mrk_summary_view mgi_note_vocevidence_view acc_logicaldb_view mgi_note_strain_view
-# prb_strain_acc_view prb_strain_summary_view prb_strain_marker_view
+
+    #USED
+    # gxd_genotype_view, gxd_genotype_summary_view, gxd_allelepair_view, all_summary_view,
+    # all_allele_view, all_allele_mutation_view, mrk_marker_view, voc_annot_view,
+    # voc_evidence_view, bib_acc_view
+
+    #NOT YET USED
+    # mgi_organism_acc_view: Don't think we need this as I have handled the taxon mapping through a map_taxon function, unless we want the MGI ID for the organism.
+    # mgi_organism_view: I mapped the taxon from the mrk_marker_view to include all used organisms, but the mapping could be done in a more complete fashion with this table.
+    # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
+    # all_allele_cellline_view: Don't believe this view is used in either the genotype of phenotype view
+    # voc_term_view: Don't believe this view is used in either the genotype of phenotype view
+    # prb_strain_view: Used in genotype view
+    # mrk_summary_view: Used in genotype view
+    # mgi_note_vocevidence_view: Used in phenotype view
+    # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
+    # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
+    # prb_strain_acc_view: Don't believe this view is used in either the genotype of phenotype view, but is needed if we want the MGI ID for the strain.
+    # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
+    # prb_strain_marker_view: Don't believe this view is used in either the genotype of phenotype view
+
+#TODO: QA List
+    #Do identifiers have the proper prefixes?
+    #Are there quotes that need to be stripped from variables?
+    #Is there scrubbing needed for any variables?
+    # If present in other functions, can the scrubbing be moved to the scrub function?
+    #Make a checklist for the full graph and confirm that all nodes are present.
+
     tables = [
         'mgi_dbinfo',
         'gxd_genotype_view',
@@ -43,7 +66,11 @@ class MGI(Source):
         'all_summary_view',
         'all_allele_view',
         'all_allele_mutation_view',
-        'mrk_marker_view'
+        'mrk_marker_view',
+        'voc_annot_view',
+        'voc_evidence_view',
+        'bib_acc_view',
+        'prb_strain_view'
     ]
 
 
@@ -56,7 +83,8 @@ class MGI(Source):
         'has_zygosity' : 'GENO:0000608',   #what exactly "has zygosity"?  is it the allele?  genotype?
         'is_sequence_variant_instance_of' : 'GENO:0000408',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
-        'has_disposition' : 'GENO:0000208'
+        'has_disposition' : 'GENO:0000208',
+        'has_phenotype' : 'RO:0002200'
     }
 
     terms = {
@@ -65,7 +93,9 @@ class MGI(Source):
         'sequence_alteration' : 'SO:0001059',
         'variant_single_locus_complement' : 'GENO:0000030',
         'allele' : 'GENO:0000008',
-        'intrinsic_genotype' : 'GENO:0000000'
+        'intrinsic_genotype' : 'GENO:0000000',
+        'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
+        'evidence' : 'MONARCH:evidence'
     }
 
     def __init__(self):
@@ -153,6 +183,10 @@ class MGI(Source):
         self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
         self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
         self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
+        self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
+        self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
+        self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
+        #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
 
 
         print("Finished parsing.")
@@ -323,6 +357,8 @@ class MGI(Source):
                 imarker = BNode('markerkey'+marker_key)
                 iseqalt = BNode('seqaltkey'+allele_key)  # Any issues with reusing the allele_key as long as we use a different prefix?
                 istrain = BNode('strainkey'+strain_key)
+                #TODO: not using the strain key yet, so need to add that to the graph here. More strain data in the prb_strain_view.
+
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     # allele is of type: variant_locus
@@ -486,7 +522,7 @@ class MGI(Source):
                 line_counter += 1
 
                 (marker_key,organism_key,marker_status_key,marker_type_key,curationstate_key,symbol,name,chromosome,
-                 cytogenetic_offset,createdby_key,modifiedby_key,creation_date,modification_date,organism,common_name,
+                cytogenetic_offset,createdby_key,modifiedby_key,creation_date,modification_date,organism,common_name,
                 latin_name,status,marker_type,curation_state,created_by,modified_by) = line.split('\t')
 
                 imarker = BNode('markerkey'+marker_key)
@@ -517,6 +553,181 @@ class MGI(Source):
         return
 
 
+
+    def _process_voc_annot_view(self,raw,limit):
+        #Need triples:
+        #. phenotype is an instance of phenotype
+        #. phenotype sameAs iphenotype
+        #. phenotype hasExactSynonym term
+        #. genotype has_phenotype phenotype
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (annot_key,annot_type_key,object_key,term_key,qualifier_key,creation_date,modification_date,qualifier,
+                 term,sequence_num,accid,logicaldb_key,vocab_key,mgi_type_key,evidence_vocab_key,anot_type) = line.split('\t')
+
+
+
+                if annot_type_key == '1002':  # Restricting to type 1002, as done in the MousePhenotypes view.
+
+                    phenotype = URIRef(cu.get_uri(accid))
+                    #FIXME: is this the correct field to use as an internal phenotype ID?
+                    #In this table, annot_key can have more than one row with different accids.
+                    #In the view in DISCO, the annot_key is used as the 'mgi_annotation_id'
+                    #This may be fixed with filtering on annot_type_key == '1002'
+                    iphenotype = BNode('phenotypekey'+annot_key)
+                    igt = BNode('genotypekey'+object_key)
+
+                    #. phenotype is an instance of phenotype
+                    #FIXME: monarch:phenotype is not returning as a valid URI
+                    self.graph.add((phenotype,RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
+
+
+                    #FIXME: Is sameAs correct? And should the annot_key be used as the internal phenotype id?
+                    #. phenotype sameAs iphenotype
+                    self.graph.add((phenotype,OWL['sameAs'],iphenotype))
+
+                    #. phenotype hasExactSynonym term
+                    self.graph.add((phenotype,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(term)))
+
+                    #. genotype has_phenotype phenotype
+                    self.graph.add((igt,URIRef(OWL['has_phenotype']),phenotype))
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
+    def _process_voc_evidence_view(self,raw,limit):
+        #TODO
+        #QUESTION: How to get the additional evidence data? In the DISCO view, additional evidence data
+        # (evidence_code_id, evidence_code_label) is pulled in from the evidence ontology. This view only has
+        # the evidence_code_symbol. Can create an internal identifier on the annot_evidence_key,
+        # which is phenotype-evidence specific.
+        # What relationship is needed for the evidence_code_symbol? Not a label... Not a name... Is it a type?
+
+        #Need triples:
+        #. ievidence is an instance of evidence?
+        #. iphenotype has dc:evidence ievidence
+        #.
+
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (annot_evidence_key,annot_key,evidence_term_key,refs_key,inferred_from,created_by_key,modified_by_key,
+                creation_date,modification_date,evidence_code,evidence_seq_num,jnumid,jnum,short_citation,created_by,modified_by)= line.split('\t')
+
+                evidence_code = evidence_code
+                ievidence = BNode('evidencekey'+annot_evidence_key)
+                iphenotype = BNode('phenotypekey'+annot_key)
+                ipublication = BNode('publicationkey'+refs_key)
+
+                #. ievidence is an instance of evidence
+                self.graph.add((ievidence,RDF['type'],URIRef(cu.get_uri(self.terms['evidence']))))
+
+                #. iphenotype has evidence ievidence
+                #FIXME: this usage (DC['evidence']) doesn't seem right, especially if 'evidence' refers to 'monarch:evidence' from the terms table
+                self.graph.add((iphenotype,DC['evidence'],Literal(ievidence)))
+
+                #. ievidence has symbol? evidence_code
+                #FIXME: what relationship goes here?
+                #self.graph.add((ievidence,,evidence_code))
+
+                #. iphenotype has reference ipublication
+                self.graph.add((iphenotype,DC['publication'],Literal(ipublication)))
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
+    def _process_bib_acc_view(self,raw,limit):
+        # Can't get the pubmed IDs from the voc_evidence_view, so need to bring them in from this table joining
+        # on voc_evidence_view.refs_key -> bib_acc_view.object_key
+        # Can process to retrieve just the pubmed_ids, or if they would be useful can also grab the Jnum and MGI IDs.
+
+
+        #Need triples:
+        #. publication as instance
+        # internalPublicationID sameAs pubmed_id
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
+                created_by_key,modified_by_key,creation_date,modification_date,logical_db,)= line.split('\t')
+
+                ipublication = BNode('publicationkey'+object_key)
+
+                #TODO
+                #If we want other publication IDs, need to add to this statement
+                #Also, will need to separate out based on accession_key, because the object_key
+                # is the same for each reference ID (MGI ID, Jnumber, pubmed_id)...
+                if (logical_db == 'Pubmed'):
+                    pubmed_id = ('PMID:'+accid)
+
+                    #. publication as instance of publication?
+                    self.graph.add((pubmed_id,RDF['type'],URIRef(cu.get_uri(self.terms['']))))
+
+                    # internalPublicationID sameAs pubmed_id
+                    self.graph.add((ipublication,OWL['sameAs'],pubmed_id))
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+    def _process_prb_strain_view(self,raw,limit):
+        #
+
+        #Need triples:
+        #. publication as instance
+        # internalPublicationID sameAs pubmed_id
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (strain_key,species_key,strain_type_key,strain,standard,private,genetic_background,createdby_key,
+                 modifiedby_key,creation_date,modification_date,species,strain_type,created_by,modified_by)= line.split('\t')
+
+                istrain = BNode('strainkey'+strain_key)
+
+
+
+
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
     def _process_g2p(self, raw, out, g, limit=None):
         '''
         This module currently filters for only wild-type environments, which clearly excludes application
@@ -535,9 +746,10 @@ class MGI(Source):
         #TODO
         #Need: evidence, publication, association ID, entity ID, phenotype ID
         #Evidence: voc_evidence_view:evidencecode
-        #Publication:voc_evidence_view:refs_key ->
+        #Publication:voc_evidence_view:refs_key -> bib_acc_view.object_key
         #AssociationID:voc_annot_view?:annot_key. NOTE: ZFIN assembles the assoc_id: assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
-        #EntityID:genotype_id
+        #NOTE: For MGI, environment is hard coded as a null.
+        #EntityID:genotype_id, from annot_view.object_key
         #PhenotypeID:voc_annot_view?:accid
 
 
