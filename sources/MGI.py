@@ -88,7 +88,7 @@ class MGI(Source):
 
         return
 
-    def fetch(self):
+    def fetch(self, is_dl_forced):
         '''
         For the MGI resource, we connect to the remote database, and pull the tables into local files.
         We'll check the local table versions against the remote version
@@ -567,9 +567,7 @@ class MGI(Source):
 
     def file_len(self,fname):
         with open(fname) as f:
-            for i, l in enumerate(f):
-                pass
-        return i + 1
+            return sum(1 for line in f)
 
 
     #TODO: Finish identifying SO/GENO terms for mappings for those found in MGI

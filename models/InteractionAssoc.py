@@ -17,18 +17,18 @@ class InteractionAssoc(Assoc):
         'ubiquitinates' : 'RO:0002480'
     }
 
-    def __init__(self,assoc_id, gene1, gene2, pub, evidence_code):
+    def __init__(self,assoc_id, subj, obj, pub, evidence_code):
         self.cu = CurieUtil(curie_map.get())
         self.annot_id = assoc_id
-        self.gene1 = gene1
-        self.gene2 = gene2
+        self.subj = subj
+        self.obj = obj
         self.pub_id = pub
         self.evidence = evidence_code
         self.rel = self.relationships['interacts_with']  # default
         self.cu = CurieUtil(curie_map.get())
 
-        self.setSubject(gene1)
-        self.setObject(gene2)
+        self.setSubject(subj)
+        self.setObject(obj)
 
         return
 
