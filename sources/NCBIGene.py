@@ -20,7 +20,7 @@ from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import config
 import curie_map
-#from models.Features import Feature,makeChromID
+from models.Features import Feature,makeChromID
 
 class NCBIGene(Source):
     '''
