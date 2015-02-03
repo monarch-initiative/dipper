@@ -34,7 +34,7 @@ class MGI(Source):
     #USED
     # gxd_genotype_view, gxd_genotype_summary_view, gxd_allelepair_view, all_summary_view,
     # all_allele_view, all_allele_mutation_view, mrk_marker_view, voc_annot_view,
-    # voc_evidence_view, bib_acc_view
+    # voc_evidence_view, bib_acc_view, prb_strain_view
 
     #NOT YET USED
     # mgi_organism_acc_view: Don't think we need this as I have handled the taxon mapping through a map_taxon function, unless we want the MGI ID for the organism.
@@ -42,9 +42,8 @@ class MGI(Source):
     # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
     # all_allele_cellline_view: Don't believe this view is used in either the genotype of phenotype view
     # voc_term_view: Don't believe this view is used in either the genotype of phenotype view
-    # prb_strain_view: Used in genotype view
-    # mrk_summary_view: Used in genotype view
-    # mgi_note_vocevidence_view: Used in phenotype view
+    # mrk_summary_view: Used in genotype view. Only need it if we want the MGI ID for the gene.
+    # mgi_note_vocevidence_view: Used in phenotype view for free_text_phenotype_description
     # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
     # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
     # prb_strain_acc_view: Don't believe this view is used in either the genotype of phenotype view, but is needed if we want the MGI ID for the strain.
@@ -95,7 +94,8 @@ class MGI(Source):
         'allele' : 'GENO:0000008',
         'intrinsic_genotype' : 'GENO:0000000',
         'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
-        'evidence' : 'MONARCH:evidence'
+        'evidence' : 'MONARCH:evidence',
+        'genomic_background' : 'GENO:0000010'
     }
 
     def __init__(self):
@@ -186,7 +186,7 @@ class MGI(Source):
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
         self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
-        #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
+        self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
 
 
         print("Finished parsing.")
@@ -224,11 +224,13 @@ class MGI(Source):
                 self.graph.add((gt,OWL['equivalentClass'],igt))
                 self.graph.add((gt,RDF['type'],URIRef(cu.get_uri(self.terms['intrinsic_genotype']))))
                 istrain = BNode('strainkey'+strain_key)
-                #FIXME: change strain from class to term. Background?
-                self.graph.add((istrain,RDF['type'],Assoc.OWLCLASS))
-                self.graph.add((istrain,RDFS['label'],Literal(strain)))
+                self.graph.add((istrain,RDF['type'],URIRef(cu.get_uri(self.terms['genomic_background']))))
+                #Moving this one to prb_strain_view
+                #self.graph.add((istrain,RDFS['label'],Literal(strain)))
                 self.graph.add((gt,URIRef(cu.get_uri(self.relationship['has_reference_part'])),istrain))
+
                 #temporary assignment to Mus musculus
+                #In prb_strain_view, there are 160 different species, but can probably slim that number down.
                 self.graph.add((istrain,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri('NCBITaxon:10090'))))
 
                 if (limit is not None and line_counter > limit):
@@ -660,6 +662,7 @@ class MGI(Source):
                 self.graph.add((iphenotype,DC['evidence'],Literal(evidence)))
 
                 #. iphenotype has reference ipublication
+                #FIXME: Is this correct if the ipublication refers to multiple publication identifiers?
                 self.graph.add((iphenotype,DC['publication'],Literal(ipublication)))
 
                 if (limit is not None and line_counter > limit):
@@ -689,20 +692,38 @@ class MGI(Source):
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
                 created_by_key,modified_by_key,creation_date,modification_date,logical_db,)= line.split('\t')
 
+                # Do we want these reversed?
+                #. BNode for the reference key/object key that applies to
                 ipublication = BNode('publicationkey'+object_key)
+                #. BNode for the individual publication key.
+                ireference = BNode('referencekey'+accession_key)
 
-                #TODO
+
+                #FIXME: How to indicate the primary reference for JNumbers?
                 #If we want other publication IDs, need to add to this statement
                 #Also, will need to separate out based on accession_key, because the object_key
-                # is the same for each reference ID (MGI ID, Jnumber, pubmed_id)...
+                # is the same for each reference ID (MGI ID, Jnumber, pubmed_id, DOI)...
                 if (logical_db == 'Pubmed'):
-                    pubmed_id = ('PMID:'+accid)
+                    pub_id = ('PMID:'+accid)
 
-                    #. publication as instance of publication?
-                    self.graph.add((pubmed_id,RDF['type'],URIRef(cu.get_uri(self.terms['']))))
+                elif (logical_db == 'MGI' and prefixpart == 'J:'):
+                    pub_id = accid
+                    # How to indicate this as the primary association?
 
-                    # internalPublicationID sameAs pubmed_id
-                    self.graph.add((ipublication,OWL['sameAs'],pubmed_id))
+                elif (logical_db == 'MGI' and prefixpart == 'MGI:'):
+                    pub_id = accid
+
+                elif (logical_db == 'Journal Link'):
+                    pub_id = ('DOI:'+accid)
+
+                #. publication as type individual
+                self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
+
+                # publication ID (PMID, DOI, JNumber, MGI ID) sameAs accession key.
+                self.graph.add((pub_id,OWL['sameAs'],ireference))
+
+                # FIXME: To relate back to the phenotype, need to attach to the ipublication BNode. But is this correct?
+                self.graph.add((pub_id,OWL['sameAs'],ipublication))
 
 
                 if (limit is not None and line_counter > limit):
@@ -711,11 +732,15 @@ class MGI(Source):
         return
 
     def _process_prb_strain_view(self,raw,limit):
-        #
+        #Only 9 strain types if we want to map them (recombinant congenci, inbred strain, NA, congenic,
+        # consomic, coisogenic, recombinant inbred, NS, conplastic)
+        #160 species types, but could probably slim that down.
+        #If we don't want anything else from this table other than the strain label, could potentially drop it
+        # and just keep the strain labelling in the gxd_genotype_view.
 
         #Need triples:
-        #. publication as instance
-        # internalPublicationID sameAs pubmed_id
+        #. istrain has label strain
+
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -729,12 +754,10 @@ class MGI(Source):
                  modifiedby_key,creation_date,modification_date,species,strain_type,created_by,modified_by)= line.split('\t')
 
                 istrain = BNode('strainkey'+strain_key)
+                #ispecies = BNode('specieskey'+species_key)
+                #istrain_type = BNode('straintypekey'+strain_type_key)
 
-
-
-
-
-
+                self.graph.add((istrain,RDFS['label'],Literal(strain)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -920,17 +943,17 @@ class MGI(Source):
             'EXP': 'ECO:0000006',
             'IBA': 'ECO:0000318',
             'IC': 'ECO:0000001',
-            'IDA': 'ECO:0000314', #FIXME does this map to ECO:0000002 - direct assay evidence or ECO:0000314 - direct assay evidence used in manual assertion?
+            'IDA': 'ECO:0000314',
             'IEA': 'ECO:0000501',
             'IEP': 'ECO:0000008',
             'IGI': 'ECO:0000316',
             'IKR': 'ECO:0000320',
-            'IMP': 'ECO:0000315',  # Correct?
+            'IMP': 'ECO:0000315',
             'IPI': 'ECO:0000353',
             'ISA': 'ECO:0000200',
             'ISM': 'ECO:0000202',
             'ISO': 'ECO:0000201',
-            'ISS': 'ECO:0000250',  # FIXME: Or ECO:0000044 - sequence similarity evidence?
+            'ISS': 'ECO:0000250',
             'NAS': 'ECO:0000303',
             'ND': 'ECO:0000035',
             'RCA': 'ECO:0000245',
@@ -952,17 +975,17 @@ class MGI(Source):
             'EXP': 'experimental evidence',
             'IBA': 'biological aspect of ancestor evidence used in manual assertion',
             'IC': 'inference from background scientific knowledge',
-            'IDA': 'direct assay evidence used in manual assertion', #FIXME: does this map to ECO:0000002 - direct assay evidence or ECO:0000314 - direct assay evidence used in manual assertion?
+            'IDA': 'direct assay evidence used in manual assertion',
             'IEA': 'evidence used in automatic assertion',
             'IEP': 'expression pattern evidence',
             'IGI': 'genetic interaction evidence used in manual assertion',
             'IKR': 'phylogenetic determination of loss of key residues evidence used in manual assertion',
-            'IMP': 'mutant phenotype evidence used in manual assertion',  # Correct?
+            'IMP': 'mutant phenotype evidence used in manual assertion',
             'IPI': 'physical interaction evidence used in manual assertion',
             'ISA': 'sequence alignment evidence',
             'ISM': 'match to sequence model evidence',
             'ISO': 'sequence orthology evidence',
-            'ISS': 'sequence similarity evidence used in manual assertion',  # FIXME: Or ECO:0000044 - sequence similarity evidence?
+            'ISS': 'sequence similarity evidence used in manual assertion',
             'NAS': 'non-traceable author statement used in manual assertion',
             'ND': 'no biological data found',
             'RCA': 'computational combinatorial evidence used in manual assertion',
