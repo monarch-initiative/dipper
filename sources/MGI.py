@@ -56,6 +56,7 @@ class MGI(Source):
     #Is there scrubbing needed for any variables?
     # If present in other functions, can the scrubbing be moved to the scrub function?
     #Make a checklist for the full graph and confirm that all nodes are present.
+    #Do we need to do any HTML formatting of labels? (< -> &lt;)
 
     tables = [
         'mgi_dbinfo',
@@ -185,9 +186,10 @@ class MGI(Source):
         self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
-        self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
-        self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
-
+        #FIXME: processing of bib_acc_view and prb_strain_view is currently broken due to MGI data file errors
+        #Need to handle the extra tabs/spaces in the file import
+        #self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
+        #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
 
         print("Finished parsing.")
 
@@ -690,13 +692,15 @@ class MGI(Source):
                 line_counter += 1
 
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
-                created_by_key,modified_by_key,creation_date,modification_date,logical_db,)= line.split('\t')
+                created_by_key,modified_by_key,creation_date,modification_date,logical_db)= line.split('\t')
 
                 # Do we want these reversed?
                 #. BNode for the reference key/object key that applies to
                 ipublication = BNode('publicationkey'+object_key)
                 #. BNode for the individual publication key.
                 ireference = BNode('referencekey'+accession_key)
+                #pub_id = ''
+                logical_db = logical_db.strip()
 
 
                 #FIXME: How to indicate the primary reference for JNumbers?
@@ -704,26 +708,46 @@ class MGI(Source):
                 #Also, will need to separate out based on accession_key, because the object_key
                 # is the same for each reference ID (MGI ID, Jnumber, pubmed_id, DOI)...
                 if (logical_db == 'Pubmed'):
-                    pub_id = ('PMID:'+accid)
+                    pub_id = URIRef(cu.get_uri('PMID:'+accid))
+                    print(pub_id)
 
                 elif (logical_db == 'MGI' and prefixpart == 'J:'):
-                    pub_id = accid
+                    pub_id = URIRef(cu.get_uri(accid))
                     # How to indicate this as the primary association?
+                    #FIXME: Think this is wrong. Also see #. iphenotype has reference ipublication in voc_evidence_view.
+                    self.graph.add((ipublication,DC['source'],pub_id))
+                    self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
+                    self.graph.add((ipublication,OWL['sameAs'],ireference))
 
                 elif (logical_db == 'MGI' and prefixpart == 'MGI:'):
-                    pub_id = accid
+                    pub_id = URIRef(cu.get_uri(accid))
+                    self.graph.add((pub_id,OWL['sameAs'],ireference))
+
 
                 elif (logical_db == 'Journal Link'):
-                    pub_id = ('DOI:'+accid)
+                    pub_id = URIRef(cu.get_uri('DOI:'+accid))
+                    self.graph.add((pub_id,OWL['sameAs'],ireference))
 
-                #. publication as type individual
-                self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
 
-                # publication ID (PMID, DOI, JNumber, MGI ID) sameAs accession key.
-                self.graph.add((pub_id,OWL['sameAs'],ireference))
 
-                # FIXME: To relate back to the phenotype, need to attach to the ipublication BNode. But is this correct?
-                self.graph.add((pub_id,OWL['sameAs'],ipublication))
+                #else:
+                    #Should probably have an error if the publication does not match one of the above formats.
+                    #pub_id = ''
+
+
+
+
+                if pub_id != '':
+                    #. publication as type individual
+                    self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
+
+                    # publication ID (PMID, DOI, JNumber, MGI ID) sameAs accession key.
+                    self.graph.add((pub_id,OWL['sameAs'],ireference))
+
+                    # FIXME: To relate back to the phenotype, need to attach to the ipublication BNode. But is this correct?
+                    self.graph.add((pub_id,OWL['sameAs'],ipublication))
+                else:
+                    print("ERROR: Publication from (", logical_db, ") not mapped")
 
 
                 if (limit is not None and line_counter > limit):
@@ -750,8 +774,9 @@ class MGI(Source):
             for line in f:
                 line_counter += 1
 
-                (strain_key,species_key,strain_type_key,strain,standard,private,genetic_background,createdby_key,
-                 modifiedby_key,creation_date,modification_date,species,strain_type,created_by,modified_by)= line.split('\t')
+                #print(line.split('\t'))
+                (strain_key,species_key,strain_type_key,strain,standard,private,genetic_background,created_by_key,
+                modified_by_key,creation_date,modification_date,species,strain_type,created_by,modified_by) = line.split('\t')
 
                 istrain = BNode('strainkey'+strain_key)
                 #ispecies = BNode('specieskey'+species_key)

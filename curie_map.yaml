@@ -35,6 +35,8 @@
 'ISBN-13': 'http://www.monarchinitiative.org/ISBN_'
 'ISBN-15': 'http://www.monarchinitiative.org/ISBN_'
 'ISBN': 'http://www.monarchinitiative.org/ISBN_'
+'DOI' : 'http://dx.doi.org/'
+'J' : 'http://www.informatics.jax.org/reference/J:'
 
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
@@ -50,7 +52,7 @@
 'HPRD' : 'http://www.hprd.org/protein/'
 'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
 'miRBase' : 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='
-'MGI': 'http://www.informatics.jax.org/accession/MGI:'  #Note this will work for marker(gene) and allele, but not genotype
+'MGI': 'http://www.informatics.jax.org/accession/MGI:'  #Note this will work for marker(gene), allele, and references, but not genotype
 'BIOGRID' : 'http://thebiogrid.org/'
 'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'ZFIN' : 'http://zfin.org/'
