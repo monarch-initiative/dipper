@@ -179,19 +179,19 @@ class MGI(Source):
         print("Parsing files...")
 
         self._process_gxd_genotype_view(('/').join((self.rawdir,'gxd_genotype_view')),limit)
-        #self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)
-        #self._process_all_summary_view(('/').join((self.rawdir,'all_summary_view')),limit)
-        #self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit)
-        #self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
-        #self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
-        #self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
-        #self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
-        #self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
+        self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)
+        self._process_all_summary_view(('/').join((self.rawdir,'all_summary_view')),limit)
+        self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit)
+        self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
+        self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
+        self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
+        self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
+        self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
         #FIXME: processing of bib_acc_view and prb_strain_view is currently broken due to MGI data file errors
         #Need to handle the extra tabs/spaces in the file import
         #self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
         #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
-        #self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)
+        self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)
 
         print("Finished parsing.")
 
@@ -804,7 +804,7 @@ class MGI(Source):
             #Process differently if it is. Add to graph as URI?
         #Otherwise process as a non MGI ID row
         #Is it from one of the resources that you wish to use?
-            #If so, add
+            #If so, add as imarker same as marker ID?
 
         #Need triples:
         #.
@@ -820,10 +820,12 @@ class MGI(Source):
 
                 #print(line.split('\t'))
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgi_type_key,private,preferred,
-                 created_by_key,modified_by_key,creation_date,modification_date,mgiid,subtype,description_short_description) = line.split('\t')
+                 created_by_key,modified_by_key,creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
 
                 imarker = BNode('markerkey'+object_key)
                 mgi_id = URIRef(cu.get_uri(mgiid))
+                #dbs = ['41', '45', '60', '135', '83', '1', '55', '27', '13', '8']
+                #dbs = ['41, 45, 60, 135, 83, 1, 55, 27, 13, 8']
 
                 # Do we need to do specific adjustments for different ID sources?
                 if logicaldb_key == '1' and accid == mgiid:
@@ -832,28 +834,50 @@ class MGI(Source):
                     self.graph.add((mgi_id,OWL['sameAs'],imarker))
 
 
-                #May not be able to batch these, unless performing any specific processing for different resources.
-                elif logicaldb_key == any('41,45,60,135,83,1,55,27,13,8'):
+                #May only be able to batch a subset of these if performing any
+                # specific ID processing for different resources.
+
+                #Need a different approach here. Resulting in mapping to multiple internal marker IDs. Map to the accession key instead?
+                #Or maybe not....
+                #ISSUE: MirBase accession ID can map to multiple MGI IDs if the miRNA is also part of a cluster (Mirlet7b is part of cluster Mirc31)
+
+                elif logicaldb_key in ['41', '45', '60', '133', '134', '135', '27', '83', '1', '55', '13', '8']: # '27'
+
+
                     #Do something
+                    if logicaldb_key in ['133','134','60']:
+                        accid = 'ENSEMBL:'+accid
+                    elif logicaldb_key == '83':
+                        accid = 'miRBase:'+accid
+                    elif logicaldb_key == '1':
+                        accid = 'MGI:'+accid
+                    elif logicaldb_key == '41':
+                        accid = 'TrEMBL:'+accid
+                    elif logicaldb_key == '45':
+                        accid = 'PDB:'+accid
+                    elif logicaldb_key == '135':
+                        accid = 'PR:'+accid
+                    elif logicaldb_key == '83':
+                        accid = 'miRBase:'+accid
+                    elif logicaldb_key == '55':
+                        accid = 'NCBIGene:'+accid
+                    elif logicaldb_key == '27':
+                        accid = 'RefSeq:'+accid
+                    elif logicaldb_key == '13':
+                        accid = 'SwissProt:'+accid
+                    elif logicaldb_key == '8':
+                        accid = 'EC:'+accid
+                    #FIXME: The EC IDs are used for multiple genes, resulting in one EC number
+                    # that then maps to multiple marker IDs.
 
 
 
 
+                    alt_mrk_id = URIRef(cu.get_uri(accid))
 
-
-
-
-
-
-
-
-
-
-                #istrain = BNode('strainkey'+strain_key)
-                #ispecies = BNode('specieskey'+species_key)
-                #istrain_type = BNode('straintypekey'+strain_type_key)
-
-                #self.graph.add((istrain,RDFS['label'],Literal(strain)))
+                        #FIXME: Since these are alternate IDs,
+                    self.graph.add((imarker,OWL['sameAs'],alt_mrk_id))
+                    #self.graph.add((alt_mrk_id,OWL['sameAs'],imarker))
 
                 if (limit is not None and line_counter > limit):
                     break
