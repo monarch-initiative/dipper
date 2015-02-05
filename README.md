@@ -10,6 +10,7 @@
     * [rdflib](https://code.google.com/p/rdflib/)
     * isodate
     * roman
+    * python-docx
 
 * right now this runs completely through the __init__() method.  you can select the sources to process
 by commenting them on/off.
