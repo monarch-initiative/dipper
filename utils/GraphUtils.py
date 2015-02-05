@@ -89,6 +89,13 @@ class GraphUtils:
                     g.add((n1,consider,n))
         return
 
+    def addSubclass(self,g,parentid,childid):
+        p = URIRef(self.cu.get_uri(parentid))
+        c = URIRef(self.cu.get_uri(childid))
+        g.add((c,Assoc.SUBCLASS,p))
+
+        return
+
     def addSynonym(self,g,cid,synonym,synonym_type=None):
         '''
         Add the synonym as a property of the class cid.  Assume it is an exact synonym, unless
