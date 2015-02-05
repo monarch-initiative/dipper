@@ -45,6 +45,7 @@
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
 'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
+'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
