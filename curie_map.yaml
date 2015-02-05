@@ -28,6 +28,7 @@
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
 'RO': 'http://purl.obolibrary.org/obo/RO_'
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'
+'PR': 'http://purl.obolibrary.org/obo/pr_' #FIXME: believe this is correct, but need confirmation.
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
@@ -63,7 +64,12 @@
 'PomBase' : 'http://identifiers.org/PomBase:'
 'WormBase' : 'http://identifiers.org/WormBase:'
 'SGD' : 'http://identifiers.org/SGD:'
+'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 
 
 # proteins
 'UniProtKB' : 'http://identifiers.org/UniProt:'
+'SwissProt' : 'http://identifiers.org/SwissProt:'
+'TrEMBL' : 'http://www.uniprot.org/uniprot/'
+'PDB' : 'http://identifiers.org/PDB:'
+'EC' : 'http://identifiers.org/EC:'  #FIXME: Enzyme Commission numbers. Any preferred url that can resolve this?
