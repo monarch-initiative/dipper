@@ -65,7 +65,7 @@ class CTD(Source):
                     # only get direct associations
                     if row[5] != '':
                         # Process data here
-                        foo=1
+                        pass
                     row_count += 1
                     if limit is not None and row_count >= limit:
                         break
