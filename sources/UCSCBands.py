@@ -14,7 +14,7 @@ import unicodedata
 from sources.Source import Source
 from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
-from models.Features import Feature,makeChromID
+from models.GenomicFeature import Feature,makeChromID
 from models.Dataset import Dataset
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
