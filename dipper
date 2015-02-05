@@ -16,6 +16,7 @@ from sources.Panther import Panther
 from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
+from sources.GeneReviews import GeneReviews
 
 def main():
     source_to_class_map={
@@ -28,7 +29,8 @@ def main():
         'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
         'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
         'ucscbands' : UCSCBands,
-        'ctd' : CTD
+        'ctd' : CTD,
+        'genereviews' : GeneReviews
     }
 
 
