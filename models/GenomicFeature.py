@@ -75,8 +75,8 @@ class Feature() :
         n = URIRef(self.cu.get_uri(self.id))
         begin = URIRef(self.cu.get_uri(self.types['begin']))
         end = URIRef(self.cu.get_uri(self.types['end']))
-        graph.add((n,begin,Literal(start,datatype=XSD.int)))
-        graph.add((n,end,Literal(stop,datatype=XSD.int)))
+        graph.add((n,begin,Literal(start,datatype=XSD['integer'])))
+        graph.add((n,end,Literal(stop,datatype=XSD['integer'])))
         return
 
     def addSubsequenceOfFeature(self,graph,parentid):
