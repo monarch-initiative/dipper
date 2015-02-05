@@ -14,6 +14,7 @@ from docx import Document
 import curie_map
 from utils.GraphUtils import GraphUtils
 import glob
+import csv
 
 
 class GeneReviews(Source):
@@ -25,7 +26,11 @@ class GeneReviews(Source):
     '''
 
     files = {
-    }
+        'idmap' : {'file' : 'NBKid_shortname_OMIM.txt',
+                   'url' : 'http://ftp.ncbi.nih.gov/pub/GeneReviews/NBKid_shortname_OMIM.txt' },
+        'titles' : {'file': 'GRtitle_shortname_NBKid.txt',
+                    'url' : 'http://ftp.ncbi.nih.gov/pub/GeneReviews/GRtitle_shortname_NBKid.txt'}
+        }
 
     def __init__(self,args=[]):
         Source.__init__(self, 'genereviews')
@@ -44,7 +49,7 @@ class GeneReviews(Source):
         :return: None
         '''
 
-        #self.get_files(is_dl_forced)
+        self.get_files(is_dl_forced)
 
         return
 
@@ -69,6 +74,10 @@ class GeneReviews(Source):
 
         #k = ('/').join((self.rawdir,'Incontinentia_Pigmenti_GeneReview.docx'))
         #self._get_data(k)
+
+        self._get_equivids(limit)
+        self._get_titles(limit)
+
         self.load_bindings()
 
         print("INFO: Found", len(self.graph), "nodes")
@@ -124,3 +133,67 @@ class GeneReviews(Source):
         return
 
 
+    def _get_equivids(self,limit):
+        '''
+        The file processed here is of the format:
+        #NBK_id GR_shortname    OMIM
+        NBK1103 trimethylaminuria       136132
+        NBK1103 trimethylaminuria       602079
+        NBK1104 cdls    122470
+        Where each of the rows represents a mapping between a gr id and an omim id.
+        These are a 1:many relationship, and some of the omim ids are genes (not diseases).
+        Therefore, we need to create a loose coupling here.  We make the assumption that these NBKs are
+        generally higher-level grouping classes; therefore the OMIM ids are treated as subclasses.  (This
+        assumption is poor for those omims that are actually genes, but we have no way of knowing what those
+        are here...we will just have to deal with that for now.)
+        :param limit:
+        :return:
+        '''
+        raw = ('/').join((self.rawdir,self.files['idmap']['file']))
+        gu = GraphUtils(curie_map.get())
+        line_counter = 0
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (nbk_num,shortname,omim_num) = row
+                gr_id = 'GeneReviews:'+nbk_num
+                omim_id = 'OMIM:'+omim_num
+                #add the OMIM id to the graph
+                gu.addClassToGraph(self.graph,gr_id,None)
+                gu.addClassToGraph(self.graph,omim_id,None)
+                gu.addSynonym(self.graph,gr_id,shortname)
+                gu.addSubclass(self.graph,gr_id,omim_id)
+
+        return
+
+    def _get_titles(self,limit):
+        '''
+        The file processed here is of the format:
+        #NBK_id GR_shortname    OMIM
+        NBK1103 trimethylaminuria       136132
+        NBK1103 trimethylaminuria       602079
+        NBK1104 cdls    122470
+        Where each of the rows represents a mapping between a gr id and an omim id.
+        These are a 1:many relationship, and some of the omim ids are genes (not diseases).
+        Therefore, we need to create a loose coupling here.  We make the assumption that these NBKs are
+        generally higher-level grouping classes; therefore the OMIM ids are treated as subclasses.  (This
+        assumption is poor for those omims that are actually genes, but we have no way of knowing what those
+        are here...we will just have to deal with that for now.)
+        :param limit:
+        :return:
+        '''
+        raw = ('/').join((self.rawdir,self.files['titles']['file']))
+        gu = GraphUtils(curie_map.get())
+        line_counter = 0
+        with open(raw, 'r', encoding='latin-1') as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (shortname,title,nbk_num) = row
+                gr_id = 'GeneReviews:'+nbk_num
+
+                gu.addClassToGraph(self.graph,gr_id,title)
+                gu.addSynonym(self.graph,gr_id,shortname)
+
+        return
