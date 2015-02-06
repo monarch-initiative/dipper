@@ -26,6 +26,7 @@ class DispositionAssoc(Assoc):
             self.evidence = evidence_code
             self.rel = self.has_disposition  #default to has_disposition
             self.cu = CurieUtil(curie_map.get())
+            self.pub_list = None
 
             return
 

@@ -92,7 +92,6 @@ class CTD(Source):
             assoc.loadObjectProperties(self.graph)
             assoc.addAssociationNodeToGraph(self.graph)
 
-
         return
 
     def _process_pubmed_ids(self, pubmed_ids):

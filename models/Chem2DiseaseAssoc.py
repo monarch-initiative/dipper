@@ -16,11 +16,12 @@ class Chem2DiseaseAssoc(Assoc):
     most likely by calling methods in the Genotype() class.
     """
 
-    def __init__(self, assoc_id, chem_id, phenotype_id, pub, evidence_code):
+    def __init__(self, assoc_id, chem_id, phenotype_id, pub_list, evidence_code):
         self.annot_id = assoc_id
         self.chem_id = chem_id
         self.phenotype_id = phenotype_id
-        self.pub_id = pub
+        self.pub_list = pub_list
+        self.pub_id = None
         self.evidence = evidence_code
         self.rel = self.relationships['has_phenotype']  # default to has_phenotype
         self.cu = CurieUtil(curie_map.get())
