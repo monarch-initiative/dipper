@@ -71,7 +71,8 @@ class MGI(Source):
         'voc_evidence_view',
         'bib_acc_view',
         'prb_strain_view',
-        'mrk_summary_view'
+        'mrk_summary_view',
+        'mrk_acc_view'
     ]
 
 
@@ -184,6 +185,7 @@ class MGI(Source):
         self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit)
         self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)
         self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
+        self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)
         self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
@@ -191,7 +193,7 @@ class MGI(Source):
         #Need to handle the extra tabs/spaces in the file import
         #self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
         #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
-        self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)
+
 
         print("Finished parsing.")
 
@@ -230,6 +232,7 @@ class MGI(Source):
                 istrain = BNode('strainkey'+strain_key)
                 self.graph.add((istrain,RDF['type'],URIRef(cu.get_uri(self.terms['genomic_background']))))
                 #Moving this one to prb_strain_view
+                #FIXME: Keep this active or use from prb_strain_view?
                 #self.graph.add((istrain,RDFS['label'],Literal(strain)))
                 self.graph.add((gt,URIRef(cu.get_uri(self.relationship['has_reference_part'])),istrain))
 
@@ -536,7 +539,7 @@ class MGI(Source):
                 #iorganism = BNode('organismkey'+organism_key)
 
                 #. marker is type class
-                self.graph.add((imarker,RDF['type'],Assoc.OWLCLASS))
+                self.graph.add((imarker, RDF['type'], Assoc.OWLCLASS))
                 #. marker has subclass mapped(markertype)
                 self.graph.add((imarker,Assoc.SUBCLASS,URIRef(cu.get_uri(mapped_marker_type))))
                 #. marker has label symbol
@@ -564,8 +567,14 @@ class MGI(Source):
         #FIXME: dealing with annotation/associations here, not strictly phenotypes. Need to fix several graph nodes.
 
         #Need triples:
+        #. association is a class
+        #. phenotype id is class
+        #.
+
+
+        #OLD triples
         #. phenotype is an instance of phenotype
-        #. phenotype sameAs iphenotype
+        #. phenotype sameAs iphenotype#
         #. phenotype hasExactSynonym term
         #. genotype has_phenotype phenotype
 
@@ -581,16 +590,28 @@ class MGI(Source):
                  term,sequence_num,accid,logicaldb_key,vocab_key,mgi_type_key,evidence_vocab_key,anot_type) = line.split('\t')
 
 
+                # Restricting to type 1002, as done in the MousePhenotypes view.
+                # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
+                if annot_type_key == '1002':
 
-                if annot_type_key == '1002':  # Restricting to type 1002, as done in the MousePhenotypes view.
-
+                    #. This is the phenotype, or MP term for the phenotype.
                     phenotype = URIRef(cu.get_uri(accid))
+
+                    #. internalAssociation ID is the annotation_key
+                    #. NIF MousePhenotypes view prefixes with MGIAnnotInternal:
+                    iassociation = BNode('associationkey'+annot_key)
+
+                    #. internalGenotype ID is the object_key
+                    igt = BNode('genotypekey'+object_key)
+
                     #FIXME: is this the correct field to use as an internal phenotype ID?
                     #In this table, annot_key can have more than one row with different accids.
                     #In the view in DISCO, the annot_key is used as the 'mgi_annotation_id'
                     #This may be fixed with filtering on annot_type_key == '1002'
-                    iphenotype = BNode('phenotypekey'+annot_key)
-                    igt = BNode('genotypekey'+object_key)
+
+
+                    #. Swap to adding the phenotype to the graph as a class using GraphUtils
+                    #self.graph.add
 
                     #. phenotype is an instance of phenotype
                     #FIXME: monarch:phenotype is not returning as a valid URI
@@ -599,13 +620,13 @@ class MGI(Source):
 
                     #FIXME: Is sameAs correct? And should the annot_key be used as the internal phenotype id?
                     #. phenotype sameAs iphenotype
-                    self.graph.add((phenotype,OWL['sameAs'],iphenotype))
+                    #self.graph.add((phenotype,OWL['sameAs'],iphenotype))
 
                     #. phenotype hasExactSynonym term
-                    self.graph.add((phenotype,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(term)))
+                    #self.graph.add((phenotype,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(term)))
 
                     #. genotype has_phenotype phenotype
-                    self.graph.add((igt,URIRef(OWL['has_phenotype']),phenotype))
+                    #self.graph.add((igt,URIRef(OWL['has_phenotype']),phenotype))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -614,19 +635,20 @@ class MGI(Source):
 
 
     def _process_voc_evidence_view(self,raw,limit):
-        #TODO
+
+        #Revised triples:
+        #. evidence is an instance of evidence?
+        #. evidence has label evidence_code
+        #. evidence hasExactSynonym evidence_label
+        #. iassociation has dc:evidence evidence
+        #. iassociation has reference ipublication
+
+
         #QUESTION: How to get the additional evidence data? In the DISCO view, additional evidence data
         # (evidence_code_id, evidence_code_label) is pulled in from the evidence ontology. This view only has
         # the evidence_code_symbol. Can create an internal identifier on the annot_evidence_key,
         # which is phenotype-evidence specific.
         # What relationship is needed for the evidence_code_symbol? Not a label... Not a name... Is it a type?
-
-        #Need triples:
-        #. evidence is an instance of evidence?
-        #. evidence has label evidence_code
-        #. evidence hasExactSynonym evidence_label
-        #. iphenotype has dc:evidence evidence
-        #.
 
 
         gu = GraphUtils(self.namespaces)
@@ -642,7 +664,7 @@ class MGI(Source):
 
 
                 ievidence = BNode('evidencekey'+annot_evidence_key)  # Not needed if no other tables need to map to evidence.
-                iphenotype = BNode('phenotypekey'+annot_key)
+                iassociation = BNode('associationkey'+annot_key)
                 ipublication = BNode('publicationkey'+refs_key)
 
 
@@ -658,18 +680,19 @@ class MGI(Source):
                 self.graph.add((evidence,OWL['sameAs'],ievidence))
 
                 #. evidence hasExactSynonym evidence_label
+                #. The label may not be necessary since we have the URI for the evidence.
                 self.graph.add((evidence,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(evidence_label)))
 
                 #. evidence has label evidence_code
                 self.graph.add((evidence,RDFS['label'],Literal(evidence_code)))
 
-                #. iphenotype has evidence evidence
+                #. iassociation has evidence evidence
                 #FIXME: this usage (DC['evidence']) doesn't seem right, especially if 'evidence' refers to 'monarch:evidence' from the terms table
-                self.graph.add((iphenotype,DC['evidence'],Literal(evidence)))
+                self.graph.add((iassociation,DC['evidence'],Literal(evidence)))
 
-                #. iphenotype has reference ipublication
+                #. iassociation has reference ipublication
                 #FIXME: Is this correct if the ipublication refers to multiple publication identifiers? Source or Publication? Add to tracker for meeting
-                self.graph.add((iphenotype,DC['source'],Literal(ipublication)))
+                self.graph.add((iassociation,DC['source'],Literal(ipublication)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -735,7 +758,7 @@ class MGI(Source):
 
 
                 #else:
-                    #Should probably have an error if the publication does not match one of the above formats.
+                    #TODO:Should probably have an error if the publication does not match one of the above formats.
                     #pub_id = ''
 
 
@@ -830,8 +853,10 @@ class MGI(Source):
                 # Do we need to do specific adjustments for different ID sources?
                 if logicaldb_key == '1' and accid == mgiid:
                     #imarker has ID mgiid
+                    #print(accid)
 
                     self.graph.add((mgi_id,OWL['sameAs'],imarker))
+
 
 
                 #May only be able to batch a subset of these if performing any
@@ -859,8 +884,11 @@ class MGI(Source):
                         accid = 'PR:'+accid
                     elif logicaldb_key == '83':
                         accid = 'miRBase:'+accid
+                        # new ticket, how to model this one since miRNA and miRNA clusters return the same MirBase ID in MGI.
                     elif logicaldb_key == '55':
                         accid = 'NCBIGene:'+accid
+                        #FIXME: mark this as an equivalentClass?
+                        self.graph.add((imarker,OWL['equivalentClass'],URIRef(cu.get_uri(accid))))
                     elif logicaldb_key == '27':
                         accid = 'RefSeq:'+accid
                     elif logicaldb_key == '13':
@@ -868,6 +896,7 @@ class MGI(Source):
                     elif logicaldb_key == '8':
                         accid = 'EC:'+accid
                     #FIXME: The EC IDs are used for multiple genes, resulting in one EC number
+                    #Equivalence association for this type?
                     # that then maps to multiple marker IDs.
 
 
