@@ -315,3 +315,13 @@ class Source:
         status = check_call(["owltools", f],stderr=subprocess.STDOUT)
         return status
 
+    def _check_list_len(self, row, length):
+        """
+        Sanity check for csv parser
+        :param row
+        :param length
+        :return:None
+        """
+        if len(row) != length:
+            raise Exception("row length does not match expected length of " +
+                            str(length)+"\nrow: "+str(row))
