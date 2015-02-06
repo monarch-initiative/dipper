@@ -54,7 +54,7 @@ class MGI(Source):
     #Do identifiers have the proper prefixes?
     #Are there quotes that need to be stripped from variables?
     #Is there scrubbing needed for any variables?
-    # If present in other functions, can the scrubbing be moved to the scrub function?
+    #If present in other functions, can the scrubbing be moved to the scrub function?
     #Make a checklist for the full graph and confirm that all nodes are present.
     #Do we need to do any HTML formatting of labels? (< -> &lt;)
 
@@ -187,6 +187,7 @@ class MGI(Source):
         self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit)
         self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)
         self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)
+        self._process_mrk_acc_view(('/').join((self.rawdir,'mrk_acc_view')),limit)
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
         #FIXME: processing of bib_acc_view and prb_strain_view is currently broken due to MGI data file errors
@@ -512,55 +513,6 @@ class MGI(Source):
 
         return
 
-    def _process_mrk_marker_view(self,raw,limit):
-        #Need triples:
-        #. marker is type class
-        #. marker has subclass mapped(markertype)
-        #. marker has label symbol
-        #. marker has synonym name
-        #. or marker has description name?
-        #Process based on status? (official, withdrawn, interim)
-        #Do we want the chromosome number?
-
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
-        line_counter = 0
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
-                line_counter += 1
-
-                (marker_key,organism_key,marker_status_key,marker_type_key,curationstate_key,symbol,name,chromosome,
-                cytogenetic_offset,createdby_key,modifiedby_key,creation_date,modification_date,organism,common_name,
-                latin_name,status,marker_type,curation_state,created_by,modified_by) = line.split('\t')
-
-                imarker = BNode('markerkey'+marker_key)
-                mapped_marker_type = self._map_marker_type(marker_type)
-                #iorganism = BNode('organismkey'+organism_key)
-
-                #. marker is type class
-                self.graph.add((imarker, RDF['type'], Assoc.OWLCLASS))
-                #. marker has subclass mapped(markertype)
-                self.graph.add((imarker,Assoc.SUBCLASS,URIRef(cu.get_uri(mapped_marker_type))))
-                #. marker has label symbol
-                self.graph.add((imarker,RDFS['label'],Literal(symbol)))
-                #. marker has synonym name
-                self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(name)))
-                #. or marker has description name?
-                #self.graph.add((imarker,DC['description'],Literal(name)))
-                #TODO: Think it would make more sense to map the taxon using one of the organism tables.
-                # map taxon
-                taxon = self._map_taxon(latin_name)
-                #. marker in_taxon mapped(latin_name) #FIXME: is 'in_taxon' the correct relationship?
-                self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon))))
-                #TODO: If mapping to taxon using an organism table, map to the organism BNode
-                #self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),iorganism))
-
-                if (limit is not None and line_counter > limit):
-                    break
-
-        return
-
 
 
     def _process_voc_annot_view(self,raw,limit):
@@ -817,6 +769,59 @@ class MGI(Source):
         return
 
 
+    def _process_mrk_marker_view(self,raw,limit):
+        #Need triples:
+        #. marker is type class
+        #. marker has subclass mapped(markertype)
+        #. marker has label symbol
+        #. marker has synonym name
+        #. or marker has description name?
+        #Process based on status? (official, withdrawn, interim)
+        #Do we want the chromosome number?
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                (marker_key,organism_key,marker_status_key,marker_type_key,curationstate_key,symbol,name,chromosome,
+                cytogenetic_offset,createdby_key,modifiedby_key,creation_date,modification_date,organism,common_name,
+                latin_name,status,marker_type,curation_state,created_by,modified_by) = line.split('\t')
+
+                #Remove the withdrawn markers
+                if marker_status_key != '2':
+
+                    imarker = BNode('markerkey'+marker_key)
+                    mapped_marker_type = self._map_marker_type(marker_type)
+                    #iorganism = BNode('organismkey'+organism_key)
+
+                    #. marker is type class
+                    self.graph.add((imarker, RDF['type'], Assoc.OWLCLASS))
+                    #. marker has subclass mapped(markertype)
+                    self.graph.add((imarker,Assoc.SUBCLASS,URIRef(cu.get_uri(mapped_marker_type))))
+                    #. marker has label symbol
+                    self.graph.add((imarker,RDFS['label'],Literal(symbol)))
+                    #. marker has synonym name
+                    self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(name)))
+                    #. or marker has description name?
+                    #self.graph.add((imarker,DC['description'],Literal(name)))
+                    #TODO: Think it would make more sense to map the taxon using one of the organism tables.
+                    # map taxon
+                    taxon = self._map_taxon(latin_name)
+                    #. marker in_taxon mapped(latin_name) #FIXME: is 'in_taxon' the correct relationship?
+                    self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon))))
+                    #TODO: If mapping to taxon using an organism table, map to the organism BNode
+                    #self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),iorganism))
+
+                    if (limit is not None and line_counter > limit):
+                        break
+
+        return
+
+
     def _process_mrk_summary_view(self,raw,limit):
         #NOTE: There are multiple identifiers available for markers/genes from 28 different resources in this table.
         #Currently handling identifiers from TrEMBL, PDB, ENSEMBL, PRO, miRBASE, MGI, Entrez gene, RefSeq,
@@ -847,8 +852,7 @@ class MGI(Source):
 
                 imarker = BNode('markerkey'+object_key)
                 mgi_id = URIRef(cu.get_uri(mgiid))
-                #dbs = ['41', '45', '60', '135', '83', '1', '55', '27', '13', '8']
-                #dbs = ['41, 45, 60, 135, 83, 1, 55, 27, 13, 8']
+
 
                 # Do we need to do specific adjustments for different ID sources?
                 if logicaldb_key == '1' and accid == mgiid:
@@ -856,8 +860,6 @@ class MGI(Source):
                     #print(accid)
 
                     self.graph.add((mgi_id,OWL['sameAs'],imarker))
-
-
 
                 #May only be able to batch a subset of these if performing any
                 # specific ID processing for different resources.
@@ -884,7 +886,6 @@ class MGI(Source):
                         accid = 'PR:'+accid
                     elif logicaldb_key == '83':
                         accid = 'miRBase:'+accid
-                        # new ticket, how to model this one since miRNA and miRNA clusters return the same MirBase ID in MGI.
                     elif logicaldb_key == '55':
                         accid = 'NCBIGene:'+accid
                         #FIXME: mark this as an equivalentClass?
@@ -913,6 +914,52 @@ class MGI(Source):
 
         return
 
+    def _process_mrk_acc_view(self,raw,limit):
+        #. Need to grab the NCBI Gene ID for the markers, and use that as an equivalentClass
+        #. in order to fill in the empty nodes if there is no match for a marker in the mrk_summary_view.
+        #. There are some MGI IDs available, but there may be duplicates or even different IDs
+        # for a given marker key(object key), if we want to grab some of those IDs from this table.
+
+
+        #Need triples:
+        #.
+
+
+        gu = GraphUtils(self.namespaces)
+        cu = CurieUtil(self.namespaces)
+        line_counter = 0
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            for line in f:
+                line_counter += 1
+
+                #print(line.split('\t'))
+                (accession_key,accid,prefix_part,numeric_part,logicaldb_key,object_key,mgi_type_key,private,preferred,
+                 created_by_key,modified_by_key,creation_date,modification_date,logicaldb,organism_key) = line.split('\t')
+
+                imarker = BNode('markerkey'+object_key)
+
+
+                if logicaldb_key == '55':
+                    accid = 'NCBIGene:'+accid
+                    #FIXME: mark this as an equivalentClass?
+                    #self.graph.add((imarker,OWL['equivalentClass'],URIRef(cu.get_uri(accid))))
+                    self.graph.add((URIRef(cu.get_uri(accid)),OWL['equivalentClass'],imarker))
+
+                    #alt_mrk_id = URIRef(cu.get_uri(accid))
+
+                        #FIXME: Since these are alternate IDs,
+                    #self.graph.add((imarker,OWL['sameAs'],alt_mrk_id))
+                    #self.graph.add((alt_mrk_id,OWL['sameAs'],imarker))
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
+
+
     def _process_g2p(self, raw, out, g, limit=None):
         '''
         This module currently filters for only wild-type environments, which clearly excludes application
@@ -936,8 +983,6 @@ class MGI(Source):
         #NOTE: For MGI, environment is hard coded as a null.
         #EntityID:genotype_id, from annot_view.object_key
         #PhenotypeID:voc_annot_view?:accid
-
-
 
         return
 
