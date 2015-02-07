@@ -51,7 +51,7 @@ class Assoc:
 
         return
 
-    def addAssociationToGraph(self,g):
+    def addAssociationToGraph(self, g):
         cu = self.cu
 
         # first, add the direct triple
@@ -68,6 +68,7 @@ class Assoc:
         g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
         g.add((node, self.BASE['hasSubject'], s))
         g.add((node, self.BASE['hasObject'], o))
+        g.add((node, self.BASE['hasPredicate'], p))
 
         # this is handling the occasional messy pubs that are sometimes literals
         if self.pub_id is not None:
