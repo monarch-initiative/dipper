@@ -251,10 +251,10 @@ class Source:
                 print("INFO: Fetching data from table",t)
                 self._getcols(cur,t)
                 query=(' ').join(("SELECT * FROM",t))
+                countquery=(' ').join(("SELECT COUNT(*) FROM",t))
                 if (limit is not None):
                     query=(' ').join((query,"LIMIT",str(limit)))
-                print("COMMAND:",query)
-                cur.execute(query)
+                    countquery=(' ').join((countquery,"LIMIT",str(limit)))
 
                 outfile=('/').join((self.rawdir,t))
 
@@ -267,10 +267,13 @@ class Source:
                     print("INFO: rows in local file: ",filerowcount)
 
                 #get rows in the table
-                tablerowcount=cur.rowcount
+                #tablerowcount=cur.rowcount
+                cur.execute(countquery)
+                tablerowcount=cur.fetchone()[0]
                 if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
                     print("INFO: local data different from remote; fetching.")
                     #download the file
+                    print("COMMAND:",query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
                     with open(outfile, 'w') as f:
                         cur.copy_expert(outputquery, f)
