@@ -58,10 +58,10 @@ def main():
         print("*******", source, "*******")
         source = source.lower()
         mysource = source_to_class_map[source]()
-        mysource.fetch(args.force)
-        mysource.parse(args.limit)
         if args.parse_only is False:
-            mysource.write(format='turtle')
+            mysource.fetch(args.force)
+        mysource.parse(args.limit)
+        mysource.write(format='turtle')
         #status = mysource.verify()
 #       if status is not True:
 #           print('ERROR: Source',source,'did not pass verification tests.')
