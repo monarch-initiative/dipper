@@ -305,8 +305,10 @@ class Source:
         '''
         vg = Graph()
         vg.parse(f, format="turtle")
-        print ('Graph nodes:',len(vg))
-        return
+        print ('INFO: Found',len(vg),'graph nodes')
+        if len(vg) > 0:
+            return True
+        return False
 
     def _verifyowl(self,f):
         '''
@@ -316,7 +318,12 @@ class Source:
         :return: Boolean status (passed: True; did not pass: False)
         '''
         status = check_call(["owltools", f],stderr=subprocess.STDOUT)
-        return status
+        #returns zero is success!
+        if (status != 0):
+            print('ERROR: finished verifying with owltools with status',status)
+            return False
+        else:
+            return True
 
     def _check_list_len(self, row, length):
         """
