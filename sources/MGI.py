@@ -46,7 +46,7 @@ class MGI(Source):
     # mgi_note_vocevidence_view: Used in phenotype view for free_text_phenotype_description
     # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
     # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
-    # prb_strain_acc_view: Don't believe this view is used in either the genotype of phenotype view, but is needed if we want the MGI ID for the strain.
+    # FIXME - prb_strain_acc_view: Don't believe this view is used in either the genotype of phenotype view, but is needed if we want the MGI ID for the strain.
     # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
     # prb_strain_marker_view: Don't believe this view is used in either the genotype of phenotype view
 
@@ -82,7 +82,7 @@ class MGI(Source):
         'has_alternate_part' : 'GENO:0000382',
         'has_reference_part' : 'GENO:0000385',
         'in_taxon' : 'RO:0000216',
-        'has_zygosity' : 'GENO:0000608',   #what exactly "has zygosity"?  is it the allele?  genotype?
+        'has_zygosity' : 'GENO:0000608',
         'is_sequence_variant_instance_of' : 'GENO:0000408',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
         'has_disposition' : 'GENO:0000208',
@@ -190,10 +190,8 @@ class MGI(Source):
         self._process_mrk_acc_view(('/').join((self.rawdir,'mrk_acc_view')),limit)
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)
-        #FIXME: processing of bib_acc_view and prb_strain_view is currently broken due to MGI data file errors
-        #Need to handle the extra tabs/spaces in the file import
-        #self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
-        #self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
+        self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)
+        self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
 
 
         print("Finished parsing.")
@@ -206,14 +204,21 @@ class MGI(Source):
 
 
     def _process_gxd_genotype_view(self, raw, limit=None):
-        #need to make triples:
-        #.  genotype is a class  (or instance?)
-        #.  genotype has equivalentClass mgi internal identifier?  -- maybe make the internal identifier an anonymous node?
-        #.  genotype subclass of intrinsic_genotype
-        #.  genotype has_genomic_background strain_key
-        #.  strainkey has_label strain
-        #.  strainkey in_taxon taxon_id  #not part of this table
-        #.  strainkey is a class (or an instance?)
+        '''
+        This table indicates the relationship between a genotype, it's internal+mgi identifier,
+        and it's background strain.  Taxon relationships for the strain will be taken care of in another table.
+
+        Makes these triples:
+        <MGI:genotypeid> a GENO:genotype
+        <MGI:genotypeid> sameAs <internal genotype id>
+        <internal strain id> a GENO:genomic_background
+        <MGI:genotypeid> GENO:has_reference_part <internal strain id>
+
+        :param raw:
+        :param limit:
+        :return:
+        '''
+
 
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
@@ -227,19 +232,16 @@ class MGI(Source):
 
                 #we can make these proper methods later
                 gt = URIRef(cu.get_uri(mgiid))
-                igt = BNode('genotypekey'+genotype_key)
-                self.graph.add((gt,OWL['equivalentClass'],igt))
-                self.graph.add((gt,RDF['type'],URIRef(cu.get_uri(self.terms['intrinsic_genotype']))))
-                istrain = BNode('strainkey'+strain_key)
-                self.graph.add((istrain,RDF['type'],URIRef(cu.get_uri(self.terms['genomic_background']))))
-                #Moving this one to prb_strain_view
-                #FIXME: Keep this active or use from prb_strain_view?
-                #self.graph.add((istrain,RDFS['label'],Literal(strain)))
-                self.graph.add((gt,URIRef(cu.get_uri(self.relationship['has_reference_part'])),istrain))
+                igt_id = self._makeInternalIdentifier('genotype',genotype_key)
+                igt = BNode(igt_id)
+                gu.addIndividualToGraph(self.graph,mgiid,None,self.terms['intrinsic_genotype'])
+                self.graph.add((gt,OWL['sameAs'],igt))
 
-                #temporary assignment to Mus musculus
-                #In prb_strain_view, there are 160 different species, but can probably slim that number down.
-                self.graph.add((istrain,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri('NCBITaxon:10090'))))
+                istrain_id = self._makeInternalIdentifier('strain',strain_key)
+                istrain_node = BNode(istrain_id)
+                gu.addIndividualToGraph(self.graph,istrain_id,None,self.terms['genomic_background'])
+
+                self.graph.add((gt,URIRef(cu.get_uri(self.relationship['has_reference_part'])),istrain_node))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -266,11 +268,13 @@ class MGI(Source):
                 #note the short_description is the GVC
 
                 #we can make these proper methods later
+
                 gt = URIRef(cu.get_uri(mgiid))
-                igt = BNode('genotypekey'+object_key)
-                self.graph.add((gt,OWL['equivalentClass'],igt))
-                self.graph.add((gt,RDF['type'],URIRef(cu.get_uri(self.terms['intrinsic_genotype']))))
-                self.graph.add((gt,RDFS['label'],Literal(description)))  #the 'description' is the full genotype label
+                igt_id = self._makeInternalIdentifier('genotype',object_key)
+                igt_node = BNode(igt_id)
+                gu.addIndividualToGraph(self.graph,mgiid,description,self.terms['intrinsic_genotype'])
+                self.graph.add((gt,OWL['sameAs'],igt_node))
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -516,19 +520,19 @@ class MGI(Source):
 
 
     def _process_voc_annot_view(self,raw,limit):
-        #FIXME: dealing with annotation/associations here, not strictly phenotypes. Need to fix several graph nodes.
+        '''
+        This MGI table represents associations between things.
+        We currently filter this table on Genotype-Phenotype associations, but may be expanded in the future.
+        The table only includes the internal genotype identifiers, so we link on that.
 
-        #Need triples:
-        #. association is a class
-        #. phenotype id is class
-        #.
+        :param raw:
+        :param limit:
+        :return:
+        '''
 
-
-        #OLD triples
-        #. phenotype is an instance of phenotype
-        #. phenotype sameAs iphenotype#
-        #. phenotype hasExactSynonym term
-        #. genotype has_phenotype phenotype
+        #TODO also get Strain/Attributes (annottypekey = 1000)
+        #TODO what is Phenotype (Derived) vs non-derived?  (annottypekey = 1015)
+        #TODO is evidence in this table?  what is the evidence vocab key?
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -536,7 +540,6 @@ class MGI(Source):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
-                line_counter += 1
 
                 (annot_key,annot_type_key,object_key,term_key,qualifier_key,creation_date,modification_date,qualifier,
                  term,sequence_num,accid,logicaldb_key,vocab_key,mgi_type_key,evidence_vocab_key,anot_type) = line.split('\t')
@@ -545,40 +548,35 @@ class MGI(Source):
                 # Restricting to type 1002, as done in the MousePhenotypes view.
                 # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
                 if annot_type_key == '1002':
+                    line_counter += 1
+
+                    #todo add NOT annotations
+                    #skip 'normal'
+                    if (qualifier=='norm'):
+                        print("INFO: found normal phenotype:",term)
+                        continue
 
                     #. This is the phenotype, or MP term for the phenotype.
-                    phenotype = URIRef(cu.get_uri(accid))
+                    pnode = URIRef(cu.get_uri(accid))
+                    gu.addClassToGraph(self.graph,accid,None)
 
                     #. internalAssociation ID is the annotation_key
                     #. NIF MousePhenotypes view prefixes with MGIAnnotInternal:
-                    iassociation = BNode('associationkey'+annot_key)
+                    iassoc_id = self._makeInternalIdentifier('annot',annot_key)
 
-                    #. internalGenotype ID is the object_key
-                    igt = BNode('genotypekey'+object_key)
+                    assoc_id = self.make_id(iassoc_id)
+                    n = URIRef(cu.get_uri(':'+assoc_id))
 
-                    #FIXME: is this the correct field to use as an internal phenotype ID?
-                    #In this table, annot_key can have more than one row with different accids.
-                    #In the view in DISCO, the annot_key is used as the 'mgi_annotation_id'
-                    #This may be fixed with filtering on annot_type_key == '1002'
-
-
-                    #. Swap to adding the phenotype to the graph as a class using GraphUtils
-                    #self.graph.add
-
-                    #. phenotype is an instance of phenotype
-                    #FIXME: monarch:phenotype is not returning as a valid URI
-                    self.graph.add((phenotype,RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
+                    # internalGenotype ID is the object_key
+                    gt_id = self._makeInternalIdentifier('genotype',object_key)
+                    gtnode = BNode(gt_id)
+                    gu.addIndividualToGraph(self.graph,gt_id,None)
 
 
-                    #FIXME: Is sameAs correct? And should the annot_key be used as the internal phenotype id?
-                    #. phenotype sameAs iphenotype
-                    #self.graph.add((phenotype,OWL['sameAs'],iphenotype))
+                    #add the association
+                    assoc = G2PAssoc(':'+assoc_id,gt_id,accid,None,None)
+                    assoc.addAssociationNodeToGraph(self.graph)
 
-                    #. phenotype hasExactSynonym term
-                    #self.graph.add((phenotype,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(term)))
-
-                    #. genotype has_phenotype phenotype
-                    #self.graph.add((igt,URIRef(OWL['has_phenotype']),phenotype))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -587,21 +585,12 @@ class MGI(Source):
 
 
     def _process_voc_evidence_view(self,raw,limit):
-
-        #Revised triples:
-        #. evidence is an instance of evidence?
-        #. evidence has label evidence_code
-        #. evidence hasExactSynonym evidence_label
-        #. iassociation has dc:evidence evidence
-        #. iassociation has reference ipublication
-
-
-        #QUESTION: How to get the additional evidence data? In the DISCO view, additional evidence data
-        # (evidence_code_id, evidence_code_label) is pulled in from the evidence ontology. This view only has
-        # the evidence_code_symbol. Can create an internal identifier on the annot_evidence_key,
-        # which is phenotype-evidence specific.
-        # What relationship is needed for the evidence_code_symbol? Not a label... Not a name... Is it a type?
-
+        '''
+        Here we fetch the evidence (code and publication) for the associations.
+        :param raw:
+        :param limit:
+        :return:
+        '''
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -614,37 +603,22 @@ class MGI(Source):
                 (annot_evidence_key,annot_key,evidence_term_key,refs_key,inferred_from,created_by_key,modified_by_key,
                 creation_date,modification_date,evidence_code,evidence_seq_num,jnumid,jnum,short_citation,created_by,modified_by)= line.split('\t')
 
-
-                ievidence = BNode('evidencekey'+annot_evidence_key)  # Not needed if no other tables need to map to evidence.
-                iassociation = BNode('associationkey'+annot_key)
-                ipublication = BNode('publicationkey'+refs_key)
-
+                iassoc_id = self._makeInternalIdentifier('annot',annot_key)
+                assoc_id = self.make_id(iassoc_id)  #the public version of the identifier
 
                 # Only 18 evidence codes used in MGI, so create a mapping function to map the label and the ID.
                 evidence_id = self._map_evidence_id(evidence_code)
-                evidence_label = self._map_evidence_label(evidence_code)
                 evidence = URIRef(cu.get_uri(evidence_id))
 
-                #. evidence is an instance of evidence
-                self.graph.add((evidence,RDF['type'],URIRef(cu.get_uri(self.terms['evidence']))))
+                #TODO add it as an instance of what type?
+                #add the pub as an individual;
+                gu.addIndividualToGraph(self.graph,jnumid,None)
+                pub = URIRef(cu.get_uri(jnumid))
 
-                #evidence has an equivalent class internalEvidenceID.
-                self.graph.add((evidence,OWL['sameAs'],ievidence))
+                #add the ECO and citation information to the annot
+                self.graph.add((URIRef(cu.get_uri(':'+assoc_id)),DC['evidence'],evidence))
+                self.graph.add((URIRef(cu.get_uri(':'+assoc_id)),DC['source'],pub))
 
-                #. evidence hasExactSynonym evidence_label
-                #. The label may not be necessary since we have the URI for the evidence.
-                self.graph.add((evidence,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(evidence_label)))
-
-                #. evidence has label evidence_code
-                self.graph.add((evidence,RDFS['label'],Literal(evidence_code)))
-
-                #. iassociation has evidence evidence
-                #FIXME: this usage (DC['evidence']) doesn't seem right, especially if 'evidence' refers to 'monarch:evidence' from the terms table
-                self.graph.add((iassociation,DC['evidence'],Literal(evidence)))
-
-                #. iassociation has reference ipublication
-                #FIXME: Is this correct if the ipublication refers to multiple publication identifiers? Source or Publication? Add to tracker for meeting
-                self.graph.add((iassociation,DC['source'],Literal(ipublication)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -653,81 +627,51 @@ class MGI(Source):
 
 
     def _process_bib_acc_view(self,raw,limit):
-        # Can't get the pubmed IDs from the voc_evidence_view, so need to bring them in from this table joining
-        # on voc_evidence_view.refs_key -> bib_acc_view.object_key
-        # Can process to retrieve just the pubmed_ids, or if they would be useful can also grab the Jnum and MGI IDs.
-
-
-        #Need triples:
-        #. publication as instance
-        # internalPublicationID sameAs pubmed_id
+        '''
+        This will make equivalences between the different pub ids
+        :param raw:
+        :param limit:
+        :return:
+        '''
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
         line_counter = 0
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
                 line_counter += 1
-
+                if (line_counter == 1):
+                    continue #skip header
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
-                created_by_key,modified_by_key,creation_date,modification_date,logical_db)= line.split('\t')
+                created_by_key,modified_by_key,creation_date,modification_date,logical_db)= line
 
-                # Do we want these reversed?
-                #. BNode for the reference key/object key that applies to
-                ipublication = BNode('publicationkey'+object_key)
-                #. BNode for the individual publication key.
-                ireference = BNode('referencekey'+accession_key)
-                #pub_id = ''
+                ipub_id = self._makeInternalIdentifier('publication',object_key)
+                ipub = BNode(ipub_id)
+
                 logical_db = logical_db.strip()
 
-
-                #FIXME: How to indicate the primary reference for JNumbers?
-                #If we want other publication IDs, need to add to this statement
-                #Also, will need to separate out based on accession_key, because the object_key
-                # is the same for each reference ID (MGI ID, Jnumber, pubmed_id, DOI)...
-                if (logical_db == 'Pubmed'):
-                    pub_id = URIRef(cu.get_uri('PMID:'+accid))
-                    #print(pub_id)
-
-                elif (logical_db == 'MGI' and prefixpart == 'J:'):
-                    pub_id = URIRef(cu.get_uri(accid))
-                    # How to indicate this as the primary association?
-                    #FIXME: Think this is wrong. Also see #. iphenotype has reference ipublication in voc_evidence_view.
-                    #self.graph.add((ipublication,DC['source'],pub_id))
-                    self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
-                    self.graph.add((pub_id,OWL['sameAs'],ipublication))
-
-                elif (logical_db == 'MGI' and prefixpart == 'MGI:'):
-                    pub_id = URIRef(cu.get_uri(accid))
-                    self.graph.add((pub_id,OWL['sameAs'],ireference))
-
-
+                #get the real nice pub identifier
+                pub_id = None
+                if (logicaldb_key == '29'):  #pubmed
+                    pub_id = 'PMID:'+accid
+                elif (logicaldb_key == '1' and re.match('J|MGI:',prefixpart)):
+                    pub_id = accid
                 elif (logical_db == 'Journal Link'):
-                    pub_id = URIRef(cu.get_uri('DOI:'+accid))
-                    self.graph.add((pub_id,OWL['sameAs'],ireference))
+                    #some DOIs seem to have spaces
+                    #FIXME MGI needs to FIX THESE UPSTREAM!!!!
+                    #we'll scrub them here for the time being
+                    pub_id = 'DOI:'+re.sub('\s+','',accid)
 
+                if (pub_id is not None):
+                    #only add these to the graph if it's mapped to something we understand
+                    gu.addIndividualToGraph(self.graph,pub_id,None)
+                    gu.addIndividualToGraph(self.graph,ipub_id,None)
+                    #todo add this to graph utils
+                    self.graph.add((ipub,OWL['sameAs'],URIRef(cu.get_uri(pub_id))))
 
-
-                #else:
-                    #TODO:Should probably have an error if the publication does not match one of the above formats.
-                    #pub_id = ''
-
-
-
-
-                if pub_id != '': #FIXME
-                    #. publication as type individual
-                    #self.graph.add((pub_id,RDF['type'],Assoc.OWLIND))
-
-                    # publication ID (PMID, DOI, JNumber, MGI ID) sameAs accession key.
-                    #self.graph.add((pub_id,OWL['sameAs'],ireference))
-
-                    # FIXME: To relate back to the phenotype, need to attach to the ipublication BNode. But is this correct?
-                    self.graph.add((pub_id,OWL['sameAs'],ipublication))
                 else:
-                    print("ERROR: Publication from (", logical_db, ") not mapped")
-
+                    print("WARN: Publication from (", logical_db, ") not mapped for",ipub_id)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -735,33 +679,42 @@ class MGI(Source):
         return
 
     def _process_prb_strain_view(self,raw,limit):
+        '''
+        Process a table to get strains (with internal ids), and their labels.
+        These strains are created as instances of intrinsic_genotype.
+
+        :param raw:
+        :param limit:
+        :return:
+        '''
         #Only 9 strain types if we want to map them (recombinant congenci, inbred strain, NA, congenic,
         # consomic, coisogenic, recombinant inbred, NS, conplastic)
         #160 species types, but could probably slim that down.
         #If we don't want anything else from this table other than the strain label, could potentially drop it
         # and just keep the strain labelling in the gxd_genotype_view.
 
-        #Need triples:
-        #. istrain has label strain
-
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
         line_counter = 0
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
                 line_counter += 1
 
-                #print(line.split('\t'))
                 (strain_key,species_key,strain_type_key,strain,standard,private,genetic_background,created_by_key,
-                modified_by_key,creation_date,modification_date,species,strain_type,created_by,modified_by) = line.split('\t')
+                modified_by_key,creation_date,modification_date,species,strain_type,created_by,modified_by) = line
 
-                istrain = BNode('strainkey'+strain_key)
+                istrain_id = self._makeInternalIdentifier('strain',strain_key)
+                istrain_node = BNode(istrain_id)
+
+                #FIXME is the strain an 'intrinsic_genotype', 'genomic_background' or something else?
+                gu.addIndividualToGraph(self.graph,istrain_id,strain,self.terms['intrinsic_genotype'])
+                #TODO add species
+                #TODO what is strain type anyway?
                 #ispecies = BNode('specieskey'+species_key)
                 #istrain_type = BNode('straintypekey'+strain_type_key)
-
-                self.graph.add((istrain,RDFS['label'],Literal(strain)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -770,6 +723,15 @@ class MGI(Source):
 
 
     def _process_mrk_marker_view(self,raw,limit):
+        '''
+        This is the definition of markers (as in genes, but other genomic loci as well).
+        This includes their labels, specific class, and identifiers
+        FIXME, it doesn't create real node ids, but BNodes.  will this get rectified?
+        TODO should we use the mrk_mouse_view instead?
+        :param raw:
+        :param limit:
+        :return:
+        '''
         #Need triples:
         #. marker is type class
         #. marker has subclass mapped(markertype)
@@ -794,25 +756,24 @@ class MGI(Source):
                 #Remove the withdrawn markers
                 if marker_status_key != '2':
 
-                    imarker = BNode('markerkey'+marker_key)
-                    mapped_marker_type = self._map_marker_type(marker_type)
-                    #iorganism = BNode('organismkey'+organism_key)
+                    imarker_id = self._makeInternalIdentifier('marker',marker_key)
+                    imarker_node = BNode(imarker_id)
 
-                    #. marker is type class
-                    self.graph.add((imarker, RDF['type'], Assoc.OWLCLASS))
-                    #. marker has subclass mapped(markertype)
-                    self.graph.add((imarker,Assoc.SUBCLASS,URIRef(cu.get_uri(mapped_marker_type))))
-                    #. marker has label symbol
-                    self.graph.add((imarker,RDFS['label'],Literal(symbol)))
-                    #. marker has synonym name
-                    self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['hasExactSynonym'])),Literal(name)))
-                    #. or marker has description name?
-                    #self.graph.add((imarker,DC['description'],Literal(name)))
+                    #perhaps only pull info for mouse genes here?  other species should come from other dbs
+                    if (organism_key != '1'):
+                        continue
+
+                    #map the marker to the gene class
+                    mapped_marker_type = self._map_marker_type(marker_type)
+
+                    gu.addClassToGraph(self.graph,imarker_id,symbol,mapped_marker_type,name)
+                    gu.addSynonym(self.graph,imarker_id,name,Assoc.relationships['hasExactSynonym'])
+
+                    #add the taxon
+                    taxon_id = self._map_taxon(latin_name)
+                    self.graph.add((imarker_node,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon_id))))
+
                     #TODO: Think it would make more sense to map the taxon using one of the organism tables.
-                    # map taxon
-                    taxon = self._map_taxon(latin_name)
-                    #. marker in_taxon mapped(latin_name) #FIXME: is 'in_taxon' the correct relationship?
-                    self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon))))
                     #TODO: If mapping to taxon using an organism table, map to the organism BNode
                     #self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),iorganism))
 
@@ -924,6 +885,7 @@ class MGI(Source):
         #Need triples:
         #.
 
+        #TODO consider making a pass through the table and making a hash of the internal/primary external key
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -932,25 +894,23 @@ class MGI(Source):
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
-
-                #print(line.split('\t'))
                 (accession_key,accid,prefix_part,numeric_part,logicaldb_key,object_key,mgi_type_key,private,preferred,
                  created_by_key,modified_by_key,creation_date,modification_date,logicaldb,organism_key) = line.split('\t')
 
-                imarker = BNode('markerkey'+object_key)
+                imark_id = self._makeInternalIdentifier('marker',object_key)
 
+                marker_id = None
+                if (preferred == '1'):  #what does it mean if it's 0?
+                    if logicaldb_key == '55':  #entrez/ncbi
+                        marker_id = 'NCBIGene:'+accid
+                    elif logicaldb_key == '1':  #mgi
+                        marker_id = accid
+                    elif logicaldb_key == '60':
+                        marker_id = 'ENSEMBL:'+accid
 
-                if logicaldb_key == '55':
-                    accid = 'NCBIGene:'+accid
-                    #FIXME: mark this as an equivalentClass?
-                    #self.graph.add((imarker,OWL['equivalentClass'],URIRef(cu.get_uri(accid))))
-                    self.graph.add((URIRef(cu.get_uri(accid)),OWL['equivalentClass'],imarker))
-
-                    #alt_mrk_id = URIRef(cu.get_uri(accid))
-
-                        #FIXME: Since these are alternate IDs,
-                    #self.graph.add((imarker,OWL['sameAs'],alt_mrk_id))
-                    #self.graph.add((alt_mrk_id,OWL['sameAs'],imarker))
+                if (marker_id is not None):
+                    gu.addClassToGraph(self.graph,marker_id,None)
+                    gu.addEquivalentClass(self.graph,marker_id,imark_id)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1073,22 +1033,19 @@ class MGI(Source):
     def _map_marker_type(self, marker_type):
         type = None
         type_map = {
-            'Complex/Cluster/Region': 'SO:0000001',  # region. Something more specific available?
+            'Complex/Cluster/Region': 'SO:0000001',  # region. Something more specific available? #fixme
             'Transgene': 'SO:0000902',  # transgene
             'Gene': 'SO:0000704',  # gene
             'QTL': 'SO:0000771',  # QTL
             'DNA Segment': 'SO:0000110',  # sequence_feature. sequence_motif=SO:0001683? region=SO:0000001
             'Pseudogene': 'SO:0000336',  # pseudogene
-            'Cytogenetic Marker': 'SO:0001645',  # genetic_marker?
+            'Cytogenetic Marker': 'SO:0001645',  # genetic_marker?   #fixme
             'Other Genome Feature': 'SO:0000110',  # sequence_feature. Or sequence_motif=SO:0001683?
-            'BAC/YAC end': 'SO:0000999',  # BAC_end: SO:0000999, YAC_end: SO:00011498
+            'BAC/YAC end': 'SO:0000150',  # BAC_end: SO:0000999, YAC_end: SO:00011498; using parent term
         }
         if (marker_type.strip() in type_map):
             type = type_map.get(marker_type)
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
-        # print("Mapped: ", allele_type, "to", type)
         else:
-            # TODO add logging
             print("ERROR: Marker Type (", marker_type, ") not mapped")
 
         return type
@@ -1132,6 +1089,7 @@ class MGI(Source):
         return type
 
     def _map_evidence_id(self, evidence_code):
+        #TODO a default evidence code???  what should it be?
         type = None
         type_map = {
             'EXP': 'ECO:0000006',
@@ -1155,11 +1113,8 @@ class MGI(Source):
         }
         if (evidence_code.strip() in type_map):
             type = type_map.get(evidence_code)
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
-        # print("Mapped: ", allele_type, "to", type)
         else:
-            # TODO add logging
-            print("ERROR: Taxon Name (", evidence_code, ") not mapped")
+            print("ERROR: Evidence code (", evidence_code, ") not mapped")
 
         return type
 
@@ -1194,3 +1149,16 @@ class MGI(Source):
             print("ERROR: Taxon Name (", evidence_code, ") not mapped")
 
         return type
+
+
+    def _makeInternalIdentifier(self,prefix,key):
+        '''
+        This is a special MGI-to-MONARCH-ism.  MGI tables have unique keys that we use here, but don't want
+        to necessarily re-distribute those internal identifiers.  Therefore, we make them into keys in a consistent
+        way here.
+        :param prefix: the object type to prefix the key with, since the numbers themselves are not unique across tables
+        :param key: the number
+        :return:
+        '''
+
+        return '_'+prefix+'key'+key
