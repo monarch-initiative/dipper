@@ -58,10 +58,10 @@ class DispositionAssoc(Assoc):
             return numStatements
 
         def addAssociationNodeToGraph(self,g):
-            namespaces = self.curie_map
+            namespaces = curie_map.get()
             n = Namespace(namespaces['MONARCH'])
             node = n[self.annot_id]
-            s = n[self.entity_id.replace(':','_')]
+
             s = URIRef(self.cu.get_uri(self.entity_id))
             p = URIRef(self.rel)
             o = Namespace(namespaces['HP'])[self.heritability_id.replace('HP:','')]
