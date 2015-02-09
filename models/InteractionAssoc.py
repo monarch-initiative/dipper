@@ -26,6 +26,7 @@ class InteractionAssoc(Assoc):
         self.evidence = evidence_code
         self.rel = self.relationships['interacts_with']  # default
         self.cu = CurieUtil(curie_map.get())
+        self.pub_list = None
 
         self.setSubject(subj)
         self.setObject(obj)

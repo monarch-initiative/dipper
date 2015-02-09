@@ -51,7 +51,7 @@ class Assoc:
 
         return
 
-    def addAssociationToGraph(self,g):
+    def addAssociationToGraph(self, g):
         cu = self.cu
 
         #first, add the direct triple
@@ -71,38 +71,29 @@ class Assoc:
         #g.add((o, RDF['type'], self.OWLCLASS))
         g.add((s, p, o))
 
-        #now, create the reified relationship with our annotation pattern
+        # now, create the reified relationship with our annotation pattern
         node = URIRef(cu.get_uri(self.annot_id))
         g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
         g.add((node, self.BASE['hasSubject'], s))
         g.add((node, self.BASE['hasObject'], o))
+        g.add((node, self.BASE['hasPredicate'], p))
 
-        #this is handling the occasional messy pubs that are sometimes literals
-        if (self.pub_id is not None):
-            if (re.compile('http').match(self.pub_id)):
-                source = URIRef(self.pub_id)
-            else:
-                u = cu.get_uri(self.pub_id)
-                if (u is not None):
-                    source = URIRef(u)
-                else:
-                    source = None
+        # this is handling the occasional messy pubs that are sometimes literals
+        if self.pub_id is not None:
+            source = self._get_source(self.pub_id)
 
-        if (self.pub_id is not None and self.pub_id.strip() != ''):
-            if (source is not None and source != URIRef('[]')):
-                g.add((node, DC['source'], source))
-                g.add((source, RDF['type'], self.OWLIND))
-            else:
-                print("WARN: source as a literal -- is this ok?")
-                g.add((node, DC['source'], Literal(self.pub_id)))
-            #            else:
-            #                print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
+        if self.pub_id is not None and self.pub_id.strip() != '':
+            self._add_source_node(g, node, source, self.pub_id)
 
-        if (self.evidence is None or self.evidence.strip() == ''):
+        if self.evidence is None or self.evidence.strip() == '':
             print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
             evidence = URIRef(cu.get_uri(self.evidence))
             g.add((node, DC['evidence'], evidence))
+
+        # Check if publications are in list form
+        if self.pub_list is not None:
+            self._process_pub_list(self.pub_list, g, node)
 
         return
 
@@ -128,4 +119,52 @@ class Assoc:
         cu = self.cu
         for k in self.relationships:
             g.add((URIRef(cu.get_uri(self.relationships[k])),RDF['type'],self.OWLPROP))
+        return
+
+    def _process_pub_list(self, pub_list, g, node):
+        """
+        :param pub_list: list of references with proper prefix
+        :return None
+        """
+        for pub in pub_list:
+            source = self._get_source(pub)
+
+            if pub.strip() != '':
+                self._add_source_node(g, node, source, pub)
+
+        return
+
+    def _get_source(self, pub_id):
+        """
+        :param pub_id: Prefixed publication ID
+        :return: source: Source IRI containing publication ID
+        """
+        source = None
+        cu = self.cu
+        if re.compile('http').match(pub_id):
+            source = URIRef(pub_id)
+        else:
+            u = cu.get_uri(pub_id)
+            if u is not None:
+                source = URIRef(u)
+
+        return source
+
+    def _add_source_node(self, g, node, source, pub_id):
+        """
+        :param g: graph
+        :param node:
+        :param source:
+        :param pub_id:
+        :return: None
+        """
+        if source is not None and source != URIRef('[]'):
+            g.add((node, DC['source'], source))
+            g.add((source, RDF['type'], self.OWLIND))
+        else:
+            print("WARN: source as a literal -- is this ok?")
+            g.add((node, DC['source'], Literal(pub_id)))
+            # else:
+            #   print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
+
         return

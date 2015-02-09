@@ -29,6 +29,7 @@ class D2PAssoc(Assoc):
         self.evidence = evidence_code
         self.rel = self.relationships['has_phenotype']
         self.cu = CurieUtil(curie_map.get())
+        self.pub_list = None
 
         self.setSubject(entity_id)
         self.setObject(phenotype_id)

@@ -29,6 +29,7 @@ class OrthologyAssoc(Assoc):
         self.pub_id = pub
         self.evidence = evidence_code
         self.rel = self.relationships['orthologous']  # default
+        self.pub_list = None
 
         self.setSubject(gene1)
         self.setObject(gene2)
