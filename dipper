@@ -67,10 +67,10 @@ def main():
             status = mysource.verify()
             if status is not True:
                 print('ERROR: Source',source,'did not pass verification tests.')
-                print('***** Finished with',source,'*****')
                 exit(0)  #exit with a bad code
         else:
             print('INFO: skipping verification step')
+        print('***** Finished with',source,'*****')
     #load configuration parameters
     #for example, keys
 
@@ -80,6 +80,3 @@ if __name__ == "__main__":
     main()
 
 ###########################
-
-
-
