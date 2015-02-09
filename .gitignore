@@ -1,5 +1,12 @@
 # Created by https://www.gitignore.io
 
+### Project specific:
+
+conf.json
+raw
+out
+owltools*
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
