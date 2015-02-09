@@ -271,7 +271,7 @@ class Source:
                 cur.execute(countquery)
                 tablerowcount=cur.fetchone()[0]
                 if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
-                    print("INFO: local data different from remote; fetching.")
+                    print("INFO: local (",filerowcount,") different from remote (",tablerowcount,"); fetching.")
                     #download the file
                     print("COMMAND:",query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
