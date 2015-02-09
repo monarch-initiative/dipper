@@ -1,6 +1,6 @@
 __author__ = 'nicole'
 
-from rdflib import Namespace, URIRef, Literal
+from rdflib import Namespace, URIRef, Literal,BNode
 from rdflib.namespace import RDF,DC,OWL,RDFS
 from utils.CurieUtil import CurieUtil
 import re
@@ -55,12 +55,20 @@ class Assoc:
         cu = self.cu
 
         #first, add the direct triple
-        s = URIRef(cu.get_uri(self.sub))
+        #anonymous nodes are indicated with underscore
+        if (re.match('_',self.sub)):
+            s = BNode(self.sub)
+        else:
+            s = URIRef(cu.get_uri(self.sub))
+        if (re.match('_',self.obj)):
+            o = BNode(self.obj)
+        else:
+            o = URIRef(cu.get_uri(self.obj))
         p = URIRef(cu.get_uri(self.rel))
-        o = URIRef(cu.get_uri(self.obj))
 
-        g.add((s, RDF['type'], self.OWLCLASS))
-        g.add((o, RDF['type'], self.OWLCLASS))
+        #FIXME - these were recently commented out; make sure to propagate class creation to calling fxns
+        #g.add((s, RDF['type'], self.OWLCLASS))
+        #g.add((o, RDF['type'], self.OWLCLASS))
         g.add((s, p, o))
 
         #now, create the reified relationship with our annotation pattern
