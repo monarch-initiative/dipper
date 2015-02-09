@@ -47,6 +47,7 @@
 'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
+'JAX' : 'http://jaxmice.jax.org/strain/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
