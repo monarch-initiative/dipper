@@ -1,9 +1,10 @@
 __author__ = 'nicole'
 
-from rdflib import Literal, URIRef
+from rdflib import Literal, URIRef, BNode
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
+import re
 
 class GraphUtils:
 
@@ -28,7 +29,8 @@ class GraphUtils:
         :param description:
         :return:
         '''
-        n = URIRef(self.cu.get_uri(id))
+
+        n = self._getNode(id)
 
         g.add((n, RDF['type'], Assoc.OWLCLASS))
         if (label is not None):
@@ -41,7 +43,7 @@ class GraphUtils:
         return g
 
     def addIndividualToGraph(self, g, id, label, type=None, description=None):
-        n = URIRef(self.cu.get_uri(id))
+        n = self._getNode(id)
 
         if (label is not None):
             g.add((n, RDFS['label'], Literal(label)))
@@ -55,10 +57,16 @@ class GraphUtils:
         return g
 
     def addEquivalentClass(self,g,id1,id2):
-        if (self.cu.get_uri(id1) is not None and self.cu.get_uri(id2) is not None):
-            n1 = URIRef(self.cu.get_uri(id1))
-            n2 = URIRef(self.cu.get_uri(id2))
+        n1 = n2 = None
+        if (re.match('^_',id1)):
+            n1 = self._getNode(id1)
+
+        if (re.match('^_',id2)):
+            n2 = self._getNode(id2)
+
+        if (n1 is not None and n2 is not None):
             g.add((n1,OWL['equivalentClass'],n2))
+
         return
 
     def addDeprecatedClass(self,g,oldid,newids=None):
@@ -106,7 +114,7 @@ class GraphUtils:
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :return:
         '''
-        n = URIRef(self.cu.get_uri(cid))
+        n = self._getNode(cid)
         if (synonym_type is None):
             synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
         else:
@@ -117,7 +125,7 @@ class GraphUtils:
 
     def addDefinition(self,g,cid,definition):
         if (definition is not None):
-            n = URIRef(self.cu.get_uri(cid))
+            n = self._getNode(cid)
             p = URIRef(self.cu.get_uri(Assoc.relationships['definition']))
             g.add((n,p,Literal(definition)))
 
@@ -141,3 +149,23 @@ class GraphUtils:
         else:
             print(graph.serialize(format=format).decode())
         return
+
+
+    def _getNode(self,id):
+        '''
+        This is a wrapper for creating a node with a given identifier.  If an id starts with an
+        underscore, it assigns it to a BNode, otherwise it creates it with a standard URIRef.
+        This will return None if it can't map the node properly.
+        :param id:
+        :return:
+        '''
+        n=None
+        if (re.match('^_',id)):
+            n = BNode(id)
+        else:
+            u = self.cu.get_uri(id)
+            if (u is not None):
+                n = URIRef(self.cu.get_uri(id))
+            else:
+                print("ERROR: couldn't make URI for ",id)
+        return n
