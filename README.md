@@ -10,7 +10,7 @@
     * [rdflib](https://code.google.com/p/rdflib/)
     * isodate
     * roman
-    * python-docx
+    * [python-docx](https://github.com/python-openxml/python-docx)
 
 * **To run the software**:
     * you can run the code by supplying a list of one or more sources on the command line.  some examples:
@@ -20,8 +20,8 @@
     * other commandline parameters are explained in the code
      
 * The general strategy here is that there is one class per data source.  We define the files to be fetched,
-any file scrubbing, and then the parsing methods.  As the files are parsed, they are turned into triples and
-loaded into a graph.  This graph is then typically dumped into triples in turtle format.
+any file scrubbing, and then the parsing methods.  As the files are parsed, triples are loaded into a graph.  
+This graph is then typically dumped into triples in turtle format.
 
 * The following sources have been partially mapped:
     * Human Phenotype Ontology Annotations (Disease-Phenotype abnormal associations)
