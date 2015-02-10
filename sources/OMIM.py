@@ -5,11 +5,12 @@ from urllib import request
 import re
 import time
 from datetime import datetime
-import gzip,os.path
+import gzip,os.path,zlib
 import json
 from rdflib import Graph, Literal, URIRef, Namespace
 from rdflib.namespace import RDF, RDFS, OWL, DC
 from sources.Source import Source
+from subprocess import call
 
 from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
@@ -24,17 +25,26 @@ import curie_map
 
 
 class OMIM(Source):
-    '''
+    """
      OMIM is an unusual source.  We can get lots of the disease-gene associations, including allelic variants
      from their ftp site, which is obtainable anonymously.  However, more detailed information is available
      via their API.  So, we pull the basic files from their ftp site, extract the omim identifiers,
      then query their API in batch.  (Note this requires an apiKey, which is not stored in the repo,
      but in a separate conf.json file.)
-    '''
+     Processing this source serves two purposes:
+     1.  enables the creation of the OMIM classes for the purposes of merging into the disease ontology
+     2.  adds annotations such as disease-gene associations
+
+     When creating the disease classes, we pull from their REST-api id/label/definition information.
+     Additionally we pull the Orphanet and UMLS mappings (to make equivalent ids).  We also pull the
+     phenotypic series annotations as grouping classes.
+
+     Note that
+    """
 
     files = {
         'all' : {
-            'file' : 'omim.txt.gz',
+            'file' : 'omim.txt.Z',
             'url' : 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/omim.txt.Z'
         },
         #'genemap' : {
@@ -48,11 +58,16 @@ class OMIM(Source):
         'morbidmap' : {
            'file': 'morbidmap.txt',
             'url' : 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/morbidmap'
+        },
+        'phenotypicSeries' : {
+            'file' : 'phenotypicSeriesTitles.txt',
+            'url' : 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab'
         }
+
     }
 
 
-    OMIM_API = "http://api.omim.org:8000/api"
+    OMIM_API = "http://api.omim.org/api"
 
     def __init__(self):
         Source.__init__(self, 'omim')
@@ -103,6 +118,7 @@ class OMIM(Source):
 
         self._process_all(limit)
         self._process_morbidmap(limit)
+        self._process_phenotypicseries(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -122,26 +138,40 @@ class OMIM(Source):
         line_counter=0
         omimfile=('/').join((self.rawdir,self.files['all']['file']))
         print("FILE:",omimfile)
-        with gzip.open(omimfile, 'rb') as f:
+        #todo check to see if the file is there
+        call(["uncompress", omimfile])
+        omimfile = omimfile.replace('.Z','')
+        with open(omimfile, "r") as f:
             for line in f:
-                line=line.decode().strip()
+                line=line.strip()
+
                 if (line=="*FIELD* NO"):
                    line_counter += 1
                    #read the next line
-                   number=f.readline().decode().strip()
+                   number=f.readline().strip()
                    omimids.append(number)
 
+        #recompress the file
+        call(["compress",omimfile])
         print("INFO: Done.  I found",omimids.__len__(),"omim ids")
         return omimids
 
     def _process_all(self,limit):
-        '''
-        This takes the list of omim identifiers from the omim.txt.gz file,
+        """
+        This takes the list of omim identifiers from the omim.txt.Z file,
         and iteratively queries the omim api for the json-formatted data.
         This will create OMIM classes, with the label, definition, and some synonyms.
+        If an entry is "removed", it is added as a deprecated class.
+        If an entry is "moved", it is deprecated and consider annotations are added.
+
+        Additionally, we extract:
+        *phenotypicSeries ids as superclasses
+        *equivalent ids for Orphanet and UMLS
+
         :param limit:
         :return:
-        '''
+        """
+
         omimids = []  #to store the set of omim identifiers
         omimids = self._get_omim_ids()
 
@@ -183,7 +213,7 @@ class OMIM(Source):
             #print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
 
             ### if you want to test a specific entry number, uncomment the following code block
-            #if ('100600' in omimids[it:end]):
+            #if ('300523' in omimids[it:end]):  #104000
             #    print("FOUND IT in",omimids[it:end])
             #else:
             #   #testing very specific record
@@ -192,6 +222,7 @@ class OMIM(Source):
             ### end code block for testing
 
             print ('fetching:',(',').join(omimids[it:end]))
+            #print('url:',url)
             d = urllib.request.urlopen(url)
             resp = d.read().decode()
             request_time = datetime.now()
@@ -206,6 +237,7 @@ class OMIM(Source):
                 omimnum = e['entry']['mimNumber']
                 titles = e['entry']['titles']
                 label = titles['preferredTitle']
+
 
                 #remove the abbreviation (comes after the ;) from the preferredTitle, and add it as a synonym
                 abbrev = None
@@ -252,6 +284,11 @@ class OMIM(Source):
                             fixedids.append('OMIM:'+i.strip())
 
                         gu.addDeprecatedClass(g,omimid,fixedids)
+
+                    self._get_phenotypicseries_parents(e['entry'])
+                    self._get_mappedids(e['entry'])
+
+
                 ###end iterating over batch of entries
 
             #can't have more than 4 req per sec,
@@ -265,11 +302,17 @@ class OMIM(Source):
         return
 
     def _process_morbidmap(self,limit):
-
-        #1  - Disorder, <disorder MIM no.> (<phene mapping key>)
-        #2  - Gene/locus symbols
-        #3  - Gene/locus MIM no.
-        #4  - cytogenetic location
+        """
+        This will process the morbidmap file to get the links between omim genes and diseases.
+        Triples created:
+        <omim_gene_id> has_phenotype <omim_disease_id>
+        <assoc> hasSubject <omim_gene_id>
+        <assoc> hasObject <omim_disease_id>
+        <assoc> hasPredicate <has_phenotype>
+        <assoc> DC:evidence <eco_id>
+        :param limit:
+        :return:
+        """
         line_counter = 0
         with open(('/').join((self.rawdir,self.files['morbidmap']['file']))) as f:
             for line in f:
@@ -279,25 +322,30 @@ class OMIM(Source):
 
                 #disorder = disorder label , number (mapping key)
                 #3-M syndrome 1, 273750 (3)|CUL7, 3M1|609577|6p21.1
-                disorder_search = re.search('(.*), (\d+) \((\d+)\)',disorder)
-                if (disorder_search is not None):
-                    disorder_parts = disorder_search.groups()
+
+                #but note that for those diseases where they are genomic loci (not genes though),
+                #the omim id is only listed as the gene
+                #Alopecia areata 1 (2)|AA1|104000|18p11.3-p11.2
+                disorder_match = re.match('(.*), (\d+) \((\d+)\)',disorder)
+
+                if (disorder_match is not None):
+                    disorder_parts = disorder_match.groups()
                     if (len(disorder_parts) == 3):
                         (disorder_label,disorder_num,phene_key) = disorder_parts
                     else:
                         print("WARN: I couldn't parse disorder string:",disorder)
                         continue
-                gene_symbols = gene_symbols.split(', ')
-                gene_id = (':').join(('OMIM',gene_num))
-                disorder_id = (':').join(('OMIM',disorder_num))
+                    gene_symbols = gene_symbols.split(', ')
+                    gene_id = (':').join(('OMIM',gene_num))
+                    disorder_id = (':').join(('OMIM',disorder_num))
 
-                evidence = self._map_phene_mapping_code_to_eco(phene_key)
+                    evidence = self._map_phene_mapping_code_to_eco(phene_key)
 
 
-                assoc_id = self.make_id((disorder_id+gene_id+phene_key))
-                assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence)
-                assoc.loadObjectProperties(self.graph)
-                assoc.addAssociationToGraph(self.graph)
+                    assoc_id = self.make_id((disorder_id+gene_id+phene_key))
+                    assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence)
+                    assoc.loadObjectProperties(self.graph)
+                    assoc.addAssociationToGraph(self.graph)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -306,13 +354,13 @@ class OMIM(Source):
         return
 
     def _get_description(self,entry):
-        '''
+        """
         Get the description of the omim entity from the textSection called 'description'.
         Note that some of these descriptions have linebreaks.  If printed in turtle syntax,
         they will appear to be triple-quoted.
         :param entry:
         :return:
-        '''
+        """
         d = None
         if entry is not None:
             #print(entry)
@@ -353,14 +401,14 @@ class OMIM(Source):
         return eco_code
 
     def _cleanup_label(self,label):
-        '''
+        """
         Reformat the ALL CAPS OMIM labels to something more pleasant to read.  This will:
         1.  remove the abbreviation suffixes
         2.  convert the roman numerals to integer numbers
         3.  make the text title case, except for conjunctions/prepositions/articles
         :param label:
         :return:
-        '''
+        """
         #remove the abbreviation
 
         conjunctions = ['and','but','yet','for','nor','so']
@@ -398,3 +446,93 @@ class OMIM(Source):
         l=(' ').join(fixedwords)
         #print (label,'-->',l)
         return l
+
+    def _process_phenotypicseries(self,limit):
+        """
+        Creates classes from the OMIM phenotypic series list.  These are grouping classes
+        to hook the more granular OMIM diseases.
+        :param limit:
+        :return:
+        """
+        print("INFO: getting phenotypic series titles")
+        gu = GraphUtils(curie_map.get())
+        line_counter = 0
+        start=False
+        with open(('/').join((self.rawdir,self.files['phenotypicSeries']['file']))) as f:
+            for line in f:
+                #there's several lines of header in the file, so need to skip several lines:
+                if not start:
+                    if re.match('Phenotypic Series',line):
+                        start=True
+                    continue
+                if re.match('\w*$',line):
+                    #skip blank lines
+                    continue
+                line = line.strip()
+                line_counter += 1
+                (ps_label,ps_num) = line.split('\t')
+                omim_id = 'OMIM:'+ps_num
+                gu.addClassToGraph(self.graph,omim_id,ps_label)
+
+        return
+
+    def _get_phenotypicseries_parents(self,entry):
+        """
+        Extract the phenotypic series parent relationship out of the entry
+        :param entry:
+        :return:
+        """
+        gu = GraphUtils(curie_map.get())
+        omimid = 'OMIM:'+str(entry['mimNumber'])
+        #the phenotypic series mappings
+        serieslist = []
+        if 'phenotypicSeriesExists' in entry :
+            if entry['phenotypicSeriesExists'] == True:
+                if 'phenotypeMapList' in entry:
+                    phenolist = entry['phenotypeMapList']
+                    for p in phenolist:
+                        serieslist.append(p['phenotypeMap']['phenotypicSeriesNumber'])
+                if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
+                    phenolist = entry['geneMap']['phenotypeMapList']
+                    for p in phenolist:
+                        if 'phenotypicSeriesNumber' in p['phenotypeMap']:
+                            serieslist.append(p['phenotypeMap']['phenotypicSeriesNumber'])
+        #add this entry as a subclass of the series entry
+        for ser in serieslist:
+            series_id = 'OMIM:'+ser
+            gu.addClassToGraph(self.graph,series_id,None)
+            gu.addSubclass(self.graph,series_id,omimid)
+
+        return
+
+    def _get_mappedids(self,entry):
+        """
+        Extract the Orphanet and UMLS ids as equivalences from the entry
+        :param entry:
+        :return:
+        """
+        #umlsIDs
+        gu = GraphUtils(curie_map.get())
+        omimid = 'OMIM:'+str(entry['mimNumber'])
+        orpha_mappings = []
+        if 'externalLinks' in entry:
+            links = entry['externalLinks']
+            if 'orphanetDiseases' in links:
+                #triple semi-colon delimited list of double semi-colon delimited orphanet ID/disease pairs
+                #2970;;566;;Prune belly syndrome
+                items  = links['orphanetDiseases'].split(';;;')
+                for i in items:
+                    (orpha_num,internal_num,orpha_label) = i.split(';;')
+                    orpha_id = 'ORPHANET:'+orpha_num.strip()
+                    orpha_mappings.append(orpha_id)
+                    gu.addClassToGraph(self.graph,orpha_id,orpha_label.strip())
+                    gu.addXref(self.graph,omimid,orpha_id)
+
+            if 'umlsIDs' in links:
+                umls_mappings = links['umlsIDs'].split(',')
+                for i in umls_mappings:
+                    umls_id = 'UMLS:'+i
+                    gu.addClassToGraph(self.graph,umls_id,None)
+                    gu.addXref(self.graph,omimid,umls_id)
+
+        return
