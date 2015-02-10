@@ -16,12 +16,11 @@ import os
 
 
 class TestUtils:
-    source = Source
-    graph = Graph()
 
     def __init__(self, source):
         # instantiate source object
         self.source = source
+        self.graph = Graph()
         self._load_graph_from_turtle()
         return
 
