@@ -5,7 +5,7 @@ import curie_map
 from sources.Source import Source
 from models.Dataset import Dataset
 from models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
-from models.InteractionAssoc import InteractionAssoc
+from models.Gene2Pathway import Gene2Pathway
 from utils.GraphUtils import GraphUtils
 
 
@@ -102,7 +102,7 @@ class CTD(Source):
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
 
         assoc_id = self.make_id('ctd' + pathway_id + entrez_id)
-        assoc = InteractionAssoc(assoc_id, pathway_id, entrez_id, None, evidence_code)
+        assoc = Gene2Pathway(assoc_id, pathway_id, entrez_id, evidence_code)
         assoc.loadObjectProperties(self.graph)
         assoc.setRelationship(assoc.relationships['interacts_with'])
         assoc.addInteractionAssociationToGraph(self.graph)

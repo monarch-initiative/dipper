@@ -17,6 +17,7 @@ from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
+from utils.TestUtils import TestUtils
 
 def main():
     source_to_class_map={
@@ -51,7 +52,16 @@ def main():
     parser.add_argument('--force', action='store_true',
                         help='force re-download of files')
     parser.add_argument('--no_verify',help='ignore the verification step',action='store_true')
+    parser.add_argument('--query',help='enter in a sparql query',type=str)
     args = parser.parse_args()
+
+    if args.query is not None:
+        for source in args.sources.split(','):
+            source = source.lower()
+            mysource = source_to_class_map[source]()
+            test_query = TestUtils(mysource)
+            test_query.query_graph(args.query)
+            exit(0)
 
     #iterate through all the sources
     for source in args.sources.split(','):

@@ -69,6 +69,7 @@
 'WormBase' : 'http://identifiers.org/WormBase:'
 'SGD' : 'http://identifiers.org/SGD:'
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
+'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
 
 
 # proteins
