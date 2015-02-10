@@ -144,11 +144,60 @@ class IMPC(Source):
 
                 # Do we need to handle an unknown zygosity label in another fashion?
                 # How do we want to handle the "not_applicable" zygosity labels?
+                # Is the question mark allele the correct way?
                 else:
                     print("INFO: found unknown zygosity :",zygosity)
+                    break
 
 
 
+                # Make the variant locus name/label
+                if re.match(".*<.*>.*", allele_symbol):
+                    variant_locus_name = allele_symbol
+                else:
+                    variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
+
+
+                # Making genotype labels from the various parts, can change later if desired.
+                if zygosity == 'heterozygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)+'['+strain_name+']'
+                    #print(genotype_name)
+                elif zygosity == 'homozygote':
+                    genotype_name = variant_locus_name+'/'+variant_locus_name+'['+strain_name+']'
+                    #print(genotype_name)
+                elif zygosity == 'hemizygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)+'['+strain_name+']'
+                    #print(genotype_name)
+                    #Do something completely different
+                elif zygosity == 'not_applicable':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)+'['+strain_name+']'
+                    #print(genotype_name)
+                # Do we need to handle an unknown zygosity label in another fashion?
+                # How do we want to handle the "not_applicable" zygosity labels?
+                # Is the question mark allele the correct way?
+                else:
+                    print("INFO: found unknown zygosity :",zygosity)
+                    break
+
+                # Create the genotype
+                geno = Genotype(genotype_id, genotype_name)
+                #print('ID='+genotype_id+'     LABEL='+genotype_name)
+
+                #FIXME
+                #IMPC contains targeted mutations with either gene traps, knockouts, insertion/intragenic deletions.
+                #Currently hard-coding to the insertion type. Does this need to be adjusted?
+                allele_type = 'SO:0000667'
+
+
+                #This is for handling any of the alleles that do not have an MGI ID or IMPC has not yet
+                # updated their data for the allele with the MGI ID. The IDs look like NULL-<10-digit string>.
+                if re.match("MGI:.*",allele_accession_id):
+                    allele_id = allele_accession_id
+                else:
+                    allele_id = 'IMPC:'+allele_accession_id
+
+                #print(allele_id)
+                geno.addAllele(allele_id, allele_symbol, allele_type)
 
 
 
