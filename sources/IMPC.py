@@ -126,23 +126,11 @@ class IMPC(Source):
                 # Should these just be the genotype IDs, or should we use the self._makeInternalIdentifier()?
                 # Or perhaps this, adjusted base on zygosity:
                 # genotype_id = self.make_id((marker_accession_id+allele_accession_id+strain_accession_id))
-                if zygosity == 'heterozygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'homozygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'hemizygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'not_applicable':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
-
-                # Do we need to handle an unknown zygosity label in another fashion?
-                # How do we want to handle the "not_applicable" zygosity labels?
-                # Is the question mark allele the correct way?
-                else:
-                    print("INFO: found unknown zygosity :",zygosity)
-                    break
-
-
+                # OR, even more simplified:
+                # genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
+                # If we use this even more simplified method for the genotype ID,
+                # may want to move the zygosity warning to the zygosity processing portion.
+                genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
 
                 # Make the variant locus name/label
                 if re.match(".*<.*>.*", allele_symbol):
@@ -150,27 +138,34 @@ class IMPC(Source):
                 else:
                     variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
 
-
-                # Making genotype labels from the various parts, can change later if desired.
+                # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)+'['+strain_name+']'
-                    #print(genotype_name)
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)
+                    #print(vslc_name)
                 elif zygosity == 'homozygote':
-                    genotype_name = variant_locus_name+'/'+variant_locus_name+'['+strain_name+']'
-                    #print(genotype_name)
+                    vslc_name = variant_locus_name+'/'+variant_locus_name
+                    #print(vslc_name)
                 elif zygosity == 'hemizygote':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)+'['+strain_name+']'
-                    #print(genotype_name)
-                    #Do something completely different
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)
+                    #print(vslc_name)
                 elif zygosity == 'not_applicable':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)+'['+strain_name+']'
-                    #print(genotype_name)
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)
+                    #print(vslc_name)
                 # Do we need to handle an unknown zygosity label in another fashion?
                 # How do we want to handle the "not_applicable" zygosity labels?
                 # Is the question mark allele the correct way?
                 else:
                     print("INFO: found unknown zygosity :",zygosity)
                     break
+
+                # Create the GVC labels
+                # For IMPC, the GVC == VSLC
+                gvc_name = vslc_name
+
+
+                # Making genotype labels from the various parts, can change later if desired.
+                genotype_name = vslc_name+'['+strain_name+']'
+
 
                 # Create the genotype
                 geno = Genotype(genotype_id, genotype_name)
@@ -195,7 +190,7 @@ class IMPC(Source):
                 #Hard coding gene_type as gene.
                 gene_type = 'SO:0000704'# gene
 
-                if re.match("MGI:.*",marker_accession_id):
+                if re.match('MGI:.*',marker_accession_id):
                     gene_id = marker_accession_id
                 else:
                     gene_id = 'IMPC:'+marker_accession_id
@@ -223,7 +218,13 @@ class IMPC(Source):
                 #The following parts are test code for creating the more complex parts of the genotype partonomy.
                 #Will work on abstracting these code snippets to generalized classes for use by any resource.
 
-                # Create the VSLC
+                # Create the VSLC ID
+
+                vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+                #Alternatively could use an if statement based on zygosity like for the label, but this is simpler.
+
+
+
 
                 # Link the VSLC to the allele
 
@@ -286,44 +287,39 @@ class IMPC(Source):
 
 
                 phenotype_id = mp_term_id
+
+                #Not currently using the phenotype name, but add it somewhere as the label?
                 phenotype_name = mp_term_name
 
                 # Making genotype IDs from the various parts, can change later if desired.
                 # Should these just be the genotype IDs, or should we use the self._makeInternalIdentifier()?
-                if zygosity == 'heterozygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'homozygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'hemizygote':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
-                elif zygosity == 'not_applicable':
-                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
-                else:
-                    print("INFO: found unknown zygosity :",zygosity)
-                    break
+                genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
 
-                 # Make the variant locus name/label
+                # Make the variant locus name/label
                 if re.match(".*<.*>.*", allele_symbol):
                     variant_locus_name = allele_symbol
                 else:
                     variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
 
-
-                # Making genotype labels from the various parts, can change later if desired.
+                # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)+'['+strain_name+']'
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)
                 elif zygosity == 'homozygote':
-                    genotype_name = variant_locus_name+'/'+variant_locus_name+'['+strain_name+']'
+                    vslc_name = variant_locus_name+'/'+variant_locus_name
                 elif zygosity == 'hemizygote':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)+'['+strain_name+']'
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)
                 elif zygosity == 'not_applicable':
-                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)+'['+strain_name+']'
-                # Do we need to handle an unknown zygosity label in another fashion?
-                # How do we want to handle the "not_applicable" zygosity labels?
-                # Is the question mark allele the correct way?
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)
                 else:
                     print("INFO: found unknown zygosity :",zygosity)
                     break
+
+                # Create the GVC labels
+                # For IMPC, the GVC == VSLC
+                gvc_name = vslc_name
+
+                # Making genotype labels from the various parts, can change later if desired.
+                genotype_name = gvc_name+'['+strain_name+']'
 
                 geno = Genotype(genotype_id, genotype_name)
                 self.graph.__iadd__(geno.getGraph())
