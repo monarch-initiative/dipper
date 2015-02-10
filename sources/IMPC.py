@@ -83,7 +83,7 @@ class IMPC(Source):
 
 
         self._process_genotype_features(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
-
+        self._process_g2p(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
 
 
         #self._process_genotype_features(('/').join((self.rawdir,self.files['geno']['file'])), self.outfile, self.graph, limit)
@@ -100,11 +100,7 @@ class IMPC(Source):
 
     def _process_genotype_features(self, raw, out, g, limit=None):
 
-        #TODO make this more efficient
-        #the problem with this implementation is that it creates many genotypes over and over, if the
-        #same genotype has many features (on many rows) then the same genotype is recreated, then it must be
-        #merged.  We should probably just create the genotype once, and then find the other
-        #items that belong to that genotype.
+
         print("Processing Genotypes")
 
         line_counter = 0
@@ -117,7 +113,7 @@ class IMPC(Source):
                 #print(row)
 
                 (resource_name,phenotyping_center,colony_id,strain_name,strain_accession_id,marker_symbol,
-                 marker_accesssion_id,allele_symbol,allele_accession_id,zygosity,sex,pipeline_name,pipeline_stable_id,
+                 marker_accession_id,allele_symbol,allele_accession_id,zygosity,sex,pipeline_name,pipeline_stable_id,
                  procedure_name,procedure_stable_id,parameter_name,parameter_stable_id,mp_term_name,mp_term_id,p_value,
                  effect_size) = row
 
@@ -128,19 +124,16 @@ class IMPC(Source):
 
                 # Making genotype IDs from the various parts, can change later if desired.
                 # Should these just be the genotype IDs, or should we use the self._makeInternalIdentifier()?
+                # Or perhaps this, adjusted base on zygosity:
+                # genotype_id = self.make_id((marker_accession_id+allele_accession_id+strain_accession_id))
                 if zygosity == 'heterozygote':
-                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
-                    #print(genotype_id)
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
                 elif zygosity == 'homozygote':
-                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
-                    #print(genotype_id)
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
                 elif zygosity == 'hemizygote':
-                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
-                    #print(genotype_id)
-                    #Do something completely different
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
                 elif zygosity == 'not_applicable':
-                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
-                    #print(genotype_id)
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
 
                 # Do we need to handle an unknown zygosity label in another fashion?
                 # How do we want to handle the "not_applicable" zygosity labels?
@@ -196,50 +189,60 @@ class IMPC(Source):
                 else:
                     allele_id = 'IMPC:'+allele_accession_id
 
-                #print(allele_id)
+                #Add allele to genotype
                 geno.addAllele(allele_id, allele_symbol, allele_type)
 
+                #Hard coding gene_type as gene.
+                gene_type = 'SO:0000704'# gene
+
+                if re.match("MGI:.*",marker_accession_id):
+                    gene_id = marker_accession_id
+                else:
+                    gene_id = 'IMPC:'+marker_accession_id
 
 
-                '''
-                genotype_id = 'ZFIN:' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name)
+                #Add gene to genotype
+                #need gene_id, gene_label, gene_type. No gene description in data.
+                #All marker IDs have the MGI: prefix, but should we include an error message should a
+                # future data set not be in that format?
+                geno.addGene(gene_id, marker_symbol,gene_type)
 
-                # reassign the allele_type to a proper GENO or SO class
-                allele_type = self._map_allele_type_to_geno(allele_type)
-
-                allele_id = 'ZFIN:' + allele_id.strip()
-                geno.addAllele(allele_id, allele_name, allele_type)
-
-                if (gene_id is not None and gene_id.strip() != ''):
-                    gene_id = 'ZFIN:' + gene_id.strip()
-                    geno.addGene(gene_id, gene_symbol)
-
-                    # if it's a transgenic construct, then we'll have to get the other bits
-                    if (construct_id is not None and construct_id.strip() != ''):
-                        construct_id = 'ZFIN:' + construct_id.strip()
-                        geno.addAlleleDerivesFromConstruct(allele_id, construct_id)
-
-                    # allele to gene
-                    geno.addAlleleOfGene(allele_id, gene_id)
-
+                # Add allele to gene
+                geno.addAlleleOfGene(allele_id, gene_id)
 
                 # genotype has_part allele
                 geno.addAlleleToGenotype(genotype_id, allele_id)
+
                 # need to make some attributes of this relationship for allele zygosity within the genotype
                 #or do we just make the allele_complement here, based on the zygosity?
                 #allele_in_gene_id=self.make_id(genotype_id+allele_id+zygosity)
                 #allele has_disposition zygosity?
                 #                g.add(())
 
-                if (limit is not None and line_counter > limit):
-                    break
+                #TODO
+                #The following parts are test code for creating the more complex parts of the genotype partonomy.
+                #Will work on abstracting these code snippets to generalized classes for use by any resource.
+
+                # Create the VSLC
+
+                # Link the VSLC to the allele
+
+                # Add the zygosity to the VSLC
+
+                # Create the GVC
+
+                # Add the GVC to the intrinsic genotype
+
+                # Link the GVC to the VSLC
+
+                #TODO: Create the effective genotype label/id by adding the sex of the mouse.
+
+
 
                 #add the specific genotype subgraph to the overall graph
+                if (limit is not None and line_counter > limit):
+                    break
                 self.graph = geno.getGraph().__iadd__(self.graph)
-
-                '''
-
         print("INFO: Done with genotypes")
         return
 
@@ -255,8 +258,99 @@ class IMPC(Source):
         :param limit:
         :return:
         '''
+
+        #NOTE: No evidence provided in the data file, no environment data
+
+        #QUESTION: A matter of efficiency, but is it better to process the genotype ang G2P sections separately,
+        # or in a case like IMPC with single files, we could potentially process the G2P portions within the Genotype call.
+        # Current implementation results in processing the files multiple times, which isn't terrible given that
+        # the files for IMPC are not large files.
+
+
         print("Processing G2P")
 
+
+        line_counter = 0
+        with gzip.open(raw, 'rt') as csvfile:
+        #with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            next(filereader, None)  # skip the header row
+            for row in filereader:
+                line_counter += 1
+                #print(row)
+
+                (resource_name,phenotyping_center,colony_id,strain_name,strain_accession_id,marker_symbol,
+                 marker_accession_id,allele_symbol,allele_accession_id,zygosity,sex,pipeline_name,pipeline_stable_id,
+                 procedure_name,procedure_stable_id,parameter_name,parameter_stable_id,mp_term_name,mp_term_id,p_value,
+                 effect_size) = row
+
+
+                phenotype_id = mp_term_id
+                phenotype_name = mp_term_name
+
+                # Making genotype IDs from the various parts, can change later if desired.
+                # Should these just be the genotype IDs, or should we use the self._makeInternalIdentifier()?
+                if zygosity == 'heterozygote':
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
+                elif zygosity == 'homozygote':
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
+                elif zygosity == 'hemizygote':
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
+                elif zygosity == 'not_applicable':
+                    genotype_id = 'MONARCH:'+marker_accession_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
+                else:
+                    print("INFO: found unknown zygosity :",zygosity)
+                    break
+
+                 # Make the variant locus name/label
+                if re.match(".*<.*>.*", allele_symbol):
+                    variant_locus_name = allele_symbol
+                else:
+                    variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
+
+
+                # Making genotype labels from the various parts, can change later if desired.
+                if zygosity == 'heterozygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)+'['+strain_name+']'
+                elif zygosity == 'homozygote':
+                    genotype_name = variant_locus_name+'/'+variant_locus_name+'['+strain_name+']'
+                elif zygosity == 'hemizygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)+'['+strain_name+']'
+                elif zygosity == 'not_applicable':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)+'['+strain_name+']'
+                # Do we need to handle an unknown zygosity label in another fashion?
+                # How do we want to handle the "not_applicable" zygosity labels?
+                # Is the question mark allele the correct way?
+                else:
+                    print("INFO: found unknown zygosity :",zygosity)
+                    break
+
+                geno = Genotype(genotype_id, genotype_name)
+                self.graph.__iadd__(geno.getGraph())
+
+                #FIXME
+                #In the NIF/DISCO view, we don't really have a publication id. We have a publication URL.
+                #pub_url example: http://www.mousephenotype.org/data/genes/MGI:108077
+                #There are duplicates, and will be duplicates of the genotype/phenotype/pub_id combination.
+                #but could add the testing parameter?
+                pub_id = 'IMPC:'+marker_accession_id
+
+                #FIXME
+                #No evidence code provided. NIF/DISCO view was hard coded to null. However,
+                # isn't all of the IMPC data based on experimental evidence? Or is that too general?
+                # Could use 'EXP': 'ECO:0000006', although the code below used in ZFIN might be more appropriate.
+                eco_id = "ECO:0000059"  #experimental_phenotypic_evidence This was used in ZFIN
+
+                assoc_id = self.make_id((genotype_id+phenotype_id+pub_id))
+
+                assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id)
+                self.graph = assoc.addAssociationNodeToGraph(self.graph)
+
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
 
 
 
