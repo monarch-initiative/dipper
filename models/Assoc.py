@@ -23,7 +23,8 @@ class Assoc:
         'definition' : 'IAO:0000115',
         'in_taxon' : 'RO:0002162',
         'has_quality' : 'RO:0000086',
-        'towards' : 'RO:0002503'
+        'towards' : 'RO:0002503',
+        'has_xref' : 'OIO:hasDbXref'
     }
 
     OWLCLASS=OWL['Class']
