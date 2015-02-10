@@ -49,6 +49,7 @@
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 'KEGG' : 'http://www.genome.jp/dbget-bin/www_bget?path:map'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
+'JAX' : 'http://jaxmice.jax.org/strain/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'

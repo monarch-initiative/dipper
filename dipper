@@ -50,6 +50,7 @@ def main():
                         help='parse files without writing')
     parser.add_argument('--force', action='store_true',
                         help='force re-download of files')
+    parser.add_argument('--no_verify',help='ignore the verification step',action='store_true')
     args = parser.parse_args()
 
     #iterate through all the sources
@@ -62,12 +63,14 @@ def main():
             mysource.fetch(args.force)
         mysource.parse(args.limit)
         mysource.write(format='turtle')
-        #status = mysource.verify()
-#       if status is not True:
-#           print('ERROR: Source',source,'did not pass verification tests.')
-#           print('***** Finished with',source,'*****')
-
-
+        if args.no_verify is not True:
+            status = mysource.verify()
+            if status is not True:
+                print('ERROR: Source',source,'did not pass verification tests.')
+                exit(0)  #exit with a bad code
+        else:
+            print('INFO: skipping verification step')
+        print('***** Finished with',source,'*****')
     #load configuration parameters
     #for example, keys
 
@@ -77,6 +80,3 @@ if __name__ == "__main__":
     main()
 
 ###########################
-
-
-
