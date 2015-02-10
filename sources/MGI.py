@@ -8,7 +8,7 @@ import psycopg2
 
 from rdflib import Literal
 from rdflib.namespace import RDFS, OWL, RDF, DC
-from rdflib import Namespace, URIRef, BNode
+from rdflib import Namespace, URIRef, BNode, Graph
 
 from utils import pysed
 from sources.Source import Source
@@ -85,9 +85,11 @@ class MGI(Source):
         'in_taxon' : 'RO:0000216',
         'has_zygosity' : 'GENO:0000608',
         'is_sequence_variant_instance_of' : 'GENO:0000408',
+        'is_reference_instance_of' : 'GENO:0000610',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
         'has_disposition' : 'GENO:0000208',
-        'has_phenotype' : 'RO:0002200'
+        'has_phenotype' : 'RO:0002200',
+        'has_part' : 'BFO:0000051'
     }
 
     terms = {
@@ -413,19 +415,22 @@ class MGI(Source):
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = self.terms['variant_locus']
-                    rel = self.relationship['has_alternate_part']
+                    rel = URIRef(cu.get_uri(self.relationship['is_sequence_variant_instance_of']))
                 #for wild type alleles:
                 elif iswildtype == '1':
                     locus_type = self.terms['reference_locus']
-                    rel = self.relationship['has_reference_part']
+                    rel = URIRef(cu.get_uri(self.relationship['is_reference_instance_of']))
 
                 gu.addIndividualToGraph(self.graph,allele_id,symbol,locus_type)
                 #add link between gene and allele
+                al = URIRef(cu.get_uri(allele_id))
                 if marker_id is not None:
                     #marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
-                    self.graph.add((URIRef(cu.get_uri(marker_id)),
-                                    URIRef(cu.get_uri(rel)),
-                                    URIRef(cu.get_uri(allele_id))))
+                    self.graph.add((al,
+                                    rel,
+                                    URIRef(cu.get_uri(marker_id))))
+
+
 
                 #sequence alteration in strain
                 #FIXME change this to a different relation in_strain, genomically_related_to, sequence_derives_from
@@ -443,10 +448,12 @@ class MGI(Source):
                     #removing the < and > from sa
                     sa_label = re.sub('[\<\>]','',sa_label)
                     gu.addIndividualToGraph(self.graph,iseqalt_id,sa_label,self.terms['sequence_alteration'],name)
-                    self.graph.add((URIRef(cu.get_uri(allele_id)),OWL['hasPart'],iseqalt))  #TODO IS THIS RIGHT?
+                    rel = URIRef(cu.get_uri(self.relationship['has_alternate_part']))
+                    self.graph.add((al,rel,iseqalt))  #TODO IS THIS RIGHT?
+
 
                     if strain_id is not None:
-                        self.graph.add((iseqalt,URIRef(cu.get_uri(self.relationship['derives_from'])),URIRef(cu.get_uri(strain_id))))
+                        self.graph.add((al,URIRef(cu.get_uri(self.relationship['derives_from'])),URIRef(cu.get_uri(strain_id))))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -499,13 +506,14 @@ class MGI(Source):
                 self.graph.add((ivslc,RDFS['label'],Literal(vslc_label)))
 
                 #genotype has part vslc
-                self.graph.add((URIRef(cu.get_uri(genotype_id)),URIRef(OWL['hasPart']),ivslc))
+                self.graph.add((URIRef(cu.get_uri(genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),ivslc))
 
                 #vslc has parts allele1/allele2
+                rel = URIRef(cu.get_uri(self.relationship['has_part']))
                 if allele1_id is not None:
-                    self.graph.add((ivslc,URIRef(OWL['hasPart']),URIRef(cu.get_uri(allele1_id))))
+                    self.graph.add((ivslc,rel,URIRef(cu.get_uri(allele1_id))))
                 if allele2_id is not None:
-                    self.graph.add((ivslc,URIRef(OWL['hasPart']),URIRef(cu.get_uri(allele2_id))))
+                    self.graph.add((ivslc,rel,URIRef(cu.get_uri(allele2_id))))
 
                 #FIXME: Is this correct?
                 # Also, in my concept map I had zygosity as GENO:0000608 - has_zygosity,
@@ -1006,7 +1014,7 @@ class MGI(Source):
                  preferred,createdby_key,modifiedby_key,creation_date,modification_date,logicaldb) = line.split('\t')
 
                 #get the hashmap of the identifiers
-                if (logicaldb_key == '1') and (prefix_part == 'MGI:') and (preferred == '1'):
+                if (logicaldb_key == '1') and (prefixpart == 'MGI:') and (preferred == '1'):
                     self.idhash['strain'][object_key] = accid
                     gu.addClassToGraph(self.graph,accid,None)
 
@@ -1029,6 +1037,9 @@ class MGI(Source):
                 strain_id = None
                 if (preferred == '1'):  #what does it mean if it's 0?
                     if logicaldb_key == '22':  #JAX
+                        #scrub out the backticks from accids
+                        #TODO notify the source upstream
+                        accid = re.sub('`','',accid)
                         strain_id = 'JAX:'+accid
                     #TODO get non-preferred ids==deprecated?
 
@@ -1038,33 +1049,6 @@ class MGI(Source):
 
                 if (limit is not None and line_counter > limit):
                     break
-
-        return
-
-
-    def _process_g2p(self, raw, out, g, limit=None):
-        '''
-        This module currently filters for only wild-type environments, which clearly excludes application
-        of morpholinos.  Very stringent filter.  To be updated at a later time.
-        :param raw:
-        :param out:
-        :param g:
-        :param limit:
-        :return:
-        '''
-        print("Processing G2P")
-        line_counter = 0
-        # hardcode
-        eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
-
-        #TODO
-        #Need: evidence, publication, association ID, entity ID, phenotype ID
-        #Evidence: voc_evidence_view:evidencecode
-        #Publication:voc_evidence_view:refs_key -> bib_acc_view.object_key
-        #AssociationID:voc_annot_view?:annot_key. NOTE: ZFIN assembles the assoc_id: assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
-        #NOTE: For MGI, environment is hard coded as a null.
-        #EntityID:genotype_id, from annot_view.object_key
-        #PhenotypeID:voc_annot_view?:accid
 
         return
 
@@ -1284,3 +1268,22 @@ class MGI(Source):
         '''
 
         return '_'+prefix+'key'+key
+
+    def _querysparql(self):
+
+        #load the graph
+        vg = Graph()
+        vg.parse(self.outfile, format="turtle")
+
+        qres = g.query(
+            """SELECT DISTINCT ?aname ?bname
+                WHERE {
+                    ?a foaf:knows ?b .
+                    ?a foaf:name ?aname .
+                    ?b foaf:name ?bname .
+                }""")
+
+        for row in qres:
+            print("%s knows %s" % row)
+
+        return
