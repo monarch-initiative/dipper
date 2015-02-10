@@ -78,6 +78,9 @@ class IMPC(Source):
         if (limit is not None):
             print("Only parsing first", limit, "rows of each file")
         print("Parsing files...")
+        # IMPC data is delivered in three separate csv files. Need to iterate over each process (genotype, G2P, etc.)
+        # for each file, unless instead we merge all three files into one, then process once.
+
 
         self._process_genotype_features(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
 
@@ -120,6 +123,31 @@ class IMPC(Source):
 
                 # For IMPC, we put together genotype IDs from other parts (marker, allele, and strain IDs, with
                 # adjustments based on zygosity).
+
+
+
+                # Making genotype IDs from the various parts, can change later if desired.
+                # Should these just be the genotype IDs, or should we use the self._makeInternalIdentifier()?
+                if zygosity == 'heterozygote':
+                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_W_'+strain_accession_id.replace(':','_')
+                    #print(genotype_id)
+                elif zygosity == 'homozygote':
+                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_'+strain_accession_id.replace(':','_')
+                    #print(genotype_id)
+                elif zygosity == 'hemizygote':
+                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_0_'+strain_accession_id.replace(':','_')
+                    #print(genotype_id)
+                    #Do something completely different
+                elif zygosity == 'not_applicable':
+                    genotype_id = 'IMPC:'+marker_accesssion_id.replace(':','_')+'_'+allele_accession_id.replace(':','_')+'_?_'+strain_accession_id.replace(':','_')
+                    #print(genotype_id)
+
+                # Do we need to handle an unknown zygosity label in another fashion?
+                # How do we want to handle the "not_applicable" zygosity labels?
+                else:
+                    print("INFO: found unknown zygosity :",zygosity)
+
+
 
 
 
