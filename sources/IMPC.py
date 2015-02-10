@@ -144,10 +144,41 @@ class IMPC(Source):
 
                 # Do we need to handle an unknown zygosity label in another fashion?
                 # How do we want to handle the "not_applicable" zygosity labels?
+                # Is the question mark allele the correct way?
                 else:
                     print("INFO: found unknown zygosity :",zygosity)
 
 
+
+                # Make the variant locus name/label
+                if re.match(".*<.*>.*", allele_symbol):
+                    variant_locus_name = allele_symbol
+                else:
+                    variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
+
+
+
+
+                # Making genotype labels from the various parts, can change later if desired.
+                if zygosity == 'heterozygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)+'['+strain_name+']'
+                    #print(genotype_name)
+                elif zygosity == 'homozygote':
+                    genotype_name = variant_locus_name+'/'+variant_locus_name+'['+strain_name+']'
+                    #print(genotype_name)
+                elif zygosity == 'hemizygote':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)+'['+strain_name+']'
+                    #print(genotype_name)
+                    #Do something completely different
+                elif zygosity == 'not_applicable':
+                    genotype_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)+'['+strain_name+']'
+                    print(genotype_name)
+
+                # Do we need to handle an unknown zygosity label in another fashion?
+                # How do we want to handle the "not_applicable" zygosity labels?
+                # Is the question mark allele the correct way?
+                else:
+                    print("INFO: found unknown zygosity :",zygosity)
 
 
 
