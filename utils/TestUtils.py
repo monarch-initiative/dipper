@@ -21,7 +21,7 @@ class TestUtils:
 
     def __init__(self, source):
         # instantiate source object
-        self.source = source()
+        self.source = source
         self._load_graph_from_turtle()
         return
 
@@ -41,4 +41,3 @@ class TestUtils:
         self.graph.parse(file, format="turtle")
 
         return
-
