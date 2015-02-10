@@ -17,7 +17,7 @@ class InteractionAssoc(Assoc):
         'ubiquitinates' : 'RO:0002480'
     }
 
-    def __init__(self,assoc_id, subj, obj, pub, evidence_code):
+    def __init__(self,assoc_id, subj, obj, pub=None, evidence_code=None):
         self.cu = CurieUtil(curie_map.get())
         self.annot_id = assoc_id
         self.subj = subj

@@ -1,16 +1,25 @@
 import csv
 import re
 import gzip
+import curie_map
 from sources.Source import Source
 from models.Dataset import Dataset
 from models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
+from models.InteractionAssoc import InteractionAssoc
+from utils.GraphUtils import GraphUtils
 
 
 class CTD(Source):
 
     files = {
-        'interactions': {'file': 'CTD_chemicals_diseases.tsv.gz',
-                         'url': 'http://ctdbase.org/reports/CTD_chemicals_diseases.tsv.gz'}
+        'chemical_disease_interactions': {
+            'file': 'CTD_chemicals_diseases.tsv.gz',
+            'url': 'http://ctdbase.org/reports/CTD_chemicals_diseases.tsv.gz'
+        },
+        'gene_pathway': {
+            'file': 'CTD_genes_pathways.tsv.gz',
+            'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
+        }
     }
     static_files = {
         'publications': {'file': 'CTD_curated_references.tsv.gz'}
@@ -39,16 +48,22 @@ class CTD(Source):
 
         print("Parsing files...")
         pub_map = self._parse_publication_file(
-            limit, self.static_files['publications']['file']
+            self.static_files['publications']['file']
         )
-        self._parse_interactions_file(limit, self.files['interactions']['file'],
-                                      pub_map)
+        self._parse_interactions_file(
+            limit,
+            self.files['chemical_disease_interactions']['file'],
+            pub_map
+        )
+        self._parse_interactions_file(limit,
+                                  self.files['gene_pathway']['file']
+        )
         #TODO return md5sum of files?
         print("Done parsing files.")
 
         return
 
-    def _parse_interactions_file(self, limit, file, pub_map):
+    def _parse_interactions_file(self, limit, file, pub_map=None):
         row_count = 0
         version_pattern = re.compile('^# Report created: (.+)$')
         is_versioned = False
@@ -68,13 +83,30 @@ class CTD(Source):
                 elif re.match('^#', ' '.join(row)):
                     next
                 else:
-                    # only get direct associations
-                    if row[5] != '':
-                        # Process data here
+                    if file == self.files['chemical_disease_interactions']['file']:
                         self._process_interactions(row, pub_map)
+                    elif file == self.files['gene_pathway']['file']:
+                        self._process_pathways(row)
                     row_count += 1
                     if limit is not None and row_count >= limit:
                         break
+        return
+
+    def _process_pathways(self, row):
+        self._check_list_len(row, 4)
+        (gene_symbol, gene_id, pathway_name, pathway_id) = row
+        entrez_id = 'NCBIGene:'+gene_id
+        evidence_code = self._set_evidence_code('therapeutic')
+        # add KEGG class
+        gu = GraphUtils(curie_map.get())
+        gu.addClassToGraph(self.graph, pathway_id, pathway_name)
+
+        assoc_id = self.make_id('ctd' + pathway_id + entrez_id)
+        assoc = InteractionAssoc(assoc_id, pathway_id, entrez_id, None, evidence_code)
+        assoc.loadObjectProperties(self.graph)
+        assoc.setRelationship(assoc.relationships['interacts_with'])
+        assoc.addInteractionAssociationToGraph(self.graph)
+
         return
 
     def _process_interactions(self, row, pub_map):
@@ -89,7 +121,9 @@ class CTD(Source):
         evidence_pattern = re.compile('^therapeutic|marker\/mechanism$')
         dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
 
-        if re.match(evidence_pattern, direct_evidence):
+        if direct_evidence == '':
+            next
+        elif re.match(evidence_pattern, direct_evidence):
             reference_list = self._process_pubmed_ids(pubmed_ids)
             self._make_association(chem_id, disease_id, direct_evidence, reference_list)
         elif re.match(dual_evidence, direct_evidence):
@@ -151,7 +185,7 @@ class CTD(Source):
         :param pub_map:
         :return: dict
         """
-        publication = {'therapeutic':[], 'marker/mechanism': []}
+        publication = {'therapeutic': [], 'marker/mechanism': []}
         for val in pub_ids:
             key = disease_id+'-'+chem_id+'-'+val
             if pub_map.get(key):
@@ -164,9 +198,8 @@ class CTD(Source):
 
         return publication
 
-    def _parse_publication_file(self, limit, file):
+    def _parse_publication_file(self, file):
         """
-        :param limit:
         :param file:
         :return: dict
         """
@@ -192,8 +225,5 @@ class CTD(Source):
                                         "This is not yet handled by Dipper")
                     else:
                         pub_map[key] = evidence
-                    row_count += 1
-                    if limit is not None and row_count >= limit:
-                        break
 
         return pub_map
