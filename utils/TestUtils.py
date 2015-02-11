@@ -21,6 +21,7 @@ class TestUtils:
         # instantiate source object
         self.source = source
         self.graph = Graph()
+        self.source.load_bindings()
 
         return
 

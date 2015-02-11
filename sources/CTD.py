@@ -27,13 +27,13 @@ class CTD(Source):
 
     def __init__(self):
         Source.__init__(self, 'ctd')
-        self.load_bindings()
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
 
     def fetch(self, is_dl_forced):
         """
         :return: None
         """
+        #TODO return md5sum of files?
         self.get_files(is_dl_forced)
         return
 
@@ -58,7 +58,7 @@ class CTD(Source):
         self._parse_interactions_file(limit,
                                   self.files['gene_pathway']['file']
         )
-        #TODO return md5sum of files?
+        self.load_bindings()
         print("Done parsing files.")
 
         return

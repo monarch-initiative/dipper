@@ -114,7 +114,6 @@ class MGI(Source):
 
         #update the dataset object with details about this resource
         self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/')
-        self.load_bindings()
 
         #check if config exists; if it doesn't, error out and let user know
         if (not (('dbauth' in config.get_config()) and ('mgi' in config.get_config()['dbauth']))):
