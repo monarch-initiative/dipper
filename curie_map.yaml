@@ -48,7 +48,7 @@
 'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
-'KEGG' : 'http://www.genome.jp/dbget-bin/www_bget?path:map'
+'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?path:map'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 
