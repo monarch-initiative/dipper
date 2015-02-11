@@ -57,12 +57,8 @@ class GraphUtils:
         return g
 
     def addEquivalentClass(self,g,id1,id2):
-        n1 = n2 = None
-        if (re.match('^_',id1)):
-            n1 = self._getNode(id1)
-
-        if (re.match('^_',id2)):
-            n2 = self._getNode(id2)
+        n1 = self._getNode(id1)
+        n2 = self._getNode(id2)
 
         if (n1 is not None and n2 is not None):
             g.add((n1,OWL['equivalentClass'],n2))
@@ -131,14 +127,23 @@ class GraphUtils:
 
         return
 
+    def addXref(self,g,cid,xrefid):
+        n1 = self._getNode(cid)
+        n2 = self._getNode(xrefid)
+        p = URIRef(self.cu.get_uri(Assoc.relationships['has_xref']))
+        if (n1 is not None and n2 is not None):
+            g.add((n1,p,n2))
+
+        return
+
     def write(self, graph, format=None, file=None):
-        '''
+        """
          a basic graph writer (to stdout) for any of the sources.  this will write
          raw triples in rdfxml, unless specified.
          to write turtle, specify format='turtle'
          an optional file can be supplied instead of stdout
         :return: None
-        '''
+        """
         if (format is None):
             format = 'rdfxml'
         if (file is not None):
@@ -152,13 +157,13 @@ class GraphUtils:
 
 
     def _getNode(self,id):
-        '''
+        """
         This is a wrapper for creating a node with a given identifier.  If an id starts with an
         underscore, it assigns it to a BNode, otherwise it creates it with a standard URIRef.
         This will return None if it can't map the node properly.
         :param id:
         :return:
-        '''
+        """
         n=None
         if (re.match('^_',id)):
             n = BNode(id)

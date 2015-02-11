@@ -11,6 +11,7 @@
     * isodate
     * roman
     * [python-docx](https://github.com/python-openxml/python-docx)
+    * pyyaml
 
 * **To run the software**:
     * you can run the code by supplying a list of one or more sources on the command line.  some examples:

@@ -11,7 +11,7 @@ conf = None
 if (os.path.exists("conf.json")):
     with open("conf.json") as json_file:
         conf = json.load(json_file)
-        print("INFO: Finished loading config:",conf)
+        print("INFO: Finished loading config:")
 
 def get_config():
     return conf
