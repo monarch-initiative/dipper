@@ -15,6 +15,7 @@ from models.G2PAssoc import G2PAssoc
 from rdflib import Namespace, URIRef
 import re
 from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
 import curie_map
 
 
@@ -29,6 +30,33 @@ class IMPC(Source):
                  'url' : 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'}
     }
 
+
+    relationship = {
+        'is_mutant_of' : 'GENO:0000440',
+        'derives_from' : 'RO:0001000',
+        'has_alternate_part' : 'GENO:0000382',
+        'has_reference_part' : 'GENO:0000385',
+        'in_taxon' : 'RO:0000216',
+        'has_zygosity' : 'GENO:0000608',
+        'is_sequence_variant_instance_of' : 'GENO:0000408',
+        'is_reference_instance_of' : 'GENO:0000610',
+        'hasExactSynonym' : 'OIO:hasExactSynonym',
+        'has_disposition' : 'GENO:0000208',
+        'has_phenotype' : 'RO:0002200',
+        'has_part' : 'BFO:0000051'
+    }
+
+    terms = {
+        'variant_locus' : 'GENO:0000483',
+        'reference_locus' : 'GENO:0000036',
+        'sequence_alteration' : 'SO:0001059',
+        'variant_single_locus_complement' : 'GENO:0000030',
+        'allele' : 'GENO:0000008',
+        'intrinsic_genotype' : 'GENO:0000000',
+        'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
+        'evidence' : 'MONARCH:evidence',
+        'genomic_background' : 'GENO:0000010'
+    }
 
     def __init__(self):
         Source.__init__(self, 'impc')
@@ -86,10 +114,6 @@ class IMPC(Source):
         self._process_g2p(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
 
 
-        #self._process_genotype_features(('/').join((self.rawdir,self.files['geno']['file'])), self.outfile, self.graph, limit)
-        #self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
-        #self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
-
         print("Finished parsing.")
 
         self.load_bindings()
@@ -102,6 +126,8 @@ class IMPC(Source):
 
 
         print("Processing Genotypes")
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
 
         line_counter = 0
         with gzip.open(raw, 'rt') as csvfile:
@@ -130,6 +156,10 @@ class IMPC(Source):
                 # genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
                 # If we use this even more simplified method for the genotype ID,
                 # may want to move the zygosity warning to the zygosity processing portion.
+
+                #TODO: better to swap out the zygosity for the zygosity_id in all make_id statements?
+                #zygosity_id = self._map_zygosity(zygosity)
+
                 genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
 
                 # Make the variant locus name/label
@@ -137,6 +167,8 @@ class IMPC(Source):
                     variant_locus_name = allele_symbol
                 else:
                     variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
+
+                variant_locus_id = self.make_id((marker_accession_id+allele_accession_id))
 
                 # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
@@ -179,13 +211,16 @@ class IMPC(Source):
 
                 #This is for handling any of the alleles that do not have an MGI ID or IMPC has not yet
                 # updated their data for the allele with the MGI ID. The IDs look like NULL-<10-digit string>.
-                if re.match("MGI:.*",allele_accession_id):
-                    allele_id = allele_accession_id
-                else:
-                    allele_id = 'IMPC:'+allele_accession_id
 
+                if re.match("MGI:.*",allele_accession_id):
+                    sequence_alteration_id = allele_accession_id
+                else:
+                    sequence_alteration_id = 'IMPC:'+allele_accession_id
+
+                #print()
                 #Add allele to genotype
-                geno.addAllele(allele_id, allele_symbol, allele_type)
+                #FIXME: Is it correct to add the type to the allele, or should this be added to the sequence alteration?
+                geno.addAllele(variant_locus_id, variant_locus_name, allele_type)
 
                 #Hard coding gene_type as gene.
                 gene_type = 'SO:0000704'# gene
@@ -202,11 +237,13 @@ class IMPC(Source):
                 # future data set not be in that format?
                 geno.addGene(gene_id, marker_symbol,gene_type)
 
+                #FIXME: What about heterozygotes? Do we need to add wild type alleles? No identifier included.
                 # Add allele to gene
-                geno.addAlleleOfGene(allele_id, gene_id)
+                geno.addAlleleOfGene(variant_locus_id, gene_id)
 
                 # genotype has_part allele
-                geno.addAlleleToGenotype(genotype_id, allele_id)
+                #FIXME: What about heterozygotes?  Do we need to add wild type alleles? No identifier included.
+                geno.addAlleleToGenotype(genotype_id, variant_locus_id)
 
                 # need to make some attributes of this relationship for allele zygosity within the genotype
                 #or do we just make the allele_complement here, based on the zygosity?
@@ -220,23 +257,58 @@ class IMPC(Source):
 
                 # Create the VSLC ID
 
-                vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+                #vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+
                 #Alternatively could use an if statement based on zygosity like for the label, but this is simpler.
 
+                #self.graph.add((vslc_id,RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
+                # Or what if we go with addNode?
+                #print('VSLC_ID:'+vslc_id+'.....VSLC_NAME:'+vslc_name+'variant_single_locus_complement')
+                #geno.addNode(vslc_id,vslc_name,URIRef(cu.get_uri(self.terms['variant_single_locus_complement'])))
+                #self.graph.add(vslc_id,rel,)
+
+                # vslc is of type vslc
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
+
+                #vslc has label vslc_name
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDFS['label'],Literal(vslc_name)))
+
+                #vslc has_alternate_part allele/variant_locus
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(variant_locus_id))))
 
 
 
-                # Link the VSLC to the allele
+
 
                 # Add the zygosity to the VSLC
+                # Need a connection based on GENO:0000608 has_zygosity
+                #self.graph.add(((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_zygosity'])),URIRef(cu.get_uri(zygosity_id)))))
 
-                # Create the GVC
+
+                # Link the VSLC to the allele based on zygosity
+                # Need a connection based on GENO:0000382 has_alternate_part or
+                # GENO:0000385 has_reference_part.
+                #FIXME:What about for hemizygote/unknown?
+
+
+
+                # Create the GVC ID
+                #gvc_id = self.make_id(('GVC:'+marker_accession_id+allele_accession_id+zygosity_id))
+
+                # Add the GVC as a...
 
                 # Add the GVC to the intrinsic genotype
 
-                # Link the GVC to the VSLC
+                # Add the VSLC as a...
 
-                #TODO: Create the effective genotype label/id by adding the sex of the mouse.
+                # Add the VSLC to the GVC
+
+                #TODO: Create the effective genotype label/id by adding the sex of the mouse to the intrinsic_genotype_id.
+                #effective_genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id+sex))
+
+                # Add the effective genotype as a...
+
+                # Add the intrinsic genotype to the effective genotype
 
 
 
@@ -244,6 +316,7 @@ class IMPC(Source):
                 if (limit is not None and line_counter > limit):
                     break
                 self.graph = geno.getGraph().__iadd__(self.graph)
+
         print("INFO: Done with genotypes")
         return
 
@@ -337,12 +410,12 @@ class IMPC(Source):
                 # Could use 'EXP': 'ECO:0000006', although the code below used in ZFIN might be more appropriate.
                 eco_id = "ECO:0000059"  #experimental_phenotypic_evidence This was used in ZFIN
 
+                #pub_id could be removed here as well.
                 assoc_id = self.make_id((genotype_id+phenotype_id+pub_id))
 
-                assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id)
+                #removed pub_id.
+                assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, None, eco_id)
                 self.graph = assoc.addAssociationNodeToGraph(self.graph)
-
-
 
 
                 if (limit is not None and line_counter > limit):
@@ -351,6 +424,25 @@ class IMPC(Source):
 
 
         return
+
+
+    def _map_zygosity(self, zygosity):
+        type = None
+        type_map = {
+            'heterozygote': 'GENO:0000135',
+            'homozygote': 'GENO:0000136',
+            'hemizygote': 'GENO:0000606',
+            'not_applicable': 'GENO:0000137'
+        }
+        if (zygosity.strip() in type_map):
+            type = type_map.get(zygosity)
+            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
+        # print("Mapped: ", allele_type, "to", type)
+        else:
+            # TODO add logging
+            print("ERROR: Zygosity Type (", zygosity, ") not mapped")
+
+        return type
 
 
 
