@@ -48,7 +48,7 @@ class IMPC(Source):
     }
 
     terms = {
-        'variant_locus' : 'GENO:0000483',
+        'variant_locus' : 'GENO:0000002',
         'reference_locus' : 'GENO:0000036',
         'sequence_alteration' : 'SO:0001059',
         'variant_single_locus_complement' : 'GENO:0000030',
@@ -59,7 +59,7 @@ class IMPC(Source):
         'evidence' : 'MONARCH:evidence',
         'genomic_background' : 'GENO:0000010',
         'genomic_variation_complement' : 'GENO:0000009',
-        'zygosity' : 'GENO_0000133'
+        'zygosity' : 'GENO:0000133'
     }
 
     def __init__(self):
@@ -118,10 +118,10 @@ class IMPC(Source):
         self._process_g2p(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
 
         #TODO: Check processing of the other two IMPC data files
-        #self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
-        #self._process_g2p(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
-        #self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
-        #self._process_g2p(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
 
 
         print("Finished parsing.")
@@ -180,6 +180,7 @@ class IMPC(Source):
                     variant_locus_name = allele_symbol+'<'+allele_symbol+'>'
 
                 variant_locus_id = self.make_id((marker_accession_id+allele_accession_id))
+                variant_locus_type = self.terms['variant_locus']
 
                 # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
@@ -216,13 +217,6 @@ class IMPC(Source):
 
 
 
-
-                #FIXME
-                #IMPC contains targeted mutations with either gene traps, knockouts, insertion/intragenic deletions.
-                #Currently hard-coding to the insertion type. Does this need to be adjusted?
-                sequence_alteration_type = 'SO:0000667'  # insertion
-
-
                 #This is for handling any of the alleles that do not have an MGI ID or IMPC has not yet
                 # updated their data for the allele with the MGI ID. The IDs look like NULL-<10-digit string>.
 
@@ -240,7 +234,8 @@ class IMPC(Source):
                 #print()
                 #Add allele to genotype
                 #FIXME: Is it correct to add the type to the allele, or should this be added to the sequence alteration?
-                geno.addAllele(variant_locus_id, variant_locus_name, None)
+                #Hijacking this to be the variant_locus instead of the allele type.
+                geno.addAllele(variant_locus_id, variant_locus_name, variant_locus_type, None)
 
                 #Hard coding gene_type as gene.
                 gene_type = 'SO:0000704'# gene
@@ -283,8 +278,8 @@ class IMPC(Source):
                 #vslc has label vslc_name
                 self.graph.add((URIRef(cu.get_uri(vslc_id)),RDFS['label'],Literal(vslc_name)))
                 #vslc has_alternate_part allele/variant_locus
-                #FIXME: Matt's diagram has this one starred, perhaps still deciding on the has_part designation?
-                self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_part'])),URIRef(cu.get_uri(variant_locus_id))))
+                #FIXME: Matt's diagram has this one starred, perhaps still deciding on the has_part vs has_variant_part designation?
+                self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_variant_part'])),URIRef(cu.get_uri(variant_locus_id))))
 
                 # Add the zygosity
                 # Add zygosity as a class
@@ -350,15 +345,22 @@ class IMPC(Source):
                 # Add the taxon to the genomic_background_id
                 self.graph.add((URIRef(cu.get_uri(genomic_background_id)),URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon_id))))
 
-
+                #Add the sequence_alteration and sequence_alteration_type
+                #FIXME
+                #IMPC contains targeted mutations with either gene traps, knockouts, insertion/intragenic deletions.
+                #Currently hard-coding to the insertion type. Does this need to be adjusted?
+                sequence_alteration_type_id = 'SO:0000667'  # insertion
+                sequence_alteration_type_name = 'insertion'  # insertion
                  # sequence_alteration is of type sequence_alteration
-                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],URIRef(cu.get_uri(self.terms['effective_genotype']))))
+                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],URIRef(cu.get_uri(self.terms['sequence_alteration']))))
                 #sequence_alteration has label sequence_alteration_label
                 self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDFS['label'],Literal(sequence_alteration_name)))
+                # Add sequence_alteration_type as a class
+                gu.addClassToGraph(self.graph,sequence_alteration_type_id,sequence_alteration_type_name)
                 #sequence_alteration has type sequence_alteration_type
-                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],Literal(sequence_alteration_type)))
+                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],URIRef(cu.get_uri(sequence_alteration_type_id))))
                 # Add the sequence_alteration to the variant_locus
-                self.graph.add((URIRef(cu.get_uri(variant_locus_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(sequence_alteration_id))))
+                self.graph.add((URIRef(cu.get_uri(variant_locus_id)),URIRef(cu.get_uri(self.relationship['has_variant_part'])),URIRef(cu.get_uri(sequence_alteration_id))))
 
                 #TODO: sequence_alteration_type
 

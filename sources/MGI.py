@@ -93,7 +93,7 @@ class MGI(Source):
     }
 
     terms = {
-        'variant_locus' : 'GENO:0000483',
+        'variant_locus' : 'GENO:0000002',
         'reference_locus' : 'GENO:0000036',
         'sequence_alteration' : 'SO:0001059',
         'variant_single_locus_complement' : 'GENO:0000030',
