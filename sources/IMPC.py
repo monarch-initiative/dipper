@@ -115,6 +115,12 @@ class IMPC(Source):
         self._process_genotype_features(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
         self._process_g2p(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
 
+        #TODO: Check processing of the other two IMPC data files
+        #self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        #self._process_g2p(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        #self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        #self._process_g2p(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+
 
         print("Finished parsing.")
 
@@ -208,7 +214,7 @@ class IMPC(Source):
                 #FIXME
                 #IMPC contains targeted mutations with either gene traps, knockouts, insertion/intragenic deletions.
                 #Currently hard-coding to the insertion type. Does this need to be adjusted?
-                allele_type = 'SO:0000667'
+                sequence_alteration_type = 'SO:0000667'  # insertion
 
 
                 #This is for handling any of the alleles that do not have an MGI ID or IMPC has not yet
@@ -219,10 +225,16 @@ class IMPC(Source):
                 else:
                     sequence_alteration_id = 'IMPC:'+allele_accession_id
 
+                if re.match(".*<.*",allele_symbol):
+                    sequence_alteration_name = re.sub('.*<','<',allele_symbol)
+                else:
+                    sequence_alteration_name = '<'+allele_symbol+'>'
+
+
                 #print()
                 #Add allele to genotype
                 #FIXME: Is it correct to add the type to the allele, or should this be added to the sequence alteration?
-                geno.addAllele(variant_locus_id, variant_locus_name, allele_type)
+                geno.addAllele(variant_locus_id, variant_locus_name, None)
 
                 #Hard coding gene_type as gene.
                 gene_type = 'SO:0000704'# gene
@@ -281,7 +293,7 @@ class IMPC(Source):
 
                 # Add the zygosity to the VSLC
                 # Need a connection based on GENO:0000608 has_zygosity
-                #self.graph.add(((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_zygosity'])),URIRef(cu.get_uri(zygosity_id)))))
+                self.graph.add(((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_zygosity'])),URIRef(cu.get_uri(zygosity_id)))))
 
 
                 # Link the VSLC to the allele based on zygosity
@@ -307,7 +319,6 @@ class IMPC(Source):
                 self.graph.add((URIRef(cu.get_uri(genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(gvc_id))))
 
 
-                #TODO: Create the effective genotype label/id by adding the sex of the mouse to the intrinsic_genotype_id.
                 effective_genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id+sex))
                 effective_genotype_label = genotype_name+'('+sex+')'
 
@@ -320,7 +331,21 @@ class IMPC(Source):
                 # Add the intrinsic_genotype to the effective_genotype
                 self.graph.add((URIRef(cu.get_uri(effective_genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(genotype_id))))
 
-                #TODO: sequence_alteration, sequence_alteration_type
+
+
+                 # sequence_alteration is of type sequence_alteration
+                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],URIRef(cu.get_uri(self.terms['effective_genotype']))))
+
+                #sequence_alteration has label sequence_alteration_label
+                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDFS['label'],Literal(sequence_alteration_name)))
+
+                #sequence_alteration has type sequence_alteration_type
+                self.graph.add((URIRef(cu.get_uri(sequence_alteration_id)),RDF['type'],Literal(sequence_alteration_type)))
+
+                # Add the sequence_alteration to the variant_locus
+                self.graph.add((URIRef(cu.get_uri(variant_locus_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(sequence_alteration_id))))
+
+                #TODO: sequence_alteration_type
 
 
 
