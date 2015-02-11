@@ -21,7 +21,7 @@ class TestUtils:
         # instantiate source object
         self.source = source
         self.graph = Graph()
-        self._load_graph_from_turtle()
+
         return
 
     def query_graph(self, query):
@@ -32,7 +32,11 @@ class TestUtils:
 
         return
 
-    def _load_graph_from_turtle(self):
+    def check_query_syntax(self, query):
+        self.source.graph.query(query)
+        return
+
+    def load_graph_from_turtle(self):
         file = self.source.outdir+'/'+self.source.name+'.ttl'
         if not os.path.exists(file):
             raise Exception("file:"+file+" does not exist")

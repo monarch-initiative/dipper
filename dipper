@@ -60,6 +60,8 @@ def main():
             source = source.lower()
             mysource = source_to_class_map[source]()
             test_query = TestUtils(mysource)
+            test_query.check_query_syntax(args.query)
+            test_query.load_graph_from_turtle()
             test_query.query_graph(args.query)
             exit(0)
 
