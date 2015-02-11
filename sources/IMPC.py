@@ -53,9 +53,11 @@ class IMPC(Source):
         'variant_single_locus_complement' : 'GENO:0000030',
         'allele' : 'GENO:0000008',
         'intrinsic_genotype' : 'GENO:0000000',
+        'effective_genotype' : 'GENO:0000525',
         'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
         'evidence' : 'MONARCH:evidence',
-        'genomic_background' : 'GENO:0000010'
+        'genomic_background' : 'GENO:0000010',
+        'genomic_variation_complement' : 'GENO:0000009'
     }
 
     def __init__(self):
@@ -158,7 +160,7 @@ class IMPC(Source):
                 # may want to move the zygosity warning to the zygosity processing portion.
 
                 #TODO: better to swap out the zygosity for the zygosity_id in all make_id statements?
-                #zygosity_id = self._map_zygosity(zygosity)
+                zygosity_id = self._map_zygosity(zygosity)
 
                 genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id))
 
@@ -257,27 +259,24 @@ class IMPC(Source):
 
                 # Create the VSLC ID
 
-                #vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+                vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
 
                 #Alternatively could use an if statement based on zygosity like for the label, but this is simpler.
 
                 #self.graph.add((vslc_id,RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
                 # Or what if we go with addNode?
                 #print('VSLC_ID:'+vslc_id+'.....VSLC_NAME:'+vslc_name+'variant_single_locus_complement')
-                #geno.addNode(vslc_id,vslc_name,URIRef(cu.get_uri(self.terms['variant_single_locus_complement'])))
+                #geno.addNode(vslc_id,vslc_name,self.terms['variant_single_locus_complement'])
                 #self.graph.add(vslc_id,rel,)
 
                 # vslc is of type vslc
-                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
+                self.graph.add((URIRef(cu.get_uri(vslc_id)),RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
 
                 #vslc has label vslc_name
-                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDFS['label'],Literal(vslc_name)))
+                self.graph.add((URIRef(cu.get_uri(vslc_id)),RDFS['label'],Literal(vslc_name)))
 
                 #vslc has_alternate_part allele/variant_locus
-                #self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(variant_locus_id))))
-
-
-
+                self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(variant_locus_id))))
 
 
                 # Add the zygosity to the VSLC
@@ -291,24 +290,37 @@ class IMPC(Source):
                 #FIXME:What about for hemizygote/unknown?
 
 
-
+                # Add the GVC
                 # Create the GVC ID
-                #gvc_id = self.make_id(('GVC:'+marker_accession_id+allele_accession_id+zygosity_id))
+                gvc_id = self.make_id(('GVC:'+marker_accession_id+allele_accession_id+zygosity_id))
 
-                # Add the GVC as a...
+                # gvc is of type gvc
+                self.graph.add((URIRef(cu.get_uri(gvc_id)),RDF['type'],URIRef(cu.get_uri(self.terms['genomic_variation_complement']))))
+
+                #gvc has label gvc
+                self.graph.add((URIRef(cu.get_uri(gvc_id)),RDFS['label'],Literal(gvc_name)))
+
+                #gvc has_alternate_part vslc
+                self.graph.add((URIRef(cu.get_uri(gvc_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(vslc_id))))
 
                 # Add the GVC to the intrinsic genotype
+                self.graph.add((URIRef(cu.get_uri(genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(gvc_id))))
 
-                # Add the VSLC as a...
-
-                # Add the VSLC to the GVC
 
                 #TODO: Create the effective genotype label/id by adding the sex of the mouse to the intrinsic_genotype_id.
-                #effective_genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id+sex))
+                effective_genotype_id = self.make_id((marker_accession_id+allele_accession_id+zygosity+strain_accession_id+sex))
+                effective_genotype_label = genotype_name+'('+sex+')'
 
-                # Add the effective genotype as a...
+                 # effective_genotype is of type effective_genotype
+                self.graph.add((URIRef(cu.get_uri(effective_genotype_id)),RDF['type'],URIRef(cu.get_uri(self.terms['effective_genotype']))))
 
-                # Add the intrinsic genotype to the effective genotype
+                #effective_genotype has label effective_genotype_label
+                self.graph.add((URIRef(cu.get_uri(effective_genotype_id)),RDFS['label'],Literal(effective_genotype_label)))
+
+                # Add the intrinsic_genotype to the effective_genotype
+                self.graph.add((URIRef(cu.get_uri(effective_genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),URIRef(cu.get_uri(genotype_id))))
+
+                #TODO: sequence_alteration, sequence_alteration_type
 
 
 
