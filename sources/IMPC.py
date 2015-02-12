@@ -468,8 +468,41 @@ class IMPC(Source):
                 assoc_id = self.make_id((genotype_id+phenotype_id+pub_id))
 
                 #removed pub_id.
+                #assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id)
                 assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, None, eco_id)
                 self.graph = assoc.addAssociationNodeToGraph(self.graph)
+
+                #TODO: Add the additional phenotype data parts.
+                #Will have to figure out exactly how to map these relationships, abstract to reusable functions.
+
+                #In the G2PAssoc, the association is mapped between the genotype and the phenotype, but the
+                # phenotype is not really created as a separate instance that we can then hang additional
+                # phenotype parts on, correct? HOWEVER, while the phenotype term ID is not unique,
+                # the phenotype as measured by a specific testing parameter in a specific effective genotype
+                # would be unique. Are there multiple testing parameters for that combination?
+
+                #Add phenotype_description_free_text
+                #Format: 'Phenotype observed by '|| phenotyping_center||' in an '||procedure_name||' assay where '||testing_parameter_name||' was measured with an effect_size of '||effect_size||'. (p='||p_value||')' as phenotype_description_free_text,
+                phenotype_description_free_text = 'Phenotype observed by '+phenotyping_center+' in an '+procedure_name+' assay where '+parameter_name+' was measured with an effect_size of '+effect_size+'. (p='+p_value+')'
+
+
+                #Add phenotype description to phenotype
+                #g.add((n, DC['description'], Literal(phenotype_description_free_text)))
+
+
+                # Add the phenotype
+                # Create the phenotype ID. Can this be repeated given that the phenotype terms are very common,
+                # or do we need to create a unique phenotype id for each row?
+                #vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+                # vslc is of type vslc
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
+                #vslc has label vslc_name
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),RDFS['label'],Literal(vslc_name)))
+                #vslc has_alternate_part allele/variant_locus
+
+                #self.graph.add((URIRef(cu.get_uri(vslc_id)),URIRef(cu.get_uri(self.relationship['has_variant_part'])),URIRef(cu.get_uri(variant_locus_id))))
+
+
 
 
                 if (limit is not None and line_counter > limit):

@@ -43,6 +43,7 @@ class MGI(Source):
     # all_allele_cellline_view: Don't believe this view is used in either the genotype of phenotype view
     # voc_term_view: Don't believe this view is used in either the genotype of phenotype view
     # mrk_summary_view: Used in genotype view. Only need it if we want the MGI ID for the gene.
+    #TODO: Bring in the mgi_note_vocevidence_view to obtain the free_text_phenotype_description
     # mgi_note_vocevidence_view: Used in phenotype view for free_text_phenotype_description
     # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
     # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
