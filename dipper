@@ -17,6 +17,7 @@ from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
+from sources.EOM import EOM
 from utils.TestUtils import TestUtils
 
 def main():
@@ -31,7 +32,8 @@ def main():
         'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
         'ucscbands' : UCSCBands,
         'ctd' : CTD,
-        'genereviews' : GeneReviews
+        'genereviews' : GeneReviews,
+        'eom' : EOM
     }
 
 
