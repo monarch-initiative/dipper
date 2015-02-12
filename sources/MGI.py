@@ -83,7 +83,7 @@ class MGI(Source):
         'derives_from' : 'RO:0001000',
         'has_alternate_part' : 'GENO:0000382',
         'has_reference_part' : 'GENO:0000385',
-        'in_taxon' : 'RO:0000216',
+        'in_taxon' : 'RO:00002162',
         'has_zygosity' : 'GENO:0000608',
         'is_sequence_variant_instance_of' : 'GENO:0000408',
         'is_reference_instance_of' : 'GENO:0000610',
