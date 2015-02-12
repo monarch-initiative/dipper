@@ -22,44 +22,44 @@ import curie_map
 class IMPC(Source):
 
     files = {
-        'impc' : {'file' : 'IMPC_genotype_phenotype.csv.gz',
-                  'url' : 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
-        'euro' : {'file' : 'EuroPhenome_genotype_phenotype.csv.gz',
-                  'url' : 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
-        'mgd' : {'file' : 'MGP_genotype_phenotype.csv.gz',
-                 'url' : 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'}
+        'impc': {'file': 'IMPC_genotype_phenotype.csv.gz',
+                 'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
+        'euro': {'file': 'EuroPhenome_genotype_phenotype.csv.gz',
+                 'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
+        'mgd': {'file': 'MGP_genotype_phenotype.csv.gz',
+                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'}
     }
 
 
     relationship = {
-        'is_mutant_of' : 'GENO:0000440',
-        'derives_from' : 'RO:0001000',
-        'has_alternate_part' : 'GENO:0000382',
-        'has_reference_part' : 'GENO:0000385',
-        'in_taxon' : 'RO:0000216',
-        'has_zygosity' : 'GENO:0000608',
-        'is_sequence_variant_instance_of' : 'GENO:0000408',
-        'is_reference_instance_of' : 'GENO:0000610',
-        'hasExactSynonym' : 'OIO:hasExactSynonym',
-        'has_disposition' : 'GENO:0000208',
-        'has_phenotype' : 'RO:0002200',
-        'has_part' : 'BFO:0000051',
-        'has_variant_part' : 'GENO:0000382'
+        'is_mutant_of': 'GENO:0000440',
+        'derives_from': 'RO:0001000',
+        'has_alternate_part': 'GENO:0000382',
+        'has_reference_part': 'GENO:0000385',
+        'in_taxon': 'RO:0000216',
+        'has_zygosity': 'GENO:0000608',
+        'is_sequence_variant_instance_of': 'GENO:0000408',
+        'is_reference_instance_of': 'GENO:0000610',
+        'hasExactSynonym': 'OIO:hasExactSynonym',
+        'has_disposition': 'GENO:0000208',
+        'has_phenotype': 'RO:0002200',
+        'has_part': 'BFO:0000051',
+        'has_variant_part': 'GENO:0000382'
     }
 
     terms = {
-        'variant_locus' : 'GENO:0000002',
-        'reference_locus' : 'GENO:0000036',
-        'sequence_alteration' : 'SO:0001059',
-        'variant_single_locus_complement' : 'GENO:0000030',
-        'allele' : 'GENO:0000008',
-        'intrinsic_genotype' : 'GENO:0000000',
-        'effective_genotype' : 'GENO:0000525',
-        'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
-        'evidence' : 'MONARCH:evidence',
-        'genomic_background' : 'GENO:0000010',
-        'genomic_variation_complement' : 'GENO:0000009',
-        'zygosity' : 'GENO:0000133'
+        'variant_locus': 'GENO:0000002',
+        'reference_locus': 'GENO:0000036',
+        'sequence_alteration': 'SO:0001059',
+        'variant_single_locus_complement': 'GENO:0000030',
+        'allele': 'GENO:0000008',
+        'intrinsic_genotype': 'GENO:0000000',
+        'effective_genotype': 'GENO:0000525',
+        'phenotype': 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
+        'evidence': 'MONARCH:evidence',
+        'genomic_background': 'GENO:0000010',
+        'genomic_variation_complement': 'GENO:0000009',
+        'zygosity': 'GENO:0000133'
     }
 
     def __init__(self):
@@ -115,13 +115,13 @@ class IMPC(Source):
 
 
         self._process_genotype_features(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
-        self._process_g2p(('/').join((self.rawdir,self.files['impc']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir, self.files['impc']['file'])), self.outfile, self.graph, limit)
 
         #TODO: Check processing of the other two IMPC data files
         self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
-        self._process_g2p(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir, self.files['euro']['file'])), self.outfile, self.graph, limit)
         self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
-        self._process_g2p(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir, self.files['mgd']['file'])), self.outfile, self.graph, limit)
 
 
         print("Finished parsing.")
@@ -184,16 +184,16 @@ class IMPC(Source):
 
                 # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
-                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<+>',variant_locus_name)
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*', '<+>', variant_locus_name)
                     #print(vslc_name)
                 elif zygosity == 'homozygote':
                     vslc_name = variant_locus_name+'/'+variant_locus_name
                     #print(vslc_name)
                 elif zygosity == 'hemizygote':
-                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<0>',variant_locus_name)
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*', '<0>', variant_locus_name)
                     #print(vslc_name)
                 elif zygosity == 'not_applicable':
-                    vslc_name = variant_locus_name+'/'+re.sub('<.*','<?>',variant_locus_name)
+                    vslc_name = variant_locus_name+'/'+re.sub('<.*', '<?>', variant_locus_name)
                     #print(vslc_name)
                 # Do we need to handle an unknown zygosity label in another fashion?
                 # How do we want to handle the "not_applicable" zygosity labels?
@@ -462,7 +462,7 @@ class IMPC(Source):
                 #No evidence code provided. NIF/DISCO view was hard coded to null. However,
                 # isn't all of the IMPC data based on experimental evidence? Or is that too general?
                 # Could use 'EXP': 'ECO:0000006', although the code below used in ZFIN might be more appropriate.
-                eco_id = "ECO:0000059"  #experimental_phenotypic_evidence This was used in ZFIN
+                eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
 
                 #pub_id could be removed here as well.
                 assoc_id = self.make_id((genotype_id+phenotype_id+pub_id))

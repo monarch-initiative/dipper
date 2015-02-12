@@ -33,3 +33,5 @@ This graph is then typically dumped into triples in turtle format.
     * UCSCBands (taking the chromosomal banding patterns and converting them to a nested and genomically located structure)
     * GeneReviews (mapping their ids to OMIM)
     * NCBIGene (Genes, equivalent ids, taxa, and their chr locations)
+    * IMPC (Genotypes (with their parts) and Genotype-Phenotype associations)
+    * MGI (Genotypes (with their parts) and Genotype-Phenotype associations)
