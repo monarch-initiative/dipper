@@ -105,7 +105,7 @@ class EOM(Source):
         :return: None
         '''
         # scrub file of the oddities where there are "\" instead of empty strings
-        #pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
+        #pysed.replace("\r", '', ('/').join((self.rawdir,'dv.nlx_157874_1')))
 
         return
 
@@ -117,7 +117,8 @@ class EOM(Source):
             print("Only parsing first", limit, "rows of each file")
         print("Parsing files...")
 
-
+        self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
+        self._process_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
 
         print("Finished parsing.")
 
@@ -126,6 +127,62 @@ class EOM(Source):
 
         print("Found", len(self.graph), "nodes")
         return
+
+
+
+    def _process_nlx_157874_1_view(self, raw, limit=None):
+        '''
+        This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
+        :param raw:
+        :param limit:
+        :return:
+        '''
+
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
+        line_counter = 0
+        with open(raw, 'r') as f1:
+            f1.readline()  # read the header row; skip
+            for line in f1:
+                line_counter += 1
+
+                (morphology_term_id, morphology_term_num, morphology_term_label, morphology_term_url,
+                 terminology_category_label, terminology_category_url, subcategory, objective_definition,
+                subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
+                e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+    def _process_eom_terms(self, raw, limit=None):
+        '''
+        This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
+        :param raw:
+        :param limit:
+        :return:
+        '''
+
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
+        line_counter = 0
+        with open(raw, 'r') as f1:
+            f1.readline()  # read the header row; skip
+            for line in f1:
+                line_counter += 1
+
+                (morphology_term_id, morphology_term_label, hp_id, hp_label,notes) = line.split('\t')
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
 
 
     #TODO generalize this to a set of utils
