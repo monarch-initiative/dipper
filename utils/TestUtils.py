@@ -1,4 +1,3 @@
-import rdflib
 from rdflib import Graph
 from sources import Source
 from sources.HPOAnnotations import HPOAnnotations
@@ -12,16 +11,17 @@ from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
-import os
+import os, hashlib
 
 
 class TestUtils:
 
-    def __init__(self, source):
+    def __init__(self, source=None):
         # instantiate source object
         self.source = source
         self.graph = Graph()
-        self.source.load_bindings()
+        if (source is not None):
+            self.source.load_bindings()
 
         return
 
@@ -29,7 +29,7 @@ class TestUtils:
         query_result = self.graph.query(query)
 
         for row in query_result:
-            print("%s %s" % row)
+            print(row)
 
         return
 
@@ -45,3 +45,17 @@ class TestUtils:
         self.graph.parse(file, format="turtle")
 
         return
+
+    def get_file_md5(self, directory, file, blocksize=2**20):
+        # reference: http://stackoverflow.com/questions/
+        #            1131220/get-md5-hash-of-big-files-in-python
+
+        md5 = hashlib.md5()
+        with open(os.path.join(directory, file), "rb") as f:
+            while True:
+                buffer = f.read(blocksize)
+                if not buffer:
+                    break
+                md5.update(buffer)
+
+        return md5.hexdigest()

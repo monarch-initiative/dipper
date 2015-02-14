@@ -33,7 +33,6 @@ class CTD(Source):
         """
         :return: None
         """
-        #TODO return md5sum of files?
         self.get_files(is_dl_forced)
         return
 

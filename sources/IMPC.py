@@ -27,7 +27,9 @@ class IMPC(Source):
         'euro': {'file': 'EuroPhenome_genotype_phenotype.csv.gz',
                  'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
         'mgd': {'file': 'MGP_genotype_phenotype.csv.gz',
-                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'}
+                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'},
+        'checksum': {'file': 'checksum.md5',
+                     'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/checksum.md5'},
     }
 
 
@@ -76,19 +78,7 @@ class IMPC(Source):
 
 
     def fetch(self, is_dl_forced):
-        #this is fetching the standard files, not from the API/REST service
-        for f in self.files.keys():
-            file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                ('/').join((self.rawdir,file['file'])),
-                                is_dl_forced)
-            self.dataset.setFileAccessUrl(file['url'])
-            st = os.stat(('/').join((self.rawdir,file['file'])))
-
-        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        self.dataset.setVersion(filedate)
-
+        self.get_files(is_dl_forced)
         return
 
     def scrub(self):
@@ -549,6 +539,20 @@ class IMPC(Source):
 
         return type
 
+    def parse_checksum_file(self,file):
+        """
+        :param file
+        :return dict
+        """
+        checksums = dict()
+        file_path = '/'.join((self.rawdir, file))
+        with open(file_path, 'rt') as tsvfile:
+            reader = csv.reader(tsvfile, delimiter=' ')
+            for row in reader:
+                (checksum, whitespace, file_name) = row
+                checksums[checksum] = file_name
+
+        return checksums
 
     def verify(self):
         status = False
