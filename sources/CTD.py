@@ -33,7 +33,6 @@ class CTD(Source):
         """
         :return: None
         """
-        #TODO return md5sum of files?
         self.get_files(is_dl_forced)
         return
 
@@ -102,9 +101,13 @@ class CTD(Source):
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
 
         assoc_id = self.make_id('ctd' + pathway_id + entrez_id)
-        assoc = Gene2Pathway(assoc_id, pathway_id, entrez_id, evidence_code)
+        assoc = Gene2Pathway(assoc_id, pathway_id, entrez_id, evidence_code,
+                             pathway_name, gene_symbol)
         assoc.loadObjectProperties(self.graph)
         assoc.setRelationship(assoc.relationships['interacts_with'])
+        assoc.add_gene_as_class(self.graph)
+        if re.match(re.compile('^REACT'),pathway_id):
+            assoc.add_pathway_as_class(self.graph)
         assoc.addInteractionAssociationToGraph(self.graph)
 
         return

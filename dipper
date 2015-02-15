@@ -17,6 +17,7 @@ from sources.NCBIGene import NCBIGene
 from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
+from sources.EOM import EOM
 from utils.TestUtils import TestUtils
 
 def main():
@@ -26,12 +27,13 @@ def main():
         'omim' : OMIM,  #full file takes ~15 min, due to required throttling
         'biogrid' : BioGrid,  #interactions file takes <10 minutes
         'mgi' : MGI,
-        'impc' : IMPC,
+        'impc' : IMPC,  # Running time to process all three data files is ~85 minutes so far.
         'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
         'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
         'ucscbands' : UCSCBands,
         'ctd' : CTD,
-        'genereviews' : GeneReviews
+        'genereviews' : GeneReviews,
+        'eom' : EOM
     }
 
 
