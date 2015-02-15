@@ -13,6 +13,9 @@
     * [python-docx](https://github.com/python-openxml/python-docx)
     * pyyaml
 
+* The OMIM source requires the 'compress' and 'uncompress' system commands to be available, for LZW decompression.  
+(This may be a problem for windows users.) 
+
 * **To run the software**:
     * you can run the code by supplying a list of one or more sources on the command line.  some examples:
       dipper --sources omim,ncbigene
