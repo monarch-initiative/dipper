@@ -34,7 +34,7 @@ class MGI(Source):
     #USED
     # gxd_genotype_view, gxd_genotype_summary_view, gxd_allelepair_view, all_summary_view,
     # all_allele_view, all_allele_mutation_view, mrk_marker_view, voc_annot_view,
-    # voc_evidence_view, bib_acc_view, prb_strain_view
+    # voc_evidence_view, bib_acc_view, prb_strain_view, prb_strain_acc_view, mrk_summary_view
 
     #NOT YET USED
     # mgi_organism_acc_view: Don't think we need this as I have handled the taxon mapping through a map_taxon function, unless we want the MGI ID for the organism.
@@ -42,11 +42,9 @@ class MGI(Source):
     # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
     # all_allele_cellline_view: Don't believe this view is used in either the genotype of phenotype view
     # voc_term_view: Don't believe this view is used in either the genotype of phenotype view
-    # mrk_summary_view: Used in genotype view. Only need it if we want the MGI ID for the gene.
     # mgi_note_vocevidence_view: Used in phenotype view for free_text_phenotype_description
     # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
     # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
-    # FIXME - prb_strain_acc_view: Don't believe this view is used in either the genotype of phenotype view, but is needed if we want the MGI ID for the strain.
     # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
     # prb_strain_marker_view: Don't believe this view is used in either the genotype of phenotype view
 
@@ -73,7 +71,8 @@ class MGI(Source):
         'prb_strain_view',
         'mrk_summary_view',
         'mrk_acc_view',
-        'prb_strain_acc_view'
+        'prb_strain_acc_view',
+        'mgi_note_vocevidence_view'
     ]
 
 
@@ -82,35 +81,42 @@ class MGI(Source):
         'derives_from' : 'RO:0001000',
         'has_alternate_part' : 'GENO:0000382',
         'has_reference_part' : 'GENO:0000385',
-        'in_taxon' : 'RO:0000216',
+        'in_taxon' : 'RO:0002162',
         'has_zygosity' : 'GENO:0000608',
         'is_sequence_variant_instance_of' : 'GENO:0000408',
         'is_reference_instance_of' : 'GENO:0000610',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
-        'has_disposition' : 'GENO:0000208',
+        #'has_disposition' : 'GENO:0000208',
         'has_phenotype' : 'RO:0002200',
         'has_part' : 'BFO:0000051'
     }
 
     terms = {
-        'variant_locus' : 'GENO:0000483',
+        'variant_locus' : 'GENO:0000002',
         'reference_locus' : 'GENO:0000036',
         'sequence_alteration' : 'SO:0001059',
         'variant_single_locus_complement' : 'GENO:0000030',
-        'allele' : 'GENO:0000008',
         'intrinsic_genotype' : 'GENO:0000000',
-        'phenotype' : 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
-        'evidence' : 'MONARCH:evidence',
-        'genomic_background' : 'GENO:0000010'
+        'genomic_background' : 'GENO:0000611',
+        'gvc' : 'GENO:0000009'
+    }
+
+    #Set this flag to False for normal running
+    test=True
+    #for testing purposes, this is a list of internal db keys to match and select only portions of the source
+    test_keys = {
+        'allele' : [1303,56760,816699,51074,14595,816707,246,38139,4334,817387,8567,476,42885,3658,1193,6978,6598,16698],
+        'marker' : [38043,305574,444020,34578,9503,38712,17679,445717,38415,12944,377,77197,18436,30157,14252],
+        'annot' : [23546035,189443,189450,29645664,29645665,189447,189452,189451,189446,29645667,189449,29645666,189445,189444,189442,29645682,189448,29645663,69611011,93548463,928426,23534428,23535949,43838073,43838073,318424,717023,717025,717027,717028,717029,717026,90942389,717024,90942390,90942392,90942384,90942382,90942386,90942381,90942385,90942391,5647502,69611253,93436975,93436976,93436973,93419639,93436974,93436977,93401080,84201418,6778,93636629,93648755,93614265,93607816,93624755,43803707,43803707,80436328,93484431,93484432,93552054,13487622,13487624,13487623,43804057,43804057,83942519,12035,6620086,93620355,93581890,79642481,93579091,93581841,93584586,93626409,79655585,93618579,93581832,93579870,93576058,93581813,93587213,93604448,93583073,23241933,93583786,93643814,43805682,43805682,92947717,92948518,92947729,92947735,92949200,92947757,92948169,92949301,92948441,93491336,93491334,93491335,93491333,93491337,93551440,24722398,93642680,6173781,93459094,93652704,6173780,93459097,93459095,93613038,93092371,93092368,93092369,93092372,93092373,58485679,93092374,93626918,93643825,6173778,93092375,93647695,62628962,6173775,93459096,93092376,93092377,93092378,93092379,93092380,93621390,43815003,43815003,93092370,93092381,93092382,93510300,93510296,93510297,93510299,93510298,59357866,59357864,59357865,59357867,59357863,60448186,60448185,60448187],
+        'genotype' : [553,11702,12910,13407,13453,14815,26655,28610,37313,38345,59766,60082],
+        'pub' : [73197,165659,134151,76922,181903,26681,128938,80054,156949,159965,53672,170462,206876,87798,100777,176693,139205,73199,74017,102010,152095,18062,216614,61933,13385,32366,114625,182408,140802],
+        'strain' : [30639,33832,33875,33940,36012,59504,34338,34382,47670,59802,33946,31421,64,40,14,-2,30639,15975,35077,12610,-1,28319,27026,141],
+        'notes' : [5114,107221415,1055341,37833486,107158128,107218642,53310,53311,53312,53313,53314,53315,53316,53317,53318,53319,53320,71099,501751,501752,501753,103920323,501754,103920328,501755,103920312,501756,103920325,501757,744108,6049949,103920319,6621213,107251870,6621216,6621218,6621219,7108498,107168838,107248964,14590363,14590364,14590365,25123358,25123360,26688159,32028545,32028546,32028547,32028548,32028549,32028564,47742903,47743253,47744878,47754199,47777269,65105483,66144014,66144015,66144016,66144017,66144018,70046116,78382808,78383050,107154485,107237686,107174867,107218519,107214911,107256603,106949909,106969369,103920318,103920320,103920322,103920324,103920326,103920330,103920331,103920332,103920333,106390006,106390018,106390024,106390046,106390458,106390730,106390807,106391489,106391590,106579450,106579451,106579452,106579453,106579454,106579455,106579456,106579457,106579458,106579459,106579460,106579461,106579462,106579463,106579464,106949910,106969368,106996040,106996041,106996042,106996043,106996044,107022123,107022124,107022125,107022126,107052057,107052058,107058959,107058960,107058961,107058962,107058963,107077922,107077923,107077924,107077925,107077926,107116089,107119066,107119680,107155254,107159385,107160435,107163154,107163183,107163196,107163271,107164877,107165872,107166942,107170557,107194346,107198590,107205179,107206725,107212120,107214364,107215700,107219974,107222064,107222717,107235068,107242709,107244121,107244139,107249091,107250401,107255383]
     }
 
     def __init__(self):
         Source.__init__(self, 'mgi')
         self.namespaces.update(curie_map.get())
-        #assemble all the curie mappings from the imported models
-        #self.namespaces.update(Assoc.curie_map)
-        #self.namespaces.update(Genotype.curie_map)
-        #self.namespaces.update(G2PAssoc.curie_map)
 
         #update the dataset object with details about this resource
         self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/')
@@ -120,7 +126,7 @@ class MGI(Source):
             print("ERROR: not configured with PG user/password.")
 
         #source-specific warnings.  will be cleared when resolved.
-        #print("WARN: we are filtering G2P on the wild-type environment data for now")
+        print("WARN: we are ignoring normal phenotypes for now")
 
         return
 
@@ -187,17 +193,17 @@ class MGI(Source):
         #views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
         #fly
 
-        self.idhash = {'allele' : {}, 'marker' : {}, 'publication' : {}, 'strain' : {}, 'genotype' : {}, 'annot' : {}}
+        self.idhash = {'allele' : {}, 'marker' : {}, 'publication' : {}, 'strain' : {},
+                       'genotype' : {}, 'annot' : {}, 'notes' : {}}
 
         #the following will provide us the hash-lookups
+        self._process_prb_strain_acc_view(('/').join((self.rawdir,'prb_strain_acc_view')),limit)  #DONE
         self._process_mrk_acc_view(('/').join((self.rawdir,'mrk_acc_view')),limit) #DONE
         self._process_all_summary_view(('/').join((self.rawdir,'all_summary_view')),limit) #DONE
         self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)  #DONE
         self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)  #DONE
-        self._process_prb_strain_acc_view(('/').join((self.rawdir,'prb_strain_acc_view')),limit)  #DONE
-        #FIXME add prb_strain_acc_view
 
-        #the following will use the hash to lookup the ids
+        #the following will use the hash populated above to lookup the ids
         self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
         self._process_gxd_genotype_view(('/').join((self.rawdir,'gxd_genotype_view')),limit)  #DONE
         self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit) #DONE
@@ -207,12 +213,14 @@ class MGI(Source):
         self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)  #DONE
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)  #DONE
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)  #DONE
-
+        self._process_mgi_note_vocevidence_view(('/').join((self.rawdir,'mgi_note_vocevidence_view')),limit)
 
         print("Finished parsing.")
 
         self.load_bindings()
         Assoc().loadObjectProperties(self.graph)
+        gu = GraphUtils(curie_map.get())
+        gu.loadObjectProperties(self.graph,self.relationship)
 
         print("Loaded", len(self.graph), "nodes")
         return
@@ -245,6 +253,10 @@ class MGI(Source):
                 (genotype_key,strain_key,isconditional,note,existsas_key,createdby_key,modifiedby_key,creation_date,
                  modification_date,strain,mgiid,dbname,createdbymodifiedby,existsas,empty) = line.split('\t')
 
+                if self.test is True:
+                    if int(genotype_key) not in self.test_keys.get('genotype'):
+                        continue
+
                 if self.idhash['genotype'].get(genotype_key) is None:
                     #just in case we haven't seen it before, catch and add the id mapping here
                     self.idhash['genotype'][genotype_key] = mgiid
@@ -254,11 +266,18 @@ class MGI(Source):
 
                 #if it's in the hash, assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
-                if (strain_id is not None):
-                    str = URIRef(cu.get_uri(strain_id))
+                if (strain_id is None):
+                    #some of the strains don't have public identifiers!
+                    #so add these as a BNode
+                    print("WARN: adding background as internal id:",strain_key,strain)
+                    strain_id = self._makeInternalIdentifier('strain',strain_key)
+                    if self.test:
+                        strain_id = ':'+strain_id
+                    gu.addIndividualToGraph(self.graph,strain_id,strain,self.terms['intrinsic_genotype'])
 
-                   #todo refactor to genotype model
-                    self.graph.add((gt,URIRef(cu.get_uri(self.relationship['has_reference_part'])),str))
+                str = gu.getNode(strain_id)
+                self.graph.add((str,RDF['type'],gu.getNode(self.terms['genomic_background'])))
+                self.graph.add((gt,gu.getNode(self.relationship['has_reference_part']),str))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -266,6 +285,17 @@ class MGI(Source):
         return
 
     def _process_gxd_genotype_summary_view(self,raw,limit=None):
+        '''
+        Add the genotype internal id to mgiid mapping to the idhashmap.  Also, add them as individuals to the graph.
+        We re-format the label to put the background strain in brackets after the gvc.
+        Triples created:
+        <genotype id> a GENO:intrinsic_genotype
+        <genotype id> rdfs:label "<gvc> [bkgd]"
+
+        :param raw:
+        :param limit:
+        :return:
+        '''
         #need to make triples:
         #. genotype is a class - redundant?
         #. genotype has equivalent class internalGenotypeID
@@ -283,14 +313,21 @@ class MGI(Source):
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,createdby_key,modifiedby_key,
                  creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
 
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('genotype'):
+                        continue
+
                 #add the internal genotype to mgi mapping
                 self.idhash['genotype'][object_key] = mgiid
 
-                #FIXME note the short_description is the GVC  (use this or reason?)
+                #we don't like the way they put the bkgd strain before the gvc, so reformat it here:
+                label = short_description + '[' + subtype + ']'
 
                 if (preferred == '1'):
-                    gu.addIndividualToGraph(self.graph,mgiid,description,self.terms['intrinsic_genotype'])
+                    gu.addIndividualToGraph(self.graph,mgiid,label,self.terms['intrinsic_genotype'])
+
                 #TODO what to do with != preferred
+                #TODO note the short_description is the GVC  (use this or reason?)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -306,16 +343,8 @@ class MGI(Source):
         :param limit:
         :return:
         '''
-        #Need to make triples:
-        #. allele is an instance of allele
-        #. internalAlleleID has equivalent class as allele
-        #. allele has label short_description: Better to use symbol from all_allele_view?
-        #. allele has description description
 
-        #TODO: allele subtype
-
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
         line_counter = 0
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -327,12 +356,19 @@ class MGI(Source):
                 #NOTE:May want to filter alleles based on the preferred field (preferred = 1) or will get duplicates
                 ## (24288, to be exact... Reduced to 480 if filtered on preferred = 1)
 
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('allele'):
+                        continue
+
+                #map allele type
+                #altype = self._map_allele_type(subtype)
+                altype = None  #temporary; we'll assign the type later
+
                 #If we want to filter on preferred:
                 if preferred == '1':
                     #add the allele key to the hash for later lookup
                     self.idhash['allele'][object_key] = mgiid
-                    gu.addIndividualToGraph(self.graph,mgiid,short_description.strip(),self.terms['allele'],description.strip())
-                    #TODO update subtype
+                    gu.addIndividualToGraph(self.graph,mgiid,short_description.strip(),altype,description.strip())
 
                 #TODO deal with non-preferreds, are these deprecated?
 
@@ -347,44 +383,26 @@ class MGI(Source):
         Add the allele as a variant locus (or reference locus if wild-type).
         If the marker is specified, we add the link to the marker.
         We assume that the MGI ids are available in the idhash, added in all_summary_view.
-        We add the sequence alteration as a BNode here.
+        We add the sequence alteration as a BNode here, if there is a marker.  Otherwise, the
+        allele itself is a sequence alteration.
 
         Triples:
         <MGI:allele_id> a GENO:variant_locus OR GENO:reference_locus
         <MGI:allele_id> GENO:has_variant_part OR GENO:has_reference_part  <MGI:marker_id>
         <MGI:allele_id> GENO:derived_from <MGI:strain_id>
-        <MGI:allele_id>
+        <MGI:allele_id> a GENO:sequence_alteration   IF no marker_id specified.
+        <_seq_alt_id> a GENO:sequence_alteration
+        <MGI:allele_id> has_variant_part <_seq_alt_id>
+        <_seq_alt_id> derives_from <strain_id>
         :param raw:
         :param limit:
         :return:
         """
-
-        #NOTE: allele == variant locus
-        #Need triples:
-        #. (variant) allele is a subclass of variant_locus
-        #. (variant) allele is variant_of gene/marker
-        #. (wild type) allele is a subclass of reference_locus
-        #. (wild type) allele is reference_of gene/marker
-        #. allele has label symbol (any reformatting?)
-        #. sequence alteration is a class
-        #. sequence alteration is a subclass of SO:0001059
-        #. sequence alteration has description name
-        #. sequence alteration in strain
-
-        # Extra: strain_key, map along the lines of "allele (allele_key -> Bnode) in strain (strain_key -> Bnode)?"
-        # Strain label available. Marker label available. Better to map those through their primary tables, correct?
-        #TODO
-        # Allele type key also available. Need to locate related table
         # transmission_key -> inheritance? Need to locate related table.
-        # strain: sequence_alteration in strain?
-
-        #Instead of a function-specific set of variables, should these instead be added
-        # to the relationship table at the top?
-
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
+        cu = CurieUtil(curie_map.get())
         line_counter = 0
-        print("INFO: adding alleles; mapping to markers; extracting their sequence alterations")
+        print("INFO: adding alleles, mapping to markers, extracting their sequence alterations")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -393,6 +411,11 @@ class MGI(Source):
                 (allele_key,marker_key,strain_key,mode_key,allele_type_key,allele_status_key,transmission_key,
                  collection_key,symbol,name,nomensymbol,iswildtype,isextinct,ismixed,createdby_key,modifiedby_key,
                  approvedby_key,approval_date,creation_date,modification_date,markersymbol,term,statusnum,strain,collection,createdby,modifiedby,approvedby) = line.split('\t')
+
+                if self.test is True:
+                    if int(allele_key) not in self.test_keys.get('allele'):
+                        continue
+
 
                 allele_id = self.idhash['allele'].get(allele_key)
                 if (allele_id is None):
@@ -406,54 +429,65 @@ class MGI(Source):
                         print("ERROR: what to do! can't find marker_id. skipping",marker_key,symbol)
                         continue
 
-                #TODO handle the case when the marker == allele (though they are not the same MGI id)
-
                 strain_id = self.idhash['strain'].get(strain_key)
                 iseqalt_id = self._makeInternalIdentifier('seqalt',allele_key)
-                iseqalt = BNode(iseqalt_id)  # Any issues with reusing the allele_key as long as we use a different prefix?
+                if (self.test):
+                    #in test mode, we want to make these identified nodes
+                    iseqalt_id = ':'+iseqalt_id
+                    iseqalt = URIRef(cu.get_uri(iseqalt_id))
+                else:
+                    #otherwise, keep them as BNodes
+                    iseqalt = BNode(iseqalt_id)
 
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = self.terms['variant_locus']
-                    rel = URIRef(cu.get_uri(self.relationship['is_sequence_variant_instance_of']))
+                    locus_rel = gu.getNode(self.relationship['is_sequence_variant_instance_of'])
                 #for wild type alleles:
                 elif iswildtype == '1':
                     locus_type = self.terms['reference_locus']
-                    rel = URIRef(cu.get_uri(self.relationship['is_reference_instance_of']))
+                    locus_rel = gu.getNode(self.relationship['is_reference_instance_of'])
 
                 gu.addIndividualToGraph(self.graph,allele_id,symbol,locus_type)
                 #add link between gene and allele
-                al = URIRef(cu.get_uri(allele_id))
+                al = gu.getNode(allele_id)
+
                 if marker_id is not None:
                     #marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
                     self.graph.add((al,
-                                    rel,
-                                    URIRef(cu.get_uri(marker_id))))
-
-
+                                    locus_rel,
+                                    gu.getNode(marker_id)))
 
                 #sequence alteration in strain
                 #FIXME change this to a different relation in_strain, genomically_related_to, sequence_derives_from
                 if iswildtype == '0':
-                    #sequence alteration has label reformatted(symbol)
                     sa_label = symbol
-                    if re.match(".*<.*>.*", symbol):
-                        #print(sa_label)
-                        sa_label = re.sub(".*<", "<", symbol)
-                        #print(sa_label)
-                    elif re.match("\+", symbol):
-                        #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
-                        sa_label = '<+>'
-                        #print(sa_label)
+                    sa_id = iseqalt_id
+
+                    if marker_key is not None and marker_key != '':
+                        #sequence alteration has label reformatted(symbol)
+                        if re.match(".*<.*>.*", symbol):
+                            #print(sa_label)
+                            sa_label = re.sub(".*<", "<", symbol)
+                            #print(sa_label)
+                        elif re.match("\+", symbol):
+                            #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
+                            sa_label = '<+>'
+                            #print(sa_label)
+                        rel = gu.getNode(self.relationship['has_alternate_part'])
+                        #if we do this like this, do we get the relationship between the al and seqalt?
+                        self.graph.add((al,rel,iseqalt))
+                    else:
+                        #make the sequence alteration == allele
+                        sa_id = allele_id
+
+                    #else this will end up adding the non-located transgenes as sequence alterations also
                     #removing the < and > from sa
                     sa_label = re.sub('[\<\>]','',sa_label)
-                    gu.addIndividualToGraph(self.graph,iseqalt_id,sa_label,self.terms['sequence_alteration'],name)
-                    rel = URIRef(cu.get_uri(self.relationship['has_alternate_part']))
-                    self.graph.add((al,rel,iseqalt))  #TODO IS THIS RIGHT?
-
+                    gu.addIndividualToGraph(self.graph,sa_id,sa_label,self.terms['sequence_alteration'],name)
 
                     if strain_id is not None:
-                        self.graph.add((al,URIRef(cu.get_uri(self.relationship['derives_from'])),URIRef(cu.get_uri(strain_id))))
+                        self.graph.add((al,gu.getNode(self.relationship['derives_from']),gu.getNode(strain_id)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -461,16 +495,18 @@ class MGI(Source):
         return
 
     def _process_gxd_allele_pair_view(self,raw,limit):
-        #Need triples:
-        #. vslc is of type: vslc
-        #. genotype has vslc allele_pair_key
-        #. vslc has label processed(vslc_label)
-        #. vslc has_part allele1
-        #. vslc has_part allele2
-        #. vslc has_disposition mapped(allelestate)
+        """
+        This assumes that the genotype and alleles have already been added to the id hashmap.
+        Triples added:
+        <genotype_id> has_part <vslc>
+        <vslc> has_part <allele1>
+        <vslc> has_part <allele2>
+        <vslc> has_zygosity <zygosity>
 
-
-        #Additional stuff: chromosome, compound? (entries: Top, Not Applicable, Bottom)
+        :param raw:
+        :param limit:
+        :return:
+        """
 
         gu = GraphUtils(self.namespaces)
         cu = CurieUtil(self.namespaces)
@@ -486,6 +522,11 @@ class MGI(Source):
                 #NOTE: symbol = gene/marker, allele1 + allele2 = VSLC, allele1/allele2 = variant locus, allelestate = zygosity
                 #FIXME Need to handle alleles not in the *<*> format, such as many gene traps, induced mutations, and transgenics
 
+                if self.test is True:
+                    if int(genotype_key) not in self.test_keys.get('genotype'):
+                        continue
+
+
                 genotype_id = self.idhash['genotype'].get(genotype_key)
 
                 allele1_id = self.idhash['allele'].get(allele_key_1)
@@ -493,7 +534,11 @@ class MGI(Source):
 
                 #Need to map the allelestate to a zygosity term
                 zygosity_id = self._map_zygosity(allelestate)
-                ivslc = BNode('vslckey'+allelepair_key)
+                ivslc_id = 'vslckey'+allelepair_key
+                if self.test:
+                    #make this a real id in test mode
+                    ivslc_id = ':'+ivslc_id
+                ivslc = gu.getNode(ivslc_id)
                 #FIXME: VSLC label likely needs processing similar to the processing in the all_allele_view
                 #FIXME: Handle null alleles for allele2
                 vslc_label = (allele1+'/'+allele2)
@@ -506,19 +551,17 @@ class MGI(Source):
                 self.graph.add((ivslc,RDFS['label'],Literal(vslc_label)))
 
                 #genotype has part vslc
-                self.graph.add((URIRef(cu.get_uri(genotype_id)),URIRef(cu.get_uri(self.relationship['has_alternate_part'])),ivslc))
+                self.graph.add((gu.getNode(genotype_id),gu.getNode(self.relationship['has_alternate_part']),ivslc))
 
                 #vslc has parts allele1/allele2
                 rel = URIRef(cu.get_uri(self.relationship['has_part']))
                 if allele1_id is not None:
-                    self.graph.add((ivslc,rel,URIRef(cu.get_uri(allele1_id))))
+                    self.graph.add((ivslc,rel,gu.getNode(allele1_id)))
                 if allele2_id is not None:
-                    self.graph.add((ivslc,rel,URIRef(cu.get_uri(allele2_id))))
+                    self.graph.add((ivslc,rel,gu.getNode(allele2_id)))
 
                 #FIXME: Is this correct?
-                # Also, in my concept map I had zygosity as GENO:0000608 - has_zygosity,
-                # but I don't see it in my geno.owl file.
-                self.graph.add((ivslc,URIRef(cu.get_uri(self.relationship['has_zygosity'])),URIRef(cu.get_uri(zygosity_id))))
+                self.graph.add((ivslc,gu.getNode(self.relationship['has_zygosity']),gu.getNode(zygosity_id)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -530,8 +573,8 @@ class MGI(Source):
         #. sequence_alteration has_type mutation
         #. sequence_alteration_type_label?
 
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
+
         line_counter = 0
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -540,11 +583,19 @@ class MGI(Source):
 
                 (allele_key,mutation_key,creation_date,modification_date,mutation) = line.split('\t')
                 iseqalt_id = self._makeInternalIdentifier('seqalt',allele_key)
-                iseqalt = BNode(iseqalt_id)
+
+                if self.test is True:
+                    if int(allele_key) not in self.test_keys.get('allele'):
+                        continue
+                    iseqalt_id = ':'+iseqalt_id
+
+                n = gu.getNode(iseqalt_id)
 
                 #map the sequence_alteration_type
                 seq_alt_type_id = self._map_seq_alt_type(mutation)
-                self.graph.add((iseqalt,RDF['type'],URIRef(cu.get_uri(seq_alt_type_id))))
+                t = gu.getNode(seq_alt_type_id)
+
+                self.graph.add((n,RDF['type'],t))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -554,7 +605,7 @@ class MGI(Source):
 
 
     def _process_voc_annot_view(self,raw,limit):
-        '''
+        """
         This MGI table represents associations between things.
         We currently filter this table on Genotype-Phenotype associations, but may be expanded in the future.
         Reference the genotype in the idhash.
@@ -563,7 +614,7 @@ class MGI(Source):
         :param raw:
         :param limit:
         :return:
-        '''
+        """
 
         #TODO also get Strain/Attributes (annottypekey = 1000)
         #TODO what is Phenotype (Derived) vs non-derived?  (annottypekey = 1015)
@@ -579,6 +630,9 @@ class MGI(Source):
                 (annot_key,annot_type_key,object_key,term_key,qualifier_key,creation_date,modification_date,qualifier,
                  term,sequence_num,accid,logicaldb_key,vocab_key,mgi_type_key,evidence_vocab_key,anot_type) = line.split('\t')
 
+                if self.test is True:
+                    if int(annot_key) not in self.test_keys.get('annot'):
+                        continue
 
                 # Restricting to type 1002, as done in the MousePhenotypes view.
                 # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
@@ -622,9 +676,10 @@ class MGI(Source):
         :return:
         """
 
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
+
         line_counter = 0
+        print("INFO: getting evidence and pubs for annotations")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -632,6 +687,13 @@ class MGI(Source):
 
                 (annot_evidence_key,annot_key,evidence_term_key,refs_key,inferred_from,created_by_key,modified_by_key,
                 creation_date,modification_date,evidence_code,evidence_seq_num,jnumid,jnum,short_citation,created_by,modified_by)= line.split('\t')
+
+                if self.test is True:
+                    if int(annot_key) not in self.test_keys.get('annot'):
+                        continue
+
+                #add the association id to map to the evidence key (this is to attach the right note to the right assn)
+                self.idhash['notes'][annot_evidence_key] = annot_key
 
                 assoc_id = self.idhash['annot'].get(annot_key)
 
@@ -641,16 +703,15 @@ class MGI(Source):
 
                 # Only 18 evidence codes used in MGI, so create a mapping function to map the label and the ID.
                 evidence_id = self._map_evidence_id(evidence_code)
-                evidence = URIRef(cu.get_uri(evidence_id))
+                evidence = gu.getNode(evidence_id)
 
                 #TODO add it as an instance of what type?
                 #add the pub as an individual;
                 gu.addIndividualToGraph(self.graph,jnumid,None)
-                pub = URIRef(cu.get_uri(jnumid))
 
                 #add the ECO and citation information to the annot
-                self.graph.add((URIRef(cu.get_uri(assoc_id)),DC['evidence'],evidence))
-                self.graph.add((URIRef(cu.get_uri(assoc_id)),DC['source'],pub))
+                self.graph.add((gu.getNode(assoc_id),DC['evidence'],evidence))
+                self.graph.add((gu.getNode(assoc_id),DC['source'],gu.getNode(jnumid)))
 
 
                 if (limit is not None and line_counter > limit):
@@ -660,23 +721,21 @@ class MGI(Source):
 
 
     def _process_bib_acc_view(self,raw,limit):
-        '''
+        """
         This traverses the table twice; once to look up the internal key to J number mapping; then to make the
         equivalences.  All internal keys have a J and MGI identifier.
         This will make equivalences between the different pub ids
         :param raw:
         :param limit:
         :return:
-        '''
+        """
 
-
-
-        gu = GraphUtils(self.namespaces)
+        gu = GraphUtils(curie_map.get())
         cu = CurieUtil(self.namespaces)
 
         #firstpass, get the J number mapping, and add to the global hash
         line_counter = 0
-        print('INFO: getting pub id mappings')
+        print('INFO: populating pub id hash')
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -685,6 +744,10 @@ class MGI(Source):
                     continue #skip header
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
                 created_by_key,modified_by_key,creation_date,modification_date,logical_db)= line
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('pub'):
+                        continue
 
                 #we use the J number here because it is the externally-accessible identifier
                 if prefixpart != 'J:':
@@ -708,10 +771,13 @@ class MGI(Source):
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
                 created_by_key,modified_by_key,creation_date,modification_date,logical_db)= line
 
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('pub'):
+                        continue
+
 
                 logical_db = logical_db.strip()
 
-                #get the real nice pub identifier
                 jid = self.idhash['publication'].get(object_key)
 
                 pub_id = None
@@ -732,9 +798,7 @@ class MGI(Source):
                 if (pub_id is not None):
                     #only add these to the graph if it's mapped to something we understand
                     gu.addIndividualToGraph(self.graph,pub_id,None)
-                    #todo add this to graph utils
-                    self.graph.add((URIRef(cu.get_uri(jid)),OWL['sameAs'],URIRef(cu.get_uri(pub_id))))
-
+                    self.graph.add((gu.getNode(jid),OWL['sameAs'],gu.getNode(pub_id)))
                 else:
                     print("WARN: Publication from (", logical_db, ") not mapped for",object_key)
 
@@ -744,14 +808,14 @@ class MGI(Source):
         return
 
     def _process_prb_strain_view(self,raw,limit):
-        '''
+        """
         Process a table to get strains (with internal ids), and their labels.
         These strains are created as instances of intrinsic_genotype.
 
         :param raw:
         :param limit:
         :return:
-        '''
+        """
         #Only 9 strain types if we want to map them (recombinant congenci, inbred strain, NA, congenic,
         # consomic, coisogenic, recombinant inbred, NS, conplastic)
         #160 species types, but could probably slim that down.
@@ -759,28 +823,29 @@ class MGI(Source):
         # and just keep the strain labelling in the gxd_genotype_view.
 
 
-        gu = GraphUtils(self.namespaces)
-        cu = CurieUtil(self.namespaces)
+        gu = GraphUtils(curie_map.get())
         line_counter = 0
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
                 line_counter += 1
-
+                if (line_counter == 1):
+                    continue
                 (strain_key,species_key,strain_type_key,strain,standard,private,genetic_background,created_by_key,
                 modified_by_key,creation_date,modification_date,species,strain_type,created_by,modified_by) = line
 
+                if self.test is True:
+                    if int(strain_key) not in self.test_keys.get('strain'):
+                        continue
+
+
                 strain_id = self.idhash['strain'].get(strain_key)
 
-                istrain_id = self._makeInternalIdentifier('strain',strain_key)
-
-                #FIXME is the strain an 'intrinsic_genotype', 'genomic_background' or something else?
-                gu.addIndividualToGraph(self.graph,istrain_id,strain,self.terms['intrinsic_genotype'])
-                #TODO add species
-                #TODO what is strain type anyway?
-                #ispecies = BNode('specieskey'+species_key)
-                #istrain_type = BNode('straintypekey'+strain_type_key)
+                if strain_id is not None:
+                    gu.addIndividualToGraph(self.graph,strain_id,strain,self.terms['intrinsic_genotype'])
+                    #TODO add species
+                    #TODO what is strain type anyway?
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -789,15 +854,15 @@ class MGI(Source):
 
 
     def _process_mrk_marker_view(self,raw,limit):
-        '''
-        This is the definition of markers (as in genes, but other genomic loci as well).
+        """
+        This is the definition of markers (as in genes, but other genomic loci types as well).
         It looks up the identifiers in the hashmap
         This includes their labels, specific class, and identifiers
         TODO should we use the mrk_mouse_view instead?
         :param raw:
         :param limit:
         :return:
-        '''
+        """
         #Need triples:
         #. marker is type class
         #. marker has subclass mapped(markertype)
@@ -807,7 +872,7 @@ class MGI(Source):
         #Process based on status? (official, withdrawn, interim)
         #Do we want the chromosome number?
 
-        gu = GraphUtils(self.namespaces)
+        gu = GraphUtils(curie_map.get())
         cu = CurieUtil(self.namespaces)
         line_counter = 0
         with open(raw, 'r') as f:
@@ -818,6 +883,10 @@ class MGI(Source):
                 (marker_key,organism_key,marker_status_key,marker_type_key,curationstate_key,symbol,name,chromosome,
                 cytogenetic_offset,createdby_key,modifiedby_key,creation_date,modification_date,organism,common_name,
                 latin_name,status,marker_type,curation_state,created_by,modified_by) = line.split('\t')
+
+                if self.test is True:
+                    if int(marker_key) not in self.test_keys.get('marker'):
+                        continue
 
                 #Remove the withdrawn markers
                 if marker_status_key != '2':
@@ -837,11 +906,8 @@ class MGI(Source):
 
                     #add the taxon
                     taxon_id = self._map_taxon(latin_name)
-                    self.graph.add((URIRef(cu.get_uri(marker_id)),URIRef(cu.get_uri(self.relationship['in_taxon'])),URIRef(cu.get_uri(taxon_id))))
+                    self.graph.add((gu.getNode(marker_id),gu.getNode(self.relationship['in_taxon']),gu.getNode(taxon_id)))
 
-                    #TODO: Think it would make more sense to map the taxon using one of the organism tables.
-                    #TODO: If mapping to taxon using an organism table, map to the organism BNode
-                    #self.graph.add((imarker,URIRef(cu.get_uri(self.relationship['in_taxon'])),iorganism))
 
                     if (limit is not None and line_counter > limit):
                         break
@@ -877,23 +943,24 @@ class MGI(Source):
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgi_type_key,private,preferred,
                  created_by_key,modified_by_key,creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
 
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('marker'):
+                        continue
+
+
                 if self.idhash['marker'].get(object_key) is None:
                     #can't find the marker in the hash; add it here:
                     self.idhash['marker'][object_key] = mgiid
                     gu.addClassToGraph(self.graph,mgiid,None)
 
-                marker = URIRef(cu.get_uri(mgiid))
 
                 if (accid == mgiid):
-                    #don't need to make equivlances to itself
+                    #don't need to make equivalences to itself
                     continue
 
                 #ISSUE: MirBase accession ID can map to multiple MGI IDs if the miRNA is also part of a cluster (Mirlet7b is part of cluster Mirc31)
 
                 if (preferred=='1'):
-                    #logicaldb_key in ['41', '45', '60', '133', '134', '135', '27', '83', '1', '55', '13', '8']: # '27'
-
-                    #Do something
                     mapped_id = None
                     if logicaldb_key in ['133','134','60']:
                         #FIXME some ensembl ids are genes, others are proteins
@@ -902,8 +969,8 @@ class MGI(Source):
                         mapped_id = 'miRBase:'+accid
                     elif logicaldb_key == '1':
                         mapped_id = 'MGI:'+accid
-                    elif logicaldb_key == '41':
-                        mapped_id = 'TrEMBL:'+accid
+                    #elif logicaldb_key == '41':
+                    #    mapped_id = 'TrEMBL:'+accid
                     elif logicaldb_key == '45':
                         mapped_id = 'PDB:'+accid
                     elif logicaldb_key == '135':
@@ -931,14 +998,14 @@ class MGI(Source):
         return
 
     def _process_mrk_acc_view(self,raw,limit):
-        '''
+        """
         Use this table to create the idmap between the internal marker id and the public mgiid.
         Also, add the equivalence statements between genes for a subset of the identifiers
         (thus far is NCBIGene and ENSEMBL)
         :param raw:
         :param limit:
         :return:
-        '''
+        """
 
         #make a pass through the table first, to create the mapping between the external and internal identifiers
         line_counter = 0
@@ -950,6 +1017,10 @@ class MGI(Source):
                 line_counter += 1
                 (accession_key,accid,prefix_part,numeric_part,logicaldb_key,object_key,mgi_type_key,private,preferred,
                  created_by_key,modified_by_key,creation_date,modification_date,logicaldb,organism_key) = line.split('\t')
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('marker'):
+                        continue
 
                 #get the hashmap of the identifiers
                 if (logicaldb_key == '1') and (prefix_part == 'MGI:') and (preferred == '1'):
@@ -965,6 +1036,10 @@ class MGI(Source):
                 line_counter += 1
                 (accession_key,accid,prefix_part,numeric_part,logicaldb_key,object_key,mgi_type_key,private,preferred,
                  created_by_key,modified_by_key,creation_date,modification_date,logicaldb,organism_key) = line.split('\t')
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('marker'):
+                        continue
 
 
                 mgiid = self.idhash['marker'].get(object_key)
@@ -993,25 +1068,28 @@ class MGI(Source):
         return
 
     def _process_prb_strain_acc_view(self,raw,limit):
-        '''
+        """
         Use this table to create the idmap between the internal marker id and the public mgiid.
-        Also, add the equivalence statements between genes for a subset of the identifiers
-        (thus far is NCBIGene and ENSEMBL)
+        Also, add the equivalence statements between strains for MGI and JAX
         :param raw:
         :param limit:
         :return:
-        '''
+        """
 
         #make a pass through the table first, to create the mapping between the external and internal identifiers
         line_counter = 0
         gu = GraphUtils(self.namespaces)
-        print("INFO: mapping markers to internal identifiers")
+        print("INFO: mapping strains to internal identifiers")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,
                  preferred,createdby_key,modifiedby_key,creation_date,modification_date,logicaldb) = line.split('\t')
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('strain'):
+                        continue
 
                 #get the hashmap of the identifiers
                 if (logicaldb_key == '1') and (prefixpart == 'MGI:') and (preferred == '1'):
@@ -1027,6 +1105,11 @@ class MGI(Source):
                 line_counter += 1
                 (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,
                  preferred,createdby_key,modifiedby_key,creation_date,modification_date,logicaldb) = line.split('\t')
+
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('strain'):
+                        continue
 
 
                 mgiid = self.idhash['strain'].get(object_key)
@@ -1049,6 +1132,41 @@ class MGI(Source):
 
                 if (limit is not None and line_counter > limit):
                     break
+
+        return
+
+
+    def _process_mgi_note_vocevidence_view(self,raw,limit):
+        """
+        Here we fetch the free text descriptions of the phenotype associations.
+        :param raw:
+        :param limit:
+        :return:
+        """
+
+        gu = GraphUtils(curie_map.get())
+
+        line_counter = 0
+        print("INFO: getting free text descriptions for annotations")
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if (line_counter == 1):
+                    continue
+
+                (note_key,object_key,mgitype_key,notetype_key,createdby_key,modifiedby_key,
+                 creation_date,modification_date,notetype,note,sequencenum) = line
+
+
+                if self.test is True:
+                    if int(object_key) not in self.test_keys.get('notes'):
+                        continue
+
+                annotkey = self.idhash['notes'].get(object_key)  # object_key == evidence._annotevidence_key
+                annot_id = self.idhash['annot'].get(annotkey)
+                if (annot_id is not None):
+                    self.graph.add((gu.getNode(annot_id),DC['description'],Literal(note.strip())))
 
         return
 
@@ -1104,8 +1222,6 @@ class MGI(Source):
         }
         if (sequence_alteration_type.strip() in type_map):
             type = type_map.get(sequence_alteration_type.strip())
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(allele_type)
-            # print("Mapped: ", sequence_alteration_type, "to", type)
         else:
             # TODO add logging
             print("ERROR: Sequence Alteration Type (", sequence_alteration_type, ") not mapped")
@@ -1128,11 +1244,8 @@ class MGI(Source):
         }
         if (zygosity.strip() in type_map):
             type = type_map.get(zygosity)
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
-        # print("Mapped: ", allele_type, "to", type)
         else:
-            # TODO add logging
-            print("ERROR: Allele Type (", zygosity, ") not mapped")
+            print("ERROR: Zygosity (", zygosity, ") not mapped")
 
         return type
 
@@ -1155,6 +1268,24 @@ class MGI(Source):
             print("ERROR: Marker Type (", marker_type, ") not mapped")
 
         return type
+
+    def _map_allele_type(self,allele_type):
+        """
+        This makes the assumption that all things are variant_loci (including Not Specified)
+        :param allele_type:
+        :return:
+        """
+
+        type = self.terms['variant_locus']  #assume it's a variant locus
+        type_map = {
+            'Not Applicable' : self.terms['reference_locus'],
+            'QTL': self.terms['reference_locus'],  # should QTLs be something else?  or SO:QTL?
+        }
+        if (allele_type.strip() in type_map):
+            type = type_map.get(allele_type)
+
+        return type
+
 
     def _map_taxon(self, taxon_name):
         type = None
@@ -1186,10 +1317,7 @@ class MGI(Source):
         }
         if (taxon_name.strip() in type_map):
             type = type_map.get(taxon_name)
-            # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
-        # print("Mapped: ", allele_type, "to", type)
         else:
-            # TODO add logging
             print("ERROR: Taxon Name (", taxon_name, ") not mapped")
 
         return type
