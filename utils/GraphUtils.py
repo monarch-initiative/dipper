@@ -1,13 +1,33 @@
 __author__ = 'nicole'
 
-from rdflib import Literal, URIRef, BNode
+from rdflib import Literal, URIRef, BNode, Namespace
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD
-from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
 import re
 
 class GraphUtils:
 
+    #FIXME - i've duplicated relationships in Assoc and here - pick one or the other and refactor
+    #TODO refactor using the getNode() method to clear out the URIRef(cu.get_uri(<id>)) nonsense
+
+    OWLCLASS=OWL['Class']
+    OWLIND=OWL['NamedIndividual']
+    OWLPROP=OWL['ObjectProperty']
+    SUBCLASS=RDFS['subClassOf']
+
+    relationships = {
+        'has_disposition':'GENO:0000208',
+        'has_phenotype':'RO:0002200',
+        'replaced_by' : 'IAO:0100001',
+        'consider' : 'OIO:consider',
+        'hasExactSynonym' : 'OIO:hasExactSynonym',
+        'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
+        'definition' : 'IAO:0000115',
+        'in_taxon' : 'RO:0002162',
+        'has_quality' : 'RO:0000086',
+        'towards' : 'RO:0002503',
+        'has_xref' : 'OIO:hasDbXref'
+    }
 
 
     def __init__(self,curie_map):
@@ -32,12 +52,12 @@ class GraphUtils:
 
         n = self._getNode(id)
 
-        g.add((n, RDF['type'], Assoc.OWLCLASS))
+        g.add((n, RDF['type'], self.OWLCLASS))
         if (label is not None):
             g.add((n, RDFS['label'], Literal(label)))
         if (type is not None):
             t = URIRef(self.cu.get_uri(type))
-            g.add((n, Assoc.SUBCLASS, t))
+            g.add((n, self.SUBCLASS, t))
         if (description is not None):
             g.add((n, DC['description'], Literal(description)))
         return g
@@ -51,7 +71,7 @@ class GraphUtils:
             t = URIRef(self.cu.get_uri(type))
             g.add((n, RDF['type'], t))
         else:
-            g.add((n, RDF['type'], Assoc.OWLIND))
+            g.add((n, RDF['type'], self.OWLIND))
         if (description is not None):
             g.add((n, DC['description'], Literal(description)))
         return g
@@ -76,11 +96,11 @@ class GraphUtils:
         :return:
         '''
         #print("INFO: adding deprecated class:",oldid, "with newids",newids)
-        consider = URIRef(self.cu.get_uri(Assoc.relationships['consider']))
-        replaced_by = URIRef(self.cu.get_uri(Assoc.relationships['replaced_by']))
+        consider = URIRef(self.cu.get_uri(self.relationships['consider']))
+        replaced_by = URIRef(self.cu.get_uri(self.relationships['replaced_by']))
 
         n1 = URIRef(self.cu.get_uri(oldid))
-        g.add((n1,RDF['type'],Assoc.OWLCLASS))
+        g.add((n1,RDF['type'],self.OWLCLASS))
         g.add((n1,OWL['deprecated'],Literal(True,datatype=XSD[bool])))
 
         if (newids is not None):
@@ -96,7 +116,7 @@ class GraphUtils:
     def addSubclass(self,g,parentid,childid):
         p = URIRef(self.cu.get_uri(parentid))
         c = URIRef(self.cu.get_uri(childid))
-        g.add((c,Assoc.SUBCLASS,p))
+        g.add((c,self.SUBCLASS,p))
 
         return
 
@@ -112,7 +132,7 @@ class GraphUtils:
         '''
         n = self._getNode(cid)
         if (synonym_type is None):
-            synonym_type = URIRef(self.cu.get_uri(Assoc.relationships['hasExactSynonym'])) #default
+            synonym_type = URIRef(self.cu.get_uri(self.relationships['hasExactSynonym'])) #default
         else:
             synonym_type = URIRef(self.cu.get_uri(synonym_type))
 
@@ -122,7 +142,7 @@ class GraphUtils:
     def addDefinition(self,g,cid,definition):
         if (definition is not None):
             n = self._getNode(cid)
-            p = URIRef(self.cu.get_uri(Assoc.relationships['definition']))
+            p = URIRef(self.cu.get_uri(self.relationships['definition']))
             g.add((n,p,Literal(definition)))
 
         return
@@ -130,7 +150,7 @@ class GraphUtils:
     def addXref(self,g,cid,xrefid):
         n1 = self._getNode(cid)
         n2 = self._getNode(xrefid)
-        p = URIRef(self.cu.get_uri(Assoc.relationships['has_xref']))
+        p = URIRef(self.cu.get_uri(self.relationships['has_xref']))
         if (n1 is not None and n2 is not None):
             g.add((n1,p,n2))
 
@@ -174,3 +194,21 @@ class GraphUtils:
             else:
                 print("ERROR: couldn't make URI for ",id)
         return n
+
+    def getNode(self,id):
+
+        return self._getNode(id)
+
+
+    def loadObjectProperties(self,graph,op):
+        """
+        Given a graph, it will load the supplied object properties
+        as owl['ObjectProperty'] types
+        :param g: a graph
+        :param op: a dictionary of object properties
+        :return: None
+        """
+        cu = self.cu
+        for k in op:
+            graph.add((URIRef(cu.get_uri(op[k])),RDF['type'],self.OWLPROP))
+        return

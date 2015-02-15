@@ -3,6 +3,7 @@ __author__ = 'nicole'
 from rdflib import Namespace, URIRef, Literal,BNode
 from rdflib.namespace import RDF,DC,OWL,RDFS
 from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
 import re
 import curie_map
 
@@ -87,6 +88,7 @@ class Assoc:
             self._add_source_node(g, node, source, self.pub_id)
 
         if self.evidence is None or self.evidence.strip() == '':
+            #TODO remove this warning, it's annoying
             print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
             evidence = URIRef(cu.get_uri(self.evidence))
@@ -111,15 +113,10 @@ class Assoc:
         return
 
     def loadObjectProperties(self,g):
-        '''
-        Given a graph, it will load any of the items in relationships dictionary
-        as owl['ObjectProperty'] types
-        :param g: a graph
-        :return: None
-        '''
-        cu = self.cu
-        for k in self.relationships:
-            g.add((URIRef(cu.get_uri(self.relationships[k])),RDF['type'],self.OWLPROP))
+
+        gu = GraphUtils(curie_map.get())
+        gu.loadObjectProperties(g,self.relationships)
+
         return
 
     def _process_pub_list(self, pub_list, g, node):
