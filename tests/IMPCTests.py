@@ -2,7 +2,6 @@ from sources.IMPC import IMPC
 from utils.TestUtils import TestUtils
 import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def compare_checksums():
@@ -20,7 +19,7 @@ def compare_checksums():
         test = TestUtils()
         if test.get_file_md5(impc.rawdir, file) != md5:
             is_match = False
-            logger.info('FAILED: ' + file +
+            logger.debug('FAILED: ' + file +
                         ' was not downloaded completely')
             return is_match
 

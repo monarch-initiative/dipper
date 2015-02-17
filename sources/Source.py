@@ -16,7 +16,6 @@ import curie_map
 
 from utils.GraphUtils import GraphUtils
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
