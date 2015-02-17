@@ -5,7 +5,8 @@
 __author__ = 'nlw'
 
 import config
-import argparse, logging
+import argparse
+import logging
 from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 from sources.OMIM import OMIM

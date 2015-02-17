@@ -19,8 +19,7 @@ def compare_checksums():
         test = TestUtils()
         if test.get_file_md5(impc.rawdir, file) != md5:
             is_match = False
-            logger.debug('FAILED: ' + file +
-                        ' was not downloaded completely')
+            logger.warn('%s was not downloaded completely', file)
             return is_match
 
     return is_match
