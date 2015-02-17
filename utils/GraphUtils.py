@@ -193,9 +193,12 @@ class GraphUtils:
         :param id:
         :return:
         """
+        base=Namespace(self.curie_map.get(''))
         n=None
         if (re.match('^_',id)):
             n = BNode(id)
+        elif (re.match('^\:',id)):
+            n = base[re.sub(':','',id)]
         else:
             u = self.cu.get_uri(id)
             if (u is not None):
@@ -219,5 +222,5 @@ class GraphUtils:
         """
         cu = self.cu
         for k in op:
-            graph.add((URIRef(cu.get_uri(op[k])),RDF['type'],self.OWLPROP))
+            graph.add((self.getNode(op[k]),RDF['type'],self.OWLPROP))
         return
