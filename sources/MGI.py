@@ -165,6 +165,16 @@ class MGI(Source):
                 datestamp = datetime.strptime(d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
 
+        #we must fetch and create the genotype label.  unfortunately it doesn't live anywhere pre-constructed
+        #so we are creating it here with a select; but we may consider doing something else
+        pg_query = (" ").join("select accid as mgiid,",
+                    "array_to_string(array_agg(replace(short_description,',','/') order by 1),'; ') as gvc,",
+                    "subtype as background",
+                    "from gxd_genotype_summary_view",
+                    "group by accid,subtype")
+
+        #self.fetch_query_from_pgdb("genoaggregate",pg_query,None,cxn)
+
         self.dataset.setVersion(datestamp,ver)
 
         return
@@ -195,22 +205,25 @@ class MGI(Source):
 
         self.idhash = {'allele' : {}, 'marker' : {}, 'publication' : {}, 'strain' : {},
                        'genotype' : {}, 'annot' : {}, 'notes' : {}}
-
+        self.markers = {'classes' : [], 'indiv' : []}  #to store if a marker is a class or indiv
         #the following will provide us the hash-lookups
         self._process_prb_strain_acc_view(('/').join((self.rawdir,'prb_strain_acc_view')),limit)  #DONE
-        self._process_mrk_acc_view(('/').join((self.rawdir,'mrk_acc_view')),limit) #DONE
+        #this only adds the mgiids into the hashmap for markers, does not add them to the graph
+        self._process_mrk_acc_view(('/').join((self.rawdir,'mrk_acc_view')),limit)
         self._process_all_summary_view(('/').join((self.rawdir,'all_summary_view')),limit) #DONE
         self._process_bib_acc_view(('/').join((self.rawdir,'bib_acc_view')),limit)  #DONE
         self._process_gxd_genotype_summary_view(('/').join((self.rawdir,'gxd_genotype_summary_view')),limit)  #DONE
+        #self._process_genoaggregate(('/').join((self.rawdir,'genoaggregate')),limit)
 
         #the following will use the hash populated above to lookup the ids
         self._process_prb_strain_view(('/').join((self.rawdir,'prb_strain_view')),limit)
         self._process_gxd_genotype_view(('/').join((self.rawdir,'gxd_genotype_view')),limit)  #DONE
-        self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit) #DONE
-        self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)  #DONE
-        self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit) #DONE
+        self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)  #this actually adds them to the graph
+        self._process_mrk_acc_view_for_equiv(limit)
         self._process_mrk_summary_view(('/').join((self.rawdir,'mrk_summary_view')),limit)  #DONE
-        self._process_mrk_marker_view(('/').join((self.rawdir,'mrk_marker_view')),limit)  #DONE
+        self._process_all_allele_view(('/').join((self.rawdir,'all_allele_view')),limit) #DONE
+        self._process_all_allele_mutation_view(('/').join((self.rawdir,'all_allele_mutation_view')),limit) #DONE
+        self._process_gxd_allele_pair_view(('/').join((self.rawdir,'gxd_allelepair_view')),limit)  #DONE
         self._process_voc_annot_view(('/').join((self.rawdir,'voc_annot_view')),limit)  #DONE
         self._process_voc_evidence_view(('/').join((self.rawdir,'voc_evidence_view')),limit)  #DONE
         self._process_mgi_note_vocevidence_view(('/').join((self.rawdir,'mgi_note_vocevidence_view')),limit)
@@ -288,9 +301,13 @@ class MGI(Source):
         '''
         Add the genotype internal id to mgiid mapping to the idhashmap.  Also, add them as individuals to the graph.
         We re-format the label to put the background strain in brackets after the gvc.
+
+        We must pass through the file once to get the ids and aggregate the vslcs into a hashmap into the genotype
+
         Triples created:
         <genotype id> a GENO:intrinsic_genotype
         <genotype id> rdfs:label "<gvc> [bkgd]"
+
 
         :param raw:
         :param limit:
@@ -305,6 +322,7 @@ class MGI(Source):
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
         line_counter = 0
+        geno_hash = {}
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -320,11 +338,21 @@ class MGI(Source):
                 #add the internal genotype to mgi mapping
                 self.idhash['genotype'][object_key] = mgiid
 
-                #we don't like the way they put the bkgd strain before the gvc, so reformat it here:
-                label = short_description + '[' + subtype + ']'
-
                 if (preferred == '1'):
-                    gu.addIndividualToGraph(self.graph,mgiid,label,self.terms['intrinsic_genotype'])
+                    d = re.sub('\,','/',short_description)
+                    if mgiid not in geno_hash:
+                        geno_hash[mgiid] = {'vslcs' : [d],'subtype' : subtype}
+                    else:
+                        vslcs = geno_hash[mgiid].get('vslcs')
+                        vslcs.append(d)
+
+
+            #now, loop through the hash and add the genotypes as individuals
+            for id in geno_hash:
+                geno = geno_hash.get(id)
+                gvc = sorted(geno.get('vslcs'))
+                label = ('; ').join(gvc) + '[' + geno.get('subtype') +']'
+                gu.addIndividualToGraph(self.graph,id,label,self.terms['intrinsic_genotype'])
 
                 #TODO what to do with != preferred
                 #TODO note the short_description is the GVC  (use this or reason?)
@@ -360,14 +388,15 @@ class MGI(Source):
                     if int(object_key) not in self.test_keys.get('allele'):
                         continue
 
-                #map allele type
-                #altype = self._map_allele_type(subtype)
+                #we are setting the allele type to None, so that we can add the type later
+                # (since we don't actually know if it's a reference or altered allele)
                 altype = None  #temporary; we'll assign the type later
 
                 #If we want to filter on preferred:
                 if preferred == '1':
                     #add the allele key to the hash for later lookup
                     self.idhash['allele'][object_key] = mgiid
+                    #TODO consider not adding the individuals in this one
                     gu.addIndividualToGraph(self.graph,mgiid,short_description.strip(),altype,description.strip())
 
                 #TODO deal with non-preferreds, are these deprecated?
@@ -449,11 +478,11 @@ class MGI(Source):
                     locus_rel = gu.getNode(self.relationship['is_reference_instance_of'])
 
                 gu.addIndividualToGraph(self.graph,allele_id,symbol,locus_type)
-                #add link between gene and allele
                 al = gu.getNode(allele_id)
 
+                #marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
                 if marker_id is not None:
-                    #marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
+                    #add link between gene and allele
                     self.graph.add((al,
                                     locus_rel,
                                     gu.getNode(marker_id)))
@@ -484,7 +513,8 @@ class MGI(Source):
                     #else this will end up adding the non-located transgenes as sequence alterations also
                     #removing the < and > from sa
                     sa_label = re.sub('[\<\>]','',sa_label)
-                    gu.addIndividualToGraph(self.graph,sa_id,sa_label,self.terms['sequence_alteration'],name)
+                    #we add the sequence_alteration as None, as it will get added later
+                    gu.addIndividualToGraph(self.graph,sa_id,sa_label,None,name)
 
                     if strain_id is not None:
                         self.graph.add((al,gu.getNode(self.relationship['derives_from']),gu.getNode(strain_id)))
@@ -818,9 +848,6 @@ class MGI(Source):
         """
         #Only 9 strain types if we want to map them (recombinant congenci, inbred strain, NA, congenic,
         # consomic, coisogenic, recombinant inbred, NS, conplastic)
-        #160 species types, but could probably slim that down.
-        #If we don't want anything else from this table other than the strain label, could potentially drop it
-        # and just keep the strain labelling in the gxd_genotype_view.
 
 
         gu = GraphUtils(curie_map.get())
@@ -846,6 +873,12 @@ class MGI(Source):
                     gu.addIndividualToGraph(self.graph,strain_id,strain,self.terms['intrinsic_genotype'])
                     #TODO add species
                     #TODO what is strain type anyway?
+                    n = gu.getNode(strain_id)
+                    #add the species here
+                    sp = self._map_strain_species(species)
+                    #add the species to the graph as a class
+                    gu.addClassToGraph(self.graph,sp,None)
+                    self.graph.add((n,gu.getNode(self.relationship['in_taxon']),gu.getNode(sp)))
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -863,14 +896,6 @@ class MGI(Source):
         :param limit:
         :return:
         """
-        #Need triples:
-        #. marker is type class
-        #. marker has subclass mapped(markertype)
-        #. marker has label symbol
-        #. marker has synonym name
-        #. or marker has description name?
-        #Process based on status? (official, withdrawn, interim)
-        #Do we want the chromosome number?
 
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(self.namespaces)
@@ -901,8 +926,17 @@ class MGI(Source):
                     #map the marker to the gene class
                     mapped_marker_type = self._map_marker_type(marker_type)
 
-                    gu.addClassToGraph(self.graph,marker_id,symbol,mapped_marker_type,name)
-                    gu.addSynonym(self.graph,marker_id,name,Assoc.relationships['hasExactSynonym'])
+                    #if it's unlocated, then don't add it as a class; we assume that it'll get added as an individual
+                    if (chromosome is not None and chromosome.strip() != 'UN'):
+                        gu.addClassToGraph(self.graph,marker_id,symbol,mapped_marker_type,name)
+                        gu.addSynonym(self.graph,marker_id,name,Assoc.relationships['hasExactSynonym'])
+                        self.markers['classes'].append(marker_id)
+                        #print("added",symbol,"as class")
+                    else:
+                        gu.addIndividualToGraph(self.graph,marker_id,symbol,mapped_marker_type,name)
+                        gu.addSynonym(self.graph,marker_id,name,Assoc.relationships['hasExactSynonym'])
+                        self.markers['indiv'].append(marker_id)
+                        #print("added",symbol,"as indiv")
 
                     #add the taxon
                     taxon_id = self._map_taxon(latin_name)
@@ -916,19 +950,15 @@ class MGI(Source):
 
 
     def _process_mrk_summary_view(self,raw,limit):
+        """
+        Here we pull the mgiid of the features, and make equivalent (or sameAs) associations to referenced ids
+        :param raw:
+        :param limit:
+        :return:
+        """
         #NOTE: There are multiple identifiers available for markers/genes from 28 different resources in this table.
         #Currently handling identifiers from TrEMBL, PDB, ENSEMBL, PRO, miRBASE, MGI, Entrez gene, RefSeq,
         # swiss-prot, and EC, but can add more.
-
-        #Need to grab the iMarker ID, MGI ID
-        #Determine if the row is the MGI ID row
-            #Process differently if it is. Add to graph as URI?
-        #Otherwise process as a non MGI ID row
-        #Is it from one of the resources that you wish to use?
-            #If so, add as imarker same as marker ID?
-
-        #Need triples:
-        #.
 
 
         gu = GraphUtils(self.namespaces)
@@ -952,6 +982,7 @@ class MGI(Source):
                     #can't find the marker in the hash; add it here:
                     self.idhash['marker'][object_key] = mgiid
                     gu.addClassToGraph(self.graph,mgiid,None)
+                    print("added",mgiid,"as class")
 
 
                 if (accid == mgiid):
@@ -965,8 +996,8 @@ class MGI(Source):
                     if logicaldb_key in ['133','134','60']:
                         #FIXME some ensembl ids are genes, others are proteins
                         mapped_id = 'ENSEMBL:'+accid
-                    elif logicaldb_key == '83':
-                        mapped_id = 'miRBase:'+accid
+                    #elif logicaldb_key == '83':
+                    #    mapped_id = 'miRBase:'+accid
                     elif logicaldb_key == '1':
                         mapped_id = 'MGI:'+accid
                     #elif logicaldb_key == '41':
@@ -988,8 +1019,13 @@ class MGI(Source):
                     #FIXME: The EC IDs are used for multiple genes, resulting in one EC number
 
                     if (mapped_id is not None):
-                        gu.addClassToGraph(self.graph,mapped_id,None)
-                        gu.addEquivalentClass(self.graph,mgiid,mapped_id)
+                        if (mgiid in self.markers['classes']):
+                            gu.addClassToGraph(self.graph,mapped_id,None)
+                            gu.addEquivalentClass(self.graph,mgiid,mapped_id)
+                        elif (mgiid in self.markers['indiv']):
+                            gu.addIndividualToGraph(self.graph,mapped_id,None)
+                            gu.addSameIndividual(self.graph,mgiid,mapped_id)
+
 
 
                 if (limit is not None and line_counter > limit):
@@ -1000,8 +1036,6 @@ class MGI(Source):
     def _process_mrk_acc_view(self,raw,limit):
         """
         Use this table to create the idmap between the internal marker id and the public mgiid.
-        Also, add the equivalence statements between genes for a subset of the identifiers
-        (thus far is NCBIGene and ENSEMBL)
         :param raw:
         :param limit:
         :return:
@@ -1025,12 +1059,20 @@ class MGI(Source):
                 #get the hashmap of the identifiers
                 if (logicaldb_key == '1') and (prefix_part == 'MGI:') and (preferred == '1'):
                     self.idhash['marker'][object_key] = accid
-                    gu.addClassToGraph(self.graph,accid,None)
 
+        return
+
+    def _process_mrk_acc_view_for_equiv(self,limit):
+        """
+        Add the equivalences, either sameAs or equivalentClass, depending on the nature of the marker.
+        :param limit:
+        :return:
+        """
+        gu = GraphUtils(curie_map.get())
         #pass through the file again, and make the equivalence statements to a subset of the idspaces
         print("INFO: mapping marker equivalent identifiers")
         line_counter = 0
-        with open(raw, 'r') as f:
+        with open(('/').join((self.rawdir,'mrk_acc_view')), 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
@@ -1040,7 +1082,6 @@ class MGI(Source):
                 if self.test is True:
                     if int(object_key) not in self.test_keys.get('marker'):
                         continue
-
 
                 mgiid = self.idhash['marker'].get(object_key)
                 if (mgiid is None):
@@ -1059,8 +1100,16 @@ class MGI(Source):
                     #TODO get non-preferred ids==deprecated?
 
                 if (marker_id is not None):
-                    gu.addClassToGraph(self.graph,marker_id,None)
-                    gu.addEquivalentClass(self.graph,mgiid,marker_id)
+                    if(mgiid in self.markers['classes']):
+                        gu.addClassToGraph(self.graph,marker_id,None)
+                        gu.addEquivalentClass(self.graph,mgiid,marker_id)
+                    elif (mgiid in self.markers['indiv']):
+                        gu.addIndividualToGraphToGraph(self.graph,marker_id,None)
+                        gu.addSameIndividual(self.graph,mgiid,marker_id)
+                    else:
+                        print("ERROR: mgiid not in class or indiv hash",mgiid)
+
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1094,7 +1143,7 @@ class MGI(Source):
                 #get the hashmap of the identifiers
                 if (logicaldb_key == '1') and (prefixpart == 'MGI:') and (preferred == '1'):
                     self.idhash['strain'][object_key] = accid
-                    gu.addClassToGraph(self.graph,accid,None)
+                    gu.addIndividualToGraph(self.graph,accid,None)
 
         #pass through the file again, and make the equivalence statements to a subset of the idspaces
         print("INFO: mapping strain equivalent identifiers")
@@ -1127,8 +1176,8 @@ class MGI(Source):
                     #TODO get non-preferred ids==deprecated?
 
                 if (strain_id is not None):
-                    gu.addClassToGraph(self.graph,strain_id,None)
-                    gu.addEquivalentClass(self.graph,mgiid,strain_id)
+                    gu.addIndividualToGraph(self.graph,strain_id,None)
+                    gu.addSameIndividual(self.graph,mgiid,strain_id)
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1170,6 +1219,48 @@ class MGI(Source):
 
         return
 
+    def _process_genoaggregate(self,raw,limit):
+        """
+        Here, we add the aggregated genotype labels to the graph.
+        This is the table that is created by us in a selection and aggregation of MGI data
+        in order to get a single label for a given genotype.
+        :param raw:
+        :param limit:
+        :return:
+        """
+
+        gu = GraphUtils(curie_map.get())
+
+        line_counter = 0
+        print("INFO: getting free text descriptions for annotations")
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if (line_counter == 1):
+                    continue
+
+                (mgiid,genotype_key,gvc,subtype) = line
+
+                if self.test is True:
+                    if int(genotype_key) not in self.test_keys.get('genotype'):
+                        continue
+
+               #add the internal genotype to mgi mapping
+                self.idhash['genotype'][genotype_key] = mgiid
+
+                if (preferred == '1'):
+                    geno_label = gvc.strip() + '[' + subtype + ']'
+                    gu.addIndividualToGraph(self.graph,mgiid,geno_label,self.terms['intrinsic_genotype'])
+
+                #TODO what to do with != preferred
+                #TODO note the short_description is the GVC  (use this or reason?)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        return
 
     def verify(self):
         status = False
@@ -1198,33 +1289,33 @@ class MGI(Source):
 
     #TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
     def _map_seq_alt_type(self, sequence_alteration_type):
-        type = None
+        type = 'SO:0001059'  #default to sequence_alteration
         type_map = {
             'Deletion': 'SO:0000159',  # deletion
             'Disruption caused by insertion of vector': 'SO:0000667',  # insertion - correct?
             'Duplication': 'SO:1000035',  # duplication
             'Insertion': 'SO:0000667',  # insertion
-            'Insertion of gene trap vector': 'SO:0000667',  # insertion - correct?
-            'Intergenic deletion': 'SO:0000159',  # deletion
-            'Intragenic deletion': 'SO:0000159',  # deletion
+            'Insertion of gene trap vector': 'SO:0001218',  # transgenic insertion - correct?  (TODO gene_trap_construct: SO:0001477)
+            'Intergenic deletion': 'SO:0000159',  # deletion  #TODO return a list? SO:0001628 intergenic_variant
+            'Intragenic deletion': 'SO:0000159',  # deletion  #TODO return a list?  SO:0001564 gene_variant
             'Inversion': 'SO:1000036',  # inversion
-            'Not Applicable': 'SO:0001060',  # sequence variant - correct?
-            'Not Specified': 'SO:0001060',  # sequence variant - correct?
-            'Nucleotide repeat expansion': 'SO:0000667',  # insertion - correct?
-            'Nucleotide substitutions': 'SO:1000002',  # substitution - Correct? Or another term indicating more than one?
-            'Other': 'SO:0001060',  # sequence variant - correct?
+            'Not Applicable': 'SO:0001059',
+            'Not Specified': 'SO:0001059',
+            'Nucleotide repeat expansion': 'SO:1000039',  # tandem duplication  #TODO ask for another term
+            'Nucleotide substitutions': 'SO:0002007',  # multiple nucleotide variant
+            'Other': 'SO:0001059',
             'Single point mutation': 'SO:1000008',  # point_mutation
             'Translocation': 'SO:0000199',  # translocation
-            'Transposon insertion': 'SO:0000101',  # transposable_element
-            'Undefined': 'SO:0001060',  # sequence variant - correct?
-            'Viral insertion': 'SO:0000667',  # insertion - correct?
+            'Transposon insertion': 'SO:0001837',  # mobile element insertion
+            'Undefined': 'SO:0001059',
+            'Viral insertion': 'SO:0001838',  # novel sequence insertion (no viral version)
             'wild type': 'SO:0000817'  # wild type
         }
         if (sequence_alteration_type.strip() in type_map):
             type = type_map.get(sequence_alteration_type.strip())
         else:
             # TODO add logging
-            print("ERROR: Sequence Alteration Type (", sequence_alteration_type, ") not mapped")
+            print("ERROR: Sequence Alteration Type (", sequence_alteration_type, ") not mapped; defaulting to sequence_alteration")
 
         return type
 
@@ -1321,6 +1412,182 @@ class MGI(Source):
             print("ERROR: Taxon Name (", taxon_name, ") not mapped")
 
         return type
+
+    def _map_strain_species(self,species):
+        #make the assumption that it is a mouse 10090 unless if specified:
+        tax = '10088'
+        id_map = {
+            'laboratory mouse and M. m. domesticus (brevirostris)': '116058',
+            'laboratory mouse and M. m. bactrianus': '35531',
+            'laboratory mouse and M. m. castaneus and M. m. musculus': '477816',  # does not include lab mouse
+            'M. m. domesticus and M. m. molossinus and M. m. castaneus': '1266728',
+            'M. setulosus': '10102',
+            'laboratory mouse and wild-derived': '10088',  #Mus genus
+            'laboratory mouse and M. m. musculus (Prague)': '39442',
+            'M. m. castaneus and M. m. musculus': '477816',
+            'M. m. domesticus (Canada)': '10092',
+            'M. m. domesticus and M. m. domesticus poschiavinus': '10092',  #FIXME
+            'M. m. musculus and M. spretus or M. m. domesticus': '186842',
+            'M. chypre': '862507',  #unclassified mus
+            'M. cookii (Southeast Asia)': '10098',
+            'M. cervicolor': '10097',
+            'M. m. gentilulus': '80274',
+            'M. m. domesticus poschiavinus (Tirano, Italy)': '10092',  #FIXME
+            'M. m. castaneus (Phillipines)': '10091',
+            'M. m. domesticus (brevirostris) (France)': '116058',
+            'M. m. domesticus (Lake Casitas, CA)': '10092',
+            'laboratory mouse or wild': '862507',
+            'M. spretus (Morocco)': '10096',
+            'M. m. bactrianus (Russia)': '35531',
+            'M. m. musculus (Pakistan)': '39442',
+            'M. tenellus': '397330',
+            'M. baoulei': '544437',
+            'laboratory mouse and M. spretus or M. m. castaneus': '862507',
+            'M. haussa': '273922',
+            'M. m. domesticus (Montpellier, France)': '10092',
+            'M. m. musculus': '39442',
+            'M. m. domesticus and Not specified': '10090',
+            'laboratory mouse and M. spretus or M. m. musculus': '862507',
+            'Rat': '10114',
+            'M. m. musculus (Czech)': '39442',
+            'M. spretus or laboratory mouse and M. m. musculus': '862507',
+            'M. m. domesticus (Skokholm, UK)': '10092',
+            'M. shanghai': '862507',
+            'M. m. musculus (Korea)': '39442',
+            'laboratory mouse and M. m. domesticus (Peru)': '39442',
+            'M. m. molossinus and laboratory mouse': '57486',
+            'laboratory mouse and M. m. praetextus x M. m. domesticus': '10088',
+            'M. cervicolor popaeus': '135828',
+            'M. m. domesticus or M. m. musculus': '10090',
+            'M. abbotti': '10108',
+            'M. nitidulus': '390848',
+            'M. gradsko': '10088',
+            'M. m. domesticus poschiavinus (Zalende)': '10092',
+            'M. m. domesticus (MD)': '10092',
+            'M. triton': '473865',
+            'M. m. domesticus (Tunisia)': '10092',
+            'Wild and outbred Swiss and M. m. domesticus and M. m. molossinus': '862507',
+            'M. m. molossinus and M. spretus': '186842',
+            'M. spretus (France)': '10096',
+            'M. m. praetextus x M. m. domesticus and M. m. domesticus': '10090',
+            'M. m. bactrianus': '35531',
+            'M. m. domesticus (Bulgaria)': '10092',
+            'Not Specified and M. m. domesticus': '10090',
+            'laboratory mouse and M. m. molossinus': '10090',
+            'M. spretus or M. m. domesticus': '862507',
+            'M. m. molossinus (Anjo, Japan)': '57486',
+            'M. m. castaneus or M. m. musculus': '10090',
+            'laboratory mouse and M. m. castaneus and M. m. domesticus poschiavinus': '10090',
+            'M. spretus (Spain)': '10096',
+            'M. m. molossinus (Japan)': '57486',
+            'M. lepidoides': '390847',
+            'M. m. macedonicus': '10090',
+            'M. m. musculus (Pohnpei-Micronesia)': '39442',
+            'M. m. domesticus (Morocco)': '10092',
+            'laboratory mouse and M. m. domesticus poschiavinus': '10090',
+            'M. (Nannomys) (Zakouma NP, Chad)': '862510',
+            'laboratory mouse and M. m. musculus (Tubingen, S Germany)': '10090',
+            'M. cypriacus': '468371',
+            'laboratory mouse and M. m. domesticus': '10090',
+            'M. m. musculus and M. m. domesticus': '477815',
+            'M. crociduroides': '41269',
+            'laboratory mouse and M. m. domesticus (Israel)': '10090',
+            'M. m. domesticus (Ann Arbor, MI)': '10092',
+            'M. caroli': '10089',
+            'M. emesi': '887131',
+            'M. gratus': '229288',
+            'laboratory mouse or M. spretus': '10090',
+            'M. m. domesticus (PA)': '10092',
+            'M. m. domesticus (DE)': '10092',
+            'laboratory mouse and M. m. castaneus': '10090',
+            'M. hortulanus (Austria)': '10103',  #synonymous with Mus spicilegus
+            'M. m. musculus and M. hortulanus': '862507',
+            'Not Applicable': None,
+            'M. mattheyi': '41270',
+            'M. m. macedonicus or M. m. musculus': '10090',
+            'M. m. musculus (Georgia)': '39442',
+            'M. famulus': '83773',
+            'M. m. bactrianus (Iran)': '35531',
+            'M. m. musculus (Toshevo, Bulgaria)': '39442',
+            'M. m. musculus (Prague)': '39442',
+            'M. platythrix (India)': '10101',
+            'M. m. domesticus': '10092',
+            'M. m. castaneus and laboratory mouse': '10090',
+            'M. m. domesticus (Australia)': '10092',
+            'laboratory mouse and M. m. domesticus and M. m. molossinus': '10090',
+            'M. m. domesticus (brevirostris) (Morocco)': '10092',
+            'laboratory mouse and M. spretus and M. m. musculus': '10090',
+            'M. m. molossinus': '57486',
+            'M. hortulanus': '10103',  #synonymous with Mus spicilegus
+            'M. dunni': '254704',  #synonymous with Mus terricolor
+            'M. m. castaneus (Pathumthani, Thailand)': '10091',
+            'M. terricolor': '254704',
+            'M. m. domesticus (China)': '10092',
+            'M. fragilicauda': '186193',
+            'Not Resolved': '10088',  #assume Mus
+            'M. m. musculus or M. spretus and laboratory mouse': '10088',
+            'M. macedonicus macedonicus': '270353',
+            'laboratory mouse': '10090',
+            'laboratory mouse and M. abbotti': '10088',
+            'M. cervicolor cervicolor': '135827',
+            'laboratory mouse and M. spretus': '10088',
+            'M. m. domesticus (praetextus)': '10092',
+            'M. spretus (London)': '10096',
+            'M. m. musculus (Prague) and laboratory mouse': '10090',
+            'laboratory mouse and M. m. musculus (Central Jutland, Denmark)': '10090',
+            'M. m. musculus (Northern Jutland, Denmark)': '39442',
+            'M. m. castaneus (Taiwan)': '10091',
+            'M. brevirostris': '116058',
+            'M. spretus': '10096',
+            'M. m. domesticus poschiavinus': '10092',
+            'M. pahari': '10093',
+            'M. m. molossinus (Hakozaki, Japan)': '57486',
+            'M. m. musculus (Hokkaido)': '39442',
+            'M. m. musculus or M. spretus': '862507',
+            'laboratory mouse and M. m. musculus': '10090',
+            'Not Specified and M. m. musculus': '10090',
+            'M. m. castaneus (Masinagudi, South India)': '10091',
+            'M. indutus': '273921',
+            'M. saxicola': '10094',
+            'M. m. praetextus x M. m. musculus': '10090',
+            'M. spretus and laboratory mouse': '862507',
+            'laboratory mouse and M. m. castaneus and M. m. domesticus': '10090',
+            'M. m. musculus (Bulgaria)': '39442',
+            'M. booduga': '27681',
+            'Not Specified': '10090',  #OK?
+            'Not Specified and M. m. molossinus': '10090',
+            'M. m. musculus and M. spretus': '862507',
+            'M. minutoides': '10105',
+            'M. spretus (Tunisia)': '10096',
+            'M. spicilegus': '10103',
+            'Peru Coppock': '10088',  #unclassified mus
+            'M. m. domesticus (CA)': '10092',
+            'M. macedonicus spretoides': '270352',
+            'M. m. musculus and M. m. castaneus': '477816',
+            'M. m. praetextus x M. m. domesticus': '10090',
+            'M. m. domesticus and M. spretus': '862507',
+            'M. m. molossinus (Mishima)': '57486',
+            'M. hortulanus and M. m. macedonicus': '10088',
+            'Not Specified and M. spretus': '10088',
+            'M. m. domesticus (Peru)': '10092',
+            'M. m. domesticus (OH)': '10092',
+            'M. m. bactrianus and laboratory mouse': '10090',
+            'laboratory mouse and M. m. domesticus (OH)': '10090',
+            'M. m. gansuensis': '1385377',
+            'laboratory mouse and M. m. castaneus and M. spretus': '10088',
+            'M. m. castaneus': '10091',
+            'Wild and M. m. domesticus': '10088',
+            'M. m. molossinus (Nagoya)': '57486'
+        }
+        if (species.strip() in id_map):
+            tax = id_map.get(species.strip())
+
+        else:
+            print("WARN: Species (", species, ") not mapped; defaulting to Mus genus.")
+
+        return 'NCBITaxon:'+tax
+
+
 
     def _map_evidence_id(self, evidence_code):
         #TODO a default evidence code???  what should it be?
