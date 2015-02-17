@@ -102,7 +102,7 @@ class MGI(Source):
     }
 
     #Set this flag to False for normal running
-    test=True
+    test=False
     #for testing purposes, this is a list of internal db keys to match and select only portions of the source
     test_keys = {
         'allele' : [1303,56760,816699,51074,14595,816707,246,38139,4334,817387,8567,476,42885,3658,1193,6978,6598,16698],
