@@ -5,7 +5,7 @@ __author__ = 'nicole'
 from rdflib import BNode, ConjunctiveGraph, Literal, RDF, Graph, Namespace
 from rdflib.namespace import FOAF, DC, RDFS, OWL
 
-import urllib, csv, os, time
+import urllib, csv, os, time, logging
 from urllib import request
 from datetime import datetime
 from stat import *
@@ -16,6 +16,8 @@ import curie_map
 
 from utils.GraphUtils import GraphUtils
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
 
@@ -41,14 +43,14 @@ class Source:
 
         #if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
-            print("INFO: creating raw directory for resource "+self.name)
+            logger.info("creating raw directory for resource %s"+self.name)
             os.makedirs(self.rawdir)
 
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
-        print("INFO: Setting outfile to", self.outfile)
+        logger.info("Setting outfile to %s", self.outfile)
 
         self.datasetfile = ('/').join((self.outdir,self.name + '_dataset.ttl'))
-        print("INFO: Setting dataset file to", self.datasetfile)
+        logger.info("Setting dataset file to %s", self.datasetfile)
 
         return
 
@@ -125,11 +127,11 @@ class Source:
             elif(stream.lowercase().strip() != 'stdout'):
                 gu.write(g['g'],format)
             else:
-                print("ERROR: I don't understand your stream.")
+                logger.error("I don't understand your stream.")
         return
 
     def whoami(self):
-        print("I am ",self.name)
+        logger.info("I am %s", self.name)
         return
 
     def make_id(self,long_string):
@@ -155,18 +157,18 @@ class Source:
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
         '''
-        print("INFO: Checking if remote file is newer...")
+        logger.info("Checking if remote file is newer...")
         #check if local file exists
         #if no local file, then remote is newer
         if (not os.path.exists(local)):
-            print("INFO: File does not exist locally")
+            logger.info("File does not exist locally")
             return True
         #get remote file details
         d = urllib.request.urlopen(remote)
         size=d.info()['Content-Length']
 
         st = os.stat(local)
-        print("INFO: Local file date:",datetime.utcfromtimestamp(st[ST_CTIME]))
+        logger.info("Local file date: %s",datetime.utcfromtimestamp(st[ST_CTIME]))
 
         last_modified = d.info()['Last-Modified']
         if (last_modified is not None):
@@ -178,12 +180,12 @@ class Source:
             if (dt_obj > datetime.utcfromtimestamp(st[ST_CTIME])):
                 #check if file size is different
                 if (st[ST_SIZE] != size):
-                    print("INFO: Newer file exists on remote server")
+                    logger.info("Newer file exists on remote server")
                     return True
                 else:
-                    print("INFO: Remote file has same filesize--will not download")
+                    logger.info("Remote file has same filesize--will not download")
         elif (st[ST_SIZE] != size):
-            print("INFO: Object on server is same size as local file; assuming unchanged")
+            logger.info("Object on server is same size as local file; assuming unchanged")
         return False
 
     def get_files(self, is_dl_forced):
@@ -221,17 +223,17 @@ class Source:
         '''
         if ((is_dl_forced is True) or
            (self.checkIfRemoteIsNewer(remotefile, localfile))):
-            print("INFO: Fetching from ", remotefile)
+            logger.info("Fetching from ", remotefile)
             # TODO url verification, etc
             annotation_file = urllib.request
             annotation_file.urlretrieve(remotefile, localfile)
-            print("INFO: Finished.  Wrote file to", localfile)
+            logger.info("Finished.  Wrote file to %s", localfile)
         else:
-            print("INFO: Using existing file", localfile)
+            logger.info("Using existing file %s", localfile)
 
         st = os.stat(localfile)
-        print("INFO: file size:", st[ST_SIZE])
-        print("INFO: file created:", time.asctime(time.localtime(st[ST_CTIME])))
+        logger.info("file size: %s", st[ST_SIZE])
+        logger.info("file created: %s", time.asctime(time.localtime(st[ST_CTIME])))
         return
 
     def fetch_from_pgdb(self,tables,cxn,limit=None):
@@ -248,7 +250,7 @@ class Source:
             con = psycopg2.connect(host=cxn['host'],database=cxn['database'],port=cxn['port'], user=cxn['user'], password=cxn['password'])
             cur = con.cursor()
             for t in self.tables:
-                print("INFO: Fetching data from table",t)
+                logger.info("Fetching data from table %s",t)
                 self._getcols(cur,t)
                 query=(' ').join(("SELECT * FROM",t))
                 countquery=(' ').join(("SELECT COUNT(*) FROM",t))
@@ -264,21 +266,21 @@ class Source:
                 if os.path.exists(outfile):
                     #get rows in the file
                     filerowcount=self.file_len(outfile)
-                    print("INFO: rows in local file: ",filerowcount)
+                    logger.info("rows in local file: %s",filerowcount)
 
                 #get rows in the table
                 #tablerowcount=cur.rowcount
                 cur.execute(countquery)
                 tablerowcount=cur.fetchone()[0]
                 if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
-                    print("INFO: local (",filerowcount,") different from remote (",tablerowcount,"); fetching.")
+                    logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
                     #download the file
-                    print("COMMAND:",query)
+                    logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
                     with open(outfile, 'w') as f:
                         cur.copy_expert(outputquery, f)
                 else:
-                    print("INFO: local data same as remote; reusing.")
+                    logger.info("local data same as remote; reusing.")
 
         finally:
             if con:
@@ -305,7 +307,7 @@ class Source:
         '''
         vg = Graph()
         vg.parse(f, format="turtle")
-        print ('INFO: Found',len(vg),'graph nodes')
+        logger.info('Found %s graph nodes',len(vg))
         if len(vg) > 0:
             return True
         return False
@@ -320,7 +322,7 @@ class Source:
         status = check_call(["owltools", f],stderr=subprocess.STDOUT)
         #returns zero is success!
         if (status != 0):
-            print('ERROR: finished verifying with owltools with status',status)
+            logger.error('finished verifying with owltools with status %s',status)
             return False
         else:
             return True
