@@ -88,8 +88,9 @@ class Assoc:
             self._add_source_node(g, node, source, self.pub_id)
 
         if self.evidence is None or self.evidence.strip() == '':
+            pass
             #TODO remove this warning, it's annoying
-            print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
+            #print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
             evidence = URIRef(cu.get_uri(self.evidence))
             g.add((node, DC['evidence'], evidence))
