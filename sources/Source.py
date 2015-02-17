@@ -42,7 +42,7 @@ class Source:
 
         #if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
-            logger.info("creating raw directory for resource %s"+self.name)
+            logger.info("creating raw directory for resource %s", self.name)
             os.makedirs(self.rawdir)
 
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
@@ -167,7 +167,7 @@ class Source:
         size=d.info()['Content-Length']
 
         st = os.stat(local)
-        logger.info("Local file date: %s",datetime.utcfromtimestamp(st[ST_CTIME]))
+        logger.info("Local file date: %s", datetime.utcfromtimestamp(st[ST_CTIME]))
 
         last_modified = d.info()['Last-Modified']
         if (last_modified is not None):
@@ -222,7 +222,7 @@ class Source:
         '''
         if ((is_dl_forced is True) or
            (self.checkIfRemoteIsNewer(remotefile, localfile))):
-            logger.info("Fetching from ", remotefile)
+            logger.info("Fetching from %s", remotefile)
             # TODO url verification, etc
             annotation_file = urllib.request
             annotation_file.urlretrieve(remotefile, localfile)
@@ -265,7 +265,7 @@ class Source:
                 if os.path.exists(outfile):
                     #get rows in the file
                     filerowcount=self.file_len(outfile)
-                    logger.info("rows in local file: %s",filerowcount)
+                    logger.info("rows in local file: %s", filerowcount)
 
                 #get rows in the table
                 #tablerowcount=cur.rowcount
