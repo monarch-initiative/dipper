@@ -85,6 +85,15 @@ class GraphUtils:
 
         return
 
+    def addSameIndividual(self,g,id1,id2):
+        n1 = self._getNode(id1)
+        n2 = self._getNode(id2)
+
+        if (n1 is not None and n2 is not None):
+            g.add((n1,OWL['sameAs'],n2))
+
+        return
+
     def addDeprecatedClass(self,g,oldid,newids=None):
         '''
         Will mark the oldid as a deprecated class.
