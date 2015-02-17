@@ -1,17 +1,8 @@
 from rdflib import Graph
-from sources import Source
-from sources.HPOAnnotations import HPOAnnotations
-from sources.ZFIN import ZFIN
-from sources.OMIM import OMIM
-from sources.BioGrid import BioGrid
-from sources.MGI import MGI
-from sources.IMPC import IMPC
-from sources.Panther import Panther
-from sources.NCBIGene import NCBIGene
-from sources.UCSCBands import UCSCBands
-from sources.CTD import CTD
-from sources.GeneReviews import GeneReviews
-import os, hashlib
+import os
+import hashlib
+import urllib
+from stat import *
 
 
 class TestUtils:
@@ -59,3 +50,20 @@ class TestUtils:
                 md5.update(buffer)
 
         return md5.hexdigest()
+
+    def get_remote_content_len(self, remote):
+        """
+        :param remote:
+        :return: size of remote file
+        """
+        remote_file = urllib.request.urlopen(remote)
+        byte_size = remote_file.info()['Content-Length']
+        return byte_size
+
+    def get_local_file_size(self, localfile):
+        """
+        :param localfile:
+        :return: size of file
+        """
+        byte_size = os.stat(localfile)
+        return byte_size[ST_SIZE]
