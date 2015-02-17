@@ -25,7 +25,10 @@ class Assoc:
         'in_taxon' : 'RO:0002162',
         'has_quality' : 'RO:0000086',
         'towards' : 'RO:0002503',
-        'has_xref' : 'OIO:hasDbXref'
+        'has_xref' : 'OIO:hasDbXref',
+        'has_subject' : ':hasSubject',
+        'has_object' : ':hasObject',
+        'has_predicate' : ':hasPredicate'
     }
 
     OWLCLASS=OWL['Class']
@@ -55,30 +58,21 @@ class Assoc:
 
     def addAssociationToGraph(self, g):
         cu = self.cu
-
+        gu = GraphUtils(curie_map.get())
         #first, add the direct triple
         #anonymous nodes are indicated with underscore
-        if (re.match('_',self.sub)):
-            s = BNode(self.sub)
-        else:
-            s = URIRef(cu.get_uri(self.sub))
-        if (re.match('_',self.obj)):
-            o = BNode(self.obj)
-        else:
-            o = URIRef(cu.get_uri(self.obj))
-        p = URIRef(cu.get_uri(self.rel))
+        s = gu.getNode(self.sub)
+        o = gu.getNode(self.obj)
+        p = gu.getNode(self.rel)
 
-        #FIXME - these were recently commented out; make sure to propagate class creation to calling fxns
-        #g.add((s, RDF['type'], self.OWLCLASS))
-        #g.add((o, RDF['type'], self.OWLCLASS))
         g.add((s, p, o))
 
         # now, create the reified relationship with our annotation pattern
-        node = URIRef(cu.get_uri(self.annot_id))
+        node = gu.getNode(self.annot_id)
         g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
-        g.add((node, self.BASE['hasSubject'], s))
-        g.add((node, self.BASE['hasObject'], o))
-        g.add((node, self.BASE['hasPredicate'], p))
+        g.add((node, gu.getNode(self.relationships['has_subject']), s))
+        g.add((node, gu.getNode(self.relationships['has_object']), o))
+        g.add((node, gu.getNode(self.relationships['has_predicate']), p))
 
         # this is handling the occasional messy pubs that are sometimes literals
         if self.pub_id is not None:
@@ -88,8 +82,9 @@ class Assoc:
             self._add_source_node(g, node, source, self.pub_id)
 
         if self.evidence is None or self.evidence.strip() == '':
+            pass
             #TODO remove this warning, it's annoying
-            print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
+            #print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
             evidence = URIRef(cu.get_uri(self.evidence))
             g.add((node, DC['evidence'], evidence))

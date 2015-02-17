@@ -85,6 +85,15 @@ class GraphUtils:
 
         return
 
+    def addSameIndividual(self,g,id1,id2):
+        n1 = self._getNode(id1)
+        n2 = self._getNode(id2)
+
+        if (n1 is not None and n2 is not None):
+            g.add((n1,OWL['sameAs'],n2))
+
+        return
+
     def addDeprecatedClass(self,g,oldid,newids=None):
         '''
         Will mark the oldid as a deprecated class.
@@ -184,9 +193,12 @@ class GraphUtils:
         :param id:
         :return:
         """
+        base=Namespace(self.curie_map.get(''))
         n=None
         if (re.match('^_',id)):
             n = BNode(id)
+        elif (re.match('^\:',id)):
+            n = base[re.sub(':','',id)]
         else:
             u = self.cu.get_uri(id)
             if (u is not None):
@@ -210,5 +222,5 @@ class GraphUtils:
         """
         cu = self.cu
         for k in op:
-            graph.add((URIRef(cu.get_uri(op[k])),RDF['type'],self.OWLPROP))
+            graph.add((self.getNode(op[k]),RDF['type'],self.OWLPROP))
         return

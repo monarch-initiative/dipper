@@ -286,6 +286,53 @@ class Source:
                 con.close()
         return
 
+    def fetch_query_from_pgdb(self,qname,query,con,cxn,limit=None):
+        """
+        Supply either an already established connection, or connection parameters.
+        The supplied connection will override any separate cxn parameter
+        :param qname:  The name of the query to save the output to
+        :param query:  The SQL query itself
+        :param con:  The already-established connection
+        :param cxn: The postgres connection information
+        :param limit: If you only want a subset of rows from the query
+        :return:
+        """
+        if (con is None and cxn is None):
+            print("ERROR: you need to supply connection information")
+            return
+        if (con is None and cxn is not None):
+            con = psycopg2.connect(host=cxn['host'],database=cxn['database'],port=cxn['port'], user=cxn['user'], password=cxn['password'])
+
+        outfile=('/').join((self.rawdir,qname))
+        cur = con.cursor()
+        countquery=(' ').join(("SELECT COUNT(*) FROM (",query,") x"))  #wrap the query to get the count
+        if (limit is not None):
+            countquery=(' ').join((countquery,"LIMIT",str(limit)))
+
+        #check local copy.  assume that if the # rows are the same, that the table is the same
+        filerowcount=-1
+        if os.path.exists(outfile):
+            #get rows in the file
+            filerowcount=self.file_len(outfile)
+            print("INFO: rows in local file: ",filerowcount)
+
+        #get rows in the table
+        #tablerowcount=cur.rowcount
+        cur.execute(countquery)
+        tablerowcount=cur.fetchone()[0]
+
+        if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
+            print("INFO: local (",filerowcount,") different from remote (",tablerowcount,"); fetching.")
+            #download the file
+            print("COMMAND:",query)
+            outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
+            with open(outfile, 'w') as f:
+                cur.copy_expert(outputquery, f)
+        else:
+            print("INFO: local data same as remote; reusing.")
+
+        return
+
     def verify(self):
         '''
         abstract method to verify the integrity of the data fetched and turned into triples
