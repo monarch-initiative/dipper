@@ -167,11 +167,11 @@ class MGI(Source):
 
         #we must fetch and create the genotype label.  unfortunately it doesn't live anywhere pre-constructed
         #so we are creating it here with a select; but we may consider doing something else
-        pg_query = (" ").join("select accid as mgiid,",
+        pg_query = (" ").join(("select accid as mgiid,",
                     "array_to_string(array_agg(replace(short_description,',','/') order by 1),'; ') as gvc,",
                     "subtype as background",
                     "from gxd_genotype_summary_view",
-                    "group by accid,subtype")
+                    "group by accid,subtype"))
 
         #self.fetch_query_from_pgdb("genoaggregate",pg_query,None,cxn)
 
@@ -339,7 +339,7 @@ class MGI(Source):
                 self.idhash['genotype'][object_key] = mgiid
 
                 if (preferred == '1'):
-                    d = re.sub('\,','/',short_description)
+                    d = re.sub('\,','/',short_description.strip())
                     if mgiid not in geno_hash:
                         geno_hash[mgiid] = {'vslcs' : [d],'subtype' : subtype}
                     else:
@@ -564,7 +564,7 @@ class MGI(Source):
 
                 #Need to map the allelestate to a zygosity term
                 zygosity_id = self._map_zygosity(allelestate)
-                ivslc_id = 'vslckey'+allelepair_key
+                ivslc_id = self._makeInternalIdentifier('vslc',allelepair_key)
                 if self.test:
                     #make this a real id in test mode
                     ivslc_id = ':'+ivslc_id
@@ -575,7 +575,7 @@ class MGI(Source):
                 #print(vslc_label)
 
                 #. vslc is of type: vslc
-                self.graph.add((ivslc,RDF['type'],URIRef(cu.get_uri(self.terms['variant_single_locus_complement']))))
+                self.graph.add((ivslc,RDF['type'],gu.getNode(self.terms['variant_single_locus_complement'])))
 
                 #. vslc has label processed(vslc_label)
                 self.graph.add((ivslc,RDFS['label'],Literal(vslc_label)))
