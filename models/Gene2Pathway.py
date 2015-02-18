@@ -6,7 +6,7 @@ import curie_map
 
 class Gene2Pathway(Assoc):
 
-    relationships = {
+    relationship_map = {
         'genetically_interacts_with' : 'RO:0002435',
         'interacts_with' : 'RO:0002434',  #use this for directly interacts with.  better choice? psi-mi:"MI:0407"(direct interaction)
         'molecularly_interacts_with' : 'RO:0002436',  #should we use this instead for direct interaction?
@@ -21,7 +21,7 @@ class Gene2Pathway(Assoc):
         self.obj = gene_id
         self.pub_id = None
         self.evidence = evidence_code
-        self.rel = self.relationships['interacts_with']  # default
+        self.rel = self.relationship_map['interacts_with']  # default
         self.cu = CurieUtil(curie_map.get())
         self.pub_list = None
         self.pathway_label = pathway_label
