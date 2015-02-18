@@ -226,7 +226,7 @@ class Source:
             annotation_file = urllib.request
             annotation_file.urlretrieve(remotefile, localfile)
             logger.info("Finished.  Wrote file to %s", localfile)
-            if self.compare_local_remote_bytes():
+            if self.compare_local_remote_bytes(remotefile, localfile):
                 logger.debug("local file is same size as remote"
                              " after download")
             else:
@@ -426,21 +426,18 @@ class Source:
         byte_size = os.stat(localfile)
         return byte_size[ST_SIZE]
 
-    def compare_local_remote_bytes(self):
+    def compare_local_remote_bytes(self, remotefile, localfile):
         """
         test to see if fetched file is the same size as the remote file
         using information in the content-length field in the HTTP header
         :return: True or False
         """
         is_equal = True
-        for file, paths in self.files.items():
-            file_path = '/'.join((self.rawdir, paths['file']))
-            local_size = self.get_local_file_size(file_path)
-            remote_size = self.get_remote_content_len(paths['url'])
-            if local_size != int(remote_size):
-                is_equal = False
-                logger.error('local file and remote file different sizes\n'
-                            '%s has size %s, %s has size %s', file_path,
-                            local_size, paths['url'], remote_size)
-
+        remote_size = self.get_remote_content_len(remotefile)
+        local_size = self.get_local_file_size(localfile)
+        if local_size != int(remote_size):
+            is_equal = False
+            logger.error('local file and remote file different sizes\n'
+                         '%s has size %s, %s has size %s', localfile,
+                          local_size, remotefile, remote_size)
         return is_equal
