@@ -7,11 +7,7 @@ import curie_map
 class Gene2Pathway(Assoc):
 
     relationship_map = {
-        'genetically_interacts_with' : 'RO:0002435',
-        'interacts_with' : 'RO:0002434',  #use this for directly interacts with.  better choice? psi-mi:"MI:0407"(direct interaction)
-        'molecularly_interacts_with' : 'RO:0002436',  #should we use this instead for direct interaction?
-        'colocalizes_with' : 'RO:0002325', #psi-mi:"MI:0403"(colocalization)
-        'ubiquitinates' : 'RO:0002480'
+        'has_member': 'RO:0002351'
     }
 
     def __init__(self,assoc_id, pathway_id, gene_id, evidence_code, pathway_label=None, gene_label=None):
@@ -21,7 +17,7 @@ class Gene2Pathway(Assoc):
         self.obj = gene_id
         self.pub_id = None
         self.evidence = evidence_code
-        self.rel = self.relationship_map['interacts_with']  # default
+        self.rel = self.relationship_map['has_member']  # default
         self.cu = CurieUtil(curie_map.get())
         self.pub_list = None
         self.pathway_label = pathway_label
@@ -50,4 +46,8 @@ class Gene2Pathway(Assoc):
         gu = GraphUtils(curie_map.get())
         gu.addClassToGraph(graph, self.subj, self.pathway_label)
 
+        return
+
+    def set_rel(self, relationship):
+        self.rel = relationship
         return

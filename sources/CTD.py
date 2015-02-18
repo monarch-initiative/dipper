@@ -98,7 +98,7 @@ class CTD(Source):
         self._check_list_len(row, 4)
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
         entrez_id = 'NCBIGene:'+gene_id
-        evidence_code = self._set_evidence_code('therapeutic')
+        evidence_code = self._set_evidence_code('TAS')
         # add KEGG class
         gu = GraphUtils(curie_map.get())
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
@@ -152,7 +152,7 @@ class CTD(Source):
         :return:None
         """
         assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
-        evidence_code = self._set_evidence_code(direct_evidence)
+        evidence_code = self._set_evidence_code('TAS')
         chem_mesh_id = 'MESH:'+chem_id
 
         assoc = Chem2DiseaseAssoc(assoc_id, chem_mesh_id, disease_id,
@@ -178,8 +178,7 @@ class CTD(Source):
         :return: ECO evidence code
         """
         ECO_MAP = {
-            'therapeutic': 'ECO:0000269',
-            'marker/mechanism': 'ECO:0000306'
+            'TAS': 'ECO:0000033'
         }
         return ECO_MAP[evidence]
 
