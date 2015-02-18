@@ -17,6 +17,9 @@ import re
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 import curie_map
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class IMPC(Source):
@@ -79,6 +82,10 @@ class IMPC(Source):
 
     def fetch(self, is_dl_forced):
         self.get_files(is_dl_forced)
+        if self.compare_checksums():
+            logger.debug('Files have same checksum as reference')
+        else:
+            raise Exception('Reference checksums do not match disk')
         return
 
     def scrub(self):
@@ -553,6 +560,22 @@ class IMPC(Source):
                 checksums[checksum] = file_name
 
         return checksums
+
+    def compare_checksums(self):
+        """
+        test to see if fetched file matches checksum from ebi
+        :return: True or False
+        """
+        is_match = True
+        reference_checksums = self.parse_checksum_file(
+            self.files['checksum']['file'])
+        for md5, file in reference_checksums.items():
+            if self.get_file_md5(self.rawdir, file) != md5:
+                is_match = False
+                logger.warn('%s was not downloaded completely', file)
+                return is_match
+
+        return is_match
 
     def verify(self):
         status = False

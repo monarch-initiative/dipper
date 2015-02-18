@@ -2,11 +2,14 @@ import csv
 import re
 import gzip
 import curie_map
+import logging
 from sources.Source import Source
 from models.Dataset import Dataset
 from models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
 from models.Gene2Pathway import Gene2Pathway
 from utils.GraphUtils import GraphUtils
+
+logger = logging.getLogger(__name__)
 
 
 class CTD(Source):
@@ -104,7 +107,7 @@ class CTD(Source):
         assoc = Gene2Pathway(assoc_id, pathway_id, entrez_id, evidence_code,
                              pathway_name, gene_symbol)
         assoc.loadObjectProperties(self.graph)
-        assoc.setRelationship(assoc.relationships['interacts_with'])
+        assoc.setRelationship(assoc.relationship_map['interacts_with'])
         assoc.add_gene_as_class(self.graph)
         if re.match(re.compile('^REACT'),pathway_id):
             assoc.add_pathway_as_class(self.graph)
