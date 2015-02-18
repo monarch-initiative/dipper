@@ -1104,7 +1104,7 @@ class MGI(Source):
                         gu.addClassToGraph(self.graph,marker_id,None)
                         gu.addEquivalentClass(self.graph,mgiid,marker_id)
                     elif (mgiid in self.markers['indiv']):
-                        gu.addIndividualToGraphToGraph(self.graph,marker_id,None)
+                        gu.addIndividualToGraph(self.graph,marker_id,None)
                         gu.addSameIndividual(self.graph,mgiid,marker_id)
                     else:
                         print("ERROR: mgiid not in class or indiv hash",mgiid)
