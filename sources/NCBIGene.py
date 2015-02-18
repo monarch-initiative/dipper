@@ -1,31 +1,24 @@
 import os
 from stat import *
-import urllib
-from urllib import request
 import re
-import time
 from datetime import datetime
 import gzip,os.path
-import json
-from rdflib import Graph, Literal, URIRef, Namespace, BNode
-from rdflib.namespace import RDF, RDFS, OWL, DC,XSD
 import unicodedata
 
 from sources.Source import Source
-from models.D2PAssoc import D2PAssoc
-from models.DispositionAssoc import DispositionAssoc
 from models.Dataset import Dataset
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import config
 import curie_map
 from models.GenomicFeature import Feature,makeChromID
 
 class NCBIGene(Source):
-    '''
+    """
 
-    '''
+    Parses the gene_info (gene names, symbols, ids, equivalent ids), gene history (alt ids), and
+        publications about a gene, and
+    """
 
     files = {
         'gene_info' : {
@@ -127,9 +120,6 @@ class NCBIGene(Source):
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
 
-        intaxon=URIRef(cu.get_uri(Assoc.relationships['in_taxon']))
-
-        #an omim-specific thing here; from the omim.txt.gz file, get the omim numbers
         #not unzipping the file
         print("INFO: Processing Gene records")
         line_counter=0
@@ -160,12 +150,14 @@ class NCBIGene(Source):
                 tax_id = (':').join(('NCBITaxon',tax_num))
                 gene_type_id = self._map_type_of_gene(gtype)
 
-                n = URIRef(cu.get_uri(gene_id))
+                n = gu.getNode(gene_id)
 
                 if (symbol == 'NEWENTRY'):
                     label = None
                 else:
                     label = symbol
+
+                #TODO might have to figure out if things aren't genes, and make them individuals
                 gu.addClassToGraph(self.graph,gene_id,label,gene_type_id,desc)
 
                 #todo use feature for refactor
@@ -190,7 +182,7 @@ class NCBIGene(Source):
                         if ((fixedr is not None) and (fixedr.strip() != '')):
                             if (re.match('HPRD',fixedr)):
                                 #proteins are not == genes.
-                                self.graph.add((n,URIRef(cu.get_uri(self.relationships['has_gene_product'])),URIRef(cu.get_uri(fixedr))))
+                                self.graph.add((n,gu.getNode(self.relationships['has_gene_product']),gu.getNode(fixedr)))
                             else:
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
                                     gu.addEquivalentClass(self.graph,gene_id,fixedr)
@@ -238,7 +230,6 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
-        cu = CurieUtil(curie_map.get())
 
         print("INFO: Processing Gene records")
         line_counter=0
@@ -290,8 +281,7 @@ class NCBIGene(Source):
         '''
 
         gu = GraphUtils(curie_map.get())
-        cu = CurieUtil(curie_map.get())
-        is_about = URIRef(cu.get_uri(self.relationships['is_about']))
+        is_about = gu.getNode(self.relationships['is_about'])
 
         print("INFO: Processing Gene records")
         line_counter=0
@@ -317,13 +307,12 @@ class NCBIGene(Source):
                 line_counter += 1
                 gene_id = (':').join(('NCBIGene',gene_num))
                 pubmed_id = (':').join(('PMID',pubmed_num))
-                tax_id = (':').join(('NCBITaxon',tax_num))
 
                 #add the gene, in case it hasn't before
                 gu.addClassToGraph(self.graph,gene_id,None)
                 #add the publication as a NamedIndividual
-                self.graph.add((URIRef(cu.get_uri(pubmed_id)),RDF['type'],Assoc.OWLIND))
-                self.graph.add((URIRef(cu.get_uri(pubmed_id)),is_about,URIRef(cu.get_uri(gene_id))))
+                gu.addIndividualToGraph(self.graph,pubmed_id,None,None)  #add type publication
+                self.graph.add((gu.getNode(pubmed_id),is_about,gu.getNode(gene_id)))
 
                 if (limit is not None and line_counter > limit):
                     break
