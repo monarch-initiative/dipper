@@ -218,14 +218,17 @@ class EOM(Source):
                     self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['comment'],Literal(comments)))
 
 
-                #TODO: Need to fix handling of '; ' delimited entries.
-                #morphology_term_id hasRelatedSynonym synonyms
+                #morphology_term_id hasRelatedSynonym synonyms (; delimited)
                 if synonyms != '':
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(synonyms)))
+                    items = synonyms.split(';')
+                    for i in items:
+                        self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(i)))
 
-                #TODO: Need to fix handling of '; ' delimited entries.
-                if replaces != '' and replaces == synonyms:
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(replaces)))
+                #morphology_term_id hasRelatedSynonym replaces (; delimited)
+                if replaces != '' and replaces != synonyms:
+                    items = replaces.split(';')
+                    for i in items:
+                        self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(i)))
 
 
                 #Question: Add subject_definition and objective definition as a combined definition?
