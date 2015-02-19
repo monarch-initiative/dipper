@@ -4,6 +4,7 @@ from datetime import datetime
 from stat import *
 import re
 import psycopg2
+import logging
 
 
 from rdflib import Literal
@@ -20,6 +21,7 @@ from utils.CurieUtil import CurieUtil
 from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
 
+logger = logging.getLogger(__name__)
 
 class EOM(Source):
     '''
@@ -219,17 +221,11 @@ class EOM(Source):
 
     def _map_eom_terms(self, raw, limit=None):
         '''
-        This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
+        This table contains the HP ID mappings from the local tsv file.
         :param raw:
         :param limit:
         :return:
         '''
-
-
-        # Which route do we want to go here...
-        # Do we want to do this separate, after creating the other graphs...
-        # Or call it within the other function ?
-
 
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
@@ -243,8 +239,11 @@ class EOM(Source):
 
                 #Sub out the underscores for colons.
                 hp_id = re.sub('_', ':', hp_id)
-                #Add the HP ID as an equivalent class
-                gu.addEquivalentClass(self.graph,morphology_term_id,hp_id)
+                if re.match(".*HP:.*", hp_id):
+                    #Add the HP ID as an equivalent class
+                    gu.addEquivalentClass(self.graph,morphology_term_id,hp_id)
+                else:
+                    logger.warning('No matching HP term for %s',morphology_term_label)
 
                 if (limit is not None and line_counter > limit):
                     break
