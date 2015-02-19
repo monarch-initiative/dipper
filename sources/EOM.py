@@ -49,10 +49,9 @@ class EOM(Source):
 
         #check if config exists; if it doesn't, error out and let user know
         if (not (('dbauth' in config.get_config()) and ('disco' in config.get_config()['dbauth']))):
-            print("ERROR: not configured with PG user/password.")
+            logger.error("ERROR: not configured with PG user/password.")
 
         #source-specific warnings.  will be cleared when resolved.
-        #print("WARN: we are filtering G2P on the wild-type environment data for now")
 
         return
 
@@ -116,18 +115,20 @@ class EOM(Source):
     # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if (limit is not None):
-            print("Only parsing first", limit, "rows of each file")
-        print("Parsing files...")
+            logger.info("Only parsing first %s rows of each file", limit)
+
+        logger.info("Parsing files...")
 
         self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
         self._map_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
 
-        print("Finished parsing.")
+        logger.info("Finished parsing.")
+
 
         self.load_bindings()
         Assoc().loadObjectProperties(self.graph)
 
-        print("Found", len(self.graph), "nodes")
+        logger.info("Found %s nodes", len(self.graph))
         return
 
 
@@ -241,7 +242,7 @@ class EOM(Source):
         #print("COMMAND:",query)
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
-        print("COLS ("+table+"):",colnames)
+        logger.info("COLS (%s): %s", table, colnames)
 
         return
 
