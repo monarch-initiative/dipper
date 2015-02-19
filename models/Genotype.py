@@ -22,10 +22,11 @@ class Genotype():
         'intrinsic_genotype': 'GENO:0000000',
         'extrinsic_genotype': 'GENO:0000524',
         'effective_genotype': 'GENO:0000525',
-        'genomic_background': 'GENO:0000010',
+        'genomic_background': 'GENO:0000611',
         'genomic_variation_complement': 'GENO:0000009',
         'variant_single_locus_complement': 'GENO:0000030',
-        'alternate_locus': 'GENO:0000512',
+        'variant_locus': 'GENO:0000002',
+        'reference_locus' : 'GENO:0000036',
         'allele': 'GENO:0000008',
         'gene': 'SO:0000704',
         'QTL': 'SO:0000771',
@@ -49,10 +50,12 @@ class Genotype():
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
         'has_reference_part': 'GENO:0000385',
-        'in_taxon': 'RO:0000216',
+        'in_taxon' : 'RO:0002162',
         'has_zygosity': 'GENO:0000608',
         'is_sequence_variant_instance_of': 'GENO:0000408',
-        'targets_instance_of': 'GENO:0000414'
+        'targets_instance_of': 'GENO:0000414',
+        'is_reference_instance_of' : 'GENO:0000610',
+        'has_part' : 'BFO:0000051'
     }
 
     zygosity = {
@@ -69,7 +72,7 @@ class Genotype():
 
     def __init__(self, graph):
 
-        self.gu = GraphUtils(self.cm)
+        self.gu = GraphUtils(curie_map.get())
 
         self.graph = graph
 
@@ -170,7 +173,6 @@ class Genotype():
 
         #vslc has parts allele1/allele2
         gu = self.gu
-        has_part = gu.getNode(self.relationship['has_part'])
         has_zygosity = gu.getNode(self.relationship['has_zygosity'])
 
         vslc = gu.getNode(vslc_id)
