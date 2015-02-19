@@ -17,8 +17,7 @@ from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
-import config
-import curie_map
+from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
 
 

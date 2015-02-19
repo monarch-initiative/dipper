@@ -16,7 +16,7 @@ from rdflib import Namespace, URIRef
 import re
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import curie_map
+from conf import config, curie_map
 import logging
 
 logger = logging.getLogger(__name__)
