@@ -1,18 +1,16 @@
-import csv, os, datetime
+import csv
+import os
 from datetime import datetime
 from stat import *
 import urllib
+
 from utils import pysed
-
-
 from sources.Source import Source
-
 from models.D2PAssoc import D2PAssoc
 from models.DispositionAssoc import DispositionAssoc
-from rdflib import Namespace
 from models.Dataset import Dataset
 from models.Assoc import Assoc
-import curie_map
+
 
 '''
 #see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html

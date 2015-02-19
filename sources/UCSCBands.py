@@ -1,26 +1,16 @@
 import os
 from stat import *
-import urllib
-from urllib import request
 import re
-import time
 from datetime import datetime
-import gzip,os.path
-import json
-from rdflib import Graph, Literal, URIRef, Namespace, BNode
-from rdflib.namespace import RDF, RDFS, OWL, DC,XSD
-import unicodedata
+import gzip
+import os.path
 
 from sources.Source import Source
-from models.D2PAssoc import D2PAssoc
-from models.DispositionAssoc import DispositionAssoc
 from models.GenomicFeature import Feature,makeChromID
 from models.Dataset import Dataset
-from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
-from utils.GraphUtils import GraphUtils
-import config
-import curie_map
+from conf import curie_map
+
 
 class UCSCBands(Source):
     '''

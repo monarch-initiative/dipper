@@ -1,13 +1,15 @@
 import csv
 import re
 import gzip
-import curie_map
 import logging
+
+from conf import curie_map
 from sources.Source import Source
 from models.Dataset import Dataset
 from models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
 from models.Gene2Pathway import Gene2Pathway
 from utils.GraphUtils import GraphUtils
+
 
 logger = logging.getLogger(__name__)
 

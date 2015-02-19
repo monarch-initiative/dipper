@@ -2,17 +2,17 @@ import psycopg2
 
 __author__ = 'nicole'
 
-from rdflib import BNode, ConjunctiveGraph, Literal, RDF, Graph, Namespace
+from rdflib import ConjunctiveGraph, Graph, Namespace
 from rdflib.namespace import FOAF, DC, RDFS, OWL
 
-import urllib, csv, os, time, logging
+import urllib, os, time, logging
 from urllib import request
 from datetime import datetime
 from stat import *
 import hashlib
 import subprocess
 from subprocess import check_call
-import curie_map
+from conf import curie_map
 
 from utils.GraphUtils import GraphUtils
 

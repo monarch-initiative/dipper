@@ -5,23 +5,19 @@ from urllib import request
 import re
 import time
 from datetime import datetime
-import gzip,os.path,zlib
+import os.path
 import json
-from rdflib import Graph, Literal, URIRef, Namespace
-from rdflib.namespace import RDF, RDFS, OWL, DC
-from sources.Source import Source
 from subprocess import call
 
-from models.D2PAssoc import D2PAssoc
-from models.DispositionAssoc import DispositionAssoc
+from rdflib import URIRef
+
+from sources.Source import Source
 from models.Dataset import Dataset
-from models.Assoc import Assoc
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import config
+from conf import config, curie_map
 from utils.romanplus import romanNumeralPattern,fromRoman, toRoman
-import curie_map
 
 
 class OMIM(Source):

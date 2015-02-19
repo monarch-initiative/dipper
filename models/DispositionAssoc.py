@@ -1,14 +1,15 @@
 __author__ = 'nicole'
 
-from rdflib import BNode, ConjunctiveGraph, Literal, RDF, OWL, extras, Namespace, URIRef
-from rdflib.namespace import FOAF, RDFS, DC
+import re
+import urllib
+
+from rdflib import RDF, Namespace, URIRef
+from rdflib.namespace import DC
 
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
-import curie_map
+from conf import curie_map
 
-import re
-import urllib
 
 #The first of many associations
 #This one is specific for making a disease-to-phenotype

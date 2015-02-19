@@ -1,11 +1,12 @@
 __author__ = 'nicole'
 
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF, DC
+from rdflib import URIRef
+from rdflib.namespace import RDF
+
 from utils.CurieUtil import CurieUtil
-import re
 from models.Assoc import Assoc
-import curie_map
+from conf import curie_map
+
 
 class OrthologyAssoc(Assoc):
 

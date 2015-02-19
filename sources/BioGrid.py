@@ -1,19 +1,14 @@
 __author__ = 'nicole'
 
-from rdflib import Namespace
-from rdflib.namespace import FOAF, DC, RDFS, OWL
-
-import urllib, csv, os, time
-from urllib import request
+import os
 from datetime import datetime
 from stat import *
-import hashlib
-import subprocess
-from subprocess import check_call
 from zipfile import ZipFile
 import re
 
-import curie_map
+from rdflib.namespace import FOAF, DC, RDFS
+
+from conf import curie_map
 from sources.Source import Source
 from models.InteractionAssoc import InteractionAssoc
 from models.Dataset import Dataset

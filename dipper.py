@@ -4,9 +4,9 @@
 #this will eventually control the processing of data sources
 __author__ = 'nlw'
 
-import config
 import argparse
 import logging
+
 from sources.HPOAnnotations import HPOAnnotations
 from sources.ZFIN import ZFIN
 from sources.OMIM import OMIM
@@ -20,6 +20,7 @@ from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
 from sources.EOM import EOM
 from utils.TestUtils import TestUtils
+
 
 def main():
     source_to_class_map={

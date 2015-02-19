@@ -1,24 +1,18 @@
 import csv
 import os
 from datetime import datetime
-from stat import *
 import re
-import psycopg2
-
 
 from rdflib import Literal
 from rdflib.namespace import RDFS, OWL, RDF, DC
-from rdflib import Namespace, URIRef, BNode, Graph
+from rdflib import URIRef, BNode, Graph
 
-from utils import pysed
 from sources.Source import Source
 from models.Assoc import Assoc
-from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
-import config
-import curie_map
+from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
 
 

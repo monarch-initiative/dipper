@@ -1,20 +1,16 @@
 __author__ = 'nicole'
 
-from rdflib.namespace import FOAF, DC, RDFS, OWL
-
-import tarfile
-
 import re
-import os
+import glob
+import csv
+
+from docx import Document
 
 from models.Assoc import Assoc
 from sources.Source import Source
 from models.Dataset import Dataset
-from docx import Document
-import curie_map
+from conf import curie_map
 from utils.GraphUtils import GraphUtils
-import glob
-import csv
 
 
 class GeneReviews(Source):

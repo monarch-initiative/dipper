@@ -1,12 +1,11 @@
 __author__ = 'nicole'
 
-from rdflib.namespace import OWL, RDF, DC
-from rdflib import Namespace, URIRef, Literal
-import re
-import urllib
+from rdflib import Namespace, Literal
+
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
-import curie_map
+from conf import curie_map
+
 
 # This one is specific for making a disease-to-phenotype
 class D2PAssoc(Assoc):

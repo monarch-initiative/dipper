@@ -1,13 +1,12 @@
 __author__ = 'nicole'
 
-from rdflib import Graph, Literal, RDF, OWL, URIRef
-from rdflib.namespace import RDFS, DC
-
+from rdflib import Graph, RDF, OWL, URIRef
 
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
 from models.Assoc import Assoc
-import curie_map
+from conf import curie_map
+
 
 class Genotype():
     '''

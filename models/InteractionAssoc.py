@@ -1,11 +1,9 @@
 __author__ = 'nicole'
 
-from rdflib import URIRef, Namespace
-from rdflib.namespace import RDF, DC
 from utils.CurieUtil import CurieUtil
-import re
 from models.Assoc import Assoc
-import curie_map
+from conf import curie_map
+
 
 class InteractionAssoc(Assoc):
 

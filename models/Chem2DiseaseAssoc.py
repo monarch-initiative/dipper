@@ -1,9 +1,6 @@
-from rdflib.namespace import RDF, DC
-from rdflib import Namespace, URIRef, Literal
-import re
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
-import curie_map
+from conf import curie_map
 
 
 class Chem2DiseaseAssoc(Assoc):

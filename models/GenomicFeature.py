@@ -1,12 +1,15 @@
 __author__ = 'nicole'
 
-import curie_map
-from utils.GraphUtils import GraphUtils
-from utils.CurieUtil import CurieUtil
 import re
+
 from rdflib import URIRef,Literal
 from rdflib.namespace import RDF,XSD
+
+from conf import curie_map
+from utils.GraphUtils import GraphUtils
+from utils.CurieUtil import CurieUtil
 from models.Assoc import Assoc
+
 
 class Feature() :
     '''

@@ -1,23 +1,21 @@
 import csv
-from utils import pysed
-import os, datetime
-from datetime import datetime
-from stat import *
-from rdflib import Graph, Literal
-from rdflib.namespace import RDFS, OWL, RDF
-import gzip,os.path
+import gzip
+import re
+import logging
+
+from rdflib import Literal
+from rdflib.namespace import RDFS, RDF
+from rdflib import URIRef
 
 from sources.Source import Source
 from models.Assoc import Assoc
 from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
-from rdflib import Namespace, URIRef
-import re
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import curie_map
-import logging
+from conf import curie_map
+
 
 logger = logging.getLogger(__name__)
 

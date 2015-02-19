@@ -8,8 +8,8 @@ conf = None
 
 #load the configuration file, if it exists.
 #it isn't required, but may be for some sources
-if (os.path.exists("conf.json")):
-    with open("conf.json") as json_file:
+if (os.path.exists("conf/conf.json")):
+    with open("conf/conf.json") as json_file:
         conf = json.load(json_file)
         print("INFO: Finished loading config:")
 

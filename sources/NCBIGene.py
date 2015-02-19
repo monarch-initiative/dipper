@@ -2,7 +2,8 @@ import os
 from stat import *
 import re
 from datetime import datetime
-import gzip,os.path
+import gzip
+import os.path
 import unicodedata
 
 from sources.Source import Source
@@ -10,8 +11,9 @@ from models.Dataset import Dataset
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import curie_map
+from conf import curie_map
 from models.GenomicFeature import Feature,makeChromID
+
 
 class NCBIGene(Source):
     """

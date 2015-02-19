@@ -1,11 +1,13 @@
 __author__ = 'nicole'
 
-from rdflib import Namespace, URIRef, Literal,BNode
+import re
+
+from rdflib import Namespace, URIRef, Literal
 from rdflib.namespace import RDF,DC,OWL,RDFS
+
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-import re
-import curie_map
+from conf import curie_map
 
 
 class Assoc:

@@ -1,20 +1,21 @@
 import csv
-from utils import pysed
-import os, datetime
+import os
 from datetime import datetime
 from stat import *
-from rdflib import Graph, Literal
-from rdflib.namespace import RDFS, OWL, RDF
+import re
 
+from rdflib import Literal
+from rdflib.namespace import RDFS, OWL, RDF
+from rdflib import URIRef
+
+from utils import pysed
 from sources.Source import Source
 from models.Assoc import Assoc
 from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
-from rdflib import Namespace, URIRef
-import re
 from utils.CurieUtil import CurieUtil
-import curie_map
+from conf import curie_map
 
 
 class ZFIN(Source):
