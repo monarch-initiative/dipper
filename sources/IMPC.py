@@ -115,10 +115,10 @@ class IMPC(Source):
         self._process_g2p(('/').join((self.rawdir, self.files['impc']['file'])), self.outfile, self.graph, limit)
 
         #TODO: Check processing of the other two IMPC data files
-        #self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
-        #self._process_g2p(('/').join((self.rawdir, self.files['euro']['file'])), self.outfile, self.graph, limit)
-        #self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
-        #self._process_g2p(('/').join((self.rawdir, self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir, self.files['euro']['file'])), self.outfile, self.graph, limit)
+        self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(('/').join((self.rawdir, self.files['mgd']['file'])), self.outfile, self.graph, limit)
 
 
         print("Finished parsing.")
@@ -484,7 +484,8 @@ class IMPC(Source):
 
 
                 #Add phenotype description to phenotype
-                self.graph.add((assoc, DC['description'], Literal(phenotype_description_free_text)))
+                #FIXME: Currently results in an error.
+                #self.graph.add((assoc, DC['description'], Literal(phenotype_description_free_text)))
 
 
                 # Add the phenotype
