@@ -6,6 +6,7 @@ conf.json
 raw
 out
 owltools*
+conf/conf.json
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
