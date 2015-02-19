@@ -1,13 +1,24 @@
+import csv
 import os
 from datetime import datetime
 from stat import *
+import re
+import psycopg2
 
+
+from rdflib import Literal
+from rdflib.namespace import RDFS, OWL, RDF, DC, FOAF
+from rdflib import Namespace, URIRef, BNode, Graph
+
+from utils import pysed
 from sources.Source import Source
-
 from models.Assoc import Assoc
+from models.Genotype import Genotype
 from models.Dataset import Dataset
+from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
-from conf import config, curie_map
+import config
+import curie_map
 from utils.GraphUtils import GraphUtils
 
 
@@ -22,6 +33,26 @@ class EOM(Source):
         'dv.nlx_157874_1'
     ]
 
+    terms = {
+        'phenotype': 'MONARCH:phenotype'  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
+
+    }
+
+    relationship = {
+        'is_mutant_of': 'GENO:0000440',
+        'derives_from': 'RO:0001000',
+        'has_alternate_part': 'GENO:0000382',
+        'has_reference_part': 'GENO:0000385',
+        'in_taxon': 'RO:00002162',
+        'has_zygosity': 'GENO:0000608',
+        'is_sequence_variant_instance_of': 'GENO:0000408',
+        'is_reference_instance_of': 'GENO:0000610',
+        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
+        'has_disposition': 'GENO:0000208',
+        'has_phenotype': 'RO:0002200',
+        'has_part': 'BFO:0000051',
+        'has_variant_part': 'GENO:0000382'
+    }
 
 
     def __init__(self):
@@ -137,14 +168,78 @@ class EOM(Source):
 
                 (morphology_term_id, morphology_term_num, morphology_term_label, morphology_term_url,
                  terminology_category_label, terminology_category_url, subcategory, objective_definition,
-                subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
-                e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
+                 subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
+                 e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
+
+
+
+
+
+                self.cm = curie_map.get()
+
+                self.gu = GraphUtils(self.cm)
+                self.cu = CurieUtil(self.cm)
+
+                self.eom = Graph()
+
+                #Add morphology_term_id as a class? An instance of what type? Phenotype, yes?
+                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
+
+                #morphology_term_id has label morphology_term_label
+                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDFS['label'],Literal(morphology_term_label)))
+
+                #morphology_term_id has depiction small_figure_url
+                if small_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(small_figure_url)))
+                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
+                #self.graph.add((Literal(small_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
+
+                #morphology_term_id has depiction large_figure_url
+                if large_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(large_figure_url)))
+                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
+                #self.graph.add((Literal(large_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
+
+
+                #Do we want the label even if there is only one or the other definition?
+                if subjective_definition != '' and objective_definition == '':
+                    description = 'Subjective Description: '+subjective_definition
+                elif objective_definition != '' and subjective_definition == '':
+                    description = 'Objective Description: '+objective_definition
+                elif subjective_definition != '' and objective_definition != '':
+                    description = 'Objective Description: '+objective_definition+'; Subjective Description: '+subjective_definition
+                else:
+                    description = None
+
+                if description is not None:
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['description'],Literal(description)))
+
+                #morphology_term_id has comment comments
+                if comments != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['comment'],Literal(comments)))
+
+
+                #TODO: Need to fix handling of '; ' delimited entries.
+                #morphology_term_id hasRelatedSynonym synonyms
+                if synonyms != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(synonyms)))
+
+                #TODO: Need to fix handling of '; ' delimited entries.
+                if replaces != '' and replaces == synonyms:
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(replaces)))
+
+
+                #Question: Add subject_definition and objective definition as a combined definition?
+                #self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
+
+
+
 
 
 
                 if (limit is not None and line_counter > limit):
                     break
-
+                #self.graph = eom.getGraph().__iadd__(self.graph)
         return
 
     def _process_eom_terms(self, raw, limit=None):

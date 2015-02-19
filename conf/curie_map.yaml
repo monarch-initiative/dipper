@@ -51,6 +51,7 @@
 'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?path:map'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
+'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'

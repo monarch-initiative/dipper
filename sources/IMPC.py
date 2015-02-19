@@ -1,21 +1,23 @@
 import csv
-import gzip
-import re
-import logging
-
-from rdflib import Literal
-from rdflib.namespace import RDFS, RDF
-from rdflib import URIRef
+from utils import pysed
+import os, datetime
+from datetime import datetime
+from stat import *
+from rdflib import Graph, Literal
+from rdflib.namespace import RDFS, OWL, RDF, DC
+import gzip,os.path
 
 from sources.Source import Source
 from models.Assoc import Assoc
 from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
+from rdflib import Namespace, URIRef
+import re
 from utils.CurieUtil import CurieUtil
 from utils.GraphUtils import GraphUtils
-from conf import curie_map
-
+import curie_map
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class IMPC(Source):
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
         'has_reference_part': 'GENO:0000385',
-        'in_taxon': 'RO:0000216',
+        'in_taxon': 'RO:00002162',
         'has_zygosity': 'GENO:0000608',
         'is_sequence_variant_instance_of': 'GENO:0000408',
         'is_reference_instance_of': 'GENO:0000610',
@@ -55,7 +57,7 @@ class IMPC(Source):
         'reference_locus': 'GENO:0000036',
         'sequence_alteration': 'SO:0001059',
         'variant_single_locus_complement': 'GENO:0000030',
-        'allele': 'GENO:0000008',
+        'allele': 'GENO:0000014',
         'intrinsic_genotype': 'GENO:0000000',
         'effective_genotype': 'GENO:0000525',
         'phenotype': 'MONARCH:phenotype',  # Is this correct? What about GENO:0000348 - phenotype? MONARCH:phenotype
@@ -113,10 +115,10 @@ class IMPC(Source):
         self._process_g2p(('/').join((self.rawdir, self.files['impc']['file'])), self.outfile, self.graph, limit)
 
         #TODO: Check processing of the other two IMPC data files
-        self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
-        self._process_g2p(('/').join((self.rawdir, self.files['euro']['file'])), self.outfile, self.graph, limit)
-        self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
-        self._process_g2p(('/').join((self.rawdir, self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        #self._process_genotype_features(('/').join((self.rawdir,self.files['euro']['file'])), self.outfile, self.graph, limit)
+        #self._process_g2p(('/').join((self.rawdir, self.files['euro']['file'])), self.outfile, self.graph, limit)
+        #self._process_genotype_features(('/').join((self.rawdir,self.files['mgd']['file'])), self.outfile, self.graph, limit)
+        #self._process_g2p(('/').join((self.rawdir, self.files['mgd']['file'])), self.outfile, self.graph, limit)
 
 
         print("Finished parsing.")
@@ -321,7 +323,7 @@ class IMPC(Source):
                     genomic_background_id = strain_accession_id
                 else:
                     genomic_background_id = 'IMPC:'+strain_accession_id
-                    #FIXME: Will this resolve, or do we need a separate IMPCStrain:?
+                    #FIXME: Will this resolve, or do we need a separate IMPCStrain: in the curie_map.yaml?
                 genomic_background_name = strain_name
                 # genomic_background_id is of type genomic_background
                 self.graph.add((URIRef(cu.get_uri(genomic_background_id)),RDF['type'],URIRef(cu.get_uri(self.terms['genomic_background']))))
@@ -456,7 +458,7 @@ class IMPC(Source):
                 #FIXME
                 #No evidence code provided. NIF/DISCO view was hard coded to null. However,
                 # isn't all of the IMPC data based on experimental evidence? Or is that too general?
-                # Could use 'EXP': 'ECO:0000006', although the code below used in ZFIN might be more appropriate.
+                # Could use 'EXP': 'ECO:0000006', althougfh the code below used in ZFIN might be more appropriate.
                 eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
 
                 #pub_id could be removed here as well.
@@ -474,7 +476,7 @@ class IMPC(Source):
                 # phenotype is not really created as a separate instance that we can then hang additional
                 # phenotype parts on, correct? HOWEVER, while the phenotype term ID is not unique,
                 # the phenotype as measured by a specific testing parameter in a specific effective genotype
-                # would be unique. Are there multiple testing parameters for that combination?
+                # might be unique. Are there multiple testing parameters for that combination?
 
                 #Add phenotype_description_free_text
                 #Format: 'Phenotype observed by '|| phenotyping_center||' in an '||procedure_name||' assay where '||testing_parameter_name||' was measured with an effect_size of '||effect_size||'. (p='||p_value||')' as phenotype_description_free_text,
@@ -482,7 +484,7 @@ class IMPC(Source):
 
 
                 #Add phenotype description to phenotype
-                #g.add((n, DC['description'], Literal(phenotype_description_free_text)))
+                self.graph.add((assoc, DC['description'], Literal(phenotype_description_free_text)))
 
 
                 # Add the phenotype
