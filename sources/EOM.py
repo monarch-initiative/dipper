@@ -137,7 +137,7 @@ class EOM(Source):
         print("Parsing files...")
 
         self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
-        self._process_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
+        self._map_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
 
         print("Finished parsing.")
 
@@ -170,37 +170,7 @@ class EOM(Source):
                  subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
                  e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
 
-
-
-
-
-                self.cm = curie_map.get()
-
-                self.gu = GraphUtils(self.cm)
-                self.cu = CurieUtil(self.cm)
-
-                self.eom = Graph()
-
-                #Add morphology_term_id as a class? An instance of what type? Phenotype, yes?
-                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
-
-                #morphology_term_id has label morphology_term_label
-                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDFS['label'],Literal(morphology_term_label)))
-
-                #morphology_term_id has depiction small_figure_url
-                if small_figure_url != '':
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(small_figure_url)))
-                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
-                #self.graph.add((Literal(small_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
-
-                #morphology_term_id has depiction large_figure_url
-                if large_figure_url != '':
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(large_figure_url)))
-                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
-                #self.graph.add((Literal(large_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
-
-
-                #Do we want the label even if there is only one or the other definition?
+                #Assemble the description text
                 if subjective_definition != '' and objective_definition == '':
                     description = 'Subjective Description: '+subjective_definition
                 elif objective_definition != '' and subjective_definition == '':
@@ -210,13 +180,20 @@ class EOM(Source):
                 else:
                     description = None
 
-                if description is not None:
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['description'],Literal(description)))
+                #Add morphology term to graph as a class with label, type, and description.
+                gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label,self.terms['phenotype'],description)
+
+                #morphology_term_id has depiction small_figure_url
+                if small_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(small_figure_url)))
+
+                #morphology_term_id has depiction large_figure_url
+                if large_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(large_figure_url)))
 
                 #morphology_term_id has comment comments
                 if comments != '':
                     self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['comment'],Literal(comments)))
-
 
                 #morphology_term_id hasRelatedSynonym synonyms (; delimited)
                 if synonyms != '':
@@ -230,13 +207,9 @@ class EOM(Source):
                     for i in items:
                         self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(i)))
 
-
-                #Question: Add subject_definition and objective definition as a combined definition?
-                #self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
-
-
-
-
+                #FIXME: What is the proper predicate for a web page link? morphology_term_id hasURL morphology_term_url?
+                #morphology_term_id has page morphology_term_url
+                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['page'],Literal(morphology_term_url)))
 
 
                 if (limit is not None and line_counter > limit):
@@ -244,13 +217,19 @@ class EOM(Source):
                 #self.graph = eom.getGraph().__iadd__(self.graph)
         return
 
-    def _process_eom_terms(self, raw, limit=None):
+    def _map_eom_terms(self, raw, limit=None):
         '''
         This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
         :param raw:
         :param limit:
         :return:
         '''
+
+
+        # Which route do we want to go here...
+        # Do we want to do this separate, after creating the other graphs...
+        # Or call it within the other function ?
+
 
         gu = GraphUtils(curie_map.get())
         cu = CurieUtil(curie_map.get())
@@ -262,12 +241,17 @@ class EOM(Source):
 
                 (morphology_term_id, morphology_term_label, hp_id, hp_label,notes) = line.split('\t')
 
-
+                #Sub out the underscores for colons.
+                hp_id = re.sub('_', ':', hp_id)
+                #Add the HP ID as an equivalent class
+                gu.addEquivalentClass(self.graph,morphology_term_id,hp_id)
 
                 if (limit is not None and line_counter > limit):
                     break
 
         return
+
+
 
 
 
