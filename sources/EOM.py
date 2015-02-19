@@ -1,22 +1,17 @@
-import csv
 import os
 from datetime import datetime
 from stat import *
 import re
-import psycopg2
 import logging
 
 
 from rdflib import Literal
-from rdflib.namespace import RDFS, OWL, RDF, DC, FOAF
-from rdflib import Namespace, URIRef, BNode, Graph
+from rdflib.namespace import DC, FOAF
+from rdflib import URIRef
 
-from utils import pysed
 from sources.Source import Source
 from models.Assoc import Assoc
-from models.Genotype import Genotype
 from models.Dataset import Dataset
-from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
@@ -40,19 +35,7 @@ class EOM(Source):
     }
 
     relationship = {
-        'is_mutant_of': 'GENO:0000440',
-        'derives_from': 'RO:0001000',
-        'has_alternate_part': 'GENO:0000382',
-        'has_reference_part': 'GENO:0000385',
-        'in_taxon': 'RO:00002162',
-        'has_zygosity': 'GENO:0000608',
-        'is_sequence_variant_instance_of': 'GENO:0000408',
-        'is_reference_instance_of': 'GENO:0000610',
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
-        'has_disposition': 'GENO:0000208',
-        'has_phenotype': 'RO:0002200',
-        'has_part': 'BFO:0000051',
-        'has_variant_part': 'GENO:0000382'
     }
 
 
@@ -87,7 +70,7 @@ class EOM(Source):
         self.fetch_from_pgdb(self.tables,cxn)
 
 
-        #FIXME: Fix
+        #FIXME: Everything needed for data provenance?
         datestamp=ver=None
         #get the resource version information from table mgi_dbinfo, already fetched above
         #outfile=('/').join((self.rawdir,'mgi_dbinfo'))
@@ -110,8 +93,6 @@ class EOM(Source):
         st = os.stat(('/').join((self.rawdir,'dv.nlx_157874_1')))
         filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
-
-
 
 
 
