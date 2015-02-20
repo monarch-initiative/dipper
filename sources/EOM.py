@@ -70,25 +70,6 @@ class EOM(Source):
 
 
         #FIXME: Everything needed for data provenance?
-        datestamp=ver=None
-        #get the resource version information from table mgi_dbinfo, already fetched above
-        #outfile=('/').join((self.rawdir,'mgi_dbinfo'))
-        '''
-        if os.path.exists(outfile):
-            st = os.stat(outfile)
-            with open(outfile, 'r') as f:
-                f.readline() #read the header row; skip
-                info = f.readline()
-                cols = info.split('\t')
-                ver = cols[0] #col 0 is public_version
-                ver = ver.replace('EOM ','')  #MGI 5.20 --> 5.20
-                #MGI has a datestamp for the data within the database; use it instead of the download date
-                #datestamp in the table: 2014-12-23 00:14:20
-                d = cols[7].strip()  #modification date
-                datestamp = datetime.strptime(d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
-                f.close()
-        '''
-        #datestamp = datetime.strptime(d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
         st = os.stat(('/').join((self.rawdir,'dv.nlx_157874_1')))
         filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
