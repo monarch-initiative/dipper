@@ -19,6 +19,7 @@ from sources.UCSCBands import UCSCBands
 from sources.CTD import CTD
 from sources.GeneReviews import GeneReviews
 from sources.EOM import EOM
+from sources.Coriell import Coriell
 from utils.TestUtils import TestUtils
 
 
@@ -35,7 +36,8 @@ def main():
         'ucscbands' : UCSCBands,
         'ctd' : CTD,
         'genereviews' : GeneReviews,
-        'eom' : EOM
+        'eom' : EOM,  # Takes about 5 seconds.
+        'coriell' : Coriell
     }
 
     logger = logging.getLogger(__name__)
