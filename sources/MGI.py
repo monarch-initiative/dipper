@@ -16,25 +16,22 @@ from utils.GraphUtils import GraphUtils
 
 
 class MGI(Source):
-    '''
+    """
+    This is the Mouse informatics resource, from which we process genotype and phenotype data about laboratory mice.
+    Genotypes leverage the GENO genotype model.
     Be sure to have pg user/password connection details in your conf.json file, like:
       dbauth : {
         'mgi' : {'user' : '<username>', 'password' : '<password>'}
       }
-    '''
-# tables in existing interop
+    """
 
-
-    #NOT YET USED
-    # mgi_organism_acc_view: Don't think we need this as I have handled the taxon mapping through a map_taxon function, unless we want the MGI ID for the organism.
-    # mgi_organism_view: I mapped the taxon from the mrk_marker_view to include all used organisms, but the mapping could be done in a more complete fashion with this table.
+    #CONSIDER IF WE NEED:
+    # mgi_organism_acc_view: Consider using this for the taxon mapping instead of the hashmap encoded below
     # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
-    # all_allele_cellline_view: Don't believe this view is used in either the genotype of phenotype view
-    # voc_term_view: Don't believe this view is used in either the genotype of phenotype view
-    # acc_logicaldb_view: Don't believe this view is used in either the genotype of phenotype view
-    # mgi_note_strain_view: Don't believe this view is used in either the genotype of phenotype view
+    # all_allele_cellline_view: When we want to start dealing with cell lines
+    # mgi_note_strain_view: prose descriptons of strains.
     # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
-    # prb_strain_marker_view: Don't believe this view is used in either the genotype of phenotype view
+    # prb_strain_marker_view: eventually i think we want this because it has other relevant markers that are affected
 
     tables = [
         'mgi_dbinfo',
@@ -86,11 +83,11 @@ class MGI(Source):
         return
 
     def fetch(self, is_dl_forced):
-        '''
+        """
         For the MGI resource, we connect to the remote database, and pull the tables into local files.
         We'll check the local table versions against the remote version
         :return:
-        '''
+        """
 
         #create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
@@ -193,7 +190,6 @@ class MGI(Source):
         If the strain isn't in the hashmap, it also adds it here with a monarchized identifier using the
         unique key of the strain, formatted like:  :_mgistrainkey12345
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -249,8 +245,6 @@ class MGI(Source):
         <genotype id> a GENO:intrinsic_genotype
         <genotype id> rdfs:label "<gvc> [bkgd]"
 
-
-        :param raw:
         :param limit:
         :return:
         """
@@ -312,7 +306,6 @@ class MGI(Source):
             rdf:label "allele symbol"
             dc:descirption "long allele name"
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -373,7 +366,6 @@ class MGI(Source):
         <_seq_alt_id> a GENO:sequence_alteration
             derives_from <strain_id>
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -478,7 +470,6 @@ class MGI(Source):
         <vslc> has_part <allele2>
         <vslc> has_zygosity <zygosity>
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -535,7 +526,6 @@ class MGI(Source):
         Note that we create a BNode for the sequence alteration because it isn't publically identified.
         <sequence alteration id> a <SO:mutation_type>
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -579,7 +569,6 @@ class MGI(Source):
         We add the internal annotation id to the idhashmap.  It is expected that the genotypes have already
         been added to the idhash
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -639,8 +628,15 @@ class MGI(Source):
     def _process_voc_evidence_view(self,limit):
         """
         Here we fetch the evidence (code and publication) for the associations.
+        The evidence codes are mapped from the standard GO codes to ECO.
+        J numbers are added for publications.
         We will only add the evidence if the annotation is in our idhash.
-        :param raw:
+
+        Triples:
+        <annot_id> dc:evidence <evidence_id>
+        <pub_id> a owl:NamedIndividual
+        <annot_id> dc:source <pub_id>
+
         :param limit:
         :return:
         """
@@ -693,8 +689,10 @@ class MGI(Source):
            once to look up the internal key to J number mapping for the id hashmap
            then again to make the equivalences.  All internal keys have both a J and MGI identifier.
         This will make equivalences between the different pub ids
-
-        :param raw:
+        Triples:
+            <pub_id> a owl:NamedIndividual
+            <other_pub_id> a owl:NamedIndividual
+            <pub_id> owl:sameAs <other_pub_id>
         :param limit:
         :return:
         """
@@ -782,11 +780,10 @@ class MGI(Source):
         Process a table to get strains (with internal ids), and their labels.
         These strains are created as instances of intrinsic_genotype.
         Triples:
-        <strain id> a GENO:intrinsic_genotype
-            rdf:label "strain label"
-            RO:in_taxon <NCBI taxon id>
+            <strain id> a GENO:intrinsic_genotype
+                rdf:label "strain label"
+                RO:in_taxon <NCBI taxon id>
 
-        :param raw:
         :param limit:
         :return:
         """
@@ -838,7 +835,13 @@ class MGI(Source):
         It looks up the identifiers in the hashmap
         This includes their labels, specific class, and identifiers
         TODO should we use the mrk_mouse_view instead?
-        :param raw:
+
+        Triples:
+        <marker_id> a owl:Class OR owl:NamedIndividual
+            GENO:marker_type
+            rdf:label <symbol>
+            RO:in_taxon <NCBITaxon_id>
+
         :param limit:
         :return:
         """
@@ -900,7 +903,7 @@ class MGI(Source):
         """
         Here we pull the mgiid of the features, and make equivalent (or sameAs) associations to referenced ids.
         Only adding the ENSEMBL genes and NCBI gene ids.  Will wait on other ids later.
-        :param raw:
+
         :param limit:
         :return:
         """
@@ -979,7 +982,7 @@ class MGI(Source):
     def _process_mrk_acc_view(self,limit):
         """
         Use this table to create the idmap between the internal marker id and the public mgiid.
-        :param raw:
+        No triples are produced in this process
         :param limit:
         :return:
         """
@@ -1070,7 +1073,11 @@ class MGI(Source):
         """
         Use this table to create the idmap between the internal marker id and the public mgiid.
         Also, add the equivalence statements between strains for MGI and JAX
-        :param raw:
+        Triples:
+        <strain_id> a GENO:intrinsic_genotype
+        <other_strain_id> a GENO:intrinsic_genotype
+        <strain_id> owl:sameAs <other_strain_id>
+
         :param limit:
         :return:
         """
@@ -1140,7 +1147,8 @@ class MGI(Source):
     def _process_mgi_note_vocevidence_view(self,limit):
         """
         Here we fetch the free text descriptions of the phenotype associations.
-        :param raw:
+        Triples:
+        <annot_id> dc:description "description text"
         :param limit:
         :return:
         """
@@ -1169,6 +1177,10 @@ class MGI(Source):
                 if (annot_id is not None):
                     assoc = Assoc()
                     assoc.addDescription(self.graph,annot_id,note.strip())
+
+                if (limit is not None and line_counter > limit):
+                    break
+
 
         return
 
