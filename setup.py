@@ -1,7 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
+from distutils.core import setup
 
 setup(name='DIPper',
       version='1.0',
       description='Data Ingest Pipeline',
-      packages=['distutils', 'distutils.command,psycopg2, rdflib, isodate, roman, python-docx, pyyaml'],
-)
+      packages=['dipper','dipper.sources','dipper.models','dipper.utils'],
+      )

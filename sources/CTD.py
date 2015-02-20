@@ -7,7 +7,7 @@ from conf import curie_map
 from sources.Source import Source
 from models.Dataset import Dataset
 from models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
-from models.Gene2Pathway import Gene2Pathway
+from models.Pathway2Gene import Pathway2Gene
 from utils.GraphUtils import GraphUtils
 
 
@@ -100,16 +100,15 @@ class CTD(Source):
         self._check_list_len(row, 4)
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
         entrez_id = 'NCBIGene:'+gene_id
-        evidence_code = self._set_evidence_code('TAS')
+        evidence_code = self._get_evidence_code('TAS')
         # add KEGG class
         gu = GraphUtils(curie_map.get())
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
 
         assoc_id = self.make_id('ctd' + pathway_id + entrez_id)
-        assoc = Gene2Pathway(assoc_id, pathway_id, entrez_id, evidence_code,
+        assoc = Pathway2Gene(assoc_id, pathway_id, entrez_id, evidence_code,
                              pathway_name, gene_symbol)
         assoc.loadObjectProperties(self.graph)
-        assoc.setRelationship(assoc.relationship_map['interacts_with'])
         assoc.add_gene_as_class(self.graph)
         if re.match(re.compile('^REACT'),pathway_id):
             assoc.add_pathway_as_class(self.graph)
@@ -154,11 +153,11 @@ class CTD(Source):
         :return:None
         """
         assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
-        evidence_code = self._set_evidence_code('TAS')
+        evidence_code = self._get_evidence_code('TAS')
         chem_mesh_id = 'MESH:'+chem_id
-
+        relationship = self._get_relationship_id(direct_evidence)
         assoc = Chem2DiseaseAssoc(assoc_id, chem_mesh_id, disease_id,
-                                  pubmed_ids, evidence_code)
+                                  pubmed_ids, relationship, evidence_code)
         assoc.loadObjectProperties(self.graph)
         assoc.addAssociationNodeToGraph(self.graph)
         return
@@ -174,7 +173,7 @@ class CTD(Source):
             id_list[i] = 'PMID:'+val
         return id_list
 
-    def _set_evidence_code(self, evidence):
+    def _get_evidence_code(self, evidence):
         """
         :param evidence
         :return: ECO evidence code
@@ -183,6 +182,17 @@ class CTD(Source):
             'TAS': 'ECO:0000033'
         }
         return ECO_MAP[evidence]
+
+    def _get_relationship_id(self, rel):
+        """
+        :param evidence
+        :return: ECO evidence code
+        """
+        REL_MAP = {
+            'therapeutic': 'MONARCH:treats',
+            'marker/mechanism': 'MONARCH:causes'
+        }
+        return REL_MAP[rel]
 
     def _split_pub_ids_by_evidence(self, pub_ids, disease_id, chem_id, pub_map):
         """

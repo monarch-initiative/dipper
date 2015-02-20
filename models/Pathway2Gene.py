@@ -5,7 +5,7 @@ from models.Assoc import Assoc
 from conf import curie_map
 
 
-class Gene2Pathway(Assoc):
+class Pathway2Gene(Assoc):
 
     relationship_map = {
         'has_member': 'RO:0002351'
@@ -47,8 +47,4 @@ class Gene2Pathway(Assoc):
         gu = GraphUtils(curie_map.get())
         gu.addClassToGraph(graph, self.subj, self.pathway_label)
 
-        return
-
-    def set_rel(self, relationship):
-        self.rel = relationship
         return
