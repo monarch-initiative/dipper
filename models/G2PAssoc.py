@@ -5,6 +5,7 @@ from rdflib import Namespace, URIRef, Literal
 import re
 from models.Assoc import Assoc
 from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
 import curie_map
 
 
@@ -19,6 +20,7 @@ class G2PAssoc(Assoc):
     '''
 
     def __init__(self, assoc_id, entity_id, phenotype_id, pub, evidence_code):
+        super().__init__()
         self.annot_id = assoc_id
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -26,6 +28,7 @@ class G2PAssoc(Assoc):
         self.evidence = evidence_code
         self.rel = self.relationships['has_phenotype']  # default to has_phenotype
         self.cu = CurieUtil(curie_map.get())
+#        self.gu = GraphUtils(curie_map.get())
         self.pub_list = None
 
         self.setSubject(entity_id)
