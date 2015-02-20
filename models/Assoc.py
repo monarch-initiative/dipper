@@ -40,6 +40,7 @@ class Assoc:
 
     def __init__(self):
         self.cu = CurieUtil(curie_map.get())
+        self.gu = GraphUtils(curie_map.get())
         return
 
     def get_namespaces(self):
@@ -58,7 +59,7 @@ class Assoc:
 
     def addAssociationToGraph(self, g):
         cu = self.cu
-        gu = GraphUtils(curie_map.get())
+        gu = self.gu
         #first, add the direct triple
         #anonymous nodes are indicated with underscore
         s = gu.getNode(self.sub)
@@ -86,8 +87,7 @@ class Assoc:
             #TODO remove this warning, it's annoying
             #print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
-            evidence = URIRef(cu.get_uri(self.evidence))
-            g.add((node, DC['evidence'], evidence))
+            self.addEvidence(g,self.annot_id,self.evidence)
 
         # Check if publications are in list form
         if self.pub_list is not None:
@@ -107,10 +107,46 @@ class Assoc:
         self.rel = identifier
         return
 
-    def loadObjectProperties(self,g):
+    def addEvidence(self,g,evidence_identifier,annot_id=None):
+        """
+        Add the evidence to the annotation object; if one is supplied, add it to that.
+        :param g:
+        :param evidence_identifier:
+        :return:
+        """
+        evidence = self.gu.getNode(evidence_identifier)
+        if (annot_id is None and self.annot_id is not None):
+            annot_id = self.annot_id
+        if annot_id is not None:
+            node = self.gu.getNode(annot_id)
+            g.add((node, DC['evidence'], evidence))
+        else:
+            pass
+            #todo print warning.
+        return
 
-        gu = GraphUtils(curie_map.get())
-        gu.loadObjectProperties(g,self.relationships)
+    def addSource(self,g,assoc,source_id):
+        """
+        TODO we need to greatly expand this function!
+        :param g:
+        :param assoc:
+        :param source_identifier:
+        :return:
+        """
+        source = self.gu.getNode(source_id)
+        self.gu.addIndividualToGraph(g,source_id,None)
+        node = self.gu.getNode(assoc)
+        g.add((node, DC['source'], source))
+
+        return
+
+    def addDescription(self,g,assoc,description):
+        node = self.gu.getNode(assoc)
+        g.add((node,DC['description'],Literal(description)))
+        return
+
+    def loadObjectProperties(self,g):
+        self.gu.loadObjectProperties(g,self.relationships)
 
         return
 
