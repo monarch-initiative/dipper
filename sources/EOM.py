@@ -1,25 +1,22 @@
-import csv
 import os
 from datetime import datetime
 from stat import *
 import re
-import psycopg2
+import logging
 
 
 from rdflib import Literal
-from rdflib.namespace import RDFS, OWL, RDF, DC, FOAF
-from rdflib import Namespace, URIRef, BNode, Graph
+from rdflib.namespace import DC, FOAF
+from rdflib import URIRef
 
-from utils import pysed
 from sources.Source import Source
 from models.Assoc import Assoc
-from models.Genotype import Genotype
 from models.Dataset import Dataset
-from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
 from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
 
+logger = logging.getLogger(__name__)
 
 class EOM(Source):
     '''
@@ -38,19 +35,7 @@ class EOM(Source):
     }
 
     relationship = {
-        'is_mutant_of': 'GENO:0000440',
-        'derives_from': 'RO:0001000',
-        'has_alternate_part': 'GENO:0000382',
-        'has_reference_part': 'GENO:0000385',
-        'in_taxon': 'RO:00002162',
-        'has_zygosity': 'GENO:0000608',
-        'is_sequence_variant_instance_of': 'GENO:0000408',
-        'is_reference_instance_of': 'GENO:0000610',
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
-        'has_disposition': 'GENO:0000208',
-        'has_phenotype': 'RO:0002200',
-        'has_part': 'BFO:0000051',
-        'has_variant_part': 'GENO:0000382'
     }
 
 
@@ -64,10 +49,9 @@ class EOM(Source):
 
         #check if config exists; if it doesn't, error out and let user know
         if (not (('dbauth' in config.get_config()) and ('disco' in config.get_config()['dbauth']))):
-            print("ERROR: not configured with PG user/password.")
+            logger.error("ERROR: not configured with PG user/password.")
 
         #source-specific warnings.  will be cleared when resolved.
-        #print("WARN: we are filtering G2P on the wild-type environment data for now")
 
         return
 
@@ -85,7 +69,7 @@ class EOM(Source):
         self.fetch_from_pgdb(self.tables,cxn)
 
 
-        #FIXME: Fix
+        #FIXME: Everything needed for data provenance?
         datestamp=ver=None
         #get the resource version information from table mgi_dbinfo, already fetched above
         #outfile=('/').join((self.rawdir,'mgi_dbinfo'))
@@ -112,8 +96,6 @@ class EOM(Source):
 
 
 
-
-
         return
 
     def scrub(self):
@@ -133,18 +115,20 @@ class EOM(Source):
     # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if (limit is not None):
-            print("Only parsing first", limit, "rows of each file")
-        print("Parsing files...")
+            logger.info("Only parsing first %s rows of each file", limit)
+
+        logger.info("Parsing files...")
 
         self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
-        self._process_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
+        self._map_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
 
-        print("Finished parsing.")
+        logger.info("Finished parsing.")
+
 
         self.load_bindings()
         Assoc().loadObjectProperties(self.graph)
 
-        print("Found", len(self.graph), "nodes")
+        logger.info("Found %s nodes", len(self.graph))
         return
 
 
@@ -170,37 +154,7 @@ class EOM(Source):
                  subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
                  e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
 
-
-
-
-
-                self.cm = curie_map.get()
-
-                self.gu = GraphUtils(self.cm)
-                self.cu = CurieUtil(self.cm)
-
-                self.eom = Graph()
-
-                #Add morphology_term_id as a class? An instance of what type? Phenotype, yes?
-                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
-
-                #morphology_term_id has label morphology_term_label
-                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDFS['label'],Literal(morphology_term_label)))
-
-                #morphology_term_id has depiction small_figure_url
-                if small_figure_url != '':
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(small_figure_url)))
-                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
-                #self.graph.add((Literal(small_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
-
-                #morphology_term_id has depiction large_figure_url
-                if large_figure_url != '':
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(large_figure_url)))
-                #The below statement doesn't hang the image on the term id, so I used the above statement instead.
-                #self.graph.add((Literal(large_figure_url),FOAF['depicts'],(URIRef(cu.get_uri(morphology_term_id)))))
-
-
-                #Do we want the label even if there is only one or the other definition?
+                #Assemble the description text
                 if subjective_definition != '' and objective_definition == '':
                     description = 'Subjective Description: '+subjective_definition
                 elif objective_definition != '' and subjective_definition == '':
@@ -210,13 +164,20 @@ class EOM(Source):
                 else:
                     description = None
 
-                if description is not None:
-                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['description'],Literal(description)))
+                #Add morphology term to graph as a class with label, type, and description.
+                gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label,self.terms['phenotype'],description)
+
+                #morphology_term_id has depiction small_figure_url
+                if small_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(small_figure_url)))
+
+                #morphology_term_id has depiction large_figure_url
+                if large_figure_url != '':
+                    self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['depiction'],Literal(large_figure_url)))
 
                 #morphology_term_id has comment comments
                 if comments != '':
                     self.graph.add((URIRef(cu.get_uri(morphology_term_id)),DC['comment'],Literal(comments)))
-
 
                 #morphology_term_id hasRelatedSynonym synonyms (; delimited)
                 if synonyms != '':
@@ -230,13 +191,9 @@ class EOM(Source):
                     for i in items:
                         self.graph.add((URIRef(cu.get_uri(morphology_term_id)),URIRef(cu.get_uri(self.relationship['hasRelatedSynonym'])),Literal(i)))
 
-
-                #Question: Add subject_definition and objective definition as a combined definition?
-                #self.graph.add((URIRef(cu.get_uri(morphology_term_id)),RDF['type'],URIRef(cu.get_uri(self.terms['phenotype']))))
-
-
-
-
+                #FIXME: What is the proper predicate for a web page link? morphology_term_id hasURL morphology_term_url?
+                #morphology_term_id has page morphology_term_url
+                self.graph.add((URIRef(cu.get_uri(morphology_term_id)),FOAF['page'],Literal(morphology_term_url)))
 
 
                 if (limit is not None and line_counter > limit):
@@ -244,9 +201,9 @@ class EOM(Source):
                 #self.graph = eom.getGraph().__iadd__(self.graph)
         return
 
-    def _process_eom_terms(self, raw, limit=None):
+    def _map_eom_terms(self, raw, limit=None):
         '''
-        This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
+        This table contains the HP ID mappings from the local tsv file.
         :param raw:
         :param limit:
         :return:
@@ -262,12 +219,20 @@ class EOM(Source):
 
                 (morphology_term_id, morphology_term_label, hp_id, hp_label,notes) = line.split('\t')
 
-
+                #Sub out the underscores for colons.
+                hp_id = re.sub('_', ':', hp_id)
+                if re.match(".*HP:.*", hp_id):
+                    #Add the HP ID as an equivalent class
+                    gu.addEquivalentClass(self.graph,morphology_term_id,hp_id)
+                else:
+                    logger.warning('No matching HP term for %s',morphology_term_label)
 
                 if (limit is not None and line_counter > limit):
                     break
 
         return
+
+
 
 
 
@@ -277,7 +242,7 @@ class EOM(Source):
         #print("COMMAND:",query)
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
-        print("COLS ("+table+"):",colnames)
+        logger.info("COLS (%s): %s", table, colnames)
 
         return
 
