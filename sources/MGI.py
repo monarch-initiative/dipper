@@ -1370,7 +1370,7 @@ class MGI(Source):
         return type
 
     def _map_strain_species(self,species):
-        #make the assumption that it is a mouse 10090 unless if specified:
+        #make the assumption that it is a Mus genus, unless if specified
         tax = '10088'
         id_map = {
             'laboratory mouse and M. m. domesticus (brevirostris)': '116058',
