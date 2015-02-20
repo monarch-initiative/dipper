@@ -42,7 +42,8 @@ class Genotype():
         'translocation': 'SO:0000199',
         'inversion': 'SO:1000036',
         'tandem_duplication': 'SO:1000173',
-        'point_mutation': 'SO:1000008'
+        'point_mutation': 'SO:1000008',
+        'population' : 'GENO:0000110'  #collection of organisms; consider OBI:population
     }
 
     relationship = {
@@ -55,7 +56,9 @@ class Genotype():
         'is_sequence_variant_instance_of': 'GENO:0000408',
         'targets_instance_of': 'GENO:0000414',
         'is_reference_instance_of' : 'GENO:0000610',
-        'has_part' : 'BFO:0000051'
+        'has_part' : 'BFO:0000051',
+        'has_member_with_allelotype' : 'GENO:0000225',  #use this when relating populations
+        'is_allelotype_of' : 'GENO:0000206'
     }
 
     zygosity = {
@@ -309,3 +312,9 @@ class Genotype():
         return
 
 
+    def addMemberOfPopulation(self,member_id,population_id):
+        self.graph.add((self.gu.getNode(population_id),
+                        self.gu.getNode(self.relationship['has_member_with_allelotype']),
+                        self.gu.getNode(member_id)))
+
+        return
