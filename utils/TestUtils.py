@@ -14,7 +14,13 @@ class TestUtils:
         query_result = self.graph.query(query)
 
         for row in query_result:
-            print(", ".join(row))
+            result_set = []
+            for val in row:
+                if val is None:
+                    val = 'null'
+                result_set.append(val)
+
+            print(", ".join(result_set))
 
         return
 
