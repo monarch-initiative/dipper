@@ -128,9 +128,9 @@ class Genotype():
 
         return
 
-    def addAlleleDerivesFromConstruct(self, allele_id, construct_id):
+    def addAlleleDerivesFrom(self, allele_id, construct_or_strain_id):
         """
-        We add a derives_from relationship between an allele and a construct here.  Adding the
+        We add a derives_from relationship between an allele and a construct or strain here.  Adding the
         allele and constructs to the graph should happen before (or after) this function call to
         ensure graph integrity.
         :param allele_id:
@@ -138,7 +138,7 @@ class Genotype():
         :return:
         """
         rel = self.gu.getNode(self.relationship['derives_from'])
-        self.graph.add((self.gu.getNode(allele_id), rel, self.gu.getNode(construct_id)))
+        self.graph.add((self.gu.getNode(allele_id), rel, self.gu.getNode(construct_or_strain_id)))
 
         return
 
@@ -237,8 +237,8 @@ class Genotype():
     def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
         gu = self.gu
 
-        self.graph.add((background_id, RDF['type'], gu.getNode(self.genoparts['genomic_background'])))
-        self.graph.add((genotype_id, gu.getNode(self.relationship['has_reference_part']), background_id))
+        self.graph.add((gu.getNode(background_id), RDF['type'], gu.getNode(self.genoparts['genomic_background'])))
+        self.graph.add((gu.getNode(genotype_id), gu.getNode(self.relationship['has_reference_part']), gu.getNode(background_id)))
 
         return
 
