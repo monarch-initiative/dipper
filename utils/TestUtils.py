@@ -4,12 +4,9 @@ import os
 
 class TestUtils:
 
-    def __init__(self, source=None):
+    def __init__(self):
         # instantiate source object
-        self.source = source
         self.graph = Graph()
-        if (source is not None):
-            self.source.load_bindings()
 
         return
 
@@ -17,16 +14,17 @@ class TestUtils:
         query_result = self.graph.query(query)
 
         for row in query_result:
-            print(row)
+            print(", ".join(row))
 
         return
 
-    def check_query_syntax(self, query):
-        self.source.graph.query(query)
+    def check_query_syntax(self, query, source):
+        source.load_bindings()
+        source.graph.query(query)
         return
 
-    def load_graph_from_turtle(self):
-        file = self.source.outdir+'/'+self.source.name+'.ttl'
+    def load_graph_from_turtle(self, source):
+        file = source.outdir+'/'+source.name+'.ttl'
         if not os.path.exists(file):
             raise Exception("file:"+file+" does not exist")
         # load turtle file into graph

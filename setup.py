@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from distutils.core import setup
 
+# TODO Move packages into single directory (named dipper?) to
+# namespace
 setup(name='DIPper',
       version='1.0',
       description='Data Ingest Pipeline',

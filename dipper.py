@@ -59,19 +59,20 @@ def main():
     args = parser.parse_args()
 
     if args.quiet:
-        logging.basicConfig(level=logging.WARNING)
+        logging.basicConfig(level=logging.ERROR)
     else:
         logging.basicConfig(level=logging.DEBUG)
 
     if args.query is not None:
+        test_query = TestUtils()
         for source in args.sources.split(','):
             source = source.lower()
             mysource = source_to_class_map[source]()
-            test_query = TestUtils(mysource)
-            test_query.check_query_syntax(args.query)
-            test_query.load_graph_from_turtle()
-            test_query.query_graph(args.query)
-            exit(0)
+            test_query.check_query_syntax(args.query, mysource)
+            test_query.load_graph_from_turtle(mysource)
+
+        test_query.query_graph(args.query)
+        exit(0)
 
     #iterate through all the sources
     for source in args.sources.split(','):
