@@ -4,10 +4,6 @@ from datetime import datetime
 from stat import *
 import re
 
-from rdflib import Literal
-from rdflib.namespace import RDFS, OWL, RDF
-from rdflib import URIRef
-
 from utils import pysed
 from sources.Source import Source
 from models.Assoc import Assoc
@@ -15,6 +11,7 @@ from models.Genotype import Genotype
 from models.Dataset import Dataset
 from models.G2PAssoc import G2PAssoc
 from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
 from conf import curie_map
 
 
@@ -83,7 +80,7 @@ class ZFIN(Source):
 
         self._load_zp_mappings()
 
-        self._process_genotype_features(('/').join((self.rawdir,self.files['geno']['file'])), self.outfile, self.graph, limit)
+        self._process_genotype_features(limit)
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
 
@@ -95,13 +92,16 @@ class ZFIN(Source):
         print("Found", len(self.graph), "nodes")
         return
 
-    def _process_genotype_features(self, raw, out, g, limit=None):
+    def _process_genotype_features(self, limit=None):
+        """
+        We don't actually know the allele pairs, so we'll store some info in a hashmap for post-processing
+        :param limit:
+        :return:
+        """
+        raw = ('/').join((self.rawdir,self.files['geno']['file']))
+        out = self.outfile
 
-        #TODO make this more efficient
-        #the problem with this implementation is that it creates many genotypes over and over, if the
-        #same genotype has many features (on many rows) then the same genotype is recreated, then it must be
-        #merged.  We should probably just create the genotype once, and then find the other
-        #items that belong to that genotype.
+        geno_hash = {}
         print("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -114,7 +114,11 @@ class ZFIN(Source):
                  construct_name, construct_id, other) = row
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name)
+                geno = Genotype(self.graph)
+                gt = geno.addGenotype(genotype_id, genotype_name)
+                if genotype_id not in geno_hash:
+                    geno_hash[genotype_id] = {};
+                genoparts = geno_hash[genotype_id]
 
                 # reassign the allele_type to a proper GENO or SO class
                 allele_type = self._map_allele_type_to_geno(allele_type)
@@ -133,21 +137,78 @@ class ZFIN(Source):
 
                     # allele to gene
                     geno.addAlleleOfGene(allele_id, gene_id)
+                    if gene_id not in genoparts:
+                        genoparts[gene_id] = [allele_id]
+                    else:
+                        genoparts[gene_id].append(allele_id)
 
+                    if (zygosity == 'homozygous'):
+                        genoparts[gene_id].append(allele_id)  #add the allele again
+                    elif (zygosity == 'unknown'):
+                        genoparts[gene_id].append('?')  #we'll just use this as a convention for unknown
+                    #elif (zygosity == 'complex'):  #what are these?
+                    #    genoparts[gene_id].append('complex')
+                    geno_hash[genotype_id] = genoparts
+                else:
+                    #if the gene is not known, still need to add the allele to the genotype hash
+                    #these will be added as sequence alterations.
+                    genoparts[allele_id] = [allele_id]
+                    if zygosity == 'homozygous':
+                        genoparts[allele_id].append(allele_id)
+                    elif zygosity == 'unknown':
+                        genoparts[allele_id].append('?')
+                    #elif zygosity == 'complex':  #not sure what to do with these?
+                    #    genoparts[allele_id].append('complex')
 
-                # genotype has_part allele
-                geno.addAlleleToGenotype(genotype_id, allele_id)
-                # need to make some attributes of this relationship for allele zygosity within the genotype
-                #or do we just make the allele_complement here, based on the zygosity?
-                #allele_in_gene_id=self.make_id(genotype_id+allele_id+zygosity)
-                #allele has_disposition zygosity?
-                #                g.add(())
+                    geno_hash[allele_id] = genoparts
 
                 if (limit is not None and line_counter > limit):
                     break
 
-                #add the specific genotype subgraph to the overall graph
-                self.graph = geno.getGraph().__iadd__(self.graph)
+                #end loop through file
+            #now loop through the geno_hash, and build the vslcs
+
+            for gt in geno_hash:
+                for gene_id in geno_hash.get(gt):
+                    variant_locus_parts = geno_hash.get(gt).get(gene_id)
+                    if gene_id in variant_locus_parts:
+                        #reset the gene_id to none
+                        gene_id = None
+
+                    allele1_id = variant_locus_parts[0]
+                    allele2_id = None
+                    zygosity_id = None
+                    #making the assumption that there are not more than 2 variant_locus_parts
+                    if len(variant_locus_parts) > 1:
+                        allele2_id = variant_locus_parts[1]
+                    if allele2_id is not None:
+                        if allele2_id == '?':
+                            zygosity_id = geno.zygosity['indeterminate']
+                            allele2_id = None
+                        elif allele2_id == 'complex':
+                            pass #not sure what to assign here
+                        elif allele1_id != allele2_id:
+                            zygosity_id = geno.zygosity['heterozygous']
+                        elif allele1_id == allele2_id:
+                            zygosity_id = geno.zygosity['homozygous']
+                    else:
+                        zygosity_id = geno.zygosity['indeterminate']
+
+                    #create the vslc
+                    if gene_id is None:
+                        g = ''
+                    else:
+                        g = gene_id
+                    if (allele2_id is None):
+                        a2 = ''
+                    else:
+                        a2 = allele2_id
+
+                    vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
+                    geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
+                    geno.addVSLCtoParent(vslc_id,gt)
+
+
             print("INFO: Done with genotypes")
         return
 
@@ -214,8 +275,10 @@ class ZFIN(Source):
                     continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
-                geno = Genotype(genotype_id, genotype_name)
-                self.graph.__iadd__(geno.getGraph())
+
+                geno = Genotype(self.graph)
+                geno.addGenotype(genotype_id,genotype_name)
+                #because we are using only w.t. environments, the genotype is just intrinsic.
 
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
                                                                superterm2_id, subterm2_id, modifier)
@@ -250,7 +313,7 @@ class ZFIN(Source):
         '''
         line_counter = 0
         cu = CurieUtil(curie_map.get())
-
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -258,16 +321,13 @@ class ZFIN(Source):
                 (pub_id, pubmed_id, authors, title, journal, year, vol, pages, empty) = row
 
                 pub_id = 'ZFIN:'+pub_id.strip()
-                pubmed_id = 'PMID:'+pubmed_id.strip()
-                self.graph.add((URIRef(cu.get_uri(pub_id)), RDF['type'], Assoc.OWLIND))
-                self.graph.add((URIRef(cu.get_uri(pubmed_id)), RDF['type'], Assoc.OWLIND))
-                if (pubmed_id != '' and pubmed_id is not None):
-                    self.graph.add((URIRef(cu.get_uri(pub_id)), OWL['sameAs'], URIRef(cu.get_uri(pubmed_id))))
-
-                #build a label for now
                 pub_label = ('; ').join((authors, title, journal, year, vol, pages))
-                #TODO should the label only be added if there is no pubmed mapping?
-                self.graph.add((URIRef(cu.get_uri(pub_id)), RDFS['label'], Literal(pub_label)))
+                gu.addIndividualToGraph(self.graph,pub_id,pub_label)
+
+                pubmed_id = 'PMID:'+pubmed_id.strip()
+                if (pubmed_id != '' and pubmed_id is not None):
+                    gu.addIndividualToGraph(self.graph,pubmed_id,None)
+                    gu.addSameIndividual(self.graph,pub_id,pubmed_id)
 
                 if (limit is not None and line_counter > limit):
                     break
