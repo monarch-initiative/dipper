@@ -5,14 +5,10 @@ import re
 import logging
 
 
-from rdflib import Literal
-from rdflib.namespace import DC, FOAF
-from rdflib import URIRef
-
 from sources.Source import Source
 from models.Assoc import Assoc
 from models.Dataset import Dataset
-from utils.CurieUtil import CurieUtil
+
 from conf import config, curie_map
 from utils.GraphUtils import GraphUtils
 
@@ -39,11 +35,6 @@ class EOM(Source):
     tables = [
         'dv.nlx_157874_1'
     ]
-
-
-    relationship = {
-        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
-    }
 
 
     def __init__(self):
