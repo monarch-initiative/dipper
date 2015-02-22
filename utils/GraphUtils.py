@@ -1,7 +1,7 @@
 __author__ = 'nicole'
 
 from rdflib import Literal, URIRef, BNode, Namespace
-from rdflib.namespace import DC, RDF, RDFS, OWL, XSD
+from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 from utils.CurieUtil import CurieUtil
 import re
 
@@ -162,6 +162,20 @@ class GraphUtils:
         p = URIRef(self.cu.get_uri(self.relationships['has_xref']))
         if (n1 is not None and n2 is not None):
             g.add((n1,p,n2))
+
+        return
+
+    def addDepiction(self,g,subject_id,image_url):
+        g.add((self.getNode(subject_id),FOAF['depiction'],Literal(image_url)))
+        return
+
+    def addComment(self,g,subject_id,comment):
+        g.add((self.getNode(subject_id),DC['comment'],Literal(comment.strip())))
+
+        return
+
+    def addPage(self,g,subject_id,page_url):
+        g.add((self.getNode(subject_id),FOAF['page'],Literal(page_url)))
 
         return
 
