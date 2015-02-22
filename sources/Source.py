@@ -441,3 +441,25 @@ class Source:
                          '%s has size %s, %s has size %s', localfile,
                           local_size, remotefile, remote_size)
         return is_equal
+
+
+        #TODO generalize this to a set of utils
+    def _getcols(self,cur,table):
+        """
+        Will execute a pg query to get the column names for the given table.
+        :param cur:
+        :param table:
+        :return:
+        """
+        query=(' ').join(("SELECT * FROM",table,"LIMIT 0"))  #for testing
+        #print("COMMAND:",query)
+        cur.execute(query)
+        colnames = [desc[0] for desc in cur.description]
+        logger.info("COLS (%s): %s", table, colnames)
+
+        return
+
+
+    def file_len(self,fname):
+        with open(fname) as f:
+            return sum(1 for line in f)
