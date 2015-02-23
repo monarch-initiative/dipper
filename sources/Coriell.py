@@ -20,14 +20,17 @@ from utils.GraphUtils import GraphUtils
 logger = logging.getLogger(__name__)
 
 class Coriell(Source):
-    '''
-    Be sure to have pg user/password connection details in your conf.json file, like:
-      dbauth : {
-        'disco' : {'user' : '<username>', 'password' : '<password>'}
-      }
-    '''
+    """
+    The Coriell Catalog provided to Monarch includes metadata and descriptions of NIGMS, NINDS, NHGRI, and
+    NIA cell lines.  These lines are made available for research purposes.
+    Here, we create annotations for the cell lines as models of the diseases from which
+    they originate.
 
+    Notice: The Coriell catalog is delivered to Monarch in a specific format, and requires ssh rsa fingerprint
+    identification.  Other groups wishing to get this data in it's raw form will need to contact Coriell
+    for credentials.
 
+    """
 
     def __init__(self):
         Source.__init__(self, 'coriell')
@@ -46,6 +49,15 @@ class Coriell(Source):
 
 
     def fetch(self, is_dl_forced):
+        """
+        Be sure to have pg user/password connection details in your conf.json file, like:
+        dbauth : {
+        "coriell" : {"user" : "<username>", "password" : "<password>", "host" : <host>}
+        }
+
+        :param is_dl_forced:
+        :return:
+        """
         host1 = 'host=\''+config.get_config()['keys']['coriell']['host']+'\''
         user1 = 'user=\''+config.get_config()['keys']['coriell']['user']+'\''
         passwd1 = 'passwd=\''+config.get_config()['keys']['coriell']['password']+'\''
@@ -69,9 +81,6 @@ class Coriell(Source):
 
         return
 
-    # here we're reading and building a full named graph of this resource, then dumping it all at the end
-    # we can investigate doing this line-by-line later
-    # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if (limit is not None):
             logger.info("Only parsing first %s rows of each file", limit)
@@ -87,37 +96,5 @@ class Coriell(Source):
 
         logger.info("Found %s nodes", len(self.graph))
         return
-
-
-
-
-
-
-
-    #TODO generalize this to a set of utils
-    def _getcols(self,cur,table):
-        query=(' ').join(("SELECT * FROM",table,"LIMIT 0"))  #for testing
-        #print("COMMAND:",query)
-        cur.execute(query)
-        colnames = [desc[0] for desc in cur.description]
-        logger.info("COLS (%s): %s", table, colnames)
-
-        return
-
-
-    def file_len(self,fname):
-        with open(fname) as f:
-            return sum(1 for line in f)
-
-
-
-
-    def verify(self):
-        status = False
-        self._verify(self.outfile)
-        status = self._verifyowl(self.outfile)
-
-        # verify some kind of relationship that should be in the file
-        return status
 
 
