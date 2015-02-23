@@ -130,32 +130,34 @@ class Genotype():
 
         return
 
-    def addAlleleDerivesFrom(self, allele_id, construct_or_strain_id):
+    def addDerivesFrom(self, child_id, parent_id):
         """
-        We add a derives_from relationship between an allele and a construct or strain here.  Adding the
-        allele and constructs to the graph should happen before (or after) this function call to
+        We add a derives_from relationship between the child and parent id.  Examples of uses include betwen:
+        an allele and a construct or strain here, a cell line and it's parent genotype.  Adding the
+        parent and child to the graph should happen outside of this function call to
         ensure graph integrity.
         :param allele_id:
         :param construct_id:
         :return:
         """
         rel = self.gu.getNode(self.relationship['derives_from'])
-        self.graph.add((self.gu.getNode(allele_id), rel, self.gu.getNode(construct_or_strain_id)))
+        self.graph.add((self.gu.getNode(child_id), rel, self.gu.getNode(parent_id)))
 
         return
 
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
         """
-        We make the assumption here that if the relationship is not provided, it is an alteration (not a reference) part
+        We make the assumption here that if the relationship is not provided, it is a
+        GENO:is_sequence_variant_instance_of
         :param allele_id:
         :param gene_id:
         :param rel_id:
         :return:
         """
         if (rel_id is None):
-            rel_id = self.relationship['has_alternate_part']
-        self.addParts(allele_id, gene_id, rel_id)
+            rel_id = self.gu.getNode(self.relationship['is_sequence_variant_instance_of'])
+        self.graph.add((self.gu.getNode(allele_id),self.gu.getNode(rel_id),self.gu.getNode(gene_id)))
 
         return
 
@@ -209,7 +211,7 @@ class Genotype():
     def addParts(self, part_id, parent_id, part_relationship=None):
         """
         This will add a has_part (or subproperty) relationship between a parent_id and the supplied part.
-        By default the relationship will be GENO:has_part, but any relationship could be given here.
+        By default the relationship will be BFO:has_part, but any relationship could be given here.
         :param variant_part:
         :param parent_id:
         :param part_relationship:
