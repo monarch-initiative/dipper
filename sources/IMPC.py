@@ -132,7 +132,7 @@ class IMPC(Source):
                 #genotype that is attached to phenotype = allele + strain + zygosity + sex (and is derived from a colony)
 
                 genotype_id = self.make_id((allele_accession_id+zygosity+strain_accession_id))
-                geno.addAlleleDerivesFrom(genotype_id,colony_id)
+                geno.addDerivesFrom(genotype_id,colony_id)
 
                 #as with MGI, the allele is the variant locus.  IF the marker is not known, we will call it a
                 #sequence alteration.  otherwise, we will create a BNode for the sequence alteration.
@@ -207,7 +207,7 @@ class IMPC(Source):
                 effective_genotype_label = genotype_name+'('+sex+')'
                 geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
                 geno.addParts(genotype_id,effective_genotype_id)
-                geno.addAlleleDerivesFrom(effective_genotype_id,colony_id)
+                geno.addDerivesFrom(effective_genotype_id,colony_id)
 
                 # Add the taxon as a class
                 taxon_id = 'NCBITaxon:10090'  #map to Mus musculus

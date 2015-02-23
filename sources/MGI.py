@@ -452,7 +452,7 @@ class MGI(Source):
                     #gu.addIndividualToGraph(self.graph,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id,sa_label,None,name)
                     if strain_id is not None:
-                        geno.addAlleleDerivesFrom(allele_id,strain_id)
+                        geno.addDerivesFrom(allele_id,strain_id)
 
                 if (limit is not None and line_counter > limit):
                     break
