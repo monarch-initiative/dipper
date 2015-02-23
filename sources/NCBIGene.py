@@ -38,14 +38,13 @@ class NCBIGene(Source):
     }
 
 
-
-
     relationships = {
         'gene_product_of' : 'RO:0002204',
         'has_gene_product' : 'RO:0002205',
         'is_about' : 'IAO:00000136'
     }
 
+    testmode = False
 
     def __init__(self):
         Source.__init__(self, 'ncbigene')
@@ -65,6 +64,9 @@ class NCBIGene(Source):
         #set to None if you don't want to apply a filter
         self.filter = 'taxids'
 
+        if self.testmode:
+            self.filter = 'geneids'
+
         return
 
     def fetch(self, is_dl_forced):
@@ -83,14 +85,6 @@ class NCBIGene(Source):
 
         return
 
-
-    def scrub(self):
-        '''
-        Perform various data-scrubbing on the raw data files prior to parsing.
-        For this resource, this currently includes: (Nothing)
-        :return: None
-        '''
-        return
 
 
     def parse(self, limit=None):
