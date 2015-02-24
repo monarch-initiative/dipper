@@ -1,9 +1,9 @@
 __author__ = 'nicole'
 
-from utils.CurieUtil import CurieUtil
-from utils.GraphUtils import GraphUtils
-from models.Assoc import Assoc
-from conf import curie_map
+from dipper.utils.CurieUtil import CurieUtil
+from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Assoc import Assoc
+from dipper.curie import curie_map
 
 
 class InteractionAssoc(Assoc):
