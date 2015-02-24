@@ -73,6 +73,7 @@ class Genotype():
 
         self.gu = GraphUtils(curie_map.get())
 
+
         self.graph = graph
 
         self.gu.loadObjectProperties(self.graph,self.relationship)
@@ -153,7 +154,7 @@ class Genotype():
         :return:
         """
         if (rel_id is None):
-            rel_id = self.gu.getNode(self.relationship['is_sequence_variant_instance_of'])
+            rel_id = self.relationship['is_sequence_variant_instance_of']
         self.graph.add((self.gu.getNode(allele_id),self.gu.getNode(rel_id),self.gu.getNode(gene_id)))
 
         return
