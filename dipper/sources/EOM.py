@@ -33,7 +33,7 @@ class EOM(Source):
 
     #we are using the dv view here; i wonder if we should be using the prod view, or their services instead.?
     tables = [
-        'dv.nlx_157874_1'
+        'dvp.pr_nlx_157874_1'
     ]
 
 
