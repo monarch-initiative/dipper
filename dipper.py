@@ -18,9 +18,9 @@ from dipper.sources.NCBIGene import NCBIGene
 from dipper.sources.UCSCBands import UCSCBands
 from dipper.sources.CTD import CTD
 from dipper.sources.GeneReviews import GeneReviews
-from dipper.sources import EOM
+from dipper.sources.EOM import EOM
 from dipper.sources.Coriell import Coriell
-from dipper.utils import TestUtils
+from dipper.utils.TestUtils import TestUtils
 
 
 def main():
