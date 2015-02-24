@@ -103,11 +103,13 @@ class EOM(Source):
         This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
         Note that foaf:depiction is inverse of foaf:depicts relationship.
 
+        Since it is bad form to have two definitions, we concatenate the two into one string.
+
         Triples:
             <eom id> a owl:Class
                 rdf:label Literal(eom label)
                 OIO:hasRelatedSynonym Literal(synonym list)
-                IAO:definition Literal(subjective def), Literal(objective_def)
+                IAO:definition Literal(objective_def. subjective def)
                 foaf:depiction Literal(small_image_url),Literal(large_image_url)
                 foaf:page Literal(page_url)
                 dc:comment Literal(long commented text)
@@ -134,13 +136,17 @@ class EOM(Source):
                 gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label)
 
                 #Assemble the description text
-                description = None
-                if subjective_definition.strip() != '':
-                    subjective_definition = 'Subjective Description: '+subjective_definition.strip()
-                    gu.addDefinition(self.graph,morphology_term_id,subjective_definition)
-                if objective_definition.strip() != '':
-                    objective_definition = 'Objective Description: '+objective_definition.strip()
-                    gu.addDefinition(self.graph,morphology_term_id,objective_definition)
+
+                if subjective_definition != '' and not (re.match('.+\.$',subjective_definition)):
+                    #add a trailing period.
+                    subjective_definition = subjective_definition.strip() + '.'
+                if objective_definition != '' and not (re.match('.+\.$',objective_definition)):
+                    #add a trailing period.
+                    objective_definition = objective_definition.strip() + '.'
+
+                definition = ('  ').join((objective_definition,subjective_definition)).strip()
+
+                gu.addDefinition(self.graph,morphology_term_id,definition)
 
 
                 #<term id> FOAF:depicted_by literal url
@@ -162,12 +168,12 @@ class EOM(Source):
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        gu.addSynonym(self.graph,morphology_term_id,s.strip())
+                        gu.addSynonym(self.graph,morphology_term_id,s.strip(),gu.relationships['hasExactSynonym'])
 
                 #morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
-                        gu.addSynonym(self.graph,morphology_term_id,s.strip())
+                        gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
 
                 #morphology_term_id has page morphology_term_url
                 gu.addPage(self.graph,morphology_term_id,morphology_term_url)
