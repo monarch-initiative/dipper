@@ -198,6 +198,7 @@ class NCBIGene(Source):
                     if (map_loc != '-'):
                         #this matches the regular kind of chrs, so make that kind of band
                         #not sure why this matches? chrX|Y or 10090chr12|Un"
+                        #TODO we probably need a different regex per organism
                         if re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$',map_loc):
                             #the maploc_id already has the numeric chromosome in it, strip it first
                             bid = re.sub('^'+str(chr),'',map_loc)
