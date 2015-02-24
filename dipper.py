@@ -7,20 +7,20 @@ __author__ = 'nlw'
 import argparse
 import logging
 
-from sources.HPOAnnotations import HPOAnnotations
-from sources.ZFIN import ZFIN
-from sources.OMIM import OMIM
-from sources.BioGrid import BioGrid
-from sources.MGI import MGI
-from sources.IMPC import IMPC
-from sources.Panther import Panther
-from sources.NCBIGene import NCBIGene
-from sources.UCSCBands import UCSCBands
-from sources.CTD import CTD
-from sources.GeneReviews import GeneReviews
-from sources.EOM import EOM
-from sources.Coriell import Coriell
-from utils.TestUtils import TestUtils
+from dipper.sources.HPOAnnotations import HPOAnnotations
+from dipper.sources.ZFIN import ZFIN
+from dipper.sources.OMIM import OMIM
+from dipper.sources.BioGrid import BioGrid
+from dipper.sources.MGI import MGI
+from dipper.sources.IMPC import IMPC
+from dipper.sources.Panther import Panther
+from dipper.sources.NCBIGene import NCBIGene
+from dipper.sources.UCSCBands import UCSCBands
+from dipper.sources.CTD import CTD
+from dipper.sources.GeneReviews import GeneReviews
+from dipper.sources import EOM
+from dipper.sources.Coriell import Coriell
+from dipper.utils import TestUtils
 
 
 def main():
