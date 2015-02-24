@@ -16,7 +16,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.conf import config
+from dipper  import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern,fromRoman, toRoman
 

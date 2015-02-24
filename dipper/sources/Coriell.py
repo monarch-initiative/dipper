@@ -3,7 +3,7 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
-from dipper.conf import config
+from dipper import config
 
 logger = logging.getLogger(__name__)
 

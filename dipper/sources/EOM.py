@@ -7,7 +7,7 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
-from dipper.conf import config
+from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 
