@@ -89,7 +89,7 @@ class BioGrid(Source):
         #TODO make each of these items an option... we may want to process them separately
         self._get_interactions(limit)
 
-        #self._get_identifiers(limit)
+        self._get_identifiers(limit)
         self.load_bindings()
 
         print("Loaded", len(self.graph), "nodes")
@@ -98,6 +98,7 @@ class BioGrid(Source):
 
 
     def _get_interactions(self,limit):
+        print("INFO: getting interactions")
         line_counter = 0
         f=('/').join((self.rawdir,self.files['interactions']['file']))
         myzip = ZipFile(f,'r')
@@ -121,7 +122,8 @@ class BioGrid(Source):
                 #TODO remove these filters, or parameterize them
                 #uncomment the following codeblock if you want to filter based on taxid
                 #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
-                taxids = [9606] #human
+                #taxids = [9606] #human
+                taxids = [9606,10090]
                 if (not (taxids.__contains__(int(re.sub('taxid:','', taxid_a.rstrip()))) or
                     taxids.__contains__(int(re.sub('taxid:','', taxid_b.rstrip()))) )):
                     continue
@@ -172,6 +174,7 @@ class BioGrid(Source):
         :param limit:
         :return:
         '''
+        print("INFO: getting identifier mapping")
         line_counter = 0
         f=('/').join((self.rawdir,self.files['identifiers']['file']))
         myzip = ZipFile(f,'r')
@@ -223,14 +226,15 @@ class BioGrid(Source):
 
 
     def _map_MI_to_RO(self,mi_id):
+        rel = InteractionAssoc(None,None,None,None,None).get_relationships()
         mi_ro_map = {
-            'MI:0403' : InteractionAssoc.relationships['colocalizes_with'], #colocalization
-            'MI:0407' : InteractionAssoc.relationships['interacts_with'], #direct interaction
-            'MI:0794' : InteractionAssoc.relationships['genetically_interacts_with'], #synthetic genetic interaction defined by inequality
-            'MI:0796' : InteractionAssoc.relationships['genetically_interacts_with'], #suppressive genetic interaction defined by inequality
-            'MI:0799' : InteractionAssoc.relationships['genetically_interacts_with'], #additive genetic interaction defined by inequality
-            'MI:0914' : InteractionAssoc.relationships['interacts_with'], #association
-            'MI:0915' : InteractionAssoc.relationships['interacts_with'] #physical association
+            'MI:0403' : rel['colocalizes_with'], #colocalization
+            'MI:0407' : rel['interacts_with'], #direct interaction
+            'MI:0794' : rel['genetically_interacts_with'], #synthetic genetic interaction defined by inequality
+            'MI:0796' : rel['genetically_interacts_with'], #suppressive genetic interaction defined by inequality
+            'MI:0799' : rel['genetically_interacts_with'], #additive genetic interaction defined by inequality
+            'MI:0914' : rel['interacts_with'], #association
+            'MI:0915' : rel['interacts_with'] #physical association
         }
 
         ro_id = InteractionAssoc.relationships['interacts_with']  #default
