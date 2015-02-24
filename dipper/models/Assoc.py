@@ -89,7 +89,7 @@ class Assoc:
             #TODO remove this warning, it's annoying
             #print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
-            self.addEvidence(g,self.annot_id,self.evidence)
+            self.addEvidence(g,self.evidence,self.annot_id)
 
         # Check if publications are in list form
         if self.pub_list is not None:
