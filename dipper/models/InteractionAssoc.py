@@ -1,13 +1,14 @@
 __author__ = 'nicole'
 
-from dipper.utils.CurieUtil import CurieUtil
-from dipper.models.Assoc import Assoc
-from dipper.curie import curie_map
+from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
+from models.Assoc import Assoc
+from conf import curie_map
 
 
 class InteractionAssoc(Assoc):
 
-    relationships = {
+    rel = {
         'genetically_interacts_with' : 'RO:0002435',
         'interacts_with' : 'RO:0002434',  #use this for directly interacts with.  better choice? psi-mi:"MI:0407"(direct interaction)
         'molecularly_interacts_with' : 'RO:0002436',  #should we use this instead for direct interaction?
@@ -16,7 +17,10 @@ class InteractionAssoc(Assoc):
     }
 
     def __init__(self,assoc_id, subj, obj, pub, evidence_code):
+        super()
+        self.relationships.update(self.rel)
         self.cu = CurieUtil(curie_map.get())
+        self.gu = GraphUtils(curie_map.get())
         self.annot_id = assoc_id
         self.subj = subj
         self.obj = obj
@@ -29,6 +33,7 @@ class InteractionAssoc(Assoc):
         self.setSubject(subj)
         self.setObject(obj)
 
+
         return
 
     def addInteractionAssociationToGraph(self,g):
@@ -38,3 +43,4 @@ class InteractionAssoc(Assoc):
         #todo add some other stuff related to the experimental methods?
 
         return
+

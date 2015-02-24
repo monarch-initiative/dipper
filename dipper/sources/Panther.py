@@ -97,6 +97,7 @@ class Panther(Source):
         :param limit:
         :return:
         '''
+        print("INFO: getting orthologs")
         line_counter = 0
         for k in self.files.keys():
             f=('/').join((self.rawdir,self.files[k]['file']))
@@ -221,13 +222,15 @@ class Panther(Source):
         :param ortho: orthology code
         :return: RO identifier
         '''
-        ro_id = OrthologyAssoc.relationships['orthologous'] #in orthology relationship with
+        o = OrthologyAssoc(None,None,None,None,None)  #this is sneaky, needs refactor
+
+        ro_id = o.relationships['orthologous'] #in orthology relationship with
         ortho_to_ro_map = {
-            'P' : OrthologyAssoc.relationships['paralogous'],
-            'O' : OrthologyAssoc.relationships['orthologous'],
-            'LDO': OrthologyAssoc.relationships['least_diverged_orthologous'],
-            'X': OrthologyAssoc.relationships['xenologous'],
-            'LDX': OrthologyAssoc.relationships['xenologous']
+            'P' : o.relationships['paralogous'],
+            'O' : o.relationships['orthologous'],
+            'LDO': o.relationships['least_diverged_orthologous'],
+            'X': o.relationships['xenologous'],
+            'LDX': o.relationships['xenologous']
         }
 
         if (ortho in ortho_to_ro_map):

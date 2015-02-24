@@ -3,14 +3,15 @@ __author__ = 'nicole'
 from rdflib import URIRef
 from rdflib.namespace import RDF
 
-from dipper.utils.CurieUtil import CurieUtil
-from dipper.models.Assoc import Assoc
-from dipper.curie import curie_map
+from utils.CurieUtil import CurieUtil
+from utils.GraphUtils import GraphUtils
+from models.Assoc import Assoc
+from conf import curie_map
 
 
 class OrthologyAssoc(Assoc):
 
-    relationships = {
+    ortho_rel = {
         'orthologous' : 'RO:HOM0000017', #in orthology relationship with
         'least_diverged_orthologous' : 'RO:HOM0000020', #in 1 to 1 orthology relationship with
         'homologous': 'RO:HOM0000019', ## in 1 to 1 homology relationship with
@@ -23,7 +24,10 @@ class OrthologyAssoc(Assoc):
 
 
     def __init__(self,assoc_id, gene1, gene2, pub, evidence_code):
+        super()
         self.cu = CurieUtil(curie_map.get())
+        self.gu = GraphUtils(curie_map.get())
+        self.relationships.update(self.ortho_rel)
         self.annot_id = assoc_id
         self.gene1 = gene1
         self.gene2 = gene2
