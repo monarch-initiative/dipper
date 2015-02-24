@@ -30,6 +30,7 @@
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'
 'PR': 'http://purl.obolibrary.org/obo/pr_' #FIXME: believe this is correct, but need confirmation.
 'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'
+'PW' : 'http://purl.obolibrary.org/obo/PW_'
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
