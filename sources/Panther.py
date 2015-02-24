@@ -13,7 +13,7 @@ from models.Dataset import Dataset
 
 
 class Panther(Source):
-    '''
+    """
     The pairwise orthology calls from Panther DB: http://pantherdb.org/ encompass 22 species,
     from the RefGenome and HCOP projects.
     Here, we map the orthology classes to RO homology relationships
@@ -26,7 +26,7 @@ class Panther(Source):
     no hierarchical (subfamily) information.  This will get updated from the HMM files in the future.
 
     Note that there is a fair amount of identifier cleanup performed, to align with standard CURIE prefixes.
-    '''
+    """
 
     files = {
         'refgenome' : {'file': 'RefGenomeOrthologs.tar.gz',
@@ -77,30 +77,42 @@ class Panther(Source):
         return
 
 
-    def verify(self):
-        '''
-        abstract method to verify the integrity of the data fetched and turned into triples
-        this should be overridden by tests in subclasses
-        :return: True if all tests pass
-        '''
-        status = False
-        self._verify(self.outfile)
-        status = self._verifyowl(self.outfile)
-
-        return status
-
     def _get_orthologs(self,limit):
-        '''
+        """
         will process each of the specified pairwise orthology files, creating orthology associations
         based on the specified orthology code.
         this currently assumes that each of the orthology files is identically formatted.
+        relationships are made between genes here.
 
         there is also a nominal amount of identifier re-formatting:
         MGI:MGI --> MGI
         Ensembl --> ENSEMBL
+
+        we skip any genes where we don't know how to map the gene identifiers.  for example,
+        Gene:Huwe1 for RAT is not an identifier, so we skip any mappings to this identifier.  Often, the
+        there are two entries for the same gene (base on equivalent Uniprot id), and so we are not
+        actually losing any information.
+
+        We presently have a hard-coded filter to select only orthology relationships where one of the pair
+        is in our species of interest (Mouse and Human, for the moment).  This will be added as a
+        configurable parameter in the future.
+
+        Genes are also added to a grouping class defined with a PANTHER id.
+
+        Triples:
+        <gene1_id> RO:othologous <gene2_id>
+        <assoc_id> :hasSubject <gene1_id>
+        <assoc_id> :hasObject <gene2_id>
+        <assoc_id> :hasPredicate <RO:orthologous>
+        <assoc_id> dc:evidence ECO:phylogenetic_evidence
+
+        <panther_id> a DATA:gene_family
+        <panther_id> RO:has_member <gene1_id>
+        <panther_id> RO:has_member <gene2_id>
+
         :param limit:
         :return:
-        '''
+        """
         print("INFO: getting orthologs")
         line_counter = 0
         for k in self.files.keys():
@@ -126,6 +138,7 @@ class Panther(Source):
                     (a, b, orthology_class, ancestor_taxon,panther_id) = line.split('\t')
                     (species_a,gene_a,protein_a) = a.split('|')
                     (species_b,gene_b,protein_b) = b.split('|')
+
 
                     #map the taxon abbreviations to ncbi taxon ids
                     taxon_a = self._map_taxon_abbr_to_id(species_a)
@@ -156,6 +169,10 @@ class Panther(Source):
 
                     gene_a = self._clean_up_gene_id(gene_a,species_a)
                     gene_b = self._clean_up_gene_id(gene_b,species_b)
+
+                    #a special case here; mostly some rat genes they use symbols instead of identifiers.  will skip
+                    if (re.match('Gene:',gene_a) or re.match('Gene:',gene_b)):
+                        continue
 
                     rel=self._map_orthology_code_to_RO(orthology_class)
 
