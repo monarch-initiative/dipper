@@ -2,11 +2,11 @@
 
 ### Project specific:
 
-conf.json
+dipper/conf.json
 raw
 out
 owltools*
-conf/conf.json
+conf.json
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
