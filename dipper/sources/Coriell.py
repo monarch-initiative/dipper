@@ -1,9 +1,12 @@
 import logging
+import csv
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
 from dipper import config
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +22,13 @@ class Coriell(Source):
     for credentials.
 
     """
+
+    files = {
+        'ninds': {'file': 'NINDS_2014-02-03_13-32-24.csv'},
+        'nigms': {'file': 'NIGMS_2014-02-03_13-31-42.csv'},
+        'nia': {'file': 'NIA_2015-02-20_16-08-04.csv'}
+    }
+
 
     def __init__(self):
         Source.__init__(self, 'coriell')
@@ -75,6 +85,9 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
+        for f in ['ninds','nigms']:
+            file = ('/').join((self.rawdir,self.files[f]['file']))
+            self._process_data(file, limit)
 
         logger.info("Finished parsing.")
 
@@ -85,4 +98,36 @@ class Coriell(Source):
         logger.info("Found %s nodes", len(self.graph))
         return
 
+    def _process_data(self, raw, limit=None):
+        """
+        This function will process the data files from Coriell
 
+
+
+        Triples:
+
+
+
+        :param raw:
+        :param limit:
+        :return:
+        """
+        logger.info("Processing Data from %s",raw)
+        #gu = GraphUtils(curie_map.get())
+
+        line_counter = 0
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            next(filereader, None)  # skip the header row
+            for row in filereader:
+                line_counter += 1
+
+                (catalog_id,description,omim_number,sample_type,cell_line_available,
+                 dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
+                 relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+        return
