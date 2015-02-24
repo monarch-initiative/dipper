@@ -10,7 +10,7 @@ from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.utils import CurieUtil
 from dipper.conf import config
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 
 

@@ -12,7 +12,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class ZFIN(Source):

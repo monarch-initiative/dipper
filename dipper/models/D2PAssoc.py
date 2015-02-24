@@ -4,7 +4,7 @@ from rdflib import Namespace, Literal
 
 from dipper.models.Assoc import Assoc
 from dipper.utils.CurieUtil import CurieUtil
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 # This one is specific for making a disease-to-phenotype

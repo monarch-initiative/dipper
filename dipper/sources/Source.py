@@ -12,7 +12,7 @@ from stat import *
 import hashlib
 import subprocess
 from subprocess import check_call
-from dipper.curie import curie_map
+from dipper import curie_map
 
 from dipper.utils.GraphUtils import GraphUtils
 

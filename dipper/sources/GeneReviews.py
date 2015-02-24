@@ -9,7 +9,7 @@ from docx import Document
 from dipper.models.Assoc import Assoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 
 

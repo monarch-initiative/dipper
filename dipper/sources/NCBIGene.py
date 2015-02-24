@@ -11,7 +11,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.Assoc import Assoc
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.models.GenomicFeature import Feature,makeChromID
 
 

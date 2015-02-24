@@ -3,7 +3,7 @@ __author__ = 'nlw'
 from rdflib import RDF
 
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class Genotype():

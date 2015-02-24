@@ -3,7 +3,7 @@ import re
 import gzip
 import logging
 
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc

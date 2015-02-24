@@ -9,7 +9,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from dipper.models.Genotype import Genotype
-from dipper.curie import curie_map
+from dipper import curie_map
 from rdflib import Graph
 
 import unittest

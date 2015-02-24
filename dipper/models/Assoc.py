@@ -7,7 +7,7 @@ from rdflib.namespace import RDF,DC,OWL,RDFS
 
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class Assoc:

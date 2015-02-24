@@ -5,7 +5,7 @@ import re
 from rdflib import URIRef,Literal
 from rdflib.namespace import RDF,XSD
 
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.models.Assoc import Assoc

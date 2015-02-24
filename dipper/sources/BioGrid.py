@@ -8,7 +8,7 @@ import re
 
 from rdflib.namespace import FOAF, DC, RDFS
 
-from dipper.curie import curie_map
+from dipper import curie_map
 from dipper.sources.Source import Source
 from dipper.models.InteractionAssoc import InteractionAssoc
 from dipper.models.Dataset import Dataset

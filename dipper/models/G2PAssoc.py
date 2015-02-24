@@ -2,7 +2,7 @@ __author__ = 'nicole'
 
 from dipper.models.Assoc import Assoc
 from dipper.utils.CurieUtil import CurieUtil
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class G2PAssoc(Assoc):

@@ -9,7 +9,7 @@ from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature,makeChromID
 from dipper.models.Dataset import Dataset
 from dipper.utils.CurieUtil import CurieUtil
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class UCSCBands(Source):

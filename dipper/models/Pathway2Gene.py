@@ -2,7 +2,7 @@
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Assoc import Assoc
-from dipper.curie import curie_map
+from dipper import curie_map
 
 
 class Pathway2Gene(Assoc):

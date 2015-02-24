@@ -8,7 +8,8 @@ from rdflib.namespace import DC
 
 from dipper.models.Assoc import Assoc
 from dipper.utils.CurieUtil import CurieUtil
-from dipper.curie import curie_map
+from dipper import curie_map
+
 
 
 
