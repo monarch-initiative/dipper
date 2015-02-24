@@ -19,17 +19,18 @@ class GraphUtils:
     SUBCLASS=RDFS['subClassOf']
 
     relationships = {
-        'has_disposition':'GENO:0000208',
-        'has_phenotype':'RO:0002200',
-        'replaced_by' : 'IAO:0100001',
-        'consider' : 'OIO:consider',
-        'hasExactSynonym' : 'OIO:hasExactSynonym',
-        'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
-        'definition' : 'IAO:0000115',
-        'in_taxon' : 'RO:0002162',
-        'has_quality' : 'RO:0000086',
-        'towards' : 'RO:0002503',
-        'has_xref' : 'OIO:hasDbXref'
+        'has_disposition': 'GENO:0000208',
+        'has_phenotype': 'RO:0002200',
+        'replaced_by': 'IAO:0100001',
+        'consider': 'OIO:consider',
+        'hasExactSynonym': 'OIO:hasExactSynonym',
+        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
+        'definition': 'IAO:0000115',
+        'in_taxon': 'RO:0002162',
+        'has_quality': 'RO:0000086',
+        'towards': 'RO:0002503',
+        'has_xref': 'OIO:hasDbXref',
+        'has_member': 'RO:0002351'
     }
 
 
@@ -181,6 +182,9 @@ class GraphUtils:
         g.add((self.getNode(subject_id),FOAF['page'],Literal(page_url)))
 
         return
+
+    def addMember(self, g, group_id, member_id):
+        self.addTriple(g, group_id, self.relationships['has_member'], member_id)
 
     def write(self, graph, format=None, file=None):
         """

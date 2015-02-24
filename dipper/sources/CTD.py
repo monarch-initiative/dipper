@@ -7,7 +7,6 @@ from dipper import curie_map
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
-from dipper.models.Pathway2Gene import Pathway2Gene
 from dipper.utils.GraphUtils import GraphUtils
 
 
@@ -98,21 +97,18 @@ class CTD(Source):
 
     def _process_pathways(self, row):
         self._check_list_len(row, 4)
+        gu = GraphUtils(curie_map.get())
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
         entrez_id = 'NCBIGene:'+gene_id
-        evidence_code = self._get_evidence_code('TAS')
-        # add KEGG class
-        gu = GraphUtils(curie_map.get())
+        # Adding all pathways as classes, may refactor in the future
+        # to only add Reactome pathways from CTD
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
+        gu.addSubclass(self.graph, self._get_class_id('pathway'), pathway_id)
+        gu.addClassToGraph(self.graph, entrez_id, gene_symbol)
+        gu.addMember(self.graph, pathway_id, entrez_id)
 
-        assoc_id = self.make_id('ctd' + pathway_id + entrez_id)
-        assoc = Pathway2Gene(assoc_id, pathway_id, entrez_id, evidence_code,
-                             pathway_name, gene_symbol)
-        assoc.loadObjectProperties(self.graph)
-        assoc.add_gene_as_class(self.graph)
-        if re.match(re.compile('^REACT'),pathway_id):
-            assoc.add_pathway_as_class(self.graph)
-        assoc.addInteractionAssociationToGraph(self.graph)
+        # if re.match(re.compile('^REACT'),pathway_id):
+        #    gu.addClassToGraph(self.graph, pathway_id, pathway_name)
 
         return
 
@@ -193,6 +189,16 @@ class CTD(Source):
             'marker/mechanism': 'MONARCH:causes'
         }
         return REL_MAP[rel]
+
+    def _get_class_id(self, cls):
+        """
+        :param cls
+        :return: curie
+        """
+        CLASS_MAP = {
+            'pathway': 'PW:0000001',
+        }
+        return CLASS_MAP[cls]
 
     def _split_pub_ids_by_evidence(self, pub_ids, disease_id, chem_id, pub_map):
         """
