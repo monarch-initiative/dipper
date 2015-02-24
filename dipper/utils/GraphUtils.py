@@ -228,6 +228,13 @@ class GraphUtils:
 
         return self._getNode(id)
 
+    def addTriple(self,graph,subject_id,predicate_id,object,object_is_literal=False):
+        if object_is_literal is True:
+            graph.add((self.getNode(subject_id),self.getNode(predicate_id),Literal(object)))
+        else:
+            graph.add((self.getNode(subject_id),self.getNode(predicate_id),self.getNode(object)))
+
+        return
 
     def loadObjectProperties(self,graph,op):
         """
