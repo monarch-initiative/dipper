@@ -133,7 +133,8 @@ class ZFIN(Source):
                     # if it's a transgenic construct, then we'll have to get the other bits
                     if (construct_id is not None and construct_id.strip() != ''):
                         construct_id = 'ZFIN:' + construct_id.strip()
-                        geno.addAlleleDerivesFromConstruct(allele_id, construct_id)
+                        geno.addDerivesFrom(allele_id, construct_id)
+
 
                     # allele to gene
                     geno.addAlleleOfGene(allele_id, gene_id)
