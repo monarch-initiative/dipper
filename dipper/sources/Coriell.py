@@ -5,6 +5,8 @@ from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
 from dipper import config
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import curie_map
 
 
 
@@ -24,9 +26,18 @@ class Coriell(Source):
     """
 
     files = {
-        'ninds': {'file': 'NINDS_2014-02-03_13-32-24.csv'},
-        'nigms': {'file': 'NIGMS_2014-02-03_13-31-42.csv'},
-        'nia': {'file': 'NIA_2015-02-20_16-08-04.csv'}
+        'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
+                  'id' : 'NINDSrepository',
+                  'label': 'NINDS Human Genetics DNA and Cell line Repository',
+                  'page' : 'https://catalog.coriell.org/1/NINDS'},
+        'nigms': {'file' : 'NIGMS_2014-02-03_13-31-42.csv',
+                  'id' : 'NIGMSrepository',
+                  'label': 'NIGMS Human Genetic Cell Repository',
+                  'page' : 'https://catalog.coriell.org/1/NIGMS'},
+        'nia': {'file' : 'NIA_2015-02-20_16-08-04.csv',
+                'id' : 'NIArepository',
+                'label': 'NIA Aging Cell Repository',
+                'page': 'https://catalog.coriell.org/1/NIA'}
     }
 
 
@@ -87,6 +98,7 @@ class Coriell(Source):
 
         for f in ['ninds','nigms']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
+            #self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
@@ -100,11 +112,38 @@ class Coriell(Source):
 
     def _process_data(self, raw, limit=None):
         """
-        This function will process the data files from Coriell
+        This function will process the data files from Coriell.
 
 
 
-        Triples:
+        Triples: (examples)
+
+            :NIGMSrepository a CLO_0000008 #repository  ?
+                label : NIGMS Human Genetic Cell Repository
+                foaf:page https://catalog.coriell.org/0/sections/collections/NIGMS/?SsId=8
+
+            line_id a CL_0000057,  #fibroblast line
+                derives_from patient_id, uberon:Fibroblast
+                part_of :NIGMSrepository
+                #we also have the age_at_sampling type of property
+
+            patient id a foaf:person, proband, OMIM:disease_id
+                label: "fibroblast from patient 12345 with disease X"
+                member_of family_id  #what is the right thing here?
+                SIO:race EFO:caucasian  #subclass of EFO:0001799
+                in_taxon NCBITaxon:9606
+                dc:description Literal(remark)
+                GENO:has_genotype genotype_id
+
+            family_id a owl:NamedIndividual
+                foaf:page "https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?PgId=402&fam=2104&coll=GM"
+
+            genotype_id a intrinsic_genotype
+                GENO:has_variant_part allelic_variant_id
+                #we don't necessarily know much about the genotype, other than the allelic variant.
+                #also there's the sex here)
+
+            pub_id mentions cell_line_id
 
 
 
@@ -126,8 +165,69 @@ class Coriell(Source):
                  dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
                  relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
 
+                line_id = catalog_id
+
+                cell_type = self._map_cell_type(sample_type)
+
+                 #if pubmed_ids != '':
+                    #for s in pubmed_ids.split(';'):
+                        #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+
 
 
                 if (limit is not None and line_counter > limit):
                     break
         return
+
+    def _process_repository(self, id, label, page):
+        """
+        This function will process the data files from Coriell.
+
+        Triples:
+            Repository a CLO_0000008 #repository
+            rdf:label Literal (label)
+            foaf:page Literal (page)
+
+
+        :param raw:
+        :param limit:
+        :return:
+        """
+        #FIXME: How to devise a label for each repository?
+        gu = GraphUtils(curie_map.get())
+        repo_id = id
+        repo_label = label
+        repo_page = page
+        gu.addClassToGraph(self.graph,repo_id,repo_label)
+        gu.addPage(self.graph,repo_id,repo_page)
+
+
+
+        return
+
+
+
+    def _map_cell_type(self, sample_type):
+        type = None
+        type_map = {
+            'Amniotic fluid-derived cell line': 'CL:0002323',  # FIXME: amniocyte?
+            'B-Lymphocyte': 'CL:0000236',  # B cell
+            'Chorionic villus-derived cell line': '', # FIXME: No Match
+            'Endothelial': 'CL:0000115',  # endothelial cell
+            'Erythroleukemic cell line': '',  # FIXME: No Match. "Abnormal precursor (virally transformed) of mouse erythrocytes that can be grown in culture and induced to differentiate by treatment with, for example, DMSO."
+            'Fibroblast': 'CL:0000057',  # fibroblast
+            'Keratinocyte': 'CL:0000312', # keratinocyte
+            'Melanocyte': 'CL:0000148',  # melanocyte
+            'Microcell hybrid': '',  # FIXME: No Match
+            'Myoblast': 'CL:0000056',  # myoblast
+            'Smooth muscle': 'CL:0000192',  # smooth muscle cell
+            'Stem cell': 'CL:0000034',  # stem cell
+            'T-Lymphocyte': 'CL:0000084',  # T cell
+            'Tumor-derived cell line': 'CL:0002198'  # FIXME: No Match. "Cells isolated from a mass of neoplastic cells, i.e., a growth formed by abnormal cellular proliferation." Oncocyte? CL:0002198
+        }
+        if (sample_type.strip() in type_map):
+            type = type_map.get(sample_type)
+        else:
+            print("ERROR: Zygosity (", zygosity, ") not mapped")
+
+        return type
