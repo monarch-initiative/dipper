@@ -101,24 +101,26 @@ class IMPC(Source):
                 #colony ids sometimes have <> in them, and break our system; replace these with underscores
                 colony_id = 'IMPC:'+re.sub('[<>\s]','_',colony)
 
+
                 if not re.match('MGI',allele_accession_id):
                     allele_accession_id = 'IMPC:'+allele_accession_id
 
 
                 ##############    BUILD THE COLONY    #############
                 #first, let's describe the colony that the animals come from
-                #from an old email dated July 23 2014:
-                #We are using a concatenation of imits colony_id + center to identify a strain.
-                #Phenotypes associations are made to imits colony_id +center+zygosity+gender
-                #FIXME the above doesn't make much sense to me; i am doing what i think makes sense below. -nlw
+                #The Colony ID refers to the ES cell clone used to generate a mouse strain.
+                #Terry sez: we use this clone ID to track ES cell -> mouse strain -> mouse phenotyping.
+                #The same ES clone maybe used at multiple centers, so we have to concatenate the two to have a unique ID.
+                #some useful reading about generating mice from ES cells: http://ki.mit.edu/sbc/escell/services/details
 
-                #the colony is reflective of the allele and strain (background), with unknown zygosity
+                #here, we'll make a genotype that derives from an ES cell with a given allele.  the strain is not
+                #really attached to the colony.
+
+                #the colony/clone is reflective of the allele, with unknown zygosity
                 gu.addIndividualToGraph(self.graph,colony_id,colony,geno.genoparts['population'])
-                if (strain_accession_id is not None and not re.search('\:',strain_accession_id)):
-                    strain_accession_id = 'IMPC:'+strain_accession_id
-                elif strain_accession_id is not None and strain_accession_id != '':
-                    geno.addGenomicBackgroundToGenotype(strain_accession_id,colony_id)
+
                 #vslc of the colony has unknown zygosity
+                #note that we will define the allele (and it's relationship to the marker, etc.) later
                 vslc_colony = ':_'+allele_accession_id+geno.zygosity['indeterminate']
                 vslc_colony_label = 'vslc'+colony #TODO remove me
                 gu.addIndividualToGraph(self.graph,vslc_colony,vslc_colony_label,geno.genoparts['variant_single_locus_complement'])
@@ -126,10 +128,10 @@ class IMPC(Source):
                 geno.addMemberOfPopulation(vslc_colony,colony_id)
 
                 ##############    BUILD THE ANNOTATED GENOTYPE    #############
-                #now, we'll build the genotype of the individual that derives from the colony
-                #genotype that is attached to phenotype = allele + strain + zygosity + sex (and is derived from a colony)
+                #now, we'll build the genotype of the individual that derives from the colony/clone
+                #genotype that is attached to phenotype = colony_id + strain + zygosity + sex (and is derived from a colony)
 
-                genotype_id = self.make_id((allele_accession_id+zygosity+strain_accession_id))
+                genotype_id = self.make_id((colony_id+phenotyping_center+zygosity+strain_accession_id))
                 geno.addDerivesFrom(genotype_id,colony_id)
 
                 #as with MGI, the allele is the variant locus.  IF the marker is not known, we will call it a
@@ -192,11 +194,17 @@ class IMPC(Source):
                     genomic_background_id = 'IMPC:'+strain_accession_id
                     #FIXME: Will this resolve, or do we need a separate IMPCStrain:?
 
+                #make a phenotyping-center-specific strain to use as the background
+                pheno_center_strain_label = strain_name+'/'+phenotyping_center
+                pheno_center_strain_id = self.make_id((genomic_background_id+phenotyping_center))
+                geno.addGenotype(pheno_center_strain_id,pheno_center_strain_label,genomic_background_id)
+
                 # Making genotype labels from the various parts, can change later if desired.
-                genotype_name = vslc_name+'['+strain_name+']'
+                #since the genotype is reflective of the place it got made, should put that in to disambiguate
+                genotype_name = vslc_name+'['+pheno_center_strain_label+']'
 
                 geno.addGenotype(genomic_background_id,strain_name)
-                geno.addGenomicBackgroundToGenotype(genomic_background_id,genotype_id)
+                geno.addGenomicBackgroundToGenotype(pheno_center_strain_id,genotype_id)
 
                 geno.addGenotype(genotype_id,genotype_name)
 
@@ -220,6 +228,8 @@ class IMPC(Source):
 
 
                 ##############    BUILD THE G2P ASSOC    #############
+                #from an old email dated July 23 2014:
+                #Phenotypes associations are made to imits colony_id +center+zygosity+gender
 
                 phenotype_id = mp_term_id
 
