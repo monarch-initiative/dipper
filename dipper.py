@@ -43,7 +43,9 @@ def main():
     logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser(description='Dipper: Data Ingestion'
-                                                 ' Pipeline for SciGraph')
+                                                 ' Pipeline for SciGraph',
+                                     formatter_class=
+                                     argparse.RawTextHelpFormatter)
     parser.add_argument('-s', '--sources', type=str, required=True,
                         help='comma separated list of sources')
     parser.add_argument('-l', '--limit', type=int, help='limit number of rows')
@@ -56,7 +58,14 @@ def main():
     parser.add_argument('--query',help='enter in a sparql query',type=str)
     parser.add_argument('-q', '--quiet',help='turn off info logging',
                         action="store_true")
+    parser.add_argument('-t', '--taxon', type=str,
+                        help='Add a taxon constraint on a source\n'
+                             'Implemented taxa per source\n'
+                             'NCBIGene: 9606,10090\n'
+                             'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
+                             'BioGrid: 9606,10090,10116,7227,7955,6239,8355')
     args = parser.parse_args()
+    tax_ids = map(int, args.taxon.split(','))
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
@@ -74,12 +83,16 @@ def main():
         test_query.query_graph(args.query)
         exit(0)
 
-    #iterate through all the sources
+    # iterate through all the sources
     for source in args.sources.split(','):
-        print()
-        print("*******", source, "*******")
+        logger.info("\n*******%s*******", source)
         source = source.lower()
-        mysource = source_to_class_map[source]()
+        src = source_to_class_map[source]
+        mysource = None
+        if src is NCBIGene:
+            mysource = src(tax_ids)
+        else:
+            mysource = src()
         if args.parse_only is False:
             mysource.fetch(args.force)
         mysource.parse(args.limit)
@@ -87,15 +100,15 @@ def main():
         if args.no_verify is not True:
             status = mysource.verify()
             if status is not True:
-                print('ERROR: Source',source,'did not pass verification tests.')
-                exit(0)  #exit with a bad code
+                logger.error('Source %s did not pass verification tests.', source)
+                exit(1)
         else:
-            print('INFO: skipping verification step')
-        print('***** Finished with',source,'*****')
-    #load configuration parameters
-    #for example, keys
+            logger.info('skipping verification step')
+        logger.info('***** Finished with %s *****', source)
+    # load configuration parameters
+    # for example, keys
 
-    print("All done.")
+    logger.info("All done.")
 
 if __name__ == "__main__":
     main()

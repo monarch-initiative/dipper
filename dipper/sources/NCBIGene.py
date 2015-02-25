@@ -46,25 +46,23 @@ class NCBIGene(Source):
 
     testmode = False
 
-    def __init__(self):
+    def __init__(self, tax_ids=None, gene_ids=None):
         Source.__init__(self, 'ncbigene')
 
+        self.tax_ids = tax_ids
+        self.gene_ids = gene_ids
+        self.filter = 'taxids'
         self.load_bindings()
 
         self.dataset = Dataset('ncbigene', 'National Center for Biotechnology Information', 'http://ncbi.nih.nlm.gov/gene')
-        #data-source specific warnings (will be removed when issues are cleared)
-        #print()
+        # data-source specific warnings (will be removed when issues are cleared)
 
-        self.filters = {
-            'taxids' : [9606,10090],
-            'geneids' : [17151,100008564,17005,11834,14169]
-        }
-
-        #this filter will be applied to all parsing/outputing...
-        #set to None if you don't want to apply a filter
-        self.filter = 'taxids'
+        # Defaults
+        if self.tax_ids is None:
+            self.tax_ids = [9606, 10090]
 
         if self.testmode:
+            self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
             self.filter = 'geneids'
 
         return
@@ -134,8 +132,8 @@ class NCBIGene(Source):
 
                 ##### set filter=None in init if you don't want to have a filter
                 if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
-                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                         continue
                 ##### end filter
 
@@ -242,8 +240,8 @@ class NCBIGene(Source):
 
                 ##### set filter=None in init if you don't want to have a filter
                 if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
-                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                         continue
                 ##### end filter
 
@@ -294,8 +292,8 @@ class NCBIGene(Source):
 
                 ##### set filter=None in init if you don't want to have a filter
                 if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.filters[self.filter])) or
-                        (self.filter == 'geneids' and (int(gene_num) not in self.filters[self.filter]))):
+                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                         continue
                 ##### end filter
 
