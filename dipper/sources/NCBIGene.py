@@ -133,7 +133,7 @@ class NCBIGene(Source):
                 ##### set filter=None in init if you don't want to have a filter
                 if self.filter is not None:
                     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                         continue
                 ##### end filter
 
@@ -241,7 +241,7 @@ class NCBIGene(Source):
                 ##### set filter=None in init if you don't want to have a filter
                 if self.filter is not None:
                     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                         continue
                 ##### end filter
 

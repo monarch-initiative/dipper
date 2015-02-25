@@ -61,7 +61,7 @@ class UCSCBands(Source):
 
 
     def __init__(self):
-        Source.__init__(self, 'ucscbands')
+        super().__init__('ucscbands')
 
         self.load_bindings()
 
