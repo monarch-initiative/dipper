@@ -65,7 +65,9 @@ def main():
                              'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
                              'BioGrid: 9606,10090,10116,7227,7955,6239,8355')
     args = parser.parse_args()
-    tax_ids = map(int, args.taxon.split(','))
+    tax_ids = None
+    if args.taxon.split is not None:
+        tax_ids = map(int, args.taxon.split(','))
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
