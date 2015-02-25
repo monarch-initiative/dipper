@@ -32,7 +32,7 @@ class EOM(Source):
 
     """
 
-    #we are using the dv view here; i wonder if we should be using the prod view, or their services instead.?
+    #we are using the production view here; should we be using services?
     tables = [
         'dvp.pr_nlx_157874_1'
     ]
