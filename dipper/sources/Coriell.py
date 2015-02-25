@@ -1,5 +1,7 @@
 import logging
 import csv
+from rdflib.namespace import FOAF, RDF, RDFS
+from rdflib import Literal
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -25,6 +27,7 @@ class Coriell(Source):
     for credentials.
 
     """
+    PERSON=FOAF['person']
 
     files = {
         'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
@@ -41,10 +44,6 @@ class Coriell(Source):
                 'page': 'https://catalog.coriell.org/1/NIA'}
     }
 
-    relationship = {
-        'derives_from': 'RO:0001000',
-        'part_of': 'BFO:0000050'
-    }
 
 
     def __init__(self):
@@ -184,7 +183,10 @@ class Coriell(Source):
                     if family_id != '':
                         patient_id = self.make_id(family_id+relprob)
                     else:
-                        patient_id = cell_line_id
+                        #FIXME: This is going to result in cell lines also being labeled as foaf:person
+                        #patient_id = cell_line_id
+                        #Think it would be better just to make an id
+                        patient_id = self.make_id(cell_line_id)
 
                     #FIXME:Including a generic label for now.
                     line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
@@ -194,15 +196,26 @@ class Coriell(Source):
 
                     # Cell line derives from patient
                     # Should we call this from the Genotype.py or generalize to the GraphUtils?
-                    rel = gu.getNode(self.relationship['derives_from'])
+                    rel = gu.getNode(gu.relationships['derives_from'])
                     self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(patient_id)))
 
                     # Cell line part_of repository
-                    rel = gu.getNode(self.relationship['part_of'])
+                    rel = gu.getNode(gu.relationships['part_of'])
                     self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
 
-                    # Adding the patient ID as a typed individual.
-                    #gu.addIndividualToGraph(self.graph,patient_id,line_label,cell_type)
+                    #Make a label for the patient
+                    patient_label = sample_type+' from patient '+patient_id+' with '+description
+
+                    # Adding the patient ID as an individual.
+                    #FIXME: How to add FOAF:Person?
+                    # Do we need to add the person as a 'Category' instead of a class or individual?
+                    #gu.addClassToGraph(self.graph,patient_id,patient_label)
+
+                    #Abstract this to an addPerson graph util?
+                    n = gu.getNode(patient_id)
+                    self.graph.add((n, RDF['type'], self.PERSON))
+                    self.graph.add((n, RDFS['label'], Literal(patient_label)))
+
 
 
 

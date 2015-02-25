@@ -31,7 +31,9 @@ class GraphUtils:
         'towards': 'RO:0002503',
         'has_xref': 'OIO:hasDbXref',
         'has_member': 'RO:0002351',
-        'involved_in': 'RO:0002331'
+        'involved_in': 'RO:0002331',
+        'derives_from': 'RO:0001000',
+        'part_of': 'BFO:0000050'
     }
 
 
