@@ -96,7 +96,7 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
-        for f in ['ninds']:
+        for f in ['ninds','nigms','nia']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
             #self._process_repository(self.files[f]['page'],self.files[f]['label'])
             self._process_data(file, limit)
@@ -159,31 +159,35 @@ class Coriell(Source):
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             next(filereader, None)  # skip the header row
             for row in filereader:
-                line_counter += 1
+                if not row:
+                    pass
+                else:
+                    line_counter += 1
 
-                (catalog_id,description,omim_number,sample_type,cell_line_available,
-                 dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
-                 relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
+                    (catalog_id,description,omim_number,sample_type,cell_line_available,
+                    dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
+                    relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
 
-                line_id = 'Coriell:'+catalog_id.strip()
+                    line_id = 'Coriell:'+catalog_id.strip()
 
-                cell_type = self._map_cell_type(sample_type)
+                    cell_type = self._map_cell_type(sample_type)
 
-                line_label = collection.partition(' ')[0]+catalog_id.strip()
+                    #FIXME:Including a generic label for now.
+                    line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
 
-
-                gu.addIndividualToGraph(self.graph,line_id,line_label,cell_type)
-
-
-
-                #if pubmed_ids != '':
-                    #for s in pubmed_ids.split(';'):
-                        #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+                    # Adding the cell line as a typed individual.
+                    gu.addIndividualToGraph(self.graph,line_id,line_label,cell_type)
 
 
 
-                if (limit is not None and line_counter > limit):
-                    break
+                    #if pubmed_ids != '':
+                        #for s in pubmed_ids.split(';'):
+                            #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+
+
+
+                    if (limit is not None and line_counter > limit):
+                        break
         return
 
     def _process_repository(self, page, label):
@@ -218,14 +222,17 @@ class Coriell(Source):
     def _map_cell_type(self, sample_type):
         type = None
         type_map = {
+            'Adipose stromal cell': 'CL:0002570', # FIXME: mesenchymal stem cell of adipose
             'Amniotic fluid-derived cell line': 'CL:0002323',  # FIXME: amniocyte?
             'B-Lymphocyte': 'CL:0000236',  # B cell
             'Chorionic villus-derived cell line': 'CL:0000000', # FIXME: No Match
             'Endothelial': 'CL:0000115',  # endothelial cell
+            'Epithelial': 'CL:0000066',  # epithelial cell
             'Erythroleukemic cell line': 'CL:0000000',  # FIXME: No Match. "Abnormal precursor (virally transformed) of mouse erythrocytes that can be grown in culture and induced to differentiate by treatment with, for example, DMSO."
             'Fibroblast': 'CL:0000057',  # fibroblast
             'Keratinocyte': 'CL:0000312', # keratinocyte
             'Melanocyte': 'CL:0000148',  # melanocyte
+            'Mesothelial': 'CL:0000077',
             'Microcell hybrid': 'CL:0000000',  # FIXME: No Match
             'Myoblast': 'CL:0000056',  # myoblast
             'Smooth muscle': 'CL:0000192',  # smooth muscle cell

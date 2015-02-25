@@ -130,7 +130,7 @@ class Genotype():
 
     def addDerivesFrom(self, child_id, parent_id):
         """
-        We add a derives_from relationship between the child and parent id.  Examples of uses include betwen:
+        We add a derives_from relationship between the child and parent id.  Examples of uses include between:
         an allele and a construct or strain here, a cell line and it's parent genotype.  Adding the
         parent and child to the graph should happen outside of this function call to
         ensure graph integrity.
