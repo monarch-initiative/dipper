@@ -139,7 +139,6 @@ class EOM(Source):
                  terminology_category_label,terminology_category_url,subcategory,objective_definition,
                  subjective_definition,comments,synonyms,replaces,small_figure_url,large_figure_url,
                  e_uid,v_uid,v_uuid,v_last_modified) = line.split('\t')
-                print(line)
                 #Add morphology term to graph as a class with label, type, and description.
                 gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label)
 
