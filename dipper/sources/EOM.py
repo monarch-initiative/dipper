@@ -3,6 +3,7 @@ from datetime import datetime
 from stat import *
 import re
 import logging
+import csv
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -132,13 +133,15 @@ class EOM(Source):
         line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
-            for line in f1:
+            filereader = csv.reader(f1, delimiter='\t', quotechar='\"')
+            for line in filereader:
                 line_counter += 1
-
                 (morphology_term_id,morphology_term_num,morphology_term_label,morphology_term_url,
                  terminology_category_label,terminology_category_url,subcategory,objective_definition,
                  subjective_definition,comments,synonyms,replaces,small_figure_url,large_figure_url,
-                 e_uid,v_uid,v_uuid,v_last_modified) = line.split('\t')
+                 e_uid,v_uid,v_uuid,v_last_modified) = line
+
+
                 #Add morphology term to graph as a class with label, type, and description.
                 gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label)
 
