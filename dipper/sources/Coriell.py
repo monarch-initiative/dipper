@@ -10,6 +10,7 @@ from dipper import curie_map
 
 
 
+
 logger = logging.getLogger(__name__)
 
 class Coriell(Source):
@@ -27,17 +28,22 @@ class Coriell(Source):
 
     files = {
         'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
-                  'id' : 'NINDSrepository',
+                  'id' : 'NINDS',
                   'label': 'NINDS Human Genetics DNA and Cell line Repository',
                   'page' : 'https://catalog.coriell.org/1/NINDS'},
         'nigms': {'file' : 'NIGMS_2014-02-03_13-31-42.csv',
-                  'id' : 'NIGMSrepository',
+                  'id' : 'NIGMS',
                   'label': 'NIGMS Human Genetic Cell Repository',
                   'page' : 'https://catalog.coriell.org/1/NIGMS'},
         'nia': {'file' : 'NIA_2015-02-20_16-08-04.csv',
-                'id' : 'NIArepository',
+                'id' : 'NIA',
                 'label': 'NIA Aging Cell Repository',
                 'page': 'https://catalog.coriell.org/1/NIA'}
+    }
+
+    relationship = {
+        'derives_from': 'RO:0001000',
+        'part_of': 'BFO:0000050'
     }
 
 
@@ -98,7 +104,7 @@ class Coriell(Source):
 
         for f in ['ninds','nigms','nia']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
-            #self._process_repository(self.files[f]['page'],self.files[f]['label'])
+            self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
@@ -166,17 +172,37 @@ class Coriell(Source):
 
                     (catalog_id,description,omim_number,sample_type,cell_line_available,
                     dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
-                    relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
+                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids) = row
 
-                    line_id = 'Coriell:'+catalog_id.strip()
+                    cell_line_id = 'Coriell:'+catalog_id.strip()
 
                     cell_type = self._map_cell_type(sample_type)
+
+                    repository = self._map_collection(collection)
+
+                    # FIXME: Need a better patient ID from Coriell.
+                    if family_id != '':
+                        patient_id = self.make_id(family_id+relprob)
+                    else:
+                        patient_id = cell_line_id
 
                     #FIXME:Including a generic label for now.
                     line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
 
                     # Adding the cell line as a typed individual.
-                    gu.addIndividualToGraph(self.graph,line_id,line_label,cell_type)
+                    gu.addIndividualToGraph(self.graph,cell_line_id,line_label,cell_type)
+
+                    # Cell line derives from patient
+                    # Should we call this from the Genotype.py or generalize to the GraphUtils?
+                    rel = gu.getNode(self.relationship['derives_from'])
+                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(patient_id)))
+
+                    # Cell line part_of repository
+                    rel = gu.getNode(self.relationship['part_of'])
+                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
+
+                    # Adding the patient ID as a typed individual.
+                    #gu.addIndividualToGraph(self.graph,patient_id,line_label,cell_type)
 
 
 
@@ -190,7 +216,7 @@ class Coriell(Source):
                         break
         return
 
-    def _process_repository(self, page, label):
+    def _process_repository(self, id, label, page):
         """
         This function will process the data supplied internally about the repository from Coriell.
 
@@ -206,12 +232,12 @@ class Coriell(Source):
         """
         #FIXME: How to devise a label for each repository?
         gu = GraphUtils(curie_map.get())
-        #repo_id = id
+        repo_id = 'CoriellCollection:'+id
         repo_label = label
         repo_page = page
         #gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addIndividualToGraph(self.graph,repo_page,repo_label,'CLO:0000008')
-        #gu.addPage(self.graph,repo_id,repo_page)
+        gu.addIndividualToGraph(self.graph,repo_id,repo_label,'CLO:0000008')
+        gu.addPage(self.graph,repo_id,repo_page)
 
 
 
@@ -244,5 +270,19 @@ class Coriell(Source):
             type = type_map.get(sample_type)
         else:
             print("ERROR: Cell type (", sample_type, ") not mapped")
+
+        return type
+
+    def _map_collection(self, collection):
+        type = None
+        type_map = {
+            'NINDS Repository': 'CoriellCollection:NINDS',
+            'NIGMS Human Genetic Cell Repository': 'CoriellCollection:NIGMS',
+            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA'
+        }
+        if (collection.strip() in type_map):
+            type = type_map.get(collection)
+        else:
+            print("ERROR: Collection (", collection, ") not mapped")
 
         return type

@@ -57,6 +57,7 @@
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
 'Coriell' : 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
+'CoriellCollection' : 'https://catalog.coriell.org/1/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
