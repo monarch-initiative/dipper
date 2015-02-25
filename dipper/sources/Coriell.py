@@ -96,9 +96,9 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
-        for f in ['ninds','nigms']:
+        for f in ['ninds']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
-            #self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
+            #self._process_repository(self.files[f]['page'],self.files[f]['label'])
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
@@ -152,7 +152,7 @@ class Coriell(Source):
         :return:
         """
         logger.info("Processing Data from %s",raw)
-        #gu = GraphUtils(curie_map.get())
+        gu = GraphUtils(curie_map.get())
 
         line_counter = 0
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -165,11 +165,18 @@ class Coriell(Source):
                  dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
                  relprob,mutation,gene,fam,collection,url,cat_remark,pubmed_ids) = row
 
-                line_id = catalog_id
+                line_id = 'Coriell:'+catalog_id.strip()
 
                 cell_type = self._map_cell_type(sample_type)
 
-                 #if pubmed_ids != '':
+                line_label = collection.partition(' ')[0]+catalog_id.strip()
+
+
+                gu.addIndividualToGraph(self.graph,line_id,line_label,cell_type)
+
+
+
+                #if pubmed_ids != '':
                     #for s in pubmed_ids.split(';'):
                         #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
 
@@ -179,9 +186,9 @@ class Coriell(Source):
                     break
         return
 
-    def _process_repository(self, id, label, page):
+    def _process_repository(self, page, label):
         """
-        This function will process the data files from Coriell.
+        This function will process the data supplied internally about the repository from Coriell.
 
         Triples:
             Repository a CLO_0000008 #repository
@@ -195,11 +202,12 @@ class Coriell(Source):
         """
         #FIXME: How to devise a label for each repository?
         gu = GraphUtils(curie_map.get())
-        repo_id = id
+        #repo_id = id
         repo_label = label
         repo_page = page
-        gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addPage(self.graph,repo_id,repo_page)
+        #gu.addClassToGraph(self.graph,repo_id,repo_label)
+        gu.addIndividualToGraph(self.graph,repo_page,repo_label,'CLO:0000008')
+        #gu.addPage(self.graph,repo_id,repo_page)
 
 
 
@@ -212,13 +220,13 @@ class Coriell(Source):
         type_map = {
             'Amniotic fluid-derived cell line': 'CL:0002323',  # FIXME: amniocyte?
             'B-Lymphocyte': 'CL:0000236',  # B cell
-            'Chorionic villus-derived cell line': '', # FIXME: No Match
+            'Chorionic villus-derived cell line': 'CL:0000000', # FIXME: No Match
             'Endothelial': 'CL:0000115',  # endothelial cell
-            'Erythroleukemic cell line': '',  # FIXME: No Match. "Abnormal precursor (virally transformed) of mouse erythrocytes that can be grown in culture and induced to differentiate by treatment with, for example, DMSO."
+            'Erythroleukemic cell line': 'CL:0000000',  # FIXME: No Match. "Abnormal precursor (virally transformed) of mouse erythrocytes that can be grown in culture and induced to differentiate by treatment with, for example, DMSO."
             'Fibroblast': 'CL:0000057',  # fibroblast
             'Keratinocyte': 'CL:0000312', # keratinocyte
             'Melanocyte': 'CL:0000148',  # melanocyte
-            'Microcell hybrid': '',  # FIXME: No Match
+            'Microcell hybrid': 'CL:0000000',  # FIXME: No Match
             'Myoblast': 'CL:0000056',  # myoblast
             'Smooth muscle': 'CL:0000192',  # smooth muscle cell
             'Stem cell': 'CL:0000034',  # stem cell
@@ -228,6 +236,6 @@ class Coriell(Source):
         if (sample_type.strip() in type_map):
             type = type_map.get(sample_type)
         else:
-            print("ERROR: Zygosity (", zygosity, ") not mapped")
+            print("ERROR: Cell type (", sample_type, ") not mapped")
 
         return type

@@ -31,6 +31,8 @@
 'PR': 'http://purl.obolibrary.org/obo/pr_' #FIXME: believe this is correct, but need confirmation.
 'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'
 'PW' : 'http://purl.obolibrary.org/obo/PW_'
+'CL' : 'http://purl.obolibrary.org/obo/CL_'
+'CLO' : 'http://purl.obolibrary.org/obo/CLO_'
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
 
 # publication/reference sources
@@ -54,6 +56,7 @@
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
+'Coriell' : 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'

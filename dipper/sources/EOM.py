@@ -36,6 +36,13 @@ class EOM(Source):
         'dvp.pr_nlx_157874_1'
     ]
 
+    files = {
+        'map' : {
+            'file' : 'hp-to-eom-mapping.tsv',
+            'url' : 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/mappings/hp-to-eom-mapping.tsv'
+        }
+    }
+
 
     def __init__(self):
         Source.__init__(self, 'eom')
@@ -66,6 +73,7 @@ class EOM(Source):
         #self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
         self.fetch_from_pgdb(self.tables,cxn)
 
+        self.get_files(is_dl_forced)
 
         #FIXME: Everything needed for data provenance?
         st = os.stat(('/').join((self.rawdir,'dv.nlx_157874_1')))
@@ -85,7 +93,7 @@ class EOM(Source):
         logger.info("Parsing files...")
 
         self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
-        self._map_eom_terms(('/').join((self.rawdir,'eom_terms.tsv')),limit)
+        self._map_eom_terms(('/').join((self.rawdir,self.files['map']['file'])),limit)
 
         logger.info("Finished parsing.")
 
