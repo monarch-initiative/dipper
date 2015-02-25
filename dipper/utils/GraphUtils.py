@@ -30,7 +30,8 @@ class GraphUtils:
         'has_quality': 'RO:0000086',
         'towards': 'RO:0002503',
         'has_xref': 'OIO:hasDbXref',
-        'has_member': 'RO:0002351'
+        'has_member': 'RO:0002351',
+        'involved_in': 'RO:0002331'
     }
 
 
@@ -185,6 +186,9 @@ class GraphUtils:
 
     def addMember(self, g, group_id, member_id):
         self.addTriple(g, group_id, self.relationships['has_member'], member_id)
+
+    def addInvolvedIn(self, g, member_id, group_id):
+        self.addTriple(g, member_id, self.relationships['involved_in'], group_id)
 
     def write(self, graph, format=None, file=None):
         """

@@ -1,6 +1,7 @@
 import csv
 import re
 import gzip
+import os
 import logging
 
 from dipper import curie_map
@@ -50,9 +51,13 @@ class CTD(Source):
             print("Only parsing first", limit, "rows")
 
         print("Parsing files...")
-        pub_map = self._parse_publication_file(
-            self.static_files['publications']['file']
-        )
+        pub_map = dict()
+        file_path = '/'.join((self.rawdir,
+                              self.static_files['publications']['file']))
+        if os.path.exists(file_path) is True:
+            pub_map = self._parse_publication_file(
+                self.static_files['publications']['file']
+            )
         self._parse_interactions_file(
             limit,
             self.files['chemical_disease_interactions']['file'],
@@ -103,9 +108,10 @@ class CTD(Source):
         # Adding all pathways as classes, may refactor in the future
         # to only add Reactome pathways from CTD
         gu.addClassToGraph(self.graph, pathway_id, pathway_name)
-        gu.addSubclass(self.graph, self._get_class_id('pathway'), pathway_id)
+        gu.addSubclass(self.graph, self._get_class_id('signal transduction'), pathway_id)
         gu.addClassToGraph(self.graph, entrez_id, gene_symbol)
-        gu.addMember(self.graph, pathway_id, entrez_id)
+        gu.addInvolvedIn(self.graph, entrez_id, pathway_id)
+
 
         # if re.match(re.compile('^REACT'),pathway_id):
         #    gu.addClassToGraph(self.graph, pathway_id, pathway_name)
@@ -129,7 +135,8 @@ class CTD(Source):
         elif re.match(evidence_pattern, direct_evidence):
             reference_list = self._process_pubmed_ids(pubmed_ids)
             self._make_association(chem_id, disease_id, direct_evidence, reference_list)
-        elif re.match(dual_evidence, direct_evidence):
+        elif ((re.match(dual_evidence, direct_evidence))
+              and (len(pub_map.keys()) > 0)):
             reference_list = self._process_pubmed_ids(pubmed_ids)
             pub_evidence_map = \
                 self._split_pub_ids_by_evidence(
@@ -197,6 +204,7 @@ class CTD(Source):
         """
         CLASS_MAP = {
             'pathway': 'PW:0000001',
+            'signal transduction': 'GO:0007165'
         }
         return CLASS_MAP[cls]
 
