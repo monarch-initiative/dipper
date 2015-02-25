@@ -19,6 +19,7 @@ class D2PAssoc(Assoc):
     '''
 
     def __init__(self, assoc_id, entity_id, phenotype_id, onset, frequency, pub, evidence_code):
+        super().__init__()
         self.annot_id = assoc_id
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -28,6 +29,7 @@ class D2PAssoc(Assoc):
         self.evidence = evidence_code
         self.rel = self.relationships['has_phenotype']
         self.cu = CurieUtil(curie_map.get())
+
         self.pub_list = None
 
         self.setSubject(entity_id)
