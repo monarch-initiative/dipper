@@ -76,7 +76,7 @@ class EOM(Source):
         self.get_files(is_dl_forced)
 
         #FIXME: Everything needed for data provenance?
-        st = os.stat(('/').join((self.rawdir,'dv.nlx_157874_1')))
+        st = os.stat(('/').join((self.rawdir,'dvp.pr_nlx_157874_1')))
         filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
 
@@ -92,7 +92,7 @@ class EOM(Source):
 
         logger.info("Parsing files...")
 
-        self._process_nlx_157874_1_view(('/').join((self.rawdir,'dv.nlx_157874_1')),limit)
+        self._process_nlx_157874_1_view(('/').join((self.rawdir,'dvp.pr_nlx_157874_1')),limit)
         self._map_eom_terms(('/').join((self.rawdir,self.files['map']['file'])),limit)
 
         logger.info("Finished parsing.")
@@ -135,11 +135,11 @@ class EOM(Source):
             for line in f1:
                 line_counter += 1
 
-                (morphology_term_id, morphology_term_num, morphology_term_label, morphology_term_url,
-                 terminology_category_label, terminology_category_url, subcategory, objective_definition,
-                 subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
-                 e_uid, v_uid, v_uuid, v_last_modified) = line.split('\t')
-
+                (morphology_term_id,morphology_term_num,morphology_term_label,morphology_term_url,
+                 terminology_category_label,terminology_category_url,subcategory,objective_definition,
+                 subjective_definition,comments,synonyms,replaces,small_figure_url,large_figure_url,
+                 e_uid,v_uid,v_uuid,v_last_modified) = line.split('\t')
+                print(line)
                 #Add morphology term to graph as a class with label, type, and description.
                 gu.addClassToGraph(self.graph,morphology_term_id,morphology_term_label)
 
