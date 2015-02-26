@@ -187,7 +187,8 @@ class Coriell(Source):
 
                     # FIXME: Need a better patient ID from Coriell.
                     if family_id != '':
-                        patient_id = self.make_id(family_id+relprob)
+                        #patient_id = self.make_id(family_id+relprob)
+                        patient_id = self.make_id(cell_line_id)
                     else:
                         #FIXME: Adjust this?
                         #Think it would be better just to make an id
@@ -228,6 +229,8 @@ class Coriell(Source):
                         family_comp_id = 'CoriellFamily:'+family_id
                         gu.addMemberOf(self.graph,patient_id,family_comp_id)
 
+
+                    # Add description (remark) to patient
                     if cat_remark !='':
                         gu.addDescription(self.graph,patient_id,cat_remark)
 
@@ -236,6 +239,7 @@ class Coriell(Source):
                         mapped_race = self._map_race(race)
                         if mapped_race is not None:
                             gu.addTriple(self.graph,patient_id,'SIO:001015',mapped_race)
+                            gu.addSubclass(self.graph,'EFO:0001799',mapped_race)
 
 
 
