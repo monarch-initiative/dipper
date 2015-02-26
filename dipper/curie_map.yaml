@@ -34,6 +34,7 @@
 'CL' : 'http://purl.obolibrary.org/obo/CL_'
 'CLO' : 'http://purl.obolibrary.org/obo/CLO_'
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
+'SIO' : 'http://semanticscience.org/resource/SIO_'
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
@@ -58,6 +59,7 @@
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
 'Coriell' : 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
 'CoriellCollection' : 'https://catalog.coriell.org/1/'
+'CoriellFamily' : 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'

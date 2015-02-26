@@ -31,6 +31,7 @@ class GraphUtils:
         'towards': 'RO:0002503',
         'has_xref': 'OIO:hasDbXref',
         'has_member': 'RO:0002351',
+        'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050'
@@ -181,6 +182,10 @@ class GraphUtils:
 
         return
 
+    def addDescription(self,g,subject_id,description):
+        g.add((self.getNode(subject_id),DC['description'],Literal(description.strip())))
+        return
+
     def addPage(self,g,subject_id,page_url):
         g.add((self.getNode(subject_id),FOAF['page'],Literal(page_url)))
 
@@ -188,6 +193,10 @@ class GraphUtils:
 
     def addMember(self, g, group_id, member_id):
         self.addTriple(g, group_id, self.relationships['has_member'], member_id)
+
+    def addMemberOf(self, g, member_id, group_id):
+        self.addTriple(g, member_id, self.relationships['member_of'], group_id)
+        return
 
     def addInvolvedIn(self, g, member_id, group_id):
         self.addTriple(g, member_id, self.relationships['involved_in'], group_id)

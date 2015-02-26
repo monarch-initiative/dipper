@@ -2,6 +2,7 @@ import logging
 import csv
 from rdflib.namespace import FOAF, RDF, RDFS
 from rdflib import Literal
+import pysftp
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -72,14 +73,19 @@ class Coriell(Source):
         :param is_dl_forced:
         :return:
         """
-        host1 = 'host=\''+ config.get_config()['keys']['coriell']['host']+'\''
-        user1 = 'user=\''+ config.get_config()['keys']['coriell']['user']+'\''
-        passwd1 = 'passwd=\''+ config.get_config()['keys']['coriell']['password']+'\''
+        host1 = config.get_config()['keys']['coriell']['host']
+        user1 = 'username=\''+ config.get_config()['keys']['coriell']['user']+'\''
+        passwd1 = 'password=\''+ config.get_config()['keys']['coriell']['password']+'\''
         #print(host1,user1,passwd1)
         #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
         #ftp = FTP(host1,user1,passwd1,timeout=None)
-
         #ftp.login()
+
+        #with pysftp.Connection(host1, user1, passwd1) as sftp:
+            #with sftp.cd('public')
+            #print('success!')
+                #sftp.get_r()
+
 
         return
 
@@ -183,8 +189,7 @@ class Coriell(Source):
                     if family_id != '':
                         patient_id = self.make_id(family_id+relprob)
                     else:
-                        #FIXME: This is going to result in cell lines also being labeled as foaf:person
-                        #patient_id = cell_line_id
+                        #FIXME: Adjust this?
                         #Think it would be better just to make an id
                         patient_id = self.make_id(cell_line_id)
 
@@ -216,6 +221,19 @@ class Coriell(Source):
                     self.graph.add((n, RDF['type'], self.PERSON))
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
 
+                    # Add taxon to patient
+                    gu.addTriple(self.graph,patient_id,'RO:0002162','NCBITaxon:9606')
+
+                    if family_id != '':
+                        family_comp_id = 'CoriellFamily:'+family_id
+                        gu.addMemberOf(self.graph,patient_id,family_comp_id)
+
+                    if cat_remark !='':
+                        gu.addDescription(self.graph,patient_id,cat_remark)
+
+                    # Add race of patient
+                    if race != '':
+                        gu.addTriple(self.graph,patient_id,'SIO:001015',race,object_is_literal=True)
 
 
 
