@@ -28,6 +28,18 @@ class Coriell(Source):
     for credentials.
 
     """
+
+    terms = {
+        'sampling_time': 'EFO:0000689',
+        'human': 'NCBITaxon:9606',
+        'in_taxon': 'RO:0002162',
+        'cell_line_repository': 'CLO:0000008',
+        'race': 'SIO:001015',
+        'ethnic_group': 'EFO:0001799'
+
+    }
+
+
     PERSON=FOAF['person']
 
     files = {
@@ -209,6 +221,10 @@ class Coriell(Source):
                     rel = gu.getNode(gu.relationships['part_of'])
                     self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
 
+                    # Cell age_at_sampling
+                    #FIXME: More appropriate term than sampling_time?
+                    gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
+
                     #Make a label for the patient
                     patient_label = sample_type+' from patient '+patient_id+' with '+description
 
@@ -217,13 +233,34 @@ class Coriell(Source):
                     # Do we need to add the person as a 'Category' instead of a class or individual?
                     #gu.addClassToGraph(self.graph,patient_id,patient_label)
 
-                    #Abstract this to an addPerson graph util?
+                    #TODO:Abstract this to an addPerson graph util?
                     n = gu.getNode(patient_id)
                     self.graph.add((n, RDF['type'], self.PERSON))
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
 
                     # Add taxon to patient
-                    gu.addTriple(self.graph,patient_id,'RO:0002162','NCBITaxon:9606')
+                    gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])
+
+                    # Add sex/gender of patient?
+                    # Add affected status?
+                    #Add
+
+                    # Add description (remark) to patient
+                    if cat_remark !='':
+                        gu.addDescription(self.graph,patient_id,cat_remark)
+
+                    # Add race of patient
+                    #FIXME: Adjust for subcategories based on ethnicity field
+                    #EDIT: There are 743 different entries for ethnicity... Too many to map
+                    #Perhaps add ethnicity as a literal in addition to the mapped race?
+                    #Need to adjust the ethnicity text to just initial capitalization as some entries:ALL CAPS
+                    if race != '':
+                        mapped_race = self._map_race(race)
+                        if mapped_race is not None:
+                            gu.addTriple(self.graph,patient_id,self.terms['race'],mapped_race)
+                            gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
+
+                    # Add OMIM Disease ID (';' delimited)
 
 
                     # Add triples for family_id, if present.
@@ -244,23 +281,6 @@ class Coriell(Source):
 
                         #Add family URL as page to family_id.
                         gu.addPage(self.graph,family_comp_id,family_url)
-
-                    # Add OMIM Disease ID (';' delimited)
-
-                    #
-
-
-                    # Add description (remark) to patient
-                    if cat_remark !='':
-                        gu.addDescription(self.graph,patient_id,cat_remark)
-
-                    # Add race of patient
-                    if race != '':
-                        mapped_race = self._map_race(race)
-                        if mapped_race is not None:
-                            gu.addTriple(self.graph,patient_id,'SIO:001015',mapped_race)
-                            gu.addSubclass(self.graph,'EFO:0001799',mapped_race)
-
 
 
 
@@ -296,7 +316,7 @@ class Coriell(Source):
         repo_label = label
         repo_page = page
         #gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addIndividualToGraph(self.graph,repo_id,repo_label,'CLO:0000008')
+        gu.addIndividualToGraph(self.graph,repo_id,repo_label,self.terms['cell_line_repository'])
         gu.addPage(self.graph,repo_id,repo_page)
 
 
