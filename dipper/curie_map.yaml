@@ -35,6 +35,7 @@
 'CLO' : 'http://purl.obolibrary.org/obo/CLO_'
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
 'SIO' : 'http://semanticscience.org/resource/SIO_'
+'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'

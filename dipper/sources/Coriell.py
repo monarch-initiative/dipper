@@ -233,7 +233,9 @@ class Coriell(Source):
 
                     # Add race of patient
                     if race != '':
-                        gu.addTriple(self.graph,patient_id,'SIO:001015',race,object_is_literal=True)
+                        mapped_race = self._map_race(race)
+                        if mapped_race is not None:
+                            gu.addTriple(self.graph,patient_id,'SIO:001015',mapped_race)
 
 
 
@@ -300,7 +302,39 @@ class Coriell(Source):
         if (sample_type.strip() in type_map):
             type = type_map.get(sample_type)
         else:
-            print("ERROR: Cell type (", sample_type, ") not mapped")
+            logger.warn("ERROR: Cell type not mapped: %s", sample_type)
+
+        return type
+
+
+    def _map_race(self, race):
+        type = None
+        type_map = {
+            'African American': 'EFO:0003150',
+            #'American Indian': 'EFO',
+            'Asian': 'EFO:0003152',
+            'Asian; Other': 'EFO:0003152',  # FIXME: Asian?
+            'Asiatic Indian': 'EFO:0003153',  # Asian Indian
+            'Black': 'EFO:0003150',  # FIXME: African American? There is also African.
+            'Caucasian': 'EFO:0003156',
+            'Chinese': 'EFO:0003157',
+            'East Indian': 'EFO:0003158',  # Eastern Indian
+            'Filipino': 'EFO:0003160',
+            'Hispanic/Latino': 'EFO:0003169',  # Hispanic: EFO:0003169, Latino: EFO:0003166
+            'Japanese': 'EFO:0003164',
+            'Korean': 'EFO:0003165',
+            #'More than one race': 'EFO',
+            #'Not Reported': 'EFO',
+            #'Other': 'EFO',
+            'Pacific Islander': 'EFO:0003154',  # Asian/Pacific Islander
+            'Polynesian': 'EFO:0003154',  # Asian/Pacific Islander
+            #'Unknown': 'EFO',
+            'Vietnamese': 'EFO:0003152',  # Asian
+        }
+        if (race.strip() in type_map):
+            type = type_map.get(race)
+        else:
+            logger.warn("Race type not mapped: %s", race)
 
         return type
 
@@ -314,6 +348,6 @@ class Coriell(Source):
         if (collection.strip() in type_map):
             type = type_map.get(collection)
         else:
-            print("ERROR: Collection (", collection, ") not mapped")
+            logger.warn("ERROR: Collection type not mapped: %s", collection)
 
         return type
