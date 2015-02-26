@@ -2,6 +2,7 @@ import logging
 import csv
 from rdflib.namespace import FOAF, RDF, RDFS
 from rdflib import Literal
+import pysftp
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -72,14 +73,19 @@ class Coriell(Source):
         :param is_dl_forced:
         :return:
         """
-        host1 = 'host=\''+ config.get_config()['keys']['coriell']['host']+'\''
-        user1 = 'user=\''+ config.get_config()['keys']['coriell']['user']+'\''
-        passwd1 = 'passwd=\''+ config.get_config()['keys']['coriell']['password']+'\''
+        host1 = config.get_config()['keys']['coriell']['host']
+        user1 = 'username=\''+ config.get_config()['keys']['coriell']['user']+'\''
+        passwd1 = 'password=\''+ config.get_config()['keys']['coriell']['password']+'\''
         #print(host1,user1,passwd1)
         #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
         #ftp = FTP(host1,user1,passwd1,timeout=None)
-
         #ftp.login()
+
+        #with pysftp.Connection(host1, user1, passwd1) as sftp:
+            #with sftp.cd('public')
+            #print('success!')
+                #sftp.get_r()
+
 
         return
 
@@ -181,10 +187,10 @@ class Coriell(Source):
 
                     # FIXME: Need a better patient ID from Coriell.
                     if family_id != '':
-                        patient_id = self.make_id(family_id+relprob)
+                        #patient_id = self.make_id(family_id+relprob)
+                        patient_id = self.make_id(cell_line_id)
                     else:
-                        #FIXME: This is going to result in cell lines also being labeled as foaf:person
-                        #patient_id = cell_line_id
+                        #FIXME: Adjust this?
                         #Think it would be better just to make an id
                         patient_id = self.make_id(cell_line_id)
 
@@ -216,6 +222,24 @@ class Coriell(Source):
                     self.graph.add((n, RDF['type'], self.PERSON))
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
 
+                    # Add taxon to patient
+                    gu.addTriple(self.graph,patient_id,'RO:0002162','NCBITaxon:9606')
+
+                    if family_id != '':
+                        family_comp_id = 'CoriellFamily:'+family_id
+                        gu.addMemberOf(self.graph,patient_id,family_comp_id)
+
+
+                    # Add description (remark) to patient
+                    if cat_remark !='':
+                        gu.addDescription(self.graph,patient_id,cat_remark)
+
+                    # Add race of patient
+                    if race != '':
+                        mapped_race = self._map_race(race)
+                        if mapped_race is not None:
+                            gu.addTriple(self.graph,patient_id,'SIO:001015',mapped_race)
+                            gu.addSubclass(self.graph,'EFO:0001799',mapped_race)
 
 
 
@@ -282,7 +306,39 @@ class Coriell(Source):
         if (sample_type.strip() in type_map):
             type = type_map.get(sample_type)
         else:
-            print("ERROR: Cell type (", sample_type, ") not mapped")
+            logger.warn("ERROR: Cell type not mapped: %s", sample_type)
+
+        return type
+
+
+    def _map_race(self, race):
+        type = None
+        type_map = {
+            'African American': 'EFO:0003150',
+            #'American Indian': 'EFO',
+            'Asian': 'EFO:0003152',
+            'Asian; Other': 'EFO:0003152',  # FIXME: Asian?
+            'Asiatic Indian': 'EFO:0003153',  # Asian Indian
+            'Black': 'EFO:0003150',  # FIXME: African American? There is also African.
+            'Caucasian': 'EFO:0003156',
+            'Chinese': 'EFO:0003157',
+            'East Indian': 'EFO:0003158',  # Eastern Indian
+            'Filipino': 'EFO:0003160',
+            'Hispanic/Latino': 'EFO:0003169',  # Hispanic: EFO:0003169, Latino: EFO:0003166
+            'Japanese': 'EFO:0003164',
+            'Korean': 'EFO:0003165',
+            #'More than one race': 'EFO',
+            #'Not Reported': 'EFO',
+            #'Other': 'EFO',
+            'Pacific Islander': 'EFO:0003154',  # Asian/Pacific Islander
+            'Polynesian': 'EFO:0003154',  # Asian/Pacific Islander
+            #'Unknown': 'EFO',
+            'Vietnamese': 'EFO:0003152',  # Asian
+        }
+        if (race.strip() in type_map):
+            type = type_map.get(race)
+        else:
+            logger.warn("Race type not mapped: %s", race)
 
         return type
 
@@ -296,6 +352,6 @@ class Coriell(Source):
         if (collection.strip() in type_map):
             type = type_map.get(collection)
         else:
-            print("ERROR: Collection (", collection, ") not mapped")
+            logger.warn("ERROR: Collection type not mapped: %s", collection)
 
         return type
