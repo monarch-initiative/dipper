@@ -2,6 +2,9 @@ __author__ = 'nicole'
 
 import json
 import os.path
+import logging
+
+logger = logging.getLogger(__name__)
 
 #read configuration file
 conf = None
@@ -12,7 +15,7 @@ if os.path.exists(os.path.join(os.path.dirname(__file__), 'conf.json')):
     with open(os.path.join(os.path.dirname(__file__),
                            'conf.json')) as json_file:
         conf = json.load(json_file)
-        print("INFO: Finished loading config:")
+        logger.debug("Finished loading config")
 
 def get_config():
     return conf

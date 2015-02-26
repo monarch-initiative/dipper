@@ -58,21 +58,29 @@ def main():
     parser.add_argument('--query',help='enter in a sparql query',type=str)
     parser.add_argument('-q', '--quiet',help='turn off info logging',
                         action="store_true")
+    parser.add_argument('--debug',help='turn on debug logging',
+                        action="store_true")
     parser.add_argument('-t', '--taxon', type=str,
                         help='Add a taxon constraint on a source\n'
                              'Implemented taxa per source\n'
                              'NCBIGene: 9606,10090\n'
                              'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
-                             'BioGrid: 9606,10090,10116,7227,7955,6239,8355')
+                             'BioGrid: 9606,10090,10116,7227,7955,6239,8355\n'
+                             'UCSCBands: 9606')
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
-        tax_ids = map(int, args.taxon.split(','))
+        tax_ids = list(map(int, args.taxon.split(',')))
+
+    taxa_supported = [Panther, NCBIGene, BioGrid, UCSCBands]
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
     else:
-        logging.basicConfig(level=logging.DEBUG)
+        if args.debug:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
 
     if args.query is not None:
         test_query = TestUtils()
@@ -91,7 +99,7 @@ def main():
         source = source.lower()
         src = source_to_class_map[source]
         mysource = None
-        if src is NCBIGene:
+        if src in taxa_supported:
             mysource = src(tax_ids)
         else:
             mysource = src()

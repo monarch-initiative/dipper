@@ -2,6 +2,7 @@ import logging
 import csv
 from rdflib.namespace import FOAF, RDF, RDFS
 from rdflib import Literal
+import pysftp
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -27,6 +28,18 @@ class Coriell(Source):
     for credentials.
 
     """
+
+    terms = {
+        'sampling_time': 'EFO:0000689',
+        'human': 'NCBITaxon:9606',
+        'in_taxon': 'RO:0002162',
+        'cell_line_repository': 'CLO:0000008',
+        'race': 'SIO:001015',
+        'ethnic_group': 'EFO:0001799'
+
+    }
+
+
     PERSON=FOAF['person']
 
     files = {
@@ -72,14 +85,19 @@ class Coriell(Source):
         :param is_dl_forced:
         :return:
         """
-        host1 = 'host=\''+ config.get_config()['keys']['coriell']['host']+'\''
-        user1 = 'user=\''+ config.get_config()['keys']['coriell']['user']+'\''
-        passwd1 = 'passwd=\''+ config.get_config()['keys']['coriell']['password']+'\''
+        host1 = config.get_config()['keys']['coriell']['host']
+        user1 = 'username=\''+ config.get_config()['keys']['coriell']['user']+'\''
+        passwd1 = 'password=\''+ config.get_config()['keys']['coriell']['password']+'\''
         #print(host1,user1,passwd1)
         #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
         #ftp = FTP(host1,user1,passwd1,timeout=None)
-
         #ftp.login()
+
+        #with pysftp.Connection(host1, user1, passwd1) as sftp:
+            #with sftp.cd('public')
+            #print('success!')
+                #sftp.get_r()
+
 
         return
 
@@ -181,10 +199,10 @@ class Coriell(Source):
 
                     # FIXME: Need a better patient ID from Coriell.
                     if family_id != '':
-                        patient_id = self.make_id(family_id+relprob)
+                        #patient_id = self.make_id(family_id+relprob)
+                        patient_id = self.make_id(cell_line_id)
                     else:
-                        #FIXME: This is going to result in cell lines also being labeled as foaf:person
-                        #patient_id = cell_line_id
+                        #FIXME: Adjust this?
                         #Think it would be better just to make an id
                         patient_id = self.make_id(cell_line_id)
 
@@ -203,6 +221,10 @@ class Coriell(Source):
                     rel = gu.getNode(gu.relationships['part_of'])
                     self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
 
+                    # Cell age_at_sampling
+                    #FIXME: More appropriate term than sampling_time?
+                    gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
+
                     #Make a label for the patient
                     patient_label = sample_type+' from patient '+patient_id+' with '+description
 
@@ -211,10 +233,55 @@ class Coriell(Source):
                     # Do we need to add the person as a 'Category' instead of a class or individual?
                     #gu.addClassToGraph(self.graph,patient_id,patient_label)
 
-                    #Abstract this to an addPerson graph util?
+                    #TODO:Abstract this to an addPerson graph util?
                     n = gu.getNode(patient_id)
                     self.graph.add((n, RDF['type'], self.PERSON))
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
+
+                    # Add taxon to patient
+                    gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])
+
+                    # Add sex/gender of patient?
+                    # Add affected status?
+                    #Add
+
+                    # Add description (remark) to patient
+                    if cat_remark !='':
+                        gu.addDescription(self.graph,patient_id,cat_remark)
+
+                    # Add race of patient
+                    #FIXME: Adjust for subcategories based on ethnicity field
+                    #EDIT: There are 743 different entries for ethnicity... Too many to map
+                    #Perhaps add ethnicity as a literal in addition to the mapped race?
+                    #Need to adjust the ethnicity text to just initial capitalization as some entries:ALL CAPS
+                    if race != '':
+                        mapped_race = self._map_race(race)
+                        if mapped_race is not None:
+                            gu.addTriple(self.graph,patient_id,self.terms['race'],mapped_race)
+                            gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
+
+                    # Add OMIM Disease ID (';' delimited)
+
+
+                    # Add triples for family_id, if present.
+                    #FIXME: Is this the correct approach for the family ID URI?
+                    #Once the CoriellFamily: prefix is resolved through the curie map,
+                    # then family_comp_id = family_url.
+                    if family_id != '':
+                        family_comp_id = 'CoriellFamily:'+family_id
+
+                        # Add the family ID as a named individual
+                        gu.addIndividualToGraph(self.graph,family_comp_id,None)
+
+                        #Add the patient as a member of the family
+                        gu.addMemberOf(self.graph,patient_id,family_comp_id)
+
+                        #set URL for family_id
+                        family_url = 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='+family_id
+
+                        #Add family URL as page to family_id.
+                        gu.addPage(self.graph,family_comp_id,family_url)
+
 
 
 
@@ -249,7 +316,7 @@ class Coriell(Source):
         repo_label = label
         repo_page = page
         #gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addIndividualToGraph(self.graph,repo_id,repo_label,'CLO:0000008')
+        gu.addIndividualToGraph(self.graph,repo_id,repo_label,self.terms['cell_line_repository'])
         gu.addPage(self.graph,repo_id,repo_page)
 
 
@@ -282,7 +349,39 @@ class Coriell(Source):
         if (sample_type.strip() in type_map):
             type = type_map.get(sample_type)
         else:
-            print("ERROR: Cell type (", sample_type, ") not mapped")
+            logger.warn("ERROR: Cell type not mapped: %s", sample_type)
+
+        return type
+
+
+    def _map_race(self, race):
+        type = None
+        type_map = {
+            'African American': 'EFO:0003150',
+            #'American Indian': 'EFO',
+            'Asian': 'EFO:0003152',
+            'Asian; Other': 'EFO:0003152',  # FIXME: Asian?
+            'Asiatic Indian': 'EFO:0003153',  # Asian Indian
+            'Black': 'EFO:0003150',  # FIXME: African American? There is also African.
+            'Caucasian': 'EFO:0003156',
+            'Chinese': 'EFO:0003157',
+            'East Indian': 'EFO:0003158',  # Eastern Indian
+            'Filipino': 'EFO:0003160',
+            'Hispanic/Latino': 'EFO:0003169',  # Hispanic: EFO:0003169, Latino: EFO:0003166
+            'Japanese': 'EFO:0003164',
+            'Korean': 'EFO:0003165',
+            #'More than one race': 'EFO',
+            #'Not Reported': 'EFO',
+            #'Other': 'EFO',
+            'Pacific Islander': 'EFO:0003154',  # Asian/Pacific Islander
+            'Polynesian': 'EFO:0003154',  # Asian/Pacific Islander
+            #'Unknown': 'EFO',
+            'Vietnamese': 'EFO:0003152',  # Asian
+        }
+        if (race.strip() in type_map):
+            type = type_map.get(race)
+        else:
+            logger.warn("Race type not mapped: %s", race)
 
         return type
 
@@ -296,6 +395,6 @@ class Coriell(Source):
         if (collection.strip() in type_map):
             type = type_map.get(collection)
         else:
-            print("ERROR: Collection (", collection, ") not mapped")
+            logger.warn("ERROR: Collection type not mapped: %s", collection)
 
         return type

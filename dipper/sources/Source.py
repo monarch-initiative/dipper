@@ -435,7 +435,7 @@ class Source:
         is_equal = True
         remote_size = self.get_remote_content_len(remotefile)
         local_size = self.get_local_file_size(localfile)
-        if local_size != int(remote_size):
+        if remote_size is not None and local_size != int(remote_size):
             is_equal = False
             logger.error('local file and remote file different sizes\n'
                          '%s has size %s, %s has size %s', localfile,

@@ -34,12 +34,17 @@ class BioGrid(Source):
         }
     }
 
-    def __init__(self,args=[]):
-        Source.__init__(self, 'biogrid')
+    def __init__(self, tax_ids=None):
+        super().__init__('biogrid')
 
+        self.tax_ids = tax_ids
         self.load_bindings()
 
         self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/')
+
+        # Defaults
+        if self.tax_ids is None:
+            self.tax_ids = [9606, 10090]
 
         #data-source specific warnings (will be removed when issues are cleared)
         print("WARN: several MI experimental codes do not exactly map to ECO; using approximations.")
@@ -122,9 +127,8 @@ class BioGrid(Source):
                 #uncomment the following codeblock if you want to filter based on taxid
                 #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
                 #taxids = [9606] #human
-                taxids = [9606,10090]
-                if (not (taxids.__contains__(int(re.sub('taxid:','', taxid_a.rstrip()))) or
-                    taxids.__contains__(int(re.sub('taxid:','', taxid_b.rstrip()))) )):
+                if (int(re.sub('taxid:','', taxid_a.rstrip())) not in self.tax_ids
+                        or int(re.sub('taxid:','', taxid_b.rstrip())) not in self.tax_ids):
                     continue
                 else:
                     matchcounter += 1

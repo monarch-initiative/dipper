@@ -33,12 +33,16 @@ class Panther(Source):
         }
     }
 
-    def __init__(self,args=[]):
-        Source.__init__(self, 'panther')
-
+    def __init__(self, tax_ids=None):
+        super().__init__('panther')
+        self.tax_ids = tax_ids
         self.load_bindings()
 
         self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships', 'http://pantherdb.org/')
+
+        # Defaults
+        if self.tax_ids is None:
+            self.tax_ids = [9606, 10090]
 
         #data-source specific warnings (will be removed when issues are cleared)
 
@@ -143,14 +147,13 @@ class Panther(Source):
                     #TODO remove these filters, or parameterize them
                     ###uncomment the following code block if you want to filter based on taxid
                     #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
-                    taxids = [9606,10090] #human/mouse only  takes about 15m
                     #taxids = [9606] #human only
                     #retain only those orthologous relationships to genes in the specified taxids
                     #using AND will get you only those associations where gene1 AND gene2 are in the taxid list (most-filter)
                     #using OR will get you any associations where gene1 OR gene2 are in the taxid list (some-filter)
                     #print("INFO: restricting taxa to ids:",taxids)
-                    if ((int(re.sub('NCBITaxon:','', taxon_a.rstrip())) not in taxids ) and
-                        (int(re.sub('NCBITaxon:','', taxon_b.rstrip())) not in taxids ) ):
+                    if ((int(re.sub('NCBITaxon:','', taxon_a.rstrip())) not in self.tax_ids ) and
+                        (int(re.sub('NCBITaxon:','', taxon_b.rstrip())) not in self.tax_ids ) ):
                         continue
                     else:
                         matchcounter += 1
