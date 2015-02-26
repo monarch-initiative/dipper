@@ -225,9 +225,29 @@ class Coriell(Source):
                     # Add taxon to patient
                     gu.addTriple(self.graph,patient_id,'RO:0002162','NCBITaxon:9606')
 
+
+                    # Add triples for family_id, if present.
+                    #FIXME: Is this the correct approach for the family ID URI?
+                    #Once the CoriellFamily: prefix is resolved through the curie map,
+                    # then family_comp_id = family_url.
                     if family_id != '':
                         family_comp_id = 'CoriellFamily:'+family_id
+
+                        # Add the family ID as a named individual
+                        gu.addIndividualToGraph(self.graph,family_comp_id,None)
+
+                        #Add the patient as a member of the family
                         gu.addMemberOf(self.graph,patient_id,family_comp_id)
+
+                        #set URL for family_id
+                        family_url = 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='+family_id
+
+                        #Add family URL as page to family_id.
+                        gu.addPage(self.graph,family_comp_id,family_url)
+
+                    # Add OMIM Disease ID (';' delimited)
+
+                    #
 
 
                     # Add description (remark) to patient
@@ -240,6 +260,9 @@ class Coriell(Source):
                         if mapped_race is not None:
                             gu.addTriple(self.graph,patient_id,'SIO:001015',mapped_race)
                             gu.addSubclass(self.graph,'EFO:0001799',mapped_race)
+
+
+
 
 
 
