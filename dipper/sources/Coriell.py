@@ -36,7 +36,6 @@ class Coriell(Source):
         'cell_line_repository': 'CLO:0000008',
         'race': 'SIO:001015',
         'ethnic_group': 'EFO:0001799'
-
     }
 
 
@@ -191,12 +190,24 @@ class Coriell(Source):
                     dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
                     relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids) = row
 
+
+
+                    ##############    BUILD REQUIRED VARIABLES    #############
+
+                    #Make the cell line ID
                     cell_line_id = 'Coriell:'+catalog_id.strip()
 
+                    #Map the cell/sample type
                     cell_type = self._map_cell_type(sample_type)
 
+                    #Make a cell line label
+                    #FIXME:Including a generic label for now.
+                    line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
+
+                    #Map the repository/collection
                     repository = self._map_collection(collection)
 
+                    #Make the patient ID
                     # FIXME: Need a better patient ID from Coriell.
                     if family_id != '':
                         #patient_id = self.make_id(family_id+relprob)
@@ -206,11 +217,18 @@ class Coriell(Source):
                         #Think it would be better just to make an id
                         patient_id = self.make_id(cell_line_id)
 
-                    #FIXME:Including a generic label for now.
-                    line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
+                    #Make a label for the patient
+                    patient_label = sample_type+' from patient '+patient_id+' with '+description
+
+
+                    ##############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
                     gu.addIndividualToGraph(self.graph,cell_line_id,line_label,cell_type)
+
+                    #TODO: Do we need to map the cell types to Uberon, or does the fact that we have mapped to CL
+                    # mean that the mapping is performed at the ontology level? Also, many of the matching terms
+                    # are marked as obsolete in Uberon.
 
                     # Cell line derives from patient
                     # Should we call this from the Genotype.py or generalize to the GraphUtils?
@@ -225,18 +243,32 @@ class Coriell(Source):
                     #FIXME: More appropriate term than sampling_time?
                     gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
 
-                    #Make a label for the patient
-                    patient_label = sample_type+' from patient '+patient_id+' with '+description
 
-                    # Adding the patient ID as an individual.
+                    ##############    BUILD THE PATIENT    #############
+
+                    # Add the patient ID as an individual.
                     #FIXME: How to add FOAF:Person?
                     # Do we need to add the person as a 'Category' instead of a class or individual?
                     #gu.addClassToGraph(self.graph,patient_id,patient_label)
 
+                    #Add the patient as a person with label.
                     #TODO:Abstract this to an addPerson graph util?
                     n = gu.getNode(patient_id)
                     self.graph.add((n, RDF['type'], self.PERSON))
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
+
+                    #TODO: Proband
+                    self.graph.add((n, RDF['type'], Literal(relprob)))
+
+                    #TODO: OMIM Disease
+                    # Add OMIM Disease ID (';' delimited)
+                    #Perhaps add OMIM ID, and if no OMIM ID is present, just add a disease description?
+                    #Assuming we don't need a disease description if it has an OMIM ID, as that can be mapped from OMIM.
+
+                    if omim_number != '':
+                        for s in omim_number.split(';'):
+                            self.graph.add((n, RDF['type'], Literal(s.strip())))
+
 
                     # Add taxon to patient
                     gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])
@@ -260,8 +292,11 @@ class Coriell(Source):
                             gu.addTriple(self.graph,patient_id,self.terms['race'],mapped_race)
                             gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
 
-                    # Add OMIM Disease ID (';' delimited)
 
+                    #TODO: Need genotype data, not currently available.
+                    #Can build some rudimentary info from what's in the data set:
+
+                    ##############    BUILD THE FAMILY    #############
 
                     # Add triples for family_id, if present.
                     #FIXME: Is this the correct approach for the family ID URI?
@@ -310,6 +345,7 @@ class Coriell(Source):
         :param limit:
         :return:
         """
+        ##############    BUILD THE CELL LINE REPOSITORY    #############
         #FIXME: How to devise a label for each repository?
         gu = GraphUtils(curie_map.get())
         repo_id = 'CoriellCollection:'+id
@@ -318,8 +354,6 @@ class Coriell(Source):
         #gu.addClassToGraph(self.graph,repo_id,repo_label)
         gu.addIndividualToGraph(self.graph,repo_id,repo_label,self.terms['cell_line_repository'])
         gu.addPage(self.graph,repo_id,repo_page)
-
-
 
         return
 
