@@ -65,11 +65,12 @@ def main():
                              'Implemented taxa per source\n'
                              'NCBIGene: 9606,10090\n'
                              'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
-                             'BioGrid: 9606,10090,10116,7227,7955,6239,8355')
+                             'BioGrid: 9606,10090,10116,7227,7955,6239,8355\n'
+                             'UCSCBands: 9606')
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
-        tax_ids = map(int, args.taxon.split(','))
+        tax_ids = list(map(int, args.taxon.split(',')))
 
     taxa_supported = [Panther, NCBIGene, BioGrid, UCSCBands]
 

@@ -4,12 +4,15 @@ import re
 from datetime import datetime
 import gzip
 import os.path
+import logging
 
 from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature,makeChromID
 from dipper.models.Dataset import Dataset
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
+
+logger = logging.getLogger(__name__)
 
 
 class UCSCBands(Source):
@@ -43,10 +46,9 @@ class UCSCBands(Source):
     '''
 
     files = {
-        'human_bands' : {
+        '9606' : {
             'file' : '9606cytoBand.txt.gz',
             'url' : 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
-            'taxon' : '9606'
         },
     }
 
@@ -60,15 +62,22 @@ class UCSCBands(Source):
     }
 
 
-    def __init__(self):
+    def __init__(self, tax_ids=None):
         super().__init__('ucscbands')
 
+        self.tax_ids = tax_ids
         self.load_bindings()
+
+        # Defaults
+        if self.tax_ids is None:
+            self.tax_ids = [9606]
+
+        self._check_tax_ids()
 
         self.dataset = Dataset('ucscbands', 'UCSC Cytogenic Bands', 'http://hgdownload.cse.ucsc.edu')
 
+
         #data-source specific warnings (will be removed when issues are cleared)
-        #print()
 
         return
 
@@ -90,33 +99,33 @@ class UCSCBands(Source):
 
 
     def parse(self, limit=None):
+
         if (limit is not None):
-            print("Only parsing first", limit, "rows")
+            logger.info("Only parsing first %d rows", limit)
 
-        print("Parsing files...")
+        logger.info("Parsing files...")
 
-        self._get_chrbands(limit,self.files['human_bands'])
+        for taxon in self.tax_ids:
+            self._get_chrbands(limit, str(taxon))
         #TODO as a post-processing step, we must propagate the coordinates to the upper-level features
 
         self.load_core_bindings()
         self.load_bindings()
 
-        print("Done parsing files.")
+        logger.info("Done parsing files.")
 
         return
 
-    def _get_chrbands(self,limit,data):
+    def _get_chrbands(self,limit,taxon):
         '''
         :param limit:
         :return:
         '''
         cu = CurieUtil(curie_map.get())
-
-        print("INFO: Processing Chr bands from",)
         line_counter=0
-        myfile=('/').join((self.rawdir,data['file']))
-        print("FILE:",myfile)
-        taxon = data['taxon']
+        myfile=('/').join((self.rawdir,self.files[taxon]['file']))
+        logger.info("Processing Chr bands from FILE: %s", myfile)
+
         mybands = {}
 
         with gzip.open(myfile, 'rb') as f:
@@ -255,7 +264,13 @@ class UCSCBands(Source):
         if (type in type_to_so_map):
             so_id = type_to_so_map.get(type)
         else:
-            print("WARN: unmapped code",type,". Defaulting to chr_part 'SO:0000830'.")
+            logger.warn("Unmapped code %s. "
+                        "Defaulting to chr_part 'SO:0000830'.", type)
 
         return so_id
 
+    def _check_tax_ids(self):
+        for taxon in self.tax_ids:
+            if str(taxon) not in self.files:
+                raise Exception("Taxon " + str(taxon) + " not supported"
+                                " by source UCSCBands")
