@@ -58,9 +58,9 @@ class CTD(Source):
             :return:None
         """
         if limit is not None:
-            print("Only parsing first", limit, "rows")
+            logger.info("Only parsing first %d rows", limit)
 
-        print("Parsing files...")
+        logger.info("Parsing files...")
         pub_map = dict()
         file_path = '/'.join((self.rawdir,
                               self.static_files['publications']['file']))
@@ -77,7 +77,7 @@ class CTD(Source):
                                   self.files['gene_pathway']['file']
         )
         self.load_bindings()
-        print("Done parsing files.")
+        logger.info("Done parsing files.")
 
         return
 
@@ -279,7 +279,7 @@ class CTD(Source):
             if pub_map.get(key):
                 publication[pub_map[key]].append(val)
             else:
-                logger.ERROR("Could not disambiguate publication "
+                logger.error("Could not disambiguate publication "
                              "for disease id: %s"
                              "\nchemical id: %s"
                              "\npublication id: %", disease_id, chem_id, val)
@@ -313,7 +313,7 @@ class CTD(Source):
                     if chem_id is '' or disease_id is '':
                         next
                     elif pub_map.get(key) is not None:
-                        logger.ERROR("Ambiguous publication mapping for"
+                        logger.error("Ambiguous publication mapping for"
                                      " key: %s\n "
                                      "This is not yet handled by Dipper", key)
                         sys.exit(1)
