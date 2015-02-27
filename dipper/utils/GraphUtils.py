@@ -17,6 +17,7 @@ class GraphUtils:
     OWLIND=OWL['NamedIndividual']
     OWLPROP=OWL['ObjectProperty']
     SUBCLASS=RDFS['subClassOf']
+    PERSON=FOAF['person']
 
     relationships = {
         'has_disposition': 'GENO:0000208',
@@ -102,6 +103,13 @@ class GraphUtils:
 
         return
 
+    def addPerson(self,graph,subject_id,label):
+        graph.add((self.getNode(subject_id), RDF['type'], self.PERSON))
+        if (label is not None):
+            graph.add((self.getNode(subject_id), RDFS['label'], Literal(label)))
+        return
+
+
     def addDeprecatedClass(self,g,oldid,newids=None):
         '''
         Will mark the oldid as a deprecated class.
@@ -145,7 +153,7 @@ class GraphUtils:
         return
 
     def addLabel(self,graph,subject_id,label):
-        graph.add((self.getNode(subject_id), RDF['label'],Literal(label)))
+        graph.add((self.getNode(subject_id),RDFS['label'],Literal(label)))
         return
 
     def addSynonym(self,g,cid,synonym,synonym_type=None):

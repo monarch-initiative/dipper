@@ -1,7 +1,5 @@
 import logging
 import csv
-from rdflib.namespace import FOAF, RDF, RDFS
-from rdflib import Literal
 import pysftp
 
 from dipper.sources.Source import Source
@@ -35,11 +33,12 @@ class Coriell(Source):
         'in_taxon': 'RO:0002162',
         'cell_line_repository': 'CLO:0000008',
         'race': 'SIO:001015',
-        'ethnic_group': 'EFO:0001799'
+        'ethnic_group': 'EFO:0001799',
+        'mentions': 'IAO:0000142'
     }
 
 
-    PERSON=FOAF['person']
+
 
     files = {
         'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
@@ -250,16 +249,12 @@ class Coriell(Source):
                     #FIXME: How to add FOAF:Person?
                     # Do we need to add the person as a 'Category' instead of a class or individual?
                     #gu.addClassToGraph(self.graph,patient_id,patient_label)
+                    #gu.addIndividualToGraph(self.graph,patient_id,patient_label,(FOAF['person']))
 
                     #Add the patient as a person with label.
-                    #TODO:Abstract this to an addPerson graph util?
-                    n = gu.getNode(patient_id)
-                    self.graph.add((n, RDF['type'], self.PERSON))
-                    #gu.addType(self.graph,patient_id,self.PERSON)
-                    self.graph.add((n, RDFS['label'], Literal(patient_label)))
+                    gu.addPerson(self.graph,patient_id,patient_label)
 
-                    #TODO: Proband
-                    #self.graph.add((n, RDF['type'], Literal(relprob)))
+                    #Add proband as type to patient
                     gu.addType(self.graph,patient_id,relprob,type_is_literal=True)
 
                     #TODO: OMIM Disease
@@ -274,7 +269,7 @@ class Coriell(Source):
                             #self.graph.add((n, RDF['type'], ))
 
                     # Add taxon to patient
-                    gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])
+                    gu.addTriple(self.graph,patient_id,self.terms['mentions'],self.terms['human'])
 
                     # Add sex/gender of patient?
                     # Add affected status?
@@ -324,8 +319,10 @@ class Coriell(Source):
 
 
 
-                    #if pubmed_ids != '':
-                        #for s in pubmed_ids.split(';'):
+                    if pubmed_ids != '':
+                        for s in pubmed_ids.split(';'):
+                            pubmed_id = 'PMID:'+s.strip()
+                            gu.addTriple(self.graph,pubmed_id,self.terms['mentions'],cell_line_id)
                             #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
 
 
