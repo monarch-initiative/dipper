@@ -264,11 +264,12 @@ class Coriell(Source):
                     # Add OMIM Disease ID (';' delimited)
                     #Perhaps add OMIM ID, and if no OMIM ID is present, just add a disease description?
                     #Assuming we don't need a disease description if it has an OMIM ID, as that can be mapped from OMIM.
-
+                    #FIXME: Don't believe this adding as type is correct.
                     if omim_number != '':
                         for s in omim_number.split(';'):
-                            self.graph.add((n, RDF['type'], Literal(s.strip())))
-
+                            disease_id = 'OMIM:'+s.strip()
+                            gu.addType(self.graph,patient_id,disease_id)
+                            #self.graph.add((n, RDF['type'], ))
 
                     # Add taxon to patient
                     gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])

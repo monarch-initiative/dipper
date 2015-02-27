@@ -137,6 +137,14 @@ class GraphUtils:
 
         return
 
+    def addType(self,graph,subject_id,type,type_is_literal=False):
+        if type_is_literal is True:
+            graph.add((self.getNode(subject_id), RDF['type'],Literal(type)))
+        else:
+            graph.add((self.getNode(subject_id), RDF['type'],self.getNode(type)))
+
+        return
+
     def addSynonym(self,g,cid,synonym,synonym_type=None):
         '''
         Add the synonym as a property of the class cid.  Assume it is an exact synonym, unless
