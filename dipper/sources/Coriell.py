@@ -254,11 +254,13 @@ class Coriell(Source):
                     #Add the patient as a person with label.
                     #TODO:Abstract this to an addPerson graph util?
                     n = gu.getNode(patient_id)
-                    self.graph.add((n, RDF['type'], self.PERSON))
+                    #self.graph.add((n, RDF['type'], self.PERSON))
+                    gu.addType(self.graph,patient_id,self.PERSON)
                     self.graph.add((n, RDFS['label'], Literal(patient_label)))
 
                     #TODO: Proband
-                    self.graph.add((n, RDF['type'], Literal(relprob)))
+                    #self.graph.add((n, RDF['type'], Literal(relprob)))
+                    gu.addType(self.graph,patient_id,relprob,type_is_literal=True)
 
                     #TODO: OMIM Disease
                     # Add OMIM Disease ID (';' delimited)

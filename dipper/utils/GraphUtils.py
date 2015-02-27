@@ -142,7 +142,10 @@ class GraphUtils:
             graph.add((self.getNode(subject_id), RDF['type'],Literal(type)))
         else:
             graph.add((self.getNode(subject_id), RDF['type'],self.getNode(type)))
+        return
 
+    def addLabel(self,graph,subject_id,label):
+        graph.add((self.getNode(subject_id), RDF['label'],Literal(label)))
         return
 
     def addSynonym(self,g,cid,synonym,synonym_type=None):
@@ -196,7 +199,6 @@ class GraphUtils:
 
     def addPage(self,g,subject_id,page_url):
         g.add((self.getNode(subject_id),FOAF['page'],Literal(page_url)))
-
         return
 
     def addMember(self, g, group_id, member_id):
