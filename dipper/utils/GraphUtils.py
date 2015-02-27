@@ -35,7 +35,8 @@ class GraphUtils:
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
-        'part_of': 'BFO:0000050'
+        'part_of': 'BFO:0000050',
+        'mentions': 'IAO:0000142'
     }
 
 

@@ -30,11 +30,9 @@ class Coriell(Source):
     terms = {
         'sampling_time': 'EFO:0000689',
         'human': 'NCBITaxon:9606',
-        'in_taxon': 'RO:0002162',
         'cell_line_repository': 'CLO:0000008',
         'race': 'SIO:001015',
-        'ethnic_group': 'EFO:0001799',
-        'mentions': 'IAO:0000142'
+        'ethnic_group': 'EFO:0001799'
     }
 
 
@@ -190,7 +188,6 @@ class Coriell(Source):
                     relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids) = row
 
 
-
                     ##############    BUILD REQUIRED VARIABLES    #############
 
                     #Make the cell line ID
@@ -227,16 +224,14 @@ class Coriell(Source):
 
                     #TODO: Do we need to map the cell types to Uberon, or does the fact that we have mapped to CL
                     # mean that the mapping is performed at the ontology level? Also, many of the matching terms
-                    # are marked as obsolete in Uberon.
+                    # are marked as obsolete in Uberon, such as fibroblast.
 
                     # Cell line derives from patient
                     # Should we call this from the Genotype.py or generalize to the GraphUtils?
-                    rel = gu.getNode(gu.relationships['derives_from'])
-                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(patient_id)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['derives_from']), gu.getNode(patient_id)))
 
                     # Cell line part_of repository
-                    rel = gu.getNode(gu.relationships['part_of'])
-                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['part_of']), gu.getNode(repository)))
 
                     # Cell age_at_sampling
                     #FIXME: More appropriate term than sampling_time?
@@ -266,14 +261,9 @@ class Coriell(Source):
                         for s in omim_number.split(';'):
                             disease_id = 'OMIM:'+s.strip()
                             gu.addType(self.graph,patient_id,disease_id)
-                            #self.graph.add((n, RDF['type'], ))
 
                     # Add taxon to patient
-                    gu.addTriple(self.graph,patient_id,self.terms['mentions'],self.terms['human'])
-
-                    # Add sex/gender of patient?
-                    # Add affected status?
-                    #Add
+                    gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],self.terms['human'])
 
                     # Add description (remark) to patient
                     if cat_remark !='':
@@ -316,14 +306,23 @@ class Coriell(Source):
                         gu.addPage(self.graph,family_comp_id,family_url)
 
 
+                    ##############    BUILD THE GENOTYPE   #############
+
+                    #genotype_id a intrinsic_genotype
+                    #GENO:has_variant_part allelic_variant_id
+                    #we don't necessarily know much about the genotype, other than the allelic variant.
+                    #also there's the sex here)
 
 
+
+
+
+                    ##############    ADD PUBLICATIONS   #############
 
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
-                            gu.addTriple(self.graph,pubmed_id,self.terms['mentions'],cell_line_id)
-                            #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+                            gu.addTriple(self.graph,pubmed_id,gu.relationships['mentions'],cell_line_id)
 
 
 
