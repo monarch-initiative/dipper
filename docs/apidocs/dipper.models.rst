@@ -1,10 +1,10 @@
-dipper.models package
+models Package
 =====================
 
 Submodules
 ----------
 
-dipper.models.Assoc module
+:mod:`Assoc` Module
 --------------------------
 
 .. automodule:: dipper.models.Assoc
@@ -12,7 +12,7 @@ dipper.models.Assoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.Chem2DiseaseAssoc module
+:mod:`Chem2DiseaseAssoc` Module
 --------------------------------------
 
 .. automodule:: dipper.models.Chem2DiseaseAssoc
@@ -20,7 +20,7 @@ dipper.models.Chem2DiseaseAssoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.D2PAssoc module
+:mod:`D2PAssoc` Module
 -----------------------------
 
 .. automodule:: dipper.models.D2PAssoc
@@ -28,7 +28,7 @@ dipper.models.D2PAssoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.Dataset module
+:mod:`Dataset` Module
 ----------------------------
 
 .. automodule:: dipper.models.Dataset
@@ -36,7 +36,7 @@ dipper.models.Dataset module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.DispositionAssoc module
+:mod:`DispositionAssoc` Module
 -------------------------------------
 
 .. automodule:: dipper.models.DispositionAssoc
@@ -44,7 +44,7 @@ dipper.models.DispositionAssoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.G2PAssoc module
+:mod:`G2PAssoc` Module
 -----------------------------
 
 .. automodule:: dipper.models.G2PAssoc
@@ -52,7 +52,7 @@ dipper.models.G2PAssoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.GenomicFeature module
+:mod:`GenomicFeature` Module
 -----------------------------------
 
 .. automodule:: dipper.models.GenomicFeature
@@ -60,7 +60,7 @@ dipper.models.GenomicFeature module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.Genotype module
+:mod:`Genotype` Module
 -----------------------------
 
 .. automodule:: dipper.models.Genotype
@@ -68,7 +68,7 @@ dipper.models.Genotype module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.InteractionAssoc module
+:mod:`InteractionAssoc` Module
 -------------------------------------
 
 .. automodule:: dipper.models.InteractionAssoc
@@ -76,7 +76,7 @@ dipper.models.InteractionAssoc module
     :undoc-members:
     :show-inheritance:
 
-dipper.models.OrthologyAssoc module
+:mod:`OrthologyAssoc` Module
 -----------------------------------
 
 .. automodule:: dipper.models.OrthologyAssoc
@@ -85,10 +85,4 @@ dipper.models.OrthologyAssoc module
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: dipper.models
-    :members:
-    :undoc-members:
-    :show-inheritance:

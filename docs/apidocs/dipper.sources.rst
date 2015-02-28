@@ -1,10 +1,10 @@
-dipper.sources package
+sources Package
 ======================
 
 Submodules
 ----------
 
-dipper.sources.BioGrid module
+:mod:`BioGrid` Module
 -----------------------------
 
 .. automodule:: dipper.sources.BioGrid
@@ -12,7 +12,7 @@ dipper.sources.BioGrid module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.CTD module
+:mod:`CTD` Module
 -------------------------
 
 .. automodule:: dipper.sources.CTD
@@ -20,7 +20,7 @@ dipper.sources.CTD module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.Coriell module
+:mod:`Coriell` Module
 -----------------------------
 
 .. automodule:: dipper.sources.Coriell
@@ -28,7 +28,7 @@ dipper.sources.Coriell module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.EOM module
+:mod:`EOM` Module
 -------------------------
 
 .. automodule:: dipper.sources.EOM
@@ -36,7 +36,7 @@ dipper.sources.EOM module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.GeneReviews module
+:mod:`GeneReviews` Module
 ---------------------------------
 
 .. automodule:: dipper.sources.GeneReviews
@@ -44,7 +44,7 @@ dipper.sources.GeneReviews module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.HPOAnnotations module
+:mod:`HPOAnnotations` Module
 ------------------------------------
 
 .. automodule:: dipper.sources.HPOAnnotations
@@ -52,7 +52,7 @@ dipper.sources.HPOAnnotations module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.IMPC module
+:mod:`IMPC` Module
 --------------------------
 
 .. automodule:: dipper.sources.IMPC
@@ -60,7 +60,7 @@ dipper.sources.IMPC module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.MGI module
+:mod:`MGI Module
 -------------------------
 
 .. automodule:: dipper.sources.MGI
@@ -68,7 +68,7 @@ dipper.sources.MGI module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.NCBIGene module
+:mod:`NCBIGene` Module
 ------------------------------
 
 .. automodule:: dipper.sources.NCBIGene
@@ -76,7 +76,7 @@ dipper.sources.NCBIGene module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.OMIM module
+:mod:`OMIM` Module
 --------------------------
 
 .. automodule:: dipper.sources.OMIM
@@ -84,7 +84,7 @@ dipper.sources.OMIM module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.Panther module
+:mod:`Panther` Module
 -----------------------------
 
 .. automodule:: dipper.sources.Panther
@@ -92,7 +92,7 @@ dipper.sources.Panther module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.Source module
+:mod:`Source` Module
 ----------------------------
 
 .. automodule:: dipper.sources.Source
@@ -100,7 +100,7 @@ dipper.sources.Source module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.UCSCBands module
+:mod:`UCSCBands` Module
 -------------------------------
 
 .. automodule:: dipper.sources.UCSCBands
@@ -108,7 +108,7 @@ dipper.sources.UCSCBands module
     :undoc-members:
     :show-inheritance:
 
-dipper.sources.ZFIN module
+:mod:`ZFIN` Module
 --------------------------
 
 .. automodule:: dipper.sources.ZFIN
@@ -117,10 +117,4 @@ dipper.sources.ZFIN module
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: dipper.sources
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -45,10 +45,4 @@ Submodules
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: dipper.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
