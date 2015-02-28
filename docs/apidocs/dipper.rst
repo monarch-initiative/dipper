@@ -13,7 +13,7 @@ Subpackages
 Submodules
 ----------
 
-:mod `config` Module
+:mod:`config` Module
 --------------------
 
 .. automodule:: dipper.config
@@ -21,7 +21,7 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-:mod `curie_map` Module
+:mod:`curie_map` Module
 -----------------------
 
 .. automodule:: dipper.curie_map
