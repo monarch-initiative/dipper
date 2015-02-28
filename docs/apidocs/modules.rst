@@ -1,7 +1,7 @@
-dipper
+Dipper API Docs
 ======
 
 .. toctree::
    :maxdepth: 4
 
-   Dipper API Docs
+   dipper
