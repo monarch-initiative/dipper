@@ -60,7 +60,7 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-:mod:`MGI Module
+:mod:`MGI` Module
 -------------------------
 
 .. automodule:: dipper.sources.MGI
