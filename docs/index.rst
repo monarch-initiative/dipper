@@ -6,13 +6,14 @@
 Welcome to Dipper's documentation!
 ==================================
 
-Dipper is a pure Python package to generate RDF triples from common scientific resources
+Dipper is a pure Python package to generate RDF triples from common scientific resources.
+Dipper includes subpackages and modules to create graphical models of this data, including:
 
 * Models for ternary associations and complex partonomies
 
 * Graph utilities to create common relationships using a variety of ontologies
 
-* Fetchers and Parsers that inferface with remote databases and web services
+* Fetchers and Parsers that interface with remote databases and web services
 
 
 Contents:
