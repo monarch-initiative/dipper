@@ -55,7 +55,7 @@ class CTD(Source):
         Args:
             :param limit (int, optional) limit the number of rows processed
         Returns:
-            :return:None
+            :return None
         """
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
@@ -91,7 +91,7 @@ class CTD(Source):
                     publication mapping dictionary
                     generated with _split_pub_ids_by_evidence()
         Returns:
-            :return:None
+            :return None
         """
         row_count = 0
         version_pattern = re.compile('^# Report created: (.+)$')
@@ -128,7 +128,7 @@ class CTD(Source):
         Args:
             :param row (list): row of CTD data
         Returns:
-            :return: self.graph(rdflib.Graph()): CTD graph
+            :return self.graph(rdflib.Graph()): CTD graph
         """
         self._check_list_len(row, 4)
         gu = GraphUtils(curie_map.get())
@@ -155,7 +155,7 @@ class CTD(Source):
             :param row (list): row of CTD data
             :param pub_map(dict, optional): publication mapping dictionary
         Returns:
-            :return: self.graph(rdflib.Graph()): CTD graph
+            :return self.graph(rdflib.Graph()): CTD graph
         """
         self._check_list_len(row, 10)
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
@@ -190,7 +190,7 @@ class CTD(Source):
             :param direct_evidence
             :param pubmed_ids
         Returns:
-            :return:None
+            :return None
         """
         assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
         evidence_code = self._get_evidence_code('TAS')
@@ -210,7 +210,7 @@ class CTD(Source):
             :param pubmed_ids -  string representing publication
                                  ids seperated by a | symbol
         Returns:
-            :return: list: Pubmed curies
+            :return list: Pubmed curies
         """
         id_list = pubmed_ids.split('|')
         for (i, val) in enumerate(id_list):
@@ -223,7 +223,7 @@ class CTD(Source):
         Args:
             :param evidence (str): evidence label
         Label:
-            :return: str: curie for evidence label from ECO
+            :return str: curie for evidence label from ECO
         """
         ECO_MAP = {
             'TAS': 'ECO:0000033'
@@ -236,7 +236,7 @@ class CTD(Source):
         Args:
             :param rel (str): relationship label
         Returns:
-            :return: str: curie for relationship label
+            :return str: curie for relationship label
         """
         REL_MAP = {
             'therapeutic': 'MONARCH:treats',
@@ -250,7 +250,7 @@ class CTD(Source):
         Args:
             :param cls (str): class label
         Returns:
-            :return: str: curie for class label
+            :return str: curie for class label
         """
         CLASS_MAP = {
             'pathway': 'PW:0000001',
@@ -267,7 +267,7 @@ class CTD(Source):
             :param chem_id (str): chemical curie
             :param pub_map (dict): publication dictionary
         Returns:
-            :return: dictionary in the following structure:
+            :return dictionary in the following structure:
                      {
                       'therapeutic': [1234,2345],
                       'marker/mechanism': [4567,5678]
@@ -293,7 +293,7 @@ class CTD(Source):
         Args:
             :param file (str): file name
         Returns:
-            :return: dict: key containing the chemID, phenotypeID, and pubID
+            :return dict: key containing the chemID, phenotypeID, and pubID
                            mapped to relationship
         """
         row_count = 0
