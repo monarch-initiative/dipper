@@ -44,6 +44,11 @@ class Source:
             logger.info("creating raw directory for resource %s", self.name)
             os.makedirs(self.rawdir)
 
+        #if output dir doesn't exist, create it
+        if not os.path.exists(self.outdir):
+            logger.info("creating output directory")
+            os.makedirs(self.outdir)
+
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
         logger.info("Setting outfile to %s", self.outfile)
 

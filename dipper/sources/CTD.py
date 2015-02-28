@@ -128,7 +128,7 @@ class CTD(Source):
         Args:
             :param row (list): row of CTD data
         Returns:
-            :return self.graph(rdflib.Graph()): CTD graph
+            :return None
         """
         self._check_list_len(row, 4)
         gu = GraphUtils(curie_map.get())
@@ -145,7 +145,7 @@ class CTD(Source):
         # if re.match(re.compile('^REACT'),pathway_id):
         #    gu.addClassToGraph(self.graph, pathway_id, pathway_name)
 
-        return self.graph
+        return
 
     def _process_interactions(self, row, pub_map):
         """
@@ -155,7 +155,7 @@ class CTD(Source):
             :param row (list): row of CTD data
             :param pub_map(dict, optional): publication mapping dictionary
         Returns:
-            :return self.graph(rdflib.Graph()): CTD graph
+            :return None
         """
         self._check_list_len(row, 10)
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
@@ -178,7 +178,7 @@ class CTD(Source):
             for val in direct_evidence.split('|'):
                 self._make_association(chem_id, disease_id, val, pub_evidence_map[val])
 
-        return self.graph
+        return
 
     def _make_association(self, chem_id, disease_id, direct_evidence, pubmed_ids):
         """
