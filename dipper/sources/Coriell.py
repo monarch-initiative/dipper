@@ -223,6 +223,11 @@ class Coriell(Source):
                     patient_label = sample_type+' from patient '+patient_id+' with '+description
 
 
+                    if dbsnp_id != '':
+                        alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
+
+
+
                     ##############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
@@ -268,6 +273,9 @@ class Coriell(Source):
                         for s in omim_number.split(';'):
                             disease_id = 'OMIM:'+s.strip()
                             gu.addType(self.graph,patient_id,disease_id)
+                            if alleleic_variant_id != '':
+                                #Add dbSNP ID sameAs OMIM ID for the disease_id
+                                gu.addSameIndividual(self.graph,alleleic_variant_id,disease_id)
 
                     # Add taxon to patient
                     if species == 'Homo sapiens':
@@ -329,12 +337,13 @@ class Coriell(Source):
                     genotype_label = 'temp_genotype_label'
                     geno.addGenotype(genotype_id,genotype_label)
 
-                    if dbsnp_id != '':
-                        alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
+                    if alleleic_variant_id != '':
                         #FIXME: Should this instead be addAllele?
                         #FIXME: Alternatively, abstract an addAlternatePart to Genotype.py?
                         variant_type = geno.genoparts['point_mutation']
                         geno.addParts(alleleic_variant_id,genotype_id,variant_type)
+
+
 
 
 
@@ -349,6 +358,7 @@ class Coriell(Source):
                             gu.addType(self.graph,patient_id,disease_variant_id)
 
                             #Add sameAs OMIM ID for the disease_variant_id
+
 
 
 
