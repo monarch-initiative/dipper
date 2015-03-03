@@ -222,7 +222,7 @@ class Coriell(Source):
                     #Make a label for the patient
                     patient_label = sample_type+' from patient '+patient_id+' with '+description
 
-
+                    #Declaring the alleleic variant ID here, as need to add sameAs to the OMIM disease ID for patient
                     if dbsnp_id != '':
                         alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
 
@@ -344,20 +344,17 @@ class Coriell(Source):
                         geno.addParts(alleleic_variant_id,genotype_id,variant_type)
 
 
-
-
-
-
-                    #This column and the OMIM ID column may match, may not match,
-                    # as the specific disease variant number may be different.
+                    #This column and the OMIM ID column are not equal,
+                    # as the specific disease variant number will be different.
                     if variant_id != '':
                         for s in variant_id.split(';'):
                             disease_variant_id = 'OMIM:'+s.strip()
                             #FIXME: Add as type?
-
                             gu.addType(self.graph,patient_id,disease_variant_id)
 
-                            #Add sameAs OMIM ID for the disease_variant_id
+                            #FIXME: What is the relation between the disease ID and the disease variant ID?
+                            # disease_id has_variant disease_variant_id?
+                            #Add sameAs OMIM ID for the disease_variant_id?
 
 
 
