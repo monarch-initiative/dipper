@@ -356,7 +356,7 @@ class Coriell(Source):
                             # disease_id has_variant disease_variant_id?
                             #Add sameAs OMIM ID for the disease_variant_id?
 
-
+                    #TODO: Add sex/gender
 
 
                     ##############    ADD PUBLICATIONS   #############
