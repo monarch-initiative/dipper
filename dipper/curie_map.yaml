@@ -52,6 +52,7 @@
 'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/'
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
 'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
+'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?path:map'

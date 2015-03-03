@@ -8,6 +8,7 @@ from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper.models.Genotype import Genotype
 
 
 
@@ -277,9 +278,9 @@ class Coriell(Source):
 
                     # Add race of patient
                     #FIXME: Adjust for subcategories based on ethnicity field
-                    #EDIT: There are 743 different entries for ethnicity... Too many to map
+                    #EDIT: There are 743 different entries for ethnicity... Too many to map?
                     #Perhaps add ethnicity as a literal in addition to the mapped race?
-                    #Need to adjust the ethnicity text to just initial capitalization as some entries:ALL CAPS
+                    #Need to adjust the ethnicity text (if using) to just initial capitalization as some entries:ALLCAPS
                     if race != '':
                         mapped_race = self._map_race(race)
                         if mapped_race is not None:
@@ -319,7 +320,33 @@ class Coriell(Source):
                     #we don't necessarily know much about the genotype, other than the allelic variant.
                     #also there's the sex here)
 
+                    #FIXME: What do we want to use for the genotype ID?
+                    #FIXME: Likely need some editing for this section.
+                    geno = Genotype(self.graph)
+                    genotype_id = self.make_id('GENOTYPE'+cell_line_id)
+                    genotype_label = 'temp_genotype_label'
+                    geno.addGenotype(genotype_id,genotype_label)
 
+                    if dbsnp_id != '':
+                        alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
+                        #FIXME: Should this instead be addAllele?
+                        #FIXME: Alternatively, abstract an addAlternatePart to Genotype.py?
+                        variant_type = geno.genoparts['point_mutation']
+                        geno.addParts(alleleic_variant_id,genotype_id,variant_type)
+
+
+
+
+                    #This column and the OMIM ID column may match, may not match,
+                    # as the specific disease variant number may be different.
+                    if variant_id != '':
+                        for s in variant_id.split(';'):
+                            disease_variant_id = 'OMIM:'+s.strip()
+                            #FIXME: Add as type?
+
+                            gu.addType(self.graph,patient_id,disease_variant_id)
+
+                            #Add sameAs OMIM ID for the disease_variant_id
 
 
 
