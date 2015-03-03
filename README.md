@@ -44,12 +44,8 @@ This graph is then typically dumped into triples in turtle format.
 
     Dipper can be installed as an external python package with pip3
 
-    * Installing Dipper with pip3
-
         pip3 install git+git://github.com/monarch-initiative/dipper.git
         
-    or;
+    or clone the repository and run:
     
-    * Clone the repository and run:
-
         pip3 install -e /path/to/git/dipper
