@@ -39,3 +39,17 @@ This graph is then typically dumped into triples in turtle format.
     * NCBIGene (Genes, equivalent ids, taxa, and their chr locations)
     * IMPC (Genotypes (with their parts) and Genotype-Phenotype associations)
     * MGI (Genotypes (with their parts) and Genotype-Phenotype associations)
+    
+* Importing Dipper as a python package
+
+    Dipper can be installed as an external python package with pip3
+
+    * Installing Dipper with pip3
+
+        pip3 install git+git://github.com/monarch-initiative/dipper.git
+        
+    or;
+    
+    * Clone the repository and run:
+
+        pip3 install -e /path/to/git/dipper
