@@ -191,7 +191,7 @@ class Coriell(Source):
                     (catalog_id,description,omim_number,sample_type,cell_line_available,
                     dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
                     relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids,
-                    amily_member,variant_id,dbsnp_id,species) = row
+                    family_member,variant_id,dbsnp_id,species) = row
 
 
                     ##############    BUILD REQUIRED VARIABLES    #############
@@ -270,7 +270,11 @@ class Coriell(Source):
                             gu.addType(self.graph,patient_id,disease_id)
 
                     # Add taxon to patient
-                    gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],self.terms['human'])
+                    if species == 'Homo sapiens':
+                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],self.terms['human'])
+                    elif species != '':
+                        taxon = self._map_species(species)
+                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],taxon)
 
                     # Add description (remark) to patient
                     if cat_remark !='':
@@ -288,8 +292,6 @@ class Coriell(Source):
                             gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
 
 
-                    #TODO: Need genotype data, not currently available.
-                    #Can build some rudimentary info from what's in the data set:
 
                     ##############    BUILD THE FAMILY    #############
 
@@ -450,6 +452,50 @@ class Coriell(Source):
             logger.warn("Race type not mapped: %s", race)
 
         return type
+
+
+    def _map_species(self, species):
+        type = None
+        type_map = {
+            'Mus musculus': 'NCBITaxon:10090',
+            'Peromyscus peromyscus californicus': 'NCBITaxon:42520',
+            'Peromyscus peromyscus maniculatus': 'NCBITaxon:10042',
+            'Peromyscus peromyscus leucopus': 'NCBITaxon:10041',
+            'Peromyscus peromyscus polionotus': 'NCBITaxon:42413',
+            'Macaca fascicularis': 'NCBITaxon:9541',
+            'Rattus norvegicus': 'NCBITaxon:10116',
+            'Papio anubis': 'NCBITaxon:9555',
+            'Cricetulus griseus': 'NCBITaxon:10029',
+            'Geochelone elephantopus': 'NCBITaxon:66189',
+            'Muntiacus muntjak': 'NCBITaxon:9888',
+            'Ailurus fulgens': 'NCBITaxon:9649',
+            'Sus scrofa': 'NCBITaxon:9823',
+            'Bos taurus': 'NCBITaxon:9913',
+            'Oryctolagus cuniculus': 'NCBITaxon:9986',
+            'Macaca nemestrina': 'NCBITaxon:9545',
+            'Canis familiaris': 'NCBITaxon:9615',
+            'Equus caballus': 'NCBITaxon:9796',
+            'Macaca mulatta': 'NCBITaxon:9544',
+            'Mesocricetus auratus': 'NCBITaxon:10036',
+            'Macaca nigra': 'NCBITaxon:54600',
+            'Erythrocebus patas': 'NCBITaxon:9538',
+            'Pongo pygmaeus': 'NCBITaxon:9600',
+            'Callicebus moloch': 'NCBITaxon:9523',
+            'Lagothrix lagotricha': 'NCBITaxon:9519',
+            'Saguinus fuscicollis': 'NCBITaxon:9487',
+            'Saimiri sciureus': 'NCBITaxon:9521',
+            'Saguinus labiatus': 'NCBITaxon:78454',
+            'Pan paniscus': 'NCBITaxon:9597',
+            'Ovis aries': 'NCBITaxon:9940',
+            'Felis catus': 'NCBITaxon:9685'
+        }
+        if (species.strip() in type_map):
+            type = type_map.get(species)
+        else:
+            logger.warn("Species type not mapped: %s", species)
+
+        return type
+
 
     def _map_collection(self, collection):
         type = None
