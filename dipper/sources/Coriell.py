@@ -8,6 +8,7 @@ from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper.models.Genotype import Genotype
 
 
 
@@ -39,17 +40,21 @@ class Coriell(Source):
 
 
     files = {
-        'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
+        'ninds': {'file' : 'NINDS_latest.csv',
                   'id' : 'NINDS',
                   'label': 'NINDS Human Genetics DNA and Cell line Repository',
                   'page' : 'https://catalog.coriell.org/1/NINDS'},
-        'nigms': {'file' : 'NIGMS_2014-02-03_13-31-42.csv',
+        'nigms': {'file' : 'NIGMS_latest.csv',
                   'id' : 'NIGMS',
                   'label': 'NIGMS Human Genetic Cell Repository',
                   'page' : 'https://catalog.coriell.org/1/NIGMS'},
-        'nia': {'file' : 'NIA_2015-02-20_16-08-04.csv',
+        'nia': {'file' : 'NIA_latest.csv',
                 'id' : 'NIA',
                 'label': 'NIA Aging Cell Repository',
+                'page': 'https://catalog.coriell.org/1/NIA'},
+        'nhgri': {'file' : 'NHGRI_latest.csv',
+                'id' : 'NHGRI',
+                'label': 'NHGRI Sample Repository for Human Genetic Research',
                 'page': 'https://catalog.coriell.org/1/NIA'}
     }
 
@@ -88,12 +93,12 @@ class Coriell(Source):
         #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
         #ftp = FTP(host1,user1,passwd1,timeout=None)
         #ftp.login()
-
+        #FIXME: Still resulting in login time out.
         #with pysftp.Connection(host1, user1, passwd1) as sftp:
-            #with sftp.cd('public')
-            #print('success!')
+            #with sftp.cd('public'):
+                #print('success!')
                 #sftp.get_r()
-
+        #Will need to rename the files, or handle changing file names with the same beginning (NIGMS_..., etc.)
 
         return
 
@@ -115,7 +120,7 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
-        for f in ['ninds','nigms','nia']:
+        for f in ['ninds','nigms','nia','nhgri']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
             self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
             self._process_data(file, limit)
@@ -185,7 +190,8 @@ class Coriell(Source):
 
                     (catalog_id,description,omim_number,sample_type,cell_line_available,
                     dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
-                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids) = row
+                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids,
+                    amily_member,variant_id,dbsnp_id,species) = row
 
 
                     ##############    BUILD REQUIRED VARIABLES    #############
@@ -235,7 +241,8 @@ class Coriell(Source):
 
                     # Cell age_at_sampling
                     #FIXME: More appropriate term than sampling_time?
-                    gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
+                    if (age != ''):
+                        gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
 
 
                     ##############    BUILD THE PATIENT    #############
@@ -271,9 +278,9 @@ class Coriell(Source):
 
                     # Add race of patient
                     #FIXME: Adjust for subcategories based on ethnicity field
-                    #EDIT: There are 743 different entries for ethnicity... Too many to map
+                    #EDIT: There are 743 different entries for ethnicity... Too many to map?
                     #Perhaps add ethnicity as a literal in addition to the mapped race?
-                    #Need to adjust the ethnicity text to just initial capitalization as some entries:ALL CAPS
+                    #Need to adjust the ethnicity text (if using) to just initial capitalization as some entries:ALLCAPS
                     if race != '':
                         mapped_race = self._map_race(race)
                         if mapped_race is not None:
@@ -313,7 +320,33 @@ class Coriell(Source):
                     #we don't necessarily know much about the genotype, other than the allelic variant.
                     #also there's the sex here)
 
+                    #FIXME: What do we want to use for the genotype ID?
+                    #FIXME: Likely need some editing for this section.
+                    geno = Genotype(self.graph)
+                    genotype_id = self.make_id('GENOTYPE'+cell_line_id)
+                    genotype_label = 'temp_genotype_label'
+                    geno.addGenotype(genotype_id,genotype_label)
 
+                    if dbsnp_id != '':
+                        alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
+                        #FIXME: Should this instead be addAllele?
+                        #FIXME: Alternatively, abstract an addAlternatePart to Genotype.py?
+                        variant_type = geno.genoparts['point_mutation']
+                        geno.addParts(alleleic_variant_id,genotype_id,variant_type)
+
+
+
+
+                    #This column and the OMIM ID column may match, may not match,
+                    # as the specific disease variant number may be different.
+                    if variant_id != '':
+                        for s in variant_id.split(';'):
+                            disease_variant_id = 'OMIM:'+s.strip()
+                            #FIXME: Add as type?
+
+                            gu.addType(self.graph,patient_id,disease_variant_id)
+
+                            #Add sameAs OMIM ID for the disease_variant_id
 
 
 
@@ -423,7 +456,8 @@ class Coriell(Source):
         type_map = {
             'NINDS Repository': 'CoriellCollection:NINDS',
             'NIGMS Human Genetic Cell Repository': 'CoriellCollection:NIGMS',
-            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA'
+            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA',
+            'NHGRI Sample Repository for Human Genetic Research': 'CoriellCollection:NHGRI'
         }
         if (collection.strip() in type_map):
             type = type_map.get(collection)
