@@ -3,6 +3,7 @@ import re
 import gzip
 import os
 import logging
+import sys
 
 from dipper import curie_map
 from dipper.sources.Source import Source
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CTD(Source):
+    """Fetch, Parse, and Convert data from CTD into Triples"""
 
     files = {
         'chemical_disease_interactions': {
@@ -36,21 +38,29 @@ class CTD(Source):
 
     def fetch(self, is_dl_forced):
         """
-        :return: None
+        Override Assoc.fetch()
+        Fetches resources from CTD using the CTD.files dictionary
+        Args:
+            :param is_dl_forced (bool): Force download
+        Returns:
+            :return None
         """
         self.get_files(is_dl_forced)
         return
 
     def parse(self, limit=None):
         """
+        Override Assoc.parse()
         Parses version and interaction information from CTD
-        :param limit limit the number of rows processed
-        :return:None
+        Args:
+            :param limit (int, optional) limit the number of rows processed
+        Returns:
+            :return None
         """
         if limit is not None:
-            print("Only parsing first", limit, "rows")
+            logger.info("Only parsing first %d rows", limit)
 
-        print("Parsing files...")
+        logger.info("Parsing files...")
         pub_map = dict()
         file_path = '/'.join((self.rawdir,
                               self.static_files['publications']['file']))
@@ -58,20 +68,31 @@ class CTD(Source):
             pub_map = self._parse_publication_file(
                 self.static_files['publications']['file']
             )
-        self._parse_interactions_file(
+        self._parse_ctd_file(
             limit,
             self.files['chemical_disease_interactions']['file'],
             pub_map
         )
-        self._parse_interactions_file(limit,
+        self._parse_ctd_file(limit,
                                   self.files['gene_pathway']['file']
         )
         self.load_bindings()
-        print("Done parsing files.")
+        logger.info("Done parsing files.")
 
         return
 
-    def _parse_interactions_file(self, limit, file, pub_map=None):
+    def _parse_ctd_file(self, limit, file, pub_map=None):
+        """
+        Parses files in CTD.files dictionary
+        Args:
+            :param limit (int): limit the number of rows processed
+            :param file (str): file name (must be defined in CTD.file)
+            :param pub_map(dict, optional):
+                    publication mapping dictionary
+                    generated with _split_pub_ids_by_evidence()
+        Returns:
+            :return None
+        """
         row_count = 0
         version_pattern = re.compile('^# Report created: (.+)$')
         is_versioned = False
@@ -94,13 +115,21 @@ class CTD(Source):
                     if file == self.files['chemical_disease_interactions']['file']:
                         self._process_interactions(row, pub_map)
                     elif file == self.files['gene_pathway']['file']:
-                        self._process_pathways(row)
+                        self._process_pathway(row)
                     row_count += 1
                     if limit is not None and row_count >= limit:
                         break
         return
 
-    def _process_pathways(self, row):
+    def _process_pathway(self, row):
+        """
+        Process row of CTD data from CTD_genes_pathways.tsv.gz
+        and generate triples
+        Args:
+            :param row (list): row of CTD data
+        Returns:
+            :return None
+        """
         self._check_list_len(row, 4)
         gu = GraphUtils(curie_map.get())
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
@@ -120,9 +149,13 @@ class CTD(Source):
 
     def _process_interactions(self, row, pub_map):
         """
-        :param row
-        :param pub_map
-        :return:None
+        Process row of CTD data from CTD_genes_pathways.tsv.gz
+        and generate triples
+        Args:
+            :param row (list): row of CTD data
+            :param pub_map(dict, optional): publication mapping dictionary
+        Returns:
+            :return None
         """
         self._check_list_len(row, 10)
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
@@ -140,7 +173,7 @@ class CTD(Source):
             reference_list = self._process_pubmed_ids(pubmed_ids)
             pub_evidence_map = \
                 self._split_pub_ids_by_evidence(
-                    reference_list, disease_id, chem_id, pub_map
+                    reference_list, chem_id, disease_id, pub_map
                 )
             for val in direct_evidence.split('|'):
                 self._make_association(chem_id, disease_id, val, pub_evidence_map[val])
@@ -149,11 +182,15 @@ class CTD(Source):
 
     def _make_association(self, chem_id, disease_id, direct_evidence, pubmed_ids):
         """
-        :param chem_id
-        :param disease_id
-        :param direct_evidence
-        :param pubmed_ids
-        :return:None
+        Make a reified chemical-phenotype association
+        using the Chem2DiseaseAssoc class
+        Args:
+            :param chem_id
+            :param disease_id
+            :param direct_evidence
+            :param pubmed_ids
+        Returns:
+            :return None
         """
         assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
         evidence_code = self._get_evidence_code('TAS')
@@ -163,13 +200,17 @@ class CTD(Source):
                                   pubmed_ids, relationship, evidence_code)
         assoc.loadObjectProperties(self.graph)
         assoc.addAssociationNodeToGraph(self.graph)
-        return
+
+        return self.graph
 
     def _process_pubmed_ids(self, pubmed_ids):
         """
-        :param pubmed_ids -  string representing publication
-                           ids seperated by a | symbol
-        :return: list of ids with the PUBMED prefix
+        Take a list of pubmed IDs and add PMID prefix
+        Args:
+            :param pubmed_ids -  string representing publication
+                                 ids seperated by a | symbol
+        Returns:
+            :return list: Pubmed curies
         """
         id_list = pubmed_ids.split('|')
         for (i, val) in enumerate(id_list):
@@ -178,8 +219,11 @@ class CTD(Source):
 
     def _get_evidence_code(self, evidence):
         """
-        :param evidence
-        :return: ECO evidence code
+        Get curie for evidence class label
+        Args:
+            :param evidence (str): evidence label
+        Label:
+            :return str: curie for evidence label from ECO
         """
         ECO_MAP = {
             'TAS': 'ECO:0000033'
@@ -188,8 +232,11 @@ class CTD(Source):
 
     def _get_relationship_id(self, rel):
         """
-        :param evidence
-        :return: ECO evidence code
+        Get curie from relationship property label
+        Args:
+            :param rel (str): relationship label
+        Returns:
+            :return str: curie for relationship label
         """
         REL_MAP = {
             'therapeutic': 'MONARCH:treats',
@@ -199,8 +246,11 @@ class CTD(Source):
 
     def _get_class_id(self, cls):
         """
-        :param cls
-        :return: curie
+        Fet curie from CLASS_MAP dictionary
+        Args:
+            :param cls (str): class label
+        Returns:
+            :return str: curie for class label
         """
         CLASS_MAP = {
             'pathway': 'PW:0000001',
@@ -208,13 +258,20 @@ class CTD(Source):
         }
         return CLASS_MAP[cls]
 
-    def _split_pub_ids_by_evidence(self, pub_ids, disease_id, chem_id, pub_map):
+    def _split_pub_ids_by_evidence(self, pub_ids, chem_id, disease_id, pub_map):
         """
-        :param pub_ids:
-        :param disease_id:
-        :param chem_id:
-        :param pub_map:
-        :return: dict
+        Split a list of ambiguous sources to chemical-phenotype relationship
+        Args:
+            :param pub_ids (list): list of publication IDs
+            :param disease_id (str): disease curie
+            :param chem_id (str): chemical curie
+            :param pub_map (dict): publication dictionary
+        Returns:
+            :return dictionary in the following structure:
+                     {
+                      'therapeutic': [1234,2345],
+                      'marker/mechanism': [4567,5678]
+                     }
         """
         publication = {'therapeutic': [], 'marker/mechanism': []}
         for val in pub_ids:
@@ -222,17 +279,22 @@ class CTD(Source):
             if pub_map.get(key):
                 publication[pub_map[key]].append(val)
             else:
-                raise Exception("Could not disambiguate publication "
-                                "for disease id: " + disease_id +
-                                "\nchemical id: " + chem_id +
-                                "\npublication id: " + val)
+                logger.error("Could not disambiguate publication "
+                             "for disease id: %s"
+                             "\nchemical id: %s"
+                             "\npublication id: %", disease_id, chem_id, val)
+                sys.exit(1)
 
         return publication
 
     def _parse_publication_file(self, file):
         """
-        :param file:
-        :return: dict
+        Parse publication file found in CTD.static_files
+        Args:
+            :param file (str): file name
+        Returns:
+            :return dict: key containing the chemID, phenotypeID, and pubID
+                           mapped to relationship
         """
         row_count = 0
         pub_map = dict()
@@ -251,9 +313,10 @@ class CTD(Source):
                     if chem_id is '' or disease_id is '':
                         next
                     elif pub_map.get(key) is not None:
-                        raise Exception("Ambiguous publication mapping for"
-                                        " key: "+key+"\n"
-                                        "This is not yet handled by Dipper")
+                        logger.error("Ambiguous publication mapping for"
+                                     " key: %s\n "
+                                     "This is not yet handled by Dipper", key)
+                        sys.exit(1)
                     else:
                         pub_map[key] = evidence
 

@@ -21,7 +21,7 @@ class GenotypeTestCase(unittest.TestCase):
     def tearDown(self):
         self.genotype = None
 
-    def test_genotype_constructor(self):
+    def test_addGenotype(self):
         from rdflib.namespace import RDFS,URIRef
         from rdflib import Literal
         from dipper.utils.CurieUtil import CurieUtil

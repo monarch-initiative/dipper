@@ -17,6 +17,7 @@ class GraphUtils:
     OWLIND=OWL['NamedIndividual']
     OWLPROP=OWL['ObjectProperty']
     SUBCLASS=RDFS['subClassOf']
+    PERSON=FOAF['person']
 
     relationships = {
         'has_disposition': 'GENO:0000208',
@@ -34,7 +35,8 @@ class GraphUtils:
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
-        'part_of': 'BFO:0000050'
+        'part_of': 'BFO:0000050',
+        'mentions': 'IAO:0000142'
     }
 
 
@@ -102,6 +104,13 @@ class GraphUtils:
 
         return
 
+    def addPerson(self,graph,subject_id,label):
+        graph.add((self.getNode(subject_id), RDF['type'], self.PERSON))
+        if (label is not None):
+            graph.add((self.getNode(subject_id), RDFS['label'], Literal(label)))
+        return
+
+
     def addDeprecatedClass(self,g,oldid,newids=None):
         '''
         Will mark the oldid as a deprecated class.
@@ -135,6 +144,17 @@ class GraphUtils:
         c = URIRef(self.cu.get_uri(childid))
         g.add((c,self.SUBCLASS,p))
 
+        return
+
+    def addType(self,graph,subject_id,type,type_is_literal=False):
+        if type_is_literal is True:
+            graph.add((self.getNode(subject_id), RDF['type'],Literal(type)))
+        else:
+            graph.add((self.getNode(subject_id), RDF['type'],self.getNode(type)))
+        return
+
+    def addLabel(self,graph,subject_id,label):
+        graph.add((self.getNode(subject_id),RDFS['label'],Literal(label)))
         return
 
     def addSynonym(self,g,cid,synonym,synonym_type=None):
@@ -188,7 +208,6 @@ class GraphUtils:
 
     def addPage(self,g,subject_id,page_url):
         g.add((self.getNode(subject_id),FOAF['page'],Literal(page_url)))
-
         return
 
     def addMember(self, g, group_id, member_id):

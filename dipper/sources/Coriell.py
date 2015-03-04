@@ -1,7 +1,5 @@
 import logging
 import csv
-from rdflib.namespace import FOAF, RDF, RDFS
-from rdflib import Literal
 import pysftp
 
 from dipper.sources.Source import Source
@@ -10,6 +8,7 @@ from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper.models.Genotype import Genotype
 
 
 
@@ -32,27 +31,30 @@ class Coriell(Source):
     terms = {
         'sampling_time': 'EFO:0000689',
         'human': 'NCBITaxon:9606',
-        'in_taxon': 'RO:0002162',
         'cell_line_repository': 'CLO:0000008',
         'race': 'SIO:001015',
         'ethnic_group': 'EFO:0001799'
     }
 
 
-    PERSON=FOAF['person']
+
 
     files = {
-        'ninds': {'file' : 'NINDS_2014-02-03_13-32-24.csv',
+        'ninds': {'file' : 'NINDS_latest.csv',
                   'id' : 'NINDS',
                   'label': 'NINDS Human Genetics DNA and Cell line Repository',
                   'page' : 'https://catalog.coriell.org/1/NINDS'},
-        'nigms': {'file' : 'NIGMS_2014-02-03_13-31-42.csv',
+        'nigms': {'file' : 'NIGMS_latest.csv',
                   'id' : 'NIGMS',
                   'label': 'NIGMS Human Genetic Cell Repository',
                   'page' : 'https://catalog.coriell.org/1/NIGMS'},
-        'nia': {'file' : 'NIA_2015-02-20_16-08-04.csv',
+        'nia': {'file' : 'NIA_latest.csv',
                 'id' : 'NIA',
                 'label': 'NIA Aging Cell Repository',
+                'page': 'https://catalog.coriell.org/1/NIA'},
+        'nhgri': {'file' : 'NHGRI_latest.csv',
+                'id' : 'NHGRI',
+                'label': 'NHGRI Sample Repository for Human Genetic Research',
                 'page': 'https://catalog.coriell.org/1/NIA'}
     }
 
@@ -91,12 +93,12 @@ class Coriell(Source):
         #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
         #ftp = FTP(host1,user1,passwd1,timeout=None)
         #ftp.login()
-
+        #FIXME: Still resulting in login time out.
         #with pysftp.Connection(host1, user1, passwd1) as sftp:
-            #with sftp.cd('public')
-            #print('success!')
+            #with sftp.cd('public'):
+                #print('success!')
                 #sftp.get_r()
-
+        #Will need to rename the files, or handle changing file names with the same beginning (NIGMS_..., etc.)
 
         return
 
@@ -118,7 +120,7 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
-        for f in ['ninds','nigms','nia']:
+        for f in ['ninds','nigms','nia','nhgri']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
             self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
             self._process_data(file, limit)
@@ -188,8 +190,8 @@ class Coriell(Source):
 
                     (catalog_id,description,omim_number,sample_type,cell_line_available,
                     dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
-                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids) = row
-
+                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids,
+                    family_member,variant_id,dbsnp_id,species) = row
 
 
                     ##############    BUILD REQUIRED VARIABLES    #############
@@ -220,6 +222,11 @@ class Coriell(Source):
                     #Make a label for the patient
                     patient_label = sample_type+' from patient '+patient_id+' with '+description
 
+                    #Declaring the alleleic variant ID here, as need to add sameAs to the OMIM disease ID for patient
+                    if dbsnp_id != '':
+                        alleleic_variant_id = 'dbSNPIndividual:'+dbsnp_id
+
+
 
                     ##############    BUILD THE CELL LINE    #############
 
@@ -228,20 +235,19 @@ class Coriell(Source):
 
                     #TODO: Do we need to map the cell types to Uberon, or does the fact that we have mapped to CL
                     # mean that the mapping is performed at the ontology level? Also, many of the matching terms
-                    # are marked as obsolete in Uberon.
+                    # are marked as obsolete in Uberon, such as fibroblast.
 
                     # Cell line derives from patient
                     # Should we call this from the Genotype.py or generalize to the GraphUtils?
-                    rel = gu.getNode(gu.relationships['derives_from'])
-                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(patient_id)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['derives_from']), gu.getNode(patient_id)))
 
                     # Cell line part_of repository
-                    rel = gu.getNode(gu.relationships['part_of'])
-                    self.graph.add((gu.getNode(cell_line_id), rel, gu.getNode(repository)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['part_of']), gu.getNode(repository)))
 
                     # Cell age_at_sampling
                     #FIXME: More appropriate term than sampling_time?
-                    gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
+                    if (age != ''):
+                        gu.addTriple(self.graph,patient_id,self.terms['sampling_time'],age,object_is_literal=True)
 
 
                     ##############    BUILD THE PATIENT    #############
@@ -250,32 +256,33 @@ class Coriell(Source):
                     #FIXME: How to add FOAF:Person?
                     # Do we need to add the person as a 'Category' instead of a class or individual?
                     #gu.addClassToGraph(self.graph,patient_id,patient_label)
+                    #gu.addIndividualToGraph(self.graph,patient_id,patient_label,(FOAF['person']))
 
                     #Add the patient as a person with label.
-                    #TODO:Abstract this to an addPerson graph util?
-                    n = gu.getNode(patient_id)
-                    self.graph.add((n, RDF['type'], self.PERSON))
-                    self.graph.add((n, RDFS['label'], Literal(patient_label)))
+                    gu.addPerson(self.graph,patient_id,patient_label)
 
-                    #TODO: Proband
-                    self.graph.add((n, RDF['type'], Literal(relprob)))
+                    #Add proband as type to patient
+                    gu.addType(self.graph,patient_id,relprob,type_is_literal=True)
 
                     #TODO: OMIM Disease
                     # Add OMIM Disease ID (';' delimited)
                     #Perhaps add OMIM ID, and if no OMIM ID is present, just add a disease description?
                     #Assuming we don't need a disease description if it has an OMIM ID, as that can be mapped from OMIM.
-
+                    #FIXME: Don't believe this adding as type is correct.
                     if omim_number != '':
                         for s in omim_number.split(';'):
-                            self.graph.add((n, RDF['type'], Literal(s.strip())))
-
+                            disease_id = 'OMIM:'+s.strip()
+                            gu.addType(self.graph,patient_id,disease_id)
+                            if alleleic_variant_id != '':
+                                #Add dbSNP ID sameAs OMIM ID for the disease_id
+                                gu.addSameIndividual(self.graph,alleleic_variant_id,disease_id)
 
                     # Add taxon to patient
-                    gu.addTriple(self.graph,patient_id,self.terms['in_taxon'],self.terms['human'])
-
-                    # Add sex/gender of patient?
-                    # Add affected status?
-                    #Add
+                    if species == 'Homo sapiens':
+                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],self.terms['human'])
+                    elif species != '':
+                        taxon = self._map_species(species)
+                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],taxon)
 
                     # Add description (remark) to patient
                     if cat_remark !='':
@@ -283,9 +290,9 @@ class Coriell(Source):
 
                     # Add race of patient
                     #FIXME: Adjust for subcategories based on ethnicity field
-                    #EDIT: There are 743 different entries for ethnicity... Too many to map
+                    #EDIT: There are 743 different entries for ethnicity... Too many to map?
                     #Perhaps add ethnicity as a literal in addition to the mapped race?
-                    #Need to adjust the ethnicity text to just initial capitalization as some entries:ALL CAPS
+                    #Need to adjust the ethnicity text (if using) to just initial capitalization as some entries:ALLCAPS
                     if race != '':
                         mapped_race = self._map_race(race)
                         if mapped_race is not None:
@@ -293,8 +300,6 @@ class Coriell(Source):
                             gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
 
 
-                    #TODO: Need genotype data, not currently available.
-                    #Can build some rudimentary info from what's in the data set:
 
                     ##############    BUILD THE FAMILY    #############
 
@@ -318,12 +323,48 @@ class Coriell(Source):
                         gu.addPage(self.graph,family_comp_id,family_url)
 
 
+                    ##############    BUILD THE GENOTYPE   #############
+
+                    #genotype_id a intrinsic_genotype
+                    #GENO:has_variant_part allelic_variant_id
+                    #we don't necessarily know much about the genotype, other than the allelic variant.
+                    #also there's the sex here)
+
+                    #FIXME: What do we want to use for the genotype ID?
+                    #FIXME: Likely need some editing for this section.
+                    geno = Genotype(self.graph)
+                    genotype_id = self.make_id('GENOTYPE'+cell_line_id)
+                    genotype_label = 'temp_genotype_label'
+                    geno.addGenotype(genotype_id,genotype_label)
+
+                    if alleleic_variant_id != '':
+                        #FIXME: Should this instead be addAllele?
+                        #FIXME: Alternatively, abstract an addAlternatePart to Genotype.py?
+                        variant_type = geno.genoparts['point_mutation']
+                        geno.addParts(alleleic_variant_id,genotype_id,variant_type)
 
 
+                    #This column and the OMIM ID column are not equal,
+                    # as the specific disease variant number will be different.
+                    if variant_id != '':
+                        for s in variant_id.split(';'):
+                            disease_variant_id = 'OMIM:'+s.strip()
+                            #FIXME: Add as type?
+                            gu.addType(self.graph,patient_id,disease_variant_id)
 
-                    #if pubmed_ids != '':
-                        #for s in pubmed_ids.split(';'):
-                            #gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+                            #FIXME: What is the relation between the disease ID and the disease variant ID?
+                            # disease_id has_variant disease_variant_id?
+                            #Add sameAs OMIM ID for the disease_variant_id?
+
+                    #TODO: Add sex/gender
+
+
+                    ##############    ADD PUBLICATIONS   #############
+
+                    if pubmed_ids != '':
+                        for s in pubmed_ids.split(';'):
+                            pubmed_id = 'PMID:'+s.strip()
+                            gu.addTriple(self.graph,pubmed_id,gu.relationships['mentions'],cell_line_id)
 
 
 
@@ -419,12 +460,57 @@ class Coriell(Source):
 
         return type
 
+
+    def _map_species(self, species):
+        type = None
+        type_map = {
+            'Mus musculus': 'NCBITaxon:10090',
+            'Peromyscus peromyscus californicus': 'NCBITaxon:42520',
+            'Peromyscus peromyscus maniculatus': 'NCBITaxon:10042',
+            'Peromyscus peromyscus leucopus': 'NCBITaxon:10041',
+            'Peromyscus peromyscus polionotus': 'NCBITaxon:42413',
+            'Macaca fascicularis': 'NCBITaxon:9541',
+            'Rattus norvegicus': 'NCBITaxon:10116',
+            'Papio anubis': 'NCBITaxon:9555',
+            'Cricetulus griseus': 'NCBITaxon:10029',
+            'Geochelone elephantopus': 'NCBITaxon:66189',
+            'Muntiacus muntjak': 'NCBITaxon:9888',
+            'Ailurus fulgens': 'NCBITaxon:9649',
+            'Sus scrofa': 'NCBITaxon:9823',
+            'Bos taurus': 'NCBITaxon:9913',
+            'Oryctolagus cuniculus': 'NCBITaxon:9986',
+            'Macaca nemestrina': 'NCBITaxon:9545',
+            'Canis familiaris': 'NCBITaxon:9615',
+            'Equus caballus': 'NCBITaxon:9796',
+            'Macaca mulatta': 'NCBITaxon:9544',
+            'Mesocricetus auratus': 'NCBITaxon:10036',
+            'Macaca nigra': 'NCBITaxon:54600',
+            'Erythrocebus patas': 'NCBITaxon:9538',
+            'Pongo pygmaeus': 'NCBITaxon:9600',
+            'Callicebus moloch': 'NCBITaxon:9523',
+            'Lagothrix lagotricha': 'NCBITaxon:9519',
+            'Saguinus fuscicollis': 'NCBITaxon:9487',
+            'Saimiri sciureus': 'NCBITaxon:9521',
+            'Saguinus labiatus': 'NCBITaxon:78454',
+            'Pan paniscus': 'NCBITaxon:9597',
+            'Ovis aries': 'NCBITaxon:9940',
+            'Felis catus': 'NCBITaxon:9685'
+        }
+        if (species.strip() in type_map):
+            type = type_map.get(species)
+        else:
+            logger.warn("Species type not mapped: %s", species)
+
+        return type
+
+
     def _map_collection(self, collection):
         type = None
         type_map = {
             'NINDS Repository': 'CoriellCollection:NINDS',
             'NIGMS Human Genetic Cell Repository': 'CoriellCollection:NIGMS',
-            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA'
+            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA',
+            'NHGRI Sample Repository for Human Genetic Research': 'CoriellCollection:NHGRI'
         }
         if (collection.strip() in type_map):
             type = type_map.get(collection)
