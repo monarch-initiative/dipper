@@ -41,7 +41,7 @@ class NCBIGene(Source):
     relationships = {
         'gene_product_of' : 'RO:0002204',
         'has_gene_product' : 'RO:0002205',
-        'is_about' : 'IAO:00000136'
+        'is_about' : 'IAO:0000136'
     }
 
     testmode = False
