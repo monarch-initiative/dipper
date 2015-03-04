@@ -3,7 +3,7 @@ __author__ = 'nicole'
 import re
 
 from rdflib import Namespace, URIRef, Literal
-from rdflib.namespace import RDF,DC,OWL,RDFS
+from rdflib.namespace import RDF,DC,OWL,RDFS,XSD
 
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
@@ -30,7 +30,8 @@ class Assoc:
         'has_xref' : 'OIO:hasDbXref',
         'has_subject' : ':hasSubject',
         'has_object' : ':hasObject',
-        'has_predicate' : ':hasPredicate'
+        'has_predicate' : ':hasPredicate',
+        'has_measurement' : 'IAO:0000004'
     }
 
     OWLCLASS=OWL['Class']
@@ -150,6 +151,12 @@ class Assoc:
     def loadObjectProperties(self,g):
         self.gu.loadObjectProperties(g,self.relationships)
 
+        return
+
+    def addScore(self,g,assoc,score,score_type=None):
+        node = self.gu.getNode(assoc)
+        has_measurement=self.gu.getNode(self.relationships['has_measurement'])
+        g.add((node,has_measurement,Literal(score,datatype=XSD['float'])))
         return
 
     def _process_pub_list(self, pub_list, g, node):
