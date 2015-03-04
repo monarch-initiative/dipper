@@ -22,7 +22,7 @@ class G2PAssoc(Assoc):
         self.phenotype_id = phenotype_id
         self.pub_id = pub
         self.evidence = evidence_code
-        self.rel = self.relationships['has_phenotype']  # default to has_phenotype
+        self.rel = self.properties['has_phenotype']  # default to has_phenotype
         self.cu = CurieUtil(curie_map.get())
 #        self.gu = GraphUtils(curie_map.get())
         self.pub_list = None

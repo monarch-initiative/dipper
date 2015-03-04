@@ -27,13 +27,14 @@ class OrthologyAssoc(Assoc):
         super()
         self.cu = CurieUtil(curie_map.get())
         self.gu = GraphUtils(curie_map.get())
-        self.relationships.update(self.ortho_rel)
+        self.object_properties.update(self.ortho_rel)
+        self.properties.update(self.ortho_rel)
         self.annot_id = assoc_id
         self.gene1 = gene1
         self.gene2 = gene2
         self.pub_id = pub
         self.evidence = evidence_code
-        self.rel = self.relationships['orthologous']  # default
+        self.rel = self.properties['orthologous']  # default
         self.pub_list = None
 
         self.setSubject(gene1)
@@ -66,7 +67,7 @@ class OrthologyAssoc(Assoc):
         f = self.gu.getNode(family_id)
         a = self.gu.getNode(self.gene1)
         b = self.gu.getNode(self.gene2)
-        p = self.gu.getNode(self.relationships['has_member'])
+        p = self.gu.getNode(self.properties['has_member'])
 
         #make the assumption that the genes have already been added as classes previously
         #add the family grouping as an instance of a gene family?

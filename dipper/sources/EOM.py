@@ -100,7 +100,7 @@ class EOM(Source):
 
 
         self.load_bindings()
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         logger.info("Found %s nodes", len(self.graph))
         return

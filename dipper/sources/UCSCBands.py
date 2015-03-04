@@ -53,13 +53,13 @@ class UCSCBands(Source):
     }
 
 
-    relationships = {
-        'gene_product_of' : 'RO:0002204',
-        'has_gene_product' : 'RO:0002205',
-        'is_about' : 'IAO:00000136',
-        'has_subsequence' : 'RO:0002524',
-        'is_subsequence_of' : 'RO:0002525',
-    }
+    # relationships = {
+    #     'gene_product_of' : 'RO:0002204',
+    #     'has_gene_product' : 'RO:0002205',
+    #     'is_about' : 'IAO:00000136',
+    #     'has_subsequence' : 'RO:0002524',
+    #     'is_subsequence_of' : 'RO:0002525',
+    # }
 
 
     def __init__(self, tax_ids=None):
@@ -112,6 +112,7 @@ class UCSCBands(Source):
         self.load_core_bindings()
         self.load_bindings()
 
+
         logger.info("Done parsing files.")
 
         return
@@ -133,7 +134,7 @@ class UCSCBands(Source):
         f = Feature(build_id,build_id,Feature.types['reference_genome'])
         f.addTaxonToFeature(self.graph,'NCBITaxon:9606')
         f.addFeatureToGraph(self.graph)
-
+        f.loadAllProperties(self.graph)
 
         with gzip.open(myfile, 'rb') as f:
             for line in f:

@@ -198,7 +198,7 @@ class CTD(Source):
         relationship = self._get_relationship_id(direct_evidence)
         assoc = Chem2DiseaseAssoc(assoc_id, chem_mesh_id, disease_id,
                                   pubmed_ids, relationship, evidence_code)
-        assoc.loadObjectProperties(self.graph)
+        assoc.loadAllProperties(self.graph)
         assoc.addAssociationNodeToGraph(self.graph)
 
         return self.graph

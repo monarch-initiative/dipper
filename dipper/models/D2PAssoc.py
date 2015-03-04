@@ -27,7 +27,7 @@ class D2PAssoc(Assoc):
         self.frequency = frequency
         self.pub_id = pub
         self.evidence = evidence_code
-        self.rel = self.relationships['has_phenotype']
+        self.rel = self.properties['has_phenotype']
         self.cu = CurieUtil(curie_map.get())
 
         self.pub_list = None

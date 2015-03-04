@@ -87,7 +87,7 @@ class ZFIN(Source):
         print("Finished parsing.")
 
         self.load_bindings()
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         print("Found", len(self.graph), "nodes")
         return

@@ -341,7 +341,7 @@ class OMIM(Source):
 
                     assoc_id = self.make_id((disorder_id+gene_id+phene_key))
                     assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence)
-                    assoc.loadObjectProperties(self.graph)
+                    assoc.loadAllProperties(self.graph)
                     assoc.addAssociationToGraph(self.graph)
 
                 if (limit is not None and line_counter > limit):

@@ -16,21 +16,32 @@ class GraphUtils:
     OWLCLASS=OWL['Class']
     OWLIND=OWL['NamedIndividual']
     OWLPROP=OWL['ObjectProperty']
+    OBJPROP=OWL['ObjectProperty']
+    ANNOTPROP=OWL['AnnotationProperty']
+    DATAPROP=OWL['DataProperty']
     SUBCLASS=RDFS['subClassOf']
     PERSON=FOAF['person']
 
-    relationships = {
-        'has_disposition': 'GENO:0000208',
-        'has_phenotype': 'RO:0002200',
-        'replaced_by': 'IAO:0100001',
-        'consider': 'OIO:consider',
-        'hasExactSynonym': 'OIO:hasExactSynonym',
-        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
-        'definition': 'IAO:0000115',
-        'in_taxon': 'RO:0002162',
-        'has_quality': 'RO:0000086',
-        'towards': 'RO:0002503',
-        'has_xref': 'OIO:hasDbXref',
+
+    annotation_properties = {
+        'replaced_by' : 'IAO:0100001',
+        'consider' : 'OIO:consider',
+        'hasExactSynonym' : 'OIO:hasExactSynonym',
+        'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
+        'definition' : 'IAO:0000115',
+        'has_xref' : 'OIO:hasDbXref',
+    }
+
+    object_properties = {
+        'has_disposition':'GENO:0000208',
+        'has_phenotype':'RO:0002200',
+        'in_taxon' : 'RO:0002162',
+        'has_quality' : 'RO:0000086',
+        'towards' : 'RO:0002503',
+        'has_subject' : ':hasSubject',
+        'has_object' : ':hasObject',
+        'has_predicate' : ':hasPredicate',
+        'is_about' : 'IAO:00000136',
         'has_member': 'RO:0002351',
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
@@ -38,6 +49,16 @@ class GraphUtils:
         'part_of': 'BFO:0000050',
         'mentions': 'IAO:0000142'
     }
+
+    datatype_properties = {
+        'position' : 'faldo:position',
+        'has_measurement' : 'IAO:0000004'
+    }
+
+    properties = annotation_properties.copy()
+    properties.update(object_properties)
+    properties.update(datatype_properties)
+
 
 
     def __init__(self,curie_map):
@@ -211,14 +232,14 @@ class GraphUtils:
         return
 
     def addMember(self, g, group_id, member_id):
-        self.addTriple(g, group_id, self.relationships['has_member'], member_id)
+        self.addTriple(g, group_id, self.properties['has_member'], member_id)
 
     def addMemberOf(self, g, member_id, group_id):
-        self.addTriple(g, member_id, self.relationships['member_of'], group_id)
+        self.addTriple(g, member_id, self.properties['member_of'], group_id)
         return
 
     def addInvolvedIn(self, g, member_id, group_id):
-        self.addTriple(g, member_id, self.relationships['involved_in'], group_id)
+        self.addTriple(g, member_id, self.properties['involved_in'], group_id)
 
     def write(self, graph, format=None, file=None):
         """
@@ -278,11 +299,30 @@ class GraphUtils:
         """
         Given a graph, it will load the supplied object properties
         as owl['ObjectProperty'] types
+        A convenience.
+        Status: DEPRECATED.  See loadProperties().
         :param g: a graph
         :param op: a dictionary of object properties
         :return: None
         """
-        cu = self.cu
-        for k in op:
-            graph.add((self.getNode(op[k]),RDF['type'],self.OWLPROP))
+        self.loadProperties(graph,op,self.OBJPROP)
+
+        return
+
+    def loadProperties(self,graph,op,property_type):
+        """
+        Given a graph, it will load the supplied object properties
+        as the given property_type.
+        :param g: a graph
+        :param op: a dictionary of object properties
+        :param property_type: one of OWL:(Annotation|Data|Object)Property
+        :return: None
+        """
+
+        if property_type not in [self.OBJPROP,self.ANNOTPROP,self.DATAPROP]:
+            print("ERROR: bad property type assigned:",property_type)
+        else:
+            for k in op:
+                graph.add((self.getNode(op[k]),RDF['type'],property_type))
+
         return

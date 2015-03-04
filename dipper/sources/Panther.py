@@ -183,7 +183,7 @@ class Panther(Source):
                     #add the association and relevant nodes to graph
                     assoc = OrthologyAssoc(assoc_id,gene_a,gene_b,None,evidence)
                     assoc.setRelationship(rel)
-                    assoc.loadObjectProperties(self.graph)
+                    assoc.loadAllProperties(self.graph)    #FIXME inefficient
                     assoc.addAssociationToGraph(self.graph)
 
                     #note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
@@ -244,13 +244,13 @@ class Panther(Source):
         '''
         o = OrthologyAssoc(None,None,None,None,None)  #this is sneaky, needs refactor
 
-        ro_id = o.relationships['orthologous'] #in orthology relationship with
+        ro_id = o.properties['orthologous'] #in orthology relationship with
         ortho_to_ro_map = {
-            'P' : o.relationships['paralogous'],
-            'O' : o.relationships['orthologous'],
-            'LDO': o.relationships['least_diverged_orthologous'],
-            'X': o.relationships['xenologous'],
-            'LDX': o.relationships['xenologous']
+            'P' : o.properties['paralogous'],
+            'O' : o.properties['orthologous'],
+            'LDO': o.properties['least_diverged_orthologous'],
+            'X': o.properties['xenologous'],
+            'LDX': o.properties['xenologous']
         }
 
         if (ortho in ortho_to_ro_map):

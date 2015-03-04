@@ -109,6 +109,7 @@ class BioGrid(Source):
         #assume that the first entry is the item
         fname=myzip.namelist()[0]
         matchcounter=0
+
         with myzip.open(fname,'r') as csvfile:
             for line in csvfile:
                 #skip comment lines
@@ -159,13 +160,14 @@ class BioGrid(Source):
 
                 assoc = InteractionAssoc(assoc_id,gene_a,gene_b,pub_id,evidence)
                 assoc.setRelationship(rel)
-                assoc.loadObjectProperties(self.graph)
+                assoc.loadAllProperties(self.graph)    #FIXME - this seems terribly inefficient
                 assoc.addInteractionAssociationToGraph(self.graph)
                 if (limit is not None and line_counter > limit):
                     break
 
         myzip.close()
         #print("INFO: found",str(matchcounter),"matching rows")  #for testing
+
 
         return
 
@@ -229,7 +231,7 @@ class BioGrid(Source):
 
 
     def _map_MI_to_RO(self,mi_id):
-        rel = InteractionAssoc(None,None,None,None,None).get_relationships()
+        rel = InteractionAssoc(None,None,None,None,None).get_properties()
         mi_ro_map = {
             'MI:0403' : rel['colocalizes_with'], #colocalization
             'MI:0407' : rel['interacts_with'], #direct interaction
@@ -240,7 +242,7 @@ class BioGrid(Source):
             'MI:0915' : rel['interacts_with'] #physical association
         }
 
-        ro_id = InteractionAssoc.relationships['interacts_with']  #default
+        ro_id = rel['interacts_with']  #default
         if (mi_id in mi_ro_map):
             ro_id = mi_ro_map.get(mi_id)
 

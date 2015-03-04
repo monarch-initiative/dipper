@@ -21,9 +21,8 @@ class Feature() :
     TODO: this will need to be extended to properly deal with fuzzy positions in faldo.
     '''
 
-    relationships = {
+    object_properties = {
         'location' : 'faldo:location',
-        'position' : 'faldo:position',
         'begin' : 'faldo:begin',
         'end' : 'faldo:end',
         'reference' : 'faldo:reference',
@@ -33,6 +32,16 @@ class Feature() :
         'has_subsequence' : 'RO:0002524',
         'is_subsequence_of' : 'RO:0002525',
     }
+
+    data_properties = {
+        'position' : 'faldo:position',
+    }
+
+    annotation_properties = {    }
+
+    properties = object_properties.copy()
+    properties.update(data_properties)
+    properties.update(annotation_properties)
 
     types = {
         'region' : 'faldo:Region',
@@ -156,14 +165,14 @@ class Feature() :
 
         #create a region that has the begin/end positions
         region_id = ':_'+self.id+'Region'  #FIXME make this anonymous
-        self.gu.addTriple(graph,self.id,self.relationships['location'],region_id)
+        self.gu.addTriple(graph,self.id,self.properties['location'],region_id)
 
         self.gu.addIndividualToGraph(graph,region_id,None,'faldo:Region')
         #add the start/end positions to the region
         if (self.start is not None):
-            self.gu.addTriple(graph,region_id,self.relationships['begin'],self._makePositionId(self.start['reference'],self.start['coordinate']))
+            self.gu.addTriple(graph,region_id,self.properties['begin'],self._makePositionId(self.start['reference'],self.start['coordinate']))
         if (self.stop is not None):
-            self.gu.addTriple(graph,region_id,self.relationships['end'],self._makePositionId(self.start['reference'],self.stop['coordinate']))
+            self.gu.addTriple(graph,region_id,self.properties['end'],self._makePositionId(self.start['reference'],self.stop['coordinate']))
 
         #{coordinate : integer, reference : reference_id, types = []}
 
@@ -204,8 +213,8 @@ class Feature() :
 
         iid = self._makePositionId(reference_id,position)
         n = self.gu.getNode(iid)
-        pos = self.gu.getNode(self.relationships['position'])
-        ref = self.gu.getNode(self.relationships['reference'])
+        pos = self.gu.getNode(self.properties['position'])
+        ref = self.gu.getNode(self.properties['reference'])
         graph.add((n,pos,Literal(position,datatype=XSD['integer'])))
         graph.add((n,ref,self.gu.getNode(reference_id)))
         if position_types is not None:
@@ -233,7 +242,7 @@ class Feature() :
         '''
         n = self.gu.getNode(self.id)
         p = self.gu.getNode(parentid)
-        subsequence=self.gu.getNode(self.relationships['is_subsequence_of'])
+        subsequence=self.gu.getNode(self.properties['is_subsequence_of'])
         graph.add((n,subsequence,p))
         return
 
@@ -250,10 +259,22 @@ class Feature() :
         self.taxon = taxonid
         n = self.gu.getNode(self.id)
         t = self.gu.getNode(self.taxon)
-        intaxon=self.gu.getNode(Assoc.relationships['in_taxon'])
+        intaxon=self.gu.getNode(Assoc.properties['in_taxon'])
         graph.add((n,intaxon,t))
         return
 
+    def loadAllProperties(self,graph):
+
+        prop_dict = {
+            Assoc().ANNOTPROP : self.annotation_properties,
+            Assoc().OBJECTPROP : self.object_properties,
+            Assoc().DATAPROP : self.data_properties
+        }
+
+        for p in prop_dict:
+            self.gu.loadProperties(graph,prop_dict.get(p),p)
+
+        return
 
 def makeChromID(chrom, taxon=None):
     '''

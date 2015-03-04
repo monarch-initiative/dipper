@@ -16,27 +16,42 @@ class Assoc:
     on statements.
     '''
 
-    relationships = {
-        'has_disposition':'GENO:0000208',
-        'has_phenotype':'RO:0002200',
+    annotation_properties = {
         'replaced_by' : 'IAO:0100001',
         'consider' : 'OIO:consider',
         'hasExactSynonym' : 'OIO:hasExactSynonym',
         'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
         'definition' : 'IAO:0000115',
+        'has_xref' : 'OIO:hasDbXref',
+    }
+
+    object_properties = {
+        'has_disposition':'GENO:0000208',
+        'has_phenotype':'RO:0002200',
         'in_taxon' : 'RO:0002162',
         'has_quality' : 'RO:0000086',
         'towards' : 'RO:0002503',
-        'has_xref' : 'OIO:hasDbXref',
         'has_subject' : ':hasSubject',
         'has_object' : ':hasObject',
         'has_predicate' : ':hasPredicate',
+        'is_about' : 'IAO:00000136',
+    }
+
+    datatype_properties = {
+        'position' : 'faldo:position',
         'has_measurement' : 'IAO:0000004'
     }
 
+    properties = annotation_properties.copy()
+    properties.update(object_properties)
+    properties.update(datatype_properties)
+
     OWLCLASS=OWL['Class']
     OWLIND=OWL['NamedIndividual']
-    OWLPROP=OWL['ObjectProperty']
+    OBJECTPROP = OWL['ObjectProperty']
+    ANNOTPROP=OWL['AnnotationProperty']
+    DATAPROP=OWL['DataProperty']
+
     SUBCLASS=RDFS['subClassOf']
     BASE=Namespace(curie_map.get()[''])
 
@@ -52,8 +67,8 @@ class Assoc:
 
         return None
 
-    def get_relationships(self):
-        return self.relationships
+    def get_properties(self):
+        return self.properties
 
     def createAssociationNode(self, g):
         #TODO make a general association object following our pattern
@@ -74,9 +89,9 @@ class Assoc:
         # now, create the reified relationship with our annotation pattern
         node = gu.getNode(self.annot_id)
         g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
-        g.add((node, gu.getNode(self.relationships['has_subject']), s))
-        g.add((node, gu.getNode(self.relationships['has_object']), o))
-        g.add((node, gu.getNode(self.relationships['has_predicate']), p))
+        g.add((node, gu.getNode(self.properties['has_subject']), s))
+        g.add((node, gu.getNode(self.properties['has_object']), o))
+        g.add((node, gu.getNode(self.properties['has_predicate']), p))
 
         # this is handling the occasional messy pubs that are sometimes literals
         if self.pub_id is not None:
@@ -148,14 +163,20 @@ class Assoc:
         g.add((node,DC['description'],Literal(description)))
         return
 
-    def loadObjectProperties(self,g):
-        self.gu.loadObjectProperties(g,self.relationships)
+
+    def loadAllProperties(self,g):
+        props = { self.OBJECTPROP : self.object_properties,
+              self.ANNOTPROP : self.annotation_properties,
+              self.DATAPROP : self.datatype_properties}
+
+        for p in props:
+            self.gu.loadProperties(g,props[p],p)
 
         return
 
     def addScore(self,g,assoc,score,score_type=None):
         node = self.gu.getNode(assoc)
-        has_measurement=self.gu.getNode(self.relationships['has_measurement'])
+        has_measurement=self.gu.getNode(self.properties['has_measurement'])
         g.add((node,has_measurement,Literal(score,datatype=XSD['float'])))
         return
 

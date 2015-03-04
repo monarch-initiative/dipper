@@ -72,7 +72,7 @@ class IMPC(Source):
         logger.info("Finished parsing")
 
         self.load_bindings()
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         logger.info("Found %s nodes", len(self.graph))
         return
@@ -151,7 +151,7 @@ class IMPC(Source):
                     variant_locus_type = geno.genoparts['variant_locus']
                     geno.addGene(marker_accession_id,marker_symbol,geno.genoparts['gene'])
                     geno.addAllele(variant_locus_id, variant_locus_name, variant_locus_type, None)
-                    geno.addAlleleOfGene(variant_locus_id, marker_accession_id,geno.relationship['has_alternate_part'])
+                    geno.addAlleleOfGene(variant_locus_id, marker_accession_id,geno.properties['has_alternate_part'])
                     sequence_alteration_id = ':_seqalt'+re.sub(':','-',allele_accession_id)  #these are materialized for now
                     geno.addSequenceAlterationToVariantLocus(sequence_alteration_id,variant_locus_id)
 

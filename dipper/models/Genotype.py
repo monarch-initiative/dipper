@@ -42,7 +42,7 @@ class Genotype():
         'population' : 'GENO:0000110'  #collection of organisms; consider OBI:population
     }
 
-    relationship = {
+    object_properties = {
         'is_mutant_of': 'GENO:0000440',
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
@@ -68,6 +68,7 @@ class Genotype():
         'hemizygous': 'GENO:0000606'
     }
 
+    properties = object_properties.copy()
 
     def __init__(self, graph):
 
@@ -76,7 +77,7 @@ class Genotype():
 
         self.graph = graph
 
-        self.gu.loadObjectProperties(self.graph,self.relationship)
+        self.gu.loadProperties(self.graph,self.object_properties,self.gu.OBJPROP)
 
         return
 
@@ -138,7 +139,7 @@ class Genotype():
         :param construct_id:
         :return:
         """
-        rel = self.gu.getNode(self.relationship['derives_from'])
+        rel = self.gu.getNode(self.properties['derives_from'])
         self.graph.add((self.gu.getNode(child_id), rel, self.gu.getNode(parent_id)))
 
         return
@@ -154,7 +155,7 @@ class Genotype():
         :return:
         """
         if (rel_id is None):
-            rel_id = self.relationship['is_sequence_variant_instance_of']
+            rel_id = self.properties['is_sequence_variant_instance_of']
         self.graph.add((self.gu.getNode(allele_id),self.gu.getNode(rel_id),self.gu.getNode(gene_id)))
 
         return
@@ -175,7 +176,7 @@ class Genotype():
 
         #vslc has parts allele1/allele2
         gu = self.gu
-        has_zygosity = gu.getNode(self.relationship['has_zygosity'])
+        has_zygosity = gu.getNode(self.properties['has_zygosity'])
 
         vslc = gu.getNode(vslc_id)
         if allele1_id is not None:
@@ -202,7 +203,7 @@ class Genotype():
         :param parent_id:
         :return:
         """
-        self.addParts(vslc_id, parent_id, self.relationship['has_alternate_part'])
+        self.addParts(vslc_id, parent_id, self.properties['has_alternate_part'])
 
         return
 
@@ -217,7 +218,7 @@ class Genotype():
         """
         gu = self.gu
         if part_relationship is None:
-            has_part = gu.getNode(self.relationship['has_part'])
+            has_part = gu.getNode(self.properties['has_part'])
         else:
             has_part = gu.getNode(part_relationship)
 
@@ -233,14 +234,14 @@ class Genotype():
         return
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
-        self.addParts(sa_id, vl_id, self.relationship['has_alternate_part'])
+        self.addParts(sa_id, vl_id, self.properties['has_alternate_part'])
         return
 
     def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
         gu = self.gu
 
         self.graph.add((gu.getNode(background_id), RDF['type'], gu.getNode(self.genoparts['genomic_background'])))
-        self.graph.add((gu.getNode(genotype_id), gu.getNode(self.relationship['has_reference_part']), gu.getNode(background_id)))
+        self.graph.add((gu.getNode(genotype_id), gu.getNode(self.properties['has_reference_part']), gu.getNode(background_id)))
 
         return
 
@@ -253,7 +254,7 @@ class Genotype():
         :param genopart_id:
         :return:
         """
-        in_taxon = self.gu.getNode(self.relationship['in_taxon'])
+        in_taxon = self.gu.getNode(self.properties['in_taxon'])
         s = self.gu.getNode(genopart_id)
         self.graph.add((s, in_taxon, self.gu.getNode(taxon_id)))
 
@@ -300,7 +301,7 @@ class Genotype():
         # we are assuming that the reagent targets a GENE as opposed to any genomic feature.
         # but maybe that's not right, because i bet some reagents might target sequence_alterations.
         gu = self.gu
-        targets = gu.getNode(self.relationship['targets_instance_of'])
+        targets = gu.getNode(self.properties['targets_instance_of'])
         self.graph.add((gu.getNode(reagent_id), targets, gu.getNode(gene_id)))
 
         if (targeted_gene_id is None):
@@ -313,7 +314,7 @@ class Genotype():
 
     def addMemberOfPopulation(self,member_id,population_id):
         self.graph.add((self.gu.getNode(population_id),
-                        self.gu.getNode(self.relationship['has_member_with_allelotype']),
+                        self.gu.getNode(self.properties['has_member_with_allelotype']),
                         self.gu.getNode(member_id)))
 
         return

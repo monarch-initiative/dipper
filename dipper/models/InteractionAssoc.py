@@ -18,7 +18,8 @@ class InteractionAssoc(Assoc):
 
     def __init__(self,assoc_id, subj, obj, pub, evidence_code):
         super()
-        self.relationships.update(self.rel)
+        self.object_properties.update(self.rel)
+        self.properties.update(self.rel)
         self.cu = CurieUtil(curie_map.get())
         self.gu = GraphUtils(curie_map.get())
         self.annot_id = assoc_id
@@ -26,7 +27,7 @@ class InteractionAssoc(Assoc):
         self.obj = obj
         self.pub_id = pub
         self.evidence = evidence_code
-        self.rel = self.relationships['interacts_with']  # default
+        self.rel = self.rel['interacts_with']  # default
         self.cu = CurieUtil(curie_map.get())
         self.pub_list = None
 

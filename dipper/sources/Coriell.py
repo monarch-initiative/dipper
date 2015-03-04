@@ -65,7 +65,7 @@ class Coriell(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/nigms/')
+        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/')
 
         #data-source specific warnings (will be removed when issues are cleared)
         #print()
@@ -129,7 +129,7 @@ class Coriell(Source):
 
 
         self.load_bindings()
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         logger.info("Found %s nodes", len(self.graph))
         return
@@ -239,10 +239,10 @@ class Coriell(Source):
 
                     # Cell line derives from patient
                     # Should we call this from the Genotype.py or generalize to the GraphUtils?
-                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['derives_from']), gu.getNode(patient_id)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.properties['derives_from']), gu.getNode(patient_id)))
 
                     # Cell line part_of repository
-                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.relationships['part_of']), gu.getNode(repository)))
+                    self.graph.add((gu.getNode(cell_line_id), gu.getNode(gu.properties['part_of']), gu.getNode(repository)))
 
                     # Cell age_at_sampling
                     #FIXME: More appropriate term than sampling_time?
@@ -279,10 +279,10 @@ class Coriell(Source):
 
                     # Add taxon to patient
                     if species == 'Homo sapiens':
-                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],self.terms['human'])
+                        gu.addTriple(self.graph,patient_id,gu.properties['in_taxon'],self.terms['human'])
                     elif species != '':
                         taxon = self._map_species(species)
-                        gu.addTriple(self.graph,patient_id,gu.relationships['in_taxon'],taxon)
+                        gu.addTriple(self.graph,patient_id,gu.properties['in_taxon'],taxon)
 
                     # Add description (remark) to patient
                     if cat_remark !='':
@@ -364,7 +364,7 @@ class Coriell(Source):
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
-                            gu.addTriple(self.graph,pubmed_id,gu.relationships['mentions'],cell_line_id)
+                            gu.addTriple(self.graph,pubmed_id,gu.properties['mentions'],cell_line_id)
 
 
 

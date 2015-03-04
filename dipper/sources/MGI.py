@@ -53,7 +53,7 @@ class MGI(Source):
 
 
     #Set this flag to False for normal running
-    test=False
+    test=True
     #for testing purposes, this is a list of internal db keys to match and select only portions of the source
     test_keys = {
         'allele' : [1303,56760,816699,51074,14595,816707,246,38139,4334,817387,8567,476,42885,3658,1193,6978,6598,16698],
@@ -168,7 +168,7 @@ class MGI(Source):
         #TODO generate report of internal identifiers we created (eg for strains)
 
         self.load_bindings()
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         print("Loaded", len(self.graph), "nodes")
         return
@@ -410,11 +410,11 @@ class MGI(Source):
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = geno.genoparts['variant_locus']
-                    locus_rel = geno.relationship['is_sequence_variant_instance_of']
+                    locus_rel = geno.properties['is_sequence_variant_instance_of']
                 #for wild type alleles:
                 elif iswildtype == '1':
                     locus_type = geno.genoparts['reference_locus']
-                    locus_rel = geno.relationship['is_reference_instance_of']
+                    locus_rel = geno.properties['is_reference_instance_of']
 
                 gu.addIndividualToGraph(self.graph,allele_id,symbol,locus_type)
                 al = gu.getNode(allele_id)
@@ -880,11 +880,11 @@ class MGI(Source):
                     #everything except for genes are modeled as individuals
                     if (chromosome is not None and chromosome.strip() != 'UN'):
                         gu.addClassToGraph(self.graph,marker_id,symbol,mapped_marker_type,name)
-                        gu.addSynonym(self.graph,marker_id,name,Assoc.relationships['hasExactSynonym'])
+                        gu.addSynonym(self.graph,marker_id,name,Assoc.properties['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
                     else:
                         gu.addIndividualToGraph(self.graph,marker_id,symbol,mapped_marker_type,name)
-                        gu.addSynonym(self.graph,marker_id,name,Assoc.relationships['hasExactSynonym'])
+                        gu.addSynonym(self.graph,marker_id,name,Assoc.properties['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     #add the taxon

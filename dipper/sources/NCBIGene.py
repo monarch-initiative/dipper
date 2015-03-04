@@ -38,11 +38,11 @@ class NCBIGene(Source):
     }
 
 
-    relationships = {
-        'gene_product_of' : 'RO:0002204',
-        'has_gene_product' : 'RO:0002205',
-        'is_about' : 'IAO:0000136'
-    }
+    # relationships = {
+    #     'gene_product_of' : 'RO:0002204',
+    #     'has_gene_product' : 'RO:0002205',
+    #     'is_about' : 'IAO:0000136'
+    # }
 
     testmode = False
 
@@ -64,6 +64,8 @@ class NCBIGene(Source):
         if self.testmode:
             self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
             self.filter = 'geneids'
+
+        self.properties = Feature.properties
 
         return
 
@@ -112,7 +114,7 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
-        cu = CurieUtil(curie_map.get())
+
 
         #not unzipping the file
         print("INFO: Processing Gene records")
@@ -162,11 +164,12 @@ class NCBIGene(Source):
                     gu.addSynonym(self.graph,gene_id,name)
                 if (synonyms.strip() != '-'):
                     for s in synonyms.split('|'):
-                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.relationships['hasRelatedSynonym'])
+                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
                 if (other_designations.strip() != '-'):
                     for s in other_designations.split('|'):
-                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.relationships['hasRelatedSynonym'])
+                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
                 f.addTaxonToFeature(self.graph,tax_id)
+                f.loadAllProperties(self.graph)   #FIXME inefficient
 
                 #deal with the xrefs
                 #MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
@@ -176,7 +179,7 @@ class NCBIGene(Source):
                         if ((fixedr is not None) and (fixedr.strip() != '')):
                             if (re.match('HPRD',fixedr)):
                                 #proteins are not == genes.
-                                self.graph.add((n,gu.getNode(self.relationships['has_gene_product']),gu.getNode(fixedr)))
+                                self.graph.add((n,gu.getNode(self.properties['has_gene_product']),gu.getNode(fixedr)))
                             else:
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
                                     gu.addEquivalentClass(self.graph,gene_id,fixedr)
@@ -276,7 +279,7 @@ class NCBIGene(Source):
         '''
 
         gu = GraphUtils(curie_map.get())
-        is_about = gu.getNode(self.relationships['is_about'])
+        is_about = gu.getNode(Assoc.properties['is_about'])
 
         print("INFO: Processing Gene records")
         line_counter=0

@@ -121,7 +121,7 @@ class HPOAnnotations(Source):
 
         print("Parsing files...")
         self._process_phenotype_tab(('/').join((self.rawdir,self.files['annot']['file'])),self.outfile,self.graph,limit)
-        Assoc().loadObjectProperties(self.graph)
+        Assoc().loadAllProperties(self.graph)
 
         #TODO add negative phenotype statements
         #self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)

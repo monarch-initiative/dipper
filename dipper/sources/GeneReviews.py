@@ -123,7 +123,7 @@ class GeneReviews(Source):
             #TODO add equivalences or types
             gu.addClassToGraph(self.graph,disease_id,disease_name,None,description)
             if synonyms is not None:
-                gu.addSynonym(self.graph,disease_id,synonyms,Assoc.relationships['hasExactSynonym'])
+                gu.addSynonym(self.graph,disease_id,synonyms,Assoc.properties['hasExactSynonym'])
 
 
         return
