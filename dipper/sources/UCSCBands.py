@@ -155,8 +155,9 @@ class UCSCBands(Source):
                 #add the region and it's location
                 maploc_id = cid+band
                 bfeature = Feature(maploc_id,chrom+band,region_type_id,rtype)
+                bfeature.addFeatureStartLocation(start,cid)
+                bfeature.addFeatureEndLocation(stop,cid)
                 bfeature.addFeatureToGraph(self.graph)
-                bfeature.addCoordinatesOfFeature(self.graph,start,stop)
 
                 #get the parent bands, and make them unique
                 parents = list(self._make_parent_bands(band,set()))
@@ -212,7 +213,9 @@ class UCSCBands(Source):
         for b in mybands.keys():
             bid = makeChromID(b,taxon)
             bfeature = Feature(bid,None,None)  #for now, hopefully it won't overwrite
-            bfeature.addCoordinatesOfFeature(self.graph,mybands.get(b)['min'],mybands.get(b)['max'])
+            bfeature.addFeatureStartLocation(mybands.get(b)['min'],None)
+            bfeature.addFeatureStartLocation(mybands.get(b)['max'],None)
+            bfeature.addFeatureToGraph(self.graph)
         return
 
     def _make_parent_bands(self,band,child_bands):
