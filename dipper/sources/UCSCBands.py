@@ -9,7 +9,7 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature,makeChromID
 from dipper.models.Dataset import Dataset
-from dipper.utils.CurieUtil import CurieUtil
+from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class UCSCBands(Source):
 
         self.tax_ids = tax_ids
         self.load_bindings()
-
+        self.gu = GraphUtils(curie_map.get())
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606]
@@ -121,12 +121,19 @@ class UCSCBands(Source):
         :param limit:
         :return:
         '''
-        cu = CurieUtil(curie_map.get())
         line_counter=0
         myfile=('/').join((self.rawdir,self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
 
         mybands = {}
+
+
+        #add the build - ideally it would be taken from the file itself, but it's not in it.
+        build_id = 'UCSC:hg19'
+        f = Feature(build_id,build_id,Feature.types['reference_genome'])
+        f.addTaxonToFeature(self.graph,'NCBITaxon:9606')
+        f.addFeatureToGraph(self.graph)
+
 
         with gzip.open(myfile, 'rb') as f:
             for line in f:
@@ -146,10 +153,11 @@ class UCSCBands(Source):
                 #add the chr
                 cfeature = Feature(cid,chrom,self._map_type_of_region('chromosome'))
                 cfeature.addFeatureToGraph(self.graph) #fixme - should probably only add this at the end?
+                cfeature.addFeatureStartLocation(0,build_id)
                 cfeature.addTaxonToFeature(self.graph,tax_id)
                 #add the chr to the hashmap of coordinates
                 if chrom not in mybands.keys():
-                    mybands[chrom] = {'min' : 0, 'max' : 0 }
+                    mybands[chrom] = {'min' : 0, 'max' : 0, 'chr' : build_id }
 
                 #TODO add genome build as reference to the chromosomes (or at minimum to the dataset)
                 #add the region and it's location
@@ -158,6 +166,7 @@ class UCSCBands(Source):
                 bfeature.addFeatureStartLocation(start,cid)
                 bfeature.addFeatureEndLocation(stop,cid)
                 bfeature.addFeatureToGraph(self.graph)
+                self.gu.addMember(self.graph,build_id,cid)
 
                 #get the parent bands, and make them unique
                 parents = list(self._make_parent_bands(band,set()))
@@ -194,7 +203,7 @@ class UCSCBands(Source):
                     sta=int(start)
                     sto=int(stop)
                     if k not in mybands.keys():
-                        b = {'min' : min(sta,sto), 'max' : max(sta,sto)}
+                        b = {'min' : min(sta,sto), 'max' : max(sta,sto), 'chr' : chrom}
                         mybands[k] = b
                     else:
                         b = mybands.get(k)
@@ -212,9 +221,10 @@ class UCSCBands(Source):
         #add the band locations to the graph.
         for b in mybands.keys():
             bid = makeChromID(b,taxon)
+            chr = makeChromID(mybands.get(b)['chr'],taxon)
             bfeature = Feature(bid,None,None)  #for now, hopefully it won't overwrite
-            bfeature.addFeatureStartLocation(mybands.get(b)['min'],None)
-            bfeature.addFeatureStartLocation(mybands.get(b)['max'],None)
+            bfeature.addFeatureStartLocation(mybands.get(b)['min'],chr)
+            bfeature.addFeatureEndLocation(mybands.get(b)['max'],chr)
             bfeature.addFeatureToGraph(self.graph)
         return
 
@@ -277,3 +287,5 @@ class UCSCBands(Source):
             if str(taxon) not in self.files:
                 raise Exception("Taxon " + str(taxon) + " not supported"
                                 " by source UCSCBands")
+
+

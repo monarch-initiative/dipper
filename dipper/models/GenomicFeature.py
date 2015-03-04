@@ -44,8 +44,8 @@ class Feature() :
         'plus_strand' : 'faldo:PlusStrandPosition',
         'minus_strand' : 'faldo:MinusStrandPosition',
         'both_strand' : 'faldo:BothStrandPosition',
-        'score' : 'SO:0001685'  #FIXME - this is not a good solution, too generic
-
+        'score' : 'SO:0001685',  #FIXME - this is not a good solution, too generic
+        'reference_genome' : 'SO:0001505'
     }
 
     def __init__(self,id,label,type,description=None):
