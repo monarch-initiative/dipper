@@ -234,7 +234,7 @@ class GraphUtils:
         if (re.match('^_',id)):
             n = BNode(id)
         elif (re.match('^\:',id)):
-            n = base[re.sub(':','',id)]
+            n = base[re.sub(':','',id,1)]   #do we need to remove embedded colons in the ids?
         else:
             u = self.cu.get_uri(id)
             if (u is not None):
