@@ -293,7 +293,7 @@ class Feature() :
 
         return
 
-def makeChromID(chrom, taxon=None):
+def makeChromID(chrom, reference=None):
     '''
     This will take a chromosome number and a NCBI taxon number,
     and create a unique identifier for the chromosome.  These identifiers
@@ -305,11 +305,16 @@ def makeChromID(chrom, taxon=None):
     :param taxon: the numeric portion of the taxon id
     :return:
     '''
-    if (taxon is None):
-        print('WARN: no taxon for this chrom.  you may have conflicting ids')
+    if (reference is None):
+        print('WARN: no reference for this chrom.  you may have conflicting ids')
         taxon = ''
     # replace any chr-like prefixes with blank to standardize
     c = re.sub('ch(r?)[omse]*', '', chrom)
-    id = ('').join((':', taxon, 'chr', c))
+
+    #remove the build/taxon prefixes to look cleaner
+    r = reference
+    if (re.match('.+:.+',reference)):
+        r = re.match('.*:(.*)',reference).group(1)
+    id = ('').join((':', r, 'chr', c))
     return id
 
