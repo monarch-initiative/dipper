@@ -4,6 +4,7 @@ from rdflib import RDF
 
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper.models.GenomicFeature import Feature,makeChromID
 
 
 class Genotype():
@@ -317,4 +318,33 @@ class Genotype():
                         self.gu.getNode(self.properties['has_member_with_allelotype']),
                         self.gu.getNode(member_id)))
 
+        return
+
+    def addReferenceGenome(self,build_id,build_label,taxon_id):
+
+        self.gu.addIndividualToGraph(self.graph,build_id,build_label,Feature.types['reference_genome'])
+        self.addTaxon(taxon_id,build_id)
+
+        return
+
+
+    def addChromosome(self,chr,tax_id,build_id=None,build_label=None):
+        #if it's just the chromosome, add it as an instance.  if a build is included, punn it and make sure
+        #it's a class that the build-specific chromosome is a part of
+        chr_id = makeChromID(str(chr),tax_id)
+        if build_id is None:
+            self.gu.addIndividualToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
+            self.addTaxon(tax_id,chr_id)
+        else:
+            #assume that the reference genome has already been added
+            #add the chr as a class
+            self.gu.addClassToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
+            chrinbuild_id = makeChromID(chr,build_id)
+            if build_label is None:
+                build_label = build_id
+            chrinbuild_label = chr+' ('+build_label+')'
+            #add the build-specific chromosome as an instance of the chr class
+            self.gu.addIndividualToGraph(self.graph,chrinbuild_id,chrinbuild_label,chr_id)
+            #add the build-specific chromosome as a member of the build-collection
+            self.gu.addMember(self.graph,build_id,chrinbuild_id)
         return
