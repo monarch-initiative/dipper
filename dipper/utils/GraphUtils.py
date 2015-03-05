@@ -143,8 +143,8 @@ class GraphUtils:
         :return:
         '''
         #print("INFO: adding deprecated class:",oldid, "with newids",newids)
-        consider = URIRef(self.cu.get_uri(self.relationships['consider']))
-        replaced_by = URIRef(self.cu.get_uri(self.relationships['replaced_by']))
+        consider = URIRef(self.cu.get_uri(self.properties['consider']))
+        replaced_by = URIRef(self.cu.get_uri(self.properties['replaced_by']))
 
         n1 = URIRef(self.cu.get_uri(oldid))
         g.add((n1,RDF['type'],self.OWLCLASS))
@@ -190,7 +190,7 @@ class GraphUtils:
         '''
         n = self._getNode(cid)
         if (synonym_type is None):
-            synonym_type = URIRef(self.cu.get_uri(self.relationships['hasExactSynonym'])) #default
+            synonym_type = URIRef(self.cu.get_uri(self.properties['hasExactSynonym'])) #default
         else:
             synonym_type = URIRef(self.cu.get_uri(synonym_type))
 
@@ -200,7 +200,7 @@ class GraphUtils:
     def addDefinition(self,g,cid,definition):
         if (definition is not None):
             n = self._getNode(cid)
-            p = URIRef(self.cu.get_uri(self.relationships['definition']))
+            p = URIRef(self.cu.get_uri(self.properties['definition']))
             g.add((n,p,Literal(definition)))
 
         return
@@ -208,7 +208,7 @@ class GraphUtils:
     def addXref(self,g,cid,xrefid):
         n1 = self._getNode(cid)
         n2 = self._getNode(xrefid)
-        p = URIRef(self.cu.get_uri(self.relationships['has_xref']))
+        p = URIRef(self.cu.get_uri(self.properties['has_xref']))
         if (n1 is not None and n2 is not None):
             g.add((n1,p,n2))
 

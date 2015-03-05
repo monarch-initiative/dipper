@@ -178,12 +178,12 @@ class EOM(Source):
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        gu.addSynonym(self.graph,morphology_term_id,s.strip(),gu.relationships['hasExactSynonym'])
+                        gu.addSynonym(self.graph,morphology_term_id,s.strip(),gu.properties['hasExactSynonym'])
 
                 #morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
-                        gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.relationships['hasRelatedSynonym'])
+                        gu.addSynonym(self.graph,morphology_term_id,s.strip(), gu.properties['hasRelatedSynonym'])
 
                 #morphology_term_id has page morphology_term_url
                 gu.addPage(self.graph,morphology_term_id,morphology_term_url)
