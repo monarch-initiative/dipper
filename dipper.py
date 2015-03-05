@@ -19,6 +19,7 @@ from dipper.sources.UCSCBands import UCSCBands
 from dipper.sources.CTD import CTD
 from dipper.sources.GeneReviews import GeneReviews
 from dipper.sources.EOM import EOM
+from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
 from dipper.utils.TestUtils import TestUtils
 
@@ -37,7 +38,8 @@ def main():
         'ctd' : CTD,
         'genereviews' : GeneReviews,
         'eom' : EOM,  # Takes about 5 seconds.
-        'coriell' : Coriell
+        'coriell' : Coriell,
+        'clinvar' : ClinVar
     }
 
     logger = logging.getLogger(__name__)

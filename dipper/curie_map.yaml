@@ -37,6 +37,8 @@
 'SIO' : 'http://semanticscience.org/resource/SIO_'
 'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'
 'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'
+'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
+
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
@@ -64,6 +66,12 @@
 'CoriellCollection' : 'https://catalog.coriell.org/1/'
 'CoriellFamily' : 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
+'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/?term='
+'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
+'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
+'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
+'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
+'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
