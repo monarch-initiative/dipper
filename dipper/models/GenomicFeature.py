@@ -31,6 +31,7 @@ class Feature() :
         'is_about' : 'IAO:00000136',
         'has_subsequence' : 'RO:0002524',
         'is_subsequence_of' : 'RO:0002525',
+        'has_staining_intensity' : 'GENO:0000626'
     }
 
     data_properties = {
@@ -50,12 +51,28 @@ class Feature() :
         'chromosome_arm' : 'SO:0000105',
         'chromosome_band' : 'SO:0000341',
         'chromosome_part' : 'SO:0000830',
+        'long_chromosome_arm' : 'GENO:0000629',
+        'short_chromosome_arm' : 'GENO:0000628',
+        'chromosome_region' : 'GENO:0000614',
+        'chromosome_subband' : 'GENO:0000616',
+        'centromere' : 'SO:0000577',
         'plus_strand' : 'faldo:PlusStrandPosition',
         'minus_strand' : 'faldo:MinusStrandPosition',
         'both_strand' : 'faldo:BothStrandPosition',
         'score' : 'SO:0001685',  #FIXME - this is not a good solution, too generic
-        'reference_genome' : 'SO:0001505'
+        'reference_genome' : 'SO:0001505',
+
+        #the following are sequence attributes:
+        'band_intensity':  'GENO:0000618',
+        'gneg': 'GENO:0000620',
+        'gpos': 'GENO:0000619',
+        'gpos100': 'GENO:0000622',
+        'gpos75': 'GENO:0000623',
+        'gpos50': 'GENO:0000624',
+        'gpos25': 'GENO:0000625',
+        'gvar': 'GENO:0000621'
     }
+
 
     def __init__(self,id,label,type,description=None):
         self.id = id

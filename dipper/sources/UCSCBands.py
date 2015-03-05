@@ -134,7 +134,7 @@ class UCSCBands(Source):
         f = Feature(build_id,build_id,Feature.types['reference_genome'])
         f.addTaxonToFeature(self.graph,'NCBITaxon:9606')
         f.addFeatureToGraph(self.graph)
-        f.loadAllProperties(self.graph)
+        #f.loadAllProperties(self.graph)
 
         with gzip.open(myfile, 'rb') as f:
             for line in f:
@@ -150,24 +150,28 @@ class UCSCBands(Source):
                 cid = makeChromID(chrom,taxon)
                 tax_id = (':').join(('NCBITaxon',taxon))
                 region_type_id = self._map_type_of_region(rtype)
+                self.gu.addMember(self.graph,build_id,cid)
 
                 #add the chr
                 cfeature = Feature(cid,chrom,self._map_type_of_region('chromosome'))
-                cfeature.addFeatureToGraph(self.graph) #fixme - should probably only add this at the end?
                 cfeature.addFeatureStartLocation(0,build_id)
+                cfeature.addFeatureToGraph(self.graph) #fixme - should probably only add this at the end?
                 cfeature.addTaxonToFeature(self.graph,tax_id)
                 #add the chr to the hashmap of coordinates
                 if chrom not in mybands.keys():
                     mybands[chrom] = {'min' : 0, 'max' : 0, 'chr' : build_id }
 
-                #TODO add genome build as reference to the chromosomes (or at minimum to the dataset)
                 #add the region and it's location
                 maploc_id = cid+band
                 bfeature = Feature(maploc_id,chrom+band,region_type_id,rtype)
                 bfeature.addFeatureStartLocation(start,cid)
                 bfeature.addFeatureEndLocation(stop,cid)
                 bfeature.addFeatureToGraph(self.graph)
-                self.gu.addMember(self.graph,build_id,cid)
+
+                #add the staining intensity of the band
+                if re.match('g(neg|pos|var)',rtype):
+                    self.gu.addTriple(self.graph,maploc_id,Feature.properties['has_staining_intensity'],Feature.types.get(rtype))
+
 
                 #get the parent bands, and make them unique
                 parents = list(self._make_parent_bands(band,set()))
@@ -181,8 +185,17 @@ class UCSCBands(Source):
                     pid = cid+parents[i]
                     if (re.match('[pq]$',parents[i])):
                         rti = self._map_type_of_region('chromosome_arm')
+                    if (re.match('p$',parents[i])):
+                        rti = Feature.types['short_chromosome_arm']
+                    elif (re.match('q$',parents[i])):
+                        rti = Feature.types['long_chromosome_arm']
+                    elif (re.match('[pq]\d$',parents[i])):
+                        rti = Feature.types['chromosome_region']
+                    elif (re.match('[pq]\d\d',parents[i])):
+                        rti = Feature.types['chromosome_band']
+                    elif (re.match('[pq]\d\d\.\d+',parents[i])):
+                        rti = Feature.types['chromosome_subband']
                     else:
-                        #FIXME there really ought to be a feature that is broader than a band, but part of an arm
                         rti = self._map_type_of_region('chromosome_part')
 
                     pfeature = Feature(pid,chrom+parents[i],rti)
@@ -227,6 +240,9 @@ class UCSCBands(Source):
             bfeature.addFeatureStartLocation(mybands.get(b)['min'],chr)
             bfeature.addFeatureEndLocation(mybands.get(b)['max'],chr)
             bfeature.addFeatureToGraph(self.graph)
+
+        #TODO figure out the staining intensities for the encompassing bands
+
         return
 
     def _make_parent_bands(self,band,child_bands):
@@ -254,25 +270,25 @@ class UCSCBands(Source):
 
     def _map_type_of_region(self,type):
         '''
-        Note that interband seems specific for polytene chromosomes, but not for
-        negatively stained regions of regular chromosomes.  Assigning to chr_band for now.
+        Note that "stalk" refers to the short arm of acrocentric chromosomes chr13,14,15,21,22 for human.
         :param type:
         :return:
         '''
         so_id = 'SO:0000830'
+        types = Feature.types
         type_to_so_map = {
-            'acen' : 'SO:0001795', #TODO check using regional centromere
-            'gvar' : 'SO:0000628', #chromosomal structural element
-            'stalk' : 'SO:0000830', #FIXME using chromosome part for now
-            'gneg' : 'SO:0000341', #FIXME.  using chr_band
-            'gpos100' : 'SO:0000341',  #FIXME.  using chr_band
-            'gpos25' : 'SO:0000341',   #FIXME.  using chr_band
-            'gpos50' : 'SO:0000341',  #FIXME.  using chr_band
-            'gpos75' : 'SO:0000341',  #FIXME.  using chr_band
-            'chromosome' : 'SO:0000340',
-            'chromosome_arm' : 'SO:0000105',
-            'chromosome_band' : 'SO:0000341',
-            'chromosome_part' : 'SO:0000830'
+            'acen' : types['centromere'],
+            'gvar' : types['chromosome_part']  , #chromosomal structural element
+            'stalk' : types['short_chromosome_arm'], #FIXME using chromosome part for now
+            'gneg' : types['chromosome_band'],
+            'gpos100' : types['chromosome_band'],
+            'gpos25' : types['chromosome_band'],
+            'gpos50' : types['chromosome_band'],
+            'gpos75' : types['chromosome_band'],
+            'chromosome' : types['chromosome'],
+            'chromosome_arm' : types['chromosome_arm'],
+            'chromosome_band' : types['chromosome_band'],
+            'chromosome_part' : types['chromosome_part']
         }
 
         if (type in type_to_so_map):
