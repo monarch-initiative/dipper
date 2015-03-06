@@ -1,10 +1,11 @@
-import os
+import os, csv
 from stat import *
 import re
 from datetime import datetime
 import gzip
 import os.path
 import unicodedata
+from dipper.utils import pysed
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -18,9 +19,9 @@ from dipper.models.GenomicFeature import Feature,makeChromID
 
 class ClinVar(Source):
     """
-
-    Parses the gene_info (gene names, symbols, ids, equivalent ids), gene history (alt ids), and
-        publications about a gene, and
+    ClinVar is a host of clinically relevant variants, both directly-submitted and curated from the literature.
+    We process the variant_summary file here, which is a digested version of their full xml.  We add all
+    variants (and coordinates/build) from their system.
     """
 
     files = {
@@ -28,8 +29,12 @@ class ClinVar(Source):
             'file' : 'variant_summary.txt.gz',
             'url' : 'http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz'
         },
+        'variant_citations' : {
+            'file' : 'variant_citations.txt',
+            'url' : 'http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/var_citations.txt'
+        }
         #TODO work through xml
-#var_citations.txt
+
     }
 
     testmode = False
@@ -70,15 +75,31 @@ class ClinVar(Source):
 
         return
 
+    def scrub(self):
+        """
+        The var_citations file has a bad row in it with > 6 cols.  I will comment these out.
 
+        :return:
+        """
+        #awk  -F"\t" '{if (NF <= 6) print $1, $2, $3, $4, $5, $6 ; OFS = "\t"}' variant_citations.txt
+        f = ('/').join((self.rawdir,self.files['variant_citations']['file']))
+        print('INFO: removing the line that has too many cols (^15091)')
+        pysed.replace("^15091", '#15091', f)
+
+
+
+        return
 
     def parse(self, limit=None):
         if (limit is not None):
             print("Only parsing first", limit, "rows")
 
+        self.scrub()
+
         print("Parsing files...")
 
         self._get_variants(limit)
+        self._get_var_citations(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -170,7 +191,8 @@ class ClinVar(Source):
                 allele_type_id = self._map_type_of_allele(allele_type)
 
                 if (str(chr) == ''):
-                    print(line)
+                    pass
+                    #print(line)
                 else:
                     geno.addChromosome(str(chr),tax_id,build_id,assembly)
                     chrinbuild_id = makeChromID(str(chr),build_id)
@@ -248,6 +270,58 @@ class ClinVar(Source):
 
         return
 
+    def _get_var_citations(self,limit):
+
+        # Generated weekly, the first of the week
+        # A tab-delimited report of citations associated with data in ClinVar, connected to the AlleleID, the VariationID, and either rs# from dbSNP or nsv in dbVar.
+        #
+        # AlleleID          integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
+        # VariationID       The identifier ClinVar uses to anchor its default display. (in the XML,  //MeasureSet/@ID)
+        # rs			    rs identifier from dbSNP
+        # nsv				nsv identifier from dbVar
+        # citation_source	The source of the citation, either PubMed, PubMedCentral, or the NCBI Bookshelf
+        # citation_id		The identifier used by that source
+
+
+        gu = GraphUtils(curie_map.get())
+        print("INFO: Processing Citations for variants")
+        line_counter=0
+        myfile=('/').join((self.rawdir,self.files['variant_citations']['file']))
+        print("FILE:",myfile)
+        with open(myfile, 'r',encoding="utf8") as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+
+            for line in filereader:
+                #skip comments
+                line=line
+                if (re.match('^#',line[0])):
+                    continue
+                (allele_num,variant_num,rs_num,nsv_num,citation_source,citation_id) = line
+
+                line_counter += 1
+
+                #the citation for a variant is made to the allele+variant+rs/nsv id
+                #we don't know what the citation is for exactly, other than the variant.  so use mentions
+
+                var_id = 'ClinVarVariant:'+variant_num
+
+                #citation source: PubMed | PubMedCentral | citation_source
+                #citation id:
+                #format the citation id:
+                ref_id = None
+                if citation_source == 'PubMed':
+                    ref_id = 'PMID:'+str(citation_id)
+                elif citation_source == 'PubMedCentral':
+                    ref_id = 'PMCID:'+str(citation_id)
+                if ref_id is not None:
+                    gu.addTriple(self.graph,ref_id,self.properties['is_about'],var_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+
+        return
 
     def _map_type_of_allele(self,type):
         so_id = 'SO:0001060'
