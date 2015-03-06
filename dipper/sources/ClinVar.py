@@ -197,6 +197,10 @@ class ClinVar(Source):
                     geno.addChromosome(str(chr),tax_id,build_id,assembly)
                     chrinbuild_id = makeChromID(str(chr),build_id)
 
+                #note that there are some "variants" that are actually haplotypes:
+                #for example, variant_num = 38562
+                #so the dbsnp or dbvar should probably be primary, and the variant num be the vslc,
+                #with each of the dbsnps being added to it
 
                 #todo clinical significance needs to be mapped to a list of terms
                 #first, make the variant:
@@ -300,7 +304,7 @@ class ClinVar(Source):
 
                 line_counter += 1
 
-                #the citation for a variant is made to the allele+variant+rs/nsv id
+                #the citation for a variant is made to some kind of combination of the ids here.  but i'm not sure which
                 #we don't know what the citation is for exactly, other than the variant.  so use mentions
 
                 var_id = 'ClinVarVariant:'+variant_num

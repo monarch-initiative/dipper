@@ -42,6 +42,7 @@
 
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
+'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
 'ISBN-10': 'http://www.monarchinitiative.org/ISBN_'
 'ISBN-13': 'http://www.monarchinitiative.org/ISBN_'
 'ISBN-15': 'http://www.monarchinitiative.org/ISBN_'
