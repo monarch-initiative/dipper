@@ -5,6 +5,7 @@ from rdflib import RDF
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper.models.GenomicFeature import Feature,makeChromID
+import re
 
 
 class Genotype():
@@ -320,21 +321,41 @@ class Genotype():
 
         return
 
-    def addReferenceGenome(self,build_id,build_label,taxon_id):
-
-        self.gu.addIndividualToGraph(self.graph,build_id,build_label,Feature.types['reference_genome'])
-        self.addTaxon(taxon_id,build_id)
+    def addGenome(self,taxon_id,taxon_label):
+        genome_label = taxon_label+' genome'
+        genome_id = self.makeGenomeID(taxon_id)
+        self.gu.addClassToGraph(self.graph,genome_id,genome_label,Feature.types['genome'])
+        self.addTaxon(taxon_id,genome_id)
 
         return
 
+    def addReferenceGenome(self,build_id,build_label,taxon_id):
+        genome_id = self.makeGenomeID(taxon_id)
+        self.gu.addIndividualToGraph(self.graph,build_id,build_label,Feature.types['reference_genome'])
+        self.gu.addType(self.graph,build_id,genome_id)
+        self.gu.addSubclass(self.graph,genome_id,build_id)
+
+        return
+
+    def makeGenomeID(self,taxon_id):
+        #scrub off the taxon prefix.  put it in base space
+
+        genome_id = re.sub('.*\:',':',taxon_id)+'genome'
+
+        return genome_id
 
     def addChromosome(self,chr,tax_id,build_id=None,build_label=None):
-        #if it's just the chromosome, add it as an instance.  if a build is included, punn it and make sure
-        #it's a class that the build-specific chromosome is a part of
+        #if it's just the chromosome, add it as an instance of a SO:chromosome, and add it to the genome.
+        # if a build is included, punn the chromosome as a subclass of SO:chromsome, and
+        # make the build-specific chromosome an instance of the supplied chr.  The chr then becomes part of the
+        # build or genome.
         chr_id = makeChromID(str(chr),tax_id)
         if build_id is None:
+            genome_id = self.makeGenomeID(tax_id)
             self.gu.addIndividualToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
             self.addTaxon(tax_id,chr_id)
+            #add it as a member of the genome
+            self.gu.addMember(self.graph,genome_id,chr_id)
         else:
             #assume that the reference genome has already been added
             #add the chr as a class

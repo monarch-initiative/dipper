@@ -10,6 +10,7 @@ from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature,makeChromID
 from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Genotype import Genotype
 from dipper import curie_map
 
 logger = logging.getLogger(__name__)
@@ -125,16 +126,17 @@ class UCSCBands(Source):
         line_counter=0
         myfile=('/').join((self.rawdir,self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
-
+        geno = Genotype(self.graph)
         mybands = {}
 
 
         #add the build - ideally it would be taken from the file itself, but it's not in it.
-        build_id = 'UCSC:hg19'
-        f = Feature(build_id,build_id,Feature.types['reference_genome'])
-        f.addTaxonToFeature(self.graph,'NCBITaxon:9606')
-        f.addFeatureToGraph(self.graph)
-        #f.loadAllProperties(self.graph)
+        build_num = 'hg19'
+        build_id = 'UCSC:'+build_num
+        taxon_id = 'NCBITaxon:'+taxon
+        genome_id = geno.makeGenomeID(taxon_id)
+        geno.addGenome(taxon_id,'Human genome')
+        geno.addReferenceGenome(build_id,build_num,taxon_id)
 
         with gzip.open(myfile, 'rb') as f:
             for line in f:
@@ -147,23 +149,26 @@ class UCSCBands(Source):
                 (chrom,start,stop,band,rtype) = line.split('\t')
                 line_counter += 1
 
-                cid = makeChromID(chrom,taxon)
-                tax_id = (':').join(('NCBITaxon',taxon))
-                region_type_id = self._map_type_of_region(rtype)
-                self.gu.addMember(self.graph,build_id,cid)
+                cclassid = makeChromID(chrom,taxon)  #the chrom class (generic) id
+                cid = makeChromID(chrom,build_num)   #the build-specific chromosome id
+                geno.addChromosome(chrom,taxon_id,build_id,build_num)  #add the generic and build-specific chromosome
 
-                #add the chr
-                cfeature = Feature(cid,chrom,self._map_type_of_region('chromosome'))
-                cfeature.addFeatureStartLocation(0,build_id)
-                cfeature.addFeatureToGraph(self.graph) #fixme - should probably only add this at the end?
-                cfeature.addTaxonToFeature(self.graph,tax_id)
+
                 #add the chr to the hashmap of coordinates
                 if chrom not in mybands.keys():
                     mybands[chrom] = {'min' : 0, 'max' : 0, 'chr' : build_id }
 
                 #add the region and it's location
-                maploc_id = cid+band
-                bfeature = Feature(maploc_id,chrom+band,region_type_id,rtype)
+                #add this as a class
+                maplocclass_id = cclassid+band
+                maplocclass_label = chrom+band
+                region_type_id = self._map_type_of_region(rtype)
+                self.gu.addClassToGraph(self.graph,maplocclass_id,maplocclass_label,region_type_id)
+
+                #add the build-specific region
+                maploc_id = cid+band   #build-specific band id
+                maploc_label = maplocclass_label+' ('+build_num+')'   #build-specific band label
+                bfeature = Feature(maploc_id,maploc_label,maplocclass_id)
                 bfeature.addFeatureStartLocation(start,cid)
                 bfeature.addFeatureEndLocation(stop,cid)
                 bfeature.addFeatureToGraph(self.graph)
@@ -183,6 +188,7 @@ class UCSCBands(Source):
                 #TODO this is somewhat inefficient due to re-adding upper-level nodes when iterating over the file
                 for i in range(len(parents)):
                     pid = cid+parents[i]
+                    pclassid = cclassid+parents[i]
                     if (re.match('[pq]$',parents[i])):
                         rti = self._map_type_of_region('chromosome_arm')
                     if (re.match('p$',parents[i])):
@@ -200,6 +206,8 @@ class UCSCBands(Source):
 
                     pfeature = Feature(pid,chrom+parents[i],rti)
                     pfeature.addFeatureToGraph(self.graph)
+
+
                     #add the relationships to the parent
                     if (i < len(parents)-1):
                         ppid = cid+parents[i+1]
@@ -232,13 +240,14 @@ class UCSCBands(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-        #add the band locations to the graph.
+        #add the band locations to the graph.  these are build-specific
         for b in mybands.keys():
-            bid = makeChromID(b,taxon)
-            chr = makeChromID(mybands.get(b)['chr'],taxon)
-            bfeature = Feature(bid,None,None)  #for now, hopefully it won't overwrite
-            bfeature.addFeatureStartLocation(mybands.get(b)['min'],chr)
-            bfeature.addFeatureEndLocation(mybands.get(b)['max'],chr)
+            generic_bid = makeChromID(b,taxon)
+            bid = makeChromID(b,build_num)  #the build-specific band
+            cid = makeChromID(mybands.get(b)['chr'],build_num)
+            bfeature = Feature(bid,None,generic_bid)  #this band is an instance of the generic band
+            bfeature.addFeatureStartLocation(mybands.get(b)['min'],cid)
+            bfeature.addFeatureEndLocation(mybands.get(b)['max'],cid)
             bfeature.addFeatureToGraph(self.graph)
 
         #TODO figure out the staining intensities for the encompassing bands

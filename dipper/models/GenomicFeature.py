@@ -61,6 +61,7 @@ class Feature() :
         'both_strand' : 'faldo:BothStrandPosition',
         'score' : 'SO:0001685',  #FIXME - this is not a good solution, too generic
         'reference_genome' : 'SO:0001505',
+        'genome' : 'SO:0001026',
 
         #the following are sequence attributes:
         'band_intensity':  'GENO:0000618',
