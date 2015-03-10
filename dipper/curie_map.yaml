@@ -43,9 +43,9 @@
 # publication/reference sources
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
 'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
-'ISBN-10': 'http://www.monarchinitiative.org/ISBN_'
-'ISBN-13': 'http://www.monarchinitiative.org/ISBN_'
-'ISBN-15': 'http://www.monarchinitiative.org/ISBN_'
+'ISBN-10': 'http://www.monarchinitiative.org/ISBN10_'
+'ISBN-13': 'http://www.monarchinitiative.org/ISBN13_'
+'ISBN-15': 'http://www.monarchinitiative.org/ISBN15_'
 'ISBN': 'http://www.monarchinitiative.org/ISBN_'
 'DOI' : 'http://dx.doi.org/'
 'J' : 'http://www.informatics.jax.org/reference/J:'
