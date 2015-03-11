@@ -4,7 +4,7 @@ from rdflib import RDF
 
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-from dipper.models.GenomicFeature import Feature,makeChromID
+from dipper.models.GenomicFeature import Feature,makeChromID,makeChromLabel
 import re
 
 
@@ -351,23 +351,28 @@ class Genotype():
         # if a build is included, punn the chromosome as a subclass of SO:chromsome, and
         # make the build-specific chromosome an instance of the supplied chr.  The chr then becomes part of the
         # build or genome.
+
+        #first, make the chromosome class, at the taxon level
         chr_id = makeChromID(str(chr),tax_id)
-        if build_id is None:
-            genome_id = self.makeGenomeID(tax_id)
-            self.gu.addIndividualToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
-            self.addTaxon(tax_id,chr_id)
-            #add it as a member of the genome
-            self.gu.addMember(self.graph,genome_id,chr_id)
-        else:
-            #assume that the reference genome has already been added
-            #add the chr as a class
-            self.gu.addClassToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
-            chrinbuild_id = makeChromID(chr,build_id)
+        genome_id = self.makeGenomeID(tax_id)
+        self.gu.addClassToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
+        #add it as a member of the genome (both ways)
+        self.gu.addMember(self.graph,genome_id,chr_id)
+        self.gu.addMemberOf(self.graph,chr_id,genome_id)
+
+        self.addTaxon(tax_id,genome_id)  #add the taxon to the genome
+
+
+        if build_id is not None:
+            chrinbuild_id = makeChromID(chr,build_id)  #the build-specific chromosome
             if build_label is None:
                 build_label = build_id
-            chrinbuild_label = chr+' ('+build_label+')'
+            chrinbuild_label = makeChromLabel(chr,build_label)
             #add the build-specific chromosome as an instance of the chr class
             self.gu.addIndividualToGraph(self.graph,chrinbuild_id,chrinbuild_label,chr_id)
-            #add the build-specific chromosome as a member of the build-collection
+
+            #add the build-specific chromosome as a member of the build  (both ways)
             self.gu.addMember(self.graph,build_id,chrinbuild_id)
+            self.gu.addMemberOf(self.graph,chrinbuild_id,build_id)
+
         return
