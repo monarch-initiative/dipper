@@ -47,7 +47,8 @@ class GraphUtils:
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050',
-        'mentions': 'IAO:0000142'
+        'mentions': 'IAO:0000142',
+        'model_of' : 'ERO:0000233'
     }
 
     datatype_properties = {
@@ -125,10 +126,10 @@ class GraphUtils:
 
         return
 
-    def addPerson(self,graph,subject_id,label):
-        graph.add((self.getNode(subject_id), RDF['type'], self.PERSON))
-        if (label is not None):
-            graph.add((self.getNode(subject_id), RDFS['label'], Literal(label)))
+    def addPerson(self,graph,person_id,person_label):
+        graph.add((self.getNode(person_id), RDF['type'], self.PERSON))
+        if (person_label is not None):
+            graph.add((self.getNode(person_id), RDFS['label'], Literal(person_label)))
         return
 
 
