@@ -346,7 +346,7 @@ class Genotype():
 
         return genome_id
 
-    def addChromosome(self,chr,tax_id,build_id=None,build_label=None):
+    def addChromosome(self,chr,tax_id,tax_label=None,build_id=None,build_label=None):
         #if it's just the chromosome, add it as an instance of a SO:chromosome, and add it to the genome.
         # if a build is included, punn the chromosome as a subclass of SO:chromsome, and
         # make the build-specific chromosome an instance of the supplied chr.  The chr then becomes part of the
@@ -354,8 +354,12 @@ class Genotype():
 
         #first, make the chromosome class, at the taxon level
         chr_id = makeChromID(str(chr),tax_id)
+        if tax_label is not None:
+            chr_label = makeChromLabel(chr,tax_label)
+        else:
+            chr_label = makeChromLabel(chr)
         genome_id = self.makeGenomeID(tax_id)
-        self.gu.addClassToGraph(self.graph,chr_id,chr,Feature.types['chromosome'])
+        self.gu.addClassToGraph(self.graph,chr_id,chr_label,Feature.types['chromosome'])
         #add it as a member of the genome (both ways)
         self.gu.addMember(self.graph,genome_id,chr_id)
         self.gu.addMemberOf(self.graph,chr_id,genome_id)
