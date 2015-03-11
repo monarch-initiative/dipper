@@ -38,6 +38,7 @@
 'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'
 'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'
 'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
+'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 
 
 # publication/reference sources
@@ -66,6 +67,7 @@
 'Coriell' : 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
 'CoriellCollection' : 'https://catalog.coriell.org/1/'
 'CoriellFamily' : 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
+'CoriellIndividual' : 'https://catalog.coriell.org/Search?q='
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/?term='
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
