@@ -186,6 +186,8 @@ class ClinVar(Source):
                 build_id = (':').join(('NCBIGenome',assembly))
 
                 #make the build
+                tax_label = 'Human'
+                geno.addGenome(tax_id,tax_label)
                 geno.addReferenceGenome(build_id,assembly,tax_id)
 
                 allele_type_id = self._map_type_of_allele(allele_type)
@@ -194,7 +196,7 @@ class ClinVar(Source):
                     pass
                     #print(line)
                 else:
-                    geno.addChromosome(str(chr),tax_id,build_id,assembly)
+                    geno.addChromosome(str(chr),tax_id,tax_label,build_id,assembly)
                     chrinbuild_id = makeChromID(str(chr),build_id)
 
                 #note that there are some "variants" that are actually haplotypes:
