@@ -252,16 +252,20 @@ class Feature() :
 
     def addSubsequenceOfFeature(self,graph,parentid):
         '''
-        This will add a triple like:
-        feature subsequence_of parent
+        This will add reciprocal triples like:
+        feature is_subsequence_of parent
+        parent has_subsequence feature
         :param graph:
         :param parentid:
         :return:
         '''
         n = self.gu.getNode(self.id)
         p = self.gu.getNode(parentid)
-        subsequence=self.gu.getNode(self.properties['is_subsequence_of'])
-        graph.add((n,subsequence,p))
+        rel=self.gu.getNode(self.properties['is_subsequence_of'])
+        graph.add((n,rel,p))
+        rel=self.gu.getNode(self.properties['has_subsequence'])
+        graph.add((p,rel,n))
+
         return
 
 
@@ -294,6 +298,11 @@ class Feature() :
 
         return
 
+
+    def addFeatureProperty(self,graph,property_type,property):
+        self.gu.addTriple(graph,self.id,property_type,property)
+        return
+
 def makeChromID(chrom, reference=None):
     '''
     This will take a chromosome number and a NCBI taxon number,
@@ -319,3 +328,12 @@ def makeChromID(chrom, reference=None):
     id = ('').join((':', r, 'chr', c))
     return id
 
+def makeChromLabel(chrom, reference=None):
+    label = ''
+
+    if reference is None:
+        label = chrom
+    else:
+        label = chrom+' ('+reference+')'
+
+    return label
