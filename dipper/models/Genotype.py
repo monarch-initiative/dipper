@@ -41,7 +41,8 @@ class Genotype():
         'inversion': 'SO:1000036',
         'tandem_duplication': 'SO:1000173',
         'point_mutation': 'SO:1000008',
-        'population' : 'GENO:0000110'  #collection of organisms; consider OBI:population
+        'population' : 'GENO:0000110',  #collection of organisms; consider OBI:population or EFO:population
+        'wildtype' : 'GENO:0000511'
     }
 
     object_properties = {
@@ -56,7 +57,8 @@ class Genotype():
         'is_reference_instance_of' : 'GENO:0000610',
         'has_part' : 'BFO:0000051',
         'has_member_with_allelotype' : 'GENO:0000225',  #use this when relating populations
-        'is_allelotype_of' : 'GENO:0000206'
+        'is_allelotype_of' : 'GENO:0000206',
+        'has_genotype' : 'GENO:0000222'
     }
 
     zygosity = {
