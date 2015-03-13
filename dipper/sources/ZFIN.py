@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from stat import *
 import re
+import logging
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -13,9 +14,15 @@ from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-
+logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
+    """
+    Notes/Description for ZFIN here.
+
+    """
+
+
 
     files = {
         'geno' : {'file' : 'genotype_features.txt', 'url' : 'http://zfin.org/downloads/genotype_features.txt'},
@@ -34,7 +41,7 @@ class ZFIN(Source):
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
 
         #source-specific warnings.  will be cleared when resolved.
-        print("WARN: we are filtering G2P on the wild-type environment data for now")
+        logger.warn("We are filtering G2P on the wild-type environment data for now")
 
         return
 
@@ -75,8 +82,8 @@ class ZFIN(Source):
     # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if (limit is not None):
-            print("Only parsing first", limit, "rows of each file")
-        print("Parsing files...")
+            logger.info("Only parsing first %s rows of each file", limit)
+        logger.info("Parsing files...")
 
         self._load_zp_mappings()
 
@@ -84,12 +91,12 @@ class ZFIN(Source):
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
 
-        print("Finished parsing.")
+        logger.info("Finished parsing.")
 
         self.load_bindings()
         Assoc().loadAllProperties(self.graph)
 
-        print("Found", len(self.graph), "nodes")
+        logger.info("Found %s nodes", len(self.graph))
         return
 
     def _process_genotype_features(self, limit=None):
@@ -102,7 +109,7 @@ class ZFIN(Source):
         out = self.outfile
 
         geno_hash = {}
-        print("Processing Genotypes")
+        logger.info("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -210,7 +217,7 @@ class ZFIN(Source):
                     geno.addVSLCtoParent(vslc_id,gt)
 
 
-            print("INFO: Done with genotypes")
+            logger.info("Done with genotypes")
         return
 
     def _map_allele_type_to_geno(self, allele_type):
@@ -232,7 +239,7 @@ class ZFIN(Source):
             type = type_map.get(allele_type)
         else:
             # TODO add logging
-            print("ERROR: Allele Type (", allele_type, ") not mapped")
+            logger.error("Allele Type (%s) not mapped", allele_type)
 
         return type
 
@@ -246,7 +253,7 @@ class ZFIN(Source):
         :param limit:
         :return:
         '''
-        print("Processing G2P")
+        logger.info("Processing G2P")
         line_counter = 0
         # hardcode
         eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
@@ -272,7 +279,7 @@ class ZFIN(Source):
                 #deal with environments
                 #FIXME i am only dealing with 'wild-type' environments for now
                 if (not re.match('ZDB-EXP-041102-1', env_id)):
-                    print("INFO: Skipping non-wildtype environment", env_id, "for", genotype_id)
+                    logger.info("Skipping non-wildtype environment %s for %s", env_id, genotype_id)
                     continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
@@ -295,7 +302,7 @@ class ZFIN(Source):
                     self.graph = assoc.addAssociationNodeToGraph(self.graph)
                 else:
                     #add normal phenotypes
-                    print("WARN: found normal phenotype; skipping for now")
+                    logger.warn("Found normal phenotype; skipping for now")
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -371,7 +378,7 @@ class ZFIN(Source):
         mapping = self.zp_map.get(key)
 
         if (mapping is None):
-            print("WARN: Couldn't map ZP id to",("_").join((superterm1_id,subterm1_id,quality_id,superterm2_id,subterm2_id,mod_id)))
+            logger.warn("Couldn't map ZP id to %s",("_").join((superterm1_id,subterm1_id,quality_id,superterm2_id,subterm2_id,mod_id)))
         else:
             zp_id = mapping['zp_id']
 
@@ -386,7 +393,7 @@ class ZFIN(Source):
         :return:
         '''
         self.zp_map = {}
-        print("Loading ZP-to-EQ mappings")
+        logger.info("Loading ZP-to-EQ mappings")
         line_counter = 0
         file=('/').join((self.rawdir,self.files['zpmap']['file']))
         with open(file, 'r', encoding="utf-8") as csvfile:
@@ -406,7 +413,7 @@ class ZFIN(Source):
                     'superterm2_id' : superterm2_id,
                     'subterm2_id' : subterm2_id,
                 }
-        print("Loaded",self.zp_map.__len__(),"zp terms")
+        logger.info("Loaded %s zp terms",self.zp_map.__len__())
 
         return
 
