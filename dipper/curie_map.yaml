@@ -39,6 +39,7 @@
 'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'
 'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
+'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
 
 
 # publication/reference sources
@@ -54,7 +55,6 @@
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
 'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
-'NCBITaxon' : 'http://www.ncbi.nlm.nih.gov/taxonomy/'
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
 'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
