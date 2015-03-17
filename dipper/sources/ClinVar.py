@@ -259,7 +259,7 @@ class ClinVar(Source):
                     #print('list:',pheno_list)
                     for p in pheno_list:
                         if (re.match('Orphanet:ORPHA',p)):
-                            p = re.sub('Orphanet:ORPHA','ORPHANET:',p)
+                            p = re.sub('Orphanet:ORPHA','Orphanet:',p)
                         elif (re.match('SNOMED CT',p)):
                             p = re.sub('SNOMED CT','SNOMED',p)
                         assoc_id = self.make_id(seqalt_id+p.strip())
