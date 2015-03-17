@@ -205,9 +205,9 @@ class NCBIGene(Source):
                             band = Feature(maploc_id,None,None)  #Assume it's type will be added elsewhere
                             band.addFeatureToGraph(self.graph)
                             #add the band as the containing feature
-                            gu.addTriple(self.graph,gene_id,Feature().object_properties['is_subsequence_of'],maploc_id)
+                            gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],maploc_id)
                         else:
-                            gu.addTriple(self.graph,gene_id,Feature().object_properties['is_subsequence_of'],mychrom)
+                            gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
                             #TODO handle these cases
                             #examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
