@@ -235,14 +235,13 @@ class Coriell(Source):
                     #since some patients have >1 cell line derived from them, we must make sure that the genotype
                     #is attached to the patient, and can be inferred to the cell line
                     #examples of repeated patients are:  famid=1159, member=1; fam=152,member=1
-                    #TODO verify if the family ids are unique across all catalogs, or only within a single catalog
 
                     #Make the patient ID
 
                     if family_id != '':
                         patient_id = 'MONARCH:Coriell'+family_id+'-'+family_member  #this won't resolve like this, but how to handle?
                     else:
-                        patient_id = 'Coriell:'+cell_line_id   #otherwise, just default to the cell line as the patient id
+                        patient_id = cell_line_id   #otherwise, just default to the cell line as the patient id
 
 
                     #properties of the individual patients:  sex, family id, member/relproband, description
