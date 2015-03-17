@@ -52,7 +52,7 @@ class Genotype():
         'has_reference_part': 'GENO:0000385',
         'in_taxon' : 'RO:0002162',
         'has_zygosity': 'GENO:0000608',
-        'is_sequence_variant_instance_of': 'GENO:0000408',
+        'is_sequence_variant_instance_of': 'GENO:0000408',  #links a alternate locus (instance) to a gene (class)
         'targets_instance_of': 'GENO:0000414',
         'is_reference_instance_of' : 'GENO:0000610',
         'has_part' : 'BFO:0000051',
