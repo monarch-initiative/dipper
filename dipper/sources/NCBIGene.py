@@ -9,7 +9,8 @@ import unicodedata
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Assoc import Assoc
-from dipper.utils.CurieUtil import CurieUtil
+from dipper.models.Genotype import Genotype
+
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper.models.GenomicFeature import Feature,makeChromID
@@ -59,7 +60,7 @@ class NCBIGene(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090]
+            self.tax_ids = [9606, 10090, 7955]
 
         if self.testmode:
             self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
@@ -114,6 +115,7 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
+        geno = Genotype(self.graph)
 
 
         #not unzipping the file
@@ -146,8 +148,6 @@ class NCBIGene(Source):
                 tax_id = (':').join(('NCBITaxon',tax_num))
                 gene_type_id = self._map_type_of_gene(gtype)
 
-                n = gu.getNode(gene_id)
-
                 if (symbol == 'NEWENTRY'):
                     label = None
                 else:
@@ -156,9 +156,8 @@ class NCBIGene(Source):
                 #TODO might have to figure out if things aren't genes, and make them individuals
                 gu.addClassToGraph(self.graph,gene_id,label,gene_type_id,desc)
 
-                #todo use feature for refactor
                 #we have to do special things here for genes, because they're classes not individuals
-                f = Feature(gene_id,label,gene_type_id,desc)
+                #f = Feature(gene_id,label,gene_type_id,desc)
 
                 if (name != '-'):
                     gu.addSynonym(self.graph,gene_id,name)
@@ -168,8 +167,7 @@ class NCBIGene(Source):
                 if (other_designations.strip() != '-'):
                     for s in other_designations.split('|'):
                         gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
-                f.addTaxonToFeature(self.graph,tax_id)
-                f.loadAllProperties(self.graph)   #FIXME inefficient
+
 
                 #deal with the xrefs
                 #MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
@@ -179,12 +177,12 @@ class NCBIGene(Source):
                         if ((fixedr is not None) and (fixedr.strip() != '')):
                             if (re.match('HPRD',fixedr)):
                                 #proteins are not == genes.
-                                self.graph.add((n,gu.getNode(self.properties['has_gene_product']),gu.getNode(fixedr)))
+                                gu.addTriple(self.graph,gene_id,self.properties['has_gene_product'],fixedr)
                             else:
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
                                     gu.addEquivalentClass(self.graph,gene_id,fixedr)
 
-                if (str(chr) != '-'):
+                if (str(chr) != '-' and str(chr) != ''):
                     if (re.search('\|',str(chr))):
                         #this means that there's uncertainty in the mapping.  skip it
                         #TODO we'll need to figure out how to deal with >1 loc mapping
@@ -192,30 +190,44 @@ class NCBIGene(Source):
                         continue
                     #if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-
-                    mychrom = makeChromID(str(chr),tax_num)
-                    chrom = Feature(mychrom,str(chr),Feature.types['chromosome'])
-                    chrom.addFeatureToGraph(self.graph)
-                    if (map_loc != '-'):
+                    geno.addGenome(tax_id,tax_num)   #tax label can get added elsewhere
+                    geno.addChromosome(str(chr),tax_id,tax_num)  #temporarily use the taxnum for the disambiguating label
+                    mychrom = makeChromID(str(chr),tax_id)
+                    if (tax_num == '9606' and map_loc != '-'):
                         #this matches the regular kind of chrs, so make that kind of band
                         #not sure why this matches? chrX|Y or 10090chr12|Un"
                         #TODO we probably need a different regex per organism
                         if re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$',map_loc):
                             #the maploc_id already has the numeric chromosome in it, strip it first
                             bid = re.sub('^'+str(chr),'',map_loc)
-                            maploc_id = mychrom+bid
+                            maploc_id = makeChromID(str(chr)+bid,tax_num)  #the generic location (no coordinates)
                             #print(map_loc,'-->',bid,'-->',maploc_id)
-                            band = Feature(maploc_id,map_loc,Feature.types['chromosome_part'])  #FIXME
+                            band = Feature(maploc_id,None,None)  #Assume it's type will be added elsewhere
                             band.addFeatureToGraph(self.graph)
-                            f.addSubsequenceOfFeature(self.graph,maploc_id)  #add band as the containing feature
+                            #add the band as the containing feature
+                            gu.addTriple(self.graph,gene_id,Feature().object_properties['is_subsequence_of'],maploc_id)
                         else:
+                            gu.addTriple(self.graph,gene_id,Feature().object_properties['is_subsequence_of'],mychrom)
                             #TODO handle these cases
                             #examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
                             print('not regular band pattern for',gene_id,':',map_loc)
+                    else:
+                        #add the gene as a subsequence of the chromosome
+                        gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
+                else:
+                    #since the gene is unlocated, add the taxon as a property of it
+                    #TODO should we add the gene to the "genome" instead of letting it dangle?
+                    geno.addTaxon(tax_id,gene_id)
 
                 if (limit is not None and line_counter > limit):
                     break
+
+            gu.loadProperties(self.graph,Feature.object_properties,gu.OBJPROP)
+            gu.loadProperties(self.graph,Feature.data_properties,gu.DATAPROP)
+            gu.loadProperties(self.graph,Genotype.object_properties,gu.OBJPROP)
+            gu.loadAllProperties(self.graph)
+
 
         return
 
