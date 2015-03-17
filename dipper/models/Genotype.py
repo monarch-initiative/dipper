@@ -323,7 +323,9 @@ class Genotype():
 
         return
 
-    def addGenome(self,taxon_id,taxon_label):
+    def addGenome(self,taxon_id,taxon_label=None):
+        if taxon_label is None:
+            taxon_label = taxon_id
         genome_label = taxon_label+' genome'
         genome_id = self.makeGenomeID(taxon_id)
         self.gu.addClassToGraph(self.graph,genome_id,genome_label,Feature.types['genome'])
