@@ -13,7 +13,7 @@
 'IAO': 'http://purl.obolibrary.org/obo/IAO_'
 'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
 'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'
-'ORPHANET' : 'http://purl.obolibrary.org/obo/ORPHANET_'
+'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_'
 'faldo' : 'http://biohackathon.org/resource/faldo#'
 'SO' : 'http://purl.obolibrary.org/obo/SO_'
 'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
