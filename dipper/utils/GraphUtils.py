@@ -327,3 +327,16 @@ class GraphUtils:
                 graph.add((self.getNode(op[k]),RDF['type'],property_type))
 
         return
+
+    def loadAllProperties(self,graph):
+        """
+        A convenience to load all stored properties (object, data, and annotation) into the supplied graph.
+        :param graph:
+        :return:
+        """
+
+        self.loadProperties(graph,self.object_properties,self.OBJPROP)
+        self.loadProperties(graph,self.annotation_properties,self.ANNOTPROP)
+        self.loadProperties(graph,self.datatype_properties,self.DATAPROP)
+
+        return
