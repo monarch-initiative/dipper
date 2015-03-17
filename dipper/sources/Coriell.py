@@ -187,9 +187,9 @@ class Coriell(Source):
 
         line_counter = 0
         geno = Genotype(self.graph)
-        #self.properties.update(geno.properties)
-        #gu.loadObjectProperties(self.graph,self.op)
 
+        gu.loadProperties(self.graph,geno.object_properties,gu.OBJPROP)
+        gu.loadAllProperties(self.graph)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
 #        with open(raw, 'r', encoding="utf-8") as csvfile:
@@ -238,10 +238,9 @@ class Coriell(Source):
                     #TODO verify if the family ids are unique across all catalogs, or only within a single catalog
 
                     #Make the patient ID
-                    if dbsnp_id != '':
-                        patient_id = 'CoriellIndividual:'+dbsnp_id
-                    elif family_id != '':
-                        patient_id = 'Coriell:'+family_id+'-'+family_member  #this won't resolve like this, but how to handle?
+
+                    if family_id != '':
+                        patient_id = 'MONARCH:Coriell'+family_id+'-'+family_member  #this won't resolve like this, but how to handle?
                     else:
                         patient_id = 'Coriell:'+cell_line_id   #otherwise, just default to the cell line as the patient id
 
@@ -338,23 +337,29 @@ class Coriell(Source):
                         species = 'Homo sapiens'
                     taxon = self._map_species(species)
 
-                    omim_map = {};
+                    #if there's a dbSNP id, this is actually the individual's genotype
+                    genotype_id = None
+                    genotype_label = None
+                    if (dbsnp_id != ''):
+                        genotype_id = 'dbSNPIndividual:'+dbsnp_id.strip()
 
+                    omim_map = {};
+                    gvc_id = None;
                     if (karyotype.strip() != '' and karyotype != '46;XX' and karyotype != '46;XY'):
                         #if we have the karyotype that is abnormal, then let's make that the genotype
-                        genotype_id = self.make_id(karyotype)
+                        gvc_id = self.make_id(karyotype)
 
                         #some of the karyotypes are encoded with terrible hidden codes. remove them here
                         #i've seen a <98> character
-                        genotype_label = self.remove_control_characters(karyotype)
+                        gvc_label = self.remove_control_characters(karyotype)
 
                     elif (variant_id.strip() != ''):
                         #split the variants and add them as part of the genotype
                         #we don't know their zygosity, just that they are part of the genotype
                         #variant ids are from OMIM, so prefix as such
                         #we assume that the variants will be defined in OMIM rather than here.
-                        genotype_id = self.make_id(variant_id)
-                        genotype_label = mutation   #this is the full list of mutational consequences
+                        gvc_id = self.make_id(variant_id)
+                        gvc_label = mutation   #this is the full list of mutational consequences
                         #TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
                         #make a hashmap of the omim id to variant id list; then build the genotype
                         #hashmap is also useful for removing the "genes" from the list of phenotypes
@@ -380,24 +385,40 @@ class Coriell(Source):
                                 vslc_id = self.make_id(o+(' ').join(omim_map.get(o)))
                                 allele2_id = 'OMIM:'+o+'.'+omim_map.get(o)[1]
                                 geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id)
-                                geno.addVSLCtoParent(vslc_id,genotype_id)
+                                geno.addVSLCtoParent(vslc_id,gvc_id)
                             else:
                                 gu.addIndividualToGraph(self.graph,allele1_id,None,geno.genoparts['variant_locus'])
-                                geno.addParts(allele1_id,genotype_id,geno.properties['has_alternate_part'])
-                    else:
-                        genotype_id = None
+                                geno.addParts(allele1_id,gvc_id,geno.properties['has_alternate_part'])
+                    #else:
+                        #genotype_id = None
                         #if affected == 'affected':
                         #    logger.info('affected individual without recorded variants: %s, %s',cell_line_id,description)
 
                     if (affected == 'unaffected'):
                         #let's just say that this person is wildtype
                         gu.addType(self.graph,patient_id,geno.genoparts['wildtype'])
+                    elif genotype_id is None:
+                        #make an anonymous genotype id
+                        genotype_id = '_'+geno+cell_line_id
+
+
+                    #add the gvc
+                    if gvc_id is not None:
+                        gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
+
+                        #add the gvc to the genotype
+                        if genotype_id is not None:
+                            if (affected == 'unaffected'):
+                                rel = geno.object_properties['has_reference_part']
+                            else:
+                                rel = geno.object_properties['has_alternate_part']
+                            geno.addParts(gvc_id,genotype_id,rel)
+                        genotype_label = gvc_label
 
 
                     if genotype_id is not None:
-                        geno.addGenotype(genotype_id,genotype_label)
+                        geno.addGenotype(genotype_id,genotype_label,geno.genoparts['intrinsic_genotype'])
                         geno.addTaxon(taxon,genotype_id)
-
                         #add that the patient has the genotype
                         gu.addTriple(self.graph,patient_id,geno.properties['has_genotype'],genotype_id)
                     else:
