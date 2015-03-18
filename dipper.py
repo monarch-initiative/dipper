@@ -92,7 +92,7 @@ def main():
             test_query.check_query_syntax(args.query, mysource)
             test_query.load_graph_from_turtle(mysource)
 
-        print(test_query.query_graph(args.query))
+        print(test_query.query_graph(args.query, True))
         exit(0)
 
     # iterate through all the sources
