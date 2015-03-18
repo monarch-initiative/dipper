@@ -7,7 +7,7 @@ from rdflib import Graph
 import unittest
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -39,17 +39,42 @@ class InteractionsTestCase(unittest.TestCase):
         from dipper.utils.CurieUtil import CurieUtil
         from rdflib.namespace import URIRef
 
+        # Make testutils object and load bindings
+        test_query = TestUtils(self.ctd.graph)
+        self.ctd.load_bindings()
+
+        # Expected structure
+        sparql_query = """
+                       SELECT ?assoc ?pubmed ?disease ?chemical
+                       WHERE {
+                       ?assoc a Annotation: ;
+                           dc:evidence OBO:ECO_0000033 ;
+                           dc:source ?pubmed ;
+                           :hasObject ?disease ;
+                           :hasPredicate :MONARCH_treats ;
+                           :hasSubject ?chemical .}
+                       """
+
+        # SPARQL variables to check
         cu = CurieUtil(self.curie_map)
-        chem_id = 'C046983'
-        curie = 'MESH:'+chem_id
-        chem_uri = URIRef(cu.get_uri(curie))
+        direct_evidence = 'therapeutic'
+        chem_id = 'MESH:C046983'
+        chem_uri = URIRef(cu.get_uri(chem_id))
         disease_id = 'MESH:D054198'
         disease_uri = URIRef(cu.get_uri(disease_id))
-        relationship = 'MONARCH:treats'
-        relationship_uri = URIRef(cu.get_uri(relationship))
+        assoc_id = self.ctd.make_id('ctd' + chem_id.replace('MESH:', '')
+                                    + disease_id + direct_evidence)
+        assoc_uri = URIRef(cu.get_uri(assoc_id))
+        pubmed_id = 'PMID:4519131'
+        pubmed_uri = URIRef(cu.get_uri(pubmed_id))
 
-        self.assertTrue((chem_uri, relationship_uri, disease_uri)
-                        in self.ctd.graph)
+        # Expected output from query
+        expected_output = [[assoc_uri, pubmed_uri, disease_uri, chem_uri]]
+
+        # Query graph
+        sparql_output = test_query.query_graph(sparql_query)
+
+        self.assertEqual(expected_output, sparql_output)
 
 if __name__ == '__main__':
     unittest.main()

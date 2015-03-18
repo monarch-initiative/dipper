@@ -16,19 +16,19 @@ class TestUtils:
 
         return
 
-    def query_graph(self, query, is_formatted=True):
+    def query_graph(self, query, is_formatted=False):
         query_result = self.graph.query(query)
         output = []
         for row in query_result:
+            result_set = []
+            for val in row:
+                if val is None:
+                    val = 'null'
+                result_set.append(val)
             if is_formatted:
-                result_set = []
-                for val in row:
-                    if val is None:
-                        val = 'null'
-                    result_set.append(val)
-                    output.append(", ".join(result_set))
+                output.append(", ".join(result_set))
             else:
-                output.append(row)
+                output.append(result_set)
 
         return output
 
