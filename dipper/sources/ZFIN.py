@@ -17,6 +17,7 @@ from dipper import curie_map
 logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
+    #TODO: Enter a descritption for the resource.
     """
     Notes/Description for ZFIN here.
 
@@ -108,7 +109,7 @@ class ZFIN(Source):
         self._process_genotype_features(limit)
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
-
+        self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -359,6 +360,19 @@ class ZFIN(Source):
                     break
 
         return
+
+
+
+    def _process_morpholinos(self, raw, out, g, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Done with morpholinos")
+        return
+
 
 
     def verify(self):
