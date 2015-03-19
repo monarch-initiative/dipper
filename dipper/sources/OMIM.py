@@ -339,8 +339,8 @@ class OMIM(Source):
                     #we actually want the association between the gene and the disease to be via an alternate locus
                     #not the "wildtype" gene itself.
                     #so we make an anonymous alternate locus, and put that in the association.
-                    alt_locus = '_'+gene_id+'-'+disorder_id+'VL'
-                    alt_label = gene_symbols[0]
+                    alt_locus = '_'+gene_num+'-'+disorder_num+'VL'
+                    alt_label = gene_symbols[0].strip()
                     if alt_label is not None and alt_label != '':
                         alt_label = 'some variant of '+alt_label.strip()+' that causes '+disorder_label
                     else:
