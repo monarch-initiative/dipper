@@ -9,14 +9,13 @@ import os.path
 import json
 from subprocess import call
 
-from rdflib import URIRef
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
-from dipper.utils.CurieUtil import CurieUtil
+from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
-from dipper  import config
+from dipper import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern,fromRoman, toRoman
 
@@ -98,15 +97,6 @@ class OMIM(Source):
         return
 
 
-    def scrub(self):
-        '''
-        Perform various data-scrubbing on the raw data files prior to parsing.
-        For this resource, this currently includes: (Nothing)
-        :return: None
-        '''
-        return
-
-
     def parse(self, limit=None):
         if (limit is not None):
             print("Only parsing first", limit, "rows")
@@ -119,6 +109,7 @@ class OMIM(Source):
 
         self.load_core_bindings()
         self.load_bindings()
+
 
         print("Done parsing.")
 
@@ -185,7 +176,6 @@ class OMIM(Source):
         g = self.graph
 
         gu = GraphUtils(curie_map.get())
-        cu = CurieUtil(curie_map.get())
 
         it=0  #for counting
 
@@ -244,7 +234,6 @@ class OMIM(Source):
 
                 description = self._get_description(e['entry'])
                 omimid='OMIM:'+str(omimnum)
-                n = URIRef(cu.get_uri(omimid))
 
                 if (e['entry']['status'] == 'removed'):
                     gu.addDeprecatedClass(g,omimid)
@@ -296,14 +285,18 @@ class OMIM(Source):
                 print("INFO: waiting",str(rem),'s')
                 time.sleep(rem/1000)
 
+            gu.loadAllProperties(self.graph)
+
         return
 
     def _process_morbidmap(self,limit):
         """
         This will process the morbidmap file to get the links between omim genes and diseases.
+        Here, we create anonymous nodes for some variant loci that are variants of the gene that causes the disease.
         Triples created:
-        <omim_gene_id> has_phenotype <omim_disease_id>
-        <assoc> hasSubject <omim_gene_id>
+        <some_anonymous_variant_locus> is_sequence_variant_instance_of <omim_gene_id>
+        <some_anonymous_variant_locus> has_phenotype <omim_disease_id>
+        <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
         <assoc> hasPredicate <has_phenotype>
         <assoc> DC:evidence <eco_id>
@@ -311,6 +304,8 @@ class OMIM(Source):
         :return:
         """
         line_counter = 0
+        geno = Genotype(self.graph)
+        gu = GraphUtils(curie_map.get())
         with open(('/').join((self.rawdir,self.files['morbidmap']['file']))) as f:
             for line in f:
                 line = line.strip()
@@ -340,13 +335,27 @@ class OMIM(Source):
 
 
                     assoc_id = self.make_id((disorder_id+gene_id+phene_key))
-                    assoc = G2PAssoc(assoc_id,gene_id,disorder_id,None,evidence)
+
+                    #we actually want the association between the gene and the disease to be via an alternate locus
+                    #not the "wildtype" gene itself.
+                    #so we make an anonymous alternate locus, and put that in the association.
+                    alt_locus = '_'+gene_id+'-'+disorder_id+'VL'
+                    alt_label = gene_symbols[0]
+                    if alt_label is not None and alt_label != '':
+                        alt_label = 'some variant of '+alt_label.strip()+' that causes '+disorder_label
+                    else:
+                        alt_label = None
+                    gu.addIndividualToGraph(self.graph,alt_locus,alt_label,geno.genoparts['variant_locus'])
+                    geno.addAlleleOfGene(alt_locus,gene_id)
+
+                    assoc = G2PAssoc(assoc_id,alt_locus,disorder_id,None,evidence)
                     assoc.loadAllProperties(self.graph)
                     assoc.addAssociationToGraph(self.graph)
 
                 if (limit is not None and line_counter > limit):
                     break
 
+            gu.loadProperties(self.graph,geno.object_properties,gu.OBJPROP)
 
         return
 
@@ -520,7 +529,7 @@ class OMIM(Source):
                 items  = links['orphanetDiseases'].split(';;;')
                 for i in items:
                     (orpha_num,internal_num,orpha_label) = i.split(';;')
-                    orpha_id = 'ORPHANET:'+orpha_num.strip()
+                    orpha_id = 'Orphanet:'+orpha_num.strip()
                     orpha_mappings.append(orpha_id)
                     gu.addClassToGraph(self.graph,orpha_id,orpha_label.strip())
                     gu.addXref(self.graph,omimid,orpha_id)
