@@ -109,6 +109,9 @@ class HPOAnnotations(Source):
 
         print('INFO: scrubbing MIM:12345 --> OMIM:12345')
         pysed.replace(";MIM",";OMIM", f)
+
+        print ('INFO: scrubbing ORPHANET --> Orphanet')
+        pysed.replace("ORPHANET","Orphanet", f)
         return
 
 
