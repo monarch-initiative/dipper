@@ -273,7 +273,7 @@ class GraphUtils:
         base=Namespace(self.curie_map.get(''))
         n=None
         if (re.match('^_',id)):
-            n = BNode(id)
+            n = BNode(re.sub('_','',id,1))  #replace the leading underscore to make it cleaner
         elif (re.match('^\:',id)):
             n = base[re.sub(':','',id,1)]   #do we need to remove embedded colons in the ids?
         else:
