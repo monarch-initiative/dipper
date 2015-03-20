@@ -4,6 +4,7 @@ from datetime import datetime
 from stat import *
 import re
 import logging
+from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -105,7 +106,7 @@ class ZFIN(Source):
         logger.info("Parsing files...")
 
         self._load_zp_mappings()
-
+        self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
         self._process_genotype_features(limit)
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
@@ -362,7 +363,7 @@ class ZFIN(Source):
         return
 
 
-
+    #TODO: Convert the morpholino sequence into a target sequence?
     def _process_morpholinos(self, raw, out, g, limit=None):
         """
 
@@ -370,8 +371,53 @@ class ZFIN(Source):
         :return:
         """
 
+        logger.info("Processing Morpholinos")
+        line_counter = 0
+
+
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,morpholino_id,morpholino_so_id,
+                morpholino_symbol,morpholino_sequence,publication,note) = row
+
+                seq = Seq(morpholino_sequence)
+                target_sequence = seq.reverse_complement()
+                #print(seq)
+                #print(target_sequence)
+                #print(morpholino_id)
+                if (limit is not None and line_counter > limit):
+                    break
+
+
         logger.info("Done with morpholinos")
         return
+
+
+    def _process_talens(self, raw, out, g, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Done with talens")
+        return
+
+
+    def _process_crisprs(self, raw, out, g, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Done with crisprs")
+        return
+
+
 
 
 
