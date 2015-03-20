@@ -106,7 +106,6 @@ class ZFIN(Source):
         logger.info("Parsing files...")
 
         self._load_zp_mappings()
-        self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
         self._process_genotype_features(limit)
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
@@ -362,8 +361,8 @@ class ZFIN(Source):
 
         return
 
-
-    #TODO: Convert the morpholino sequence into a target sequence?
+        #TODO: The G2P function is only dealing with wild-type environments, meaning just intrinsic genotypes
+        #If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
     def _process_morpholinos(self, raw, out, g, limit=None):
         """
 
@@ -373,7 +372,7 @@ class ZFIN(Source):
 
         logger.info("Processing Morpholinos")
         line_counter = 0
-
+        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -382,12 +381,29 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,morpholino_id,morpholino_so_id,
                 morpholino_symbol,morpholino_sequence,publication,note) = row
-
+                geno = Genotype(self.graph)
+                morpholino_id = 'ZFIN:'+morpholino_id.strip()
+                gene_id = 'ZFIN:'+gene_id.strip()
+                #Take the morpholino sequence and get the reverse complement as the target sequence
                 seq = Seq(morpholino_sequence)
                 target_sequence = seq.reverse_complement()
                 #print(seq)
                 #print(target_sequence)
                 #print(morpholino_id)
+
+                geno.addGeneTargetingReagent(morpholino_id,morpholino_symbol,morpholino_so_id)
+                geno.addReagentTargetedGene(morpholino_id,gene_id)
+
+                #Add publication
+                if(publication != ''):
+                    pub_id = 'ZFIN:'+publication.strip()
+                    gu.addIndividualToGraph(self.graph,pub_id,None)
+
+
+                #Add comment?
+                if(note != ''):
+                    gu.addComment(self.graph,morpholino_id,note)
+
                 if (limit is not None and line_counter > limit):
                     break
 

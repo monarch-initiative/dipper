@@ -42,7 +42,8 @@ class Genotype():
         'tandem_duplication': 'SO:1000173',
         'point_mutation': 'SO:1000008',
         'population' : 'GENO:0000110',  #collection of organisms; consider OBI:population or EFO:population
-        'wildtype' : 'GENO:0000511'
+        'wildtype' : 'GENO:0000511',
+        'reagent_targeted_gene': 'GENO:0000504'
     }
 
     object_properties = {
