@@ -110,6 +110,7 @@ class ZFIN(Source):
         self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
         self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
+        self._process_talens(('/').join((self.rawdir,self.files['talen']['file'])), self.outfile, self.graph, limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -363,6 +364,8 @@ class ZFIN(Source):
 
         #TODO: The G2P function is only dealing with wild-type environments, meaning just intrinsic genotypes
         #If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
+
+        #TODO: We have the sequence information for each of the targeting reagents. How to model?
     def _process_morpholinos(self, raw, out, g, limit=None):
         """
 
@@ -392,12 +395,13 @@ class ZFIN(Source):
                 #print(morpholino_id)
 
                 geno.addGeneTargetingReagent(morpholino_id,morpholino_symbol,morpholino_so_id)
-                geno.addReagentTargetedGene(morpholino_id,gene_id)
+                geno.addReagentTargetedGene(morpholino_id,gene_id, gene_id)
 
                 #Add publication
                 if(publication != ''):
                     pub_id = 'ZFIN:'+publication.strip()
                     gu.addIndividualToGraph(self.graph,pub_id,None)
+                    gu.addTriple(self.graph,pub_id,gu.properties['mentions'],morpholino_id)
 
 
                 #Add comment?
@@ -419,7 +423,43 @@ class ZFIN(Source):
         :return:
         """
 
-        logger.info("Done with talens")
+        logger.info("Processing TALENs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,talen_id,talen_so_id,
+                talen_symbol,talen_target_sequence_1,talen_target_sequence_2,publication,note) = row
+                geno = Genotype(self.graph)
+                talen_id = 'ZFIN:'+talen_id.strip()
+                gene_id = 'ZFIN:'+gene_id.strip()
+
+
+
+
+                geno.addGeneTargetingReagent(talen_id,talen_symbol,talen_so_id)
+                geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
+
+                #Add publication
+                if(publication != ''):
+                    pub_id = 'ZFIN:'+publication.strip()
+                    gu.addIndividualToGraph(self.graph,pub_id,None)
+                    gu.addTriple(self.graph,pub_id,gu.properties['mentions'],talen_id)
+
+
+                #Add comment?
+                if(note != ''):
+                    gu.addComment(self.graph,talen_id,note)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with TALENS")
         return
 
 
