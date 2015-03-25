@@ -53,7 +53,8 @@ class GraphUtils:
 
     datatype_properties = {
         'position' : 'faldo:position',
-        'has_measurement' : 'IAO:0000004'
+        'has_measurement' : 'IAO:0000004',
+        'environment' : 'GENO:0000099'
     }
 
     properties = annotation_properties.copy()

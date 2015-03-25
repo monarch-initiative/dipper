@@ -94,7 +94,8 @@ class ZFIN(Source):
         '''
         # scrub file of the oddities where there are "\" instead of empty strings
         pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
-
+        #FIXME: Trying to scrub "\" from the pheno_environment.txt file fails due to an oddity with the file type.
+        #pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['enviro']['file'])))
         return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
@@ -517,7 +518,10 @@ class ZFIN(Source):
     def _process_pheno_enviro(self, limit=None):
         """
         The pheno_environment.txt file ties experimental conditions to an environment ID.
-        The condition column may contain knockdown reagent IDs or
+        An environment ID may have one or more associated conditions.
+        Condition groups present: chemical, CRISPR, morpholino, pH, physical, physiological, salinity, TALEN,
+        temperature, and Generic-control.
+        The condition column may contain knockdown reagent IDs or mixed text.
         :param limit:
         :return:
         """
@@ -536,9 +540,21 @@ class ZFIN(Source):
 
                 #FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
                 #There are a few specific environments available in GENO, including some standard
-                # zfin environments (standard salinity and temperature, heat shock (37C), etc), and
-                # includes the zfin ID for those environments.
+                # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
+                # includes the zfin ID instead of a GENO ID for those environments.
 
+                environment_id = 'ZFIN:'+environment_id.strip()
+                if re.match('ZDB.*',condition):
+                    condition = 'ZFIN:'+condition.strip()
+
+                #TODO: Need to wrangle a better description, alternative parsing of variables
+                # (condition_group, condition, values, units, comment). Leaving as condition group for now.
+                #if(comment !=''):
+                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units+comment
+                #else:
+                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units
+                #print(enviro_description)
+                gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
 
                 if (limit is not None and line_counter > limit):
