@@ -111,6 +111,7 @@ class ZFIN(Source):
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
         self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
         self._process_talens(('/').join((self.rawdir,self.files['talen']['file'])), self.outfile, self.graph, limit)
+        self._process_crisprs(('/').join((self.rawdir,self.files['crispr']['file'])), self.outfile, self.graph, limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -368,7 +369,8 @@ class ZFIN(Source):
         #TODO: We have the sequence information for each of the targeting reagents. How to model?
     def _process_morpholinos(self, raw, out, g, limit=None):
         """
-
+        Morpholinos are knockdown reagents.
+        Only the morpholino sequence is provided, so the target sequence is calculated using biopython.
         :param limit:
         :return:
         """
@@ -418,7 +420,7 @@ class ZFIN(Source):
 
     def _process_talens(self, raw, out, g, limit=None):
         """
-
+        TALENs are knockdown reagents
         :param limit:
         :return:
         """
@@ -465,12 +467,45 @@ class ZFIN(Source):
 
     def _process_crisprs(self, raw, out, g, limit=None):
         """
-
+        CRISPRs are knockdown reagents.
         :param limit:
         :return:
         """
+        logger.info("Processing CRISPRs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
 
-        logger.info("Done with crisprs")
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,crispr_id,crispr_so_id,
+                crispr_symbol,crispr_target_sequence,publication,note) = row
+                geno = Genotype(self.graph)
+                crispr_id = 'ZFIN:'+crispr_id.strip()
+                gene_id = 'ZFIN:'+gene_id.strip()
+
+
+                geno.addGeneTargetingReagent(crispr_id,talen_symbol,crispr_so_id)
+                geno.addReagentTargetedGene(crispr_id,gene_id,gene_id)
+
+                #Add publication
+                if(publication != ''):
+                    pub_id = 'ZFIN:'+publication.strip()
+                    gu.addIndividualToGraph(self.graph,pub_id,None)
+                    gu.addTriple(self.graph,pub_id,gu.properties['mentions'],crispr_id)
+
+
+                #Add comment?
+                if(note != ''):
+                    gu.addComment(self.graph,crispr_id,note)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with CRISPRs")
         return
 
 
