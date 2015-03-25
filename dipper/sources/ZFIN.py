@@ -110,6 +110,7 @@ class ZFIN(Source):
         self._load_zp_mappings()
         self._process_genotype_features(limit)
         self._process_g2p(limit)
+        self._process_genes(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
         self._process_morpholinos(limit)
@@ -333,6 +334,41 @@ class ZFIN(Source):
 
         return
 
+    def _process_genes(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing genes")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['gene']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,ncbi_gene_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                gene_id = 'ZFIN:'+gene_id.strip()
+                ncbi_gene_id = 'NCBIGene:'+ncbi_gene_id.strip()
+
+                geno.addGene(gene_id,gene_symbol)
+                gu.addEquivalentClass(self.graph,gene_id,ncbi_gene_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with genes")
+        return
+
+
+
     def _process_pubinfo(self, limit=None):
         '''
         This will pull the zfin internal publication information, and map them to their equivalent
@@ -424,6 +460,7 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,morpholino_id,morpholino_so_id,
                 morpholino_symbol,morpholino_sequence,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
                 morpholino_id = 'ZFIN:'+morpholino_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
@@ -474,12 +511,10 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,talen_id,talen_so_id,
                 talen_symbol,talen_target_sequence_1,talen_target_sequence_2,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
                 talen_id = 'ZFIN:'+talen_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
-
-
-
 
                 geno.addGeneTargetingReagent(talen_id,talen_symbol,talen_so_id)
                 geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
@@ -520,6 +555,7 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,crispr_id,crispr_so_id,
                 crispr_symbol,crispr_target_sequence,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
                 crispr_id = 'ZFIN:'+crispr_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
