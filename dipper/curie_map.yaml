@@ -94,6 +94,7 @@
 'SGD' : 'http://identifiers.org/SGD:'
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
+'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
 
 
 # proteins

@@ -111,6 +111,8 @@ class ZFIN(Source):
         self._process_genotype_features(limit)
         self._process_g2p(limit)
         self._process_genes(limit)
+        self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
         self._process_morpholinos(limit)
@@ -363,8 +365,84 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-
         logger.info("Done with genes")
+        return
+
+
+    def _process_genbank_ids(self, limit=None):
+        """
+        This file contains BACs, cDNAs, engineered foreign genes, ESTs, engineered plasmids, Fosmids, pseudogenes,
+        engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank.
+        :param limit:
+        :return:
+        """
+        #TODO: Test the output, make sure the GenBank URI resolves for all construct types.
+        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
+        logger.info("Processing GenBank IDs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['genbank']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (zfin_id,so_id,symbol,genbank_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                zfin_id = 'ZFIN:'+zfin_id.strip()
+                genbank_id = 'GenBank:'+genbank_id.strip()
+                if re.match('ZFIN:ZDB-GENE.*',zfin_id):
+                    geno.addGene(zfin_id,symbol)
+                    gu.addClassToGraph(self.graph,genbank_id,symbol,so_id)
+                    gu.addEquivalentClass(self.graph,zfin_id,genbank_id)
+                else:
+                    geno.addConstruct(zfin_id,symbol,so_id)
+                    gu.addIndividualToGraph(self.graph,genbank_id,symbol,so_id)
+                    gu.addSameIndividual(self.graph,zfin_id,genbank_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with GenBank IDs")
+        return
+
+
+
+    def _process_uniprot_ids(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
+        logger.info("Processing UniProt IDs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['uniprot']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,uniprot_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                gene_id = 'ZFIN:'+gene_id.strip()
+                uniprot_id = 'UniProtKB:'+uniprot_id.strip()
+
+
+                #FIXME: Need to lookup with a hash whether or not the gene already exists in the graph?
+                # Or just create the gene as a class, although it would be redundant?
+                geno.addGene(gene_id,gene_symbol)
+                gu.addEquivalentClass(self.graph,gene_id,uniprot_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with UniProt IDs")
         return
 
 
