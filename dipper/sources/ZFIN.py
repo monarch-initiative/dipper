@@ -18,7 +18,7 @@ from dipper import curie_map
 logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
-    #TODO: Enter a descritption for the resource.
+    #TODO: Enter a description for the resource.
     """
     Notes/Description for ZFIN here.
 
@@ -111,6 +111,7 @@ class ZFIN(Source):
         self._process_genotype_features(limit)
         self._process_g2p(limit)
         self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
@@ -366,6 +367,40 @@ class ZFIN(Source):
 
         return
 
+    def _process_pub2pubmed(self, limit=None):
+        '''
+        This will pull the zfin internal publication to pubmed mappings. Somewhat redundant with the
+        process_pubinfo method, but this mapping includes additional internal pub to pubmed mappings.
+        :param raw:
+        :param out:
+        :param g:
+        :param limit:
+        :return:
+        '''
+        line_counter = 0
+        cu = CurieUtil(curie_map.get())
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['pub2pubmed']['file']))
+        with open(raw, 'r', encoding="latin-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (pub_id, pubmed_id,empty) = row
+
+                pub_id = 'ZFIN:'+pub_id.strip()
+                gu.addIndividualToGraph(self.graph,pub_id,None)
+
+                pubmed_id = 'PMID:'+pubmed_id.strip()
+                if (pubmed_id != '' and pubmed_id is not None):
+                    gu.addIndividualToGraph(self.graph,pubmed_id,None)
+                    gu.addSameIndividual(self.graph,pub_id,pubmed_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
         #TODO: The G2P function is only dealing with wild-type environments, meaning just intrinsic genotypes
         #If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
 
@@ -417,7 +452,7 @@ class ZFIN(Source):
                     break
 
 
-        logger.info("Done with morpholinos")
+        logger.info("Done with Morpholinos")
         return
 
 
@@ -546,15 +581,19 @@ class ZFIN(Source):
                 environment_id = 'ZFIN:'+environment_id.strip()
                 if re.match('ZDB.*',condition):
                     condition = 'ZFIN:'+condition.strip()
+                    gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
+                else:
+                    gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
                 #TODO: Need to wrangle a better description, alternative parsing of variables
                 # (condition_group, condition, values, units, comment). Leaving as condition group for now.
+                # Data is problematic with differing values (numeric values, N/A's, blanks).
                 #if(comment !=''):
                     #enviro_description = condition_group+': '+condition+' at '+values+' '+units+comment
                 #else:
                     #enviro_description = condition_group+': '+condition+' at '+values+' '+units
                 #print(enviro_description)
-                gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
+                #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
 
                 if (limit is not None and line_counter > limit):
