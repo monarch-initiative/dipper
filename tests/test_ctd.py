@@ -7,7 +7,7 @@ from rdflib import Graph
 import unittest
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
