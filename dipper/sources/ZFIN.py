@@ -107,10 +107,10 @@ class ZFIN(Source):
 
         self._load_zp_mappings()
         self._process_genotype_features(limit)
-        self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
-        self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
-        self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
-        self._process_talens(('/').join((self.rawdir,self.files['talen']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(limit)
+        self._process_pubinfo(limit)
+        self._process_morpholinos(limit)
+        self._process_talens(limit)
         self._process_crisprs(limit)
         logger.info("Finished parsing.")
 
@@ -264,7 +264,7 @@ class ZFIN(Source):
 
         return type
 
-    def _process_g2p(self, raw, out, g, limit=None):
+    def _process_g2p(self, limit=None):
         '''
         This module currently filters for only wild-type environments, which clearly excludes application
         of morpholinos.  Very stringent filter.  To be updated at a later time.
@@ -278,7 +278,7 @@ class ZFIN(Source):
         line_counter = 0
         # hardcode
         eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
-
+        raw = ('/').join((self.rawdir,self.files['pheno']['file']))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -330,7 +330,7 @@ class ZFIN(Source):
 
         return
 
-    def _process_pubinfo(self, raw, out, g, limit=None):
+    def _process_pubinfo(self, limit=None):
         '''
         This will pull the zfin internal publication information, and map them to their equivalent
         pmid, and make labels.
@@ -343,6 +343,7 @@ class ZFIN(Source):
         line_counter = 0
         cu = CurieUtil(curie_map.get())
         gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['pubs']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -367,7 +368,7 @@ class ZFIN(Source):
         #If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
 
         #TODO: We have the sequence information for each of the targeting reagents. How to model?
-    def _process_morpholinos(self, raw, out, g, limit=None):
+    def _process_morpholinos(self, limit=None):
         """
         Morpholinos are knockdown reagents.
         Only the morpholino sequence is provided, so the target sequence is calculated using biopython.
@@ -378,7 +379,7 @@ class ZFIN(Source):
         logger.info("Processing Morpholinos")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        raw = ('/').join((self.rawdir,self.files['morph']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -418,7 +419,7 @@ class ZFIN(Source):
         return
 
 
-    def _process_talens(self, raw, out, g, limit=None):
+    def _process_talens(self, limit=None):
         """
         TALENs are knockdown reagents
         :param limit:
@@ -428,7 +429,7 @@ class ZFIN(Source):
         logger.info("Processing TALENs")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        raw = ('/').join((self.rawdir,self.files['talen']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
