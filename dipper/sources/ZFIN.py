@@ -18,7 +18,7 @@ from dipper import curie_map
 logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
-    #TODO: Enter a descritption for the resource.
+    #TODO: Enter a description for the resource.
     """
     Notes/Description for ZFIN here.
 
@@ -94,7 +94,8 @@ class ZFIN(Source):
         '''
         # scrub file of the oddities where there are "\" instead of empty strings
         pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
-
+        #FIXME: Trying to scrub "\" from the pheno_environment.txt file fails due to an oddity with the file type.
+        #pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['enviro']['file'])))
         return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
@@ -105,12 +106,16 @@ class ZFIN(Source):
             logger.info("Only parsing first %s rows of each file", limit)
         logger.info("Parsing files...")
 
+        self._process_pheno_enviro(limit)
         self._load_zp_mappings()
         self._process_genotype_features(limit)
-        self._process_g2p(('/').join((self.rawdir,self.files['pheno']['file'])), self.outfile, self.graph, limit)
-        self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
-        self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
-        self._process_talens(('/').join((self.rawdir,self.files['talen']['file'])), self.outfile, self.graph, limit)
+        self._process_g2p(limit)
+        self._process_genes(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
+        self._process_morpholinos(limit)
+        self._process_talens(limit)
+        self._process_crisprs(limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -263,7 +268,7 @@ class ZFIN(Source):
 
         return type
 
-    def _process_g2p(self, raw, out, g, limit=None):
+    def _process_g2p(self, limit=None):
         '''
         This module currently filters for only wild-type environments, which clearly excludes application
         of morpholinos.  Very stringent filter.  To be updated at a later time.
@@ -277,7 +282,7 @@ class ZFIN(Source):
         line_counter = 0
         # hardcode
         eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
-
+        raw = ('/').join((self.rawdir,self.files['pheno']['file']))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -329,7 +334,42 @@ class ZFIN(Source):
 
         return
 
-    def _process_pubinfo(self, raw, out, g, limit=None):
+    def _process_genes(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing genes")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['gene']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,ncbi_gene_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                gene_id = 'ZFIN:'+gene_id.strip()
+                ncbi_gene_id = 'NCBIGene:'+ncbi_gene_id.strip()
+
+                geno.addGene(gene_id,gene_symbol)
+                gu.addEquivalentClass(self.graph,gene_id,ncbi_gene_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with genes")
+        return
+
+
+
+    def _process_pubinfo(self, limit=None):
         '''
         This will pull the zfin internal publication information, and map them to their equivalent
         pmid, and make labels.
@@ -342,6 +382,7 @@ class ZFIN(Source):
         line_counter = 0
         cu = CurieUtil(curie_map.get())
         gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['pubs']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -362,13 +403,48 @@ class ZFIN(Source):
 
         return
 
+    def _process_pub2pubmed(self, limit=None):
+        '''
+        This will pull the zfin internal publication to pubmed mappings. Somewhat redundant with the
+        process_pubinfo method, but this mapping includes additional internal pub to pubmed mappings.
+        :param raw:
+        :param out:
+        :param g:
+        :param limit:
+        :return:
+        '''
+        line_counter = 0
+        cu = CurieUtil(curie_map.get())
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['pub2pubmed']['file']))
+        with open(raw, 'r', encoding="latin-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (pub_id, pubmed_id,empty) = row
+
+                pub_id = 'ZFIN:'+pub_id.strip()
+                gu.addIndividualToGraph(self.graph,pub_id,None)
+
+                pubmed_id = 'PMID:'+pubmed_id.strip()
+                if (pubmed_id != '' and pubmed_id is not None):
+                    gu.addIndividualToGraph(self.graph,pubmed_id,None)
+                    gu.addSameIndividual(self.graph,pub_id,pubmed_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        return
+
+
         #TODO: The G2P function is only dealing with wild-type environments, meaning just intrinsic genotypes
         #If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
 
         #TODO: We have the sequence information for each of the targeting reagents. How to model?
-    def _process_morpholinos(self, raw, out, g, limit=None):
+    def _process_morpholinos(self, limit=None):
         """
-
+        Morpholinos are knockdown reagents.
+        Only the morpholino sequence is provided, so the target sequence is calculated using biopython.
         :param limit:
         :return:
         """
@@ -376,7 +452,7 @@ class ZFIN(Source):
         logger.info("Processing Morpholinos")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        raw = ('/').join((self.rawdir,self.files['morph']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -384,6 +460,7 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,morpholino_id,morpholino_so_id,
                 morpholino_symbol,morpholino_sequence,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
                 morpholino_id = 'ZFIN:'+morpholino_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
@@ -412,13 +489,13 @@ class ZFIN(Source):
                     break
 
 
-        logger.info("Done with morpholinos")
+        logger.info("Done with Morpholinos")
         return
 
 
-    def _process_talens(self, raw, out, g, limit=None):
+    def _process_talens(self, limit=None):
         """
-
+        TALENs are knockdown reagents
         :param limit:
         :return:
         """
@@ -426,7 +503,7 @@ class ZFIN(Source):
         logger.info("Processing TALENs")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        raw = ('/').join((self.rawdir,self.files['talen']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -434,12 +511,10 @@ class ZFIN(Source):
 
                 (gene_id,gene_so_id,gene_symbol,talen_id,talen_so_id,
                 talen_symbol,talen_target_sequence_1,talen_target_sequence_2,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
                 talen_id = 'ZFIN:'+talen_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
-
-
-
 
                 geno.addGeneTargetingReagent(talen_id,talen_symbol,talen_so_id)
                 geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
@@ -463,18 +538,106 @@ class ZFIN(Source):
         return
 
 
-    def _process_crisprs(self, raw, out, g, limit=None):
+    def _process_crisprs(self, limit=None):
         """
+        CRISPRs are knockdown reagents.
+        :param limit:
+        :return:
+        """
+        logger.info("Processing CRISPRs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['crispr']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
 
+                (gene_id,gene_so_id,gene_symbol,crispr_id,crispr_so_id,
+                crispr_symbol,crispr_target_sequence,publication,note) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+                crispr_id = 'ZFIN:'+crispr_id.strip()
+                gene_id = 'ZFIN:'+gene_id.strip()
+
+
+                geno.addGeneTargetingReagent(crispr_id,crispr_symbol,crispr_so_id)
+                geno.addReagentTargetedGene(crispr_id,gene_id,gene_id)
+
+                #Add publication
+                if(publication != ''):
+                    pub_id = 'ZFIN:'+publication.strip()
+                    gu.addIndividualToGraph(self.graph,pub_id,None)
+                    gu.addTriple(self.graph,pub_id,gu.properties['mentions'],crispr_id)
+
+
+                #Add comment?
+                if(note != ''):
+                    gu.addComment(self.graph,crispr_id,note)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with CRISPRs")
+        return
+
+
+    #FIXME: It seems that the pheno_environment.txt file has an additional column that is empty.
+    #Note that ZFIN indicates this file as only having 3 columns, but 6 columns exist plus the empty column.
+    # Consider scrubbing the extra column?
+    def _process_pheno_enviro(self, limit=None):
+        """
+        The pheno_environment.txt file ties experimental conditions to an environment ID.
+        An environment ID may have one or more associated conditions.
+        Condition groups present: chemical, CRISPR, morpholino, pH, physical, physiological, salinity, TALEN,
+        temperature, and Generic-control.
+        The condition column may contain knockdown reagent IDs or mixed text.
         :param limit:
         :return:
         """
 
-        logger.info("Done with crisprs")
+        logger.info("Processing phenotype environments")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['enviro']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (environment_id,condition_group,condition,values,units,comment,empty) = row
+
+
+                #FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
+                #There are a few specific environments available in GENO, including some standard
+                # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
+                # includes the zfin ID instead of a GENO ID for those environments.
+
+                environment_id = 'ZFIN:'+environment_id.strip()
+                if re.match('ZDB.*',condition):
+                    condition = 'ZFIN:'+condition.strip()
+                    gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
+                else:
+                    gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
+
+                #TODO: Need to wrangle a better description, alternative parsing of variables
+                # (condition_group, condition, values, units, comment). Leaving as condition group for now.
+                # Data is problematic with differing values (numeric values, N/A's, blanks).
+                #if(comment !=''):
+                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units+comment
+                #else:
+                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units
+                #print(enviro_description)
+                #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with phenotype environments")
         return
-
-
-
 
 
     def verify(self):
