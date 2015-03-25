@@ -111,7 +111,7 @@ class ZFIN(Source):
         self._process_pubinfo(('/').join((self.rawdir,self.files['pubs']['file'])), self.outfile, self.graph, limit)
         self._process_morpholinos(('/').join((self.rawdir,self.files['morph']['file'])), self.outfile, self.graph, limit)
         self._process_talens(('/').join((self.rawdir,self.files['talen']['file'])), self.outfile, self.graph, limit)
-        self._process_crisprs(('/').join((self.rawdir,self.files['crispr']['file'])), self.outfile, self.graph, limit)
+        self._process_crisprs(limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -465,7 +465,7 @@ class ZFIN(Source):
         return
 
 
-    def _process_crisprs(self, raw, out, g, limit=None):
+    def _process_crisprs(self, limit=None):
         """
         CRISPRs are knockdown reagents.
         :param limit:
@@ -474,7 +474,7 @@ class ZFIN(Source):
         logger.info("Processing CRISPRs")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        raw = ('/').join((self.rawdir,self.files['crispr']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -487,7 +487,7 @@ class ZFIN(Source):
                 gene_id = 'ZFIN:'+gene_id.strip()
 
 
-                geno.addGeneTargetingReagent(crispr_id,talen_symbol,crispr_so_id)
+                geno.addGeneTargetingReagent(crispr_id,crispr_symbol,crispr_so_id)
                 geno.addReagentTargetedGene(crispr_id,gene_id,gene_id)
 
                 #Add publication
