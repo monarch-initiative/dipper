@@ -105,6 +105,7 @@ class ZFIN(Source):
             logger.info("Only parsing first %s rows of each file", limit)
         logger.info("Parsing files...")
 
+        self._process_pheno_enviro(limit)
         self._load_zp_mappings()
         self._process_genotype_features(limit)
         self._process_g2p(limit)
@@ -510,7 +511,42 @@ class ZFIN(Source):
         return
 
 
+    #FIXME: It seems that the pheno_environment.txt file has an additional column that is empty.
+    #Note that ZFIN indicates this file as only having 3 columns, but 6 columns exist plus the empty column.
+    # Consider scrubbing the extra column?
+    def _process_pheno_enviro(self, limit=None):
+        """
+        The pheno_environment.txt file ties experimental conditions to an environment ID.
+        The condition column may contain knockdown reagent IDs or
+        :param limit:
+        :return:
+        """
 
+        logger.info("Processing phenotype environments")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['enviro']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (environment_id,condition_group,condition,values,units,comment,empty) = row
+
+
+                #FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
+                #There are a few specific environments available in GENO, including some standard
+                # zfin environments (standard salinity and temperature, heat shock (37C), etc), and
+                # includes the zfin ID for those environments.
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with phenotype environments")
+        return
 
 
     def verify(self):
