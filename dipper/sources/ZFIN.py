@@ -557,7 +557,7 @@ class ZFIN(Source):
                 #Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
                 # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
                 #Also, does the morpholino require the exact sequence match or can there be mismatches?
-                #Take the morpholino sequence and get the reverse complement as the target sequence
+                #Take the morpholino sequence and get the reverse complement as the target sequence.
                 seq = Seq(morpholino_sequence)
                 target_sequence = seq.reverse_complement()
                 #print(seq)
