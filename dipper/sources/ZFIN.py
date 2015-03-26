@@ -112,7 +112,7 @@ class ZFIN(Source):
         self._process_g2p(limit)
         self._process_genes(limit)
         self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
+        self._process_uniprot_ids(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
         self._process_morpholinos(limit)
@@ -377,6 +377,8 @@ class ZFIN(Source):
         :return:
         """
         #TODO: Test the output, make sure the GenBank URI resolves for all construct types.
+        # (It does, although ESTs redirect to http://www.ncbi.nlm.nih.gov/nucest/)
+
         #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
         logger.info("Processing GenBank IDs")
         line_counter = 0
@@ -437,7 +439,10 @@ class ZFIN(Source):
                 #FIXME: Need to lookup with a hash whether or not the gene already exists in the graph?
                 # Or just create the gene as a class, although it would be redundant?
                 geno.addGene(gene_id,gene_symbol)
-                gu.addEquivalentClass(self.graph,gene_id,uniprot_id)
+                #Need to add some type of 'has_gene_product' relationship here.
+                #TODO: Abstract to one of the model utilities
+                gu.addIndividualToGraph(self.graph,uniprot_id,None,'SO:0000104')
+                gu.addTriple(self.graph,gene_id,gu.properties['has_gene_product'],uniprot_id)
 
                 if (limit is not None and line_counter > limit):
                     break

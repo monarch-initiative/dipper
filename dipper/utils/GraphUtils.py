@@ -48,7 +48,8 @@ class GraphUtils:
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050',
         'mentions': 'IAO:0000142',
-        'model_of' : 'ERO:0000233'
+        'model_of' : 'ERO:0000233',
+        'has_gene_product' : 'RO:0002205'
     }
 
     datatype_properties = {
