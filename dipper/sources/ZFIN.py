@@ -4,7 +4,7 @@ from datetime import datetime
 from stat import *
 import re
 import logging
-#from Bio.Seq import Seq
+from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -552,12 +552,13 @@ class ZFIN(Source):
                 morpholino_id = 'ZFIN:'+morpholino_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
 
+                #TODO: map target sequence to morpholino.
                 #FIXME: Is this correct?
                 #Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
                 # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
                 #Take the morpholino sequence and get the reverse complement as the target sequence
-                #seq = Seq(morpholino_sequence)
-                #target_sequence = seq.reverse_complement()
+                seq = Seq(morpholino_sequence)
+                target_sequence = seq.reverse_complement()
                 #print(seq)
                 #print(target_sequence)
                 #print(morpholino_id)
@@ -733,7 +734,8 @@ class ZFIN(Source):
 
     def _process_mappings(self, limit=None):
         """
-
+        This function imports linkage mappings of various entities to genetic locations in cM or cR.
+        Entities include sequence variants, BAC ends, cDNA, ESTs, genes, PAC ends, RAPDs, SNPs, SSLPs, and  STSs.
         :param limit:
         :return:
         """
