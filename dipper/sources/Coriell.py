@@ -398,7 +398,7 @@ class Coriell(Source):
                         gu.addType(self.graph,patient_id,geno.genoparts['wildtype'])
                     elif genotype_id is None:
                         #make an anonymous genotype id
-                        genotype_id = '_'+geno+cell_line_id
+                        genotype_id = '_geno'+cell_line_id
 
 
                     #add the gvc
