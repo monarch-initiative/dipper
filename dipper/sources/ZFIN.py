@@ -471,8 +471,9 @@ class ZFIN(Source):
                 pub_label = ('; ').join((authors, title, journal, year, vol, pages))
                 gu.addIndividualToGraph(self.graph,pub_id,pub_label)
 
-                pubmed_id = 'PMID:'+pubmed_id.strip()
+
                 if (pubmed_id != '' and pubmed_id is not None):
+                    pubmed_id = 'PMID:'+pubmed_id.strip()
                     gu.addIndividualToGraph(self.graph,pubmed_id,None)
                     gu.addSameIndividual(self.graph,pub_id,pubmed_id)
 
@@ -504,8 +505,9 @@ class ZFIN(Source):
                 pub_id = 'ZFIN:'+pub_id.strip()
                 gu.addIndividualToGraph(self.graph,pub_id,None)
 
-                pubmed_id = 'PMID:'+pubmed_id.strip()
+
                 if (pubmed_id != '' and pubmed_id is not None):
+                    pubmed_id = 'PMID:'+pubmed_id.strip()
                     gu.addIndividualToGraph(self.graph,pubmed_id,None)
                     gu.addSameIndividual(self.graph,pub_id,pubmed_id)
 
