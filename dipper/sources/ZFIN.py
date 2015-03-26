@@ -108,18 +108,18 @@ class ZFIN(Source):
 
 
         self._load_zp_mappings()
-        self._process_mappings(limit)
+        #self._process_mappings(limit)
         self._process_genotype_features(limit)
         self._process_g2p(limit)
-        self._process_genes(limit)
-        self._process_genbank_ids(limit)
-        self._process_uniprot_ids(limit)
+        #self._process_genes(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
         self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
-        self._process_morpholinos(limit)
-        self._process_talens(limit)
-        self._process_crisprs(limit)
-        self._process_pheno_enviro(limit)
+        #self._process_pub2pubmed(limit)
+        #self._process_morpholinos(limit)
+        #self._process_talens(limit)
+        #self._process_crisprs(limit)
+        #self._process_pheno_enviro(limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -556,6 +556,7 @@ class ZFIN(Source):
                 #FIXME: Is this correct?
                 #Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
                 # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
+                #Also, does the morpholino require the exact sequence match or can there be mismatches?
                 #Take the morpholino sequence and get the reverse complement as the target sequence
                 seq = Seq(morpholino_sequence)
                 target_sequence = seq.reverse_complement()
@@ -750,6 +751,24 @@ class ZFIN(Source):
                 line_counter += 1
 
                 (zfin_id,symbol,so_id,panel_symbol,chromosome,location,metric,empty) = row
+
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                zfin_id = 'ZFIN:'+zfin_id.strip()
+                if re.match('ZFIN:ZDB-GENE.*',zfin_id):
+                    geno.addGene(zfin_id,symbol)
+                    gu.addClassToGraph(self.graph,zfin_id,symbol,so_id)
+                elif re.match('ZFIN:ZDB-ALT.*',zfin_id):
+                    #FIXME: Is this correct?
+                    #The mappings.txt file has these typed as SO:0001060=sequence_variant, while Genotype.py so far
+                    # only has addSequenceAlteration. Sequence variant is SO:0001059. Sequence alteration is below
+                    # sequence feature, while sequence variant is at the top of a different tree in the hierarchy.
+                    # If I'm correct to not be using the addSequenceAlteration method, this will need to be abstracted
+                    # to an addSequenceVariant method in Genotype.py.
+                    gu.addIndividualToGraph(self.graph,zfin_id,symbol,so_id)
+                else:
+                    geno.addConstruct(zfin_id,symbol,so_id)
 
 
 

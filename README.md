@@ -13,6 +13,7 @@
     * [python-docx](https://github.com/python-openxml/python-docx)
     * pyyaml
     * pysftp
+    * Bio
 
 * The OMIM source requires the 'compress' and 'uncompress' system commands to be available, for LZW decompression.  
 (This may be a problem for windows users.) 
