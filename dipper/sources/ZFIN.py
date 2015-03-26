@@ -4,7 +4,7 @@ from datetime import datetime
 from stat import *
 import re
 import logging
-from Bio.Seq import Seq
+#from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -106,8 +106,9 @@ class ZFIN(Source):
             logger.info("Only parsing first %s rows of each file", limit)
         logger.info("Parsing files...")
 
-        self._process_pheno_enviro(limit)
+
         self._load_zp_mappings()
+        self._process_mappings(limit)
         self._process_genotype_features(limit)
         self._process_g2p(limit)
         self._process_genes(limit)
@@ -118,6 +119,7 @@ class ZFIN(Source):
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
+        self._process_pheno_enviro(limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -549,9 +551,13 @@ class ZFIN(Source):
                 geno = Genotype(self.graph)
                 morpholino_id = 'ZFIN:'+morpholino_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
+
+                #FIXME: Is this correct?
+                #Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
+                # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
                 #Take the morpholino sequence and get the reverse complement as the target sequence
-                seq = Seq(morpholino_sequence)
-                target_sequence = seq.reverse_complement()
+                #seq = Seq(morpholino_sequence)
+                #target_sequence = seq.reverse_complement()
                 #print(seq)
                 #print(target_sequence)
                 #print(morpholino_id)
@@ -722,6 +728,34 @@ class ZFIN(Source):
 
 
         logger.info("Done with phenotype environments")
+        return
+
+
+    def _process_mappings(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing chromosome mappings")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['mappings']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (zfin_id,symbol,so_id,panel_symbol,chromosome,location,metric,empty) = row
+
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with chromosome mappings")
         return
 
 
