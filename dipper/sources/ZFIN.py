@@ -12,6 +12,7 @@ from dipper.models.Assoc import Assoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.GenomicFeature import Feature,makeChromID
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
@@ -108,18 +109,18 @@ class ZFIN(Source):
 
 
         self._load_zp_mappings()
-        #self._process_mappings(limit)
+        self._process_mappings(limit)
         self._process_genotype_features(limit)
         self._process_g2p(limit)
-        #self._process_genes(limit)
-        #self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
+        self._process_genes(limit)
+        self._process_genbank_ids(limit)
+        self._process_uniprot_ids(limit)
         self._process_pubinfo(limit)
-        #self._process_pub2pubmed(limit)
-        #self._process_morpholinos(limit)
-        #self._process_talens(limit)
-        #self._process_crisprs(limit)
-        #self._process_pheno_enviro(limit)
+        self._process_pub2pubmed(limit)
+        self._process_morpholinos(limit)
+        self._process_talens(limit)
+        self._process_crisprs(limit)
+        self._process_pheno_enviro(limit)
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -741,7 +742,7 @@ class ZFIN(Source):
         :return:
         """
 
-        logger.info("Processing chromosome mappings")
+        logger.info("Processing landmarks")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         raw = ('/').join((self.rawdir,self.files['mappings']['file']))
@@ -758,25 +759,37 @@ class ZFIN(Source):
                 zfin_id = 'ZFIN:'+zfin_id.strip()
                 if re.match('ZFIN:ZDB-GENE.*',zfin_id):
                     geno.addGene(zfin_id,symbol)
-                    gu.addClassToGraph(self.graph,zfin_id,symbol,so_id)
                 elif re.match('ZFIN:ZDB-ALT.*',zfin_id):
-                    #FIXME: Is this correct?
-                    #The mappings.txt file has these typed as SO:0001060=sequence_variant, while Genotype.py so far
-                    # only has addSequenceAlteration. Sequence variant is SO:0001059. Sequence alteration is below
-                    # sequence feature, while sequence variant is at the top of a different tree in the hierarchy.
-                    # If I'm correct to not be using the addSequenceAlteration method, this will need to be abstracted
-                    # to an addSequenceVariant method in Genotype.py.
+                    #The mappings.txt file has these typed as SO:0001060 (sequence_variant),
+                    # SO:000159 (sequence_alteration), SO:1000005 (complex_substitution),
+                    # or SO:1000008 (point_mutation). So adding as an individual with variable types instead of
+                    # using the addSequenceAlteration method.
                     gu.addIndividualToGraph(self.graph,zfin_id,symbol,so_id)
                 else:
                     geno.addConstruct(zfin_id,symbol,so_id)
+                taxon_id = 'NCBITaxon:7955'
+                taxon_num = '7955'
+                taxon_label = 'Danio rerio'
+                geno.addChromosome(str(chromosome),taxon_id, taxon_label)
 
+                #FIXME: What's the proper way to add a location/landmark?
+                location = location+metric
+                f = Feature(zfin_id,symbol,so_id)
+                chrom_id = makeChromID(str(chromosome),taxon_num)
+                f.addFeatureStartLocation(location,chrom_id)
+                f.addFeatureEndLocation(location,chrom_id)
+                f.addFeatureToGraph(self.graph)
 
-
+                #TODO: How should the "panel" be incorporated into the data? Can it be mapped to a source,
+                # or a publication? Only 6 panels, so hard coding data is reasonable if needed.
+                # PANELS: Heat Shock (HS), Boston MGH Cross (MGH), Mother of Pearl (MOP),
+                # Gates et al (GAT), Loeb/NIH/5000/4000 (LN54), Goodfellow T51 (T51).
+                # Tracking down reference information should be feasible.
 
                 if (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with chromosome mappings")
+        logger.info("Done with landmarks")
         return
 
 

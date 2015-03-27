@@ -351,7 +351,7 @@ class Genotype():
 
     def addChromosome(self,chr,tax_id,tax_label=None,build_id=None,build_label=None):
         #if it's just the chromosome, add it as an instance of a SO:chromosome, and add it to the genome.
-        # if a build is included, punn the chromosome as a subclass of SO:chromsome, and
+        # if a build is included, punn the chromosome as a subclass of SO:chromosome, and
         # make the build-specific chromosome an instance of the supplied chr.  The chr then becomes part of the
         # build or genome.
 
