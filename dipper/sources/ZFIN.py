@@ -109,7 +109,8 @@ class ZFIN(Source):
 
 
         self._load_zp_mappings()
-        self._process_mappings(limit)
+        self._process_features(limit)
+        self._process_landmarks(limit)
         self._process_genotype_features(limit)
         self._process_g2p(limit)
         self._process_genes(limit)
@@ -338,6 +339,34 @@ class ZFIN(Source):
                     break
 
         return
+
+
+    def _process_features(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing features")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['features']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,genomic_featurename,
+                genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id,empty) = row
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with features")
+        return
+
 
     def _process_genes(self, limit=None):
         """
@@ -734,7 +763,7 @@ class ZFIN(Source):
         return
 
 
-    def _process_mappings(self, limit=None):
+    def _process_landmarks(self, limit=None):
         """
         This function imports linkage mappings of various entities to genetic locations in cM or cR.
         Entities include sequence variants, BAC ends, cDNA, ESTs, genes, PAC ends, RAPDs, SNPs, SSLPs, and  STSs.
@@ -773,6 +802,7 @@ class ZFIN(Source):
                 geno.addChromosome(str(chromosome),taxon_id, taxon_label)
 
                 #FIXME: What's the proper way to add a location/landmark?
+                #And should the above additions of genes/alterations/constructs be removed?
                 location = location+metric
                 f = Feature(zfin_id,symbol,so_id)
                 chrom_id = makeChromID(str(chromosome),taxon_num)
