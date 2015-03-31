@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_gene_marker_relationships(limit)
         self._process_feature_affected_genes(limit)
         self._process_features(limit)
         self._process_landmarks(limit)
@@ -461,10 +462,58 @@ class ZFIN(Source):
         return
 
 
+    def _process_gene_marker_relationships(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing gene marker relationships")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['gene_marker_rel']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,marker_id,marker_so_id,marker_symbol,relationship,empty) = row
+
+                geno = Genotype(self.graph)
+
+                gene_id = 'ZFIN:'+gene_id.strip()
+                #File contains genes (SO:0000704) and psuedogenes (SO:0000336).
+                if (gene_so_id == 'SO:0000704'):
+
+                    geno.addGene(gene_id,gene_symbol)
+                elif (gene_so_id == 'SO0000336'):
+                    gu.addIndividualToGraph(self.graph,gene_id,gene_symbol,gene_so_id)
+
+                marker_id = 'ZFIN:'+marker_id.strip()
+                gu.addIndividualToGraph(self.graph,marker_id,marker_symbol,marker_so_id)
+
+                #TODO: Map gene-marker relationships.
+                #Gene-marker relationships: clone contains gene, coding sequence of, contains polymorphism,
+                # gene contains small segment, gene encodes small segment, gene has artifact,
+                # gene hybridized by small segment, gene produces transcript, gene product recognized by antibody,
+                # knockdown reagent targets gene, promoter of, transcript targets gene
+
+
+
+
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with gene marker relationships")
+        return
+
+
     def _process_genbank_ids(self, limit=None):
         """
         This file contains BACs, cDNAs, engineered foreign genes, ESTs, engineered plasmids, Fosmids, pseudogenes,
-        engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank.
+        engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank IDs.
         :param limit:
         :return:
         """
