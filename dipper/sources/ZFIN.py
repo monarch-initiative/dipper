@@ -356,9 +356,25 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-
-                (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,genomic_featurename,
+                geno = Genotype(self.graph)
+                (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,genomic_feature_name,
                 genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id,empty) = row
+
+                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
+
+                gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_name,feature_so_id)
+
+                if(construct_id is not None and construct_id != ''):
+                    construct_id = 'ZFIN:' + construct_id.strip()
+                    geno.addConstruct(construct_id,construct_name,construct_so_id)
+                    #FIXME: Need the appropriate relationship between the construct and the mutation/alteration.
+                    #Derives from? Parent = construct, child = allele/feature?
+                    geno.addDerivesFrom(genomic_feature_id,construct_id)
+
+                #TODO: Have available a mutagen and mutagee (adult males, embryos, etc.)
+                #How should this be modeled?
+                # Mutagens: CRISPR, EMS, ENU, DNA, g-rays, not specified, spontaneous, TALEN, TMP, zinc finger nuclease
+                # Mutagees: adult females, adult males, embryos, not specified, sperm
 
                 if (limit is not None and line_counter > limit):
                     break
