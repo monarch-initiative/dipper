@@ -107,8 +107,9 @@ class ZFIN(Source):
             logger.info("Only parsing first %s rows of each file", limit)
         logger.info("Parsing files...")
 
-
+        #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_feature_affected_genes(limit)
         self._process_features(limit)
         self._process_landmarks(limit)
         self._process_genotype_features(limit)
@@ -341,6 +342,48 @@ class ZFIN(Source):
         return
 
 
+    def _process_feature_affected_genes(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing feature affected genes")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['feature_affected_gene']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,gene_symbol,gene_id,gene_so_id,
+                 genomic_feature_marker_relationship,empty) = row
+
+                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
+
+                gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
+
+                gene_id = 'ZFIN:' + gene_id.strip()
+                geno.addGene(gene_id,gene_symbol)
+
+                #NOTE: Most feature_marker_relationship entries are 'is allele of' but there are some entries with
+                # 'markers missing' corresponds to SO:1000029 - chromosomal_deletion) or
+                # 'markers moved' (corresponds to SO:1000199 - translocation).
+                # For now, only indicating as an allele of gene if the relationship is 'is allele of.'
+                #TODO: Confirm that this conditional is the correct approach.
+                if (genomic_feature_marker_relationship == 'is allele of'):
+                    geno.addAlleleOfGene(genomic_feature_id,gene_id)
+                #TODO: For the other relationships, is there a 'translocation_of' or 'deletion_of' that can be used?
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with feature affected genes")
+        return
+
     def _process_features(self, limit=None):
         """
 
@@ -374,6 +417,7 @@ class ZFIN(Source):
                 #TODO: Have available a mutagen and mutagee (adult males, embryos, etc.)
                 #How should this be modeled?
                 # Mutagens: CRISPR, EMS, ENU, DNA, g-rays, not specified, spontaneous, TALEN, TMP, zinc finger nuclease
+                # Can make a mapping function for mutagens, if needed.
                 # Mutagees: adult females, adult males, embryos, not specified, sperm
 
                 if (limit is not None and line_counter > limit):
