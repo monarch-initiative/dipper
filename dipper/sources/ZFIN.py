@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_genotype_backgrounds(limit)
         self._process_gene_marker_relationships(limit)
         self._process_feature_affected_genes(limit)
         self._process_features(limit)
@@ -276,6 +277,42 @@ class ZFIN(Source):
 
         return type
 
+
+    def _process_genotype_backgrounds(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing genotype backgrounds")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['backgrounds']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (genotype_id,genotype_name,background_id,empty) = row
+
+                genotype_id = 'ZFIN:' + genotype_id.strip()
+                background_id = 'ZFIN:' + background_id.strip()
+
+                geno.addGenotype(genotype_id, genotype_name)
+
+                geno.addGenomicBackgroundToGenotype(background_id,genotype_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with genotype backgrounds")
+        return
+
+
+
+
     def _process_g2p(self, limit=None):
         '''
         This module currently filters for only wild-type environments, which clearly excludes application
@@ -418,7 +455,7 @@ class ZFIN(Source):
                 #TODO: Have available a mutagen and mutagee (adult males, embryos, etc.)
                 #How should this be modeled?
                 # Mutagens: CRISPR, EMS, ENU, DNA, g-rays, not specified, spontaneous, TALEN, TMP, zinc finger nuclease
-                # Can make a mapping function for mutagens, if needed.
+                #TODO: make a mapping function for mutagens, if needed.
                 # Mutagees: adult females, adult males, embryos, not specified, sperm
 
                 if (limit is not None and line_counter > limit):
