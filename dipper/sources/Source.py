@@ -35,8 +35,10 @@ class Source:
         self.name = args
         self.path = ""
         self.graph = ConjunctiveGraph()
+        self.testgraph = ConjunctiveGraph()  #to be used to store a subset of data for testing downstream.
         self.triple_count = 0
         self.outdir = 'out'
+        self.testdir = 'out/test'
         self.rawdir = 'raw/'+self.name
 
         #if raw data dir doesn't exist, create it
@@ -48,6 +50,11 @@ class Source:
         if not os.path.exists(self.outdir):
             logger.info("creating output directory")
             os.makedirs(self.outdir)
+            #if testdir doesn't exist, create it
+        if not os.path.exists(self.testdir):
+            logger.info("creating test output directory")
+            os.makedirs(self.testdir)
+
 
         self.outfile = ('/').join((self.outdir,self.name + ".ttl"))
         logger.info("Setting outfile to %s", self.outfile)
@@ -55,25 +62,32 @@ class Source:
         self.datasetfile = ('/').join((self.outdir,self.name + '_dataset.ttl'))
         logger.info("Setting dataset file to %s", self.datasetfile)
 
+        self.testfile = ('/').join((self.testdir,self.name + "_test.ttl"))
+        logger.info("Setting testfile to %s", self.testfile)
+
         return
 
     def load_core_bindings(self):
-        self.graph.bind("dc", DC)
-        self.graph.bind("foaf", FOAF)
-        self.graph.bind("rdfs", RDFS)
-        self.graph.bind('owl', OWL)
+
+        for g in [self.graph,self.testgraph]:
+            g.bind("dc", DC)
+            g.bind("foaf", FOAF)
+            g.bind("rdfs", RDFS)
+            g.bind('owl', OWL)
 
         return
 
     def load_bindings(self):
         self.load_core_bindings()
-        for k in self.namespaces.keys():
-            v = self.namespaces[k]
-            self.graph.bind(k, Namespace(v))
+        for g in [self.graph,self.testgraph]:
 
-        for k in curie_map.get().keys():
-            v = curie_map.get()[k]
-            self.graph.bind(k, Namespace(v))
+            for k in self.namespaces.keys():
+                v = self.namespaces[k]
+                g.bind(k, Namespace(v))
+
+            for k in curie_map.get().keys():
+                v = curie_map.get()[k]
+                g.bind(k, Namespace(v))
         return
 
     def fetch(self):
@@ -120,7 +134,8 @@ class Source:
 
         graphs = [
             {'g':self.graph,'file':file},
-            {'g':self.dataset.getGraph(),'file':datasetfile}
+            {'g':self.dataset.getGraph(),'file':datasetfile},
+            {'g':self.testgraph,'file':self.testfile}
         ]
         gu = GraphUtils(None)
         #loop through each of the graphs and print them out
