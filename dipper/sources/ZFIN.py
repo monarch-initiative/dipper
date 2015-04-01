@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_wildtypes(limit)
         self._process_genotype_backgrounds(limit)
         self._process_gene_marker_relationships(limit)
         self._process_feature_affected_genes(limit)
@@ -310,7 +311,35 @@ class ZFIN(Source):
         logger.info("Done with genotype backgrounds")
         return
 
+    def _process_wildtypes(self, limit=None):
+        """
 
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing wildtype genotypes")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['wild']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (genotype_id,genotype_name,genotype_abbreviation,empty) = row
+
+                genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                #FIXME: Just use the genotype name, or use the abbreviation as the name, the name as the description?
+                geno.addGenotype(genotype_id, genotype_abbreviation,geno.genoparts['wildtype'],genotype_name)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with wildtype genotypes")
+        return
 
 
     def _process_g2p(self, limit=None):
