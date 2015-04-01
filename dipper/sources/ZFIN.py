@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_wildtype_expression(limit)
         self._process_wildtypes(limit)
         self._process_genotype_backgrounds(limit)
         self._process_gene_marker_relationships(limit)
@@ -307,9 +308,9 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-
         logger.info("Done with genotype backgrounds")
         return
+
 
     def _process_wildtypes(self, limit=None):
         """
@@ -340,6 +341,87 @@ class ZFIN(Source):
 
         logger.info("Done with wildtype genotypes")
         return
+
+
+    def _process_wildtype_expression(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing wildtype expression")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['wild_expression']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (gene_id,gene_symbol,genotype_name,super_structure_id,super_structure_name,sub_structure_id,
+                sub_structure_name,start_stage,end_stage,assay,publication_id,probe_id,antibody_id,empty) = row
+
+                #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                #TODO: Move this from a mapping function to a lookup to prevent errors, breaks due to new wildtypes
+                genotype_id = self._map_wildtype_name_to_genotype(genotype_name)
+                genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                #TODO: Consider how to model wildtype genotypes with genes and associated expression.
+                gene_id = 'ZFIN:' + gene_id.strip()
+                geno.addGene(gene_id,gene_symbol)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with wildtype expression")
+        return
+
+
+    def _map_wildtype_name_to_genotype(self, genotype_name):
+        genotype = 'ZDB-GENO-030619-2'  #default: wild type (unspecified)
+        genotype_map = {
+            'WIK': 'ZDB-GENO-010531-2',
+            'Cologne': 'ZDB-GENO-010725-1',
+            'AB/Tuebingen': 'ZDB-GENO-010924-10',
+            'Nadia': 'ZDB-GENO-030115-2',
+            'C32': 'ZDB-GENO-030501-1',
+            'wild type (unspecified)': 'ZDB-GENO-030619-2',
+            'AB/TL': 'ZDB-GENO-031202-1',
+            'WIK/AB': 'ZDB-GENO-050511-1',
+            'SJA': 'ZDB-GENO-061206-2',
+            'SJD/C32': 'ZDB-GENO-070425-2',
+            'AB/C32': 'ZDB-GENO-070425-3',
+            'RIKEN WT': 'ZDB-GENO-070802-4',
+            'Tupfel long fin nacre': 'ZDB-GENO-080307-1',
+            'AB/EKW': 'ZDB-GENO-091223-1',
+            'Sanger AB T¸bingen': 'ZDB-GENO-100413-1',
+            'Microsporidia Free AB line': 'ZDB-GENO-120309-2',
+            'Microsporidia Free 5-D line': 'ZDB-GENO-120309-3',
+            'NHGRI-1': 'ZDB-GENO-150204-3',
+            'Darjeeling': 'ZDB-GENO-960809-13',
+            'AB': 'ZDB-GENO-960809-7',
+            'Singapore': 'ZDB-GENO-980210-24',
+            'India': 'ZDB-GENO-980210-28',
+            'Indonesia': 'ZDB-GENO-980210-32',
+            'Hong Kong': 'ZDB-GENO-980210-34',
+            'HK/Sing': 'ZDB-GENO-980210-38',
+            'HK/AB': 'ZDB-GENO-980210-40',
+            'SJD': 'ZDB-GENO-990308-9',
+            'Ekkwill': 'ZDB-GENO-990520-2',
+            'Tupfel long fin': 'ZDB-GENO-990623-2',
+            'Tuebingen': 'ZDB-GENO-990623-3'
+        }
+        if (genotype_name.strip() in genotype_map):
+            genotype = genotype_map.get(genotype_name)
+        else:
+            # TODO add logging
+            logger.error("Wildtype Genotype (%s) not mapped", genotype_name)
+
+        return genotype
+
 
 
     def _process_g2p(self, limit=None):
