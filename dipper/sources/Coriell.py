@@ -67,10 +67,13 @@ class Coriell(Source):
         'nhgri': {'file' : 'NHGRI_latest.csv',
                 'id' : 'NHGRI',
                 'label': 'NHGRI Sample Repository for Human Genetic Research',
-                'page': 'https://catalog.coriell.org/1/NIA'}
+                'page': 'https://catalog.coriell.org/1/NHGRI'}
     }
 
-
+    #the following will house the specific cell lines to use for test output
+    test_lines = ['ND02380','ND02381','ND02383','ND02384','GM17897','GM17898','GM17896','GM17944','GM17945',
+                  'ND00055','ND00094','ND00136','GM17940','GM17939','GM20567','AG02506','AG04407','AG07602',
+                  'AG07601','GM19700','GM19701','GM19702','GM00324','GM00325','GM00142']
 
     def __init__(self):
         Source.__init__(self, 'coriell')
@@ -130,18 +133,21 @@ class Coriell(Source):
         for f in ['ninds','nigms','nia','nhgri']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
             self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
-            self._process_data(file, limit)
+            self._process_data(file, False, limit)
+            self._process_data(file,True)   #process the "test" data
 
         logger.info("Finished parsing.")
 
 
         self.load_bindings()
         Assoc().loadAllProperties(self.graph)
+        Assoc().loadAllProperties(self.testgraph)
+
 
         logger.info("Found %s nodes", len(self.graph))
         return
 
-    def _process_data(self, raw, limit=None):
+    def _process_data(self, raw, test, limit=None):
         """
         This function will process the data files from Coriell.
 
@@ -179,17 +185,24 @@ class Coriell(Source):
 
 
         :param raw:
+        :param test: if True, it will process only those cell lines in test_lines, and output to the test graph.
         :param limit:
         :return:
         """
         logger.info("Processing Data from %s",raw)
         gu = GraphUtils(curie_map.get())
+        g = None  #
+
+        if test:      #set the graph to build
+            g = self.testgraph
+        else:
+            g = self.graph
 
         line_counter = 0
-        geno = Genotype(self.graph)
+        geno = Genotype(g)
 
-        gu.loadProperties(self.graph,geno.object_properties,gu.OBJPROP)
-        gu.loadAllProperties(self.graph)
+        gu.loadProperties(g,geno.object_properties,gu.OBJPROP)
+        gu.loadAllProperties(g)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
 #        with open(raw, 'r', encoding="utf-8") as csvfile:
@@ -213,6 +226,8 @@ class Coriell(Source):
                     # 46;XX; clinically normal mother of a child with Hurler syndrome; proband not in Repository,,
                     # 2,,18343,Homo sapiens
 
+                    if test and catalog_id not in self.test_lines:
+                        continue    #skip rows not in our test lines, when in test mode
 
                     ##############    BUILD REQUIRED VARIABLES    #############
 
@@ -262,16 +277,16 @@ class Coriell(Source):
                     ##############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
-                    gu.addIndividualToGraph(self.graph,cell_line_id,line_label,cell_type)
+                    gu.addIndividualToGraph(g,cell_line_id,line_label,cell_type)
 
                     # Cell line derives from patient
                     geno.addDerivesFrom(cell_line_id,patient_id)
 
                     # Cell line a member of repository
-                    gu.addMember(self.graph,repository,cell_line_id)
+                    gu.addMember(g,repository,cell_line_id)
 
                     if cat_remark !='':
-                        gu.addDescription(self.graph,cell_line_id,cat_remark)
+                        gu.addDescription(g,cell_line_id,cat_remark)
 
 
                     # Cell age_at_sampling
@@ -280,15 +295,15 @@ class Coriell(Source):
                         #this would give a BNode that is an instance of Age.  but i don't know how to connect
                         #the age node to the cell line?  we need to ask @mbrush.
                         #age_id = '_'+re.sub('\s+','_',age)
-                        #gu.addIndividualToGraph(self.graph,age_id,age,self.terms['age'])
-                        #gu.addTriple(self.graph,age_id,self.properties['has_measurement'],age,True)
+                        #gu.addIndividualToGraph(g,age_id,age,self.terms['age'])
+                        #gu.addTriple(g,age_id,self.properties['has_measurement'],age,True)
 
                     #that the cell line is a model for a disease is dealt with below
 
                     ##############    BUILD THE PATIENT    #############
 
                     # Add the patient ID as an individual.
-                    gu.addPerson(self.graph,patient_id,patient_label)
+                    gu.addPerson(g,patient_id,patient_label)
                     #TODO map relationship to proband as a class (what ontology?)
 
                     # Add race of patient
@@ -302,8 +317,8 @@ class Coriell(Source):
                     #if race != '':
                     #    mapped_race = self._map_race(race)
                     #    if mapped_race is not None:
-                    #        gu.addTriple(self.graph,patient_id,self.terms['race'],mapped_race)
-                    #        gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
+                    #        gu.addTriple(g,patient_id,self.terms['race'],mapped_race)
+                    #        gu.addSubclass(g,self.terms['ethnic_group'],mapped_race)
 
 
                     ##############    BUILD THE FAMILY    #############
@@ -314,10 +329,10 @@ class Coriell(Source):
                         family_comp_id = 'CoriellFamily:'+family_id
 
                         # Add the family ID as a named individual
-                        gu.addIndividualToGraph(self.graph,family_comp_id,None,geno.genoparts['population'])
+                        gu.addIndividualToGraph(g,family_comp_id,None,geno.genoparts['population'])
 
                         #Add the patient as a member of the family
-                        gu.addMemberOf(self.graph,patient_id,family_comp_id)
+                        gu.addMemberOf(g,patient_id,family_comp_id)
 
 
                     ##############    BUILD THE GENOTYPE   #############
@@ -330,6 +345,8 @@ class Coriell(Source):
                     #dbsnp_id = snp individual ids, is == patient id == haplotype?
 
                     #note GM00633 is a good example of chromosomal variation - do we have enough to capture this?
+
+                    #GM00325 has both abnormal karyotype and variation
 
                     #make an assumption that if the taxon is blank, that it is human!
                     if (species is None or species == ''):
@@ -344,25 +361,36 @@ class Coriell(Source):
 
                     omim_map = {};
                     gvc_id = None;
+
+                    #some of the karyotypes are encoded with terrible hidden codes. remove them here
+                    #i've seen a <98> character
+                    karyotype = self.remove_control_characters(karyotype)
+                    #TODO break down the karyotype into parts and map into GENO
+
+
+                    if gene != '':
+                        vl = gene+'['+mutation+']'
                     if (karyotype.strip() != '' and karyotype != '46;XX' and karyotype != '46;XY'):
-                        #if we have the karyotype that is abnormal, then let's make that the genotype
-                        gvc_id = self.make_id(karyotype)
+                        mutation = mutation.strip()
+                        gvc_id = self.make_id(variant_id.strip()+karyotype)
+                        if (mutation.strip() != ''):
+                            gvc_label = (';').join((vl,karyotype))
+                        else:
+                            gvc_label = karyotype
+                    elif variant_id.strip() != '':
+                        gvc_id = self.make_id(variant_id)
+                        gvc_label = vl
 
-                        #some of the karyotypes are encoded with terrible hidden codes. remove them here
-                        #i've seen a <98> character
-                        gvc_label = self.remove_control_characters(karyotype)
 
-                    elif (variant_id.strip() != ''):
+                    if (variant_id.strip() != ''):
                         #split the variants and add them as part of the genotype
                         #we don't know their zygosity, just that they are part of the genotype
                         #variant ids are from OMIM, so prefix as such
                         #we assume that the variants will be defined in OMIM rather than here.
-                        gvc_id = self.make_id(variant_id)
-                        gvc_label = mutation   #this is the full list of mutational consequences
                         #TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
                         #make a hashmap of the omim id to variant id list; then build the genotype
                         #hashmap is also useful for removing the "genes" from the list of phenotypes
-                        omim_map = {};
+                        omim_map = {}
                         #print(variant_id)
                         locus_num = None
                         for v in variant_id.split(';'):
@@ -379,14 +407,20 @@ class Coriell(Source):
                         for o in omim_map:
                             #print(omim_map)
                             allele1_id = 'OMIM:'+o+'.'+omim_map.get(o)[0]
+                            gu.addIndividualToGraph(g,allele1_id,None,geno.genoparts['variant_locus'])
                             if (len(omim_map.get(o)) > 1):
                                 #build a vslc
                                 vslc_id = self.make_id(o+(' ').join(omim_map.get(o)))
+                                vslc_label = vl
                                 allele2_id = 'OMIM:'+o+'.'+omim_map.get(o)[1]
+                                gu.addIndividualToGraph(g,allele2_id,None,geno.genoparts['variant_locus'])
                                 geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id)
                                 geno.addVSLCtoParent(vslc_id,gvc_id)
+                                gu.addIndividualToGraph(g,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
+                                #note, we do not add the gene id to the variation because we don't have it.
+                                #this will have to come from OMIM or ClinVar.
+
                             else:
-                                gu.addIndividualToGraph(self.graph,allele1_id,None,geno.genoparts['variant_locus'])
                                 geno.addParts(allele1_id,gvc_id,geno.properties['has_alternate_part'])
                     #else:
                         #genotype_id = None
@@ -395,7 +429,7 @@ class Coriell(Source):
 
                     if (affected == 'unaffected'):
                         #let's just say that this person is wildtype
-                        gu.addType(self.graph,patient_id,geno.genoparts['wildtype'])
+                        gu.addType(g,patient_id,geno.genoparts['wildtype'])
                     elif genotype_id is None:
                         #make an anonymous genotype id
                         genotype_id = '_geno'+cell_line_id
@@ -403,7 +437,7 @@ class Coriell(Source):
 
                     #add the gvc
                     if gvc_id is not None:
-                        gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
+                        gu.addIndividualToGraph(g,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
 
                         #add the gvc to the genotype
                         if genotype_id is not None:
@@ -419,7 +453,7 @@ class Coriell(Source):
                         geno.addGenotype(genotype_id,genotype_label,geno.genoparts['intrinsic_genotype'])
                         geno.addTaxon(taxon,genotype_id)
                         #add that the patient has the genotype
-                        gu.addTriple(self.graph,patient_id,geno.properties['has_genotype'],genotype_id)
+                        gu.addTriple(g,patient_id,geno.properties['has_genotype'],genotype_id)
                     else:
                         geno.addTaxon(taxon,patient_id)
 
@@ -436,16 +470,16 @@ class Coriell(Source):
                                     #if the omim number is in the omim_map, then it is a gene, and don't add it as a phenotype
                                     if d not in omim_map:
                                         disease_id = 'OMIM:'+d.strip()
-                                        gu.addClassToGraph(self.graph,disease_id,None)   #assume the label is taken care of elsewhere
+                                        gu.addClassToGraph(g,disease_id,None)   #assume the label is taken care of elsewhere
 
                                         #add the association: the patient has the disease
                                         assoc_id = self.make_id(patient_id+disease_id)
                                         assoc = G2PAssoc(assoc_id,patient_id,disease_id,None,None)
-                                        assoc.addAssociationToGraph(self.graph)
+                                        assoc.addAssociationToGraph(g)
 
                                         #also, this line is a model of this disease
                                         #TODO abstract out model into it's own association class?
-                                        gu.addTriple(self.graph,cell_line_id,gu.properties['model_of'],disease_id)
+                                        gu.addTriple(g,cell_line_id,gu.properties['model_of'],disease_id)
                                     else:
                                         logger.info('removing %s from disease list since it is a gene',d)
 
@@ -462,10 +496,10 @@ class Coriell(Source):
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
-                            gu.addTriple(self.graph,pubmed_id,gu.properties['mentions'],cell_line_id)
+                            gu.addTriple(g,pubmed_id,gu.properties['mentions'],cell_line_id)
 
 
-                    if (limit is not None and line_counter > limit):
+                    if not test and (limit is not None and line_counter > limit):
                         break
         return
 
@@ -484,14 +518,15 @@ class Coriell(Source):
         :return:
         """
         ##############    BUILD THE CELL LINE REPOSITORY    #############
-        #FIXME: How to devise a label for each repository?
-        gu = GraphUtils(curie_map.get())
-        repo_id = 'CoriellCollection:'+id
-        repo_label = label
-        repo_page = page
-        #gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addIndividualToGraph(self.graph,repo_id,repo_label,self.terms['cell_line_repository'])
-        gu.addPage(self.graph,repo_id,repo_page)
+        for g in [self.graph,self.testgraph]:
+            #FIXME: How to devise a label for each repository?
+            gu = GraphUtils(curie_map.get())
+            repo_id = 'CoriellCollection:'+id
+            repo_label = label
+            repo_page = page
+            #gu.addClassToGraph(g,repo_id,repo_label)
+            gu.addIndividualToGraph(g,repo_id,repo_label,self.terms['cell_line_repository'])
+            gu.addPage(g,repo_id,repo_page)
 
         return
 
