@@ -14,6 +14,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.GenomicFeature import Feature,makeChromID,makeChromLabel
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config
 from dipper import curie_map
@@ -218,6 +219,10 @@ class OMIM(Source):
             myjson = json.loads(resp)
             entries = myjson['omim']['entryList']
 
+            geno = Genotype(self.graph)
+            geno.addGenome('NCBITaxon:9606','Homo sapiens')
+
+
             for e in entries:
 
                 #get the numbers, labels, and descriptions
@@ -248,8 +253,9 @@ class OMIM(Source):
                 if (e['entry']['status'] == 'removed'):
                     gu.addDeprecatedClass(g,omimid)
                 else:
+                    omimtype = self._get_omimtype(e['entry'])
                     #this uses our cleaned-up label
-                    gu.addClassToGraph(g,omimid,newlabel)
+                    gu.addClassToGraph(g,omimid,newlabel,omimtype)
 
                     #add the original OMIM label as a synonym
                     gu.addSynonym(g,omimid,label)
@@ -263,6 +269,30 @@ class OMIM(Source):
                     gu.addDefinition(g,omimid,description)
                     if (abbrev is not None):
                         gu.addSynonym(g,omimid,abbrev)
+
+
+                    #if this is a genetic locus (but not sequenced) then add the chrom loc info
+                    if omimtype==Genotype.genoparts['biological_region']:
+                        if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
+                            genemap = e['entry']['geneMap']
+                            if 'cytoLocation' in genemap:
+                                cytoloc = genemap['cytoLocation']
+                                #parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
+                                #18p11.3-p11.2
+                                #for now, just take the first one
+                                #FIXME add the other end of the range, but not sure how to do that
+                                #not sure if saying subsequence of feature is the right relationship
+                                cytoloc = cytoloc.split('-')[0]
+                                f = Feature(omimid,None,None)
+                                if 'chromosome' in genemap:
+                                    chrom = makeChromID(str(genemap['chromosome']),'NCBITaxon:9606')
+                                    geno.addChromosome(str(genemap['chromosome']),'NCBITaxon:9606','Homo sapiens')
+                                    loc = makeChromID(cytoloc,'NCBITaxon:9606')
+                                    geno.addChromosome(cytoloc,'NCBITaxon:9606','Homo sapiens')
+                                    f.addSubsequenceOfFeature(self.graph,loc)
+                                    f.addFeatureToGraph(self.graph)
+                                pass
+
 
                     #check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
                     #some entries have been moved to multiple other entries and use the joining raw word "and"
@@ -558,6 +588,13 @@ class OMIM(Source):
                     gu.addClassToGraph(self.graph,umls_id,None)
                     gu.addXref(self.graph,omimid,umls_id)
 
+            if ((self._get_omimtype(entry) == Genotype.genoparts['gene'])
+                and ('geneIDs' in links)):
+                entrez_mappings = links['geneIDs']
+                for i in entrez_mappings.split(','):
+                    gu.addEquivalentClass(self.graph,omimid,'NCBIGene:'+str(i))
+
+
         return
 
     def _get_alt_labels(self,titles):
@@ -649,10 +686,12 @@ class OMIM(Source):
         elif prefix == '+' :
             #gene of known sequence and has a phenotype
             #examples: 107670,110600,126453
+            type_id = Genotype.genoparts['gene']  #doublecheck this
             pass
         elif prefix == '%' :
             #this is a disease (with a known locus).
             #examples include:  102150,104000,107200,100070
+            type_id = Genotype.genoparts['biological_region']
             pass
         elif prefix == '' :
             #this is probably just a phenotype
