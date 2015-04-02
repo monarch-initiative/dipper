@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_stages(limit)
         self._process_wildtype_expression(limit)
         self._process_wildtypes(limit)
         self._process_genotype_backgrounds(limit)
@@ -422,7 +423,32 @@ class ZFIN(Source):
 
         return genotype
 
+    def _process_stages(self, limit=None):
+        """
 
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing stages")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['stage']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (stage_id,stage_obo_id,stage_name,begin_hours,end_hours,empty) = row
+
+                #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with stages")
+        return
 
     def _process_g2p(self, limit=None):
         '''
