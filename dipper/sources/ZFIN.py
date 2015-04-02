@@ -1167,7 +1167,10 @@ class ZFIN(Source):
 
                 #FIXME: What's the proper way to add a location/landmark?
                 #And should the above additions of genes/alterations/constructs be removed?
-                location = location+metric
+                #FIXME: Output from this looks wrong
+                #Example: faldo:location <http://www.monarchinitiative.org/_ZFIN:ZDB-EST-000426-463Region>
+                #Is that coming from this code or elswehere
+                location = location+'_'+metric
                 f = Feature(zfin_id,symbol,so_id)
                 chrom_id = makeChromID(str(chromosome),taxon_num)
                 f.addFeatureStartLocation(location,chrom_id)
