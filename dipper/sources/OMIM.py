@@ -63,6 +63,12 @@ class OMIM(Source):
 
     }
 
+    test_ids = [
+        119600,120160,157140,158900,166220,168600,219700,253250,305900,600669,601278,602421,605073,607822, #from coriell
+    102560,102480,100678,102750,                     #genes
+    104200,105400,114480,115300,121900,              #phenotype/disease -- indicate that here?
+    107670,11600,126453,                             #gene of known sequence and has a phenotype
+    102150,104000,107200,100070]                     #disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -104,9 +110,11 @@ class OMIM(Source):
 
         print("Parsing files...")
 
-        self._process_all(limit)
-        self._process_morbidmap(limit)
-        self._process_phenotypicseries(limit)
+        #do each; once in test mode, the other in regular mode
+        for test in [True,False]:
+            self._process_all(limit,test)
+            self._process_morbidmap(limit,test)
+            self._process_phenotypicseries(limit,test)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -145,7 +153,7 @@ class OMIM(Source):
         print("INFO: Done.  I found",omimids.__len__(),"omim ids")
         return omimids
 
-    def _process_all(self,limit):
+    def _process_all(self,limit,testMode):
         """
         This takes the list of omim identifiers from the omim.txt.Z file,
         and iteratively queries the omim api for the json-formatted data.
@@ -156,6 +164,8 @@ class OMIM(Source):
         Additionally, we extract:
         *phenotypicSeries ids as superclasses
         *equivalent ids for Orphanet and UMLS
+
+        If set to testMode, it will write only those items in the test_ids to the testgraph.
 
         :param limit:
         :return:
@@ -174,7 +184,10 @@ class OMIM(Source):
 
         #http://api.omim.org/api/entry?mimNumber=100100&include=all
 
-        g = self.graph
+        if testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
 
         gu = GraphUtils(curie_map.get())
 
@@ -183,7 +196,7 @@ class OMIM(Source):
         #note that you can only do request batches of 20
         #see info about "Limits" at http://omim.org/help/api
         groupsize=20
-        if (limit is not None):
+        if not testMode and (limit is not None):
             #just in case the limit is larger than the number of records, max it out
             max = min((limit,omimids.__len__()))
         else:
@@ -195,7 +208,18 @@ class OMIM(Source):
         while it < max:
             end=min((max,it+groupsize))
             #iterate through the omim ids list, and fetch from the OMIM api in batches of 20
-            omimparams.update({'mimNumber' : (',').join(omimids[it:end])})
+
+            if testMode:
+                intersect=list(set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
+                if (len(intersect) > 0):  #some of the test ids are in the omimids
+                    print("found test ids:",intersect)
+                    omimparams.update({'mimNumber' : (',').join(intersect)})
+                else:
+                    it+=groupsize
+                    continue
+            else:
+                omimparams.update({'mimNumber' : (',').join(omimids[it:end])})
+
             p = urllib.parse.urlencode(omimparams)
             url = ('/').join((self.OMIM_API,'entry'))+'?%s' % p
             print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
@@ -209,7 +233,8 @@ class OMIM(Source):
             #    continue
             ### end code block for testing
 
-            print ('fetching:',(',').join(omimids[it:end]))
+
+            #print ('fetching:',(',').join(omimids[it:end]))
             #print('url:',url)
             d = urllib.request.urlopen(url)
             resp = d.read().decode()
@@ -219,7 +244,7 @@ class OMIM(Source):
             myjson = json.loads(resp)
             entries = myjson['omim']['entryList']
 
-            geno = Genotype(self.graph)
+            geno = Genotype(g)
             geno.addGenome('NCBITaxon:9606','Homo sapiens')
 
 
@@ -289,8 +314,8 @@ class OMIM(Source):
                                     geno.addChromosome(str(genemap['chromosome']),'NCBITaxon:9606','Homo sapiens')
                                     loc = makeChromID(cytoloc,'NCBITaxon:9606')
                                     geno.addChromosome(cytoloc,'NCBITaxon:9606','Homo sapiens')
-                                    f.addSubsequenceOfFeature(self.graph,loc)
-                                    f.addFeatureToGraph(self.graph)
+                                    f.addSubsequenceOfFeature(g,loc)
+                                    f.addFeatureToGraph(g)
                                 pass
 
 
@@ -316,10 +341,10 @@ class OMIM(Source):
 
                         gu.addDeprecatedClass(g,omimid,fixedids)
 
-                    self._get_phenotypicseries_parents(e['entry'])
-                    self._get_mappedids(e['entry'])
+                    self._get_phenotypicseries_parents(e['entry'],g)
+                    self._get_mappedids(e['entry'],g)
 
-                    self._get_pubs(e['entry'])
+                    self._get_pubs(e['entry'],g)
 
 
                 ###end iterating over batch of entries
@@ -332,11 +357,11 @@ class OMIM(Source):
                 print("INFO: waiting",str(rem),'s')
                 time.sleep(rem/1000)
 
-            gu.loadAllProperties(self.graph)
+            gu.loadAllProperties(g)
 
         return
 
-    def _process_morbidmap(self,limit):
+    def _process_morbidmap(self,limit,testMode):
         """
         This will process the morbidmap file to get the links between omim genes and diseases.
         Here, we create anonymous nodes for some variant loci that are variants of the gene that causes the disease.
@@ -350,8 +375,12 @@ class OMIM(Source):
         :param limit:
         :return:
         """
+        if testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
         line_counter = 0
-        geno = Genotype(self.graph)
+        geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         with open(('/').join((self.rawdir,self.files['morbidmap']['file']))) as f:
             for line in f:
@@ -374,6 +403,9 @@ class OMIM(Source):
                     else:
                         print("WARN: I couldn't parse disorder string:",disorder)
                         continue
+
+                    if testMode and (int(disorder_num) not in self.test_ids or int(gene_num) not in self.test_ids):
+                            continue
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = (':').join(('OMIM',gene_num))
                     disorder_id = (':').join(('OMIM',disorder_num))
@@ -392,17 +424,17 @@ class OMIM(Source):
                         alt_label = 'some variant of '+alt_label.strip()+' that causes '+disorder_label
                     else:
                         alt_label = None
-                    gu.addIndividualToGraph(self.graph,alt_locus,alt_label,geno.genoparts['variant_locus'])
+                    gu.addIndividualToGraph(g,alt_locus,alt_label,geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus,gene_id)
 
                     assoc = G2PAssoc(assoc_id,alt_locus,disorder_id,None,evidence)
-                    assoc.loadAllProperties(self.graph)
-                    assoc.addAssociationToGraph(self.graph)
+                    assoc.loadAllProperties(g)
+                    assoc.addAssociationToGraph(g)
 
-                if (limit is not None and line_counter > limit):
+                if not testMode and (limit is not None and line_counter > limit):
                     break
 
-            gu.loadProperties(self.graph,geno.object_properties,gu.OBJPROP)
+            gu.loadProperties(g,geno.object_properties,gu.OBJPROP)
 
         return
 
@@ -500,13 +532,17 @@ class OMIM(Source):
         #print (label,'-->',l)
         return l
 
-    def _process_phenotypicseries(self,limit):
+    def _process_phenotypicseries(self,limit,testMode):
         """
         Creates classes from the OMIM phenotypic series list.  These are grouping classes
         to hook the more granular OMIM diseases.
         :param limit:
         :return:
         """
+        if testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
         print("INFO: getting phenotypic series titles")
         gu = GraphUtils(curie_map.get())
         line_counter = 0
@@ -525,11 +561,11 @@ class OMIM(Source):
                 line_counter += 1
                 (ps_label,ps_num) = line.split('\t')
                 omim_id = 'OMIM:'+ps_num
-                gu.addClassToGraph(self.graph,omim_id,ps_label)
+                gu.addClassToGraph(g,omim_id,ps_label)
 
         return
 
-    def _get_phenotypicseries_parents(self,entry):
+    def _get_phenotypicseries_parents(self,entry,g):
         """
         Extract the phenotypic series parent relationship out of the entry
         :param entry:
@@ -553,12 +589,12 @@ class OMIM(Source):
         #add this entry as a subclass of the series entry
         for ser in serieslist:
             series_id = 'OMIM:'+ser
-            gu.addClassToGraph(self.graph,series_id,None)
-            gu.addSubclass(self.graph,series_id,omimid)
+            gu.addClassToGraph(g,series_id,None)
+            gu.addSubclass(g,series_id,omimid)
 
         return
 
-    def _get_mappedids(self,entry):
+    def _get_mappedids(self,entry,g):
         """
         Extract the Orphanet and UMLS ids as equivalences from the entry
         :param entry:
@@ -578,21 +614,21 @@ class OMIM(Source):
                     (orpha_num,internal_num,orpha_label) = i.split(';;')
                     orpha_id = 'Orphanet:'+orpha_num.strip()
                     orpha_mappings.append(orpha_id)
-                    gu.addClassToGraph(self.graph,orpha_id,orpha_label.strip())
-                    gu.addXref(self.graph,omimid,orpha_id)
+                    gu.addClassToGraph(g,orpha_id,orpha_label.strip())
+                    gu.addXref(g,omimid,orpha_id)
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
                 for i in umls_mappings:
                     umls_id = 'UMLS:'+i
-                    gu.addClassToGraph(self.graph,umls_id,None)
-                    gu.addXref(self.graph,omimid,umls_id)
+                    gu.addClassToGraph(g,umls_id,None)
+                    gu.addXref(g,omimid,umls_id)
 
             if ((self._get_omimtype(entry) == Genotype.genoparts['gene'])
                 and ('geneIDs' in links)):
                 entrez_mappings = links['geneIDs']
                 for i in entrez_mappings.split(','):
-                    gu.addEquivalentClass(self.graph,omimid,'NCBIGene:'+str(i))
+                    gu.addEquivalentClass(g,omimid,'NCBIGene:'+str(i))
 
 
         return
@@ -619,7 +655,7 @@ class OMIM(Source):
         #print('labels:',labels)
         return labels
 
-    def _get_pubs(self,entry):
+    def _get_pubs(self,entry,g):
         """
         Extract mentioned publications from the reference list
         :param entry:
@@ -633,11 +669,11 @@ class OMIM(Source):
                     omimid = 'OMIM:'+str(r['reference']['mimNumber'])
                     if 'pubmedID' in r['reference']:
                         pmid = 'PMID:'+str(r['reference']['pubmedID'])
-                        gu.addTriple(self.graph,omimid,gu.object_properties['mentions'],pmid)
+                        gu.addTriple(g,omimid,gu.object_properties['mentions'],pmid)
                     elif 'articleUrl' in r['reference']:
                         print('INFO: No PMID for reference',str(r['reference']['referenceNumber']),'in',omimid)
                         articleurl = r['reference']['articleUrl']
-                        #gu.addTriple(self.graph,omimid,gu.object_properties['mentions'],articleurl)
+                        #gu.addTriple(g,omimid,gu.object_properties['mentions'],articleurl)
                 else:
                     print('INFO:keys for item in reference list:',r.keys())
 
