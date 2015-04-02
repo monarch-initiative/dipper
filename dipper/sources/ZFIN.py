@@ -10,6 +10,7 @@ from dipper.utils import pysed
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
 from dipper.models.Genotype import Genotype
+from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.GenomicFeature import Feature,makeChromID
@@ -487,6 +488,9 @@ class ZFIN(Source):
         :return:
         """
 
+        #Is this file necessary if we can get human orthologs through PANTHER?
+        #Are the ZFIN genes mapped to an NCBI Gene ID in other files?
+
         logger.info("Processing human orthos")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
@@ -499,6 +503,26 @@ class ZFIN(Source):
                 (zfin_id,zfin_symbol,zfin_name,human_symbol,human_name,omim_id,gene_id,empty) = row
 
                 #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+
+                zfin_id = 'ZFIN:' + zfin_id.strip()
+                geno.addGene(zfin_id,zfin_symbol,None,zfin_name)
+
+                gene_id = 'NCBIGene:' + gene_id.strip()
+                geno.addGene(gene_id,human_symbol,None,human_name)
+
+                #TODO: Need to add the ortholog relationship between the zebrafish gene and the human gene
+                assoc_id = self.make_id(('').join((zfin_id,gene_id)))
+                assoc = OrthologyAssoc(assoc_id,zfin_id,gene_id,None,None)
+
+                assoc.setRelationship('RO:HOM0000017')
+                #assoc.loadAllProperties(self.graph)    #FIXME inefficient
+                assoc.addAssociationToGraph(self.graph)
+
+                omim_id = 'OMIM:' + omim_id.strip()
+
+                gu.addEquivalentClass(self.graph, gene_id, omim_id)
+
 
                 if (limit is not None and line_counter > limit):
                     break
