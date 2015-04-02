@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_human_orthos(limit)
         self._process_anatomy(limit)
         self._process_stages(limit)
         self._process_wildtype_expression(limit)
@@ -477,6 +478,33 @@ class ZFIN(Source):
 
         logger.info("Done with anatomy")
         return
+
+
+    def _process_human_orthos(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing human orthos")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['human_orthos']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (zfin_id,zfin_symbol,zfin_name,human_symbol,human_name,omim_id,gene_id,empty) = row
+
+                #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with human orthos")
 
 
     def _process_g2p(self, limit=None):
