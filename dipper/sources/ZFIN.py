@@ -109,6 +109,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_anatomy(limit)
         self._process_stages(limit)
         self._process_wildtype_expression(limit)
         self._process_wildtypes(limit)
@@ -449,6 +450,34 @@ class ZFIN(Source):
 
         logger.info("Done with stages")
         return
+
+    def _process_anatomy(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing anatomy")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['anatomy']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (anatomy_id,anatomy_name,start_stage_id,end_stage_id,empty) = row
+
+                #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+
+        logger.info("Done with anatomy")
+        return
+
 
     def _process_g2p(self, limit=None):
         '''
