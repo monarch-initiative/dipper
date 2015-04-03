@@ -110,6 +110,8 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+        self._process_genotype_features(limit)
+        self._process_g2p(limit)
         self._process_human_orthos(limit)
         self._process_anatomy(limit)
         self._process_stages(limit)
@@ -120,8 +122,6 @@ class ZFIN(Source):
         self._process_feature_affected_genes(limit)
         self._process_features(limit)
         self._process_landmarks(limit)
-        self._process_genotype_features(limit)
-        self._process_g2p(limit)
         self._process_genes(limit)
         self._process_genbank_ids(limit)
         self._process_uniprot_ids(limit)
@@ -286,7 +286,9 @@ class ZFIN(Source):
 
     def _process_genotype_backgrounds(self, limit=None):
         """
-
+        Makes these triples:
+        <ZFIN:genotype_id> GENO:has_reference_part <ZFIN:background_id>
+        <ZFIN:background_id> a GENO:genomic_background (Note that the background_id is a genotype_id)
         :param limit:
         :return:
         """
@@ -318,6 +320,12 @@ class ZFIN(Source):
 
     def _process_wildtypes(self, limit=None):
         """
+        This table provides the genotype IDs, name, and abbreviation of the wildtype genotypes.
+
+        Triples created:
+        <genotype id> a GENO:wildtype
+        <genotype id> rdfs:label genotype_abbreviation
+        <genotype id> dc:description genotype_name
 
         :param limit:
         :return:
@@ -336,12 +344,11 @@ class ZFIN(Source):
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
 
-                #FIXME: Just use the genotype name, or use the abbreviation as the name, the name as the description?
+                #Add genotype to graph with label, type=wildtype, and description.
                 geno.addGenotype(genotype_id, genotype_abbreviation,geno.genoparts['wildtype'],genotype_name)
 
                 if (limit is not None and line_counter > limit):
                     break
-
 
         logger.info("Done with wildtype genotypes")
         return
