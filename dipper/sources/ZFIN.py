@@ -630,11 +630,20 @@ class ZFIN(Source):
                  genomic_feature_marker_relationship,empty) = row
 
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
-
-                gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
+                #TODO: Can build the variant locus, sequence alteration, and sequence alteration type here.
 
                 gene_id = 'ZFIN:' + gene_id.strip()
                 geno.addGene(gene_id,gene_symbol)
+
+                #Add variant locus (allele)
+                #TODO: Confirm this is correct/holds true for all variant loci.
+                variant_locus = gene_symbol+'<'+genomic_feature_abbreviation+'>'
+                variant_locus_id = self.make_id(genomic_feature_id+gene_id)
+
+                #Do we want to filter out the translocations/deletions, or include them?
+                geno.addAllele(variant_locus_id,variant_locus,feature_so_id)
+
+                #gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
 
                 #NOTE: Most feature_marker_relationship entries are 'is allele of' but there are some entries with
                 # 'markers missing' corresponds to SO:1000029 - chromosomal_deletion) or
@@ -642,8 +651,13 @@ class ZFIN(Source):
                 # For now, only indicating as an allele of gene if the relationship is 'is allele of.'
                 #TODO: Confirm that this conditional is the correct approach.
                 if (genomic_feature_marker_relationship == 'is allele of'):
-                    geno.addAlleleOfGene(genomic_feature_id,gene_id)
+                    #FIXME: Should this be the variant locus ID or the genomic_feature_id? I think the VL ID.
+                    geno.addAlleleOfGene(variant_locus_id,gene_id)
                 #TODO: For the other relationships, is there a 'translocation_of' or 'deletion_of' that can be used?
+
+                # Add the sequence alteration
+                geno.addSequenceAlteration(genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
+                geno.addSequenceAlterationToVariantLocus(genomic_feature_id,variant_locus_id)
 
                 if (limit is not None and line_counter > limit):
                     break
