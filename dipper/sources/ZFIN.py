@@ -286,9 +286,12 @@ class ZFIN(Source):
 
     def _process_genotype_backgrounds(self, limit=None):
         """
+        This table provides a mapping of genotypes to their background genotypes.
+        Note that the background_id is also a genotype_id.
+
         Makes these triples:
         <ZFIN:genotype_id> GENO:has_reference_part <ZFIN:background_id>
-        <ZFIN:background_id> a GENO:genomic_background (Note that the background_id is a genotype_id)
+        <ZFIN:background_id> a GENO:genomic_background
         :param limit:
         :return:
         """
@@ -307,8 +310,10 @@ class ZFIN(Source):
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 background_id = 'ZFIN:' + background_id.strip()
 
+                #Add genotype
                 geno.addGenotype(genotype_id, genotype_name)
 
+                #Add background to the genotype
                 geno.addGenomicBackgroundToGenotype(background_id,genotype_id)
 
                 if (limit is not None and line_counter > limit):
