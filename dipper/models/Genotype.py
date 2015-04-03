@@ -51,15 +51,16 @@ class Genotype():
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
         'has_reference_part': 'GENO:0000385',
-        'in_taxon' : 'RO:0002162',
+        'in_taxon': 'RO:0002162',
         'has_zygosity': 'GENO:0000608',
         'is_sequence_variant_instance_of': 'GENO:0000408',  #links a alternate locus (instance) to a gene (class)
         'targets_instance_of': 'GENO:0000414',
-        'is_reference_instance_of' : 'GENO:0000610',
-        'has_part' : 'BFO:0000051',
-        'has_member_with_allelotype' : 'GENO:0000225',  #use this when relating populations
-        'is_allelotype_of' : 'GENO:0000206',
-        'has_genotype' : 'GENO:0000222'
+        'is_reference_instance_of': 'GENO:0000610',
+        'has_part': 'BFO:0000051',
+        'has_member_with_allelotype': 'GENO:0000225',  #use this when relating populations
+        'is_allelotype_of': 'GENO:0000206',
+        'has_genotype': 'GENO:0000222',
+        'has_phenotype': 'RO:0002200'
     }
 
     zygosity = {
