@@ -197,10 +197,10 @@ class OMIM(Source):
             omimparams.update({'mimNumber' : (',').join(omimids[it:end])})
             p = urllib.parse.urlencode(omimparams)
             url = ('/').join((self.OMIM_API,'entry'))+'?%s' % p
-            #print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
+            print ('fetching:',('/').join((self.OMIM_API,'entry'))+'?%s' % p)
 
             ### if you want to test a specific entry number, uncomment the following code block
-            #if ('300523' in omimids[it:end]):  #104000
+            #if ('101600' in omimids[it:end]):  #104000
             #    print("FOUND IT in",omimids[it:end])
             #else:
             #   #testing very specific record
@@ -225,6 +225,16 @@ class OMIM(Source):
                 titles = e['entry']['titles']
                 label = titles['preferredTitle']
 
+                other_labels = []
+                if 'alternativeTitles' in titles:
+                    other_labels += self._get_alt_labels(titles['alternativeTitles'])
+                if 'includedTitles' in titles:
+                    other_labels += self._get_alt_labels(titles['includedTitles'])
+
+                #add synonyms of alternate labels
+                #preferredTitle": "PFEIFFER SYNDROME",
+                #"alternativeTitles": "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
+                #"includedTitles": "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
 
                 #remove the abbreviation (comes after the ;) from the preferredTitle, and add it as a synonym
                 abbrev = None
@@ -243,6 +253,11 @@ class OMIM(Source):
 
                     #add the original OMIM label as a synonym
                     gu.addSynonym(g,omimid,label)
+
+                    #add the alternate labels and includes as synonyms
+                    for l in other_labels:
+                        gu.addSynonym(g,omimid,l)
+
 
                     #for OMIM, we're adding the description as a definition
                     gu.addDefinition(g,omimid,description)
@@ -273,6 +288,8 @@ class OMIM(Source):
 
                     self._get_phenotypicseries_parents(e['entry'])
                     self._get_mappedids(e['entry'])
+
+                    self._get_pubs(e['entry'])
 
 
                 ###end iterating over batch of entries
@@ -542,3 +559,104 @@ class OMIM(Source):
                     gu.addXref(self.graph,omimid,umls_id)
 
         return
+
+    def _get_alt_labels(self,titles):
+        """
+        From a string of delimited titles, make an array.  This assumes that the titles are double-semicolon (';;')
+        delimited.  This will additionally pass each through the _cleanup_label method to convert the
+        screaming ALL CAPS to something more pleasant to read.
+        :param titles:
+        :return: an array of cleaned-up labels
+        """
+
+        labels = []
+        #"alternativeTitles": "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
+        #"includedTitles": "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
+
+        for t in titles.split(';;'):
+            #remove ', included', if present
+            l = re.sub(',\s*INCLUDED','',t.strip(),re.IGNORECASE)
+            l = self._cleanup_label(l)
+            labels.append(l)
+
+        #print('labels:',labels)
+        return labels
+
+    def _get_pubs(self,entry):
+        """
+        Extract mentioned publications from the reference list
+        :param entry:
+        :return:
+        """
+
+        gu = GraphUtils(curie_map.get())
+        if 'referenceList' in entry:
+            for r in entry['referenceList']:
+                if 'reference' in r:
+                    omimid = 'OMIM:'+str(r['reference']['mimNumber'])
+                    if 'pubmedID' in r['reference']:
+                        pmid = 'PMID:'+str(r['reference']['pubmedID'])
+                        gu.addTriple(self.graph,omimid,gu.object_properties['mentions'],pmid)
+                    elif 'articleUrl' in r['reference']:
+                        print('INFO: No PMID for reference',str(r['reference']['referenceNumber']),'in',omimid)
+                        articleurl = r['reference']['articleUrl']
+                        #gu.addTriple(self.graph,omimid,gu.object_properties['mentions'],articleurl)
+                else:
+                    print('INFO:keys for item in reference list:',r.keys())
+
+
+
+        return
+
+    def _get_omimtype(self,entry):
+        """
+        Here, we look at the omim 'prefix' to help to type the entry.  For now, we only classify omim entries
+        as genes; the rest we leave alone.
+        :param entry:
+        :return:
+        """
+        # An asterisk (*) before an entry number indicates a gene.
+        # A number symbol (#) before an entry number indicates that it is a descriptive entry,
+        # usually of a phenotype, and does not represent a unique locus.
+        # The reason for the use of the number symbol is given in the first paragraph of the entry.
+        # Discussion of any gene(s) related to the phenotype resides in another entry(ies) as described in the first paragraph.
+        #
+        # A plus sign (+) before an entry number indicates that the entry contains the description of
+        # a gene of known sequence and a phenotype.
+        #
+        # A percent sign (%) before an entry number indicates that the entry describes a confirmed mendelian
+        # phenotype or phenotypic locus for which the underlying molecular basis is not known.
+        #
+        # No symbol before an entry number generally indicates a description of a phenotype for which the
+        # mendelian basis, although suspected, has not been clearly established or that the separateness of this
+        # phenotype from that in another entry is unclear.
+        #
+        # A caret (^) before an entry number means the entry no longer exists because it was removed from the
+        # database or moved to another entry as indicated.
+        prefix = None
+        type_id = None
+        if 'prefix' in entry:
+            prefix = entry['prefix']
+
+        if prefix == '*':
+            #gene, may not have a known sequence or a phenotype
+            #examples: 102560,102480,100678,102750
+            type_id = Genotype.genoparts['gene']  #doublecheck this
+        elif prefix == '#' :
+            #phenotype/disease -- indicate that here?
+            #examples: 104200,105400,114480,115300,121900
+            pass
+        elif prefix == '+' :
+            #gene of known sequence and has a phenotype
+            #examples: 107670,110600,126453
+            pass
+        elif prefix == '%' :
+            #this is a disease (with a known locus).
+            #examples include:  102150,104000,107200,100070
+            pass
+        elif prefix == '' :
+            #this is probably just a phenotype
+            pass
+
+
+        return type_id

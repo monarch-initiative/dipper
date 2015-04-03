@@ -2,6 +2,7 @@ import csv
 import gzip
 import re
 import logging
+import os
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -294,10 +295,11 @@ class IMPC(Source):
         reference_checksums = self.parse_checksum_file(
             self.files['checksum']['file'])
         for md5, file in reference_checksums.items():
-            if self.get_file_md5(self.rawdir, file) != md5:
-                is_match = False
-                logger.warn('%s was not downloaded completely', file)
-                return is_match
+            if os.path.isfile('/'.join((self.rawdir, file))):
+                if self.get_file_md5(self.rawdir, file) != md5:
+                    is_match = False
+                    logger.warn('%s was not downloaded completely', file)
+                    return is_match
 
         return is_match
 
