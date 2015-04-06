@@ -87,7 +87,7 @@ class OMIM(Source):
             print("ERROR: not configured with API key.")
 
         if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
-            print("WARN: not configured with gene test ids.")
+            print("WARN: not configured with disease test ids.")
         else:
             #select ony those test ids that are omim's.
             self.test_ids += [obj.replace('OMIM:','') for obj in config.get_config()['test_ids']['disease'] if re.match('OMIM:',obj)]
