@@ -13,6 +13,7 @@ from dipper.models.Genotype import Genotype
 
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper import config
 from dipper.models.GenomicFeature import Feature,makeChromID
 
 
@@ -62,9 +63,15 @@ class NCBIGene(Source):
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
-        if self.testmode:
-            self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
-            self.filter = 'geneids'
+        #if self.testmode:
+        #    self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
+        #    self.filter = 'geneids'
+        self.gene_ids = []
+        if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.gene_ids = config.get_config()['test_ids']['gene']
+
 
         self.properties = Feature.properties
 
@@ -94,9 +101,11 @@ class NCBIGene(Source):
 
         print("Parsing files...")
 
-        self._get_gene_info(limit)
-        self._get_gene_history(limit)
-        self._get_gene2pubmed(limit)
+        for m in [True,False]:
+            self.testmode = m
+            self._get_gene_info(limit)
+            self._get_gene_history(limit)
+            self._get_gene2pubmed(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -115,8 +124,13 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
-        geno = Genotype(self.graph)
 
+        if self.testmode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        geno = Genotype(g)
 
         #not unzipping the file
         print("INFO: Processing Gene records")
@@ -135,12 +149,16 @@ class NCBIGene(Source):
                  nomenclature_status,other_designations,modification_date) = line.split('\t')
 
                 ##### set filter=None in init if you don't want to have a filter
-                if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                        continue
+                #if self.filter is not None:
+                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #        continue
                 ##### end filter
 
+
+                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                    continue
 
                 line_counter += 1
 
@@ -154,19 +172,19 @@ class NCBIGene(Source):
                     label = symbol
 
                 #TODO might have to figure out if things aren't genes, and make them individuals
-                gu.addClassToGraph(self.graph,gene_id,label,gene_type_id,desc)
+                gu.addClassToGraph(g,gene_id,label,gene_type_id,desc)
 
                 #we have to do special things here for genes, because they're classes not individuals
                 #f = Feature(gene_id,label,gene_type_id,desc)
 
                 if (name != '-'):
-                    gu.addSynonym(self.graph,gene_id,name)
+                    gu.addSynonym(g,gene_id,name)
                 if (synonyms.strip() != '-'):
                     for s in synonyms.split('|'):
-                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
+                        gu.addSynonym(g,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
                 if (other_designations.strip() != '-'):
                     for s in other_designations.split('|'):
-                        gu.addSynonym(self.graph,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
+                        gu.addSynonym(g,gene_id,s.strip(),Assoc.properties['hasRelatedSynonym'])
 
 
                 #deal with the xrefs
@@ -177,10 +195,10 @@ class NCBIGene(Source):
                         if ((fixedr is not None) and (fixedr.strip() != '')):
                             if (re.match('HPRD',fixedr)):
                                 #proteins are not == genes.
-                                gu.addTriple(self.graph,gene_id,self.properties['has_gene_product'],fixedr)
+                                gu.addTriple(g,gene_id,self.properties['has_gene_product'],fixedr)
                             else:
                                 if (fixedr.split(':')[0] not in ['Vega','IMGT/GENE-DB']):  #skip these for now
-                                    gu.addEquivalentClass(self.graph,gene_id,fixedr)
+                                    gu.addEquivalentClass(g,gene_id,fixedr)
 
                 if (str(chr) != '-' and str(chr) != ''):
                     if (re.search('\|',str(chr))):
@@ -203,30 +221,30 @@ class NCBIGene(Source):
                             maploc_id = makeChromID(str(chr)+bid,tax_num)  #the generic location (no coordinates)
                             #print(map_loc,'-->',bid,'-->',maploc_id)
                             band = Feature(maploc_id,None,None)  #Assume it's type will be added elsewhere
-                            band.addFeatureToGraph(self.graph)
+                            band.addFeatureToGraph(g)
                             #add the band as the containing feature
-                            gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],maploc_id)
+                            gu.addTriple(g,gene_id,Feature.object_properties['is_subsequence_of'],maploc_id)
                         else:
-                            gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
+                            gu.addTriple(g,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
                             #TODO handle these cases
                             #examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
                             print('not regular band pattern for',gene_id,':',map_loc)
                     else:
                         #add the gene as a subsequence of the chromosome
-                        gu.addTriple(self.graph,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
+                        gu.addTriple(g,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
                 else:
                     #since the gene is unlocated, add the taxon as a property of it
                     #TODO should we add the gene to the "genome" instead of letting it dangle?
                     geno.addTaxon(tax_id,gene_id)
 
-                if (limit is not None and line_counter > limit):
+                if (not self.testmode) and (limit is not None and line_counter > limit):
                     break
 
-            gu.loadProperties(self.graph,Feature.object_properties,gu.OBJPROP)
-            gu.loadProperties(self.graph,Feature.data_properties,gu.DATAPROP)
-            gu.loadProperties(self.graph,Genotype.object_properties,gu.OBJPROP)
-            gu.loadAllProperties(self.graph)
+            gu.loadProperties(g,Feature.object_properties,gu.OBJPROP)
+            gu.loadProperties(g,Feature.data_properties,gu.DATAPROP)
+            gu.loadProperties(g,Genotype.object_properties,gu.OBJPROP)
+            gu.loadAllProperties(g)
 
 
         return
@@ -240,6 +258,10 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
+        if self.testmode:
+            g = self.testgraph
+        else:
+            g = self.graph
 
         print("INFO: Processing Gene records")
         line_counter=0
@@ -254,30 +276,36 @@ class NCBIGene(Source):
                 (tax_num,gene_num,discontinued_num,discontinued_symbol,discontinued_date) = line.split('\t')
 
                 ##### set filter=None in init if you don't want to have a filter
-                if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                        continue
+                #if self.filter is not None:
+                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #        continue
                 ##### end filter
+
 
                 if (gene_num == '-' or discontinued_num =='-'):
                     continue
+
+                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                    continue
+
                 line_counter += 1
                 gene_id = (':').join(('NCBIGene',gene_num))
                 discontinued_gene_id = (':').join(('NCBIGene',discontinued_num))
                 tax_id = (':').join(('NCBITaxon',tax_num))
 
                 #add the two genes
-                gu.addClassToGraph(self.graph,gene_id,None)
-                gu.addClassToGraph(self.graph,discontinued_gene_id,discontinued_symbol)
+                gu.addClassToGraph(g,gene_id,None)
+                gu.addClassToGraph(g,discontinued_gene_id,discontinued_symbol)
 
                 #add the new gene id to replace the old gene id
-                gu.addDeprecatedClass(self.graph,discontinued_gene_id,[gene_id])
+                gu.addDeprecatedClass(g,discontinued_gene_id,[gene_id])
 
                 #also add the old symbol as a synonym of the new gene
-                gu.addSynonym(self.graph,gene_id,discontinued_symbol)
+                gu.addSynonym(g,gene_id,discontinued_symbol)
 
-                if (limit is not None and line_counter > limit):
+                if (not self.testmode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -291,6 +319,10 @@ class NCBIGene(Source):
         '''
 
         gu = GraphUtils(curie_map.get())
+        if self.testmode:
+            g = self.testgraph
+        else:
+            g = self.graph
         is_about = gu.getNode(Assoc.properties['is_about'])
 
         print("INFO: Processing Gene records")
@@ -306,11 +338,16 @@ class NCBIGene(Source):
                 (tax_num,gene_num,pubmed_num) = line.split('\t')
 
                 ##### set filter=None in init if you don't want to have a filter
-                if self.filter is not None:
-                    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                        continue
+                #if self.filter is not None:
+                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #        continue
                 ##### end filter
+
+                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                    continue
+
 
                 if (gene_num == '-' or pubmed_num =='-'):
                     continue
@@ -319,12 +356,12 @@ class NCBIGene(Source):
                 pubmed_id = (':').join(('PMID',pubmed_num))
 
                 #add the gene, in case it hasn't before
-                gu.addClassToGraph(self.graph,gene_id,None)
+                gu.addClassToGraph(g,gene_id,None)
                 #add the publication as a NamedIndividual
-                gu.addIndividualToGraph(self.graph,pubmed_id,None,None)  #add type publication
+                gu.addIndividualToGraph(g,pubmed_id,None,None)  #add type publication
                 self.graph.add((gu.getNode(pubmed_id),is_about,gu.getNode(gene_id)))
 
-                if (limit is not None and line_counter > limit):
+                if (not self.testmode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -353,9 +390,6 @@ class NCBIGene(Source):
             so_id = type_to_so_map.get(type)
         else:
             print("WARN: unmapped code",type,". Defaulting to 'SO:0000704'.")
-
-        return so_id
-
 
         return so_id
 
