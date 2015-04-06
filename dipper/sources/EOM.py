@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class EOM(Source):
     """
-    Elements of Morphology is a great resource from NHGRI that has definitions of morphological abnormalities,
+    Elements of Morphology is a resource from NHGRI that has definitions of morphological abnormalities,
     together with image depictions.  We pull those relationships, as well as our local mapping of equivalences
     between EOM and HP terminologies.
 
@@ -27,8 +27,9 @@ class EOM(Source):
         'disco' : {'user' : '<username>', 'password' : '<password>'}
       }
 
-    Hand-curated data for the HP to EOM mapping is currently stored offline, and will need to be placed into
-    the raw/ directory here.  TODO: move this into a public repo.
+    Monarch-curated data for the HP to EOM mapping is stored at https://phenotype-ontologies.googlecode.com
+
+    Since this resource is so small, the entirety of it is the "test" set.
 
     """
 
@@ -82,8 +83,6 @@ class EOM(Source):
         self.dataset.setVersion(filedate)
 
 
-
-
         return
 
 
@@ -98,9 +97,11 @@ class EOM(Source):
 
         logger.info("Finished parsing.")
 
-
         self.load_bindings()
         Assoc().loadAllProperties(self.graph)
+
+        #since it's so small, we default to copying the entire graph to the test set
+        self.testgraph = self.graph
 
         logger.info("Found %s nodes", len(self.graph))
         return
