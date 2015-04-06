@@ -9,10 +9,10 @@ import re
 from rdflib.namespace import FOAF, DC, RDFS
 
 from dipper import curie_map
+from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.InteractionAssoc import InteractionAssoc
 from dipper.models.Dataset import Dataset
-from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 
 
@@ -34,6 +34,11 @@ class BioGrid(Source):
         }
     }
 
+    #biogrid-specific identifiers for use in subsetting identifier mapping
+    biogrid_ids = [106638,107308,107506,107674,107675,108277,108506,108767,108814,108899,110308,110364,110678,111642,
+                   112300,112365,112771,112898,199832,203220,247276,120150,120160,124085]
+
+
     def __init__(self, tax_ids=None):
         super().__init__('biogrid')
 
@@ -43,8 +48,14 @@ class BioGrid(Source):
         self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/')
 
         # Defaults
+        #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090]
+
+        if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.test_ids = config.get_config()['test_ids']['gene']
 
         #data-source specific warnings (will be removed when issues are cleared)
         print("WARN: several MI experimental codes do not exactly map to ECO; using approximations.")
@@ -91,17 +102,18 @@ class BioGrid(Source):
         '''
 
         #TODO make each of these items an option... we may want to process them separately
-        self._get_interactions(limit)
+        for testMode in [True,False]:
+            self._get_interactions(limit,testMode)
+            self._get_identifiers(limit,testMode)
 
-        self._get_identifiers(limit)
         self.load_bindings()
-
         print("Loaded", len(self.graph), "nodes")
+
 
         return
 
 
-    def _get_interactions(self,limit):
+    def _get_interactions(self,limit,testMode):
         print("INFO: getting interactions")
         line_counter = 0
         f=('/').join((self.rawdir,self.files['interactions']['file']))
@@ -124,21 +136,27 @@ class BioGrid(Source):
                  taxid_a, taxid_b, interaction_type,
                  source_db, interaction_id, confidence_val) = line.split('\t')
 
-                #TODO remove these filters, or parameterize them
-                #uncomment the following codeblock if you want to filter based on taxid
-                #taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
-                #taxids = [9606] #human
-                if (int(re.sub('taxid:','', taxid_a.rstrip())) not in self.tax_ids
-                        or int(re.sub('taxid:','', taxid_b.rstrip())) not in self.tax_ids):
-                    continue
-                else:
-                    matchcounter += 1
-
-
-                #TODO proper testing/catching of these search/match methods
                 #get the actual gene ids, typically formated like: gene/locuslink:351|BIOGRID:106848
-                gene_a='NCBIGene:'+re.search('locuslink\:(\d+)\|',interactor_a).groups()[0]
-                gene_b='NCBIGene:'+re.search('locuslink\:(\d+)\|',interactor_b).groups()[0]
+                gene_a_num = re.search('locuslink\:(\d+)\|',interactor_a).groups()[0]
+                gene_b_num = re.search('locuslink\:(\d+)\|',interactor_b).groups()[0]
+
+                if testMode:
+                    g = self.testgraph
+                    #skip any genes that don't match our test set
+                    if (int(gene_a_num) not in self.test_ids or int(gene_b_num) not in self.test_ids):
+                        continue
+                else:
+                    g = self.graph
+                    #when not in test mode, filter by taxon
+                    if (int(re.sub('taxid:','', taxid_a.rstrip())) not in self.tax_ids
+                        or int(re.sub('taxid:','', taxid_b.rstrip())) not in self.tax_ids):
+                        continue
+                    else:
+                        matchcounter += 1
+
+                gene_a='NCBIGene:'+gene_a_num
+                gene_b='NCBIGene:'+gene_b_num
+
 
                 #get the interaction type
                 #psi-mi:"MI:0407"(direct interaction)
@@ -160,18 +178,16 @@ class BioGrid(Source):
 
                 assoc = InteractionAssoc(assoc_id,gene_a,gene_b,pub_id,evidence)
                 assoc.setRelationship(rel)
-                assoc.loadAllProperties(self.graph)    #FIXME - this seems terribly inefficient
-                assoc.addInteractionAssociationToGraph(self.graph)
-                if (limit is not None and line_counter > limit):
+                assoc.loadAllProperties(g)    #FIXME - this seems terribly inefficient
+                assoc.addInteractionAssociationToGraph(g)
+                if not testMode and (limit is not None and line_counter > limit):
                     break
 
         myzip.close()
-        #print("INFO: found",str(matchcounter),"matching rows")  #for testing
-
 
         return
 
-    def _get_identifiers(self,limit):
+    def _get_identifiers(self,limit,testMode):
         '''
         This will process the id mapping file provided by Biogrid.
         The file has a very large header, which we scan past, then pull the identifiers, and make
@@ -187,6 +203,13 @@ class BioGrid(Source):
         fname=myzip.namelist()[0]
         matchcounter=0
         foundheader=False
+
+        gu = GraphUtils(curie_map.get())
+
+
+        #TODO align this species filter with the one above
+        #speciesfilters='Homo sapiens,Mus musculus,Drosophila melanogaster,Danio rerio,Caenorhabditis elegans,Xenopus laevis'.split(',')
+        speciesfilters='Homo sapiens,Mus musculus'.split(',')
         with myzip.open(fname,'r') as csvfile:
             for line in csvfile:
                 #skip header lines
@@ -200,19 +223,22 @@ class BioGrid(Source):
                 #1	814566	ENTREZ_GENE	Arabidopsis thaliana
                 (biogrid_num,id_num,id_type,organism_label) = line.split('\t')
 
+                if testMode:
+                    g = self.testgraph
+                    #skip any genes that don't match our test set
+                    if (int(biogrid_num) not in self.biogrid_ids):
+                        continue
+                else:
+                    g = self.graph
+
                 #for each one of these, create the node and add equivalent classes
-                cu = CurieUtil(curie_map.get())
-                gu = GraphUtils(curie_map.get())
-                g = self.graph
                 biogrid_id='BIOGRID:'+biogrid_num
                 prefix = self._map_idtype_to_prefix(id_type)
 
 
-                #geneidtypefilters='NCBIGene,OMIM,MGI,FlyBase,ZFIN,MGI,HGNC,WormBase,XenBase,ENSEMBL,miRBase'.split(',')
                 #TODO make these filters available as commandline options
-                geneidtypefilters='NCBIGene,MGI,ENSEMBL'.split(',')
-                #speciesfilters='Homo sapiens,Mus musculus,Drosophila melanogaster,Danio rerio,Caenorhabditis elegans,Xenopus laevis'.split(',')
-                speciesfilters='Homo sapiens,Mus musculus'.split(',')
+                #geneidtypefilters='NCBIGene,OMIM,MGI,FlyBase,ZFIN,MGI,HGNC,WormBase,XenBase,ENSEMBL,miRBase'.split(',')
+                geneidtypefilters='NCBIGene,MGI,ENSEMBL,ZFIN,HGNC'.split(',')
                 #proteinidtypefilters='HPRD,Swiss-Prot,NCBIProtein'
                 if ((speciesfilters is not None) and (organism_label.strip() in speciesfilters)):
                     line_counter += 1
@@ -224,8 +250,11 @@ class BioGrid(Source):
                     #elif (id_type == 'SYNONYM'):
                     #    gu.addSynonym(g,biogrid_id,id_num)  #FIXME - i am not sure these are synonyms, altids?
 
-                if (limit is not None and line_counter > limit):
+
+                if not testMode and (limit is not None and line_counter > limit):
                     break
+
+        myzip.close()
 
         return
 
