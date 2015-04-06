@@ -6,6 +6,7 @@ import logging
 import sys
 
 from dipper import curie_map
+from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
@@ -16,7 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 class CTD(Source):
-    """Fetch, Parse, and Convert data from CTD into Triples"""
+    """
+    The Comparative Toxicogenomics Database (CTD) includes curated data describing cross-species chemical–gene/protein
+    interactions and chemical– and gene–disease associations to illuminate molecular mechanisms underlying variable
+    susceptibility and environmentally influenced diseases.
+
+    Here, we fetch, parse, and convert data from CTD into triples, leveraging only the associations based on
+    direct evidence (not using the inferred associations).  We currently only process the following associations:
+        *chemical-disease
+        *gene-pathway
+
+    As part of a separate process through human-disease-ontology, we pull in the disease identifiers as mapped to
+    MESH.
+
+    """
 
     files = {
         'chemical_disease_interactions': {
@@ -35,6 +49,21 @@ class CTD(Source):
     def __init__(self):
         Source.__init__(self, 'ctd')
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
+
+        if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.test_geneids = config.get_config()['test_ids']['gene']
+
+        if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.test_diseaseids = config.get_config()['test_ids']['disease']
+
+
+        self.testMode = True
+
+        return
 
     def fetch(self, is_dl_forced):
         """
@@ -68,14 +97,11 @@ class CTD(Source):
             pub_map = self._parse_publication_file(
                 self.static_files['publications']['file']
             )
-        self._parse_ctd_file(
-            limit,
-            self.files['chemical_disease_interactions']['file'],
-            pub_map
-        )
-        self._parse_ctd_file(limit,
-                                  self.files['gene_pathway']['file']
-        )
+
+        for m in [True,False]:
+            self.testMode = m
+            self._parse_ctd_file(limit,self.files['chemical_disease_interactions']['file'],pub_map)
+            self._parse_ctd_file(limit,self.files['gene_pathway']['file'])
         self.load_bindings()
         logger.info("Done parsing files.")
 
@@ -117,7 +143,7 @@ class CTD(Source):
                     elif file == self.files['gene_pathway']['file']:
                         self._process_pathway(row)
                     row_count += 1
-                    if limit is not None and row_count >= limit:
+                    if (not self.testMode) and (limit is not None and row_count >= limit):
                         break
         return
 
@@ -130,27 +156,36 @@ class CTD(Source):
         Returns:
             :return None
         """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
         self._check_list_len(row, 4)
         gu = GraphUtils(curie_map.get())
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
+
+        if self.testMode and (int(gene_id) not in self.test_geneids):
+            return
+
         entrez_id = 'NCBIGene:'+gene_id
         # Adding all pathways as classes, may refactor in the future
         # to only add Reactome pathways from CTD
-        gu.addClassToGraph(self.graph, pathway_id, pathway_name)
-        gu.addSubclass(self.graph, self._get_class_id('signal transduction'), pathway_id)
-        gu.addClassToGraph(self.graph, entrez_id, gene_symbol)
-        gu.addInvolvedIn(self.graph, entrez_id, pathway_id)
+        gu.addClassToGraph(g, pathway_id, pathway_name)
+        gu.addSubclass(g, self._get_class_id('signal transduction'), pathway_id)
+        gu.addClassToGraph(g, entrez_id, gene_symbol)
+        gu.addInvolvedIn(g, entrez_id, pathway_id)
 
 
         # if re.match(re.compile('^REACT'),pathway_id):
-        #    gu.addClassToGraph(self.graph, pathway_id, pathway_name)
+        #    gu.addClassToGraph(g, pathway_id, pathway_name)
 
         return
 
     def _process_interactions(self, row, pub_map):
         """
         Process row of CTD data from CTD_genes_pathways.tsv.gz
-        and generate triples
+        and generate triples.
+        Only create associations based on direct evidence (not using the inferred-via-gene)
         Args:
             :param row (list): row of CTD data
             :param pub_map(dict, optional): publication mapping dictionary
@@ -163,6 +198,11 @@ class CTD(Source):
         evidence_pattern = re.compile('^therapeutic|marker\/mechanism$')
         dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
 
+        #filter on those diseases that are mapped to omim ids in the test set
+        intersect=list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
+        if self.testMode and len(intersect)<1:
+            return
+
         if direct_evidence == '':
             next
         elif re.match(evidence_pattern, direct_evidence):
@@ -171,12 +211,12 @@ class CTD(Source):
         elif ((re.match(dual_evidence, direct_evidence))
               and (len(pub_map.keys()) > 0)):
             reference_list = self._process_pubmed_ids(pubmed_ids)
-            pub_evidence_map = \
-                self._split_pub_ids_by_evidence(
-                    reference_list, chem_id, disease_id, pub_map
-                )
+            pub_evidence_map = self._split_pub_ids_by_evidence(reference_list, chem_id, disease_id, pub_map)
             for val in direct_evidence.split('|'):
                 self._make_association(chem_id, disease_id, val, pub_evidence_map[val])
+        else:
+            #there's dual evidence, but haven't mapped the pubs
+            logger.info("Dual evidence for %s and %s but no pub map",chem_name,disease_id)
 
         return
 
@@ -192,16 +232,21 @@ class CTD(Source):
         Returns:
             :return None
         """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
         assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
         evidence_code = self._get_evidence_code('TAS')
         chem_mesh_id = 'MESH:'+chem_id
         relationship = self._get_relationship_id(direct_evidence)
         assoc = Chem2DiseaseAssoc(assoc_id, chem_mesh_id, disease_id,
                                   pubmed_ids, relationship, evidence_code)
-        assoc.loadAllProperties(self.graph)
-        assoc.addAssociationNodeToGraph(self.graph)
+        assoc.loadAllProperties(g)
+        assoc.addAssociationNodeToGraph(g)
 
-        return self.graph
+        return g
 
     def _process_pubmed_ids(self, pubmed_ids):
         """
@@ -282,8 +327,8 @@ class CTD(Source):
                 logger.error("Could not disambiguate publication "
                              "for disease id: %s"
                              "\nchemical id: %s"
-                             "\npublication id: %", disease_id, chem_id, val)
-                sys.exit(1)
+                             "\npublication id: %s", disease_id, chem_id, str(val))
+                #sys.exit(1)
 
         return publication
 
