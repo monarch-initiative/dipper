@@ -14,6 +14,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from dipper import config
 from dipper.models.GenomicFeature import Feature,makeChromID
 
 
@@ -39,6 +40,14 @@ class ClinVar(Source):
 
     testmode = False
 
+    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 8877, 9295, 9296, 9297,
+                   9298, 9449, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823, 17232, 17233,
+                   17234, 17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179, 18180, 18181,
+                   37123, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055,
+                   112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
+                   146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132]
+
+
     def __init__(self, tax_ids=None, gene_ids=None):
         Source.__init__(self, 'clinvar')
 
@@ -54,6 +63,12 @@ class ClinVar(Source):
         if self.testmode:
             self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
             self.filter = 'geneids'
+
+        if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.gene_ids = config.get_config()['test_ids']['gene']
+
 
         self.properties = Feature.properties
 
@@ -98,8 +113,9 @@ class ClinVar(Source):
 
         print("Parsing files...")
 
-        self._get_variants(limit)
-        self._get_var_citations(limit)
+        for testMode in [True,False]:
+            self._get_variants(limit,testMode)
+            self._get_var_citations(limit,testMode)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -108,7 +124,7 @@ class ClinVar(Source):
 
         return
 
-    def _get_variants(self,limit):
+    def _get_variants(self,limit,testMode):
         '''
         Currently loops through the variant_summary file.
 
@@ -117,7 +133,14 @@ class ClinVar(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
-        geno = Genotype(self.graph)
+
+        if testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        geno = Genotype(g)
+        gu.loadAllProperties(g)
 
         #not unzipping the file
         print("INFO: Processing Variant records")
@@ -180,6 +203,10 @@ class ClinVar(Source):
 
                 line_counter += 1
 
+                if testMode:
+                    if (int(gene_num) not in self.gene_ids) or (int(variant_num) not in self.variant_ids):
+                        continue
+
                 seqalt_id = (':').join(('ClinVarVariant',variant_num))
                 gene_id = (':').join(('NCBIGene',gene_num))
                 tax_id = 'NCBITaxon:9606'   #all are human, so hardcode
@@ -213,40 +240,40 @@ class ClinVar(Source):
                 if stop != '-' and stop.strip() != '':
                     f.addFeatureEndLocation(stop,chrinbuild_id)
 
-                f.addFeatureToGraph(self.graph)
+                f.addFeatureToGraph(g)
 
                 #add the hgvs as synonyms
                 if hgvs_c != '-' and hgvs_c.strip() != '':
-                    gu.addSynonym(self.graph,seqalt_id,hgvs_c)
+                    gu.addSynonym(g,seqalt_id,hgvs_c)
                 if hgvs_p != '-' and hgvs_p.strip() != '':
-                    gu.addSynonym(self.graph,seqalt_id,hgvs_p)
+                    gu.addSynonym(g,seqalt_id,hgvs_p)
 
                 #add the dbsnp and dbvar ids as equivalent
                 if dbsnp_num != '-':
                     dbsnp_id = 'dbSNP:rs'+dbsnp_num
-                    gu.addIndividualToGraph(self.graph,dbsnp_id,None)
-                    gu.addEquivalentClass(self.graph,seqalt_id,dbsnp_id)
+                    gu.addIndividualToGraph(g,dbsnp_id,None)
+                    gu.addEquivalentClass(g,seqalt_id,dbsnp_id)
                 if dbvar_num != '-':
                     dbvar_id = 'dbVAR:'+dbvar_num
-                    gu.addIndividualToGraph(self.graph,dbvar_id,None)
-                    gu.addEquivalentClass(self.graph,seqalt_id,dbvar_id)
+                    gu.addIndividualToGraph(g,dbvar_id,None)
+                    gu.addEquivalentClass(g,seqalt_id,dbvar_id)
                 #TODO - not sure if this is right
                 #the rcv is like the combo of the phenotype with the variant
                 #if rcv_num != '-':
                 #    rcv_id = 'ClinVar:'+rcv_num
-                #    gu.addIndividualToGraph(self.graph,rcv_id,None)
-                #    gu.addEquivalentClass(self.graph,seqalt_id,rcv_id)
+                #    gu.addIndividualToGraph(g,rcv_id,None)
+                #    gu.addEquivalentClass(g,seqalt_id,rcv_id)
 
                 #add the gene
-                gu.addClassToGraph(self.graph,gene_id,gene_symbol)
+                gu.addClassToGraph(g,gene_id,gene_symbol)
 
-                gu.addTriple(self.graph,seqalt_id,geno.object_properties['is_sequence_variant_instance_of'],gene_id)
+                gu.addTriple(g,seqalt_id,geno.object_properties['is_sequence_variant_instance_of'],gene_id)
                 #make the variant locus
                 #vl_id = ':'+gene_id+'-'+variant_num
                 #geno.addSequenceAlterationToVariantLocus(seqalt_id,vl_id)
                 #geno.addAlleleOfGene(seqalt_id,gene_id,geno.properties['has_alternate_part'])
 
-                f.loadAllProperties(self.graph)   #FIXME inefficient
+                f.loadAllProperties(g)   #FIXME inefficient
 
                 #parse the list of "phenotypes" which are diseases.  add them as an association
                 #;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
@@ -265,18 +292,19 @@ class ClinVar(Source):
                         assoc_id = self.make_id(seqalt_id+p.strip())
                         #print('assoc:',(',').join((assoc_id,seqalt_id,p.strip())))
                         assoc = G2PAssoc(assoc_id,seqalt_id,p.strip(),None,None)
-                        assoc.addAssociationToGraph(self.graph)
+                        assoc.addAssociationToGraph(g)
+                        assoc.loadAllProperties(g)
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')
                     #TODO make xrefs
 
-                if (limit is not None and line_counter > limit):
+                if not testMode and (limit is not None and line_counter > limit):
                     break
 
         return
 
-    def _get_var_citations(self,limit):
+    def _get_var_citations(self,limit,testMode):
 
         # Generated weekly, the first of the week
         # A tab-delimited report of citations associated with data in ClinVar, connected to the AlleleID, the VariationID, and either rs# from dbSNP or nsv in dbVar.
@@ -294,6 +322,11 @@ class ClinVar(Source):
         line_counter=0
         myfile=('/').join((self.rawdir,self.files['variant_citations']['file']))
         print("FILE:",myfile)
+        if testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
         with open(myfile, 'r',encoding="utf8") as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
 
@@ -304,7 +337,12 @@ class ClinVar(Source):
                     continue
                 (allele_num,variant_num,rs_num,nsv_num,citation_source,citation_id) = line
 
+
                 line_counter += 1
+
+                if testMode:
+                    if int(variant_num) not in self.variant_ids:
+                        continue
 
                 #the citation for a variant is made to some kind of combination of the ids here.  but i'm not sure which
                 #we don't know what the citation is for exactly, other than the variant.  so use mentions
@@ -320,16 +358,15 @@ class ClinVar(Source):
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
-                    gu.addTriple(self.graph,ref_id,self.properties['is_about'],var_id)
+                    gu.addTriple(g,ref_id,self.properties['is_about'],var_id)
 
-                if (limit is not None and line_counter > limit):
+                if not testMode and (limit is not None and line_counter > limit):
                     break
-
-
 
         return
 
     def _map_type_of_allele(self,type):
+        #TODO this will get deprecated when we parse the xml file
         so_id = 'SO:0001060'
         type_to_so_map = {
             'NT expansion' : 'SO:1000039',  #direct tandem duplication
@@ -346,7 +383,6 @@ class ClinVar(Source):
             'single nucleotide variant' : 'SO:0001483',
             'structural variant' : 'SO:0001537',
             'undetermined variant' : 'SO:0001060'    #sequence variant
-
         }
 
         if (type in type_to_so_map):
@@ -355,25 +391,6 @@ class ClinVar(Source):
             print("WARN: unmapped code",type,". Defaulting to 'SO:sequence_variant'.")
 
         return so_id
-
-
-        return so_id
-
-    def _cleanup_id(self,i):
-        cleanid = i
-        #MIM:123456 --> #OMIM:123456
-        cleanid = re.sub('^MIM','OMIM',cleanid)
-
-        #HGNC:HGNC --> HGNC
-        cleanid = re.sub('^HGNC:HGNC','HGNC',cleanid)
-
-        #Ensembl --> ENSEMBL
-        cleanid = re.sub('^Ensembl','ENSEMBL',cleanid)
-
-        #MGI:MGI --> MGI
-        cleanid = re.sub('^MGI:MGI','MGI',cleanid)
-
-        return cleanid
 
 
     def remove_control_characters(self,s):
