@@ -13,6 +13,7 @@ from dipper.models.DispositionAssoc import DispositionAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.Assoc import Assoc
 from dipper import curie_map
+from dipper import config
 
 
 '''
@@ -56,20 +57,18 @@ class HPOAnnotations(Source):
         "TAS": "ECO:0000304"   #Traceable Author Statement
     }
 
-    test_ids = ['OMIM:119600','OMIM:120160','OMIM:157140','OMIM:158900',
-                'OMIM:166220','OMIM:168600','OMIM:219700','OMIM:253250',
-                'OMIM:305900','OMIM:600669','OMIM:601278','OMIM:602421',
-                'OMIM:605073','OMIM:607822',  #from coriell
-                'Orphanet:99889','Orphanet:99','DECIPHER:14','DECIPHER:1',
-                'OMIM:194072','OMIM:100100','Orphanet:99798']  #these ones xref the other disease DBs
-
-
     def __init__(self):
         Source.__init__(self, 'hpoa')
 
         self.load_bindings()
 
         self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
+
+        if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.test_ids = config.get_config()['test_ids']['disease']
+
 
         #data-source specific warnings (will be removed when issues are cleared)
         logger.warn("note that some ECO classes are missing for ICE and PCS; using temporary mappings.")

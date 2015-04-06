@@ -65,10 +65,10 @@ class OMIM(Source):
 
     test_ids = [
         119600,120160,157140,158900,166220,168600,219700,253250,305900,600669,601278,602421,605073,607822, #from coriell
-    102560,102480,100678,102750,                     #genes
-    104200,105400,114480,115300,121900,              #phenotype/disease -- indicate that here?
-    107670,11600,126453,                             #gene of known sequence and has a phenotype
-    102150,104000,107200,100070]                     #disease with known locus
+        102560,102480,100678,102750,                     #genes
+        104200,105400,114480,115300,121900,              #phenotype/disease -- indicate that here?
+        107670,11600,126453,                             #gene of known sequence and has a phenotype
+        102150,104000,107200,100070]                     #disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -85,6 +85,13 @@ class OMIM(Source):
         #check if config exists; if it doesn't, error out and let user know
         if (not (('keys' in config.get_config()) and ('omim' in config.get_config()['keys']))):
             print("ERROR: not configured with API key.")
+
+        if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            #select ony those test ids that are omim's.
+            self.test_ids += [obj.replace('OMIM:','') for obj in config.get_config()['test_ids']['disease'] if re.match('OMIM:',obj)]
+
         return
 
     def fetch(self, is_dl_forced):
