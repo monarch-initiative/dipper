@@ -110,16 +110,17 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
+
+        self._process_feature_affected_genes(limit)
         self._process_genotype_features(limit)
+        self._process_genotype_backgrounds(limit)
         self._process_g2p(limit)
         self._process_human_orthos(limit)
         self._process_anatomy(limit)
         self._process_stages(limit)
         self._process_wildtype_expression(limit)
         self._process_wildtypes(limit)
-        self._process_genotype_backgrounds(limit)
         self._process_gene_marker_relationships(limit)
-        self._process_feature_affected_genes(limit)
         self._process_features(limit)
         self._process_landmarks(limit)
         self._process_genes(limit)
@@ -311,6 +312,10 @@ class ZFIN(Source):
                 background_id = 'ZFIN:' + background_id.strip()
 
                 #Add genotype
+                #TODO: Need to adjust the genotype name to properly formatted labels
+                #Need to break apart the single gene/dual allele notation
+                #genotype_name = re.sub('</sup>','>', (re.sub('<sup>','<',genotype_name)))
+                #print(genotype_name)
                 geno.addGenotype(genotype_id, genotype_name)
 
                 #Add background to the genotype
@@ -612,6 +617,21 @@ class ZFIN(Source):
 
     def _process_feature_affected_genes(self, limit=None):
         """
+        This table provides the sequence alteration ID, SO type, abbreviation, and relationship to
+        the affected gene, with the gene's ID, symbol, and SO type (gene/pseudogene).
+
+        Triples created:
+        <gene id> a class:
+        <gene id> rdfs:label gene_symbol
+        <gene id> subclass of type gene/pseudogene
+
+        <variant locus id> is a GENO:allele
+        <variant locus id> rdfs:label <variant_locus_label>
+        <variant locus id> is an allele of <gene id>
+        <variant locus id> has alternate part <sequence alteration id>
+
+        <sequence alteration id> is an allele of <gene id>
+        <sequence alteration id> rdf:type <sequence alteration type>
 
         :param limit:
         :return:
@@ -629,19 +649,27 @@ class ZFIN(Source):
                 (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,gene_symbol,gene_id,gene_so_id,
                  genomic_feature_marker_relationship,empty) = row
 
+                #Sequence alteration types present in file: SO:0000159 - deletion, SO:0000160 - lambda_clone,
+                # SO:0001218 - transgenic insertion, SO:1000005 - complex_substitution, SO:1000008 - point_mutation,
+                # SO:1000029 - chromosomal_deletion, SO:1000032 - indel
+
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
                 #TODO: Can build the variant locus, sequence alteration, and sequence alteration type here.
 
                 gene_id = 'ZFIN:' + gene_id.strip()
-                geno.addGene(gene_id,gene_symbol)
+                #NOTE: There are a few pseudogenes in the file, using the gene_so_id will identify them.
+                geno.addGene(gene_id,gene_symbol,gene_so_id)
 
                 #Add variant locus (allele)
                 #TODO: Confirm this is correct/holds true for all variant loci.
-                variant_locus = gene_symbol+'<'+genomic_feature_abbreviation+'>'
+                # Should a different format be used for transgenic insertions?
+                variant_locus_label = gene_symbol+'<'+genomic_feature_abbreviation+'>'
+                #print(variant_locus)
                 variant_locus_id = self.make_id(genomic_feature_id+gene_id)
 
-                #Do we want to filter out the translocations/deletions, or include them?
-                geno.addAllele(variant_locus_id,variant_locus,feature_so_id)
+
+                #FIXME:Do we want to filter out the translocations/deletions, or include them?
+                geno.addAllele(variant_locus_id,variant_locus_label)
 
                 #gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
 
@@ -650,13 +678,19 @@ class ZFIN(Source):
                 # 'markers moved' (corresponds to SO:1000199 - translocation).
                 # For now, only indicating as an allele of gene if the relationship is 'is allele of.'
                 #TODO: Confirm that this conditional is the correct approach.
+                # Doesn't a translocation or deletion count as an allele?
                 if (genomic_feature_marker_relationship == 'is allele of'):
                     #FIXME: Should this be the variant locus ID or the genomic_feature_id? I think the VL ID.
+                    # Add the gene to the allele.
                     geno.addAlleleOfGene(variant_locus_id,gene_id)
                 #TODO: For the other relationships, is there a 'translocation_of' or 'deletion_of' that can be used?
 
-                # Add the sequence alteration
-                geno.addSequenceAlteration(genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
+                sequence_alteration_type = feature_so_id
+
+                # Add the sequence alteration id, label, and type
+                geno.addSequenceAlteration(genomic_feature_id,genomic_feature_abbreviation,sequence_alteration_type)
+
+                # Add the sequence alteration to the variant locus
                 geno.addSequenceAlterationToVariantLocus(genomic_feature_id,variant_locus_id)
 
                 if (limit is not None and line_counter > limit):
@@ -727,7 +761,6 @@ class ZFIN(Source):
                 line_counter += 1
 
                 (gene_id,gene_so_id,gene_symbol,ncbi_gene_id,empty) = row
-                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(self.graph)
 
                 gene_id = 'ZFIN:'+gene_id.strip()
