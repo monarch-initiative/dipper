@@ -35,8 +35,11 @@ class UCSCBands(Source):
     where any band in the file is an instance of a chr_band (or a more specific type), is a subsequence
     of it's containing region, and is located in the specified coordinates.
 
-    we determine the containing regions of the band by parsing the band-string; since each alphanumeric
+    We determine the containing regions of the band by parsing the band-string; since each alphanumeric
     is a significant "place", we can split it with the shorter strings being parents of the longer string
+
+    Since this is small, and we have not limited other items in our test set to a small region, we
+    simply use the whole graph (genome) for testing purposes, and copy the main graph to the test graph.
 
     TODO: will can then sort the locations of the annotated bands, and propagate them to the
     intermediate/parent regions
@@ -115,6 +118,8 @@ class UCSCBands(Source):
         self.load_core_bindings()
         self.load_bindings()
 
+        #using the full graph as the test here
+        self.testgraph = self.graph
 
         logger.info("Done parsing files.")
 
