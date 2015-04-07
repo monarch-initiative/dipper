@@ -168,6 +168,7 @@ class ZFIN(Source):
                     geno_hash[genotype_id] = {};
                 genoparts = geno_hash[genotype_id]
 
+                #FIXME: This seems incorrect. Shouldn't the types available here be added to the sequence alteration?
                 # reassign the allele_type to a proper GENO or SO class
                 allele_type = self._map_allele_type_to_geno(allele_type)
 
@@ -649,9 +650,10 @@ class ZFIN(Source):
                 (genomic_feature_id,feature_so_id,genomic_feature_abbreviation,gene_symbol,gene_id,gene_so_id,
                  genomic_feature_marker_relationship,empty) = row
 
-                #Sequence alteration types present in file: SO:0000159 - deletion, SO:0000160 - lambda_clone,
-                # SO:0001218 - transgenic insertion, SO:1000005 - complex_substitution, SO:1000008 - point_mutation,
-                # SO:1000029 - chromosomal_deletion, SO:1000032 - indel
+                #Sequence alteration types present in file: SO:0000159 - deletion, SO:0000199 - translocation,
+                # SO:0000667 - insertion, SO:0001059 - sequence_alteration,
+                # SO:0001060 - sequence_variant, SO:0001218 - transgenic insertion, SO:1000005 - complex_substitution,
+                # SO:1000008 - point_mutation, SO:1000029 - chromosomal_deletion, SO:1000032 - indel
 
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
                 #TODO: Can build the variant locus, sequence alteration, and sequence alteration type here.
@@ -746,7 +748,12 @@ class ZFIN(Source):
 
     def _process_genes(self, limit=None):
         """
+        This table provides the ZFIN gene id, the SO type of the gene, the gene symbol, and the NCBI Gene ID.
 
+        Triples created:
+        <gene id> a class
+        <gene id> rdfs:label gene_symbol
+        <gene id> equivalent class <ncbi_gene_id>
         :param limit:
         :return:
         """
