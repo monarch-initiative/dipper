@@ -111,9 +111,10 @@ class ZFIN(Source):
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
 
-        self._process_feature_affected_genes(limit)
+
         self._process_genotype_features(limit)
         self._process_genotype_backgrounds(limit)
+        self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
         self._process_human_orthos(limit)
         self._process_anatomy(limit)
@@ -148,8 +149,9 @@ class ZFIN(Source):
         """
         raw = ('/').join((self.rawdir,self.files['geno']['file']))
         out = self.outfile
-
+        gu = GraphUtils(curie_map.get())
         geno_hash = {}
+        gvc_hash = {}
         logger.info("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -219,6 +221,12 @@ class ZFIN(Source):
             #now loop through the geno_hash, and build the vslcs
 
             for gt in geno_hash:
+                if genotype_id not in gvc_hash:
+                    gvc_hash[genotype_id] = {};
+                gvcparts = gvc_hash[genotype_id]
+                vslc_counter = 0
+
+
                 for gene_id in geno_hash.get(gt):
                     variant_locus_parts = geno_hash.get(gt).get(gene_id)
                     if gene_id in variant_locus_parts:
@@ -257,6 +265,48 @@ class ZFIN(Source):
                     vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
                     geno.addVSLCtoParent(vslc_id,gt)
+
+                    gt_vslc = gt+'vslc'
+
+                    #gvc_hash[vslc_id] = {};
+                    if vslc_counter == 0:
+                        gvcparts[gt_vslc] = [vslc_id]
+                    elif vslc_id not in gvcparts:
+                        gvcparts[gt_vslc].append(vslc_id)
+                   #if gvcparts[1] is None:
+                        #gvcparts[vslc_id] = [vslc_id]
+                    #else:
+                        #gvcparts[vslc_id].append(vslc_id)
+
+                    #if len(gvcparts[vslc_id]) > 1:
+                    #if vslc_id not in gvcparts:
+                        #gvcparts[vslc_id] = [vslc_id]
+                    #if vslc_id not in gvcparts:
+                        #gvcparts[vslc_id].append(vslc_id)
+                    vslc_counter += 1
+
+                #print(gvcparts)
+
+                    #end loop through geno_hash
+            #now loop through the gvc_hash, and build the gvc
+            for gt in gvc_hash:
+                gvc_ids = []
+                for vslc_id in gvc_hash.get(gt):
+                    genomic_variation_complement_parts = gvc_hash.get(gt).get(vslc_id)
+                    #print(genomic_variation_complement_parts)
+                    gvc_id = self.make_id(('-').join(genomic_variation_complement_parts))
+                    #Add the GVC
+                    gu.addIndividualToGraph(self.graph,gvc_id,None,'GENO:0000009')
+                    #Add the GVC to the genotype
+                    gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
+
+                    #Add the VSLCs to the GVC
+                    for i in genomic_variation_complement_parts:
+                       gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+
+                #end of gvc loop
+
+            #end of genotype loop
 
 
             logger.info("Done with genotypes")
@@ -821,9 +871,6 @@ class ZFIN(Source):
                 # knockdown reagent targets gene, promoter of, transcript targets gene
 
 
-
-
-
                 if (limit is not None and line_counter > limit):
                     break
 
@@ -1136,9 +1183,7 @@ class ZFIN(Source):
         return
 
 
-    #FIXME: It seems that the pheno_environment.txt file has an additional column that is empty.
-    #Note that ZFIN indicates this file as only having 3 columns, but 6 columns exist plus the empty column.
-    # Consider scrubbing the extra column?
+
     def _process_pheno_enviro(self, limit=None):
         """
         The pheno_environment.txt file ties experimental conditions to an environment ID.
