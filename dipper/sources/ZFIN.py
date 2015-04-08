@@ -111,7 +111,7 @@ class ZFIN(Source):
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
 
-
+        self._process_pheno_enviro(limit)
         self._process_genotype_features(limit)
         self._process_genotype_backgrounds(limit)
         self._process_feature_affected_genes(limit)
@@ -132,7 +132,7 @@ class ZFIN(Source):
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
-        self._process_pheno_enviro(limit)
+
         logger.info("Finished parsing.")
 
         self.load_bindings()
@@ -264,7 +264,7 @@ class ZFIN(Source):
 
                     vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
-                    #Removing this since I am now adding the GVC.
+                    #Removing this since I am now adding the VSLC to the GVC.
                     #geno.addVSLCtoParent(vslc_id,gt)
 
                     gt_vslc = gt+'vslc'
@@ -274,22 +274,13 @@ class ZFIN(Source):
                         gvcparts[gt_vslc] = [vslc_id]
                     elif vslc_id not in gvcparts:
                         gvcparts[gt_vslc].append(vslc_id)
-                   #if gvcparts[1] is None:
-                        #gvcparts[vslc_id] = [vslc_id]
-                    #else:
-                        #gvcparts[vslc_id].append(vslc_id)
-
-                    #if len(gvcparts[vslc_id]) > 1:
-                    #if vslc_id not in gvcparts:
-                        #gvcparts[vslc_id] = [vslc_id]
-                    #if vslc_id not in gvcparts:
-                        #gvcparts[vslc_id].append(vslc_id)
                     vslc_counter += 1
 
                 #print(gvcparts)
 
                     #end loop through geno_hash
             #now loop through the gvc_hash, and build the gvc
+            #TODO: Possible to pass through VSLC label, assemble GVC label?
             for gt in gvc_hash:
                 gvc_ids = []
                 for vslc_id in gvc_hash.get(gt):
@@ -1207,6 +1198,7 @@ class ZFIN(Source):
         logger.info("Processing phenotype environments")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
+        enviro_hash = {}
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1215,17 +1207,35 @@ class ZFIN(Source):
 
                 (environment_id,condition_group,condition,values,units,comment,empty) = row
 
+                environment_id = 'ZFIN:'+environment_id.strip()
+
+                #We can build the extrinsic genotype using this file. Requires creating a hash similar to what is used
+                # for genotypes to get the VSLCs and GVCs.
+                #TODO: For now just adding Morpholinos/Talens/CRISPRs and not working with temp/chemical/physical/etc.
+
+
 
                 #FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
                 #There are a few specific environments available in GENO, including some standard
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
                 # includes the zfin ID instead of a GENO ID for those environments.
 
-                environment_id = 'ZFIN:'+environment_id.strip()
+                enviro_con = environment_id+'cond'
                 if re.match('ZDB.*',condition):
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
+                    if environment_id not in enviro_hash:
+                        enviro_hash[environment_id] = {};
+                        enviroparts = enviro_hash[environment_id]
+
+                    try:
+                        if condition not in enviroparts:
+                            enviroparts[enviro_con].append(condition)
+                    except KeyError:
+                        enviroparts[enviro_con] = [condition]
+
                 else:
+                    #FIXME:Need to adjust label for non-knockdown reagent environments
                     gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
                 #TODO: Need to wrangle a better description, alternative parsing of variables
