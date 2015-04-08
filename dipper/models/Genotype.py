@@ -44,7 +44,9 @@ class Genotype():
         'population' : 'GENO:0000110',  #collection of organisms; consider OBI:population or EFO:population
         'wildtype' : 'GENO:0000511',
         'reagent_targeted_gene': 'GENO:0000504',
-        'missense_variant': 'SO:0001583'
+        'missense_variant': 'SO:0001583',
+        'primary_transcript': 'SO:0000185',
+        'transcript_secondary_structure_variant': 'SO:0001596'
     }
 
     object_properties = {
@@ -61,7 +63,8 @@ class Genotype():
         'has_member_with_allelotype': 'GENO:0000225',  #use this when relating populations
         'is_allelotype_of': 'GENO:0000206',
         'has_genotype': 'GENO:0000222',
-        'has_phenotype': 'RO:0002200'
+        'has_phenotype': 'RO:0002200',
+        'transcribed_to': 'SO:transcribed_to'
     }
 
     zygosity = {
@@ -164,6 +167,20 @@ class Genotype():
         if (rel_id is None):
             rel_id = self.properties['is_sequence_variant_instance_of']
         self.graph.add((self.gu.getNode(allele_id),self.gu.getNode(rel_id),self.gu.getNode(gene_id)))
+
+        return
+
+    def addTranscript(self, variant_id, transcript_id, transcript_label=None, transcript_type=None):
+        """
+        Add gene/variant/allele transcribes_to relationship
+        :param graph:
+        :param variant_id:
+        :param transcript_id:
+        :param transcript_label:
+        :return:
+        """
+        self.gu.addIndividualToGraph(self.graph, transcript_id, transcript_label, transcript_type)
+        self.gu.addTriple(self.graph, variant_id, self.properties['transcribed_to'], transcript_id)
 
         return
 
