@@ -188,7 +188,8 @@ class Source:
                 else:
                     logger.info("Remote file has same filesize--will not download")
         elif (st[ST_SIZE] != size):
-            logger.info("Object on server is same size as local file; assuming unchanged")
+            logger.info("Object on server is difference size in comparison to local file")
+            return True
         return False
 
     def get_files(self, is_dl_forced):
