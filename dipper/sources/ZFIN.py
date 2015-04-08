@@ -96,7 +96,6 @@ class ZFIN(Source):
         '''
         # scrub file of the oddities where there are "\" instead of empty strings
         pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
-        pysed.replace_iso("\\\\", '', ('/').join((self.rawdir,self.files['enviro']['file'])))
         return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
@@ -110,7 +109,7 @@ class ZFIN(Source):
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
 
-        self._process_pheno_enviro(limit)
+        self._process_pheno_enviro(limit) # Must be processed before morpholinos/talens/crisprs
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
@@ -1198,7 +1197,7 @@ class ZFIN(Source):
         logger.info("Processing phenotype environments")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        enviro_hash = {}
+        extrinsic_geno_hash = {}
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1207,32 +1206,42 @@ class ZFIN(Source):
 
                 (environment_id,condition_group,condition,values,units,comment,empty) = row
 
+
+
+                if re.match("\\\\",values):
+                    values = ''
                 environment_id = 'ZFIN:'+environment_id.strip()
 
-                #We can build the extrinsic genotype using this file. Requires creating a hash similar to what is used
-                # for genotypes to get the VSLCs and GVCs.
+                #FIXME: Can the environment serve as the extrinsic genotype ID?
+                # For now, making an ID from environment ID only, but may want to revisit.
+                extrinsic_geno_id = self.make_id(environment_id)
+                geno = Genotype(self.graph)
+                ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+
+                #We can start to build the extrinsic genotype using this file.
+                # Requires creating a hash similar to what is used for genotypes to get the VSLCs and GVCs.
                 #TODO: For now just adding Morpholinos/Talens/CRISPRs and not working with temp/chemical/physical/etc.
-
-
-
                 #FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
                 #There are a few specific environments available in GENO, including some standard
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
                 # includes the zfin ID instead of a GENO ID for those environments.
-
-                enviro_con = environment_id+'cond'
+                targeted_sequence_key = self.make_id(extrinsic_geno_id+'condition')
+                #print(condition)
                 if re.match('ZDB.*',condition):
+                    #print('yay!')
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
-                    if environment_id not in enviro_hash:
-                        enviro_hash[environment_id] = {};
-                        enviroparts = enviro_hash[environment_id]
+                    if extrinsic_geno_id not in extrinsic_geno_hash:
+                        extrinsic_geno_hash[extrinsic_geno_id] = {};
+                        extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
+                        #print(extrinsic_parts)
 
-                    try:
-                        if condition not in enviroparts:
-                            enviroparts[enviro_con].append(condition)
-                    except KeyError:
-                        enviroparts[enviro_con] = [condition]
+                    #if extrinsic_geno_id[morpholino] not in extrinsic_parts:
+                            #extrinsic_geno_hash[extrinsic_geno_id][morpholino] = {};
+                            #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][morpholino]
+                            #extrinsic_parts[enviro_con].append(condition)
+                    #except KeyError:
+                        #extrinsic_parts[enviro_con] = [condition]
 
                 else:
                     #FIXME:Need to adjust label for non-knockdown reagent environments
@@ -1253,11 +1262,7 @@ class ZFIN(Source):
                 #NOTE: Will just have the knockdown reagent IDs at this point, not the gene targets.
                 #
 
-            for environment_id in enviro_hash:
-                if environment_id not in gvc_hash:
-                    gvc_hash[genotype_id] = {};
-                gvcparts = gvc_hash[genotype_id]
-                vslc_counter = 0
+
 
 
 

@@ -27,27 +27,6 @@ def replace(oldstr, newstr, infile, dryrun=False):
         exit("Unknown option specified to 'dryrun' argument, Usage: dryrun=<True|False>.")
 
 
-def replace_iso(oldstr, newstr, infile, dryrun=False):
-    '''
-    Sed-like Replace function..
-    Usage: pysed.replace(<Old string>, <Replacement String>, <Text File>)
-    Example: pysed.replace('xyz', 'XYZ', '/path/to/file.txt')
-    Example 'DRYRUN': pysed.replace('xyz', 'XYZ', '/path/to/file.txt', dryrun=True) #This will dump the output to STDOUT instead of changing the input file.
-    '''
-    linelist = []
-    with open(infile) as f:
-        for item in f:
-            newitem = re.sub(oldstr, newstr, item)
-            linelist.append(newitem)
-    if dryrun == False:
-        with open(infile, "w", encoding="iso-8859-1") as f:
-            f.truncate()
-            for line in linelist: f.writelines(line)
-    elif dryrun == True:
-        for line in linelist: print(line, end='')
-    else:
-        exit("Unknown option specified to 'dryrun' argument, Usage: dryrun=<True|False>.")
-
 def rmlinematch(oldstr, infile, dryrun=False):
     '''
     Sed-like line deletion function based on given string..
