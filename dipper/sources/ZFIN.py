@@ -96,8 +96,7 @@ class ZFIN(Source):
         '''
         # scrub file of the oddities where there are "\" instead of empty strings
         pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['geno']['file'])))
-        #FIXME: Trying to scrub "\" from the pheno_environment.txt file fails due to an oddity with the file type.
-        #pysed.replace("\\\\", '', ('/').join((self.rawdir,self.files['enviro']['file'])))
+        pysed.replace_iso("\\\\", '', ('/').join((self.rawdir,self.files['enviro']['file'])))
         return
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
@@ -112,26 +111,27 @@ class ZFIN(Source):
         self._load_zp_mappings()
 
         self._process_pheno_enviro(limit)
-        self._process_genotype_features(limit)
-        self._process_genotype_backgrounds(limit)
-        self._process_feature_affected_genes(limit)
-        self._process_g2p(limit)
-        self._process_human_orthos(limit)
-        self._process_anatomy(limit)
-        self._process_stages(limit)
-        self._process_wildtype_expression(limit)
-        self._process_wildtypes(limit)
-        self._process_gene_marker_relationships(limit)
-        self._process_features(limit)
-        self._process_landmarks(limit)
-        self._process_genes(limit)
-        self._process_genbank_ids(limit)
-        self._process_uniprot_ids(limit)
-        self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
+        #self._process_genotype_features(limit)
+        #self._process_genotype_backgrounds(limit)
+        #self._process_feature_affected_genes(limit)
+        #self._process_g2p(limit)
+        #self._process_human_orthos(limit)
+        #self._process_anatomy(limit)
+        #self._process_stages(limit)
+        #self._process_wildtype_expression(limit)
+        #self._process_wildtypes(limit)
+        #self._process_gene_marker_relationships(limit)
+        #self._process_features(limit)
+        #self._process_landmarks(limit)
+        #self._process_genes(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
+        #self._process_pubinfo(limit)
+        #self._process_pub2pubmed(limit)
+
 
         logger.info("Finished parsing.")
 
@@ -1249,6 +1249,20 @@ class ZFIN(Source):
                 #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
 
+            #Now process through the enviro_hash to produce the targeted_gene_variant_complement
+                #NOTE: Will just have the knockdown reagent IDs at this point, not the gene targets.
+                #
+
+            for environment_id in enviro_hash:
+                if environment_id not in gvc_hash:
+                    gvc_hash[genotype_id] = {};
+                gvcparts = gvc_hash[genotype_id]
+                vslc_counter = 0
+
+
+
+
+
                 if (limit is not None and line_counter > limit):
                     break
 
@@ -1397,3 +1411,4 @@ class ZFIN(Source):
     def _make_zpkey(self,superterm1_id,subterm1_id,quality_id,superterm2_id,subterm2_id,modifier):
         key = self.make_id(('_').join((superterm1_id,subterm1_id,quality_id,superterm2_id,subterm2_id,modifier)))
         return key
+
