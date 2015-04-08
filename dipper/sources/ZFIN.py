@@ -264,7 +264,8 @@ class ZFIN(Source):
 
                     vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
-                    geno.addVSLCtoParent(vslc_id,gt)
+                    #Removing this since I am now adding the GVC.
+                    #geno.addVSLCtoParent(vslc_id,gt)
 
                     gt_vslc = gt+'vslc'
 
@@ -302,7 +303,8 @@ class ZFIN(Source):
 
                     #Add the VSLCs to the GVC
                     for i in genomic_variation_complement_parts:
-                       gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+                        geno.addVSLCtoParent(i,gt)
+                        #gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
 
                 #end of gvc loop
 
@@ -344,6 +346,8 @@ class ZFIN(Source):
         Makes these triples:
         <ZFIN:genotype_id> GENO:has_reference_part <ZFIN:background_id>
         <ZFIN:background_id> a GENO:genomic_background
+        <ZFIN:background_id> in_taxon <taxon_id>
+        <taxon_id> a class
         :param limit:
         :return:
         """
@@ -361,6 +365,11 @@ class ZFIN(Source):
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 background_id = 'ZFIN:' + background_id.strip()
+
+                # Add the taxon as a class
+                taxon_id = 'NCBITaxon:7955'  # Danio rerio
+                gu.addClassToGraph(self.graph,taxon_id, None)
+                geno.addTaxon(taxon_id,background_id)
 
                 #Add genotype
                 #TODO: Need to adjust the genotype name to properly formatted labels
