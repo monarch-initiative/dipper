@@ -1228,8 +1228,9 @@ class ZFIN(Source):
         logger.info("Processing phenotype environments")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        extrinsic_geno_hash = {}
+        kd_reagent_conc_hash = {}
         extrinsic_part_hash = {}
+        #condition_
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1264,17 +1265,45 @@ class ZFIN(Source):
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
 
 
+                    # Clean up the units
+                    if units == 'N/A':
+                        units = None
+                    if units is not None and re.match('.*\/.*',units):
+                        units = re.sub(r"/",'_',units)
+
+
+
+                    # Clean up the values
+                    if values == '':
+                        values = None
+                    #if units is not None and values is not None:
+                        #print(values+units)
+
+                    #Create the targeted sequence id
+                    if units is not None and values is not None:
+                        targeted_sequence_id = condition+'_'+values+units
+                    else:
+                        targeted_sequence_id = condition+'_?'
+                    print(targeted_sequence_id)
+
+
                     if extrinsic_geno_id not in extrinsic_part_hash:
                         extrinsic_part_hash[extrinsic_geno_id] = {}
                         #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
                         #print(extrinsic_parts)
+                    if extrinsic_geno_id not in kd_reagent_conc_hash:
+                        kd_reagent_conc_hash[extrinsic_geno_id] = {}
                     #TODO:Change to a make_id after testing.
                     targeted_sequence_key = extrinsic_geno_id+condition
 
-                    if condition not in extrinsic_part_hash[extrinsic_geno_id]:
-                        extrinsic_part_hash[extrinsic_geno_id][condition] = self.kd_reagent_hash['kd_reagent_id'].get(condition)
-                        #print(extrinsic_part_hash[extrinsic_geno_id])
+                    if condition not in kd_reagent_conc_hash[extrinsic_geno_id]:
+                        kd_reagent_conc_hash[extrinsic_geno_id][condition] = targeted_sequence_id
 
+                    #print(kd_reagent_conc_hash[extrinsic_geno_id][condition])
+                    #print(kd_reagent_conc_hash[extrinsic_geno_id])
+
+
+                    #if condition not in extrinsic_part_hash[extrinsic_geno_id]:
 
                     #gvc_hash[vslc_id] = {};
                     #if vslc_counter == 0:
@@ -1315,8 +1344,18 @@ class ZFIN(Source):
             #Now process through the extrinsic_part_hash to produce the targeted_gene_variant_complement
             for extrinsic_geno_id in extrinsic_part_hash:
                 for condition in extrinsic_part_hash[extrinsic_geno_id]:
-                    knockdown_reagent = condition
+                    targeted_subregion_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
+                    #TODO: Add the labels.
+                    ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+                    geno.addTargetedGeneSubregion(targeted_subregion_id)
                     targeted_genes = extrinsic_part_hash[extrinsic_geno_id][condition]
+
+                    #for gene in targeted_genes:
+
+
+
+
+
                     #print('knockdown_reagent='+knockdown_reagent)
                     #print('targeted_genes='+('/').join(targeted_genes))
                 #for vslc_id in gvc_hash.get(gt):
