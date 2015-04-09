@@ -6,6 +6,8 @@ import re
 from dipper.sources.Source import Source
 from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import config, curie_map
 
 
 class Panther(Source):
@@ -21,7 +23,10 @@ class Panther(Source):
     Gene families are nominally created from the orthology files, though these are incomplete with
     no hierarchical (subfamily) information.  This will get updated from the HMM files in the future.
 
-    Note that there is a fair amount of identifier cleanup performed, to align with standard CURIE prefixes.
+    Note that there is a fair amount of identifier cleanup performed, to align with our standard CURIE prefixes.
+
+    The test graph of data is output based on configured "protein" identifiers in conf.json.
+
     """
 
     files = {
@@ -43,6 +48,13 @@ class Panther(Source):
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090]
+
+        if (not (('test_ids' in config.get_config()) and ('protein' in config.get_config()['test_ids']))):
+            print("WARN: not configured with gene test ids.")
+        else:
+            self.test_ids = config.get_config()['test_ids']['protein']
+
+
 
         #data-source specific warnings (will be removed when issues are cleared)
 
@@ -67,7 +79,8 @@ class Panther(Source):
         :return: None
         '''
 
-        self._get_orthologs(limit)
+        for testMode in [True,False]:
+            self._get_orthologs(limit,testMode)
 
         self.load_bindings()
 
@@ -77,9 +90,9 @@ class Panther(Source):
         return
 
 
-    def _get_orthologs(self,limit):
+    def _get_orthologs(self,limit,testMode):
         """
-        will process each of the specified pairwise orthology files, creating orthology associations
+        This will process each of the specified pairwise orthology files, creating orthology associations
         based on the specified orthology code.
         this currently assumes that each of the orthology files is identically formatted.
         relationships are made between genes here.
@@ -115,6 +128,15 @@ class Panther(Source):
         """
         print("INFO: getting orthologs")
         line_counter = 0
+
+        if testMode:
+            g = self.testgraph
+
+        else:
+            g = self.graph
+
+        gu = GraphUtils(curie_map.get())
+
         for k in self.files.keys():
             f=('/').join((self.rawdir,self.files[k]['file']))
             matchcounter=0
@@ -138,6 +160,11 @@ class Panther(Source):
                     (a, b, orthology_class, ancestor_taxon,panther_id) = line.split('\t')
                     (species_a,gene_a,protein_a) = a.split('|')
                     (species_b,gene_b,protein_b) = b.split('|')
+
+                    #skip the entries that don't have homolog relationships with the test ids
+                    if testMode and not (re.sub('UniProtKB=','',protein_a) in self.test_ids or
+                        re.sub('UniProtKB=','',protein_b) in self.test_ids):
+                        continue
 
 
                     #map the taxon abbreviations to ncbi taxon ids
@@ -183,13 +210,18 @@ class Panther(Source):
                     #add the association and relevant nodes to graph
                     assoc = OrthologyAssoc(assoc_id,gene_a,gene_b,None,evidence)
                     assoc.setRelationship(rel)
-                    assoc.loadAllProperties(self.graph)    #FIXME inefficient
-                    assoc.addAssociationToGraph(self.graph)
+                    assoc.loadAllProperties(g)    #FIXME inefficient
+
+                    #add genes to graph; assume labels will be taken care of elsewhere
+                    gu.addClassToGraph(g,gene_a,None)
+                    gu.addClassToGraph(g,gene_b,None)
+
+                    assoc.addAssociationToGraph(g)
 
                     #note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
                     assoc.addGeneFamilyToGraph(self.graph,(':').join(('PANTHER',panther_id)))
 
-                    if (limit is not None and line_counter > limit):
+                    if (not testMode) and (limit is not None and line_counter > limit):
                         break
 
             print("INFO: finished processing",f)
