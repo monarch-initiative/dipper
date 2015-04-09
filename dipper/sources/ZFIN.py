@@ -109,28 +109,29 @@ class ZFIN(Source):
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}}
+
+
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
-        self._process_genotype_features(limit)
-        self._process_genotype_backgrounds(limit)
-        self._process_feature_affected_genes(limit)
-        self._process_g2p(limit)
-        self._process_human_orthos(limit)
-        self._process_anatomy(limit)
-        self._process_stages(limit)
-        self._process_wildtype_expression(limit)
-        self._process_wildtypes(limit)
-        self._process_gene_marker_relationships(limit)
-        self._process_features(limit)
-        self._process_landmarks(limit)
-        self._process_genes(limit)
-        self._process_genbank_ids(limit)
-        self._process_uniprot_ids(limit)
-        self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
+        #self._process_genotype_features(limit)
+        #self._process_genotype_backgrounds(limit)
+        #self._process_feature_affected_genes(limit)
+        #self._process_g2p(limit)
+        #self._process_human_orthos(limit)
+        #self._process_anatomy(limit)
+        #self._process_stages(limit)
+        #self._process_wildtype_expression(limit)
+        #self._process_wildtypes(limit)
+        #self._process_gene_marker_relationships(limit)
+        #self._process_features(limit)
+        #self._process_genes(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
+        #self._process_pubinfo(limit)
+        #self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -1228,6 +1229,7 @@ class ZFIN(Source):
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         extrinsic_geno_hash = {}
+        extrinsic_part_hash = {}
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1261,24 +1263,17 @@ class ZFIN(Source):
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
 
-                    if extrinsic_geno_id not in extrinsic_geno_hash:
-                        extrinsic_geno_hash[extrinsic_geno_id] = {};
-                        extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
+
+                    if extrinsic_geno_id not in extrinsic_part_hash:
+                        extrinsic_part_hash[extrinsic_geno_id] = {}
+                        #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
                         #print(extrinsic_parts)
                     #TODO:Change to a make_id after testing.
                     targeted_sequence_key = extrinsic_geno_id+condition
-                    try:
-                        if targeted_sequence_key not in extrinsic_parts:
-                            extrinsic_parts = {extrinsic_geno_id:{targeted_sequence_key:{condition:[]}}}
-                            #print(extrinsic_parts)
-                            #extrinsic_parts[extrinsic_geno_id][targeted_sequence_key] = {};
-                            #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][targeted_sequence_key]
-                            #print(extrinsic_parts)
-                    except KeyError:
-                        extrinsic_parts = {extrinsic_geno_id:{targeted_sequence_key:[]}}
-                        #extrinsic_parts[extrinsic_geno_id][targeted_sequence_key] = {};
-                        #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][targeted_sequence_key]
-                        #extrinsic_parts[enviro_con] = [condition]
+
+                    if condition not in extrinsic_part_hash[extrinsic_geno_id]:
+                        extrinsic_part_hash[extrinsic_geno_id][condition] = self.kd_reagent_hash['kd_reagent_id'].get(condition)
+                        #print(extrinsic_part_hash[extrinsic_geno_id])
 
 
                     #gvc_hash[vslc_id] = {};
@@ -1310,20 +1305,37 @@ class ZFIN(Source):
                 #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
 
-            #Now process through the enviro_hash to produce the targeted_gene_variant_complement
-                #NOTE: Will just have the knockdown reagent IDs at this point, not the gene targets.
-                #
-
-
-
-
 
 
 
                 if (limit is not None and line_counter > limit):
                     break
 
+                #End of loop
+            #Now process through the extrinsic_part_hash to produce the targeted_gene_variant_complement
+            for extrinsic_geno_id in extrinsic_part_hash:
+                for condition in extrinsic_part_hash[extrinsic_geno_id]:
+                    knockdown_reagent = condition
+                    targeted_genes = extrinsic_part_hash[extrinsic_geno_id][condition]
+                    #print('knockdown_reagent='+knockdown_reagent)
+                    #print('targeted_genes='+('/').join(targeted_genes))
+                #for vslc_id in gvc_hash.get(gt):
+                    #genomic_variation_complement_parts = gvc_hash.get(gt).get(vslc_id)
+                    #print(genomic_variation_complement_parts)
+                    #gvc_id = self.make_id(('-').join(genomic_variation_complement_parts))
+                    #Add the GVC
+                    #gu.addIndividualToGraph(self.graph,gvc_id,None,'GENO:0000009')
+                    #Add the GVC to the genotype
+                    #gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
 
+                    #Add the VSLCs to the GVC
+                    #for i in genomic_variation_complement_parts:
+                        #geno.addVSLCtoParent(i,gt)
+                        #gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+
+                #end of gvc loop
+
+        #print(extrinsic_part_hash)
         logger.info("Done with phenotype environments")
         return
 
