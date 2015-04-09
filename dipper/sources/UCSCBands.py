@@ -177,6 +177,7 @@ class UCSCBands(Source):
                 maploc_id = cid+band   #build-specific band id
                 maploc_label = makeChromLabel(chrom+band,build_num)   #build-specific band label
                 bfeature = Feature(maploc_id,maploc_label,maplocclass_id)  #adds the band as an individual
+                #FIXME coordinates need to be 1-based in faldo
                 bfeature.addFeatureStartLocation(start,cid)
                 bfeature.addFeatureEndLocation(stop,cid)
                 bfeature.addFeatureToGraph(self.graph)
