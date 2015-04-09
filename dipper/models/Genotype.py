@@ -46,7 +46,11 @@ class Genotype():
         'reagent_targeted_gene': 'GENO:0000504',
         'missense_variant': 'SO:0001583',
         'primary_transcript': 'SO:0000185',
-        'transcript_secondary_structure_variant': 'SO:0001596'
+        'transcript_secondary_structure_variant': 'SO:0001596',
+        'sequence_variant_causing_loss_of_function_of_polypeptide': 'SO:1000118',
+        'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125',
+        'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120',
+        'sequence_variant_affecting_polypeptide_function': 'SO:1000117'
     }
 
     object_properties = {
