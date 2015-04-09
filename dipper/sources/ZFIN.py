@@ -108,28 +108,29 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
-
-        self._process_pheno_enviro(limit) # Must be processed before morpholinos/talens/crisprs
+        self.kd_reagent_hash = {'kd_reagent_id' : {}}
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
-        #self._process_genotype_features(limit)
-        #self._process_genotype_backgrounds(limit)
-        #self._process_feature_affected_genes(limit)
-        #self._process_g2p(limit)
-        #self._process_human_orthos(limit)
-        #self._process_anatomy(limit)
-        #self._process_stages(limit)
-        #self._process_wildtype_expression(limit)
-        #self._process_wildtypes(limit)
-        #self._process_gene_marker_relationships(limit)
-        #self._process_features(limit)
-        #self._process_landmarks(limit)
-        #self._process_genes(limit)
-        #self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
-        #self._process_pubinfo(limit)
-        #self._process_pub2pubmed(limit)
+        self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
+
+        self._process_genotype_features(limit)
+        self._process_genotype_backgrounds(limit)
+        self._process_feature_affected_genes(limit)
+        self._process_g2p(limit)
+        self._process_human_orthos(limit)
+        self._process_anatomy(limit)
+        self._process_stages(limit)
+        self._process_wildtype_expression(limit)
+        self._process_wildtypes(limit)
+        self._process_gene_marker_relationships(limit)
+        self._process_features(limit)
+        self._process_landmarks(limit)
+        self._process_genes(limit)
+        self._process_genbank_ids(limit)
+        self._process_uniprot_ids(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -1041,7 +1042,7 @@ class ZFIN(Source):
         :param limit:
         :return:
         """
-
+        #kd_reagent_hash = {}
         logger.info("Processing Morpholinos")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
@@ -1079,14 +1080,22 @@ class ZFIN(Source):
                     gu.addIndividualToGraph(self.graph,pub_id,None)
                     gu.addTriple(self.graph,pub_id,gu.properties['mentions'],morpholino_id)
 
-
                 #Add comment?
                 if(note != ''):
                     gu.addComment(self.graph,morpholino_id,note)
 
+                if self.kd_reagent_hash['kd_reagent_id'].get(morpholino_id) is None:
+                    reagent_target = []
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
+                else:
+
+                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][morpholino_id]
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
+
                 if (limit is not None and line_counter > limit):
                     break
-
 
         logger.info("Done with Morpholinos")
         return
@@ -1129,9 +1138,18 @@ class ZFIN(Source):
                 if(note != ''):
                     gu.addComment(self.graph,talen_id,note)
 
+                if self.kd_reagent_hash['kd_reagent_id'].get(talen_id) is None:
+                    reagent_target = []
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
+                else:
+
+                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][talen_id]
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
+
                 if (limit is not None and line_counter > limit):
                     break
-
 
         logger.info("Done with TALENS")
         return
@@ -1173,6 +1191,18 @@ class ZFIN(Source):
                 #Add comment?
                 if(note != ''):
                     gu.addComment(self.graph,crispr_id,note)
+
+                if self.kd_reagent_hash['kd_reagent_id'].get(crispr_id) is None:
+                    reagent_target = []
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
+                else:
+
+                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][crispr_id]
+                    reagent_target.append(gene_id)
+                    self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
+
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1225,16 +1255,38 @@ class ZFIN(Source):
                 #There are a few specific environments available in GENO, including some standard
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
                 # includes the zfin ID instead of a GENO ID for those environments.
-                targeted_sequence_key = self.make_id(extrinsic_geno_id+'condition')
+
                 #print(condition)
                 if re.match('ZDB.*',condition):
-                    #print('yay!')
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
+
                     if extrinsic_geno_id not in extrinsic_geno_hash:
                         extrinsic_geno_hash[extrinsic_geno_id] = {};
                         extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
                         #print(extrinsic_parts)
+                    #TODO:Change to a make_id after testing.
+                    targeted_sequence_key = extrinsic_geno_id+condition
+                    try:
+                        if targeted_sequence_key not in extrinsic_parts:
+                            extrinsic_parts = {extrinsic_geno_id:{targeted_sequence_key:{condition:[]}}}
+                            #print(extrinsic_parts)
+                            #extrinsic_parts[extrinsic_geno_id][targeted_sequence_key] = {};
+                            #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][targeted_sequence_key]
+                            #print(extrinsic_parts)
+                    except KeyError:
+                        extrinsic_parts = {extrinsic_geno_id:{targeted_sequence_key:[]}}
+                        #extrinsic_parts[extrinsic_geno_id][targeted_sequence_key] = {};
+                        #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][targeted_sequence_key]
+                        #extrinsic_parts[enviro_con] = [condition]
+
+
+                    #gvc_hash[vslc_id] = {};
+                    #if vslc_counter == 0:
+                        #gvcparts[gt_vslc] = [vslc_id]
+                    #elif vslc_id not in gvcparts:
+                        #gvcparts[gt_vslc].append(vslc_id)
+                    #vslc_counter += 1
 
                     #if extrinsic_geno_id[morpholino] not in extrinsic_parts:
                             #extrinsic_geno_hash[extrinsic_geno_id][morpholino] = {};
