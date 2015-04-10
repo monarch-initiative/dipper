@@ -1075,7 +1075,8 @@ class ZFIN(Source):
                 #FIXME: This is incorrect, as it requires the concentration if available, and is related to the extrinsic genotype.
                 #Should add the morpholino as a typed individual instead. Same for TALENs/CRISPRs.
                 geno.addGeneTargetingReagent(morpholino_id,morpholino_symbol,morpholino_so_id)
-                geno.addReagentTargetedGene(morpholino_id,gene_id, gene_id)
+                #Now adding the reagent targeted gene in the pheno_environment processing function.
+                #geno.addReagentTargetedGene(morpholino_id,gene_id, gene_id)
 
                 #Add publication
                 if(publication != ''):
@@ -1134,7 +1135,8 @@ class ZFIN(Source):
                 gene_id = 'ZFIN:'+gene_id.strip()
 
                 geno.addGeneTargetingReagent(talen_id,talen_symbol,talen_so_id)
-                geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
+                #Now adding the reagent targeted gene in the pheno_environment processing function.
+                #geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
 
                 #Add publication
                 if(publication != ''):
@@ -1191,9 +1193,9 @@ class ZFIN(Source):
                 crispr_id = 'ZFIN:'+crispr_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
 
-
                 geno.addGeneTargetingReagent(crispr_id,crispr_symbol,crispr_so_id)
-                geno.addReagentTargetedGene(crispr_id,gene_id,gene_id)
+                #Now adding the reagent targeted gene in the pheno_environment processing function.
+                #geno.addReagentTargetedGene(crispr_id,gene_id,gene_id)
 
                 #Add publication
                 if(publication != ''):
@@ -1390,8 +1392,10 @@ class ZFIN(Source):
                 #End of loop
             #Now process through the extrinsic_part_hash to produce the targeted_gene_variant_complement
             #print(extrinsic_part_hash)
+            tgc_hash = {}
             for extrinsic_geno_id in extrinsic_part_hash:
                 #print(extrinsic_part_hash[extrinsic_geno_id])
+
                 geno = Genotype(self.graph)
                 ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
                 for condition in extrinsic_part_hash[extrinsic_geno_id]:
@@ -1401,17 +1405,23 @@ class ZFIN(Source):
 
                     #Make the tgs id and label, add tgs to graph
                     targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
+                    #TODO: Change to makeID after testing.
                     targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
-                    print(targeted_gene_subregion_id)
+                    #print(targeted_gene_subregion_label)
                     geno.addTargetedGeneSubregion(targeted_gene_subregion_id,targeted_gene_subregion_label)
 
 
                     for i in kd_reagent_gene_ids:
                         #TODO: Change to a makeID after testing.
                         targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
+                        #FIXME: What about for reagents that target more than one gene? Concatenated or separate?
                         #print(targeted_gene_variant_id)
                         kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
                         kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
+                        targeted_gene_variant_label = kd_reagent_gene_label+targeted_gene_subregion_label
+                        #print(targeted_gene_variant_id)
+                        geno.addReagentTargetedGene(condition,i,targeted_gene_variant_id,targeted_gene_variant_label)
+
 
 
 
