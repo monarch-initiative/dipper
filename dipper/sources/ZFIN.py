@@ -110,28 +110,28 @@ class ZFIN(Source):
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
 
+        self._process_genotype_features(limit)
+        self._process_genotype_backgrounds(limit)
+        self._process_feature_affected_genes(limit)
+        self._process_g2p(limit)
 
         self._process_morpholinos(limit)
         self._process_talens(limit)
         self._process_crisprs(limit)
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
-        #self._process_genotype_features(limit)
-        #self._process_genotype_backgrounds(limit)
-        #self._process_feature_affected_genes(limit)
-        #self._process_g2p(limit)
-        #self._process_human_orthos(limit)
-        #self._process_anatomy(limit)
-        #self._process_stages(limit)
-        #self._process_wildtype_expression(limit)
-        #self._process_wildtypes(limit)
-        #self._process_gene_marker_relationships(limit)
-        #self._process_features(limit)
-        #self._process_genes(limit)
-        #self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
-        #self._process_pubinfo(limit)
-        #self._process_pub2pubmed(limit)
+        self._process_human_orthos(limit)
+        self._process_anatomy(limit)
+        self._process_stages(limit)
+        self._process_wildtype_expression(limit)
+        self._process_wildtypes(limit)
+        self._process_gene_marker_relationships(limit)
+        self._process_features(limit)
+        self._process_genes(limit)
+        self._process_genbank_ids(limit)
+        self._process_uniprot_ids(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -1408,6 +1408,7 @@ class ZFIN(Source):
                     targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
                     #print(targeted_gene_subregion_label)
                     geno.addTargetedGeneSubregion(targeted_gene_subregion_id,targeted_gene_subregion_label)
+                    geno.addParts(condition,targeted_gene_subregion_id)
 
 
                     for i in kd_reagent_gene_ids:
@@ -1421,6 +1422,7 @@ class ZFIN(Source):
                         #print('tgv_id='+targeted_gene_variant_id)
                         #print('tgv_label='+targeted_gene_variant_label)
                         geno.addReagentTargetedGene(condition,i,targeted_gene_variant_id,targeted_gene_variant_label)
+                        geno.addParts(targeted_gene_subregion_id,targeted_gene_variant_id)
 
                         if extrinsic_geno_id not in tgc_hash:
                             tgc_hash[extrinsic_geno_id] = {}
@@ -1446,6 +1448,13 @@ class ZFIN(Source):
                 targeted_gene_complement_label = ('; ').join(tgc_labels)
 
                 geno.addTargetedGeneComplement(targeted_gene_complement_id,targeted_gene_complement_label)
+                #TODO: Abstract adding TGC to Genotype.
+                # Add the TGC to the genotype.
+                geno.addParts(targeted_gene_complement_id,extrinsic_geno_id)
+                #TODO: Abstract adding TGVs to TGCs.
+                for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
+                    geno.addParts(targeted_gene_variant_id,targeted_gene_complement_id)
+
 
 
 
