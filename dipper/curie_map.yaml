@@ -56,7 +56,7 @@
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
 'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
-'dbSNP' : 'http://identifiers.org/dbSNP:'  #FIXME
+'dbSNP' : 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
@@ -74,7 +74,6 @@
 'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
 'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
-'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 
 # genes
