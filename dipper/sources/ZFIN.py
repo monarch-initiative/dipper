@@ -115,7 +115,7 @@ class ZFIN(Source):
         self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
 
-        self._process_morpholinos(limit)
+        self._process_morpholinos(limit) # Process before talens/crisprs
         self._process_talens(limit)
         self._process_crisprs(limit)
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
