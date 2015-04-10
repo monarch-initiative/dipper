@@ -1072,6 +1072,8 @@ class ZFIN(Source):
                 #print(target_sequence)
                 #print(morpholino_id)
 
+                #FIXME: This is incorrect, as it requires the concentration if available, and is related to the extrinsic genotype.
+                #Should add the morpholino as a typed individual instead. Same for TALENs/CRISPRs.
                 geno.addGeneTargetingReagent(morpholino_id,morpholino_symbol,morpholino_so_id)
                 geno.addReagentTargetedGene(morpholino_id,gene_id, gene_id)
 
@@ -1244,6 +1246,7 @@ class ZFIN(Source):
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         kd_reagent_conc_hash = {}
+        kd_reagent_conc_label_hash= {}
         extrinsic_part_hash = {}
         #condition_
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
@@ -1302,9 +1305,11 @@ class ZFIN(Source):
                     #Create the targeted sequence id
                     if units is not None and values is not None:
                         targeted_sequence_id = condition+'_'+values+units
+                        conc_label = '('+values+' '+units+')'
                     else:
                         #FIXME: Better way to indicate that the concentration is not provided?
                         targeted_sequence_id = condition+'_ns'
+                        conc_label = '(n.s.)'
                     #print(targeted_sequence_id)
 
 
@@ -1324,6 +1329,22 @@ class ZFIN(Source):
 
                     if condition not in kd_reagent_conc_hash[extrinsic_geno_id]:
                         kd_reagent_conc_hash[extrinsic_geno_id][condition] = targeted_sequence_id
+
+
+                    #targeted gene subregion label will come from hash
+                    kd_reagent_label = self.kd_reagent_hash['kd_reagent_label'][condition]
+                    #print(kd_reagent_label)
+                    targeted_gene_subregion_label = '<'+kd_reagent_label+' '+conc_label+'>'
+                    #print(targeted_gene_subregion_label)
+                    if extrinsic_geno_id not in kd_reagent_conc_label_hash:
+                        kd_reagent_conc_label_hash[extrinsic_geno_id] = {}
+
+                    if condition not in kd_reagent_conc_label_hash[extrinsic_geno_id]:
+                        kd_reagent_conc_label_hash[extrinsic_geno_id][condition] = targeted_gene_subregion_label
+
+
+
+
 
                     #print(kd_reagent_conc_hash[extrinsic_geno_id][condition])
                     #print(kd_reagent_conc_hash[extrinsic_geno_id])
@@ -1371,15 +1392,48 @@ class ZFIN(Source):
             #print(extrinsic_part_hash)
             for extrinsic_geno_id in extrinsic_part_hash:
                 #print(extrinsic_part_hash[extrinsic_geno_id])
+                geno = Genotype(self.graph)
+                ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
                 for condition in extrinsic_part_hash[extrinsic_geno_id]:
-                    targeted_subregion_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
-                    #TODO: Add the labels.
-                    ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
-                    geno.addTargetedGeneSubregion(targeted_subregion_id,None)
+                    kd_reagent_conc_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
+                    kd_reagent_gene_ids = self.kd_reagent_hash['kd_reagent_id'][condition]
+                    #print(kd_reagent_gene_ids)
 
-                    for i in extrinsic_part_hash[extrinsic_geno_id]:
-                        reagent_targeted_gene_id = '<'+targeted_subregion_id+'>'
+                    #Make the tgs id and label, add tgs to graph
+                    targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
+                    targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
+                    print(targeted_gene_subregion_id)
+                    geno.addTargetedGeneSubregion(targeted_gene_subregion_id,targeted_gene_subregion_label)
+
+
+                    for i in kd_reagent_gene_ids:
+                        #TODO: Change to a makeID after testing.
+                        targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
+                        #print(targeted_gene_variant_id)
+                        kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
+                        kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
+
+
+
+                    #TODO: Add the labels.
+
+
+
+                    #ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+                    #geno.addTargetedGeneSubregion(targeted_gene_subregion_id,None)
+
+                    #for i in extrinsic_part_hash[extrinsic_geno_id]:
+                        #reagent_targeted_gene_id =
                         #print(reagent_targeted_gene_id)
+
+
+
+
+                    #Add the targeted gene subregion
+
+                    #Add the targeted gene variant/reagent targeted gene
+
+                    #Assemble and add the targeted gene variant complement
 
 
 
