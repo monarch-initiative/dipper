@@ -45,8 +45,7 @@ class Genotype():
         'wildtype' : 'GENO:0000511',
         'reagent_targeted_gene': 'GENO:0000504',
         'targeted_gene_subregion' : 'GENO:0000534',
-        'targeted_gene_complement' : 'GENO:0000527',
-        'targeted_gene_variant' : 'GENO:XXXXXXX' #FIXME: Not seeing anything in GENO, may need to create ticket.
+        'targeted_gene_complement' : 'GENO:0000527'
     }
 
     object_properties = {

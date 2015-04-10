@@ -108,7 +108,7 @@ class ZFIN(Source):
 
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
-        self.kd_reagent_hash = {'kd_reagent_id' : {}}
+        self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
 
 
         self._process_morpholinos(limit)
@@ -1043,7 +1043,7 @@ class ZFIN(Source):
         :param limit:
         :return:
         """
-        #kd_reagent_hash = {}
+
         logger.info("Processing Morpholinos")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
@@ -1085,15 +1085,21 @@ class ZFIN(Source):
                 if(note != ''):
                     gu.addComment(self.graph,morpholino_id,note)
 
+                #Build the hash for the reagents and the gene targets
                 if self.kd_reagent_hash['kd_reagent_id'].get(morpholino_id) is None:
                     reagent_target = []
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
                 else:
-
                     reagent_target = self.kd_reagent_hash['kd_reagent_id'][morpholino_id]
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
+
+                if self.kd_reagent_hash['kd_reagent_label'].get(morpholino_id) is None:
+                    self.kd_reagent_hash['kd_reagent_label'][morpholino_id] = morpholino_symbol
+                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
+                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1139,15 +1145,20 @@ class ZFIN(Source):
                 if(note != ''):
                     gu.addComment(self.graph,talen_id,note)
 
+                #Build the hash for the reagents and the gene targets
                 if self.kd_reagent_hash['kd_reagent_id'].get(talen_id) is None:
                     reagent_target = []
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
                 else:
-
                     reagent_target = self.kd_reagent_hash['kd_reagent_id'][talen_id]
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
+
+                if self.kd_reagent_hash['kd_reagent_label'].get(talen_id) is None:
+                    self.kd_reagent_hash['kd_reagent_label'][talen_id] = talen_symbol
+                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
+                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1193,16 +1204,20 @@ class ZFIN(Source):
                 if(note != ''):
                     gu.addComment(self.graph,crispr_id,note)
 
+                #Build the hash for the reagents and the gene targets
                 if self.kd_reagent_hash['kd_reagent_id'].get(crispr_id) is None:
                     reagent_target = []
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
                 else:
-
                     reagent_target = self.kd_reagent_hash['kd_reagent_id'][crispr_id]
                     reagent_target.append(gene_id)
                     self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
 
+                if self.kd_reagent_hash['kd_reagent_label'].get(crispr_id) is None:
+                    self.kd_reagent_hash['kd_reagent_label'][crispr_id] = crispr_symbol
+                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
+                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
 
 
                 if (limit is not None and line_counter > limit):
@@ -1272,10 +1287,15 @@ class ZFIN(Source):
                         units = re.sub(r"/",'_',units)
 
 
-
                     # Clean up the values
                     if values == '':
                         values = None
+                    if values is not None:
+                        values = values.replace(' ', '_')
+                        #FIXME: Better way to indicate > and <?
+                        values = values.replace('<', 'less_than_')
+                        values = values.replace('>', 'greater_than_')
+
                     #if units is not None and values is not None:
                         #print(values+units)
 
@@ -1283,14 +1303,20 @@ class ZFIN(Source):
                     if units is not None and values is not None:
                         targeted_sequence_id = condition+'_'+values+units
                     else:
-                        targeted_sequence_id = condition+'_?'
-                    print(targeted_sequence_id)
+                        #FIXME: Better way to indicate that the concentration is not provided?
+                        targeted_sequence_id = condition+'_ns'
+                    #print(targeted_sequence_id)
 
 
                     if extrinsic_geno_id not in extrinsic_part_hash:
-                        extrinsic_part_hash[extrinsic_geno_id] = {}
+                        extrinsic_part_hash[extrinsic_geno_id] = [condition]
                         #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
                         #print(extrinsic_parts)
+
+                    if condition not in extrinsic_part_hash[extrinsic_geno_id]:
+                        extrinsic_part_hash[extrinsic_geno_id].append(condition)
+
+
                     if extrinsic_geno_id not in kd_reagent_conc_hash:
                         kd_reagent_conc_hash[extrinsic_geno_id] = {}
                     #TODO:Change to a make_id after testing.
@@ -1342,15 +1368,18 @@ class ZFIN(Source):
 
                 #End of loop
             #Now process through the extrinsic_part_hash to produce the targeted_gene_variant_complement
+            #print(extrinsic_part_hash)
             for extrinsic_geno_id in extrinsic_part_hash:
+                #print(extrinsic_part_hash[extrinsic_geno_id])
                 for condition in extrinsic_part_hash[extrinsic_geno_id]:
                     targeted_subregion_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
                     #TODO: Add the labels.
                     ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
-                    geno.addTargetedGeneSubregion(targeted_subregion_id)
-                    targeted_genes = extrinsic_part_hash[extrinsic_geno_id][condition]
+                    geno.addTargetedGeneSubregion(targeted_subregion_id,None)
 
-                    #for gene in targeted_genes:
+                    for i in extrinsic_part_hash[extrinsic_geno_id]:
+                        reagent_targeted_gene_id = '<'+targeted_subregion_id+'>'
+                        #print(reagent_targeted_gene_id)
 
 
 
