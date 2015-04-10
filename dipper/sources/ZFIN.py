@@ -1384,17 +1384,16 @@ class ZFIN(Source):
 
 
 
-
-
                 if (limit is not None and line_counter > limit):
                     break
 
                 #End of loop
-            #Now process through the extrinsic_part_hash to produce the targeted_gene_variant_complement
+            #Now process through the extrinsic_part_hash to produce targeted_gene_subregion and targeted_gene_variant
             #print(extrinsic_part_hash)
             tgc_hash = {}
             for extrinsic_geno_id in extrinsic_part_hash:
                 #print(extrinsic_part_hash[extrinsic_geno_id])
+
 
                 geno = Genotype(self.graph)
                 ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
@@ -1419,53 +1418,36 @@ class ZFIN(Source):
                         kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
                         kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
                         targeted_gene_variant_label = kd_reagent_gene_label+targeted_gene_subregion_label
-                        #print(targeted_gene_variant_id)
+                        #print('tgv_id='+targeted_gene_variant_id)
+                        #print('tgv_label='+targeted_gene_variant_label)
                         geno.addReagentTargetedGene(condition,i,targeted_gene_variant_id,targeted_gene_variant_label)
 
+                        if extrinsic_geno_id not in tgc_hash:
+                            tgc_hash[extrinsic_geno_id] = {}
+
+                        if targeted_gene_variant_id not in tgc_hash[extrinsic_geno_id]:
+                            tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] = targeted_gene_variant_label
 
 
 
-                    #TODO: Add the labels.
+                #End of loop
+            #Now process through the tgc_hash to produce the targeted_gene_variant_complement
+            for extrinsic_geno_id in tgc_hash:
+                tgc_ids = []
+                tgc_labels = []
+                geno = Genotype(self.graph)
+                ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+                for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
+                    if targeted_gene_variant_id not in tgc_ids:
+                        tgc_ids.append(targeted_gene_variant_id)
+                    if tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] not in tgc_labels:
+                        tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
+                targeted_gene_complement_id = ('_').join(tgc_ids)
+                targeted_gene_complement_label = ('; ').join(tgc_labels)
+
+                geno.addTargetedGeneComplement(targeted_gene_complement_id,targeted_gene_complement_label)
 
 
-
-                    #ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
-                    #geno.addTargetedGeneSubregion(targeted_gene_subregion_id,None)
-
-                    #for i in extrinsic_part_hash[extrinsic_geno_id]:
-                        #reagent_targeted_gene_id =
-                        #print(reagent_targeted_gene_id)
-
-
-
-
-                    #Add the targeted gene subregion
-
-                    #Add the targeted gene variant/reagent targeted gene
-
-                    #Assemble and add the targeted gene variant complement
-
-
-
-
-
-                    #print('knockdown_reagent='+knockdown_reagent)
-                    #print('targeted_genes='+('/').join(targeted_genes))
-                #for vslc_id in gvc_hash.get(gt):
-                    #genomic_variation_complement_parts = gvc_hash.get(gt).get(vslc_id)
-                    #print(genomic_variation_complement_parts)
-                    #gvc_id = self.make_id(('-').join(genomic_variation_complement_parts))
-                    #Add the GVC
-                    #gu.addIndividualToGraph(self.graph,gvc_id,None,'GENO:0000009')
-                    #Add the GVC to the genotype
-                    #gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
-
-                    #Add the VSLCs to the GVC
-                    #for i in genomic_variation_complement_parts:
-                        #geno.addVSLCtoParent(i,gt)
-                        #gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
-
-                #end of gvc loop
 
         #print(extrinsic_part_hash)
         logger.info("Done with phenotype environments")
