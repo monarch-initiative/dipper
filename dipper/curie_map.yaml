@@ -75,7 +75,7 @@
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
 'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
-'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id="
+'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
