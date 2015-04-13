@@ -99,7 +99,7 @@
 
 
 # proteins
-'UniProtKB' : 'http://identifiers.org/UniProt:'
+'UniProtKB' : 'http://identifiers.org/uniprot/'
 'SwissProt' : 'http://identifiers.org/SwissProt:'
 'TrEMBL' : 'http://www.uniprot.org/uniprot/'
 'PDB' : 'http://identifiers.org/PDB:'
