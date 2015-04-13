@@ -75,6 +75,7 @@
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
 'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
+'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
