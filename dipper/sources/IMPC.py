@@ -28,6 +28,11 @@ class IMPC(Source):
                      'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/checksum.md5'},
     }
 
+    #TODO move these into the conf.json
+    #the following are gene ids for testing
+    test_ids = ["MGI:109380","MGI:1347004","MGI:1353495","MGI:1913840","MGI:2144157","MGI:2182928","MGI:88456",
+                "MGI:96704","MGI:1913649","MGI:95639","MGI:1341847","MGI:104848","MGI:2442444","MGI:2444584",
+                "MGI:1916948","MGI:107403","MGI:1860086","MGI:1919305","MGI:2384936","MGI:88135"]
 
     def __init__(self):
         Source.__init__(self, 'impc')
@@ -35,6 +40,8 @@ class IMPC(Source):
         #update the dataset object with details about this resource
         #TODO put this into a conf file?
         self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org')
+
+        self.testMode = True
 
         #source-specific warnings.  will be cleared when resolved.
         #print("WARN: we are filtering G2P on the wild-type environment data for now")
@@ -66,13 +73,16 @@ class IMPC(Source):
 
         for f in ['impc','euro','mgd']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
-            self._process_data(file, limit)
 
+            for t in [True,False]:
+                self.testMode = t
+                self._process_data(file, limit)
 
         logger.info("Finished parsing")
 
         self.load_bindings()
-        Assoc().loadAllProperties(self.graph)
+        for g in [self.testgraph,self.graph]:
+            Assoc().loadAllProperties(g)
 
         logger.info("Found %s nodes", len(self.graph))
         return
@@ -81,7 +91,12 @@ class IMPC(Source):
         logger.info("Processing Data from %s",raw)
         gu = GraphUtils(curie_map.get())
 
-        geno = Genotype(self.graph)
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        geno = Genotype(g)
         line_counter = 0
         with gzip.open(raw, 'rt') as csvfile:
         #with open(raw, 'r', encoding="utf8") as csvfile:
@@ -94,6 +109,9 @@ class IMPC(Source):
                  marker_accession_id,allele_symbol,allele_accession_id,zygosity,sex,pipeline_name,pipeline_stable_id,
                  procedure_name,procedure_stable_id,parameter_name,parameter_stable_id,mp_term_name,mp_term_id,p_value,
                  effect_size) = row
+
+                if self.testMode and marker_accession_id not in self.test_ids:
+                    continue
 
                 ###### cleanup some of the identifiers ######
                 zygosity_id = self._map_zygosity(zygosity)
@@ -117,13 +135,13 @@ class IMPC(Source):
                 #really attached to the colony.
 
                 #the colony/clone is reflective of the allele, with unknown zygosity
-                gu.addIndividualToGraph(self.graph,colony_id,colony,geno.genoparts['population'])
+                gu.addIndividualToGraph(g,colony_id,colony,geno.genoparts['population'])
 
                 #vslc of the colony has unknown zygosity
                 #note that we will define the allele (and it's relationship to the marker, etc.) later
                 vslc_colony = ':_'+allele_accession_id+geno.zygosity['indeterminate']
                 vslc_colony_label = 'vslc'+colony #TODO remove me
-                gu.addIndividualToGraph(self.graph,vslc_colony,vslc_colony_label,geno.genoparts['variant_single_locus_complement'])
+                gu.addIndividualToGraph(g,vslc_colony,vslc_colony_label,geno.genoparts['variant_single_locus_complement'])
                 geno.addPartsToVSLC(vslc_colony,allele_accession_id,None,geno.zygosity['indeterminate'])
                 geno.addMemberOfPopulation(vslc_colony,colony_id)
 
@@ -181,7 +199,7 @@ class IMPC(Source):
 
                 # Add the VSLC
                 vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
-                gu.addIndividualToGraph(self.graph,vslc_id,vslc_name,geno.genoparts['variant_single_locus_complement'])
+                gu.addIndividualToGraph(g,vslc_id,vslc_name,geno.genoparts['variant_single_locus_complement'])
                 geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
                 #add vslc to genotype
                 geno.addVSLCtoParent(vslc_id,genotype_id)
@@ -217,7 +235,7 @@ class IMPC(Source):
 
                 # Add the taxon as a class
                 taxon_id = 'NCBITaxon:10090'  #map to Mus musculus
-                gu.addClassToGraph(self.graph,taxon_id, None)
+                gu.addClassToGraph(g,taxon_id, None)
 
                 if genomic_background_id is not None and genomic_background_id != '':
                     # Add the taxon to the genomic_background_id
@@ -239,12 +257,13 @@ class IMPC(Source):
                 assoc_id = self.make_id((effective_genotype_id+phenotype_id+phenotyping_center+pipeline_stable_id+procedure_stable_id+parameter_stable_id))
 
                 assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, None, eco_id)
-                assoc.addAssociationNodeToGraph(self.graph)
+                assoc.addAssociationNodeToGraph(g)
 
                 #add a free-text description
-                description = (' ').join((mp_term_name,'phenotype determined by',phenotyping_center,'in an',procedure_name,
-                              'assay where',parameter_name,'was measured with an effect_size of',effect_size,'. (p=',p_value,')'))
-                assoc.addDescription(self.graph,assoc_id,description)
+                description = (' ').join((mp_term_name,'phenotype determined by',phenotyping_center,'in an',
+                                          procedure_name,'assay where',parameter_name.strip(),
+                                          'was measured with an effect_size of',effect_size,'. (p =',p_value,')'))
+                assoc.addDescription(g,assoc_id,description)
 
                 if (limit is not None and line_counter > limit):
                     break
