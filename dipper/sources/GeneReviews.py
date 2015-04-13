@@ -76,6 +76,9 @@ class GeneReviews(Source):
 
         self.load_bindings()
 
+        #no test subset for now; test == full graph
+        self.testgraph = self.graph
+
         print("INFO: Found", len(self.graph), "nodes")
 
 
