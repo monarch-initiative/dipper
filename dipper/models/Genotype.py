@@ -46,6 +46,7 @@ class Genotype():
         'reagent_targeted_gene': 'GENO:0000504',
         'missense_variant': 'SO:0001583',
         'transcript': 'SO:0000233',
+        'polypeptide': 'SO:0000104',
         'cDNA': 'SO:0000756',
         'sequence_variant_causing_loss_of_function_of_polypeptide': 'SO:1000118',
         'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125',
