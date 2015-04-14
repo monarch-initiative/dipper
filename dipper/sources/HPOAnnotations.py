@@ -144,13 +144,13 @@ class HPOAnnotations(Source):
 
         for g in [self.graph, self.testgraph]:
             Assoc().loadAllProperties(g)
+            logger.info("Loaded %d nodes", len(g))
 
         # TODO add negative phenotype statements
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
 
         logger.info("Finished parsing.")
 
-        logger.info("Loaded %d nodes", len(self.graph))
         return
 
 
@@ -166,9 +166,9 @@ class HPOAnnotations(Source):
     def _process_phenotype_tab(self, raw, limit, testMode):
         if (testMode):
             g = self.testgraph
-            logging.info("Processing testset.")
         else:
             g = self.graph
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
