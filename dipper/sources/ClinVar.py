@@ -47,7 +47,7 @@ class ClinVar(Source):
         self.filter = 'taxids'
         self.load_bindings()
 
-        self.dataset = Dataset('ClinVar', 'National Center for Biotechnology Information', 'http://www.ncbi.nlm.nih.gov/clinvar/')
+        self.dataset = Dataset('ClinVar', 'National Center for Biotechnology Information', 'http://www.ncbi.nlm.nih.gov/clinvar/',None,'http://www.ncbi.nlm.nih.gov/About/disclaimer.html','https://creativecommons.org/publicdomain/mark/1.0/')
         # data-source specific warnings (will be removed when issues are cleared)
 
 
