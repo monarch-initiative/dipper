@@ -52,11 +52,7 @@ class Genotype():
         'sequence_variant_causing_loss_of_function_of_polypeptide': 'SO:1000118',
         'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125',
         'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120',
-        'sequence_variant_affecting_polypeptide_function': 'SO:1000117',
-        'reference_nucleotide': 'GENO:reference_nucleotide', #FIXME Made up term
-        'reference_amino_acid': 'GENO:reference_amino_acid', #FIXME Made up term
-        'altered_nucleotide': 'GENO:altered_nucleotide', #FIXME Made up term
-        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change' #FIXME Made up term
+        'sequence_variant_affecting_polypeptide_function': 'SO:1000117'
     }
 
     object_properties = {
@@ -74,7 +70,15 @@ class Genotype():
         'is_allelotype_of': 'GENO:0000206',
         'has_genotype': 'GENO:0000222',
         'has_phenotype': 'RO:0002200',
-        'transcribed_to': 'SO:transcribed_to'  #FIXME
+        'transcribed_to': 'RO:0002205',
+        'translates_to': 'RO:0002513'
+    }
+
+    annotation_properties = {
+        'reference_nucleotide': 'GENO:reference_nucleotide', #Made up term
+        'reference_amino_acid': 'GENO:reference_amino_acid', #Made up term
+        'altered_nucleotide': 'GENO:altered_nucleotide', #Made up term
+        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change' #Made up term
     }
 
     zygosity = {
@@ -89,6 +93,7 @@ class Genotype():
     }
 
     properties = object_properties.copy()
+    properties.update(annotation_properties)
 
     def __init__(self, graph):
 
@@ -191,6 +196,22 @@ class Genotype():
         """
         self.gu.addIndividualToGraph(self.graph, transcript_id, transcript_label, transcript_type)
         self.gu.addTriple(self.graph, variant_id, self.properties['transcribed_to'], transcript_id)
+
+        return
+
+    def addPolypeptide(self, polypeptide_id, polypeptide_label=None, transcript_id=None, polypeptide_type=None, ):
+        """
+        :param polypeptide_id:
+        :param polypeptide_label:
+        :param polypeptide_type:
+        :param transcript_id:
+        :return:
+        """
+        if polypeptide_type is None:
+            polypeptide_type = self.genoparts['polypeptide']
+        self.gu.addIndividualToGraph(self.graph, polypeptide_id, polypeptide_label, polypeptide_type)
+        if transcript_id is not None:
+            self.gu.addTriple(self.graph, transcript_id, self.properties['translates_to'], polypeptide_id)
 
         return
 
