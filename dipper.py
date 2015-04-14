@@ -31,7 +31,7 @@ def main():
         'omim' : OMIM,  #full file takes ~15 min, due to required throttling
         'biogrid' : BioGrid,  #interactions file takes <10 minutes
         'mgi' : MGI,
-        'impc' : IMPC,  # Running time to process all three data files is ~85 minutes so far.
+        'impc' : IMPC,
         'panther' : Panther,  #this takes a very long time, ~1hr to map 7 species-worth of associations
         'ncbigene' : NCBIGene,  #takes about 4 minutes to process 2 species
         'ucscbands' : UCSCBands,
@@ -62,13 +62,18 @@ def main():
                         action="store_true")
     parser.add_argument('--debug',help='turn on debug logging',
                         action="store_true")
+
+    #TODO this preconfiguration should probably live in the conf.json, and the same filter be applied to all sources
     parser.add_argument('-t', '--taxon', type=str,
-                        help='Add a taxon constraint on a source\n'
+                        help='Add a taxon constraint on a source. Enter 1+ NCBITaxon numbers, comma delimited\n'
                              'Implemented taxa per source\n'
-                             'NCBIGene: 9606,10090\n'
+                             'NCBIGene: 9606,10090,7955\n'
                              'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
                              'BioGrid: 9606,10090,10116,7227,7955,6239,8355\n'
                              'UCSCBands: 9606')
+    parser.add_argument('-o','--test_only', help='only process and output the pre-configured test subset',
+                        action="store_true")
+
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
@@ -107,6 +112,7 @@ def main():
             mysource = src()
         if args.parse_only is False:
             mysource.fetch(args.force)
+        mysource.settestonly(args.test_only)
         mysource.parse(args.limit)
         mysource.write(format='turtle')
         if args.no_verify is not True:

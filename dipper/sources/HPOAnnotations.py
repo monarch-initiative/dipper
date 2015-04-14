@@ -70,28 +70,29 @@ class HPOAnnotations(Source):
             self.test_ids = config.get_config()['test_ids']['disease']
 
 
-        #data-source specific warnings (will be removed when issues are cleared)
+        # data-source specific warnings (will be removed when issues are cleared)
         logger.warn("note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
 
         return
 
     def fetch(self, is_dl_forced):
+        st = None
         for f in self.files.keys():
             file = self.files.get(f)
             self.fetch_from_url(file['url'],
-                                ('/').join((self.rawdir,file['file'])),
+                                ('/').join((self.rawdir, file['file'])),
                                 is_dl_forced)
             self.dataset.setFileAccessUrl(file['url'])
             # zfin versions are set by the date of download.
-            st = os.stat(('/').join((self.rawdir,file['file'])))
+            st = os.stat(('/').join((self.rawdir, file['file'])))
 
-        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
         self.scrub()
 
         #get the latest build from jenkins
-        jenkins_info=eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
-        version=jenkins_info['number']
+        jenkins_info = eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
+        version = jenkins_info['number']
 
         self.dataset.setVersion(filedate,str(version))
 
@@ -128,20 +129,24 @@ class HPOAnnotations(Source):
 
     # here we're reading and building a full named graph of this resource, then dumping it all at the end
     # we can investigate doing this line-by-line later
-    #supply a limit if you want to test out parsing the head X lines of the file
+    # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if (limit is not None):
             logger.info("Only parsing first %s rows", limit)
 
         logger.info("Parsing files...")
-        for testMode in [True,False]:
-            self._process_phenotype_tab(('/').join((self.rawdir,self.files['annot']['file'])),limit,testMode)
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
 
-        for g in [self.graph,self.testgraph]:
+        for testMode in loops:
+            self._process_phenotype_tab('/'.join((self.rawdir, self.files['annot']['file'])), limit, testMode)
+
+        for g in [self.graph, self.testgraph]:
             Assoc().loadAllProperties(g)
 
-        #TODO add negative phenotype statements
-        #self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
+        # TODO add negative phenotype statements
+        # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
 
         logger.info("Finished parsing.")
 

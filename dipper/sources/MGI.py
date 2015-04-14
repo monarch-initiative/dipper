@@ -176,8 +176,13 @@ class MGI(Source):
             print("Only parsing first", limit, "rows of each file")
         print("Parsing files...")
 
-        for self.testMode in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
 
+        for l in loops:
+
+            self.testMode = l
 
             # the following will provide us the hash-lookups
             # These must be processed in a specific order

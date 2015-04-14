@@ -113,9 +113,13 @@ class ClinVar(Source):
 
         print("Parsing files...")
 
-        for testMode in [True,False]:
-            self._get_variants(limit,testMode)
-            self._get_var_citations(limit,testMode)
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for testMode in loops:
+            self._get_variants(limit, testMode)
+            self._get_var_citations(limit, testMode)
 
         self.load_core_bindings()
         self.load_bindings()

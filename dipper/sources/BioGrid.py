@@ -93,7 +93,7 @@ class BioGrid(Source):
 
         return
 
-    def parse(self,limit=None):
+    def parse(self, limit=None):
         '''
         abstract method to parse all data from an external resource, that was fetched in
         fetch()
@@ -101,10 +101,13 @@ class BioGrid(Source):
         :return: None
         '''
 
-        #TODO make each of these items an option... we may want to process them separately
-        for testMode in [True,False]:
-            self._get_interactions(limit,testMode)
-            self._get_identifiers(limit,testMode)
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for testMode in loops:
+            self._get_interactions(limit, testMode)
+            self._get_identifiers(limit, testMode)
 
         self.load_bindings()
         print("Loaded", len(self.graph), "nodes")

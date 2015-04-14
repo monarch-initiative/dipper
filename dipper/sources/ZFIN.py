@@ -167,7 +167,12 @@ class ZFIN(Source):
 
         self._load_zp_mappings()
 
-        for self.testMode in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for m in loops:
+            self.testMode = m
             #self._process_mappings(limit)
             self._process_genotype_features(limit)
             self._process_g2p(limit)

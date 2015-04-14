@@ -98,7 +98,11 @@ class CTD(Source):
                 self.static_files['publications']['file']
             )
 
-        for m in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for m in loops:
             self.testMode = m
             self._parse_ctd_file(limit,self.files['chemical_disease_interactions']['file'],pub_map)
             self._parse_ctd_file(limit,self.files['gene_pathway']['file'])

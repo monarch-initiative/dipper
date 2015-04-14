@@ -82,7 +82,6 @@ class UCSCBands(Source):
 
         self.dataset = Dataset('ucscbands', 'UCSC Cytogenic Bands', 'http://hgdownload.cse.ucsc.edu')
 
-
         #data-source specific warnings (will be removed when issues are cleared)
 
         return

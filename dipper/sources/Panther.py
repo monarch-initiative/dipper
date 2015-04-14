@@ -61,9 +61,9 @@ class Panther(Source):
         return
 
     def fetch(self, is_dl_forced):
-        '''
+        """
         :return: None
-        '''
+        """
 
         self.get_files(is_dl_forced)
         #TODO the version number is tricky to get...we can't get it from redirects of the url
@@ -72,14 +72,17 @@ class Panther(Source):
         return
 
     def parse(self,limit=None):
-        '''
+        """
         abstract method to parse all data from an external resource, that was fetched in
         fetch()
-        this should be overridden by subclasses
         :return: None
-        '''
+        """
 
-        for testMode in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for testMode in loops:
             self._get_orthologs(limit,testMode)
 
         self.load_bindings()

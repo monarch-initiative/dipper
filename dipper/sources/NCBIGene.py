@@ -101,7 +101,11 @@ class NCBIGene(Source):
 
         print("Parsing files...")
 
-        for m in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for m in loops:
             self.testmode = m
             self._get_gene_info(limit)
             self._get_gene_history(limit)

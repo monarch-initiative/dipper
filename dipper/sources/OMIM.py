@@ -117,8 +117,11 @@ class OMIM(Source):
 
         print("Parsing files...")
 
-        #do each; once in test mode, the other in regular mode
-        for test in [True,False]:
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
+        for test in loops:
             self._process_all(limit,test)
             self._process_morbidmap(limit,test)
             self._process_phenotypicseries(limit,test)

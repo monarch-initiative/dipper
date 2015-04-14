@@ -72,10 +72,15 @@ class IMPC(Source):
 
         logger.info("Parsing files...")
 
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
         for f in ['impc','euro','mgd']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
 
-            for t in [True,False]:
+
+            for t in loops:
                 self.testMode = t
                 self._process_data(file, limit)
 

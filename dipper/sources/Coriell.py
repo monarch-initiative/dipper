@@ -130,19 +130,22 @@ class Coriell(Source):
 
         logger.info("Parsing files...")
 
+        loops = [True]
+        if not self.testOnly:
+            loops = [True,False]
+
         for f in ['ninds','nigms','nia','nhgri']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
             self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
-            self._process_data(file, False, limit)
-            self._process_data(file,True)   #process the "test" data
+
+            for l in loops:
+                self._process_data(file, l, limit)
 
         logger.info("Finished parsing.")
 
-
         self.load_bindings()
-        Assoc().loadAllProperties(self.graph)
-        Assoc().loadAllProperties(self.testgraph)
-
+        for g in [self.graph,self.testgraph]:
+            Assoc().loadAllProperties(g)
 
         logger.info("Found %s nodes", len(self.graph))
         return
