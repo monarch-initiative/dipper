@@ -34,7 +34,7 @@ class CTD(Source):
 
     def __init__(self):
         Source.__init__(self, 'ctd')
-        self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
+        self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org',None,'http://ctdbase.org/about/legal.jsp')
 
     def fetch(self, is_dl_forced):
         """
