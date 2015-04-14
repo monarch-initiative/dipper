@@ -2,6 +2,7 @@ import csv
 import gzip
 import re
 import logging
+import os
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -105,10 +106,11 @@ class IMPC(Source):
             for row in filereader:
                 line_counter += 1
 
-                (resource_name,phenotyping_center,colony,strain_name,strain_accession_id,marker_symbol,
-                 marker_accession_id,allele_symbol,allele_accession_id,zygosity,sex,pipeline_name,pipeline_stable_id,
-                 procedure_name,procedure_stable_id,parameter_name,parameter_stable_id,mp_term_name,mp_term_id,p_value,
-                 effect_size) = row
+                (marker_accession_id,marker_symbol,phenotyping_center,colony,sex,zygosity,allele_accession_id,
+                 allele_symbol,allele_name,strain_accession_id,strain_name,project_name,project_fullname,pipeline_name,
+                 pipeline_stable_id,procedure_stable_id,procedure_name,parameter_stable_id,parameter_name,
+                 top_level_mp_term_id,top_level_mp_term_name,mp_term_id,mp_term_name,p_value,percentage_change,
+                 effect_size,statistical_method,resource_name) = row
 
                 if self.testMode and marker_accession_id not in self.test_ids:
                     continue
@@ -313,10 +315,11 @@ class IMPC(Source):
         reference_checksums = self.parse_checksum_file(
             self.files['checksum']['file'])
         for md5, file in reference_checksums.items():
-            if self.get_file_md5(self.rawdir, file) != md5:
-                is_match = False
-                logger.warn('%s was not downloaded completely', file)
-                return is_match
+            if os.path.isfile('/'.join((self.rawdir, file))):
+                if self.get_file_md5(self.rawdir, file) != md5:
+                    is_match = False
+                    logger.warn('%s was not downloaded completely', file)
+                    return is_match
 
         return is_match
 

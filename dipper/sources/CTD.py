@@ -67,7 +67,7 @@ class CTD(Source):
 
     def fetch(self, is_dl_forced):
         """
-        Override Assoc.fetch()
+        Override Source.fetch()
         Fetches resources from CTD using the CTD.files dictionary
         Args:
             :param is_dl_forced (bool): Force download
@@ -79,7 +79,7 @@ class CTD(Source):
 
     def parse(self, limit=None):
         """
-        Override Assoc.parse()
+        Override Source.parse()
         Parses version and interaction information from CTD
         Args:
             :param limit (int, optional) limit the number of rows processed

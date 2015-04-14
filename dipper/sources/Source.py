@@ -203,7 +203,8 @@ class Source:
                 else:
                     logger.info("Remote file has same filesize--will not download")
         elif (st[ST_SIZE] != size):
-            logger.info("Object on server is same size as local file; assuming unchanged")
+            logger.info("Object on server is difference size in comparison to local file")
+            return True
         return False
 
     def get_files(self, is_dl_forced):
@@ -324,7 +325,7 @@ class Source:
         :return:
         """
         if (con is None and cxn is None):
-            print("ERROR: you need to supply connection information")
+            logger.error("ERROR: you need to supply connection information")
             return
         if (con is None and cxn is not None):
             con = psycopg2.connect(host=cxn['host'],database=cxn['database'],port=cxn['port'], user=cxn['user'], password=cxn['password'])
@@ -340,7 +341,7 @@ class Source:
         if os.path.exists(outfile):
             #get rows in the file
             filerowcount=self.file_len(outfile)
-            print("INFO: rows in local file: ",filerowcount)
+            logger.info("INFO: rows in local file: %s", filerowcount)
 
         #get rows in the table
         #tablerowcount=cur.rowcount
@@ -348,9 +349,9 @@ class Source:
         tablerowcount=cur.fetchone()[0]
 
         if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  #rowcount-1 because there's a header
-            print("INFO: local (",filerowcount,") different from remote (",tablerowcount,"); fetching.")
+            logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
             #download the file
-            print("COMMAND:",query)
+            logger.debug("COMMAND:%s", query)
             outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
             with open(outfile, 'w') as f:
                 cur.copy_expert(outputquery, f)
@@ -359,7 +360,7 @@ class Source:
             if ((filerowcount-1) != tablerowcount):
                 raise Exception("Download from MGI failed, %s != %s", (filerowcount-1), tablerowcount)
         else:
-            print("INFO: local data same as remote; reusing.")
+            logger.info("local data same as remote; reusing.")
 
         return
 

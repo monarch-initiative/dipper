@@ -44,7 +44,19 @@ class Genotype():
         'population' : 'GENO:0000110',  #collection of organisms; consider OBI:population or EFO:population
         'wildtype' : 'GENO:0000511',
         'reagent_targeted_gene': 'GENO:0000504',
-        'biological_region' : 'SO:0001411'
+        'biological_region' : 'SO:0001411',
+        'missense_variant': 'SO:0001583',
+        'transcript': 'SO:0000233',
+        'polypeptide': 'SO:0000104',
+        'cDNA': 'SO:0000756',
+        'sequence_variant_causing_loss_of_function_of_polypeptide': 'SO:1000118',
+        'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125',
+        'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120',
+        'sequence_variant_affecting_polypeptide_function': 'SO:1000117',
+        'reference_nucleotide': 'GENO:reference_nucleotide', #FIXME Made up term
+        'reference_amino_acid': 'GENO:reference_amino_acid', #FIXME Made up term
+        'altered_nucleotide': 'GENO:altered_nucleotide', #FIXME Made up term
+        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change' #FIXME Made up term
     }
 
     object_properties = {
@@ -52,15 +64,17 @@ class Genotype():
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
         'has_reference_part': 'GENO:0000385',
-        'in_taxon' : 'RO:0002162',
+        'in_taxon': 'RO:0002162',
         'has_zygosity': 'GENO:0000608',
         'is_sequence_variant_instance_of': 'GENO:0000408',  #links a alternate locus (instance) to a gene (class)
         'targets_instance_of': 'GENO:0000414',
-        'is_reference_instance_of' : 'GENO:0000610',
-        'has_part' : 'BFO:0000051',
-        'has_member_with_allelotype' : 'GENO:0000225',  #use this when relating populations
-        'is_allelotype_of' : 'GENO:0000206',
-        'has_genotype' : 'GENO:0000222'
+        'is_reference_instance_of': 'GENO:0000610',
+        'has_part': 'BFO:0000051',
+        'has_member_with_allelotype': 'GENO:0000225',  #use this when relating populations
+        'is_allelotype_of': 'GENO:0000206',
+        'has_genotype': 'GENO:0000222',
+        'has_phenotype': 'RO:0002200',
+        'transcribed_to': 'SO:transcribed_to'  #FIXME
     }
 
     zygosity = {
@@ -163,6 +177,20 @@ class Genotype():
         if (rel_id is None):
             rel_id = self.properties['is_sequence_variant_instance_of']
         self.graph.add((self.gu.getNode(allele_id),self.gu.getNode(rel_id),self.gu.getNode(gene_id)))
+
+        return
+
+    def addTranscript(self, variant_id, transcript_id, transcript_label=None, transcript_type=None):
+        """
+        Add gene/variant/allele transcribes_to relationship
+        :param graph:
+        :param variant_id:
+        :param transcript_id:
+        :param transcript_label:
+        :return:
+        """
+        self.gu.addIndividualToGraph(self.graph, transcript_id, transcript_label, transcript_type)
+        self.gu.addTriple(self.graph, variant_id, self.properties['transcribed_to'], transcript_id)
 
         return
 
