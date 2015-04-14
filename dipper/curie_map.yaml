@@ -103,5 +103,5 @@
 'SwissProt' : 'http://identifiers.org/SwissProt:'
 'TrEMBL' : 'http://www.uniprot.org/uniprot/'
 'PDB' : 'http://identifiers.org/PDB:'
-'NCBIProtein:' : 'http://www.ncbi.nlm.nih.gov/protein/'
+'NCBIProtein' : 'http://www.ncbi.nlm.nih.gov/protein/'
 'EC' : 'http://identifiers.org/EC:'  #FIXME: Enzyme Commission numbers. Any preferred url that can resolve this?
