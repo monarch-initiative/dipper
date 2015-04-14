@@ -17,7 +17,7 @@ class Dataset:
 
     core_bindings = {'rdf': RDF, 'foaf': FOAF, 'xsd': XSD, 'dct': DCTERMS}
 
-    def __init__(self,identifier, title, url, description=None):
+    def __init__(self,identifier, title, url, description=None, license_url=None, data_rights=None):
         DCTYPES=Namespace(self.namespaces['dctypes'])
         self.identifier = URIRef(':'+identifier)
         self.graph = Graph()
@@ -30,8 +30,15 @@ class Dataset:
         #schemaorg:logo <http://www.ebi.ac.uk/rdf/sites/ebi.ac.uk.rdf/files/resize/images/rdf/chembl_service_logo-146x48.gif> .
 
         #TODO add the licence info
-        #self.graph.add((self.identifier, DCTERMS['license'], URIRef(license_url)))
-        #self.graph.add((self.identifier, DCTERMS['rights'], Literal(data_rights)))
+        #FIXME:Temporarily making this in IF statement, can revert after all current resources are updated.
+        if(license_url is not None):
+            self.graph.add((self.identifier, DCTERMS['license'], URIRef(license_url)))
+        else:
+            print('No license provided.')
+        if(data_rights is not None):
+            self.graph.add((self.identifier, DCTERMS['rights'], Literal(data_rights)))
+        else:
+            print('No rights provided.')
 
         if (description is not None):
             self.graph.add((':'+identifier,DCTERMS['description'],description))
