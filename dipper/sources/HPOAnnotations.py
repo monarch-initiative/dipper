@@ -57,7 +57,7 @@ class HPOAnnotations(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
+        self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org',None,'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
 
         #data-source specific warnings (will be removed when issues are cleared)
         print("WARN: note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
