@@ -386,8 +386,12 @@ class Source:
         """
         # TODO this should be moved into the test suite
         status = False
-        self._verify(self.outfile)
-        status = self._verifyowl(self.outfile)
+        files = [self.testfile]
+        if not self.testOnly:
+            files += [self.outfile]
+        for f in files:
+            self._verify(f)
+            status = status or self._verifyowl(f)
 
         return status
 
@@ -399,7 +403,7 @@ class Source:
         """
         vg = Graph()
         vg.parse(f, format="turtle")
-        logger.info('Found %s graph nodes', len(vg))
+        logger.info('Found %s graph nodes in %s', len(vg), f)
         if len(vg) > 0:
             return True
         return False
