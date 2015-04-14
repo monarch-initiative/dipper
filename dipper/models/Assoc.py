@@ -1,6 +1,7 @@
 __author__ = 'nicole'
 
 import re
+import logging
 
 from rdflib import Namespace, URIRef, Literal
 from rdflib.namespace import RDF,DC,OWL,RDFS,XSD
@@ -9,6 +10,7 @@ from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
+logger = logging.getLogger(__name__)
 
 class Assoc:
     '''
@@ -221,7 +223,7 @@ class Assoc:
             g.add((node, DC['source'], source))
             g.add((source, RDF['type'], self.OWLIND))
         else:
-            print("WARN: source as a literal -- is this ok?")
+            logger.warn("source as a literal -- is this ok?")
             g.add((node, DC['source'], Literal(pub_id)))
             # else:
             #   print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
