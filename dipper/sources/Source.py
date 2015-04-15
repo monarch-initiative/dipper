@@ -31,15 +31,25 @@ class Source:
     namespaces = {}
     files = {}
 
-    def __init__(self, args=[]):
-        self.name = args
+    def __init__(self, name=None):
+        self.name = name
         self.path = ""
         self.graph = ConjunctiveGraph()
         self.testgraph = ConjunctiveGraph()  # to be used to store a subset of data for testing downstream.
         self.triple_count = 0
         self.outdir = 'out'
-        self.testdir = 'out/test'
-        self.rawdir = 'raw/'+self.name
+        self.testdir = 'tests'
+        self.rawdir = 'raw'
+        if self.name is not None:
+            self.rawdir = '/'.join((self.rawdir, self.name))
+            self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
+            logger.info("Setting outfile to %s", self.outfile)
+
+            self.datasetfile = '/'.join((self.outdir, self.name + '_dataset.ttl'))
+            logger.info("Setting dataset file to %s", self.datasetfile)
+
+            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
+            logger.info("Setting testfile to %s", self.testfile)
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -50,19 +60,7 @@ class Source:
         if not os.path.exists(self.outdir):
             logger.info("creating output directory")
             os.makedirs(self.outdir)
-            # if testdir doesn't exist, create it
-        if not os.path.exists(self.testdir):
-            logger.info("creating test output directory")
-            os.makedirs(self.testdir)
 
-        self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
-        logger.info("Setting outfile to %s", self.outfile)
-
-        self.datasetfile = '/'.join((self.outdir, self.name + '_dataset.ttl'))
-        logger.info("Setting dataset file to %s", self.datasetfile)
-
-        self.testfile = '/'.join((self.testdir, self.name + "_test.ttl"))
-        logger.info("Setting testfile to %s", self.testfile)
 
         # will be set to True if the intention is to only process and write the test data
         self.testOnly = False
@@ -121,18 +119,22 @@ class Source:
         }
 
         # make the regular graph output file
-        file = '/'.join((self.outdir, self.name))
-        if format in format_to_xtn:
-            file = '.'.join((file, format_to_xtn.get(format)))
+        if self.name is not None:
+            file = '/'.join((self.outdir, self.name))
+            if format in format_to_xtn:
+                file = '.'.join((file, format_to_xtn.get(format)))
+            else:
+                file = '.'.join((file, format))
+            # make the datasetfile name
+            datasetfile = '/'.join((self.outdir, self.name+'_dataset'))
+            if format in format_to_xtn:
+                datasetfile = '.'.join((datasetfile, format_to_xtn.get(format)))
+            else:
+                datasetfile = '.'.join((datasetfile, format))
         else:
-            file = '.'.join((file, format))
+            logger.warn("No output file set. Using stdout")
+            stream = 'stdout'
 
-        # make the datasetfile name
-        datasetfile = '/'.join((self.outdir, self.name+'_dataset'))
-        if format in format_to_xtn:
-            datasetfile = '.'.join((datasetfile, format_to_xtn.get(format)))
-        else:
-            datasetfile = '.'.join((datasetfile, format))
 
         #start off with only the testgraph
         graphs = [
@@ -151,7 +153,7 @@ class Source:
         for g in graphs:
             if stream is None:
                 gu.write(g['g'], format, file=g['file'])
-            elif stream.lowercase().strip() != 'stdout':
+            elif stream.lowercase().strip() == 'stdout':
                 gu.write(g['g'], format)
             else:
                 logger.error("I don't understand your stream.")
@@ -378,51 +380,6 @@ class Source:
 
         return
 
-    def verify(self):
-        """
-        abstract method to verify the integrity of the data fetched and turned into triples
-        this should be overridden by tests in subclasses
-        :return: True if all tests pass
-        """
-        # TODO this should be moved into the test suite
-        status = False
-        files = [self.testfile]
-        if not self.testOnly:
-            files += [self.outfile]
-        for f in files:
-            self._verify(f)
-            status = status or self._verifyowl(f)
-
-        return status
-
-    def _verify(self, f):
-        """
-         a simple test to see if the turtle file can be loaded into a graph and parsed
-        :param f: file of ttl
-        :return:  Boolean status (passed: True; did not pass: False)
-        """
-        vg = Graph()
-        vg.parse(f, format="turtle")
-        logger.info('Found %s graph nodes in %s', len(vg), f)
-        if len(vg) > 0:
-            return True
-        return False
-
-    def _verifyowl(self, f):
-        """
-        test if the ttl can be parsed by owlparser
-        this expects owltools to be accessible from commandline
-        :param f: file of ttl
-        :return: Boolean status (passed: True; did not pass: False)
-        """
-        # TODO this should be moved into the test suite
-        status = check_call(["owltools", f], stderr=subprocess.STDOUT)
-        # returns zero is success!
-        if (status != 0):
-            logger.error('finished verifying with owltools with status %s', status)
-            return False
-        else:
-            return True
 
     def _check_list_len(self, row, length):
         """
@@ -515,3 +472,10 @@ class Source:
         self.testOnly = testonly
 
         return
+
+    def getTestSuite(self):
+        """
+        An abstract method that should be overwritten with tests appropriate for the specific source.
+        :return:
+        """
+        return None
