@@ -504,6 +504,8 @@ class ZFIN(Source):
                 geno = Genotype(self.graph)
                 (stage_id,stage_obo_id,stage_name,begin_hours,end_hours,empty) = row
 
+                stage_id = 'ZFIN:' + stage_id.strip()
+
                 # Make ID for the beginning hour, add to graph.
                 begin_hour_id = self.make_id(begin_hours)
                 gu.addIndividualToGraph(self.graph,begin_hour_id,begin_hours+' hours',gu.datatype_properties['hours'])
