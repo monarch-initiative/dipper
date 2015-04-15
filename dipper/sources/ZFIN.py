@@ -118,8 +118,9 @@ class ZFIN(Source):
         self._process_g2p(limit)
 
         self._process_morpholinos(limit) # Process before talens/crisprs
-        self._process_talens(limit)
-        self._process_crisprs(limit)
+        #NOTE: If leaving out TALENs & CRISPRs, need to filter them from the pheno_enviro parsing.
+        #self._process_talens(limit) # Leaving TALENs out until further review.
+        #self._process_crisprs(limit) # Leaving CRISPRs out until further review.
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
         self._process_wildtypes(limit) # Must be processed before wildtype_expression
@@ -530,6 +531,15 @@ class ZFIN(Source):
 
     def _process_anatomy(self, limit=None):
         """
+        This table provides mappings between ZFIN stage IDs and ZFA anatomy terms,
+        indicating the starting and ending development stage for the anatomy term.
+
+        Triples created:
+        <anatomy_id> an individual
+        <anatomy_id> rdfs:label anatomy_name
+
+        <anatomy_id> uberon:existence_starts_at begin_hour_id
+        <anatomy_id> uberon:existence_ends_at end_hour_id
 
         :param limit:
         :return:
@@ -546,7 +556,15 @@ class ZFIN(Source):
                 geno = Genotype(self.graph)
                 (anatomy_id,anatomy_name,start_stage_id,end_stage_id,empty) = row
 
-                #genotype_id = 'ZFIN:' + genotype_id.strip()
+                start_stage_id = 'ZFIN:' + start_stage_id.strip()
+                end_stage_id = 'ZFIN:' + end_stage_id.strip()
+
+                #Is this correct? Should an anatomy term be declared as it's own type, or just an individual?
+                gu.addIndividualToGraph(self.graph,anatomy_id,anatomy_name)
+
+                gu.addTriple(self.graph,anatomy_id,gu.object_properties['existence_starts_at'],start_stage_id)
+                gu.addTriple(self.graph,anatomy_id,gu.object_properties['existence_ends_at'],end_stage_id)
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1305,8 +1323,11 @@ class ZFIN(Source):
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
                 # includes the zfin ID instead of a GENO ID for those environments.
 
-                #print(condition)
-                if re.match('ZDB.*',condition):
+                #Use this regex match if using all knockdown reagents.
+                #if re.match('ZDB.*',condition):
+                #Use this regex match if using only morpholino knockdown reagents.
+                if re.match('ZDB-MRPHLNO.*',condition):
+
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
 
