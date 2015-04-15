@@ -49,13 +49,16 @@ class GraphUtils:
         'part_of': 'BFO:0000050',
         'mentions': 'IAO:0000142',
         'model_of' : 'ERO:0000233',
-        'has_gene_product' : 'RO:0002205'
+        'has_gene_product' : 'RO:0002205',
+        'existence_starts_at' : 'UBERON:existence_starts_at',
+        'existence_ends_at' : 'UBERON:existence_ends_at'
     }
 
     datatype_properties = {
         'position' : 'faldo:position',
         'has_measurement' : 'IAO:0000004',
-        'environment' : 'GENO:0000099'
+        'environment' : 'GENO:0000099',
+        'hours' : 'UO:0000032'
     }
 
     properties = annotation_properties.copy()

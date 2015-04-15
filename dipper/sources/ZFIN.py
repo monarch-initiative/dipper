@@ -471,7 +471,24 @@ class ZFIN(Source):
 
     def _process_stages(self, limit=None):
         """
+        This table provides mappings between ZFIN stage IDs and ZFS terms,
+        and includes the starting and ending hours for the developmental stage.
 
+        Triples created:
+        <begin_hour_id> an individual
+        <begin_hour_id> rdf:type uo:hours
+        <begin_hour_id> rdfs:label values+units
+
+        <end_hour_id> an individual
+        <end_hour_id> rdf:type uo:hours
+        <end_hour_id> rdfs:label values+units
+
+        <stage_id> an individual
+        <stage_id> rdf:type zfs:stage_obo_id (ZFS:1234567)
+        <stage_id> rdfs:label values+units
+
+        <stage_id> uberon:existence_starts_at begin_hour_id
+        <stage_id> uberon:existence_ends_at end_hour_id
         :param limit:
         :return:
         """
@@ -487,7 +504,20 @@ class ZFIN(Source):
                 geno = Genotype(self.graph)
                 (stage_id,stage_obo_id,stage_name,begin_hours,end_hours,empty) = row
 
-                #genotype_id = 'ZFIN:' + genotype_id.strip()
+                # Make ID for the beginning hour, add to graph.
+                begin_hour_id = self.make_id(begin_hours)
+                gu.addIndividualToGraph(self.graph,begin_hour_id,begin_hours+' hours',gu.datatype_properties['hours'])
+
+                # Make ID for the ending hour, add to graph.
+                end_hour_id = self.make_id(end_hours)
+                gu.addIndividualToGraph(self.graph,end_hour_id,end_hours+' hours',gu.datatype_properties['hours'])
+
+                #Add the stage as an individual.
+                gu.addIndividualToGraph(self.graph,stage_id,stage_name,stage_obo_id)
+
+                #Add the beginning and end hours of the development stage.
+                gu.addTriple(self.graph,stage_id,gu.object_properties['existence_starts_at'],begin_hour_id)
+                gu.addTriple(self.graph,stage_id,gu.object_properties['existence_ends_at'],end_hour_id)
 
                 if (limit is not None and line_counter > limit):
                     break
