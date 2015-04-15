@@ -4,7 +4,7 @@ from datetime import datetime
 from stat import *
 import re
 import logging
-from Bio.Seq import Seq
+#from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -109,6 +109,7 @@ class ZFIN(Source):
         #TODO: Is a specific processing order required here?
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
+        self.wildtype_hash = {'id' : {}, 'symbol' : {}}
 
         self._process_genotype_features(limit)
         self._process_genotype_backgrounds(limit)
@@ -120,16 +121,17 @@ class ZFIN(Source):
         self._process_crisprs(limit)
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
-        self._process_human_orthos(limit)
-        self._process_anatomy(limit)
-        self._process_stages(limit)
+        self._process_wildtypes(limit) # Must be processed before wildtype_expression
         self._process_wildtype_expression(limit)
-        self._process_wildtypes(limit)
+
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
         self._process_genes(limit)
         self._process_genbank_ids(limit)
         self._process_uniprot_ids(limit)
+        self._process_human_orthos(limit)
+        self._process_anatomy(limit)
+        self._process_stages(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
 
@@ -409,6 +411,20 @@ class ZFIN(Source):
                 #Add genotype to graph with label, type=wildtype, and description.
                 geno.addGenotype(genotype_id, genotype_abbreviation,geno.genoparts['wildtype'],genotype_name)
 
+
+                #Build the hash for the wild type genotypes.
+                if self.wildtype_hash['id'].get(genotype_name) is None:
+                    self.wildtype_hash['id'][genotype_name] = genotype_id
+                    self.wildtype_hash['symbol'][genotype_name] = genotype_abbreviation
+
+
+                #if self.kd_reagent_hash['kd_reagent_label'].get(morpholino_id) is None:
+                    #self.kd_reagent_hash['kd_reagent_label'][morpholino_id] = morpholino_symbol
+                #if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
+                    #self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
+
+
+
                 if (limit is not None and line_counter > limit):
                     break
 
@@ -437,8 +453,7 @@ class ZFIN(Source):
 
                 #genotype_id = 'ZFIN:' + genotype_id.strip()
 
-                #TODO: Move this from a mapping function to a lookup to prevent errors, breaks due to new wildtypes
-                genotype_id = self._map_wildtype_name_to_genotype(genotype_name)
+                genotype_id = self.wildtype_hash['id'][genotype_name]
                 genotype_id = 'ZFIN:' + genotype_id.strip()
 
                 #TODO: Consider how to model wildtype genotypes with genes and associated expression.
@@ -452,48 +467,6 @@ class ZFIN(Source):
         logger.info("Done with wildtype expression")
         return
 
-
-    def _map_wildtype_name_to_genotype(self, genotype_name):
-        genotype = 'ZDB-GENO-030619-2'  #default: wild type (unspecified)
-        genotype_map = {
-            'WIK': 'ZDB-GENO-010531-2',
-            'Cologne': 'ZDB-GENO-010725-1',
-            'AB/Tuebingen': 'ZDB-GENO-010924-10',
-            'Nadia': 'ZDB-GENO-030115-2',
-            'C32': 'ZDB-GENO-030501-1',
-            'wild type (unspecified)': 'ZDB-GENO-030619-2',
-            'AB/TL': 'ZDB-GENO-031202-1',
-            'WIK/AB': 'ZDB-GENO-050511-1',
-            'SJA': 'ZDB-GENO-061206-2',
-            'SJD/C32': 'ZDB-GENO-070425-2',
-            'AB/C32': 'ZDB-GENO-070425-3',
-            'RIKEN WT': 'ZDB-GENO-070802-4',
-            'Tupfel long fin nacre': 'ZDB-GENO-080307-1',
-            'AB/EKW': 'ZDB-GENO-091223-1',
-            'Sanger AB T¸bingen': 'ZDB-GENO-100413-1',
-            'Microsporidia Free AB line': 'ZDB-GENO-120309-2',
-            'Microsporidia Free 5-D line': 'ZDB-GENO-120309-3',
-            'NHGRI-1': 'ZDB-GENO-150204-3',
-            'Darjeeling': 'ZDB-GENO-960809-13',
-            'AB': 'ZDB-GENO-960809-7',
-            'Singapore': 'ZDB-GENO-980210-24',
-            'India': 'ZDB-GENO-980210-28',
-            'Indonesia': 'ZDB-GENO-980210-32',
-            'Hong Kong': 'ZDB-GENO-980210-34',
-            'HK/Sing': 'ZDB-GENO-980210-38',
-            'HK/AB': 'ZDB-GENO-980210-40',
-            'SJD': 'ZDB-GENO-990308-9',
-            'Ekkwill': 'ZDB-GENO-990520-2',
-            'Tupfel long fin': 'ZDB-GENO-990623-2',
-            'Tuebingen': 'ZDB-GENO-990623-3'
-        }
-        if (genotype_name.strip() in genotype_map):
-            genotype = genotype_map.get(genotype_name)
-        else:
-            # TODO add logging
-            logger.error("Wildtype Genotype (%s) not mapped", genotype_name)
-
-        return genotype
 
     def _process_stages(self, limit=None):
         """
@@ -1062,12 +1035,13 @@ class ZFIN(Source):
 
                 #TODO: map target sequence to morpholino.
                 #FIXME: Is this correct?
+                #Commenting out for now
                 #Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
                 # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
                 #Also, does the morpholino require the exact sequence match or can there be mismatches?
                 #Take the morpholino sequence and get the reverse complement as the target sequence.
-                seq = Seq(morpholino_sequence)
-                target_sequence = seq.reverse_complement()
+                #seq = Seq(morpholino_sequence)
+                #target_sequence = seq.reverse_complement()
                 #print(seq)
                 #print(target_sequence)
                 #print(morpholino_id)
@@ -1204,7 +1178,7 @@ class ZFIN(Source):
                     gu.addTriple(self.graph,pub_id,gu.properties['mentions'],crispr_id)
 
 
-                #Add comment?
+                #Add comment
                 if(note != ''):
                     gu.addComment(self.graph,crispr_id,note)
 

@@ -244,6 +244,14 @@ class Genotype():
         self.addParts(sa_id, vl_id, self.properties['has_alternate_part'])
         return
 
+    def addGenomicBackground(self, background_id, background_label, background_type=None, background_description=None):
+        if background_type is None:
+            background_type = self.genoparts['genomic_background']
+        self.gu.addIndividualToGraph(self.graph, background_id, background_label, background_type, background_description)
+
+        return
+
+
     def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
         gu = self.gu
 
