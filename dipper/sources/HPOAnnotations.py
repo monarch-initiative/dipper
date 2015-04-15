@@ -69,6 +69,8 @@ class HPOAnnotations(Source):
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
+        self.testOnly = False
+        self.testMode = False
 
         # data-source specific warnings (will be removed when issues are cleared)
         logger.warn("note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
@@ -135,16 +137,15 @@ class HPOAnnotations(Source):
             logger.info("Only parsing first %s rows", limit)
 
         logger.info("Parsing files...")
-        loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        #loops = [True]
+        #if not self.testOnly:
+        #    loops = [True,False]
 
-        for testMode in loops:
-            self._process_phenotype_tab('/'.join((self.rawdir, self.files['annot']['file'])), limit, testMode)
+        #for testMode in loops:
+        if self.testOnly:
+            self.testMode = True
 
-        for g in [self.graph, self.testgraph]:
-            Assoc().loadAllProperties(g)
-            logger.info("Loaded %d nodes", len(g))
+        self._process_phenotype_tab('/'.join((self.rawdir, self.files['annot']['file'])), limit)
 
         # TODO add negative phenotype statements
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
@@ -163,8 +164,8 @@ class HPOAnnotations(Source):
         '''
         return self.eco_dict.get(code_string)
 
-    def _process_phenotype_tab(self, raw, limit, testMode):
-        if (testMode):
+    def _process_phenotype_tab(self, raw, limit):
+        if (self.testMode):
             g = self.testgraph
         else:
             g = self.graph
@@ -178,7 +179,7 @@ class HPOAnnotations(Source):
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w, asp, syn, date, curator) = row
                 disease_id = db + ":" + num
 
-                if testMode and (disease_id not in self.test_ids):
+                if self.testMode and (disease_id not in self.test_ids):
                     continue
 
                 #blow these apart if there is a list of pubs
@@ -210,8 +211,18 @@ class HPOAnnotations(Source):
                         logger.error("I don't know what this aspect is:", asp)
 
 
-                if not testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and (limit is not None and line_counter > limit):
                    break
+
+            Assoc().loadAllProperties(g)
 
         return
 
+    def getTestSuite(self):
+        import unittest
+        from tests.test_hpoa import HPOATestCase
+        #TODO add D2PAssoc tests
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(HPOATestCase)
+
+        return test_suite

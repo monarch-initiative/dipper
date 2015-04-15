@@ -6,6 +6,7 @@ __author__ = 'nlw'
 
 import argparse
 import logging
+import unittest
 
 from dipper.sources.HPOAnnotations import HPOAnnotations
 from dipper.sources.ZFIN import ZFIN
@@ -22,6 +23,11 @@ from dipper.sources.EOM import EOM
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
 from dipper.utils.TestUtils import TestUtils
+
+from tests.test_general import GeneralGraphTestCase
+
+
+test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 
 
 def main():
@@ -100,9 +106,13 @@ def main():
         print(test_query.query_graph(args.query, True))
         exit(0)
 
+    # run initial tests
+    if args.no_verify is not True:
+        unittest.TextTestRunner(verbosity=2).run(test_suite)
+
     # iterate through all the sources
     for source in args.sources.split(','):
-        logger.info("\n*******%s*******", source)
+        logger.info("\n******* %s *******", source)
         source = source.lower()
         src = source_to_class_map[source]
         mysource = None
@@ -112,21 +122,40 @@ def main():
             mysource = src()
         if args.parse_only is False:
             mysource.fetch(args.force)
+
         mysource.settestonly(args.test_only)
-        mysource.parse(args.limit)
-        mysource.write(format='turtle')
+
+        #run tests first
         if args.no_verify is not True:
-            status = mysource.verify()
-            if status is not True:
-                logger.error('Source %s did not pass verification tests.', source)
-                exit(1)
+            suite = mysource.getTestSuite()
+            if suite is None:
+                logger.warn("No tests configured for this source: %s",source)
+            else:
+                unittest.TextTestRunner(verbosity=2).run(suite)
         else:
-            logger.info('skipping verification step')
+            logger.info("Skipping Tests for source: %s",source)
+
+
+        if not args.test_only:
+            mysource.parse(args.limit)
+            mysource.write(format='turtle')
+
+
+        # if args.no_verify is not True:
+
+        #    status = mysource.verify()
+        #    if status is not True:
+        #        logger.error('Source %s did not pass verification tests.', source)
+        #        exit(1)
+        # else:
+        #    logger.info('skipping verification step')
         logger.info('***** Finished with %s *****', source)
     # load configuration parameters
     # for example, keys
 
     logger.info("All done.")
+
+
 
 if __name__ == "__main__":
     main()
