@@ -22,7 +22,8 @@ logger = logging.getLogger(__name__)
 class ZFIN(Source):
     #TODO: Enter a description for the resource.
     """
-    Notes/Description for ZFIN here.
+    This is the Zebrafish Model Organism Database (ZFIN), from which we process genotype and phenotype data about laboratory zebrafish.
+    Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.
 
     """
 
@@ -525,7 +526,19 @@ class ZFIN(Source):
 
     def _process_human_orthos(self, limit=None):
         """
+        This table provides ortholog mappings between zebrafish and humans, including OMIM IDs
 
+        Triples created:
+        <zfin gene id> a class
+        <zfin gene id> rdfs:label gene_symbol
+        <zfin gene id> dc:description gene_name
+
+        <human gene id> a class
+        <human gene id> rdfs:label gene_symbol
+        <human gene id> dc:description gene_name
+        <human gene id> equivalent class <omim id>
+
+        <zfin gene id> orthology association <human gene id>
         :param limit:
         :return:
         """
@@ -546,23 +559,24 @@ class ZFIN(Source):
 
                 #genotype_id = 'ZFIN:' + genotype_id.strip()
 
-
+                # Add the zebrafish gene.
                 zfin_id = 'ZFIN:' + zfin_id.strip()
                 geno.addGene(zfin_id,zfin_symbol,None,zfin_name)
 
+                # Add the human gene.
                 gene_id = 'NCBIGene:' + gene_id.strip()
                 geno.addGene(gene_id,human_symbol,None,human_name)
 
                 #TODO: Need to add the ortholog relationship between the zebrafish gene and the human gene
+                # Is this the correct handling of the relationship?
                 assoc_id = self.make_id(('').join((zfin_id,gene_id)))
                 assoc = OrthologyAssoc(assoc_id,zfin_id,gene_id,None,None)
-
                 assoc.setRelationship('RO:HOM0000017')
                 #assoc.loadAllProperties(self.graph)    #FIXME inefficient
                 assoc.addAssociationToGraph(self.graph)
 
+                #Add the OMIM gene ID as an equivalent class for the human gene.
                 omim_id = 'OMIM:' + omim_id.strip()
-
                 gu.addEquivalentClass(self.graph, gene_id, omim_id)
 
 
@@ -728,7 +742,13 @@ class ZFIN(Source):
 
     def _process_features(self, limit=None):
         """
+        This module provides information for the intrinsic and extrinsic genotype features of zebrafish.
 
+         sequence alteration ID, SO type, abbreviation, and relationship to
+        the affected gene, with the gene's ID, symbol, and SO type (gene/pseudogene).
+
+        Triples created:
+        <gene id> a class:
         :param limit:
         :return:
         """
