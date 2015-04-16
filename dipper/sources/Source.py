@@ -32,6 +32,8 @@ class Source:
     files = {}
 
     def __init__(self, name=None):
+        if name is not None:
+            logger.info("Processing Source \"%s\"", name)
         self.name = name
         self.path = ""
         self.graph = ConjunctiveGraph()
@@ -53,17 +55,20 @@ class Source:
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
-            logger.info("creating raw directory for resource %s", self.name)
             os.makedirs(self.rawdir)
+            p = os.path.abspath(self.rawdir)
+            logger.info("creating raw directory for %s at ", self.name, p)
 
         # if output dir doesn't exist, create it
         if not os.path.exists(self.outdir):
-            logger.info("creating output directory")
             os.makedirs(self.outdir)
+            p = os.path.abspath(self.outdir)
+            logger.info("created output directory %s", p)
 
 
         # will be set to True if the intention is to only process and write the test data
         self.testOnly = False
+        self.testMode = False
 
         return
 
@@ -136,17 +141,17 @@ class Source:
             stream = 'stdout'
 
 
-        #start off with only the testgraph
+        #start off with only the dataset descriptions
         graphs = [
-            # {'g':self.graph,'file':file},
-            # {'g':self.dataset.getGraph(),'file':datasetfile},
-            {'g': self.testgraph, 'file': self.testfile}
+            {'g':self.dataset.getGraph(),'file':datasetfile},
         ]
 
         #add the other graphs to the set to write, if not in the test mode
-        if not self.testOnly:
-            graphs += [{'g': self.graph, 'file': file},
-                           {'g': self.dataset.getGraph(), 'file': datasetfile}]
+        if self.testMode:
+            graphs += [ {'g': self.testgraph, 'file': self.testfile} ]
+        else:
+            graphs += [ {'g': self.graph, 'file': file} ]
+
 
         gu = GraphUtils(None)
         # loop through each of the graphs and print them out
@@ -470,6 +475,17 @@ class Source:
         """
 
         self.testOnly = testonly
+
+        return
+
+    def settestmode(self, mode):
+        """
+        Set testMode to (mode).  True: run the Source in testMode; False: run it in full mode
+        :param mode:
+        :return: None
+        """
+
+        self.testMode = mode
 
         return
 

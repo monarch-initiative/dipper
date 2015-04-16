@@ -27,7 +27,7 @@ class SourceTestCase(unittest.TestCase):
         return
 
     def test_parse(self):
-        #TODO figure out how to skip this if we are running this from the source itself
+        # TODO figure out how to skip this if we are running this from the source itself
         if self.source != Source():  # don't test the abstract class
             try:
                 self.source.parse()
@@ -43,7 +43,7 @@ class SourceTestCase(unittest.TestCase):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
             p = os.path.abspath(f)
-            self.assertTrue(os.path.exists(f), "path does not exist for "+p)
+            self.assertTrue(os.path.exists(f), "path does not exist for "+f)
             test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
 
         return
@@ -52,7 +52,7 @@ class SourceTestCase(unittest.TestCase):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
             p = os.path.abspath(f)
-            self.assertTrue(os.path.exists(f), "path does not exist for "+p)
+            self.assertTrue(os.path.exists(f), "path does not exist for "+f)
             test_general.GeneralGraphTestCase().readGraphIntoOWL(f)
 
         return
@@ -61,7 +61,8 @@ class SourceTestCase(unittest.TestCase):
         if len(os.listdir(self.source.rawdir)) < 1:
             # reset the raw dir to be the source data if it doesn't exist in the test dir
             self.source.rawdir = '../'+self.source.rawdir
-            logging.info("Resetting the rawdir to %s", self.source.rawdir)
+            p = os.path.abspath(self.source.rawdir)
+            logging.info("Resetting the rawdir to %s", p)
         return
 
 
