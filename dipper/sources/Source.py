@@ -57,14 +57,13 @@ class Source:
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
             p = os.path.abspath(self.rawdir)
-            logger.info("creating raw directory for %s at ", self.name, p)
+            logger.info("creating raw directory for %s at %s", self.name, p)
 
         # if output dir doesn't exist, create it
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
             p = os.path.abspath(self.outdir)
             logger.info("created output directory %s", p)
-
 
         # will be set to True if the intention is to only process and write the test data
         self.testOnly = False
@@ -95,7 +94,7 @@ class Source:
                 g.bind(k, Namespace(v))
         return
 
-    def fetch(self):
+    def fetch(self, is_dl_forced=False):
         """
         abstract method to fetch all data from an external resource.
         this should be overridden by subclasses
@@ -140,18 +139,16 @@ class Source:
             logger.warn("No output file set. Using stdout")
             stream = 'stdout'
 
-
-        #start off with only the dataset descriptions
+        # start off with only the dataset descriptions
         graphs = [
-            {'g':self.dataset.getGraph(),'file':datasetfile},
+            {'g': self.dataset.getGraph(), 'file': datasetfile},
         ]
 
-        #add the other graphs to the set to write, if not in the test mode
+        # add the other graphs to the set to write, if not in the test mode
         if self.testMode:
-            graphs += [ {'g': self.testgraph, 'file': self.testfile} ]
+            graphs += [{'g': self.testgraph, 'file': self.testfile}]
         else:
-            graphs += [ {'g': self.graph, 'file': file} ]
-
+            graphs += [{'g': self.graph, 'file': file}]
 
         gu = GraphUtils(None)
         # loop through each of the graphs and print them out
@@ -177,9 +174,10 @@ class Source:
         """
         # FIXME for now, this will do md5.  probably not the best long-term solution
         # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
-        byte_string = long_string.encode("utf-8")
-        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
 
+        byte_string = long_string.encode("utf-8")
+
+        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
 
     def checkIfRemoteIsNewer(self, remote, local):
         """
@@ -300,7 +298,7 @@ class Source:
                 self._getcols(cur, t)
                 query = ' '.join(("SELECT * FROM", t))
                 countquery = ' '.join(("SELECT COUNT(*) FROM", t))
-                if (limit is not None):
+                if limit is not None:
                     query = ' '.join((query, "LIMIT", str(limit)))
                     countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
@@ -318,7 +316,7 @@ class Source:
                 # tablerowcount=cur.rowcount
                 cur.execute(countquery)
                 tablerowcount = cur.fetchone()[0]
-                if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  # rowcount-1 because there's a header
+                if filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
                     logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
@@ -353,7 +351,7 @@ class Source:
 
         outfile = '/'.join((self.rawdir, qname))
         cur = con.cursor()
-        countquery = ' '.join(("SELECT COUNT(*) FROM (", query,") x"))  # wrap the query to get the count
+        countquery = ' '.join(("SELECT COUNT(*) FROM (", query, ") x"))  # wrap the query to get the count
         if limit is not None:
             countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
@@ -369,7 +367,7 @@ class Source:
         cur.execute(countquery)
         tablerowcount = cur.fetchone()[0]
 
-        if (filerowcount < 0 or (filerowcount-1) != tablerowcount):  # rowcount-1 because there's a header
+        if filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
             logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
             # download the file
             logger.debug("COMMAND:%s", query)
@@ -384,7 +382,6 @@ class Source:
             logger.info("local data same as remote; reusing.")
 
         return
-
 
     def _check_list_len(self, row, length):
         """
