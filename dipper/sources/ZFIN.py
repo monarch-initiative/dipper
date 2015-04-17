@@ -130,13 +130,13 @@ class ZFIN(Source):
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
         self._process_genes(limit)
-        #self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
-        #self._process_human_orthos(limit)
-        #self._process_anatomy(limit)
-        #self._process_stages(limit)
-        #self._process_pubinfo(limit)
-        #self._process_pub2pubmed(limit)
+        self._process_genbank_ids(limit)
+        self._process_uniprot_ids(limit)
+        self._process_human_orthos(limit)
+        self._process_anatomy(limit)
+        self._process_stages(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -158,7 +158,7 @@ class ZFIN(Source):
         gu = GraphUtils(curie_map.get())
         geno_hash = {}
         gvc_hash = {}
-        gvc_label_hash = {}
+        vslc_label_hash = {}
         logger.info("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -319,6 +319,12 @@ class ZFIN(Source):
                         gvcparts[gt_vslc].append(vslc_id)
                     vslc_counter += 1
 
+                    if gt_vslc not in vslc_label_hash:
+                        vslc_label_hash[gt_vslc] = [vslc_label]
+                    elif vslc_id not in vslc_label_hash[gt_vslc]:
+                        vslc_label_hash[gt_vslc].append(vslc_label)
+
+
                 #print(gvcparts)
 
                     #end loop through geno_hash
@@ -326,14 +332,18 @@ class ZFIN(Source):
             #TODO: Possible to pass through VSLC label, assemble GVC label?
             for gt in gvc_hash:
                 gvc_ids = []
+                gvc_labels = []
                 for vslc_id in gvc_hash.get(gt):
                     genomic_variation_complement_parts = gvc_hash.get(gt).get(vslc_id)
+                    gvc_label_parts = vslc_label_hash[vslc_id]
+                    #print(gvc_label_parts)
                     #print(genomic_variation_complement_parts)
                     #FIXME: Change to make_id after QA.
                     gvc_id = self.make_id(('-').join(genomic_variation_complement_parts))
-                    #gvc_id = ('_').join(genomic_variation_complement_parts)
+                    #gvc_id = ('_split_').join(genomic_variation_complement_parts)
+                    gvc_label = ('; ').join(gvc_label_parts)
                     #Add the GVC
-                    gu.addIndividualToGraph(self.graph,gvc_id,None,'GENO:0000009')
+                    gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,'GENO:0000009')
                     #print(gvc_id)
 
                     #Add the GVC to the genotype
