@@ -111,6 +111,7 @@ class ZFIN(Source):
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
         self.wildtype_hash = {'id' : {}, 'symbol' : {}}
+        self.label_hash = {'gene_label' : {}, 'allele_label' : {}, 'construct_label' : {}}
 
         self._process_genotype_features(limit)
         self._process_genotype_backgrounds(limit)
@@ -129,13 +130,13 @@ class ZFIN(Source):
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
         self._process_genes(limit)
-        self._process_genbank_ids(limit)
-        self._process_uniprot_ids(limit)
-        self._process_human_orthos(limit)
-        self._process_anatomy(limit)
-        self._process_stages(limit)
-        self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
+        #self._process_human_orthos(limit)
+        #self._process_anatomy(limit)
+        #self._process_stages(limit)
+        #self._process_pubinfo(limit)
+        #self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -157,6 +158,7 @@ class ZFIN(Source):
         gu = GraphUtils(curie_map.get())
         geno_hash = {}
         gvc_hash = {}
+        gvc_label_hash = {}
         logger.info("Processing Genotypes")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -167,6 +169,8 @@ class ZFIN(Source):
                 (genotype_id, genotype_name, genotype_unique_name, allele_id, allele_name, allele_ab,
                  allele_type, allele_disp_type, gene_symbol, gene_id, zygosity,
                  construct_name, construct_id, other) = row
+
+
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 geno = Genotype(self.graph)
@@ -186,10 +190,17 @@ class ZFIN(Source):
                     gene_id = 'ZFIN:' + gene_id.strip()
                     geno.addGene(gene_id, gene_symbol)
 
+                    if gene_id is not None and gene_id not in self.label_hash['gene_label']:
+                        self.label_hash['gene_label'][gene_id] = gene_symbol
+                    if allele_id is not None and allele_id not in self.label_hash['allele_label']:
+                        self.label_hash['allele_label'][allele_id] = allele_name
+
                     # if it's a transgenic construct, then we'll have to get the other bits
                     if (construct_id is not None and construct_id.strip() != ''):
                         construct_id = 'ZFIN:' + construct_id.strip()
                         geno.addDerivesFrom(allele_id, construct_id)
+                        if construct_id not in self.label_hash['construct_label']:
+                            self.label_hash['construct_label'][construct_id] = construct_name
 
 
                     # allele to gene
@@ -218,6 +229,8 @@ class ZFIN(Source):
                     #    genoparts[allele_id].append('complex')
 
                     geno_hash[allele_id] = genoparts
+                    if allele_id is not None and allele_id not in self.label_hash['allele_label']:
+                        self.label_hash['allele_label'][allele_id] = allele_name
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -233,25 +246,31 @@ class ZFIN(Source):
 
 
                 for gene_id in geno_hash.get(gt):
+                    gene_label = self.label_hash['gene_label'].get(gene_id)
                     variant_locus_parts = geno_hash.get(gt).get(gene_id)
                     if gene_id in variant_locus_parts:
                         #reset the gene_id to none
                         gene_id = None
 
                     allele1_id = variant_locus_parts[0]
+                    allele1_label = self.label_hash['allele_label'].get(allele1_id)
                     allele2_id = None
+                    allele2_label = None
                     zygosity_id = None
                     #making the assumption that there are not more than 2 variant_locus_parts
                     if len(variant_locus_parts) > 1:
                         allele2_id = variant_locus_parts[1]
+                        allele2_label = self.label_hash['allele_label'].get(allele2_id)
                     if allele2_id is not None:
                         if allele2_id == '?':
                             zygosity_id = geno.zygosity['indeterminate']
                             allele2_id = None
+                            allele2_label = '?'
                         elif allele2_id == 'complex':
                             pass #not sure what to assign here
                         elif allele1_id != allele2_id:
                             zygosity_id = geno.zygosity['heterozygous']
+                            print('heterozygous pair='+allele1_id+'_'+allele2_id)
                         elif allele1_id == allele2_id:
                             zygosity_id = geno.zygosity['homozygous']
                     else:
@@ -268,12 +287,31 @@ class ZFIN(Source):
                         a2 = allele2_id
 
                     vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
+                    #print(g+'_'+allele1_id+'_'+a2)
+                    #print(gene_label)
+                    #print(allele1_label)
+                    #print(allele2_label)
+                    #print(construct_label)
+                    if gene_label is not None and allele1_label is not None and allele2_label is not None:
+                        vslc_label = gene_label+'<'+allele1_label+'>/'+gene_label+'<'+allele2_label+'>'
+                    elif gene_label is None and allele1_label is not None and allele2_label is not None:
+                        vslc_label = '<'+allele1_label+'>/<'+allele2_label+'>'
+                    elif gene_label is not None and allele1_label is not None and allele2_label is None:
+                        vslc_label = gene_label+'<'+allele1_label+'>'
+                    elif gene_label is None and allele1_label is not None and allele2_label is None:
+                        vslc_label = '<'+allele1_label+'>'
+                    else:
+                        vslc_label = '<empty>'
+                    #print(vslc_label)
+
+                    gu.addIndividualToGraph(self.graph,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
-                    #Removing this since I am now adding the VSLC to the GVC.
-                    #geno.addVSLCtoParent(vslc_id,gt)
+                    #Remove this since I am now adding the VSLC to the GVC?
+                    geno.addVSLCtoParent(vslc_id,gt)
 
                     gt_vslc = gt+'vslc'
 
+                    #FIXME: Refactor this. Don't like the counter approach.
                     #gvc_hash[vslc_id] = {};
                     if vslc_counter == 0:
                         gvcparts[gt_vslc] = [vslc_id]
@@ -291,16 +329,20 @@ class ZFIN(Source):
                 for vslc_id in gvc_hash.get(gt):
                     genomic_variation_complement_parts = gvc_hash.get(gt).get(vslc_id)
                     #print(genomic_variation_complement_parts)
+                    #FIXME: Change to make_id after QA.
                     gvc_id = self.make_id(('-').join(genomic_variation_complement_parts))
+                    #gvc_id = ('_').join(genomic_variation_complement_parts)
                     #Add the GVC
                     gu.addIndividualToGraph(self.graph,gvc_id,None,'GENO:0000009')
+                    #print(gvc_id)
+
                     #Add the GVC to the genotype
                     gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
 
                     #Add the VSLCs to the GVC
                     for i in genomic_variation_complement_parts:
                         geno.addVSLCtoParent(i,gt)
-                        #gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+                        gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
 
                 #end of gvc loop
 
