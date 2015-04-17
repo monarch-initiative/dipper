@@ -76,6 +76,7 @@
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
 'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
+'CGD' : 'http://phsu.edu/cgd/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
