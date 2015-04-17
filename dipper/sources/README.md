@@ -2,20 +2,24 @@
 
 ##Overview
 Each Source should typically have the following basic things defined:
+
   fetch()
+
   parse()
 
 
 ##Writing the fetcher()
-   * this method is intended to go and fetch the data from the remote locations.  
-   * you can add a dictionary of files with a structure like 
+* this method is intended to go and fetch the data from the remote locations.  
+* if you can add a dictionary of files with a structure like 
+
     ```python
     files = {
         key : {'file' : local.file.name,
                'url' : 'http://remote.file.location'
         }, ... }
     ```
-        
+then you can simply call the built-in file fetching method to go get all of them.
+
 
 ##Writing the parser()
 
@@ -37,9 +41,9 @@ There are certain conventions that we follow here:
 
 Add private configuration parameters into your private config.json file.  Examples of items to put into the config
 include:
-  * database connection parameters (in the "dbauth" object)
-  * ftp login credentials
-  * api keys (in the "keys" object)
+* database connection parameters (in the "dbauth" object)
+* ftp login credentials
+* api keys (in the "keys" object)
   
 These are organized such that within any object (dbauth, keys, etc), they are keyed again by the source's name.
   
@@ -51,10 +55,10 @@ The config is meant to have a set of cross-cutting identifiers that occur in mul
 cross-source integration testing in downstream platforms like SciGraph.  
 
 
-**WRITE TEST(s)**
+###WRITE TEST(s)
 Any Source should have a test suite written around it.  You should write a standalone testing suite in the "tests"
-directory, following the convention of "test_<source_name>.py", and subclass it from GeneralSourceTestCase.  
+directory, following the convention of "test_<source_name>.py", and subclass it from ```GeneralSourceTestCase```.  
 
-The main dipper.py wrapper will register all tests within the source and run them automatically.
+The main ```dipper.py``` wrapper will register all tests within the source and run them automatically.
 
 
