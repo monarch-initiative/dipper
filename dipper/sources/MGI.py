@@ -70,7 +70,7 @@ class MGI(Source):
         self.namespaces.update(curie_map.get())
 
         #update the dataset object with details about this resource
-        self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/')
+        self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/',None,'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
 
         #check if config exists; if it doesn't, error out and let user know
         if (not (('dbauth' in config.get_config()) and ('mgi' in config.get_config()['dbauth']))):

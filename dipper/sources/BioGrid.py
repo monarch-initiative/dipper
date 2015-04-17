@@ -40,7 +40,7 @@ class BioGrid(Source):
         self.tax_ids = tax_ids
         self.load_bindings()
 
-        self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/')
+        self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/',None,'http://wiki.thebiogrid.org/doku.php/terms_and_conditions')
 
         # Defaults
         if self.tax_ids is None:
