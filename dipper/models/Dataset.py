@@ -2,7 +2,9 @@ __author__ = 'nicole'
 
 from rdflib import Graph, Literal, URIRef, Namespace
 from rdflib.namespace import RDF, DCTERMS, XSD, FOAF
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Dataset:
 
@@ -34,11 +36,11 @@ class Dataset:
         if(license_url is not None):
             self.graph.add((self.identifier, DCTERMS['license'], URIRef(license_url)))
         else:
-            print('No license provided.')
+            logger.debug('No license provided.')
         if(data_rights is not None):
             self.graph.add((self.identifier, DCTERMS['rights'], Literal(data_rights)))
         else:
-            print('No rights provided.')
+            logger.debug('No rights provided.')
 
         if (description is not None):
             self.graph.add((':'+identifier,DCTERMS['description'],description))
