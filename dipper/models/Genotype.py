@@ -43,7 +43,9 @@ class Genotype():
         'point_mutation': 'SO:1000008',
         'population' : 'GENO:0000110',  #collection of organisms; consider OBI:population or EFO:population
         'wildtype' : 'GENO:0000511',
-        'reagent_targeted_gene': 'GENO:0000504'
+        'reagent_targeted_gene': 'GENO:0000504',
+        'targeted_gene_subregion' : 'GENO:0000534',
+        'targeted_gene_complement' : 'GENO:0000527'
     }
 
     object_properties = {
@@ -242,6 +244,14 @@ class Genotype():
         self.addParts(sa_id, vl_id, self.properties['has_alternate_part'])
         return
 
+    def addGenomicBackground(self, background_id, background_label, background_type=None, background_description=None):
+        if background_type is None:
+            background_type = self.genoparts['genomic_background']
+        self.gu.addIndividualToGraph(self.graph, background_id, background_label, background_type, background_description)
+
+        return
+
+
     def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
         gu = self.gu
 
@@ -316,6 +326,20 @@ class Genotype():
 
         return
 
+    def addTargetedGeneSubregion(self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
+        if tgs_type is None:
+            tgs_type = self.genoparts['targeted_gene_subregion']
+        self.gu.addIndividualToGraph(self.graph, tgs_id, tgs_label, tgs_type, tgs_description)
+
+        return
+
+
+    def addTargetedGeneComplement(self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
+        if tgc_type is None:
+            tgc_type = self.genoparts['targeted_gene_complement']
+        self.gu.addIndividualToGraph(self.graph, tgc_id, tgc_label, tgc_type, tgc_description)
+
+        return
 
     def addMemberOfPopulation(self,member_id,population_id):
         self.graph.add((self.gu.getNode(population_id),

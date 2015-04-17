@@ -40,6 +40,7 @@
 'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
+'UO' : 'http://purl.obolibrary.org/obo/UO_'
 
 
 # publication/reference sources
