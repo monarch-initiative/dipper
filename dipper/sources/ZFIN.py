@@ -733,10 +733,23 @@ class ZFIN(Source):
                     continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
+                env_id = 'ZFIN:' + env_id.strip()
 
                 geno = Genotype(self.graph)
                 geno.addGenotype(genotype_id,genotype_name)
                 #because we are using only w.t. environments, the genotype is just intrinsic.
+
+                #FIXME: Switch to make_id after QA testing.
+                #make an ID for the effective genotype
+                #effective_genotype_id = self.make_id(genotype_id+env_id)
+                effective_genotype_id = genotype_id+'_'+env_id
+
+                #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
+                geno.addGenotype(effective_genotype_id,None,geno.genoparts['effective_genotype'])
+
+                geno.addParts(env_id,effective_genotype_id)
+                geno.addParts(genotype_id,effective_genotype_id)
+
 
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
                                                                superterm2_id, subterm2_id, modifier)
