@@ -111,12 +111,15 @@ class ZFIN(Source):
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
         self.wildtype_hash = {'id' : {}, 'symbol' : {}}
-        self.label_hash = {'gene_label' : {}, 'allele_label' : {}, 'construct_label' : {}}
+        self.label_hash = {'gene_label' : {}, 'allele_label' : {}, 'construct_label' : {}, 'genotype_label' : {}, 'background_label' : {}}
+        self.genotype_id_to_background_id_hash = {'genotype_id' : {}}
 
-        self._process_genotype_features(limit)
+        #These must be processed in a specific order
+        self._process_wildtypes(limit) # Must be processed before wildtype_expression
         self._process_genotype_backgrounds(limit)
-        self._process_feature_affected_genes(limit)
-        self._process_g2p(limit)
+        self._process_genotype_features(limit)
+
+
 
         self._process_morpholinos(limit) # Process before talens/crisprs
         #NOTE: If leaving out TALENs & CRISPRs, need to filter them from the pheno_enviro parsing.
@@ -124,7 +127,9 @@ class ZFIN(Source):
         #self._process_crisprs(limit) # Leaving CRISPRs out until further review.
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
-        #self._process_wildtypes(limit) # Must be processed before wildtype_expression
+        self._process_feature_affected_genes(limit)
+        self._process_g2p(limit)
+
         #self._process_wildtype_expression(limit)
 
         #self._process_gene_marker_relationships(limit)
@@ -173,11 +178,19 @@ class ZFIN(Source):
 
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
+                background_id = self.genotype_id_to_background_id_hash['genotype_id'].get(genotype_id)
+                if background_id is not None:
+                    genotype_name = genotype_name+' ['+self.label_hash['background_label'].get(background_id)+']'
+                else:
+                    genotype_name = genotype_name+' [n.s.]'
+                #print(genotype_name)
                 geno = Genotype(self.graph)
                 gt = geno.addGenotype(genotype_id, genotype_name)
                 if genotype_id not in geno_hash:
                     geno_hash[genotype_id] = {};
                 genoparts = geno_hash[genotype_id]
+                if self.label_hash['genotype_label'].get(genotype_id) is None:
+                    self.label_hash['genotype_label'][genotype_id] = genotype_name
 
                 #FIXME: This seems incorrect. Shouldn't the types available here be added to the sequence alteration?
                 # reassign the allele_type to a proper GENO or SO class
@@ -417,6 +430,8 @@ class ZFIN(Source):
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 background_id = 'ZFIN:' + background_id.strip()
+                if self.genotype_id_to_background_id_hash['genotype_id'].get(genotype_id) is None:
+                    self.genotype_id_to_background_id_hash['genotype_id'][genotype_id] = background_id
 
                 # Add the taxon as a class
                 taxon_id = 'NCBITaxon:7955'  # Danio rerio
@@ -468,6 +483,9 @@ class ZFIN(Source):
 
                 #Add genotype to graph with label, type=wildtype, and description.
                 geno.addGenotype(genotype_id, genotype_abbreviation,geno.genoparts['wildtype'],genotype_name)
+
+                if self.label_hash['background_label'].get(genotype_id) is None:
+                    self.label_hash['background_label'][genotype_id] = genotype_name
 
 
                 #Build the hash for the wild type genotypes.
@@ -728,9 +746,9 @@ class ZFIN(Source):
 
                 #deal with environments
                 #FIXME i am only dealing with 'wild-type' environments for now
-                if (not re.match('ZDB-EXP-041102-1', env_id)):
-                    logger.info("Skipping non-wildtype environment %s for %s", env_id, genotype_id)
-                    continue
+                #if (not re.match('ZDB-EXP-041102-1', env_id)):
+                    #logger.info("Skipping non-wildtype environment %s for %s", env_id, genotype_id)
+                    #continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 env_id = 'ZFIN:' + env_id.strip()
@@ -745,7 +763,15 @@ class ZFIN(Source):
                 effective_genotype_id = genotype_id+'_'+env_id
 
                 #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
-                geno.addGenotype(effective_genotype_id,None,geno.genoparts['effective_genotype'])
+                intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
+                extrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
+                if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
+                    effective_genotype_label = intrinsic_genotype_label+'; '+extrinsic_genotype_label
+                elif intrinsic_genotype_label is None and extrinsic_genotype_label is not None:
+                    effective_genotype_label = extrinsic_genotype_label
+                elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
+                    effective_genotype_label = intrinsic_genotype_label
+                geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
 
                 geno.addParts(env_id,effective_genotype_id)
                 geno.addParts(genotype_id,effective_genotype_id)
@@ -1563,7 +1589,7 @@ class ZFIN(Source):
                 tgc_ids = []
                 tgc_labels = []
                 geno = Genotype(self.graph)
-                ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+
                 for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
                     if targeted_gene_variant_id not in tgc_ids:
                         tgc_ids.append(targeted_gene_variant_id)
@@ -1571,8 +1597,11 @@ class ZFIN(Source):
                         tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
                 targeted_gene_complement_id = ('_').join(tgc_ids)
                 targeted_gene_complement_label = ('; ').join(tgc_labels)
-
+                #FIXME: For now just using the TGC label as the extrinsic genotype label
+                ex_geno = geno.addGenotype(extrinsic_geno_id,targeted_gene_complement_label,geno.genoparts['extrinsic_genotype'])
                 geno.addTargetedGeneComplement(targeted_gene_complement_id,targeted_gene_complement_label)
+                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is None:
+                    self.label_hash['genotype_label'][extrinsic_geno_id] = targeted_gene_complement_label
                 #TODO: Abstract adding TGC to Genotype.
                 # Add the TGC to the genotype.
                 geno.addParts(targeted_gene_complement_id,extrinsic_geno_id)
