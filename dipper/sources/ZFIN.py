@@ -314,7 +314,8 @@ class ZFIN(Source):
                     elif gene_label is None and allele1_label is not None and allele2_label is None:
                         vslc_label = '<'+allele1_label+'>'
                     else:
-                        vslc_label = '<empty>'
+                        logger.error('No VSLC label created.')
+                        vslc_label = ''
                     #print(vslc_label)
 
                     gu.addIndividualToGraph(self.graph,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
@@ -357,17 +358,17 @@ class ZFIN(Source):
                     #gvc_id = ('_split_').join(genomic_variation_complement_parts)
                     gvc_label = ('; ').join(gvc_label_parts)
                     #Add the GVC
-                    gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,'GENO:0000009')
+                    gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
                     #print(gvc_id)
 
                     #Add the VSLCs to the GVC
                     for i in genomic_variation_complement_parts:
                         #geno.addVSLCtoParent(i,gt)
-                        gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+                        gu.addTriple(self.graph,gvc_id,geno.object_properties['has_alternate_part'],i)
 
 
                 #Add the GVC to the genotype
-                gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
+                gu.addTriple(self.graph,gt,geno.object_properties['has_alternate_part'],gvc_id)
 
 
 
@@ -486,6 +487,9 @@ class ZFIN(Source):
 
                 if self.label_hash['background_label'].get(genotype_id) is None:
                     self.label_hash['background_label'][genotype_id] = genotype_name
+
+                if self.label_hash['genotype_label'].get(genotype_id) is None:
+                    self.label_hash['genotype_label'][genotype_id] = '['+genotype_name+']'
 
 
                 #Build the hash for the wild type genotypes.
@@ -752,6 +756,7 @@ class ZFIN(Source):
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 env_id = 'ZFIN:' + env_id.strip()
+                extrinsic_geno_id = self.make_id(env_id)
 
                 geno = Genotype(self.graph)
                 geno.addGenotype(genotype_id,genotype_name)
@@ -764,13 +769,16 @@ class ZFIN(Source):
 
                 #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
                 intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
-                extrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
+                extrinsic_genotype_label = self.label_hash['genotype_label'].get(extrinsic_geno_id)
                 if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
                     effective_genotype_label = intrinsic_genotype_label+'; '+extrinsic_genotype_label
                 elif intrinsic_genotype_label is None and extrinsic_genotype_label is not None:
                     effective_genotype_label = extrinsic_genotype_label
                 elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
                     effective_genotype_label = intrinsic_genotype_label
+                #if intrinsic_genotype_label is not None:
+                    #print(intrinsic_genotype_label)
+                #print(effective_genotype_label)
                 geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
 
                 geno.addParts(env_id,effective_genotype_id)
@@ -787,7 +795,8 @@ class ZFIN(Source):
                 if (not re.match('^normal', modifier)):
                     assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
                     pub_id = 'ZFIN:' + pub_id.strip()
-                    assoc = G2PAssoc(assoc_id, genotype_id, phenotype_id, pub_id, eco_id)
+                    #FIXME: Assuming we change from the intrinsic genotype_id to the effective genotype ID.
+                    assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
                     self.graph = assoc.addAssociationNodeToGraph(self.graph)
                 else:
                     #add normal phenotypes
@@ -1417,7 +1426,7 @@ class ZFIN(Source):
                 # For now, making an ID from environment ID only, but may want to revisit.
                 extrinsic_geno_id = self.make_id(environment_id)
                 geno = Genotype(self.graph)
-                ex_geno = geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
+
 
                 #We can start to build the extrinsic genotype using this file.
                 # Requires creating a hash similar to what is used for genotypes to get the VSLCs and GVCs.
@@ -1434,7 +1443,7 @@ class ZFIN(Source):
 
                     condition = 'ZFIN:'+condition.strip()
                     gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
-
+                    geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
 
                     # Clean up the units
                     if units == 'N/A':
@@ -1448,7 +1457,7 @@ class ZFIN(Source):
                         values = None
                     if values is not None:
                         values = values.replace(' ', '_')
-                        #FIXME: Better way to indicate > and <?
+                        #FIXME: Better way to indicate > and < ?
                         values = values.replace('<', 'less_than_')
                         values = values.replace('>', 'greater_than_')
 
@@ -1519,9 +1528,10 @@ class ZFIN(Source):
                     #except KeyError:
                         #extrinsic_parts[enviro_con] = [condition]
 
-                else:
+                #else:
                     #FIXME:Need to adjust label for non-knockdown reagent environments
-                    gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
+                    #Adding this results in additional environmental variables being added to the morpholino environment.
+                    #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
                 #TODO: Need to wrangle a better description, alternative parsing of variables
                 # (condition_group, condition, values, units, comment). Leaving as condition group for now.
