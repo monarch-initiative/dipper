@@ -1133,8 +1133,17 @@ class ZFIN(Source):
         #TODO: We have the sequence information for each of the targeting reagents. How to model?
     def _process_morpholinos(self, limit=None):
         """
-        Morpholinos are knockdown reagents.
-        Only the morpholino sequence is provided, so the target sequence is calculated using biopython.
+        This method processes the morpholino knockdown reagents, creating triples for the
+        morpholinos and passing the morpholino data into a hash map for use in the pheno_enviro method.
+
+        Triples created:
+        <morpholino_id> is a gene_targeting_reagent
+        <morpholino_id> rdfs:label <morpholino_symbol>
+        <morpholino_id> has type <morpholino_so_id>
+        <morpholino_id> has comment <note>
+
+        <publication_id> is an individual
+        <publication_id> mentions <morpholino_id>
         :param limit:
         :return:
         """
@@ -1209,7 +1218,7 @@ class ZFIN(Source):
 
     def _process_talens(self, limit=None):
         """
-        TALENs are knockdown reagents
+
         :param limit:
         :return:
         """
