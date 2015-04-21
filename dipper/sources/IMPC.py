@@ -42,8 +42,6 @@ class IMPC(Source):
         #TODO put this into a conf file?
         self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org')
 
-        self.testMode = True
-
         #source-specific warnings.  will be cleared when resolved.
         #print("WARN: we are filtering G2P on the wild-type environment data for now")
 
@@ -73,22 +71,17 @@ class IMPC(Source):
         logger.info("Parsing files...")
 
         loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        if self.testOnly:
+            self.testMode = True
 
         for f in ['impc','euro','mgd']:
             file = ('/').join((self.rawdir,self.files[f]['file']))
+            self._process_data(file, limit)
 
-
-            for t in loops:
-                self.testMode = t
-                self._process_data(file, limit)
 
         logger.info("Finished parsing")
 
         self.load_bindings()
-        for g in [self.testgraph,self.graph]:
-            Assoc().loadAllProperties(g)
 
         logger.info("Found %s nodes", len(self.graph))
         return
@@ -275,7 +268,7 @@ class IMPC(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-
+        Assoc().loadAllProperties(g)
 
         return
 
@@ -328,3 +321,13 @@ class IMPC(Source):
 
         return is_match
 
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_impc import IMPCTestCase
+        #TODO test genotypes
+        #from tests.test_genotypes import GenotypeTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(IMPCTestCase)
+
+        return test_suite
