@@ -765,7 +765,7 @@ class ZFIN(Source):
                 #FIXME: Switch to make_id after QA testing.
                 #make an ID for the effective genotype
                 #effective_genotype_id = self.make_id(genotype_id+env_id)
-                effective_genotype_id = genotype_id+'_'+env_id
+                effective_genotype_id = self.make_id(genotype_id+'_'+env_id)
 
                 #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
                 intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
@@ -776,12 +776,15 @@ class ZFIN(Source):
                     effective_genotype_label = extrinsic_genotype_label
                 elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
                     effective_genotype_label = intrinsic_genotype_label
+                else:
+                    logger.error('No effective genotype label created.')
+                    effective_genotype_label = '<empty'
                 #if intrinsic_genotype_label is not None:
                     #print(intrinsic_genotype_label)
                 #print(effective_genotype_label)
                 geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
 
-                geno.addParts(env_id,effective_genotype_id)
+                geno.addParts(extrinsic_geno_id,effective_genotype_id)
                 geno.addParts(genotype_id,effective_genotype_id)
 
 
@@ -1566,7 +1569,8 @@ class ZFIN(Source):
                     #Make the tgs id and label, add tgs to graph
                     targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
                     #TODO: Change to makeID after testing.
-                    targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
+                    #targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
+                    targeted_gene_subregion_id = self.make_id(kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids))
                     #print(targeted_gene_subregion_label)
                     geno.addTargetedGeneSubregion(targeted_gene_subregion_id,targeted_gene_subregion_label)
                     geno.addParts(condition,targeted_gene_subregion_id)
@@ -1574,7 +1578,8 @@ class ZFIN(Source):
 
                     for i in kd_reagent_gene_ids:
                         #TODO: Change to a makeID after testing.
-                        targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
+                        #targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
+                        targeted_gene_variant_id = self.make_id(i+'_'+kd_reagent_conc_id)
                         #FIXME: What about for reagents that target more than one gene? Concatenated or separate?
                         #print(targeted_gene_variant_id)
                         kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
@@ -1605,7 +1610,9 @@ class ZFIN(Source):
                         tgc_ids.append(targeted_gene_variant_id)
                     if tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] not in tgc_labels:
                         tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
-                targeted_gene_complement_id = ('_').join(tgc_ids)
+                #FIXME:Change to MakeID after QA testing.
+                #targeted_gene_complement_id = ('_').join(tgc_ids)
+                targeted_gene_complement_id = self.make_id(('_').join(tgc_ids))
                 targeted_gene_complement_label = ('; ').join(tgc_labels)
                 #FIXME: For now just using the TGC label as the extrinsic genotype label
                 ex_geno = geno.addGenotype(extrinsic_geno_id,targeted_gene_complement_label,geno.genoparts['extrinsic_genotype'])
