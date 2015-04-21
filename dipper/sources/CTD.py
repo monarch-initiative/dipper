@@ -50,18 +50,15 @@ class CTD(Source):
         Source.__init__(self, 'ctd')
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
 
-        if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
+        if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
             print("WARN: not configured with gene test ids.")
         else:
             self.test_geneids = config.get_config()['test_ids']['gene']
 
-        if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
+        if 'test_ids' not in config.get_config() and 'disease' not in config.get_config()['test_ids']:
             print("WARN: not configured with gene test ids.")
         else:
             self.test_diseaseids = config.get_config()['test_ids']['disease']
-
-
-        self.testMode = True
 
         return
 
@@ -98,14 +95,11 @@ class CTD(Source):
                 self.static_files['publications']['file']
             )
 
-        loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        if self.testOnly:
+            self.testMode = True
 
-        for m in loops:
-            self.testMode = m
-            self._parse_ctd_file(limit,self.files['chemical_disease_interactions']['file'],pub_map)
-            self._parse_ctd_file(limit,self.files['gene_pathway']['file'])
+        self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'], pub_map)
+        self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
         self.load_bindings()
         logger.info("Done parsing files.")
 
@@ -179,7 +173,6 @@ class CTD(Source):
         gu.addClassToGraph(g, entrez_id, gene_symbol)
         gu.addInvolvedIn(g, entrez_id, pathway_id)
 
-
         # if re.match(re.compile('^REACT'),pathway_id):
         #    gu.addClassToGraph(g, pathway_id, pathway_name)
 
@@ -202,9 +195,9 @@ class CTD(Source):
         evidence_pattern = re.compile('^therapeutic|marker\/mechanism$')
         dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
 
-        #filter on those diseases that are mapped to omim ids in the test set
-        intersect=list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
-        if self.testMode and len(intersect)<1:
+        # filter on those diseases that are mapped to omim ids in the test set
+        intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
+        if self.testMode and len(intersect) < 1:
             return
 
         if direct_evidence == '':
@@ -219,8 +212,8 @@ class CTD(Source):
             for val in direct_evidence.split('|'):
                 self._make_association(chem_id, disease_id, val, pub_evidence_map[val])
         else:
-            #there's dual evidence, but haven't mapped the pubs
-            logger.info("Dual evidence for %s and %s but no pub map",chem_name,disease_id)
+            # there's dual evidence, but haven't mapped the pubs
+            logger.info("Dual evidence for %s and %s but no pub map", chem_name, disease_id)
 
         return
 
@@ -241,7 +234,7 @@ class CTD(Source):
             g = self.testgraph
         else:
             g = self.graph
-        assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
+        assoc_id = self.make_ctd_chem_disease_assoc_id(chem_id,disease_id,direct_evidence)
         evidence_code = self._get_evidence_code('TAS')
         chem_mesh_id = 'MESH:'+chem_id
         relationship = self._get_relationship_id(direct_evidence)
@@ -251,6 +244,11 @@ class CTD(Source):
         assoc.addAssociationNodeToGraph(g)
 
         return g
+
+    def make_ctd_chem_disease_assoc_id(self, chem_id, disease_id, direct_evidence):
+        assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
+
+        return assoc_id
 
     def _process_pubmed_ids(self, pubmed_ids):
         """
@@ -370,3 +368,13 @@ class CTD(Source):
                         pub_map[key] = evidence
 
         return pub_map
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_ctd import CTDTestCase
+        from tests.test_interactions import InteractionsTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(CTDTestCase)
+        test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(InteractionsTestCase))
+
+        return test_suite
