@@ -124,19 +124,19 @@ class ZFIN(Source):
         #self._process_crisprs(limit) # Leaving CRISPRs out until further review.
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
 
-        self._process_wildtypes(limit) # Must be processed before wildtype_expression
-        self._process_wildtype_expression(limit)
+        #self._process_wildtypes(limit) # Must be processed before wildtype_expression
+        #self._process_wildtype_expression(limit)
 
-        self._process_gene_marker_relationships(limit)
-        self._process_features(limit)
-        self._process_genes(limit)
-        self._process_genbank_ids(limit)
-        self._process_uniprot_ids(limit)
-        self._process_human_orthos(limit)
-        self._process_anatomy(limit)
-        self._process_stages(limit)
-        self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
+        #self._process_gene_marker_relationships(limit)
+        #self._process_features(limit)
+        #self._process_genes(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
+        #self._process_human_orthos(limit)
+        #self._process_anatomy(limit)
+        #self._process_stages(limit)
+        #self._process_pubinfo(limit)
+        #self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -270,7 +270,7 @@ class ZFIN(Source):
                             pass #not sure what to assign here
                         elif allele1_id != allele2_id:
                             zygosity_id = geno.zygosity['heterozygous']
-                            print('heterozygous pair='+allele1_id+'_'+allele2_id)
+                            #print('heterozygous pair='+allele1_id+'_'+allele2_id)
                         elif allele1_id == allele2_id:
                             zygosity_id = geno.zygosity['homozygous']
                     else:
@@ -307,7 +307,7 @@ class ZFIN(Source):
                     gu.addIndividualToGraph(self.graph,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
                     #Remove this since I am now adding the VSLC to the GVC?
-                    geno.addVSLCtoParent(vslc_id,gt)
+                    #geno.addVSLCtoParent(vslc_id,gt)
 
                     gt_vslc = gt+'vslc'
 
@@ -331,6 +331,7 @@ class ZFIN(Source):
             #now loop through the gvc_hash, and build the gvc
             #TODO: Possible to pass through VSLC label, assemble GVC label?
             for gt in gvc_hash:
+                gvc_id = '<empty>'
                 gvc_ids = []
                 gvc_labels = []
                 for vslc_id in gvc_hash.get(gt):
@@ -346,13 +347,16 @@ class ZFIN(Source):
                     gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,'GENO:0000009')
                     #print(gvc_id)
 
-                    #Add the GVC to the genotype
-                    gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
-
                     #Add the VSLCs to the GVC
                     for i in genomic_variation_complement_parts:
-                        geno.addVSLCtoParent(i,gt)
+                        #geno.addVSLCtoParent(i,gt)
                         gu.addTriple(self.graph,gvc_id,'GENO:0000382',i)
+
+
+                #Add the GVC to the genotype
+                gu.addTriple(self.graph,gt,'GENO:0000382',gvc_id)
+
+
 
                 #end of gvc loop
 
