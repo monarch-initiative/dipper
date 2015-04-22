@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class ZFIN(Source):
     #TODO: Enter a description for the resource.
     """
-    This is the Zebrafish Model Organism Database (ZFIN), from which we process genotype and phenotype data about laboratory zebrafish.
+    This is the Zebrafish Model Organism Database (ZFIN), from which we process genotype and phenotype data for laboratory zebrafish.
     Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.
 
     """
@@ -119,20 +119,15 @@ class ZFIN(Source):
         self._process_wildtypes(limit) # Must be processed before wildtype_expression
         self._process_genotype_backgrounds(limit)
         self._process_genotype_features(limit)
-
-
-
         self._process_morpholinos(limit) # Process before talens/crisprs
         #NOTE: If leaving out TALENs & CRISPRs, need to filter them from the pheno_enviro parsing.
         #self._process_talens(limit) # Leaving TALENs out until further review.
         #self._process_crisprs(limit) # Leaving CRISPRs out until further review.
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
-
         self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
 
         self._process_wildtype_expression(limit)
-
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
         self._process_genes(limit)
@@ -140,7 +135,7 @@ class ZFIN(Source):
         self._process_uniprot_ids(limit)
         self._process_human_orthos(limit)
         #self._process_anatomy(limit)
-        #self._process_stages(limit)
+        self._process_stages(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
 
@@ -553,6 +548,7 @@ class ZFIN(Source):
         """
         This table provides mappings between ZFIN stage IDs and ZFS terms,
         and includes the starting and ending hours for the developmental stage.
+        Currently only processing the mapping from the ZFIN stage ID to the ZFS ID.
 
         Triples created:
         <begin_hour_id> an individual
@@ -587,23 +583,22 @@ class ZFIN(Source):
                 stage_id = 'ZFIN:' + stage_id.strip()
 
                 # Make ID for the beginning hour, add to graph.
-                begin_hour_id = self.make_id(begin_hours)
-                gu.addIndividualToGraph(self.graph,begin_hour_id,begin_hours+' hours',gu.datatype_properties['hours'])
+                #begin_hour_id = self.make_id(begin_hours)
+                #gu.addIndividualToGraph(self.graph,begin_hour_id,begin_hours+' hours',gu.datatype_properties['hours'])
 
                 # Make ID for the ending hour, add to graph.
-                end_hour_id = self.make_id(end_hours)
-                gu.addIndividualToGraph(self.graph,end_hour_id,end_hours+' hours',gu.datatype_properties['hours'])
+                #end_hour_id = self.make_id(end_hours)
+                #gu.addIndividualToGraph(self.graph,end_hour_id,end_hours+' hours',gu.datatype_properties['hours'])
 
                 #Add the stage as an individual.
                 gu.addIndividualToGraph(self.graph,stage_id,stage_name,stage_obo_id)
 
                 #Add the beginning and end hours of the development stage.
-                gu.addTriple(self.graph,stage_id,gu.object_properties['existence_starts_at'],begin_hour_id)
-                gu.addTriple(self.graph,stage_id,gu.object_properties['existence_ends_at'],end_hour_id)
+                #gu.addTriple(self.graph,stage_id,gu.object_properties['existence_starts_at'],begin_hour_id)
+                #gu.addTriple(self.graph,stage_id,gu.object_properties['existence_ends_at'],end_hour_id)
 
                 if (limit is not None and line_counter > limit):
                     break
-
 
         logger.info("Done with stages")
         return
@@ -648,73 +643,8 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-
         logger.info("Done with anatomy")
         return
-
-
-    def _process_human_orthos(self, limit=None):
-        """
-        This table provides ortholog mappings between zebrafish and humans, including OMIM IDs
-
-        Triples created:
-        <zfin gene id> a class
-        <zfin gene id> rdfs:label gene_symbol
-        <zfin gene id> dc:description gene_name
-
-        <human gene id> a class
-        <human gene id> rdfs:label gene_symbol
-        <human gene id> dc:description gene_name
-        <human gene id> equivalent class <omim id>
-
-        <zfin gene id> orthology association <human gene id>
-        :param limit:
-        :return:
-        """
-
-        #Is this file necessary if we can get human orthologs through PANTHER?
-        #Are the ZFIN genes mapped to an NCBI Gene ID in other files?
-
-        logger.info("Processing human orthos")
-        line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir,self.files['human_orthos']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-                geno = Genotype(self.graph)
-                (zfin_id,zfin_symbol,zfin_name,human_symbol,human_name,omim_id,gene_id,empty) = row
-
-                #genotype_id = 'ZFIN:' + genotype_id.strip()
-
-                # Add the zebrafish gene.
-                zfin_id = 'ZFIN:' + zfin_id.strip()
-                geno.addGene(zfin_id,zfin_symbol,None,zfin_name)
-
-                # Add the human gene.
-                gene_id = 'NCBIGene:' + gene_id.strip()
-                geno.addGene(gene_id,human_symbol,None,human_name)
-
-                #TODO: Need to add the ortholog relationship between the zebrafish gene and the human gene
-                # Is this the correct handling of the relationship?
-                assoc_id = self.make_id(('').join((zfin_id,gene_id)))
-                assoc = OrthologyAssoc(assoc_id,zfin_id,gene_id,None,None)
-                assoc.setRelationship('RO:HOM0000017')
-                #assoc.loadAllProperties(self.graph)    #FIXME inefficient
-                assoc.addAssociationToGraph(self.graph)
-
-                #Add the OMIM gene ID as an equivalent class for the human gene.
-                omim_id = 'OMIM:' + omim_id.strip()
-                gu.addEquivalentClass(self.graph, gene_id, omim_id)
-
-
-                if (limit is not None and line_counter > limit):
-                    break
-
-
-        logger.info("Done with human orthos")
-
 
     def _process_g2p(self, limit=None):
         '''
@@ -779,7 +709,8 @@ class ZFIN(Source):
                     effective_genotype_label = intrinsic_genotype_label
                 else:
                     logger.error('No effective genotype label created.')
-                    effective_genotype_label = '<empty>'
+                    effective_genotype_label = ''
+                    #effective_genotype_label = '<empty>'
                 #if intrinsic_genotype_label is not None:
                     #print(intrinsic_genotype_label)
                 #print(effective_genotype_label)
@@ -943,10 +874,8 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-
         logger.info("Done with features")
         return
-
 
     def _process_genes(self, limit=None):
         """
@@ -984,7 +913,6 @@ class ZFIN(Source):
         logger.info("Done with genes")
         return
 
-
     def _process_gene_marker_relationships(self, limit=None):
         """
 
@@ -1010,7 +938,7 @@ class ZFIN(Source):
                 if (gene_so_id == 'SO:0000704'):
 
                     geno.addGene(gene_id,gene_symbol)
-                elif (gene_so_id == 'SO0000336'):
+                elif (gene_so_id == 'SO:0000336'):
                     gu.addIndividualToGraph(self.graph,gene_id,gene_symbol,gene_so_id)
 
                 marker_id = 'ZFIN:'+marker_id.strip()
@@ -1028,90 +956,6 @@ class ZFIN(Source):
 
         logger.info("Done with gene marker relationships")
         return
-
-
-    def _process_genbank_ids(self, limit=None):
-        """
-        This file contains BACs, cDNAs, engineered foreign genes, ESTs, engineered plasmids, Fosmids, pseudogenes,
-        engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank IDs.
-        :param limit:
-        :return:
-        """
-        #TODO: Test the output, make sure the GenBank URI resolves for all construct types.
-        # (It does, although ESTs redirect to http://www.ncbi.nlm.nih.gov/nucest/)
-
-        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
-        logger.info("Processing GenBank IDs")
-        line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir,self.files['genbank']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
-                (zfin_id,so_id,symbol,genbank_id,empty) = row
-                #FIXME: Is my approach with geno here correct?
-                geno = Genotype(self.graph)
-
-                zfin_id = 'ZFIN:'+zfin_id.strip()
-                genbank_id = 'GenBank:'+genbank_id.strip()
-                if re.match('ZFIN:ZDB-GENE.*',zfin_id):
-                    geno.addGene(zfin_id,symbol)
-                    gu.addClassToGraph(self.graph,genbank_id,symbol,so_id)
-                    gu.addEquivalentClass(self.graph,zfin_id,genbank_id)
-                else:
-                    geno.addConstruct(zfin_id,symbol,so_id)
-                    gu.addIndividualToGraph(self.graph,genbank_id,symbol,so_id)
-                    gu.addSameIndividual(self.graph,zfin_id,genbank_id)
-
-                if (limit is not None and line_counter > limit):
-                    break
-
-        logger.info("Done with GenBank IDs")
-        return
-
-
-
-    def _process_uniprot_ids(self, limit=None):
-        """
-
-        :param limit:
-        :return:
-        """
-        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
-        logger.info("Processing UniProt IDs")
-        line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir,self.files['uniprot']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
-                (gene_id,gene_so_id,gene_symbol,uniprot_id,empty) = row
-                #FIXME: Is my approach with geno here correct?
-                geno = Genotype(self.graph)
-
-                gene_id = 'ZFIN:'+gene_id.strip()
-                uniprot_id = 'UniProtKB:'+uniprot_id.strip()
-
-
-                #FIXME: Need to lookup with a hash whether or not the gene already exists in the graph?
-                # Or just create the gene as a class, although it would be redundant?
-                geno.addGene(gene_id,gene_symbol)
-                #Need to add some type of 'has_gene_product' relationship here.
-                #TODO: Abstract to one of the model utilities
-                gu.addIndividualToGraph(self.graph,uniprot_id,None,'SO:0000104')
-                gu.addTriple(self.graph,gene_id,gu.properties['has_gene_product'],uniprot_id)
-
-                if (limit is not None and line_counter > limit):
-                    break
-
-        logger.info("Done with UniProt IDs")
-        return
-
-
 
     def _process_pubinfo(self, limit=None):
         '''
@@ -1334,7 +1178,6 @@ class ZFIN(Source):
         logger.info("Done with TALENS")
         return
 
-
     def _process_crisprs(self, limit=None):
         """
         CRISPRs are knockdown reagents.
@@ -1395,8 +1238,6 @@ class ZFIN(Source):
         logger.info("Done with CRISPRs")
         return
 
-
-
     def _process_pheno_enviro(self, limit=None):
         """
         The pheno_environment.txt file ties experimental conditions to an environment ID.
@@ -1423,8 +1264,6 @@ class ZFIN(Source):
                 line_counter += 1
 
                 (environment_id,condition_group,condition,values,units,comment,empty) = row
-
-
 
                 if re.match("\\\\",values):
                     values = ''
@@ -1611,8 +1450,6 @@ class ZFIN(Source):
                         if targeted_gene_variant_id not in tgc_hash[extrinsic_geno_id]:
                             tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] = targeted_gene_variant_label
 
-
-
                 #End of loop
             #Now process through the tgc_hash to produce the targeted_gene_variant_complement
             for extrinsic_geno_id in tgc_hash:
@@ -1641,13 +1478,9 @@ class ZFIN(Source):
                 for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
                     geno.addParts(targeted_gene_variant_id,targeted_gene_complement_id)
 
-
-
-
         #print(extrinsic_part_hash)
         logger.info("Done with phenotype environments")
         return
-
 
     def _process_landmarks(self, limit=None):
         """
@@ -1711,6 +1544,146 @@ class ZFIN(Source):
         logger.info("Done with landmarks")
         return
 
+    def _process_genbank_ids(self, limit=None):
+        """
+        This file contains BACs, cDNAs, engineered foreign genes, ESTs, engineered plasmids, Fosmids, pseudogenes,
+        engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank IDs.
+        :param limit:
+        :return:
+        """
+        #TODO: Test the output, make sure the GenBank URI resolves for all construct types.
+        # (It does, although ESTs redirect to http://www.ncbi.nlm.nih.gov/nucest/)
+
+        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
+        logger.info("Processing GenBank IDs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['genbank']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (zfin_id,so_id,symbol,genbank_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                zfin_id = 'ZFIN:'+zfin_id.strip()
+                genbank_id = 'GenBank:'+genbank_id.strip()
+                if re.match('ZFIN:ZDB-GENE.*',zfin_id):
+                    geno.addGene(zfin_id,symbol)
+                    gu.addClassToGraph(self.graph,genbank_id,symbol,so_id)
+                    gu.addEquivalentClass(self.graph,zfin_id,genbank_id)
+                else:
+                    geno.addConstruct(zfin_id,symbol,so_id)
+                    gu.addIndividualToGraph(self.graph,genbank_id,symbol,so_id)
+                    gu.addSameIndividual(self.graph,zfin_id,genbank_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with GenBank IDs")
+        return
+
+    def _process_uniprot_ids(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
+        logger.info("Processing UniProt IDs")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['uniprot']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+
+                (gene_id,gene_so_id,gene_symbol,uniprot_id,empty) = row
+                #FIXME: Is my approach with geno here correct?
+                geno = Genotype(self.graph)
+
+                gene_id = 'ZFIN:'+gene_id.strip()
+                uniprot_id = 'UniProtKB:'+uniprot_id.strip()
+
+
+                #FIXME: Need to lookup with a hash whether or not the gene already exists in the graph?
+                # Or just create the gene as a class, although it would be redundant?
+                geno.addGene(gene_id,gene_symbol)
+                #Need to add some type of 'has_gene_product' relationship here.
+                #TODO: Abstract to one of the model utilities
+                gu.addIndividualToGraph(self.graph,uniprot_id,None,'SO:0000104')
+                gu.addTriple(self.graph,gene_id,gu.properties['has_gene_product'],uniprot_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with UniProt IDs")
+        return
+
+    def _process_human_orthos(self, limit=None):
+        """
+        This table provides ortholog mappings between zebrafish and humans, including OMIM IDs
+
+        Triples created:
+        <zfin gene id> a class
+        <zfin gene id> rdfs:label gene_symbol
+        <zfin gene id> dc:description gene_name
+
+        <human gene id> a class
+        <human gene id> rdfs:label gene_symbol
+        <human gene id> dc:description gene_name
+        <human gene id> equivalent class <omim id>
+
+        <zfin gene id> orthology association <human gene id>
+        :param limit:
+        :return:
+        """
+
+        #Is this file necessary if we can get human orthologs through PANTHER?
+        #Are the ZFIN genes mapped to an NCBI Gene ID in other files?
+
+        logger.info("Processing human orthos")
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir,self.files['human_orthos']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                geno = Genotype(self.graph)
+                (zfin_id,zfin_symbol,zfin_name,human_symbol,human_name,omim_id,gene_id,empty) = row
+
+                #genotype_id = 'ZFIN:' + genotype_id.strip()
+
+                # Add the zebrafish gene.
+                zfin_id = 'ZFIN:' + zfin_id.strip()
+                geno.addGene(zfin_id,zfin_symbol,None,zfin_name)
+
+                # Add the human gene.
+                gene_id = 'NCBIGene:' + gene_id.strip()
+                geno.addGene(gene_id,human_symbol,None,human_name)
+
+                #TODO: Need to add the ortholog relationship between the zebrafish gene and the human gene
+                # Is this the correct handling of the relationship?
+                assoc_id = self.make_id(('').join((zfin_id,gene_id)))
+                assoc = OrthologyAssoc(assoc_id,zfin_id,gene_id,None,None)
+                assoc.setRelationship('RO:HOM0000017')
+                #assoc.loadAllProperties(self.graph)    #FIXME inefficient
+                assoc.addAssociationToGraph(self.graph)
+
+                #Add the OMIM gene ID as an equivalent class for the human gene.
+                omim_id = 'OMIM:' + omim_id.strip()
+                gu.addEquivalentClass(self.graph, gene_id, omim_id)
+
+                if (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with human orthos")
+        return
+
 
     def verify(self):
         status = False
@@ -1752,7 +1725,6 @@ class ZFIN(Source):
             zp_id = mapping['zp_id']
 
         return zp_id
-
 
     def _load_zp_mappings(self):
         '''
