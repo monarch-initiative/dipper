@@ -1332,7 +1332,6 @@ class ZFIN(Source):
                         conc_label = '(n.s.)'
                     #print(targeted_sequence_id)
 
-
                     if extrinsic_geno_id not in extrinsic_part_hash:
                         extrinsic_part_hash[extrinsic_geno_id] = [condition]
                         #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
@@ -1340,7 +1339,6 @@ class ZFIN(Source):
 
                     if condition not in extrinsic_part_hash[extrinsic_geno_id]:
                         extrinsic_part_hash[extrinsic_geno_id].append(condition)
-
 
                     if extrinsic_geno_id not in kd_reagent_conc_hash:
                         kd_reagent_conc_hash[extrinsic_geno_id] = {}
@@ -1356,6 +1354,17 @@ class ZFIN(Source):
                     #print(kd_reagent_label)
                     targeted_gene_subregion_label = '<'+kd_reagent_label+' '+conc_label+'>'
                     #print(targeted_gene_subregion_label)
+
+                    if comment is None or comment == '':
+                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
+                    else:
+                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+' ('+comment+')]'
+
+                    if environment_id not in enviro_label_hash:
+                        enviro_label_hash[environment_id] = [environment_label]
+                    else:
+                        enviro_label_hash[environment_id].append(environment_label)
+
                     if extrinsic_geno_id not in kd_reagent_conc_label_hash:
                         kd_reagent_conc_label_hash[extrinsic_geno_id] = {}
 
@@ -1380,6 +1389,7 @@ class ZFIN(Source):
                             #extrinsic_parts[enviro_con].append(condition)
                     #except KeyError:
                         #extrinsic_parts[enviro_con] = [condition]
+
                 #FIXME: Can remove this if we don't want to deal with any other abnormal environments.
                 elif not re.match('ZDB.*',condition):
                     #FIXME:Need to adjust label for non-knockdown reagent environments
