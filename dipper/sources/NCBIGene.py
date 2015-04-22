@@ -5,6 +5,7 @@ from datetime import datetime
 import gzip
 import os.path
 import unicodedata
+import logging
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -16,12 +17,30 @@ from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature,makeChromID
 
+logger = logging.getLogger(__name__)
+
 
 class NCBIGene(Source):
     """
+    This is the processing module for the National Center for Biotechnology Information.  It includes parsers
+    for the gene_info (gene names, symbols, ids, equivalent ids), gene history (alt ids), and
+    gene2pubmed publication references about a gene.
 
-    Parses the gene_info (gene names, symbols, ids, equivalent ids), gene history (alt ids), and
-        publications about a gene, and
+    This creates Genes as classes, when they are properly typed as such.  For those entries where it is an
+    'unknown significance', it is added simply as an instance of a sequence feature.  It will add equivalentClasses
+    for a subset of external identifiers, including:  ENSEMBL, HGMD, MGI, ZFIN, and gene product links for HPRD.
+    They are additionally located to their Chromosomal band (until we process actual genomic coords in
+    a separate file).
+
+    We process the genes from the filtered taxa, starting with those configured by default (human, mouse, fish).
+    This can be overridden in the calling script to include additional taxa, if desired.
+    The gene ids in the conf.json will be used to subset the data when testing.
+
+    All entries in the gene_history file are added as deprecated classes, and linked to the current gene id, with
+    "replaced_by" relationships.
+
+    Since we do not know much about the specific link in the gene2pubmed; we simply create a "mentions" relationship.
+
     """
 
     files = {
@@ -46,7 +65,6 @@ class NCBIGene(Source):
     #     'is_about' : 'IAO:0000136'
     # }
 
-    testmode = False
 
     def __init__(self, tax_ids=None, gene_ids=None):
         Source.__init__(self, 'ncbigene')
@@ -68,7 +86,7 @@ class NCBIGene(Source):
         #    self.filter = 'geneids'
         self.gene_ids = []
         if (not (('test_ids' in config.get_config()) and ('gene' in config.get_config()['test_ids']))):
-            print("WARN: not configured with gene test ids.")
+            logger.warn("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
@@ -97,24 +115,21 @@ class NCBIGene(Source):
 
     def parse(self, limit=None):
         if (limit is not None):
-            print("Only parsing first", limit, "rows")
+            logger.info("Only parsing first %d rows", limit)
 
-        print("Parsing files...")
+        logger.info("Parsing files...")
 
-        loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        if self.testOnly:
+            self.testMode = True
 
-        for m in loops:
-            self.testmode = m
-            self._get_gene_info(limit)
-            self._get_gene_history(limit)
-            self._get_gene2pubmed(limit)
+        self._get_gene_info(limit)
+        self._get_gene_history(limit)
+        self._get_gene2pubmed(limit)
 
         self.load_core_bindings()
         self.load_bindings()
 
-        print("Done parsing files.")
+        logger.info("Done parsing files.")
 
         return
 
@@ -129,7 +144,7 @@ class NCBIGene(Source):
         '''
         gu = GraphUtils(curie_map.get())
 
-        if self.testmode:
+        if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
@@ -137,10 +152,10 @@ class NCBIGene(Source):
         geno = Genotype(g)
 
         #not unzipping the file
-        print("INFO: Processing Gene records")
+        logger.info("Processing Gene records")
         line_counter=0
         myfile=('/').join((self.rawdir,self.files['gene_info']['file']))
-        print("FILE:",myfile)
+        logger.info("FILE: %s",myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 #skip comments
@@ -160,8 +175,8 @@ class NCBIGene(Source):
                 ##### end filter
 
 
-                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
-                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testMode and (int(tax_num) not in self.tax_ids))):
                     continue
 
                 line_counter += 1
@@ -208,7 +223,7 @@ class NCBIGene(Source):
                     if (re.search('\|',str(chr))):
                         #this means that there's uncertainty in the mapping.  skip it
                         #TODO we'll need to figure out how to deal with >1 loc mapping
-                        print(gene_id,'is non-uniquely mapped to',str(chr),'.  Skipping for now.')
+                        logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
                         continue
                     #if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
@@ -233,7 +248,7 @@ class NCBIGene(Source):
                             #TODO handle these cases
                             #examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
-                            print('not regular band pattern for',gene_id,':',map_loc)
+                            logger.info('not regular band pattern for %s: %s', gene_id, map_loc)
                     else:
                         #add the gene as a subsequence of the chromosome
                         gu.addTriple(g,gene_id,Feature.object_properties['is_subsequence_of'],mychrom)
@@ -242,7 +257,7 @@ class NCBIGene(Source):
                     #TODO should we add the gene to the "genome" instead of letting it dangle?
                     geno.addTaxon(tax_id,gene_id)
 
-                if (not self.testmode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
             gu.loadProperties(g,Feature.object_properties,gu.OBJPROP)
@@ -262,15 +277,15 @@ class NCBIGene(Source):
         :return:
         '''
         gu = GraphUtils(curie_map.get())
-        if self.testmode:
+        if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
-        print("INFO: Processing Gene records")
+        logger.info("Processing Gene records")
         line_counter=0
         myfile=('/').join((self.rawdir,self.files['gene_history']['file']))
-        print("FILE:",myfile)
+        logger.info("FILE: %s",myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 #skip comments
@@ -290,8 +305,8 @@ class NCBIGene(Source):
                 if (gene_num == '-' or discontinued_num =='-'):
                     continue
 
-                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
-                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testMode and (int(tax_num) not in self.tax_ids))):
                     continue
 
                 line_counter += 1
@@ -309,7 +324,7 @@ class NCBIGene(Source):
                 #also add the old symbol as a synonym of the new gene
                 gu.addSynonym(g,gene_id,discontinued_symbol)
 
-                if (not self.testmode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -323,16 +338,16 @@ class NCBIGene(Source):
         '''
 
         gu = GraphUtils(curie_map.get())
-        if self.testmode:
+        if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
         is_about = gu.getNode(Assoc.properties['is_about'])
 
-        print("INFO: Processing Gene records")
+        logger.info("Processing Gene records")
         line_counter=0
         myfile=('/').join((self.rawdir,self.files['gene2pubmed']['file']))
-        print("FILE:",myfile)
+        logger.info("FILE: %s",myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 #skip comments
@@ -348,8 +363,8 @@ class NCBIGene(Source):
                 #        continue
                 ##### end filter
 
-                if ((self.testmode and (int(gene_num) not in self.gene_ids)) or
-                    (not self.testmode and (int(tax_num) not in self.tax_ids))):
+                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
+                    (not self.testMode and (int(tax_num) not in self.tax_ids))):
                     continue
 
 
@@ -365,7 +380,7 @@ class NCBIGene(Source):
                 gu.addIndividualToGraph(g,pubmed_id,None,None)  #add type publication
                 self.graph.add((gu.getNode(pubmed_id),is_about,gu.getNode(gene_id)))
 
-                if (not self.testmode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -393,7 +408,7 @@ class NCBIGene(Source):
         if (type in type_to_so_map):
             so_id = type_to_so_map.get(type)
         else:
-            print("WARN: unmapped code",type,". Defaulting to 'SO:0000704'.")
+            logger.warn("unmapped code %s. Defaulting to 'SO:0000704'.", type)
 
         return so_id
 
@@ -414,5 +429,18 @@ class NCBIGene(Source):
         return cleanid
 
 
+    #TODO move to util
     def remove_control_characters(self,s):
         return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
+
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_ncbi import NCBITestCase
+        #TODO test genes
+        #from tests.test_genotypes import GenotypeTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(NCBITestCase)
+
+        return test_suite
