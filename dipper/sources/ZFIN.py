@@ -1406,7 +1406,10 @@ class ZFIN(Source):
                         enviro_label = ''
                     #print(enviro_label)
 
-
+                    if environment_id not in enviro_label_hash:
+                        enviro_label_hash[environment_id] = [enviro_label]
+                    else:
+                        enviro_label_hash[environment_id].append(enviro_label)
 
                     #Adding this results in additional environmental variables being added to the morpholino environment.
                     #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
@@ -1427,6 +1430,14 @@ class ZFIN(Source):
                     break
 
                 #End of loop
+
+            #Now process through the enviro_label_hash to add labels to the environments.
+
+            for environment_id in enviro_label_hash:
+                environment_label = ('; ').join(enviro_label_hash[environment_id])
+                #print(environment_id+': '+environment_label)
+                gu.addIndividualToGraph(self.graph,environment_id,environment_label,gu.datatype_properties['environment'])
+
             #Now process through the extrinsic_part_hash to produce targeted_gene_subregion and targeted_gene_variant
             #print(extrinsic_part_hash)
             tgc_hash = {}
