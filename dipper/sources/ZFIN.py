@@ -12,9 +12,9 @@ from dipper.models.Assoc import Assoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
-from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+
 logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
@@ -23,8 +23,6 @@ class ZFIN(Source):
     Notes/Description for ZFIN here.
 
     """
-
-
 
     files = {
         'geno': {'file': 'genotype_features.txt', 'url': 'http://zfin.org/downloads/genotype_features.txt'},
@@ -112,15 +110,12 @@ class ZFIN(Source):
     def __init__(self):
         Source.__init__(self, 'zfin')
 
-
         # update the dataset object with details about this resource
         #TODO put this into a conf file?
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("We are filtering G2P on the wild-type environment data for now")
-
-        self.testMode = True
 
         return
 
@@ -167,30 +162,25 @@ class ZFIN(Source):
 
         self._load_zp_mappings()
 
-        loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        if self.testOnly:
+            self.testMode = True
 
-        for m in loops:
-            self.testMode = m
-            #self._process_mappings(limit)
-            self._process_genotype_features(limit)
-            self._process_g2p(limit)
-            #self._process_genes(limit)
-            #self._process_genbank_ids(limit)
-            #self._process_uniprot_ids(limit)
-            self._process_pubinfo(limit)
-            #self._process_pub2pubmed(limit)
-            #self._process_morpholinos(limit)
-            #self._process_talens(limit)
-            #self._process_crisprs(limit)
-            #self._process_pheno_enviro(limit)
+        #self._process_mappings(limit)
+        self._process_genotype_features(limit)
+        self._process_g2p(limit)
+        #self._process_genes(limit)
+        #self._process_genbank_ids(limit)
+        #self._process_uniprot_ids(limit)
+        self._process_pubinfo(limit)
+        #self._process_pub2pubmed(limit)
+        #self._process_morpholinos(limit)
+        #self._process_talens(limit)
+        #self._process_crisprs(limit)
+        #self._process_pheno_enviro(limit)
 
         logger.info("Finished parsing.")
 
         self.load_bindings()
-        for g in [self.graph, self.testgraph]:
-            Assoc().loadAllProperties(g)
 
         return
 
@@ -347,7 +337,7 @@ class ZFIN(Source):
         return type
 
     def _process_g2p(self, limit=None):
-        '''
+        """
         This module currently filters for only wild-type environments, which clearly excludes application
         of morpholinos.  Very stringent filter.  To be updated at a later time.
         :param raw:
@@ -355,7 +345,7 @@ class ZFIN(Source):
         :param g:
         :param limit:
         :return:
-        '''
+        """
         logger.info("Processing G2P")
         line_counter = 0
         if self.testMode:
@@ -431,6 +421,8 @@ class ZFIN(Source):
         logger.info("%d phenotype-sextuples were mapped",len(myset))
         myset = set([','.join(x) for x in missing_zpids])
         logger.warn("The following %d phenotype-sextuples were not mapped:\n,%s",len(myset),str(myset))
+
+        Assoc().loadAllProperties(g)
 
         return
 
@@ -1021,3 +1013,11 @@ class ZFIN(Source):
     def _make_zpkey(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
         key = self.make_id(('_').join((superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier)))
         return key
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_zfin import ZFINTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(ZFINTestCase)
+
+        return test_suite
