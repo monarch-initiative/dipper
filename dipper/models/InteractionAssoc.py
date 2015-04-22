@@ -9,15 +9,15 @@ from dipper import curie_map
 class InteractionAssoc(Assoc):
 
     rel = {
-        'genetically_interacts_with' : 'RO:0002435',
-        'interacts_with' : 'RO:0002434',  #use this for directly interacts with.  better choice? psi-mi:"MI:0407"(direct interaction)
-        'molecularly_interacts_with' : 'RO:0002436',  #should we use this instead for direct interaction?
-        'colocalizes_with' : 'RO:0002325', #psi-mi:"MI:0403"(colocalization)
-        'ubiquitinates' : 'RO:0002480'
+        'genetically_interacts_with': 'RO:0002435',
+        'interacts_with': 'RO:0002434',  # using for directly interacts with.  better choice? psi-mi:"MI:0407"
+        'molecularly_interacts_with': 'RO:0002436',  # should we use this instead for direct interaction?
+        'colocalizes_with': 'RO:0002325',  # psi-mi:"MI:0403"(colocalization)
+        'ubiquitinates': 'RO:0002480'
     }
 
-    def __init__(self,assoc_id, subj, obj, pub, evidence_code):
-        super()
+    def __init__(self, assoc_id, subj, obj, pub, evidence_code):
+        super().__init__()
         self.object_properties.update(self.rel)
         self.properties.update(self.rel)
         self.cu = CurieUtil(curie_map.get())
@@ -34,14 +34,12 @@ class InteractionAssoc(Assoc):
         self.setSubject(subj)
         self.setObject(obj)
 
-
         return
 
-    def addInteractionAssociationToGraph(self,g):
+    def addInteractionAssociationToGraph(self, g):
 
         self.addAssociationToGraph(g)
 
-        #todo add some other stuff related to the experimental methods?
+        # todo add some other stuff related to the experimental methods?
 
         return
-

@@ -19,13 +19,13 @@ Note: This has been modified to add optional characters after the initial roman 
 
 import re
 
-#Define exceptions
+# Define exceptions
 class RomanError(Exception): pass
 class OutOfRangeError(RomanError): pass
 class NotIntegerError(RomanError): pass
 class InvalidRomanNumeralError(RomanError): pass
 
-#Define digit mapping
+# Define digit mapping
 romanNumeralMap = (('M',  1000),
                    ('CM', 900),
                    ('D',  500),
@@ -39,6 +39,7 @@ romanNumeralMap = (('M',  1000),
                    ('V',  5),
                    ('IV', 4),
                    ('I',  1))
+
 
 def toRoman(n):
     """convert integer to Roman numeral"""
@@ -54,7 +55,8 @@ def toRoman(n):
             n -= integer
     return result
 
-#Define pattern to detect valid Roman numerals
+
+# Define pattern to detect valid Roman numerals
 romanNumeralPattern = re.compile("""
     ^                   # beginning of string
     M{0,4}              # thousands - 0 to 4 M's
@@ -66,7 +68,8 @@ romanNumeralPattern = re.compile("""
                         #        or 5-8 (V, followed by 0 to 3 I's)
     [A-Z]               # optional suffix letter, but don't retain <-- differs from original roman.py
     $                   # end of string
-    """ ,re.VERBOSE)
+    """, re.VERBOSE)
+
 
 def fromRoman(s):
     """convert Roman numeral to integer"""

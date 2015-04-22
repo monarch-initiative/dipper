@@ -6,14 +6,14 @@ from dipper import curie_map
 
 
 class G2PAssoc(Assoc):
-    '''
+    """
     A specific association class for defining Genotype-to-Phenotype relationships
     This assumes that a graph is created outside of this class, and nodes get added.
     By default, an association will assume the "has_phenotype" relationship, unless
     otherwise specified.
     Note that genotypes are expected to be created and defined outside of this association,
     most likely by calling methods in the Genotype() class.
-    '''
+    """
 
     def __init__(self, assoc_id, entity_id, phenotype_id, pub, evidence_code):
         super().__init__()
@@ -41,7 +41,7 @@ class G2PAssoc(Assoc):
         return
 
     def addAssociationNodeToGraph(self, g):
-        '''
+        """
         The reified relationship between a genotype (or any genotype part) and a phenotype
         is decorated with some provenance information.
         This makes the assumption that both the genotype and phenotype are classes.
@@ -49,13 +49,12 @@ class G2PAssoc(Assoc):
         currently hardcoded to map the annotation to the monarch namespace
         :param g:
         :return:
-        '''
+        """
 
         self.addAssociationToGraph(g)
 
-        #TODO add staging information here
+        # TODO add staging information here
         #if (self.start_stage_id is not None):
         #    g.add((node, self.BASE['during'], URIRef(self.cu.get_uri(self.start_stage_id))))
 
         return g
-

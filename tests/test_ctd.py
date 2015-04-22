@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 from dipper.sources.CTD import CTD
-from dipper import curie_map
-from rdflib import Graph
+from tests.test_source import SourceTestCase
 
 import unittest
 import logging
@@ -11,39 +10,29 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class InteractionsTestCase(unittest.TestCase):
-
+class CTDTestCase(SourceTestCase):
     def setUp(self):
-        self.graph = Graph()
-        self.curie_map = curie_map.get()
-        self.ctd = CTD()
-        self.ctd.graph = Graph()
-
-        row1 = ['06-Paris-LA-66 protocol', 'C046983', 'foo',
-               'Precursor Cell Lymphoblastic Leukemia-Lymphoma',
-               'MESH:D054198', 'therapeutic', 'bar', 'baz', 'foo', '4519131']
-        row2 = ['10,10-bis(4-pyridinylmethyl)-9(10H)-anthracenone',
-                'C112297', 'foo', 'Hyperkinesis', 'MESH:D006948',
-                'marker/mechanism', 'bar', 'baz', 'foo', '19098162']
-
-        pub_map = {}
-        self.ctd._process_interactions(row1, pub_map)
-        self.ctd._process_interactions(row2, pub_map)
+        self.source = CTD()
+        self.source.settestonly(True)
+        self._setDirToSource()
+        return
 
     def tearDown(self):
-        self.ctd.graph = None
-        self.ctd = None
+        self.source = None
+        return
+
 
     def test_therapeutic_relationship(self):
         from dipper.utils.TestUtils import TestUtils
-        from dipper.utils.CurieUtil import CurieUtil
-        from rdflib.namespace import URIRef
+        from dipper.utils.GraphUtils import GraphUtils
+        from dipper import curie_map
 
-        # Make testutils object and load bindings
-        test_query = TestUtils(self.ctd.graph)
-        self.ctd.load_bindings()
+        # Make testutils object and load ttl
+        test_query = TestUtils(self.source.graph)
+        test_query.load_testgraph_from_turtle(self.source)
 
         # Expected structure
+        # TODO can this be unified OBAN and the Annot models to be automatically generated?
         sparql_query = """
                        SELECT ?assoc ?pubmed ?disease ?chemical
                        WHERE {
@@ -56,25 +45,36 @@ class InteractionsTestCase(unittest.TestCase):
                        """
 
         # SPARQL variables to check
-        cu = CurieUtil(self.curie_map)
+        gu = GraphUtils(curie_map.get())
         direct_evidence = 'therapeutic'
-        chem_id = 'MESH:C046983'
-        chem_uri = URIRef(cu.get_uri(chem_id))
-        disease_id = 'MESH:D054198'
-        disease_uri = URIRef(cu.get_uri(disease_id))
-        assoc_id = self.ctd.make_id('ctd' + chem_id.replace('MESH:', '')
+        chem_id = 'MESH:D009538'
+        chem_uri = gu.getNode(chem_id)
+        disease_id = 'OMIM:188890'
+        disease_uri = gu.getNode(disease_id)
+        # consider replacing with make_ctd_chem_disease_assoc_id()
+        assoc_id = self.source.make_id('ctd' + chem_id.replace('MESH:', '') #MONARCH_ed73d862405982b83a9a016c2b02ba71
                                     + disease_id + direct_evidence)
-        assoc_uri = URIRef(cu.get_uri(assoc_id))
-        pubmed_id = 'PMID:4519131'
-        pubmed_uri = URIRef(cu.get_uri(pubmed_id))
+        assoc_uri = gu.getNode(assoc_id)
+        pubmed_id = 'PMID:16785264'
+        pubmed_uri = gu.getNode(pubmed_id)
 
-        # Expected output from query
-        expected_output = [[assoc_uri, pubmed_uri, disease_uri, chem_uri]]
+        # One of the expected outputs from query
+        expected_output = [assoc_uri, pubmed_uri, disease_uri, chem_uri]
 
         # Query graph
         sparql_output = test_query.query_graph(sparql_query)
 
-        self.assertEqual(expected_output, sparql_output)
+        self.assertTrue(expected_output in sparql_output, "did not find expected association: "+assoc_id)
+
+        logger.info("Test query data finished.")
+
+    # OTHER CTD-SPECIFIC TESTS GO HERE
+    # @unittest.skip('CTD-specific tests not yet defined')
+    # def test_ctd(self):
+    #    logger.info("A CTD-specific test")
+    #
+    #    return
+
 
 if __name__ == '__main__':
     unittest.main()
