@@ -1,6 +1,7 @@
 import csv
 import os
 from datetime import datetime
+import logging
 import re
 
 from dipper.sources.Source import Source
@@ -12,6 +13,8 @@ from dipper.utils import CurieUtil
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+
+logger = logging.getLogger(__name__)
 
 
 class MGI(Source):
@@ -104,10 +107,10 @@ class MGI(Source):
 
         # check if config exists; if it doesn't, error out and let user know
         if (not (('dbauth' in config.get_config()) and ('mgi' in config.get_config()['dbauth']))):
-            print("ERROR: not configured with PG user/password.")
+            logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.
-        print("WARN: we are ignoring normal phenotypes for now")
+        logger.warn("we are ignoring normal phenotypes for now")
 
         # Set this flag to False for normal running
         self.testMode = True
@@ -173,8 +176,8 @@ class MGI(Source):
         :return:
         """
         if (limit is not None):
-            print("Only parsing first", limit, "rows of each file")
-        print("Parsing files...")
+            logger.info("Only parsing first %d rows of each file", limit)
+        logger.info("Parsing files...")
 
         loops = [True]
         if not self.testOnly:
@@ -205,7 +208,7 @@ class MGI(Source):
             self._process_voc_evidence_view(limit)
             self._process_mgi_note_vocevidence_view(limit)
 
-        print("Finished parsing.")
+        logger.info("Finished parsing.")
 
         #TODO generate report of internal identifiers we created (eg for strains)
 
@@ -213,7 +216,7 @@ class MGI(Source):
         for g in [self.graph,self.testgraph]:
             Assoc().loadAllProperties(g)
 
-        print("Loaded", len(self.graph), "nodes")
+        logger.info("Loaded %d nodes", len(self.graph))
         return
 
 
@@ -245,7 +248,7 @@ class MGI(Source):
 
         geno = Genotype(g)
         raw = ('/').join((self.rawdir, 'gxd_genotype_view'))
-        print("INFO: getting genotypes and their backgrounds")
+        logger.info("getting genotypes and their backgrounds")
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
             for line in f1:
@@ -269,7 +272,7 @@ class MGI(Source):
                 if (strain_id is None):
                     # some of the strains don't have public identifiers!
                     # so we make one up, and add it to the hash
-                    print("WARN: adding background as internal id:", strain_key, strain)
+                    logger.warn("adding background as internal id: %s %s", strain_key, strain)
                     strain_id = ':'+self._makeInternalIdentifier('strain', strain_key)
                     # add it back to the idhash
                     self.idhash['strain'].update({strain_key : strain_id})
@@ -305,7 +308,7 @@ class MGI(Source):
         line_counter = 0
         geno_hash = {}
         raw = ('/').join((self.rawdir,'gxd_genotype_summary_view'))
-        print("INFO: building labels for genotypes")
+        logger.info("building labels for genotypes")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -369,7 +372,7 @@ class MGI(Source):
             g=self.graph
         line_counter = 0
         raw = ('/').join((self.rawdir,'all_summary_view'))
-        print("INFO: getting alleles and their labels and descriptions")
+        logger.info("getting alleles and their labels and descriptions")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -434,7 +437,7 @@ class MGI(Source):
 
         geno = Genotype(g)
         line_counter = 0
-        print("INFO: adding alleles, mapping to markers, extracting their sequence alterations")
+        logger.info("adding alleles, mapping to markers, extracting their sequence alterations")
         raw = ('/').join((self.rawdir,'all_allele_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -452,14 +455,14 @@ class MGI(Source):
 
                 allele_id = self.idhash['allele'].get(allele_key)
                 if (allele_id is None):
-                    print("ERROR: what to do! can't find allele_id. skipping",allele_key,symbol)
+                    logger.error("what to do! can't find allele_id. skipping %s %s", allele_key, symbol)
                     continue
 
                 if (marker_key is not None) and (marker_key != ''):
                     #we make the assumption here that the markers have already been added to the table
                     marker_id = self.idhash['marker'].get(marker_key)
                     if (marker_id is None):
-                        print("ERROR: what to do! can't find marker_id. skipping",marker_key,symbol)
+                        logger.error("what to do! can't find marker_id. skipping %s %s",marker_key,symbol)
                         continue
 
                 strain_id = self.idhash['strain'].get(strain_key)
@@ -494,13 +497,10 @@ class MGI(Source):
                     if marker_key is not None and marker_key != '':
                         #sequence alteration has label reformatted(symbol)
                         if re.match(".*<.*>.*", symbol):
-                            #print(sa_label)
                             sa_label = re.sub(".*<", "<", symbol)
-                            #print(sa_label)
                         elif re.match("\+", symbol):
                             #TODO: Check to see if this is the proper handling, as while symbol is just +, marker symbol has entries without any <+>.
                             sa_label = '<+>'
-                            #print(sa_label)
                         geno.addSequenceAlterationToVariantLocus(iseqalt_id,allele_id)
                     else:
                         #make the sequence alteration == allele
@@ -542,7 +542,7 @@ class MGI(Source):
         line_counter = 0
         geno = Genotype(g)
         raw = ('/').join((self.rawdir,'gxd_allelepair_view'))
-        print("INFO: processing allele pairs (VSLCs) for genotypes")
+        logger.info("processing allele pairs (VSLCs) for genotypes")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -562,7 +562,7 @@ class MGI(Source):
                 genotype_id = self.idhash['genotype'].get(genotype_key)
 
                 if genotype_id is None:
-                    print("ERROR: genotype_id not found for key",genotype_key,"; skipping")
+                    logger.error("genotype_id not found for key %s; skipping", genotype_key)
                     continue
 
                 allele1_id = self.idhash['allele'].get(allele_key_1)
@@ -579,7 +579,7 @@ class MGI(Source):
                 #FIXME: handle null alleles
                 vslc_label = (allele1+'/'+allele2)
 
-                gu.addIndividualToGraph(g,ivslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
+                gu.addIndividualToGraph(g, ivslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
                 geno.addVSLCtoParent(ivslc_id,genotype_id)
                 geno.addPartsToVSLC(ivslc_id,allele1_id,allele2_id,zygosity_id)
 
@@ -606,7 +606,7 @@ class MGI(Source):
 
         line_counter = 0
         raw = ('/').join((self.rawdir,'all_allele_mutation_view'))
-        print("INFO: getting mutation types for sequence alterations")
+        logger.info("getting mutation types for sequence alterations")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -655,7 +655,7 @@ class MGI(Source):
         else:
             g=self.graph
         line_counter = 0
-        print("INFO: getting G2P associations")
+        logger.info("getting G2P associations")
         raw = ('/').join((self.rawdir,'voc_annot_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -676,7 +676,7 @@ class MGI(Source):
                     #TODO add NOT annotations
                     #skip 'normal'
                     if (qualifier=='norm'):
-                        print("INFO: found normal phenotype:",term)
+                        logger.info("found normal phenotype: %s",term)
                         continue
 
                     # We expect the label for the phenotype to be taken care of elsewhere
@@ -688,7 +688,7 @@ class MGI(Source):
                     self.idhash['annot'][annot_key] = assoc_id
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if (genotype_id is None):
-                        print("ERROR: can't find genotype id for",object_key)
+                        logger.error("can't find genotype id for %s",object_key)
                     else:
                         #add the association
                         assoc = G2PAssoc(assoc_id,genotype_id,accid,None,None)
@@ -724,7 +724,7 @@ class MGI(Source):
             g=self.graph
 
         line_counter = 0
-        print("INFO: getting evidence and pubs for annotations")
+        logger.info("getting evidence and pubs for annotations")
         raw = ('/').join((self.rawdir,'voc_evidence_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -786,7 +786,7 @@ class MGI(Source):
         #TODO we may consider limiting the publication nodes
         #firstpass, get the J number mapping, and add to the global hash
         line_counter = 0
-        print('INFO: populating pub id hash')
+        logger.info('populating pub id hash')
         raw = ('/').join((self.rawdir,'bib_acc_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -812,7 +812,7 @@ class MGI(Source):
 
 
         #2nd pass, look up the MGI identifier in the hash
-        print("INFO: getting pub equivalent ids")
+        logger.info("getting pub equivalent ids")
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -851,7 +851,7 @@ class MGI(Source):
                     gu.addIndividualToGraph(g,pub_id,None)
                     gu.addSameIndividual(g,jid,pub_id)
                 else:
-                    print("WARN: Publication from (", logical_db, ") not mapped for",object_key)
+                    logger.warn("Publication from (%s) not mapped for %s", logical_db, object_key)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -882,7 +882,7 @@ class MGI(Source):
         line_counter = 0
         geno = Genotype(g)
         raw = ('/').join((self.rawdir,'prb_strain_view'))
-        print("INFO: getting strains and adding their taxa")
+        logger.info("getting strains and adding their taxa")
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -942,7 +942,7 @@ class MGI(Source):
         geno = Genotype(g)
         line_counter = 0
         raw = ('/').join((self.rawdir,'mrk_marker_view'))
-        print("INFO: getting markers and assigning types")
+        logger.info("getting markers and assigning types")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -965,7 +965,7 @@ class MGI(Source):
                         continue
 
                     if (marker_id is None):
-                        print("ERROR: can't find",marker_key,symbol,"in the id hash")
+                        logger.error("can't find %s %s in the id hash", marker_key, symbol)
 
                     mapped_marker_type = self._map_marker_type(marker_type)
 
@@ -1004,7 +1004,7 @@ class MGI(Source):
             g=self.testgraph
         else:
             g=self.graph
-        print("INFO: getting markers and equivalent ids from mrk_summary_view")
+        logger.info("getting markers and equivalent ids from mrk_summary_view")
         line_counter = 0
         raw = ('/').join((self.rawdir,'mrk_summary_view'))
         with open(raw, 'r') as f:
@@ -1024,7 +1024,7 @@ class MGI(Source):
                     if self.idhash['marker'].get(object_key) is None:
                         #can't find the marker in the hash; add it here:
                         self.idhash['marker'][object_key] = mgiid
-                        print("ERROR: this marker hasn't been seen before",mgiid,short_description)
+                        logger.error("this marker hasn't been seen before %s %s",mgiid,short_description)
 
 
                     if (accid == mgiid):
@@ -1084,7 +1084,7 @@ class MGI(Source):
 
         #make a pass through the table first, to create the mapping between the external and internal identifiers
         line_counter = 0
-        print("INFO: mapping markers to internal identifiers")
+        logger.info("mapping markers to internal identifiers")
         raw = ('/').join((self.rawdir,'mrk_acc_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1118,7 +1118,7 @@ class MGI(Source):
         #pass through the file again, and make the equivalence statements to a subset of the idspaces.
         #TODO verify the difference between what the mrk_acc_view vs mrk_summary_view buys us here.
         #if nothing, then we should remove one or the other.
-        print("INFO: mapping marker equivalent identifiers in mrk_acc_view")
+        logger.info("mapping marker equivalent identifiers in mrk_acc_view")
         line_counter = 0
         with open(('/').join((self.rawdir,'mrk_acc_view')), 'r') as f:
             f.readline()  # read the header row; skip
@@ -1138,7 +1138,7 @@ class MGI(Source):
                 mgiid = self.idhash['marker'].get(object_key)
                 if (mgiid is None):
                     #presumably we've already added the relevant MGI ids already, so skip those that we can't find
-                    #print("INFO:can't find mgiid for",object_key)
+                    logger.debug("can't find mgiid for %s",object_key)
                     continue
                 marker_id = None
                 if (preferred == '1'):  #what does it mean if it's 0?
@@ -1159,7 +1159,7 @@ class MGI(Source):
                         gu.addIndividualToGraph(g,marker_id,None)
                         gu.addSameIndividual(g,mgiid,marker_id)
                     else:
-                        print("ERROR: mgiid not in class or indiv hash",mgiid)
+                        logger.error("mgiid not in class or indiv hash %s",mgiid)
 
 
 
@@ -1190,7 +1190,7 @@ class MGI(Source):
             g=self.graph
 
         geno = Genotype(g)
-        print("INFO: mapping strains to internal identifiers")
+        logger.info("mapping strains to internal identifiers")
         raw = ('/').join((self.rawdir,'prb_strain_acc_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1209,7 +1209,7 @@ class MGI(Source):
                     gu.addIndividualToGraph(g,accid,None,geno.genoparts['intrinsic_genotype'])
 
         #pass through the file again, and make the equivalence statements to a subset of the idspaces
-        print("INFO: mapping strain equivalent identifiers")
+        logger.info("mapping strain equivalent identifiers")
         line_counter = 0
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1227,7 +1227,7 @@ class MGI(Source):
                 mgiid = self.idhash['strain'].get(object_key)
                 if (mgiid is None):
                     #presumably we've already added the relevant MGI ids already, so skip those that we can't find
-                    #print("INFO:can't find mgiid for",object_key)
+                    #logger.info("can't find mgiid for %s",object_key)
                     continue
                 strain_id = None
                 if (preferred == '1'):  #what does it mean if it's 0?
@@ -1262,7 +1262,7 @@ class MGI(Source):
             g=self.testgraph
         else:
             g=self.graph
-        print("INFO: getting free text descriptions for annotations")
+        logger.info("getting free text descriptions for annotations")
         raw = ('/').join((self.rawdir,'mgi_note_vocevidence_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1339,10 +1339,9 @@ class MGI(Source):
     #TODO generalize this to a set of utils
     def _getcols(self,cur,table):
         query=(' ').join(("SELECT * FROM",table,"LIMIT 0"))  #for testing
-        #print("COMMAND:",query)
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
-        print("COLS ("+table+"):",colnames)
+        logger.info("columns ("+table+"):",colnames)
 
         return
 
@@ -1380,7 +1379,7 @@ class MGI(Source):
             type = type_map.get(sequence_alteration_type.strip())
         else:
             # TODO add logging
-            print("ERROR: Sequence Alteration Type (", sequence_alteration_type, ") not mapped; defaulting to sequence_alteration")
+            logger.error("Sequence Alteration Type (%s) not mapped; defaulting to sequence_alteration", sequence_alteration_type)
 
         return type
 
@@ -1400,7 +1399,7 @@ class MGI(Source):
         if (zygosity.strip() in type_map):
             type = type_map.get(zygosity)
         else:
-            print("ERROR: Zygosity (", zygosity, ") not mapped")
+            logger.error("Zygosity (%s) not mapped", zygosity)
 
         return type
 
@@ -1420,7 +1419,7 @@ class MGI(Source):
         if (marker_type.strip() in type_map):
             type = type_map.get(marker_type)
         else:
-            print("ERROR: Marker Type (", marker_type, ") not mapped")
+            logger.error("Marker Type (%s) not mapped", marker_type)
 
         return type
 
@@ -1477,7 +1476,7 @@ class MGI(Source):
         if (taxon_name.strip() in type_map):
             type = type_map.get(taxon_name)
         else:
-            print("ERROR: Taxon Name (", taxon_name, ") not mapped")
+            logger.error("Taxon Name (%s) not mapped", taxon_name)
 
         return type
 
@@ -1651,7 +1650,7 @@ class MGI(Source):
             tax = id_map.get(species.strip())
 
         else:
-            print("WARN: Species (", species, ") not mapped; defaulting to Mus genus.")
+            logger.warn("Species (%s) not mapped; defaulting to Mus genus.", species)
 
         return 'NCBITaxon:'+tax
 
@@ -1683,7 +1682,7 @@ class MGI(Source):
         if (evidence_code.strip() in type_map):
             type = type_map.get(evidence_code)
         else:
-            print("ERROR: Evidence code (", evidence_code, ") not mapped")
+            logger.error("Evidence code (%s) not mapped", evidence_code)
 
         return type
 
@@ -1755,3 +1754,13 @@ class MGI(Source):
     #         print("%s knows %s" % row)
     #
     #     return
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_mgi import MGITestCase
+        #TODO test genotypes
+        #from tests.test_genotypes import GenotypeTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(MGITestCase)
+
+        return test_suite
