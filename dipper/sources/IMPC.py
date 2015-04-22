@@ -40,7 +40,8 @@ class IMPC(Source):
 
         #update the dataset object with details about this resource
         #TODO put this into a conf file?
-        self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org',None,'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
+        self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org', None,
+                               'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
 
         #source-specific warnings.  will be cleared when resolved.
         #print("WARN: we are filtering G2P on the wild-type environment data for now")

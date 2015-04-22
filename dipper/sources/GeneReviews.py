@@ -35,7 +35,8 @@ class GeneReviews(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',None,'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
+        self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',
+                               None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
 
         # data-source specific warnings (will be removed when issues are cleared)
 

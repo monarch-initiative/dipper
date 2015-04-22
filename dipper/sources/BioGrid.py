@@ -45,7 +45,8 @@ class BioGrid(Source):
         self.tax_ids = tax_ids
         self.load_bindings()
 
-        self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/',None,'http://wiki.thebiogrid.org/doku.php/terms_and_conditions')
+        self.dataset = Dataset('biogrid', 'The BioGrid', 'http://thebiogrid.org/', None,
+                               'http://wiki.thebiogrid.org/doku.php/terms_and_conditions')
 
         # Defaults
         # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals

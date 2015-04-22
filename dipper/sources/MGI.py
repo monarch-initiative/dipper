@@ -368,27 +368,29 @@ class MGI(Source):
 
         gu = GraphUtils(curie_map.get())
         if self.testMode:
-            g=self.testgraph
+            g = self.testgraph
         else:
-            g=self.graph
+            g = self.graph
         line_counter = 0
-        raw = ('/').join((self.rawdir,'all_summary_view'))
+        raw = '/'.join((self.rawdir,'all_summary_view'))
         logger.info("getting alleles and their labels and descriptions")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
 
-                (accession_key,accid,prefixpart,numericpart,logicaldb_key,object_key,mgitype_key,private,preferred,
-                 createdby_key,modifiedby_key,creation_date,modification_date,mgiid,subtype,description,short_description) = line.split('\t')
-                #NOTE:May want to filter alleles based on the preferred field (preferred = 1) or will get duplicates
-                ## (24288, to be exact... Reduced to 480 if filtered on preferred = 1)
+                (accession_key, accid, prefixpart, numericpart, logicaldb_key, object_key, mgitype_key,
+                 private,preferred,
+                 createdby_key, modifiedby_key, creation_date, modification_date, mgiid, subtype,
+                 description, short_description) = line.split('\t')
+                # NOTE:May want to filter alleles based on the preferred field (preferred = 1) or will get duplicates
+                # (24288, to be exact... Reduced to 480 if filtered on preferred = 1)
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('allele'):
                         continue
 
-                #we are setting the allele type to None, so that we can add the type later
+                # we are setting the allele type to None, so that we can add the type later
                 # (since we don't actually know if it's a reference or altered allele)
                 altype = None  #temporary; we'll assign the type later
 

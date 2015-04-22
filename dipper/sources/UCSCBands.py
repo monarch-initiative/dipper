@@ -69,7 +69,8 @@ class UCSCBands(Source):
 
         self._check_tax_ids()
 
-        self.dataset = Dataset('ucscbands', 'UCSC Cytogenic Bands', 'http://hgdownload.cse.ucsc.edu',None,'http://genome.ucsc.edu/license/')
+        self.dataset = Dataset('ucscbands', 'UCSC Cytogenic Bands', 'http://hgdownload.cse.ucsc.edu',
+                               None, 'http://genome.ucsc.edu/license/')
 
         # data-source specific warnings (will be removed when issues are cleared)
 

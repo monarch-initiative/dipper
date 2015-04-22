@@ -74,7 +74,10 @@ class NCBIGene(Source):
         self.filter = 'taxids'
         self.load_bindings()
 
-        self.dataset = Dataset('ncbigene', 'National Center for Biotechnology Information', 'http://ncbi.nih.nlm.gov/gene',None,'http://www.ncbi.nlm.nih.gov/About/disclaimer.html','https://creativecommons.org/publicdomain/mark/1.0/')
+        self.dataset = Dataset('ncbigene', 'National Center for Biotechnology Information',
+                               'http://ncbi.nih.nlm.gov/gene', None,
+                               'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
+                               'https://creativecommons.org/publicdomain/mark/1.0/')
         # data-source specific warnings (will be removed when issues are cleared)
 
         # Defaults

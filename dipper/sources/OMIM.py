@@ -68,7 +68,8 @@ class OMIM(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('omim', 'Online Mendelian Inheritance in Man', 'http://www.omim.org',None,'http://omim.org/help/agreement')
+        self.dataset = Dataset('omim', 'Online Mendelian Inheritance in Man', 'http://www.omim.org',
+                               None, 'http://omim.org/help/agreement')
 
         # data-source specific warnings (will be removed when issues are cleared)
 

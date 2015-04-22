@@ -75,7 +75,7 @@ class Coriell(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/',None)
+        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/', None)
 
         # data-source specific warnings (will be removed when issues are cleared)
 
