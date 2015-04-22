@@ -1285,6 +1285,17 @@ class ZFIN(Source):
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
                 # includes the zfin ID instead of a GENO ID for those environments.
 
+                # Clean up the units
+                if units == 'N/A' or units == '':
+                    units = None
+
+                # Clean up the values
+                if values == '' or values == 'N/A':
+                    values = None
+
+                if comment == 'NULL':
+                    comment = None
+
                 #Use this regex match if using all knockdown reagents.
                 #if re.match('ZDB.*',condition):
                 #Use this regex match if using only morpholino knockdown reagents.
@@ -1295,14 +1306,12 @@ class ZFIN(Source):
                     geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
 
                     # Clean up the units
-                    if units == 'N/A':
-                        units = None
                     if units is not None and re.match('.*\/.*',units):
                         units = re.sub(r"/",'_',units)
 
 
                     # Clean up the values
-                    if values == '':
+                    if values == '' or values == 'N/A':
                         values = None
                     if values is not None:
                         values = values.replace(' ', '_')
@@ -1312,9 +1321,6 @@ class ZFIN(Source):
 
                     #if units is not None and values is not None:
                         #print(values+units)
-
-                    if comment is 'NULL':
-                        comment = None
 
                     #Create the targeted sequence id
                     if units is not None and values is not None:
@@ -1375,15 +1381,30 @@ class ZFIN(Source):
                     #except KeyError:
                         #extrinsic_parts[enviro_con] = [condition]
                 #FIXME: Can remove this if we don't want to deal with any other abnormal environments.
-                #elif not re.match('ZDB.*',condition):
+                elif not re.match('ZDB.*',condition):
                     #FIXME:Need to adjust label for non-knockdown reagent environments
 
-                    #if values is not None and units is not None:
-                        #enviro_label = condition_group+'['+condition+': '+values+units+']'
-                    #elif values is None and units is not None:
-                        #enviro_label = condition_group+'['+condition+': '+units+']'
-                    #elif values is not None and units is None:
-                        #enviro_label = condition_group+'['+condition+': '+values+']'
+                    if values is not None and units is not None and comment is not None:
+                        enviro_label = condition_group+'['+condition+': '+values+units+' ('+comment+')]'
+                    elif values is not None and units is not None and comment is None:
+                        enviro_label = condition_group+'['+condition+': '+values+units+']'
+                    elif values is not None and units is None and comment is not None:
+                        enviro_label = condition_group+'['+condition+': '+values+' ('+comment+')]'
+                    elif values is not None and units is None and comment is None:
+                        enviro_label = condition_group+'['+condition+': '+values+']'
+                    elif values is None and units is None and comment is None:
+                        enviro_label = condition_group+'['+condition+']'
+                    elif values is None and units is None and comment is not None:
+                        enviro_label = condition_group+'['+condition+' ('+comment+')]'
+                    elif values is None and units is not None and comment is None:
+                        enviro_label = condition_group+'['+condition+': '+units+']'
+                    elif values is None and units is not None and comment is not None:
+                        enviro_label = condition_group+'['+condition+': '+units+' ('+comment+')]'
+                    else:
+                        logger.warn('No environment label created for environment %s.', environment_id)
+                        #enviro_label = '<empty>'
+                        enviro_label = ''
+                    #print(enviro_label)
 
 
 
