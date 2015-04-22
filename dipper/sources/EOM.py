@@ -51,7 +51,9 @@ class EOM(Source):
 
         # update the dataset object with details about this resource
         # TODO put this into a conf file?
-        self.dataset = Dataset('eom', 'EOM', 'http://elementsofmorphology.nih.gov')
+        self.dataset = Dataset('eom', 'EOM', 'http://elementsofmorphology.nih.gov', None, 
+                               'http://www.genome.gov/copyright.cfm',
+                               'https://creativecommons.org/publicdomain/mark/1.0/')
 
         # check if config exists; if it doesn't, error out and let user know
         if 'dbauth' not in config.get_config() and 'disco' not in config.get_config()['dbauth']:

@@ -62,7 +62,7 @@ class HPOAnnotations(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org')
+        self.dataset = Dataset('hpoa', 'Human Phenotype Ontology', 'http://www.human-phenotype-ontology.org',None,'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
 
         if (not (('test_ids' in config.get_config()) and ('disease' in config.get_config()['test_ids']))):
             print("WARN: not configured with gene test ids.")

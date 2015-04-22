@@ -44,8 +44,9 @@ class Panther(Source):
         self.tax_ids = tax_ids
         self.load_bindings()
 
-        self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships',
-                               'http://pantherdb.org/')
+        self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships', 
+                               'http://pantherdb.org/', None,
+                               'http://www.pantherdb.org/terms/disclaimer.jsp')
 
         # Defaults
         if self.tax_ids is None:

@@ -112,7 +112,7 @@ class ZFIN(Source):
 
         # update the dataset object with details about this resource
         #TODO put this into a conf file?
-        self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org')
+        self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org',None,'http://zfin.org/warranty.html')
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("We are filtering G2P on the wild-type environment data for now")

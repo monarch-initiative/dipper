@@ -48,7 +48,7 @@ class CTD(Source):
 
     def __init__(self):
         Source.__init__(self, 'ctd')
-        self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org')
+        self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org',None,'http://ctdbase.org/about/legal.jsp')
 
         if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
             print("WARN: not configured with gene test ids.")
