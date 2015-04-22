@@ -111,8 +111,9 @@ class ZFIN(Source):
         self._load_zp_mappings()
         self.kd_reagent_hash = {'kd_reagent_id' : {}, 'kd_reagent_label' : {}, 'gene_label' : {}}
         self.wildtype_hash = {'id' : {}, 'symbol' : {}}
-        self.label_hash = {'gene_label' : {}, 'allele_label' : {}, 'construct_label' : {}, 'genotype_label' : {}, 'background_label' : {}}
+        self.label_hash = {'gene_label' : {}, 'allele_label' : {}, 'construct_label' : {}, 'genotype_label' : {}, 'background_label' : {}, 'morpholino_label' : {}}
         self.genotype_id_to_background_id_hash = {'genotype_id' : {}}
+        self.extrinsic_id_to_enviro_id_hash = {'extrinsic_id' : {}}
 
         #These must be processed in a specific order
         self._process_wildtypes(limit) # Must be processed before wildtype_expression
@@ -130,18 +131,18 @@ class ZFIN(Source):
         self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
 
-        #self._process_wildtype_expression(limit)
+        self._process_wildtype_expression(limit)
 
-        #self._process_gene_marker_relationships(limit)
-        #self._process_features(limit)
-        #self._process_genes(limit)
-        #self._process_genbank_ids(limit)
-        #self._process_uniprot_ids(limit)
-        #self._process_human_orthos(limit)
+        self._process_gene_marker_relationships(limit)
+        self._process_features(limit)
+        self._process_genes(limit)
+        self._process_genbank_ids(limit)
+        self._process_uniprot_ids(limit)
+        self._process_human_orthos(limit)
         #self._process_anatomy(limit)
         #self._process_stages(limit)
-        #self._process_pubinfo(limit)
-        #self._process_pub2pubmed(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
 
 
         logger.info("Finished parsing.")
@@ -778,7 +779,7 @@ class ZFIN(Source):
                     effective_genotype_label = intrinsic_genotype_label
                 else:
                     logger.error('No effective genotype label created.')
-                    effective_genotype_label = '<empty'
+                    effective_genotype_label = '<empty>'
                 #if intrinsic_genotype_label is not None:
                     #print(intrinsic_genotype_label)
                 #print(effective_genotype_label)
@@ -1263,6 +1264,9 @@ class ZFIN(Source):
                 if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
                     self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
 
+                if self.label_hash['morpholino_label'].get(morpholino_id) is None:
+                    self.label_hash['morpholino_label'][morpholino_id] = morpholino_symbol
+
 
                 if (limit is not None and line_counter > limit):
                     break
@@ -1410,6 +1414,7 @@ class ZFIN(Source):
         kd_reagent_conc_hash = {}
         kd_reagent_conc_label_hash= {}
         extrinsic_part_hash = {}
+        enviro_label_hash = {}
         #condition_
         raw = ('/').join((self.rawdir,self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1428,6 +1433,8 @@ class ZFIN(Source):
                 #FIXME: Can the environment serve as the extrinsic genotype ID?
                 # For now, making an ID from environment ID only, but may want to revisit.
                 extrinsic_geno_id = self.make_id(environment_id)
+                self.extrinsic_id_to_enviro_id_hash['extrinsic_id'][extrinsic_geno_id] = environment_id
+
                 geno = Genotype(self.graph)
 
 
@@ -1445,7 +1452,7 @@ class ZFIN(Source):
                 if re.match('ZDB-MRPHLNO.*',condition):
 
                     condition = 'ZFIN:'+condition.strip()
-                    gu.addIndividualToGraph(self.graph,environment_id,condition,gu.datatype_properties['environment'],condition_group)
+                    gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'])
                     geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
 
                     # Clean up the units
@@ -1466,6 +1473,9 @@ class ZFIN(Source):
 
                     #if units is not None and values is not None:
                         #print(values+units)
+
+                    if comment is 'NULL':
+                        comment = None
 
                     #Create the targeted sequence id
                     if units is not None and values is not None:
@@ -1507,13 +1517,8 @@ class ZFIN(Source):
                     if condition not in kd_reagent_conc_label_hash[extrinsic_geno_id]:
                         kd_reagent_conc_label_hash[extrinsic_geno_id][condition] = targeted_gene_subregion_label
 
-
-
-
-
                     #print(kd_reagent_conc_hash[extrinsic_geno_id][condition])
                     #print(kd_reagent_conc_hash[extrinsic_geno_id])
-
 
                     #if condition not in extrinsic_part_hash[extrinsic_geno_id]:
 
@@ -1530,9 +1535,19 @@ class ZFIN(Source):
                             #extrinsic_parts[enviro_con].append(condition)
                     #except KeyError:
                         #extrinsic_parts[enviro_con] = [condition]
-
-                #else:
+                #FIXME: Can remove this if we don't want to deal with any other abnormal environments.
+                #elif not re.match('ZDB.*',condition):
                     #FIXME:Need to adjust label for non-knockdown reagent environments
+
+                    #if values is not None and units is not None:
+                        #enviro_label = condition_group+'['+condition+': '+values+units+']'
+                    #elif values is None and units is not None:
+                        #enviro_label = condition_group+'['+condition+': '+units+']'
+                    #elif values is not None and units is None:
+                        #enviro_label = condition_group+'['+condition+': '+values+']'
+
+
+
                     #Adding this results in additional environmental variables being added to the morpholino environment.
                     #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
@@ -1676,7 +1691,7 @@ class ZFIN(Source):
                 #And should the above additions of genes/alterations/constructs be removed?
                 #FIXME: Output from this looks wrong
                 #Example: faldo:location <http://www.monarchinitiative.org/_ZFIN:ZDB-EST-000426-463Region>
-                #Is that coming from this code or elswehere
+                #Is that coming from this code or elswheere
                 location = location+'_'+metric
                 f = Feature(zfin_id,symbol,so_id)
                 chrom_id = makeChromID(str(chromosome),taxon_num)
