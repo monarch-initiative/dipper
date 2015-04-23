@@ -73,7 +73,7 @@ class Dataset:
         self.graph.add((self.version, DCTERMS['isVersionOf'], self.identifier))
         self.graph.add((self.version, PAV['version'], Literal(version_id)))
 
-        logger.info("setting version to",version_id)
+        logger.info("setting version to %s",version_id)
 
         return
 
