@@ -21,7 +21,6 @@ from dipper import curie_map
 logger = logging.getLogger(__name__)
 
 class ZFIN(Source):
-    # TODO: Enter a description for the resource.
     """
     This is the Zebrafish Model Organism Database (ZFIN), from which we process genotype and phenotype data for laboratory zebrafish.
     Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.
@@ -119,7 +118,7 @@ class ZFIN(Source):
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org',None,'http://zfin.org/warranty.html')
 
         # source-specific warnings.  will be cleared when resolved.
-        logger.warn("We are filtering G2P on the wild-type environment data for now")
+        #logger.warn("We are filtering G2P on the wild-type environment data for now")
 
         return
 
@@ -193,7 +192,7 @@ class ZFIN(Source):
         self._process_genbank_ids(limit)
         self._process_uniprot_ids(limit)
         self._process_human_orthos(limit)
-        self._process_anatomy(limit)
+        #self._process_anatomy(limit)
         self._process_stages(limit)
         self._process_pubinfo(limit)
         self._process_pub2pubmed(limit)
@@ -1059,6 +1058,14 @@ class ZFIN(Source):
         '''
         This will pull the zfin internal publication information, and map them to their equivalent
         pmid, and make labels.
+
+        Triples created:
+        <pub_id> is an individual
+        <pub_id> rdfs:label <pub_label>
+        <pubmed_id> is an individual
+        <pubmed_id> rdfs:label <pub_label>
+
+        <pub_id> sameIndividual <pubmed_id>
         :param raw:
         :param out:
         :param g:
@@ -1102,6 +1109,13 @@ class ZFIN(Source):
         '''
         This will pull the zfin internal publication to pubmed mappings. Somewhat redundant with the
         process_pubinfo method, but this mapping includes additional internal pub to pubmed mappings.
+
+        <pub_id> is an individual
+        <pub_id> rdfs:label <pub_label>
+        <pubmed_id> is an individual
+        <pubmed_id> rdfs:label <pub_label>
+
+        <pub_id> sameIndividual <pubmed_id>
         :param raw:
         :param out:
         :param g:
@@ -1241,7 +1255,16 @@ class ZFIN(Source):
 
     def _process_talens(self, limit=None):
         """
+        TALENs are artificial restriction enzymes that can be used for genome editing in situ.
 
+        Triples created:
+        <talen_id> is a gene_targeting_reagent
+        <talen_id> rdfs:label <talen_symbol>
+        <talen_id> has type <talen_so_id>
+        <talen_id> has comment <note>
+
+        <publication_id> is an individual
+        <publication_id> mentions <talen_id>
         :param limit:
         :return:
         """
@@ -1308,7 +1331,16 @@ class ZFIN(Source):
 
     def _process_crisprs(self, limit=None):
         """
-        CRISPRs are knockdown reagents.
+        CRISPRs are knockdown reagents, working similar to RNAi but at the transcriptional level instead of mRNA level.
+
+        Triples created:
+        <crispr_id> is a gene_targeting_reagent
+        <crispr_id> rdfs:label <crispr_symbol>
+        <crispr_id> has type <crispr_so_id>
+        <crispr_id> has comment <note>
+
+        <publication_id> is an individual
+        <publication_id> mentions <crispr_id>
         :param limit:
         :return:
         """
@@ -1380,6 +1412,8 @@ class ZFIN(Source):
         Condition groups present: chemical, CRISPR, morpholino, pH, physical, physiological, salinity, TALEN,
         temperature, and Generic-control.
         The condition column may contain knockdown reagent IDs or mixed text.
+
+
         :param limit:
         :return:
         """
@@ -1530,6 +1564,54 @@ class ZFIN(Source):
                             #extrinsic_parts[enviro_con].append(condition)
                     #except KeyError:
                         #extrinsic_parts[enviro_con] = [condition]
+
+
+                # Add the TALENs/CRISPRs to the environment but not the extrinsic genotype
+                elif re.match('ZDB.*',condition):
+                    condition = 'ZFIN:'+condition.strip()
+                    gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'])
+
+                    # Clean up the units
+                    if units is not None and re.match('.*\/.*',units):
+                        units = re.sub(r"/",'_',units)
+
+                    # Clean up the values
+                    if values == '' or values == 'N/A':
+                        values = None
+                    if values is not None:
+                        values = values.replace(' ', '_')
+                        #FIXME: Better way to indicate > and < ?
+                        values = values.replace('<', 'less_than_')
+                        values = values.replace('>', 'greater_than_')
+
+                    #if units is not None and values is not None:
+                        #print(values+units)
+
+                    #Create the targeted sequence id
+                    if units is not None and values is not None:
+                        targeted_sequence_id = condition+'_'+values+units
+                        conc_label = '('+values+' '+units+')'
+                    else:
+                        #FIXME: Better way to indicate that the concentration is not provided?
+                        targeted_sequence_id = condition+'_ns'
+                        conc_label = '(n.s.)'
+                    #print(targeted_sequence_id
+
+                    #targeted gene subregion label will come from hash
+                    kd_reagent_label = self.kd_reagent_hash['kd_reagent_label'][condition]
+
+
+                    if comment is None or comment == '':
+                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
+                    else:
+                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+' ('+comment+')]'
+
+                    if environment_id not in enviro_label_hash:
+                        enviro_label_hash[environment_id] = [environment_label]
+                    else:
+                        enviro_label_hash[environment_id].append(environment_label)
+
+
 
                 #FIXME: Can remove this if we don't want to deal with any other abnormal environments.
                 elif not re.match('ZDB.*',condition):
