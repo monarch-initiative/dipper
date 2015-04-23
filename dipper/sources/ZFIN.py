@@ -1413,6 +1413,33 @@ class ZFIN(Source):
         temperature, and Generic-control.
         The condition column may contain knockdown reagent IDs or mixed text.
 
+        This method also constructs the extrinsic genotype and sub-parts, currently just using the morpholinos.
+        TALENs and CRISPRs will be added after modeling is completed.
+
+        Triples created:
+        <environment_id> is an Individual
+        <environment_id> rdfs:label <environment_label>
+        <environment_id> has type <environment>
+
+
+        <extrinsic_id> is an Individual
+        <extrinsic_id> rdfs:label <extrinsic_genotype>
+        <extrinsic_id> has type <extrinsic_genotype>
+
+        <targeted_gene_subregion_id> is an Individual
+        <targeted_gene_subregion_id> rdfs:label <targeted_gene_subregion_label>
+        <targeted_gene_subregion_id> has type <targeted_gene_subregion>
+        <targeted_gene_subregion_id> has part <morpholino_id>
+
+        <targeted_gene_variant_id> is an Individual
+        <targeted_gene_variant_id> rdfs:label <targeted_gene_variant_label>
+        <targeted_gene_variant_id> has type <reagent_targeted_gene>
+        <targeted_gene_variant_id> has part <targeted_gene_subregion_id>
+
+        <targeted_gene_complement_id> is an Individual
+        <targeted_gene_complement_id> rdfs:label <targeted_gene_complement_label>
+        <targeted_gene_complement_id> has type <targeted_gene_complement>
+        <targeted_gene_complement_id> has part <targeted_gene_variant_id>
 
         :param limit:
         :return:
@@ -1468,7 +1495,7 @@ class ZFIN(Source):
                 if values == '' or values == 'N/A':
                     values = None
 
-                if comment == 'NULL':
+                if comment == 'NULL' or comment == '':
                     comment = None
 
                 #Use this regex match if using all knockdown reagents.
