@@ -242,6 +242,7 @@ class Source:
 
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
+        # FIXME change this so the date is attached only to each file, not the entire dataset
         self.dataset.setVersion(filedate)
 
         return
