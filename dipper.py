@@ -20,6 +20,7 @@ from dipper.sources.GeneReviews import GeneReviews
 from dipper.sources.EOM import EOM
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
+from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
 
 from tests.test_general import GeneralGraphTestCase
@@ -42,7 +43,8 @@ def main():
         'genereviews': GeneReviews,
         'eom': EOM,  # Takes about 5 seconds.
         'coriell': Coriell,
-        'clinvar': ClinVar
+        'clinvar': ClinVar,
+        'mmrrc' : MMRRC
     }
 
     logger = logging.getLogger(__name__)
