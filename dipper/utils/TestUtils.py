@@ -46,3 +46,13 @@ class TestUtils:
         self.graph.parse(file, format="turtle")
 
         return
+
+    def load_testgraph_from_turtle(self, source):
+        file = source.outdir+'/'+source.name+'_test.ttl'
+        if not os.path.exists(file):
+            logger.error("file: %s does not exist", file)
+            sys.exit(1)
+        # load turtle file into graph
+        self.graph.parse(file, format="turtle")
+
+        return

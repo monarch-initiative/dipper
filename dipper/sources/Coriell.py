@@ -1,6 +1,5 @@
 import logging
 import csv
-import pysftp
 import re
 import unicodedata
 
@@ -13,10 +12,8 @@ from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
 
-
-
-
 logger = logging.getLogger(__name__)
+
 
 class Coriell(Source):
     """
@@ -45,54 +42,51 @@ class Coriell(Source):
         'cell_line_repository': 'CLO:0000008',
         'race': 'SIO:001015',
         'ethnic_group': 'EFO:0001799',
-        'age' : 'EFO:0000246',
+        'age': 'EFO:0000246',
         'sampling_time': 'EFO:0000689',
     }
 
-
-
     files = {
-        'ninds': {'file' : 'NINDS_latest.csv',
-                  'id' : 'NINDS',
+        'ninds': {'file': 'NINDS_latest.csv',
+                  'id': 'NINDS',
                   'label': 'NINDS Human Genetics DNA and Cell line Repository',
-                  'page' : 'https://catalog.coriell.org/1/NINDS'},
-        'nigms': {'file' : 'NIGMS_latest.csv',
-                  'id' : 'NIGMS',
+                  'page': 'https://catalog.coriell.org/1/NINDS'},
+        'nigms': {'file': 'NIGMS_latest.csv',
+                  'id': 'NIGMS',
                   'label': 'NIGMS Human Genetic Cell Repository',
-                  'page' : 'https://catalog.coriell.org/1/NIGMS'},
-        'nia': {'file' : 'NIA_latest.csv',
-                'id' : 'NIA',
+                  'page': 'https://catalog.coriell.org/1/NIGMS'},
+        'nia': {'file': 'NIA_latest.csv',
+                'id': 'NIA',
                 'label': 'NIA Aging Cell Repository',
                 'page': 'https://catalog.coriell.org/1/NIA'},
-        'nhgri': {'file' : 'NHGRI_latest.csv',
-                'id' : 'NHGRI',
-                'label': 'NHGRI Sample Repository for Human Genetic Research',
-                'page': 'https://catalog.coriell.org/1/NIA'}
+        'nhgri': {'file': 'NHGRI_latest.csv',
+                  'id': 'NHGRI',
+                  'label': 'NHGRI Sample Repository for Human Genetic Research',
+                  'page': 'https://catalog.coriell.org/1/NHGRI'}
     }
 
-
+    # the following will house the specific cell lines to use for test output
+    test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
+                  'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602',
+                  'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142']
 
     def __init__(self):
         Source.__init__(self, 'coriell')
 
         self.load_bindings()
 
-        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/')
+        self.dataset = Dataset('coriell', 'Coriell', 'http://ccr.coriell.org/', None)
 
-        #data-source specific warnings (will be removed when issues are cleared)
-        #print()
+        # data-source specific warnings (will be removed when issues are cleared)
+
         logger.warn('We assume that if a species is not provided, that it is a Human-derived cell line')
         logger.warn('We map all omim ids as a disease/phenotype entity, but should be fixed in the future')
 
-        #check if config exists; if it doesn't, error out and let user know
-        if (not (('keys' in config.get_config()) and ('coriell' in config.get_config()['keys']))):
-            logger.error("ERROR: not configured with FTP user/password.")
-
-#        self.properties = self.op.copy()
-
+        # check if config exists; if it doesn't, error out and let user know
+        if 'keys' not in config.get_config() and 'coriell' not in config.get_config()['keys']:
+            logger.error("not configured with FTP user/password.")
 
         return
-
 
     def fetch(self, is_dl_forced):
         """
@@ -120,32 +114,29 @@ class Coriell(Source):
 
         return
 
-
     def parse(self, limit=None):
-        if (limit is not None):
+        if limit is not None:
             logger.info("Only parsing first %s rows of each file", limit)
 
         logger.info("Parsing files...")
 
-        for f in ['ninds','nigms','nia','nhgri']:
-            file = ('/').join((self.rawdir,self.files[f]['file']))
-            self._process_repository(self.files[f]['id'],self.files[f]['label'],self.files[f]['page'])
+        if self.testOnly:
+            self.testMode = True
+
+        for f in ['ninds', 'nigms', 'nia', 'nhgri']:
+            file = '/'.join((self.rawdir, self.files[f]['file']))
+            self._process_repository(self.files[f]['id'], self.files[f]['label'], self.files[f]['page'])
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
 
-
         self.load_bindings()
-        Assoc().loadAllProperties(self.graph)
 
-        logger.info("Found %s nodes", len(self.graph))
         return
 
     def _process_data(self, raw, limit=None):
         """
         This function will process the data files from Coriell.
-
-
 
         Triples: (examples)
 
@@ -176,23 +167,25 @@ class Coriell(Source):
 
             pub_id mentions cell_line_id
 
-
-
         :param raw:
         :param limit:
         :return:
         """
-        logger.info("Processing Data from %s",raw)
+        logger.info("Processing Data from %s", raw)
         gu = GraphUtils(curie_map.get())
 
-        line_counter = 0
-        geno = Genotype(self.graph)
+        if self.testMode:      # set the graph to build
+            g = self.testgraph
+        else:
+            g = self.graph
 
-        gu.loadProperties(self.graph,geno.object_properties,gu.OBJPROP)
-        gu.loadAllProperties(self.graph)
+        line_counter = 0
+        geno = Genotype(g)
+
+        gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
+        gu.loadAllProperties(g)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-#        with open(raw, 'r', encoding="utf-8") as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             next(filereader, None)  # skip the header row
             for row in filereader:
@@ -201,112 +194,111 @@ class Coriell(Source):
                 else:
                     line_counter += 1
 
-                    (catalog_id,description,omim_number,sample_type,cell_line_available,
-                    dna_in_stock,dna_ref,gender,age,race,ethnicity,affected,karyotype,
-                    relprob,mutation,gene,family_id,collection,url,cat_remark,pubmed_ids,
-                    family_member,variant_id,dbsnp_id,species) = row
+                    (catalog_id, description, omim_number, sample_type, cell_line_available,
+                     dna_in_stock, dna_ref, gender, age, race, ethnicity, affected, karyotype,
+                     relprob, mutation, gene, family_id, collection, url, cat_remark, pubmed_ids,
+                     family_member, variant_id, dbsnp_id, species) = row
 
-                    #example:
-                    #GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,,Female,26 YR,Caucasian,,,,
+                    # example:
+                    # GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,,Female,26 YR,Caucasian,,,,
                     # parent,,,39,NIGMS Human Genetic Cell Repository,
                     # http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM00003,
                     # 46;XX; clinically normal mother of a child with Hurler syndrome; proband not in Repository,,
                     # 2,,18343,Homo sapiens
 
+                    if self.testMode and catalog_id not in self.test_lines:
+                        continue    # skip rows not in our test lines, when in test mode
 
-                    ##############    BUILD REQUIRED VARIABLES    #############
+                    # #############    BUILD REQUIRED VARIABLES    #############
 
-                    #Make the cell line ID
+                    # Make the cell line ID
                     cell_line_id = 'Coriell:'+catalog_id.strip()
 
-                    #Map the cell/sample type
+                    # Map the cell/sample type
                     cell_type = self._map_cell_type(sample_type)
 
-                    #Make a cell line label
+                    # Make a cell line label
                     line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
 
-                    #Map the repository/collection
+                    # Map the repository/collection
                     repository = self._map_collection(collection)
 
-                    #patients are uniquely identified by one of:
-                    #dbsnp id (which is == an individual haplotype)
-                    #family id + family member (if present) OR   #probands are usually family member zero
-                    #cell line id
-                    #since some patients have >1 cell line derived from them, we must make sure that the genotype
-                    #is attached to the patient, and can be inferred to the cell line
-                    #examples of repeated patients are:  famid=1159, member=1; fam=152,member=1
+                    # patients are uniquely identified by one of:
+                    # dbsnp id (which is == an individual haplotype)
+                    # family id + family member (if present) OR   #probands are usually family member zero
+                    # cell line id
+                    # since some patients have >1 cell line derived from them, we must make sure that the genotype
+                    # is attached to the patient, and can be inferred to the cell line
+                    # examples of repeated patients are:  famid=1159, member=1; fam=152,member=1
 
-                    #Make the patient ID
+                    # Make the patient ID
 
                     if family_id != '':
-                        patient_id = 'MONARCH:Coriell'+family_id+'-'+family_member  #this won't resolve like this, but how to handle?
+                        patient_id = 'MONARCH:Coriell'+family_id+'-'+family_member  # FIXME this won't resolve like this
                     else:
-                        patient_id = cell_line_id   #otherwise, just default to the cell line as the patient id
+                        patient_id = cell_line_id   # otherwise, just default to the cell line as the patient id
 
-
-                    #properties of the individual patients:  sex, family id, member/relproband, description
-                    #descriptions are really long and ugly SCREAMING text, so need to clean up
-                    #the control cases are so odd with this labeling scheme; but we'll deal with it as-is for now.
+                    # properties of the individual patients:  sex, family id, member/relproband, description
+                    # descriptions are really long and ugly SCREAMING text, so need to clean up
+                    # the control cases are so odd with this labeling scheme; but we'll deal with it as-is for now.
                     short_desc = (description.split(';')[0]).capitalize()
-                    if (affected=='Yes'):
+                    if affected == 'Yes':
                         affected = 'affected'
                     else:
                         affected = 'unaffected'
                     gender = gender.lower()
-                    patient_label = (' ').join((affected,gender,relprob))
-                    if (relprob=='proband'):
-                        patient_label=(' ').join((patient_label,'with',short_desc))
+                    patient_label = ' '.join((affected, gender, relprob))
+                    if relprob == 'proband':
+                        patient_label = ' '.join((patient_label, 'with', short_desc))
                     else:
-                        patient_label=(' ').join((patient_label,'of proband with',short_desc))
+                        patient_label = ' '.join((patient_label, 'of proband with', short_desc))
 
-                    ##############    BUILD THE CELL LINE    #############
+                    # #############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
-                    gu.addIndividualToGraph(self.graph,cell_line_id,line_label,cell_type)
+                    gu.addIndividualToGraph(g, cell_line_id, line_label, cell_type)
 
                     # Cell line derives from patient
-                    geno.addDerivesFrom(cell_line_id,patient_id)
+                    geno.addDerivesFrom(cell_line_id, patient_id)
 
                     # Cell line a member of repository
-                    gu.addMember(self.graph,repository,cell_line_id)
+                    gu.addMember(g, repository, cell_line_id)
 
-                    if cat_remark !='':
-                        gu.addDescription(self.graph,cell_line_id,cat_remark)
-
+                    if cat_remark != '':
+                        gu.addDescription(g, cell_line_id, cat_remark)
 
                     # Cell age_at_sampling
-                    #TODO add in the age nodes once these are modeled properly in https://github.com/monarch-initiative/dipper/issues/78
-                    #if (age != ''):
-                        #this would give a BNode that is an instance of Age.  but i don't know how to connect
-                        #the age node to the cell line?  we need to ask @mbrush.
-                        #age_id = '_'+re.sub('\s+','_',age)
-                        #gu.addIndividualToGraph(self.graph,age_id,age,self.terms['age'])
-                        #gu.addTriple(self.graph,age_id,self.properties['has_measurement'],age,True)
+                    # TODO add in the age nodes once these are modeled properly in #78
+                    # if (age != ''):
+                        # this would give a BNode that is an instance of Age.  but i don't know how to connect
+                        # the age node to the cell line?  we need to ask @mbrush.
+                        # age_id = '_'+re.sub('\s+','_',age)
+                        # gu.addIndividualToGraph(g,age_id,age,self.terms['age'])
+                        # gu.addTriple(g,age_id,self.properties['has_measurement'],age,True)
 
-                    #that the cell line is a model for a disease is dealt with below
+                    # that the cell line is a model for a disease is dealt with below
 
-                    ##############    BUILD THE PATIENT    #############
+                    # #############    BUILD THE PATIENT    #############
 
                     # Add the patient ID as an individual.
-                    gu.addPerson(self.graph,patient_id,patient_label)
-                    #TODO map relationship to proband as a class (what ontology?)
+                    gu.addPerson(g, patient_id, patient_label)
+                    # TODO map relationship to proband as a class (what ontology?)
 
                     # Add race of patient
-                    #FIXME: Adjust for subcategories based on ethnicity field
-                    #EDIT: There are 743 different entries for ethnicity... Too many to map?
-                    #Perhaps add ethnicity as a literal in addition to the mapped race?
-                    #Need to adjust the ethnicity text (if using) to just initial capitalization as some entries:ALLCAPS
+                    # FIXME: Adjust for subcategories based on ethnicity field
+                    # EDIT: There are 743 different entries for ethnicity... Too many to map?
+                    # Perhaps add ethnicity as a literal in addition to the mapped race?
+                    # Need to adjust the ethnicity txt (if using) to initial capitalization to remove ALLCAPS
 
-                    #TODO the race should go into the background of the individual.  this should be abstracted out to the Genotype class
-                    #punting for now.
-                    #if race != '':
+                    # TODO race should go into the individual's background and abstracted out to the Genotype class
+                    # punting for now.
+                    # if race != '':
                     #    mapped_race = self._map_race(race)
                     #    if mapped_race is not None:
-                    #        gu.addTriple(self.graph,patient_id,self.terms['race'],mapped_race)
-                    #        gu.addSubclass(self.graph,self.terms['ethnic_group'],mapped_race)
+                    #        gu.addTriple(g,patient_id,self.terms['race'],mapped_race)
+                    #        gu.addSubclass(g,self.terms['ethnic_group'],mapped_race)
 
-
-                    ##############    BUILD THE FAMILY    #############
+                    # #############    BUILD THE FAMILY    #############
 
                     # Add triples for family_id, if present.
                     # a family is just a small population
@@ -314,62 +306,72 @@ class Coriell(Source):
                         family_comp_id = 'CoriellFamily:'+family_id
 
                         # Add the family ID as a named individual
-                        gu.addIndividualToGraph(self.graph,family_comp_id,None,geno.genoparts['population'])
+                        gu.addIndividualToGraph(g, family_comp_id, None, geno.genoparts['population'])
 
-                        #Add the patient as a member of the family
-                        gu.addMemberOf(self.graph,patient_id,family_comp_id)
+                        # Add the patient as a member of the family
+                        gu.addMemberOf(g, patient_id, family_comp_id)
 
+                    # #############    BUILD THE GENOTYPE   #############
 
-                    ##############    BUILD THE GENOTYPE   #############
+                    # the important things to pay attention to here are:
+                    # karyotype (used when there isn't a typical mutation), esp for chr rearrangements
+                    # mutation = protein-level mutation as a label, often from omim
+                    # gene = gene symbol - TODO get id
+                    # variant_id = omim variant ids (; delimited)
+                    # dbsnp_id = snp individual ids, is == patient id == haplotype?
 
-                    #the important things to pay attention to here are:
-                    #karyotype (used when there isn't a typical mutation), esp for chr rearrangements
-                    #mutation = protein-level mutation as a label, often from omim
-                    #gene = gene symbol - TODO get id
-                    #variant_id = omim variant ids (; delimited)
-                    #dbsnp_id = snp individual ids, is == patient id == haplotype?
+                    # note GM00633 is a good example of chromosomal variation - do we have enough to capture this?
+                    # GM00325 has both abnormal karyotype and variation
 
-                    #note GM00633 is a good example of chromosomal variation - do we have enough to capture this?
-
-                    #make an assumption that if the taxon is blank, that it is human!
-                    if (species is None or species == ''):
+                    # make an assumption that if the taxon is blank, that it is human!
+                    if species is None or species == '':
                         species = 'Homo sapiens'
                     taxon = self._map_species(species)
 
-                    #if there's a dbSNP id, this is actually the individual's genotype
+                    # if there's a dbSNP id, this is actually the individual's genotype
                     genotype_id = None
                     genotype_label = None
-                    if (dbsnp_id != ''):
+                    if dbsnp_id != '':
                         genotype_id = 'dbSNPIndividual:'+dbsnp_id.strip()
 
-                    omim_map = {};
-                    gvc_id = None;
-                    if (karyotype.strip() != '' and karyotype != '46;XX' and karyotype != '46;XY'):
-                        #if we have the karyotype that is abnormal, then let's make that the genotype
-                        gvc_id = self.make_id(karyotype)
+                    omim_map = {}
+                    gvc_id = None
 
-                        #some of the karyotypes are encoded with terrible hidden codes. remove them here
-                        #i've seen a <98> character
-                        gvc_label = self.remove_control_characters(karyotype)
+                    # some of the karyotypes are encoded with terrible hidden codes. remove them here
+                    # i've seen a <98> character
+                    karyotype = self.remove_control_characters(karyotype)
+                    # TODO break down the karyotype into parts and map into GENO
 
-                    elif (variant_id.strip() != ''):
-                        #split the variants and add them as part of the genotype
-                        #we don't know their zygosity, just that they are part of the genotype
-                        #variant ids are from OMIM, so prefix as such
-                        #we assume that the variants will be defined in OMIM rather than here.
+                    if gene != '':
+                        vl = gene+'['+mutation+']'
+                    if karyotype.strip() != '' and karyotype != '46;XX' and karyotype != '46;XY':
+                        mutation = mutation.strip()
+                        gvc_id = self.make_id(variant_id.strip()+karyotype)
+                        if mutation.strip() != '':
+                            gvc_label = ';'.join((vl, karyotype))
+                        else:
+                            gvc_label = karyotype
+                    elif variant_id.strip() != '':
                         gvc_id = self.make_id(variant_id)
-                        gvc_label = mutation   #this is the full list of mutational consequences
-                        #TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
-                        #make a hashmap of the omim id to variant id list; then build the genotype
-                        #hashmap is also useful for removing the "genes" from the list of phenotypes
-                        omim_map = {};
-                        #print(variant_id)
+                        gvc_label = vl
+
+                    if variant_id.strip() != '':
+                        # split the variants and add them as part of the genotype
+                        # we don't know their zygosity, just that they are part of the genotype
+                        # variant ids are from OMIM, so prefix as such
+                        # we assume that the variants will be defined in OMIM rather than here.
+                        # TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
+                        # make a hashmap of the omim id to variant id list; then build the genotype
+                        # hashmap is also useful for removing the "genes" from the list of phenotypes
+                        omim_map = {}
+
                         locus_num = None
                         for v in variant_id.split(';'):
-                            m = re.match('(\d+)\.+(.*)',v.strip())  #handle omim-style variant ids and odd ones like 610661.p.R401X
+                            # handle omim-style and odd var ids like 610661.p.R401X
+                            m = re.match('(\d+)\.+(.*)', v.strip())
 
-                            if (m is not None and len(m.groups()) == 2):
-                                (locus_num,var_num) = m.groups()
+                            if m is not None and len(m.groups()) == 2:
+                                (locus_num, var_num) = m.groups()
 
                             if locus_num is not None and locus_num not in omim_map:
                                 omim_map[locus_num] = [var_num]
@@ -377,96 +379,101 @@ class Coriell(Source):
                                 omim_map[locus_num] = omim_map[locus_num]+[var_num]
 
                         for o in omim_map:
-                            #print(omim_map)
+
                             allele1_id = 'OMIM:'+o+'.'+omim_map.get(o)[0]
-                            if (len(omim_map.get(o)) > 1):
-                                #build a vslc
-                                vslc_id = self.make_id(o+(' ').join(omim_map.get(o)))
+                            gu.addIndividualToGraph(g, allele1_id, None, geno.genoparts['variant_locus'])
+                            if len(omim_map.get(o)) > 1:
+                                # build a vslc
+                                vslc_id = self.make_id(o + ' '.join(omim_map.get(o)))
+                                vslc_label = vl
                                 allele2_id = 'OMIM:'+o+'.'+omim_map.get(o)[1]
-                                geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id)
-                                geno.addVSLCtoParent(vslc_id,gvc_id)
+                                gu.addIndividualToGraph(g, allele2_id, None, geno.genoparts['variant_locus'])
+                                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id)
+                                geno.addVSLCtoParent(vslc_id, gvc_id)
+                                gu.addIndividualToGraph(g, vslc_id, vslc_label,
+                                                        geno.genoparts['variant_single_locus_complement'])
+                                # note, we do not add the gene id to the variation because we don't have it.
+                                # this will have to come from OMIM or ClinVar.
+
                             else:
-                                gu.addIndividualToGraph(self.graph,allele1_id,None,geno.genoparts['variant_locus'])
-                                geno.addParts(allele1_id,gvc_id,geno.properties['has_alternate_part'])
+                                geno.addParts(allele1_id, gvc_id, geno.properties['has_alternate_part'])
                     #else:
                         #genotype_id = None
                         #if affected == 'affected':
                         #    logger.info('affected individual without recorded variants: %s, %s',cell_line_id,description)
 
-                    if (affected == 'unaffected'):
-                        #let's just say that this person is wildtype
-                        gu.addType(self.graph,patient_id,geno.genoparts['wildtype'])
+                    if affected == 'unaffected':
+                        # let's just say that this person is wildtype
+                        gu.addType(g, patient_id, geno.genoparts['wildtype'])
                     elif genotype_id is None:
-                        #make an anonymous genotype id
-                        genotype_id = '_'+geno+cell_line_id
+                        # make an anonymous genotype id
+                        genotype_id = '_geno'+cell_line_id
 
-
-                    #add the gvc
+                    # add the gvc
                     if gvc_id is not None:
-                        gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
+                        gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
 
-                        #add the gvc to the genotype
+                        # add the gvc to the genotype
                         if genotype_id is not None:
-                            if (affected == 'unaffected'):
+                            if affected == 'unaffected':
                                 rel = geno.object_properties['has_reference_part']
                             else:
                                 rel = geno.object_properties['has_alternate_part']
-                            geno.addParts(gvc_id,genotype_id,rel)
+                            geno.addParts(gvc_id, genotype_id, rel)
                         genotype_label = gvc_label
 
-
                     if genotype_id is not None:
-                        geno.addGenotype(genotype_id,genotype_label,geno.genoparts['intrinsic_genotype'])
-                        geno.addTaxon(taxon,genotype_id)
-                        #add that the patient has the genotype
-                        gu.addTriple(self.graph,patient_id,geno.properties['has_genotype'],genotype_id)
+                        geno.addGenotype(genotype_id, genotype_label, geno.genoparts['intrinsic_genotype'])
+                        geno.addTaxon(taxon, genotype_id)
+                        # add that the patient has the genotype
+                        gu.addTriple(g, patient_id, geno.properties['has_genotype'], genotype_id)
                     else:
-                        geno.addTaxon(taxon,patient_id)
+                        geno.addTaxon(taxon, patient_id)
 
-                    #TODO: Add sex/gender
-
+                    # TODO: Add sex/gender
 
                     ##############    DEAL WITH THE DISEASES   #############
 
                     #what has the disease, the genotype or patient?
-                    if (affected == 'affected'):
+                    if affected == 'affected':
                         if omim_number != '':
                             for d in omim_number.split(';'):
                                 if d is not None and d != '':
-                                    #if the omim number is in the omim_map, then it is a gene, and don't add it as a phenotype
+                                    # if the omim number is in omim_map, then it is a gene not a pheno
                                     if d not in omim_map:
                                         disease_id = 'OMIM:'+d.strip()
-                                        gu.addClassToGraph(self.graph,disease_id,None)   #assume the label is taken care of elsewhere
+                                        gu.addClassToGraph(g, disease_id, None)   # assume the label is taken care of
 
-                                        #add the association: the patient has the disease
+                                        # add the association: the patient has the disease
                                         assoc_id = self.make_id(patient_id+disease_id)
-                                        assoc = G2PAssoc(assoc_id,patient_id,disease_id,None,None)
-                                        assoc.addAssociationToGraph(self.graph)
+                                        assoc = G2PAssoc(assoc_id, patient_id, disease_id, None, None)
+                                        assoc.addAssociationToGraph(g)
 
-                                        #also, this line is a model of this disease
-                                        #TODO abstract out model into it's own association class?
-                                        gu.addTriple(self.graph,cell_line_id,gu.properties['model_of'],disease_id)
+                                        # also, this line is a model of this disease
+                                        # TODO abstract out model into it's own association class?
+                                        gu.addTriple(g, cell_line_id, gu.properties['model_of'], disease_id)
                                     else:
-                                        logger.info('removing %s from disease list since it is a gene',d)
+                                        logger.info('removing %s from disease list since it is a gene', d)
 
-                                        #BEWARE
-                                        #Coriell currently seems to sometimes annotate variants to phenotype ids rather
-                                        #than gene ids!  YIKES
-                                        #we are checking with them now to find out why.
-                                        #for example.  GM16467 is annotated to 278720.0006, but it should be 613208.0006
-                                        #so this current solution is aggressive, and might mean missing data
+                                        # BEWARE
+                                        # Coriell currently seems to sometimes annotate variants to phenotype ids rather
+                                        # than gene ids!  YIKES
+                                        # we are checking with them now to find out why.
+                                        # ex: GM16467 is annotated to 278720.0006, but it should be 613208.0006
+                                        # so this current solution is aggressive, and might mean missing data
 
-
-                    ##############    ADD PUBLICATIONS   #############
+                    # #############    ADD PUBLICATIONS   #############
 
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
-                            gu.addTriple(self.graph,pubmed_id,gu.properties['mentions'],cell_line_id)
+                            gu.addTriple(g, pubmed_id, gu.properties['mentions'], cell_line_id)
 
-
-                    if (limit is not None and line_counter > limit):
+                    if not self.testMode and (limit is not None and line_counter > limit):
                         break
+
+            Assoc().loadAllProperties(g)
+
         return
 
     def _process_repository(self, id, label, page):
@@ -483,32 +490,31 @@ class Coriell(Source):
         :param limit:
         :return:
         """
-        ##############    BUILD THE CELL LINE REPOSITORY    #############
-        #FIXME: How to devise a label for each repository?
-        gu = GraphUtils(curie_map.get())
-        repo_id = 'CoriellCollection:'+id
-        repo_label = label
-        repo_page = page
-        #gu.addClassToGraph(self.graph,repo_id,repo_label)
-        gu.addIndividualToGraph(self.graph,repo_id,repo_label,self.terms['cell_line_repository'])
-        gu.addPage(self.graph,repo_id,repo_page)
+        # #############    BUILD THE CELL LINE REPOSITORY    #############
+        for g in [self.graph, self.testgraph]:
+            # FIXME: How to devise a label for each repository?
+            gu = GraphUtils(curie_map.get())
+            repo_id = 'CoriellCollection:'+id
+            repo_label = label
+            repo_page = page
+            #gu.addClassToGraph(g,repo_id,repo_label)
+            gu.addIndividualToGraph(g, repo_id, repo_label, self.terms['cell_line_repository'])
+            gu.addPage(g, repo_id, repo_page)
 
         return
 
-
-
     def _map_cell_type(self, sample_type):
-        type = None
+        ctype = None
         type_map = {
-            'Adipose stromal cell': 'CL:0002570', # FIXME: mesenchymal stem cell of adipose
+            'Adipose stromal cell': 'CL:0002570',  # FIXME: mesenchymal stem cell of adipose
             'Amniotic fluid-derived cell line': 'CL:0002323',  # FIXME: amniocyte?
             'B-Lymphocyte': 'CL:0000236',  # B cell
-            'Chorionic villus-derived cell line': 'CL:0000000', # FIXME: No Match
+            'Chorionic villus-derived cell line': 'CL:0000000',  # FIXME: No Match
             'Endothelial': 'CL:0000115',  # endothelial cell
             'Epithelial': 'CL:0000066',  # epithelial cell
             'Erythroleukemic cell line': 'CL:0000000',  # FIXME: No Match. "Abnormal precursor (virally transformed) of mouse erythrocytes that can be grown in culture and induced to differentiate by treatment with, for example, DMSO."
             'Fibroblast': 'CL:0000057',  # fibroblast
-            'Keratinocyte': 'CL:0000312', # keratinocyte
+            'Keratinocyte': 'CL:0000312',  # keratinocyte
             'Melanocyte': 'CL:0000148',  # melanocyte
             'Mesothelial': 'CL:0000077',
             'Microcell hybrid': 'CL:0000000',  # FIXME: No Match
@@ -518,16 +524,15 @@ class Coriell(Source):
             'T-Lymphocyte': 'CL:0000084',  # T cell
             'Tumor-derived cell line': 'CL:0002198'  # FIXME: No Match. "Cells isolated from a mass of neoplastic cells, i.e., a growth formed by abnormal cellular proliferation." Oncocyte? CL:0002198
         }
-        if (sample_type.strip() in type_map):
-            type = type_map.get(sample_type)
+        if sample_type.strip() in type_map:
+            ctype = type_map.get(sample_type)
         else:
-            logger.warn("ERROR: Cell type not mapped: %s", sample_type)
+            logger.error("Cell type not mapped: %s", sample_type)
 
-        return type
-
+        return ctype
 
     def _map_race(self, race):
-        type = None
+        rtype = None
         type_map = {
             'African American': 'EFO:0003150',
             #'American Indian': 'EFO',
@@ -550,16 +555,15 @@ class Coriell(Source):
             #'Unknown': 'EFO',
             'Vietnamese': 'EFO:0003152',  # Asian
         }
-        if (race.strip() in type_map):
-            type = type_map.get(race)
+        if race.strip() in type_map:
+            rtype = type_map.get(race)
         else:
             logger.warn("Race type not mapped: %s", race)
 
-        return type
-
+        return rtype
 
     def _map_species(self, species):
-        type = None
+        tax = None
         type_map = {
             'Mus musculus': 'NCBITaxon:10090',
             'Peromyscus peromyscus californicus': 'NCBITaxon:42520',
@@ -592,30 +596,39 @@ class Coriell(Source):
             'Pan paniscus': 'NCBITaxon:9597',
             'Ovis aries': 'NCBITaxon:9940',
             'Felis catus': 'NCBITaxon:9685',
-            'Homo sapiens' : 'NCBITaxon:9606'
+            'Homo sapiens': 'NCBITaxon:9606'
         }
-        if (species.strip() in type_map):
-            type = type_map.get(species)
+        if species.strip() in type_map:
+            tax = type_map.get(species)
         else:
             logger.warn("Species type not mapped: %s", species)
 
-        return type
+        return tax
 
 
     def _map_collection(self, collection):
-        type = None
+        ctype = None
         type_map = {
             'NINDS Repository': 'CoriellCollection:NINDS',
             'NIGMS Human Genetic Cell Repository': 'CoriellCollection:NIGMS',
             'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA',
             'NHGRI Sample Repository for Human Genetic Research': 'CoriellCollection:NHGRI'
         }
-        if (collection.strip() in type_map):
-            type = type_map.get(collection)
+        if collection.strip() in type_map:
+            ctype = type_map.get(collection)
         else:
             logger.warn("ERROR: Collection type not mapped: %s", collection)
 
-        return type
+        return ctype
 
-    def remove_control_characters(self,s):
-        return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+    def remove_control_characters(self, s):
+        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_coriell import CoriellTestCase
+        #TODO add G2PAssoc, Genotype tests
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(CoriellTestCase)
+
+        return test_suite

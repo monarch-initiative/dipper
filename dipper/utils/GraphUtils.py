@@ -1,12 +1,14 @@
 __author__ = 'nicole'
 
 import re
+import logging
 
 from rdflib import Literal, URIRef, BNode, Namespace
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 
 from dipper.utils.CurieUtil import CurieUtil
 
+logger = logging.getLogger(__name__)
 
 class GraphUtils:
 
@@ -64,7 +66,6 @@ class GraphUtils:
     properties = annotation_properties.copy()
     properties.update(object_properties)
     properties.update(datatype_properties)
-
 
 
     def __init__(self,curie_map):
@@ -259,7 +260,7 @@ class GraphUtils:
             format = 'rdfxml'
         if (file is not None):
             filewriter = open(file, 'w')
-            print("INFO: Writing triples in",format,"to",file)
+            logger.info("Writing triples in %s to %s", format, file)
             print(graph.serialize(format=format).decode(), file=filewriter)
             filewriter.close()
         else:
@@ -277,7 +278,7 @@ class GraphUtils:
         """
         base=Namespace(self.curie_map.get(''))
         n=None
-        if (re.match('^_',id)):
+        if (id is not None and re.match('^_',id)):
             n = BNode(re.sub('_','',id,1))  #replace the leading underscore to make it cleaner
         elif (re.match('^\:',id)):
             n = base[re.sub(':','',id,1)]   #do we need to remove embedded colons in the ids?
@@ -286,7 +287,7 @@ class GraphUtils:
             if (u is not None):
                 n = URIRef(self.cu.get_uri(id))
             else:
-                print("ERROR: couldn't make URI for ",id)
+                logger.error("couldn't make URI for %s",id)
         return n
 
     def getNode(self,id):
@@ -326,7 +327,7 @@ class GraphUtils:
         """
 
         if property_type not in [self.OBJPROP,self.ANNOTPROP,self.DATAPROP]:
-            print("ERROR: bad property type assigned:",property_type)
+            logger.error("bad property type assigned: %s",property_type)
         else:
             for k in op:
                 graph.add((self.getNode(op[k]),RDF['type'],property_type))

@@ -52,7 +52,8 @@ class OrthologyAssoc(Assoc):
         """
         Make an association between a group of genes and some grouping class.
         We make the assumption that the genes in the association are part of the supplied
-        family_id.  The family_id is added as an individual of type DATA:gene_family.
+        family_id, and that the genes have already been declared as classes elsewhere.
+        The family_id is added as an individual of type DATA:gene_family.
 
         Triples:
         <family_id> a DATA:gene_family
@@ -63,24 +64,13 @@ class OrthologyAssoc(Assoc):
         :param g: the graph to modify
         :return:
         """
-
-        f = self.gu.getNode(family_id)
-        a = self.gu.getNode(self.gene1)
-        b = self.gu.getNode(self.gene2)
-        p = self.gu.getNode(self.properties['has_member'])
+        gene_family = 'DATA:3148'  #http://edamontology.org/data_3148
 
         #make the assumption that the genes have already been added as classes previously
-        #add the family grouping as an instance of a gene family?
-
-        gene_family = 'DATA:3148'  #http://edamontology.org/data_3148
         self.gu.addIndividualToGraph(g,family_id,None,gene_family)
 
-        #is a gene family annotation
-
-        #TODO refactor with a addMember() method
         #add each gene to the family
-        g.add((f, p, a))
-        g.add((f, p, b))
-
+        self.gu.addMember(g,family_id,self.gene1)
+        self.gu.addMember(g,family_id,self.gene2)
 
         return
