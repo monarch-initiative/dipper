@@ -43,6 +43,8 @@ class HPOAnnotations(Source):
     files = {
         'annot': {'file' : 'phenotype_annotation.tab',
                    'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab'},
+        'version': {'file' : 'data_version.txt',
+                   'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/data_version.txt'},
 #       'neg_annot': {'file' : 'phenotype_annotation.tab',
 #                     'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab'
 #        },
@@ -77,25 +79,43 @@ class HPOAnnotations(Source):
         return
 
     def fetch(self, is_dl_forced):
-        st = None
-        for f in self.files.keys():
-            file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced)
-            self.dataset.setFileAccessUrl(file['url'])
-            # zfin versions are set by the date of download.
-            st = os.stat('/'.join((self.rawdir, file['file'])))
 
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        self.get_files(is_dl_forced)
+
+        # st = None
+        # for f in self.files.keys():
+        #     file = self.files.get(f)
+        #     self.fetch_from_url(file['url'],
+        #                         '/'.join((self.rawdir, file['file'])),
+        #                         is_dl_forced)
+        #     self.dataset.setFileAccessUrl(file['url'])
+        #     # zfin versions are set by the date of download.
+        #     st = os.stat('/'.join((self.rawdir, file['file'])))
+        #
+        # filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
         self.scrub()
 
         # get the latest build from jenkins
-        jenkins_info = eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
-        version = jenkins_info['number']
+        # NOT DOING THIS ANY MORE - but leaving it in for reference
+        # jenkins_info = eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
+        # version = jenkins_info['number']
 
-        self.dataset.setVersion(filedate, str(version))
+        # use the files['version'] file as the version
+        fname = '/'.join((self.rawdir, self.files['version']['file']))
+        d = ""
+        with open(fname, 'r', encoding="utf8") as f:
+            # 2015-04-23 13:01
+            v = f.readline()  # read the first line (the only line, really)
+            d = datetime.strptime(v.strip(), '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
+        f.close()
+
+        st = os.stat(fname)
+        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+
+        # this will cause two dates to be attached to the dataset (one from the filedate, and the other from here)
+        # TODO when #112 is implemented, this will result in only the whole dataset being versioned
+        self.dataset.setVersion(filedate, d)
 
         return
 
