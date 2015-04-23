@@ -47,8 +47,7 @@ class Genotype():
         'wildtype' : 'GENO:0000511',
         'reagent_targeted_gene': 'GENO:0000504',
         'targeted_gene_subregion' : 'GENO:0000534',
-        'targeted_gene_complement' : 'GENO:0000527'
-        'reagent_targeted_gene': 'GENO:0000504',
+        'targeted_gene_complement' : 'GENO:0000527',
         'biological_region' : 'SO:0001411',
         'missense_variant': 'SO:0001583',
         'transcript': 'SO:0000233',
