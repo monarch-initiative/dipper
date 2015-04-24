@@ -40,6 +40,7 @@
 'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
+'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
 
 
 # publication/reference sources
@@ -108,5 +109,4 @@
 'EC' : 'http://identifiers.org/EC:'  #FIXME: Enzyme Commission numbers. Any preferred url that can resolve this?
 
 #chemicals
-'CHEBI' : 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId='
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
