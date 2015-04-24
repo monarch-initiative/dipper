@@ -143,9 +143,9 @@ STRAIN/STOCK_ID,STRAIN/STOCK_DESIGNATION,STRAIN_TYPE,STATE,MGI_ALLELE_ACCESSION_
 
     def getTestSuite(self):
         import unittest
-        #from tests.test_mmrrc import MMRRCTestCase
-        # TODO add D2PAssoc tests
-        test_suite = None
-        #test_suite = unittest.TestLoader().loadTestsFromTestCase(MMRRCTestCase)
+        from tests.test_mmrrc import MMRRCTestCase
+        # TODO add G2PAssoc tests
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(MMRRCTestCase)
 
         return test_suite
