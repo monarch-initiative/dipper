@@ -8,6 +8,7 @@ from dipper.utils import pysed
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
 from dipper.models.D2PAssoc import D2PAssoc
+from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.DispositionAssoc import DispositionAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.Assoc import Assoc
@@ -30,7 +31,7 @@ class MMRRC(Source):
 
     files = {
         'catalog': {'file' : 'mmrrc_catalog_data.csv',
-                   'url' : 'https://www.mmrrc.org/about/data_download.php'},
+                   'url' : 'http://www.mmrrc.org/about/mmrrc_catalog_data.csv'},
     }
 
 
@@ -87,6 +88,9 @@ class MMRRC(Source):
 STRAIN/STOCK_ID,STRAIN/STOCK_DESIGNATION,STRAIN_TYPE,STATE,MGI_ALLELE_ACCESSION_ID,ALLELE_SYMBOL,ALLELE_NAME,MUTATION_TYPE,CHROMOSOME,MGI_GENE_ACCESSION_ID,GENE_SYMBOL,GENE_NAME,SDS_URL,MPT_IDS,ACCEPTED_DATE
 "000001-UNC","C57BL/6-Tg(Fga,Fgb,Fgg)1Unc/Mmnc","MSR","","MGI:95526","Fgg","fibrinogen gamma chain","TG","3","MGI:95526","Fgg","fibrinogen gamma chain","http://www.mmrrc.org/strains/1.php","1764 1790 2419 2723 5376 5387 5416 8469 9642 10211 10213","2001-05-01"
 
+        # NOTE: If a Strain carries more than one mutation, each Mutation description,
+        i.e., the set: (Mutation Type - Chromosome - Gene Symbol - Gene Name - Allele Symbol - Allele Name)
+        will require a separate line.
 
 
         :param raw:
@@ -127,10 +131,22 @@ STRAIN/STOCK_ID,STRAIN/STOCK_DESIGNATION,STRAIN_TYPE,STATE,MGI_ALLELE_ACCESSION_
                         mp_id = 'MP:'+i.zfill(7)
                         phenotype_ids.append(mp_id)
 
+                # TODO the contents of the strain_num after the dash are the "holding center".  strip this out.
+                # should map to https://www.mmrrc.org/catalog/sds.php?mmrrc_id=36643
+
+                strain_id = ':'.join(('MMRRC',strain_num))
+                # TODO add strain_type
+                gu.addIndividualToGraph(g,strain_id,strain_label)
                 # TODO 1.  build a genotype from the alleles
                 # TODO 2.  pull the background out of the strain
 
                 # TODO 3.  create associations for each of the phenotypes with the strain
+
+                for pid in phenotype_ids:
+                    gu.addClassToGraph(g,pid,None)   #assume the phenotype label is in the ontology
+                    assoc_id = self.make_id(('mmrrc'+strain_id+pid))
+                    assoc = G2PAssoc(assoc_id,strain_id,pid,None,None)
+                    assoc.addAssociationNodeToGraph(g)
 
                 # is the date for the associations, or for the strain?
 
