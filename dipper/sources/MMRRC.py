@@ -134,6 +134,8 @@ STRAIN/STOCK_ID,STRAIN/STOCK_DESIGNATION,STRAIN_TYPE,STATE,MGI_ALLELE_ACCESSION_
                 # TODO the contents of the strain_num after the dash are the "holding center".  strip this out.
                 # should map to https://www.mmrrc.org/catalog/sds.php?mmrrc_id=36643
 
+                #https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001 is a good example of 4 genotype parts
+
                 strain_id = ':'.join(('MMRRC',strain_num))
                 # TODO add strain_type
                 gu.addIndividualToGraph(g,strain_id,strain_label)
