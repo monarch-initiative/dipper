@@ -113,9 +113,6 @@ class MGI(Source):
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("we are ignoring normal phenotypes for now")
 
-        # Set this flag to False for normal running
-        self.testMode = True
-
         # so that we don't have to deal with BNodes, we will create hash lookups for the internal identifiers
         # the hash will hold the type-specific-object-keys to MGI public identifiers.  then, subsequent
         # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
@@ -136,7 +133,7 @@ class MGI(Source):
 
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
-        cxn.update({'host' : 'adhoc.informatics.jax.org', 'database' : 'mgd', 'port' : 5432 })
+        cxn.update({'host' : 'mgi-adhoc.jax.org', 'database' : 'mgd', 'port' : 5432 })
 
         self.dataset.setFileAccessUrl(('').join(('jdbc:postgresql://', cxn['host'],':', str(cxn['port']), '/',
                                                  cxn['database'])))
@@ -180,34 +177,29 @@ class MGI(Source):
             logger.info("Only parsing first %d rows of each file", limit)
         logger.info("Parsing files...")
 
-        loops = [True]
-        if not self.testOnly:
-            loops = [True,False]
+        if self.testOnly:
+            self.testMode = True
 
-        for l in loops:
+        # the following will provide us the hash-lookups
+        # These must be processed in a specific order
+        self._process_prb_strain_acc_view(limit)
+        self._process_mrk_acc_view(limit)
+        self._process_all_summary_view(limit)
+        self._process_bib_acc_view(limit)
+        self._process_gxd_genotype_summary_view(limit)
 
-            self.testMode = l
-
-            # the following will provide us the hash-lookups
-            # These must be processed in a specific order
-            self._process_prb_strain_acc_view(limit)
-            self._process_mrk_acc_view(limit)
-            self._process_all_summary_view(limit)
-            self._process_bib_acc_view(limit)
-            self._process_gxd_genotype_summary_view(limit)
-
-            # The following will use the hash populated above to lookup the ids when filling in the graph
-            self._process_prb_strain_view(limit)
-            self._process_gxd_genotype_view(limit)
-            self._process_mrk_marker_view(limit)
-            self._process_mrk_acc_view_for_equiv(limit)
-            self._process_mrk_summary_view(limit)
-            self._process_all_allele_view(limit)
-            self._process_all_allele_mutation_view(limit)
-            self._process_gxd_allele_pair_view(limit)
-            self._process_voc_annot_view(limit)
-            self._process_voc_evidence_view(limit)
-            self._process_mgi_note_vocevidence_view(limit)
+        # The following will use the hash populated above to lookup the ids when filling in the graph
+        self._process_prb_strain_view(limit)
+        self._process_gxd_genotype_view(limit)
+        self._process_mrk_marker_view(limit)
+        self._process_mrk_acc_view_for_equiv(limit)
+        self._process_mrk_summary_view(limit)
+        self._process_all_allele_view(limit)
+        self._process_all_allele_mutation_view(limit)
+        self._process_gxd_allele_pair_view(limit)
+        self._process_voc_annot_view(limit)
+        self._process_voc_evidence_view(limit)
+        self._process_mgi_note_vocevidence_view(limit)
 
         logger.info("Finished parsing.")
 
