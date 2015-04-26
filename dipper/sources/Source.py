@@ -318,7 +318,7 @@ class Source:
                 cur.execute(countquery)
                 tablerowcount = cur.fetchone()[0]
                 if filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
-                    logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
+                    logger.info("local (%d) different from remote (%d); fetching.", filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
