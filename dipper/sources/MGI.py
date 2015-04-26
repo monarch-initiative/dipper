@@ -19,19 +19,24 @@ logger = logging.getLogger(__name__)
 
 class MGI(Source):
     """
-    This is the Mouse informatics resource, from which we process genotype and phenotype data about laboratory mice.
-    Genotypes leverage the GENO genotype model.
-    Be sure to have pg user/password connection details in your conf.json file, like:
+    This is the Mouse Genome Informatics resource, from which we process genotype and phenotype data about
+    laboratory mice.  Genotypes leverage the GENO genotype model.
+
+    Here, we connect to their public database, and download a subset of tables/views to get specifically at the
+    geno-pheno data, then iterate over the tables.  We end up effectively performing joins when adding nodes
+    to the graph.
+    In order to use this parser, you will need to have user/password connection details in your conf.json file, like:
       dbauth : {
         'mgi' : {'user' : '<username>', 'password' : '<password>'}
       }
+    You can request access by contacting mgi-help@jax.org
     """
 
     #CONSIDER IF WE NEED:
     # mgi_organism_acc_view: Consider using this for the taxon mapping instead of the hashmap encoded below
     # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
     # all_allele_cellline_view: When we want to start dealing with cell lines
-    # mgi_note_strain_view: prose descriptons of strains.
+    # mgi_note_strain_view: prose descriptions of strains.
     # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
     # prb_strain_marker_view: eventually i think we want this because it has other relevant markers that are affected
 
@@ -141,6 +146,8 @@ class MGI(Source):
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
         self.fetch_from_pgdb(self.tables,cxn)
+
+        #TODO force the download of the table 'mgi_dbinfo'
 
         datestamp = ver = None
         # get the resource version information from table mgi_dbinfo, already fetched above
@@ -1336,7 +1343,7 @@ class MGI(Source):
         query=(' ').join(("SELECT * FROM",table,"LIMIT 0"))  #for testing
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
-        logger.info("columns ("+table+"):",colnames)
+        logger.info("columns (%s): %s",table, colnames)
 
         return
 
