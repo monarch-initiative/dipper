@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/monarch-initiative/mckb.svg?branch=master)](https://travis-ci.org/monarch-initiative/mckb)
+
 * The dipper main wraps all of the source parsers, enabling users to specify one or more sources to process. 
 The general strategy is that there is one class per data source.  We define the files to be fetched,
 any file scrubbing, and then the parsing methods.  As the files are parsed, triples are loaded into a graph.  
