@@ -45,20 +45,28 @@ the code to skip this, if necessary
 
 ## Running Dipper:
 * you can run the code by supplying a list of one or more sources on the command line.  some examples:
+
       ```dipper --sources omim,ncbigene```
+
 * furthermore, you can check things out by supplying a limit.  this will only process the
 first N number of rows or data elements
+
     ```dipper --sources hpoa --limit 100```
+
 * you can also run the stand-alone tests in ```tests/test_*``` to generate subsets of the data and run unittests
 * other commandline parameters are explained if you request help:
+
     ```./dipper.py --help```
 
 ## Installing Dipper as an external python package:
 You can also write your own dipper packages outside of this project, using the framework we've set up here.  Simply
 import Dipper as a python package, write your own wrapper, and add your own source parsers.
 * as an external python package with pip3
+
     ```pip3 install git+git://github.com/monarch-initiative/dipper.git```
+
 * or clone the repository and run:
+
     ```pip3 install -e /path/to/git/dipper```
 
 * The following sources have been mapped:
