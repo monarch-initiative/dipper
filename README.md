@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
+
 # DIPPER
 Dipper is a pure Python package to generate RDF triples from common scientific resources.
 Dipper includes subpackages and modules to create graphical models of this data, including:
