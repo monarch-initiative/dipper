@@ -18,6 +18,7 @@ class GraphUtils:
 
     OWLCLASS = OWL['Class']
     OWLIND = OWL['NamedIndividual']
+    OWLRESTRICTION = OWL['Restriction']
     OWLPROP = OWL['ObjectProperty']
     OBJPROP = OWL['ObjectProperty']
     ANNOTPROP = OWL['AnnotationProperty']
@@ -108,6 +109,20 @@ class GraphUtils:
         if description is not None:
             g.add((n, DC['description'], Literal(description)))
         return g
+
+    def addOWLPropertyClassRestriction(self, g, class_id, property_id, property_value):
+
+        # make a blank node to hold the property restrictions
+        # scrub the colons, they will make the ttl parsers choke
+        n = self._getNode('_'+re.sub(':','',property_id)+re.sub(':', '', property_value))
+
+        g.add((n, RDF['type'], self.OWLRESTRICTION))
+        g.add((n, OWL['onProperty'], self._getNode(property_id)))
+        g.add((n, OWL['someValuesFrom'], self._getNode(property_value)))
+
+        g.add((self._getNode(class_id), self.SUBCLASS, n))
+
+        return
 
     def addEquivalentClass(self, g, id1, id2):
         n1 = self._getNode(id1)

@@ -406,10 +406,6 @@ class Genotype():
             chr_label = makeChromLabel(chr)
         genome_id = self.makeGenomeID(tax_id)
         self.gu.addClassToGraph(self.graph, chr_id, chr_label, Feature.types['chromosome'])
-        # add it as a member of the genome (both ways)
-        self.gu.addMember(self.graph, genome_id, chr_id)
-        self.gu.addMemberOf(self.graph, chr_id, genome_id)
-
         self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
 
         if build_id is not None:

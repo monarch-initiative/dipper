@@ -317,7 +317,7 @@ def makeChromID(chrom, reference=None):
     r = reference
     if re.match('.+:.+', reference):
         r = re.match('.*:(.*)', reference).group(1)
-    id = ''.join((':', r, 'chr', c))
+    id = ''.join(('CHR:', r, 'chr', c))
     return id
 
 
