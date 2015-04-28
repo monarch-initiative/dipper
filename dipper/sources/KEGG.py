@@ -21,16 +21,8 @@ class KEGG(Source):
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
-        "pathway": ["path:map00010", "path:map00195", "path:map00100", "ZDB-GENO-050209-30",
-                      "ZDB-GENO-051018-1", "ZDB-GENO-070209-80", "ZDB-GENO-070215-11", "ZDB-GENO-070215-12",
-                      "ZDB-GENO-070228-3", "ZDB-GENO-070406-1", "ZDB-GENO-070712-5", "ZDB-GENO-070917-2",
-                      "ZDB-GENO-080328-1", "ZDB-GENO-080418-2", "ZDB-GENO-080516-8", "ZDB-GENO-080606-609",
-                      "ZDB-GENO-080701-2", "ZDB-GENO-080713-1", "ZDB-GENO-080729-2", "ZDB-GENO-080804-4",
-                      "ZDB-GENO-080825-3", "ZDB-GENO-091027-1", "ZDB-GENO-091027-2", "ZDB-GENO-091109-1",
-                      "ZDB-GENO-100325-3", "ZDB-GENO-100325-4", "ZDB-GENO-100325-5", "ZDB-GENO-100325-6",
-                      "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
-                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
-                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3"]
+        "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340"],
+        "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736"]
     }
 
     def __init__(self):
@@ -69,6 +61,7 @@ class KEGG(Source):
             self.testMode = True
 
         self._process_pathways(limit)
+        self._process_diseases(limit)
 
 
 
@@ -114,7 +107,39 @@ class KEGG(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-
         logger.info("Done with pathways")
         return
 
+    def _process_diseases(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing diseases")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['disease']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (disease_id, disease_name) = row
+
+                if self.testMode and disease_id not in self.test_ids['disease']:
+                    continue
+
+                disease_id = 'KEGG:'+disease_id.strip()
+                # Add the pathway as a class.
+                gu.addIndividualToGraph(g, disease_id, disease_name)
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with diseases")
+        return
