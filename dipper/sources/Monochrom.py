@@ -26,7 +26,8 @@ class Monochrom(Source):
     For example,
     13q21.31 ==>  13q21.31,  13q21.3,  13q21,  13q2,  13q, 13
 
-    At the moment, this only computes the bands for Human, but will be expanding in the future as desired.
+    At the moment, this only computes the bands for Human, Mouse, Zebrafish, and Rat,
+    but will be expanding in the future as needed.
 
     Because this is a universal framework to represent the chromosomal structure of any species, we must
     mint identifiers for each chromosome and part.  We differentiate species by first creating a
@@ -62,7 +63,7 @@ class Monochrom(Source):
             'build_num': 'hg19',
             'genome_label': 'Human'
         },
-        # Note that there are no bands or staining components for zfish at all
+        # Note that there are no bands, arms or staining components for zfish at the moment
         '7955': {
             'file': '7955cytoBand.txt.gz',
             'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
@@ -75,6 +76,7 @@ class Monochrom(Source):
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
+        # Note that there are no bands, arms or staining components for rat at the moment
         '10116': {
             'file': '10116cytoBand.txt.gz',
             'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/rn6/database/cytoBandIdeo.txt.gz',
@@ -90,15 +92,15 @@ class Monochrom(Source):
         self.load_bindings()
         self.gu = GraphUtils(curie_map.get())
 
-        # TODO add other species as defaults
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 7955, 10090, 10116]
 
         self._check_tax_ids()
 
-        self.dataset = Dataset('monochrom', 'UCSC Cytogenic Bands', 'http://hgdownload.cse.ucsc.edu',
-                               None, 'http://genome.ucsc.edu/license/')
+        # TODO add license
+        self.dataset = Dataset('monochrom', 'Monarch Chromosome Ontology', 'http://monarchinitiative.org',
+                               None, None)
 
         # data-source specific warnings (will be removed when issues are cleared)
 
