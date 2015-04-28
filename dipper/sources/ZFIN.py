@@ -185,7 +185,7 @@ class ZFIN(Source):
         self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
 
-        self._process_wildtype_expression(limit)
+        #self._process_wildtype_expression(limit)
         self._process_gene_marker_relationships(limit)
         self._process_features(limit)
         self._process_genes(limit)
@@ -1178,10 +1178,6 @@ class ZFIN(Source):
 
         return
 
-
-        # TODO: The G2P function is only dealing with wild-type environments, meaning just intrinsic genotypes
-        # If mapping in these extrinsic modifiers, will need to adjust the G2P function as used above.
-
         #TODO: We have the sequence information for each of the targeting reagents. How to model?
     def _process_morpholinos(self, limit=None):
         """
@@ -1219,13 +1215,12 @@ class ZFIN(Source):
                 if self.testMode and morpholino_id not in self.test_ids['morpholino']:
                     continue
 
-                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(g)
                 morpholino_id = 'ZFIN:'+morpholino_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
 
                 # TODO: map target sequence to morpholino.
-                # FIXME: Is this correct?
+                # FIXME: Is this correct? Leaving out for now.
                 # Commenting out for now
                 # Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
                 # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
@@ -1313,8 +1308,6 @@ class ZFIN(Source):
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
 
-
-                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(g)
                 talen_id = 'ZFIN:'+talen_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
@@ -1388,7 +1381,6 @@ class ZFIN(Source):
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
 
-                # FIXME: Is my approach with geno here correct?
                 geno = Genotype(g)
                 crispr_id = 'ZFIN:'+crispr_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
@@ -1506,7 +1498,7 @@ class ZFIN(Source):
 
                 # We can start to build the extrinsic genotype using this file.
                 # Requires creating a hash similar to what is used for genotypes to get the VSLCs and GVCs.
-                # TODO: For now just adding Morpholinos/Talens/CRISPRs and not working with temp/chemical/physical/etc.
+                # TODO: For now just adding Morpholinos and not working with temp/chemical/physical/etc, aside from labels
                 # FIXME: For now just using the general "Environment" geno ID (GENO:0000099)
                 #There are a few specific environments available in GENO, including some standard
                 # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
@@ -1826,7 +1818,6 @@ class ZFIN(Source):
                 if self.testMode and zfin_id not in self.test_ids['gene']+self.test_ids['allele']:
                     continue
 
-                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(g)
 
                 zfin_id = 'ZFIN:'+zfin_id.strip()
@@ -1889,7 +1880,6 @@ class ZFIN(Source):
                 if self.testMode and zfin_id not in self.test_ids['gene']:
                     continue
 
-                #FIXME: Is my approach with geno here correct?
                 geno = Genotype(g)
 
                 zfin_id = 'ZFIN:'+zfin_id.strip()
@@ -1949,9 +1939,6 @@ class ZFIN(Source):
                 gene_id = 'ZFIN:'+gene_id.strip()
                 uniprot_id = 'UniProtKB:'+uniprot_id.strip()
 
-
-                # FIXME: Need to lookup with a hash whether or not the gene already exists in the graph?
-                # Or just create the gene as a class, although it would be redundant?
                 geno.addGene(gene_id,gene_symbol)
                 # Need to add some type of 'has_gene_product' relationship here.
                 # TODO: Abstract to one of the model utilities
