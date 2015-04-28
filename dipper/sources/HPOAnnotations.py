@@ -45,6 +45,14 @@ class HPOAnnotations(Source):
     evidence, and age of onset and frequency (if known).
     The parser currently only processes the "abnormal" annotations.  Association to "remarkable normality"
     will be added in the near future.
+
+    In order to properly test this class, you should have a conf.json file configured with some test ids, in
+    the structure of:
+        <pre>
+        test_ids: {
+            "disease" : ["OMIM:119600", "OMIM:120160"]  # as examples.  put your favorite ids in the config.
+        }
+        </pre>
     """
 
     files = {
@@ -75,8 +83,8 @@ class HPOAnnotations(Source):
                                'http://www.human-phenotype-ontology.org', None,
                                'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
 
-        if 'test_ids' not in config.get_config() and 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
