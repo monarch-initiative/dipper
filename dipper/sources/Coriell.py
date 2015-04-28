@@ -83,7 +83,7 @@ class Coriell(Source):
         logger.warn('We map all omim ids as a disease/phenotype entity, but should be fixed in the future')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'keys' not in config.get_config() and 'coriell' not in config.get_config()['keys']:
+        if 'keys' not in config.get_config() or 'coriell' not in config.get_config()['keys']:
             logger.error("not configured with FTP user/password.")
 
         return

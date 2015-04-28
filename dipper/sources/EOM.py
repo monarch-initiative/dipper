@@ -56,7 +56,7 @@ class EOM(Source):
                                'https://creativecommons.org/publicdomain/mark/1.0/')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and 'disco' not in config.get_config()['dbauth']:
+        if 'dbauth' not in config.get_config() or 'disco' not in config.get_config()['dbauth']:
             logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.

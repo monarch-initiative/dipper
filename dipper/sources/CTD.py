@@ -50,13 +50,15 @@ class CTD(Source):
         Source.__init__(self, 'ctd')
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org', None, 'http://ctdbase.org/about/legal.jsp')
 
-        if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
-            print("WARN: not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+            logger.warn("not configured with gene test ids.")
+            self.test_geneids = []
         else:
             self.test_geneids = config.get_config()['test_ids']['gene']
 
-        if 'test_ids' not in config.get_config() and 'disease' not in config.get_config()['test_ids']:
-            print("WARN: not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+            self.test_diseaseids = []
         else:
             self.test_diseaseids = config.get_config()['test_ids']['disease']
 
