@@ -796,7 +796,7 @@ class ZFIN(Source):
 
                 #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
                 # Only adding the effective genotype if there is an extrinsic genotype present.
-                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is not None or self.label_hash['genotype_label'].get(extrinsic_geno_id) != '':
+                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is not None and self.label_hash['genotype_label'].get(extrinsic_geno_id) != '':
                     intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
                     extrinsic_genotype_label = self.label_hash['genotype_label'].get(extrinsic_geno_id)
                     if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
