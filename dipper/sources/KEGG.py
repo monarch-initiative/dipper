@@ -1,6 +1,6 @@
 import csv
 import logging
-
+import re
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -16,13 +16,16 @@ class KEGG(Source):
         'disease': {'file': 'disease',
                  'url': 'http://rest.genome.jp/list/disease'},
         'pathway': {'file': 'pathway',
-                 'url': 'http://rest.genome.jp/list/pathway'}
+                 'url': 'http://rest.genome.jp/list/pathway'},
+        'genes': {'file': 'genes',
+                 'url': 'http://rest.genome.jp/list/hsa'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340"],
-        "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736"]
+        "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736"],
+        "genes": ["hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387"]
     }
 
     def __init__(self):
@@ -62,6 +65,7 @@ class KEGG(Source):
 
         self._process_pathways(limit)
         self._process_diseases(limit)
+        self._process_genes(limit)
 
 
 
@@ -135,11 +139,45 @@ class KEGG(Source):
                     continue
 
                 disease_id = 'KEGG:'+disease_id.strip()
-                # Add the pathway as a class.
-                gu.addIndividualToGraph(g, disease_id, disease_name)
+                # Add the disease as a class.
+                gu.addClassToGraph(g, disease_id, disease_name)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with diseases")
+        return
+
+    def _process_genes(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing genes")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['genes']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (gene_id, gene_name) = row
+
+                if self.testMode and gene_id not in self.test_ids['genes']:
+                    continue
+
+                gene_id = 'KEGG:'+gene_id.strip()
+                # Add the disease as a class.
+                gu.addClassToGraph(g, gene_id, gene_name)
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with genes")
         return
