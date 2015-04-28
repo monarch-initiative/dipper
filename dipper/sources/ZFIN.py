@@ -178,7 +178,7 @@ class ZFIN(Source):
         self._process_genotype_backgrounds(limit)
         self._process_genotype_features(limit)
         self._process_morpholinos(limit) # Process before talens/crisprs
-        #NOTE: If leaving out TALENs & CRISPRs, need to filter them from the pheno_enviro parsing.
+        #NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the environment label.
         self._process_talens(limit) # Leaving TALENs out until further review.
         self._process_crisprs(limit) # Leaving CRISPRs out until further review.
         self._process_pheno_enviro(limit) # Must be processed after morpholinos/talens/crisprs
@@ -239,18 +239,19 @@ class ZFIN(Source):
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 background_id = self.genotype_id_to_background_id_hash['genotype_id'].get(genotype_id)
-                if background_id is not None:
-                    genotype_name = genotype_name+' ['+self.label_hash['background_label'].get(background_id)+']'
-                else:
-                    genotype_name = genotype_name+' [n.s.]'
+                #if background_id is not None:
+                    #genotype_name = genotype_name+' ['+self.label_hash['background_label'].get(background_id)+']'
+                #else:
+                    #genotype_name = genotype_name+' [n.s.]'
                 #print(genotype_name)
                 geno = Genotype(g)
-                gt = geno.addGenotype(genotype_id, genotype_name)
+                #gt = geno.addGenotype(genotype_id, genotype_name)
+                gt = geno.addGenotype(genotype_id, None)
                 if genotype_id not in geno_hash:
                     geno_hash[genotype_id] = {};
                 genoparts = geno_hash[genotype_id]
-                if self.label_hash['genotype_label'].get(genotype_id) is None:
-                    self.label_hash['genotype_label'][genotype_id] = genotype_name
+                #if self.label_hash['genotype_label'].get(genotype_id) is None:
+                    #self.label_hash['genotype_label'][genotype_id] = genotype_name
 
                 #FIXME: This seems incorrect. Shouldn't the types available here be added to the sequence alteration?
                 # reassign the allele_type to a proper GENO or SO class
@@ -291,8 +292,8 @@ class ZFIN(Source):
                     #    genoparts[gene_id].append('complex')
                     geno_hash[genotype_id] = genoparts
                 else:
-                    # if the gene is not known, still need to add the allele to the genotype hash
-                    # these will be added as sequence alterations.
+                    #if the gene is not known, still need to add the allele to the genotype hash
+                    #these will be added as sequence alterations.
                     genoparts[allele_id] = [allele_id]
                     if zygosity == 'homozygous':
                         genoparts[allele_id].append(allele_id)
@@ -308,13 +309,13 @@ class ZFIN(Source):
                 if (limit is not None and line_counter > limit):
                     break
 
-                # end loop through file
+                #end loop through file
+            #now loop through the geno_hash, and build the vslcs
 
-            # now loop through the geno_hash, and build the vslcs
             for gt in geno_hash:
-                if genotype_id not in gvc_hash:
-                    gvc_hash[genotype_id] = {};
-                gvcparts = gvc_hash[genotype_id]
+                if gt not in gvc_hash:
+                    gvc_hash[gt] = {};
+                gvcparts = gvc_hash[gt]
                 vslc_counter = 0
 
 
@@ -322,7 +323,7 @@ class ZFIN(Source):
                     gene_label = self.label_hash['gene_label'].get(gene_id)
                     variant_locus_parts = geno_hash.get(gt).get(gene_id)
                     if gene_id in variant_locus_parts:
-                        # reset the gene_id to none
+                        #reset the gene_id to none
                         gene_id = None
 
                     allele1_id = variant_locus_parts[0]
@@ -330,7 +331,7 @@ class ZFIN(Source):
                     allele2_id = None
                     allele2_label = None
                     zygosity_id = None
-                    # making the assumption that there are not more than 2 variant_locus_parts
+                    #making the assumption that there are not more than 2 variant_locus_parts
                     if len(variant_locus_parts) > 1:
                         allele2_id = variant_locus_parts[1]
                         allele2_label = self.label_hash['allele_label'].get(allele2_id)
@@ -349,17 +350,17 @@ class ZFIN(Source):
                     else:
                         zygosity_id = geno.zygosity['indeterminate']
 
-                    # create the vslc
+                    #create the vslc
                     if gene_id is None:
-                        g = ''
+                        gn = ''
                     else:
-                        g = gene_id
+                        gn = gene_id
                     if (allele2_id is None):
                         a2 = ''
                     else:
                         a2 = allele2_id
 
-                    vslc_id = self.make_id(('-').join((g,allele1_id,a2)))
+                    vslc_id = self.make_id(('-').join((gn,allele1_id,a2)))
                     #print(g+'_'+allele1_id+'_'+a2)
                     #print(gene_label)
                     #print(allele1_label)
@@ -378,7 +379,7 @@ class ZFIN(Source):
                         vslc_label = ''
                     #print(vslc_label)
 
-                    gu.addIndividualToGraph(self.graph,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
+                    gu.addIndividualToGraph(g,vslc_id,vslc_label,geno.genoparts['variant_single_locus_complement'])
                     geno.addPartsToVSLC(vslc_id,allele1_id,allele2_id,zygosity_id)
                     #Remove this since I am now adding the VSLC to the GVC?
                     #geno.addVSLCtoParent(vslc_id,gt)
@@ -397,7 +398,6 @@ class ZFIN(Source):
                         vslc_label_hash[gt_vslc] = [vslc_label]
                     elif vslc_id not in vslc_label_hash[gt_vslc]:
                         vslc_label_hash[gt_vslc].append(vslc_label)
-
 
                 #print(gvcparts)
 
@@ -418,17 +418,37 @@ class ZFIN(Source):
                     #gvc_id = ('_split_').join(genomic_variation_complement_parts)
                     gvc_label = ('; ').join(gvc_label_parts)
                     #Add the GVC
-                    gu.addIndividualToGraph(self.graph,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
+                    gu.addIndividualToGraph(g,gvc_id,gvc_label,geno.genoparts['genomic_variation_complement'])
                     #print(gvc_id)
 
                     #Add the VSLCs to the GVC
                     for i in genomic_variation_complement_parts:
                         #geno.addVSLCtoParent(i,gt)
-                        gu.addTriple(self.graph,gvc_id,geno.object_properties['has_alternate_part'],i)
+                        gu.addTriple(g,gvc_id,geno.object_properties['has_alternate_part'],i)
+
+
+                background_id = self.genotype_id_to_background_id_hash['genotype_id'].get(gt)
+                if background_id is not None:
+                    genotype_name = gvc_label+' ['+self.label_hash['background_label'].get(background_id)+']'
+                else:
+                    genotype_name = gvc_label+' [n.s.]'
+                #print(genotype_name)
+                geno = Genotype(g)
+                geno.addGenotype(gt, genotype_name)
+                #gt = geno.addGenotype(genotype_id, None)
+                if gt not in geno_hash:
+                    geno_hash[gt] = {};
+                #genoparts = geno_hash[genotype_id]
+                if self.label_hash['genotype_label'].get(gt) is None:
+                    self.label_hash['genotype_label'][gt] = genotype_name
+                    #print(genotype_name)
+
+
 
 
                 #Add the GVC to the genotype
-                gu.addTriple(self.graph,gt,geno.object_properties['has_alternate_part'],gvc_id)
+                #print(gt)
+                gu.addTriple(g,gt,geno.object_properties['has_alternate_part'],gvc_id)
 
 
 
@@ -784,6 +804,8 @@ class ZFIN(Source):
                 elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
                     effective_genotype_label = intrinsic_genotype_label
                 else:
+                    #print(intrinsic_genotype_label)
+                    #print(genotype_id)
                     logger.error('No effective genotype label created.')
                     effective_genotype_label = ''
                     #effective_genotype_label = '<empty>'
@@ -1836,6 +1858,9 @@ class ZFIN(Source):
         """
         This file contains BACs, cDNAs, engineered foreign genes, ESTs, engineered plasmids, Fosmids, pseudogenes,
         engineered plasmids, P1 artificial chromosomes, SSLPs, and STS's in addition to genes, maps all to GenBank IDs.
+
+        Triples created:
+
         :param limit:
         :return:
         """
@@ -1884,11 +1909,20 @@ class ZFIN(Source):
     
     def _process_uniprot_ids(self, limit=None):
         """
+        This method processes the the mappings from ZFIN gene IDs to UniProtKB IDs.
 
+        Triples created:
+        <zfin_gene_id> a class
+        <zfin_gene_id> rdfs:label gene_symbol
+
+        <uniprot_id> is an Individual
+        <uniprot_id> has type <polypeptide>
+
+        <zfin_gene_id> has_gene_product <uniprot_id>
         :param limit:
         :return:
         """
-        #FIXME: Is this method unnecessary once the ZFIN gene ID has been mapped to the NCBIGene ID in process_genes?
+
         logger.info("Processing UniProt IDs")
         if self.testMode:
             g = self.testgraph
@@ -1906,8 +1940,7 @@ class ZFIN(Source):
                 
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
-  
-                #FIXME: Is my approach with geno here correct?
+
                 geno = Genotype(g)
 
                 gene_id = 'ZFIN:'+gene_id.strip()
@@ -1919,7 +1952,7 @@ class ZFIN(Source):
                 geno.addGene(gene_id,gene_symbol)
                 # Need to add some type of 'has_gene_product' relationship here.
                 # TODO: Abstract to one of the model utilities
-                gu.addIndividualToGraph(g,uniprot_id,None,'SO:0000104')
+                gu.addIndividualToGraph(g,uniprot_id,None,geno.genoparts['polypeptide'])
                 gu.addTriple(g,gene_id,gu.properties['has_gene_product'],uniprot_id)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
