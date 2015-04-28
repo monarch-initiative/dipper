@@ -74,10 +74,11 @@
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
 'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
-'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
+'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
+'HGMD' : http://identifiers.org/hgmd/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
