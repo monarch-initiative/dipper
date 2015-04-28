@@ -53,7 +53,13 @@ class GraphUtils:
         'model_of' : 'ERO:0000233',
         'has_gene_product' : 'RO:0002205',
         'existence_starts_at' : 'UBERON:existence_starts_at',
-        'existence_ends_at' : 'UBERON:existence_ends_at'
+        'existence_starts_during' : 'RO:0002488',
+        'existence_ends_at' : 'UBERON:existence_ends_at',
+        'existence_ends_during' : 'RO:0002492',
+        'occurs_in' : 'BFO:0000066',
+        'has_environment_qualifier' : 'GENO:0000580',
+        'has_begin_stage_qualifier' : 'GENO:0000630',
+        'has_end_stage_qualifier' : 'GENO:0000631'
     }
 
     datatype_properties = {

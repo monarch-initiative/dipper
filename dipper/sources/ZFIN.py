@@ -749,7 +749,7 @@ class ZFIN(Source):
 
         missing_zpids = list()
         mapped_zpids = list()
-
+        gu = GraphUtils(curie_map.get())
         # hardcode
         eco_id = "ECO:0000059"  #experimental_phenotypic_evidence
         raw = ('/').join((self.rawdir,self.files['pheno']['file']))
@@ -838,6 +838,13 @@ class ZFIN(Source):
                     #FIXME: Assuming we change from the intrinsic genotype_id to the effective genotype ID.
                     assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
                     assoc.addAssociationNodeToGraph(g)
+                    #FIXME: Hanging the environment and stages on the G2P association for now.
+                    # Add environment to G2P association.
+                    gu.addTriple(g,assoc,gu.object_properties['has_environment_qualifier'],env_id)
+                    # Add starting stage to G2P association.
+                    gu.addTriple(g,assoc,gu.object_properties['has_begin_stage_qualifier'],start_stage_id)
+                    # Add ending stage to G2P association.
+                    gu.addTriple(g,assoc,gu.object_properties['has_end_stage_qualifier'],end_stage_id)
                 else:
                     # add normal phenotypes
                     logger.warn("Found normal phenotype; skipping for now")
@@ -1521,6 +1528,9 @@ class ZFIN(Source):
                 if re.match('ZDB-MRPHLNO.*',condition):
 
                     condition = 'ZFIN:'+condition.strip()
+                    #TODO: In the future may want to subdivide from the general "environment" type
+                    # and map to specific environment types (altered chemical environment,
+                    # elevated temperature environment, altered light environment, etc.)
                     gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'])
                     geno.addGenotype(extrinsic_geno_id,None,geno.genoparts['extrinsic_genotype'])
 
