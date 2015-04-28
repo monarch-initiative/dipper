@@ -795,27 +795,30 @@ class ZFIN(Source):
                 effective_genotype_id = self.make_id(genotype_id+'_'+env_id)
 
                 #FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
-                intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
-                extrinsic_genotype_label = self.label_hash['genotype_label'].get(extrinsic_geno_id)
-                if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
-                    effective_genotype_label = intrinsic_genotype_label+'; '+extrinsic_genotype_label
-                elif intrinsic_genotype_label is None and extrinsic_genotype_label is not None:
-                    effective_genotype_label = extrinsic_genotype_label
-                elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
-                    effective_genotype_label = intrinsic_genotype_label
-                else:
-                    #print(intrinsic_genotype_label)
-                    #print(genotype_id)
-                    logger.error('No effective genotype label created.')
-                    effective_genotype_label = ''
-                    #effective_genotype_label = '<empty>'
-                #if intrinsic_genotype_label is not None:
-                    #print(intrinsic_genotype_label)
-                #print(effective_genotype_label)
-                geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
-
-                geno.addParts(extrinsic_geno_id,effective_genotype_id)
-                geno.addParts(genotype_id,effective_genotype_id)
+                # Only adding the effective genotype if there is an extrinsic genotype present.
+                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is not None or self.label_hash['genotype_label'].get(extrinsic_geno_id) != '':
+                    intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
+                    extrinsic_genotype_label = self.label_hash['genotype_label'].get(extrinsic_geno_id)
+                    if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
+                        effective_genotype_label = intrinsic_genotype_label+'; '+extrinsic_genotype_label
+                    elif intrinsic_genotype_label is None and extrinsic_genotype_label is not None:
+                        effective_genotype_label = extrinsic_genotype_label
+                    elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
+                        effective_genotype_label = intrinsic_genotype_label
+                    else:
+                        #print(intrinsic_genotype_label)
+                        #print(genotype_id)
+                        logger.error('No effective genotype label created.')
+                        effective_genotype_label = ''
+                        #effective_genotype_label = '<empty>'
+                    #if intrinsic_genotype_label is not None:
+                        #print(intrinsic_genotype_label)
+                    #print(effective_genotype_label)
+                    geno.addGenotype(effective_genotype_id,effective_genotype_label,geno.genoparts['effective_genotype'])
+                    if extrinsic_genotype_label is not None and extrinsic_genotype_label != '':
+                        geno.addParts(extrinsic_geno_id,effective_genotype_id)
+                    if intrinsic_genotype_label is not None and intrinsic_genotype_label != '':
+                        geno.addParts(genotype_id,effective_genotype_id)
 
 
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
