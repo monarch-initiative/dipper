@@ -1,7 +1,7 @@
 import csv
 import re
 import logging
-#from Bio.Seq import Seq
+# from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -10,11 +10,12 @@ from dipper.models.Genotype import Genotype
 from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
-from dipper.models.GenomicFeature import Feature,makeChromID
+from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
 logger = logging.getLogger(__name__)
+
 
 class ZFIN(Source):
     """
@@ -34,7 +35,7 @@ class ZFIN(Source):
         'enviro': {'file': 'pheno_environment.txt', 'url': 'http://zfin.org/Downloads/pheno_environment.txt'},
         'stage': {'file': 'stage_ontology.txt', 'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
         'anatomy': {'file': 'anatomy_item.txt', 'url': 'http://zfin.org/Downloads/anatomy_item.txt'},
-        'wild_expression': {'file' : 'wildtype-expression.txt',
+        'wild_expression': {'file': 'wildtype-expression.txt',
                             'url': 'http://zfin.org/Downloads/wildtype-expression.txt'},
         'mappings': {'file': 'mappings.txt', 'url': 'http://zfin.org/downloads/mappings.txt'},
         'backgrounds': {'file': 'genotype_backgrounds.txt',
@@ -46,7 +47,7 @@ class ZFIN(Source):
         'human_orthos': {'file': 'human_orthos.txt', 'url': 'http://zfin.org/downloads/human_orthos.txt'},
         'features': {'file': 'features.txt', 'url': 'http://zfin.org/downloads/features.txt'},
         'feature_affected_gene': {'file': 'features-affected-genes.txt',
-                                  'url' : 'http://zfin.org/downloads/features-affected-genes.txt'},
+                                  'url': 'http://zfin.org/downloads/features-affected-genes.txt'},
         'gene_marker_rel': {'file': 'gene_marker_relationship.txt',
                             'url': 'http://zfin.org/downloads/gene_marker_relationship.txt'},
         'crispr': {'file': 'CRISPR.txt', 'url': 'http://zfin.org/downloads/CRISPR.txt'},
@@ -58,64 +59,61 @@ class ZFIN(Source):
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
         "genotype": ["ZDB-GENO-010426-2", "ZDB-GENO-010427-3", "ZDB-GENO-010427-4", "ZDB-GENO-050209-30",
-                      "ZDB-GENO-051018-1", "ZDB-GENO-070209-80", "ZDB-GENO-070215-11", "ZDB-GENO-070215-12",
-                      "ZDB-GENO-070228-3", "ZDB-GENO-070406-1", "ZDB-GENO-070712-5", "ZDB-GENO-070917-2",
-                      "ZDB-GENO-080328-1", "ZDB-GENO-080418-2", "ZDB-GENO-080516-8", "ZDB-GENO-080606-609",
-                      "ZDB-GENO-080701-2", "ZDB-GENO-080713-1", "ZDB-GENO-080729-2", "ZDB-GENO-080804-4",
-                      "ZDB-GENO-080825-3", "ZDB-GENO-091027-1", "ZDB-GENO-091027-2", "ZDB-GENO-091109-1",
-                      "ZDB-GENO-100325-3", "ZDB-GENO-100325-4", "ZDB-GENO-100325-5", "ZDB-GENO-100325-6",
-                      "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
-                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
-                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3"],
+                     "ZDB-GENO-051018-1", "ZDB-GENO-070209-80", "ZDB-GENO-070215-11", "ZDB-GENO-070215-12",
+                     "ZDB-GENO-070228-3", "ZDB-GENO-070406-1", "ZDB-GENO-070712-5", "ZDB-GENO-070917-2",
+                     "ZDB-GENO-080328-1", "ZDB-GENO-080418-2", "ZDB-GENO-080516-8", "ZDB-GENO-080606-609",
+                     "ZDB-GENO-080701-2", "ZDB-GENO-080713-1", "ZDB-GENO-080729-2", "ZDB-GENO-080804-4",
+                     "ZDB-GENO-080825-3", "ZDB-GENO-091027-1", "ZDB-GENO-091027-2", "ZDB-GENO-091109-1",
+                     "ZDB-GENO-100325-3", "ZDB-GENO-100325-4", "ZDB-GENO-100325-5", "ZDB-GENO-100325-6",
+                     "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
+                     "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
+                     "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
-                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
-                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
-                  "ZDB-GENE-080405-1", "ZDB-GENE-081211-2", "ZDB-GENE-091118-129", "ZDB-GENE-980526-135",
-                  "ZDB-GENE-980526-166", "ZDB-GENE-980526-196", "ZDB-GENE-980526-265", "ZDB-GENE-980526-299",
-                  "ZDB-GENE-980526-41", "ZDB-GENE-980526-437", "ZDB-GENE-980526-44", "ZDB-GENE-980526-481",
-                  "ZDB-GENE-980526-561", "ZDB-GENE-980526-89", "ZDB-GENE-990415-181", "ZDB-GENE-990415-72",
-                  "ZDB-GENE-990415-75"],
+                 "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
+                 "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
+                 "ZDB-GENE-080405-1", "ZDB-GENE-081211-2", "ZDB-GENE-091118-129", "ZDB-GENE-980526-135",
+                 "ZDB-GENE-980526-166", "ZDB-GENE-980526-196", "ZDB-GENE-980526-265", "ZDB-GENE-980526-299",
+                 "ZDB-GENE-980526-41", "ZDB-GENE-980526-437", "ZDB-GENE-980526-44", "ZDB-GENE-980526-481",
+                 "ZDB-GENE-980526-561", "ZDB-GENE-980526-89", "ZDB-GENE-990415-181", "ZDB-GENE-990415-72",
+                 "ZDB-GENE-990415-75"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
-                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
-                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
-                    "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
-                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636"],
+                   "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
+                   "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
+                   "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
+                   "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
-                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
-                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
-                        "ZDB-MRPHLNO-071227-1", "ZDB-MRPHLNO-080307-1", "ZDB-MRPHLNO-080428-1", "ZDB-MRPHLNO-080430-1",
-                        "ZDB-MRPHLNO-080919-4", "ZDB-MRPHLNO-081110-3", "ZDB-MRPHLNO-090106-5", "ZDB-MRPHLNO-090114-1",
-                        "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
-                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
-                        "ZDB-MRPHLNO-130222-4"],
+                       "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
+                       "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
+                       "ZDB-MRPHLNO-071227-1", "ZDB-MRPHLNO-080307-1", "ZDB-MRPHLNO-080428-1", "ZDB-MRPHLNO-080430-1",
+                       "ZDB-MRPHLNO-080919-4", "ZDB-MRPHLNO-081110-3", "ZDB-MRPHLNO-090106-5", "ZDB-MRPHLNO-090114-1",
+                       "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
+                       "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
+                       "ZDB-MRPHLNO-130222-4"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
-                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
-                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
-                         "ZDB-EXP-100330-7", "ZDB-EXP-100402-1", "ZDB-EXP-100402-2", "ZDB-EXP-100422-3",
-                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
-                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
-                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2"],
+                        "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
+                        "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
+                        "ZDB-EXP-100330-7", "ZDB-EXP-100402-1", "ZDB-EXP-100402-2", "ZDB-EXP-100422-3",
+                        "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
+                        "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
+                        "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2"],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
-                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
-                 "PMID:18201692", "PMID:18358464", "PMID:18388326", "PMID:18638469", "PMID:18846223",
-                 "PMID:19151781", "PMID:19759004", "PMID:19855021", "PMID:20040115", "PMID:20138861",
-                 "PMID:20306498", "PMID:20442775", "PMID:20603019", "PMID:21147088", "PMID:21893049",
-                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
-                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
-                 "ZFIN:ZDB-PUB-140404-9"]
-
+                "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
+                "PMID:18201692", "PMID:18358464", "PMID:18388326", "PMID:18638469", "PMID:18846223",
+                "PMID:19151781", "PMID:19759004", "PMID:19855021", "PMID:20040115", "PMID:20138861",
+                "PMID:20306498", "PMID:20442775", "PMID:20603019", "PMID:21147088", "PMID:21893049",
+                "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
+                "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
+                "ZFIN:ZDB-PUB-140404-9"]
     }
 
     def __init__(self):
         Source.__init__(self, 'zfin')
 
         # update the dataset object with details about this resource
-        #TODO put this into a conf file?
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org', None,
                                'http://zfin.org/warranty.html')
 
         return
-
 
     def fetch(self, is_dl_forced=False):
 
@@ -164,7 +162,7 @@ class ZFIN(Source):
         # NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the env label.
         self._process_talens(limit)  # Leaving TALENs out until further review.
         self._process_crisprs(limit)  # Leaving CRISPRs out until further review.
-        self._process_pheno_enviro(limit)  #  Must be processed after morpholinos/talens/crisprs
+        self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
         self._process_feature_affected_genes(limit)
         self._process_g2p(limit)
 
@@ -576,10 +574,8 @@ class ZFIN(Source):
                 (gene_id, gene_symbol, genotype_name, super_structure_id, super_structure_name, sub_structure_id,
                  sub_structure_name, start_stage, end_stage, assay, publication_id, probe_id, antibody_id, empty) = row
 
+                #genotype_id = self.wildtype_hash['id'][genotype_name]
                 #genotype_id = 'ZFIN:' + genotype_id.strip()
-
-                genotype_id = self.wildtype_hash['id'][genotype_name]
-                genotype_id = 'ZFIN:' + genotype_id.strip()
 
                 # TODO: Consider how to model wildtype genotypes with genes and associated expression.
                 gene_id = 'ZFIN:' + gene_id.strip()
@@ -775,7 +771,8 @@ class ZFIN(Source):
                     #if intrinsic_genotype_label is not None:
                         #print(intrinsic_genotype_label)
                     #print(effective_genotype_label)
-                    geno.addGenotype(effective_genotype_id, effective_genotype_label, geno.genoparts['effective_genotype'])
+                    geno.addGenotype(effective_genotype_id, effective_genotype_label,
+                                     geno.genoparts['effective_genotype'])
                     if extrinsic_genotype_label is not None and extrinsic_genotype_label != '':
                         geno.addParts(extrinsic_geno_id, effective_genotype_id)
                     if intrinsic_genotype_label is not None and intrinsic_genotype_label != '':
@@ -784,8 +781,8 @@ class ZFIN(Source):
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
                                                                superterm2_id, subterm2_id, modifier)
 
-                if (phenotype_id is None):
-                    #add this phenotype to a set to report at the end
+                if phenotype_id is None:
+                    # add this phenotype to a set to report at the end
                     missing_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier])
                     continue
                 else:
@@ -888,7 +885,7 @@ class ZFIN(Source):
                 line_counter += 1
                 geno = Genotype(self.graph)
                 (genomic_feature_id, feature_so_id, genomic_feature_abbreviation, genomic_feature_name,
-                genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id,empty) = row
+                 genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id, empty) = row
 
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
 
@@ -937,7 +934,6 @@ class ZFIN(Source):
 
         logger.info("Processing feature affected genes")
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['feature_affected_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1069,7 +1065,7 @@ class ZFIN(Source):
                 (pub_id, pubmed_id, authors, title, journal, year, vol, pages, empty) = row
 
                 if self.testMode and (pub_id.replace('ZFIN:', '') not in self.test_ids['pub']
-                    or pubmed_id.replace('PMID:', '') not in self.test_ids['pub']):
+                                      or pubmed_id.replace('PMID:', '') not in self.test_ids['pub']):
                     continue
 
                 pub_id = 'ZFIN:'+pub_id.strip()
@@ -1114,7 +1110,7 @@ class ZFIN(Source):
                 (pub_id, pubmed_id, empty) = row
 
                 if self.testMode and (pub_id.replace('ZFIN:', '') not in self.test_ids['pub']
-                    or pubmed_id.replace('PMID:', '') not in self.test_ids['pub']):
+                                      or pubmed_id.replace('PMID:', '') not in self.test_ids['pub']):
                     continue
 
                 pub_id = 'ZFIN:'+pub_id.strip()
@@ -1224,7 +1220,6 @@ class ZFIN(Source):
         logger.info("Done with Morpholinos")
         return
 
-
     def _process_talens(self, limit=None):
         """
         TALENs are artificial restriction enzymes that can be used for genome editing in situ.
@@ -1248,7 +1243,7 @@ class ZFIN(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['talen']['file']))
+        raw = '/'.join((self.rawdir, self.files['talen']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -1269,13 +1264,13 @@ class ZFIN(Source):
                 #geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
 
                 # Add publication
-                if(publication != ''):
+                if publication != '':
                     pub_id = 'ZFIN:'+publication.strip()
-                    gu.addIndividualToGraph(g,pub_id,None)
+                    gu.addIndividualToGraph(g, pub_id, None)
                     gu.addTriple(g, pub_id, gu.properties['mentions'], talen_id)
 
                 # Add comment?
-                if(note != ''):
+                if note != '':
                     gu.addComment(g, talen_id, note)
 
                 # Build the hash for the reagents and the gene targets
@@ -1486,7 +1481,7 @@ class ZFIN(Source):
                         values = None
                     if values is not None:
                         values = values.replace(' ', '_')
-                        #FIXME: Better way to indicate > and < ?
+                        # FIXME: Better way to indicate > and < ?
                         values = values.replace('<', 'less_than_')
                         values = values.replace('>', 'greater_than_')
 
@@ -1607,7 +1602,7 @@ class ZFIN(Source):
                         enviro_label_hash[environment_id].append(environment_label)
 
                 # FIXME: Can remove this if we don't want to deal with any other abnormal environments.
-                elif not re.match('ZDB.*',condition):
+                elif not re.match('ZDB.*', condition):
                     # FIXME:Need to adjust label for non-knockdown reagent environments
 
                     if values is not None and units is not None and comment is not None:
@@ -1661,7 +1656,8 @@ class ZFIN(Source):
             for environment_id in enviro_label_hash:
                 environment_label = '; '.join(enviro_label_hash[environment_id])
                 #print(environment_id+': '+environment_label)
-                gu.addIndividualToGraph(self.graph, environment_id, environment_label, gu.datatype_properties['environment'])
+                gu.addIndividualToGraph(self.graph, environment_id, environment_label,
+                                        gu.datatype_properties['environment'])
 
             # Now process through the extrinsic_part_hash to produce targeted_gene_subregion and targeted_gene_variant
             #print(extrinsic_part_hash)
