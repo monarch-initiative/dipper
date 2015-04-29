@@ -681,6 +681,8 @@ class ZFIN(Source):
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 env_id = 'ZFIN:' + env_id.strip()
                 extrinsic_geno_id = self.make_id(env_id)
+                start_stage_id = 'ZFIN:' + start_stage_id.strip()
+                end_stage_id = 'ZFIN:' + end_stage_id.strip()
 
                 geno = Genotype(g)
                 geno.addGenotype(genotype_id, genotype_name)
