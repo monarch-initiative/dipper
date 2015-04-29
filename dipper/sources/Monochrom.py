@@ -100,7 +100,7 @@ class Monochrom(Source):
 
         # TODO add license
         self.dataset = Dataset('monochrom', 'Monarch Chromosome Ontology', 'http://monarchinitiative.org',
-                               'http://creativecommons.org/licenses/by/4.0/', )
+                               None, 'http://creativecommons.org/licenses/by/4.0/')
 
         # data-source specific warnings (will be removed when issues are cleared)
 
