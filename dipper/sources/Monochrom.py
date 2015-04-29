@@ -100,13 +100,13 @@ class Monochrom(Source):
 
         # TODO add license
         self.dataset = Dataset('monochrom', 'Monarch Chromosome Ontology', 'http://monarchinitiative.org',
-                               None, None)
+                               'http://creativecommons.org/licenses/by/4.0/', )
 
         # data-source specific warnings (will be removed when issues are cleared)
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
         return
@@ -129,7 +129,7 @@ class Monochrom(Source):
 
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Found %d nodes",len(self.graph))
+        logger.info("Found %d nodes", len(self.graph))
         logger.info("Done parsing files.")
 
         return
@@ -145,7 +145,6 @@ class Monochrom(Source):
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
         geno = Genotype(self.graph)
-        mybands = {}
 
         # build the organism's genome from the taxon
         genome_label = self.files[taxon]['genome_label']
@@ -168,7 +167,8 @@ class Monochrom(Source):
 
                 # add the generic and build-specific chromosome
                 geno.addChromosome(chrom, taxon_id, genome_label)
-                self.gu.addOWLPropertyClassRestriction(self.graph, cclassid, self.gu.object_properties['member_of'], genome_id)
+                self.gu.addOWLPropertyClassRestriction(self.graph, cclassid,
+                                                       self.gu.object_properties['member_of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
@@ -197,9 +197,6 @@ class Monochrom(Source):
                     pclassid = cclassid+parents[i]  # class chr parts
                     pclass_label = makeChromLabel(chrom+parents[i], genome_label)
 
-                    rti = None
-                    if re.match('[pq]$', parents[i]):
-                        rti = self._map_type_of_region('chromosome_arm')
                     if re.match('p$', parents[i]):
                         rti = Feature.types['short_chromosome_arm']
                     elif re.match('q$', parents[i]):
@@ -219,18 +216,25 @@ class Monochrom(Source):
                     # add the subsequence stuff as restrictions
                     if i < len(parents) - 1:
                         pid = cclassid+parents[i+1]   # the instance
-                        self.gu.addOWLPropertyClassRestriction(self.graph, pclassid, Feature.object_properties['is_subsequence_of'], pid)
-                        self.gu.addOWLPropertyClassRestriction(self.graph, pid, Feature.object_properties['has_subsequence'], pclassid)
+                        self.gu.addOWLPropertyClassRestriction(self.graph, pclassid,
+                                                               Feature.object_properties['is_subsequence_of'], pid)
+                        self.gu.addOWLPropertyClassRestriction(self.graph, pid,
+                                                               Feature.object_properties['has_subsequence'], pclassid)
 
                     else:
                         # add the last one (p or q usually) as attached to the chromosome
-                        self.gu.addOWLPropertyClassRestriction(self.graph, pclassid, Feature.object_properties['is_subsequence_of'],cclassid)
-                        self.gu.addOWLPropertyClassRestriction(self.graph, cclassid, Feature.object_properties['has_subsequence'], pclassid)
+                        self.gu.addOWLPropertyClassRestriction(self.graph, pclassid,
+                                                               Feature.object_properties['is_subsequence_of'], cclassid)
+                        self.gu.addOWLPropertyClassRestriction(self.graph, cclassid,
+                                                               Feature.object_properties['has_subsequence'], pclassid)
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
-                    self.gu.addOWLPropertyClassRestriction(self.graph, maplocclass_id, Feature.object_properties['is_subsequence_of'],cclassid+parents[0])
-                    self.gu.addOWLPropertyClassRestriction(self.graph, cclassid+parents[0], Feature.object_properties['has_subsequence'], maplocclass_id)
+                    self.gu.addOWLPropertyClassRestriction(self.graph, maplocclass_id,
+                                                           Feature.object_properties['is_subsequence_of'],
+                                                           cclassid+parents[0])
+                    self.gu.addOWLPropertyClassRestriction(self.graph, cclassid+parents[0],
+                                                           Feature.object_properties['has_subsequence'], maplocclass_id)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -262,10 +266,10 @@ class Monochrom(Source):
             child_bands = set()
         return child_bands
 
-    def _map_type_of_region(self, type):
+    def _map_type_of_region(self, regiontype):
         """
         Note that "stalk" refers to the short arm of acrocentric chromosomes chr13,14,15,21,22 for human.
-        :param type:
+        :param regiontype:
         :return:
         """
         so_id = 'SO:0000830'
@@ -287,11 +291,11 @@ class Monochrom(Source):
             'chromosome_part': types['chromosome_part']
         }
 
-        if type in type_to_so_map:
-            so_id = type_to_so_map.get(type)
+        if regiontype in type_to_so_map:
+            so_id = type_to_so_map.get(regiontype)
         else:
             logger.warn("Unmapped code %s. "
-                        "Defaulting to chr_part 'SO:0000830'.", type)
+                        "Defaulting to chr_part 'SO:0000830'.", regiontype)
 
         return so_id
 
@@ -302,9 +306,9 @@ class Monochrom(Source):
                                 " by source Monochrom")
 
     def getTestSuite(self):
-        import unittest
-        #from tests.test_ucscbands import UCSCBandsTestCase
+        # import unittest
+        # from tests.test_ucscbands import UCSCBandsTestCase
         test_suite = None
-        #test_suite = unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
+        # test_suite = unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
 
         return test_suite
