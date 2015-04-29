@@ -149,8 +149,17 @@ class Monochrom(Source):
         # build the organism's genome from the taxon
         genome_label = self.files[taxon]['genome_label']
         taxon_id = 'NCBITaxon:'+taxon
+
+        #add the taxon as a class.  adding the class label elsewhere
+        self.gu.addClassToGraph(self.graph, taxon_id, None)
+        self.gu.addSynonym(self.graph, taxon_id, genome_label)
+
+        self.gu.loadObjectProperties(self.graph, Feature.object_properties)
+
         genome_id = geno.makeGenomeID(taxon_id)
         geno.addGenome(taxon_id, genome_label)
+        self.gu.addOWLPropertyClassRestriction(self.graph, genome_id, Genotype.object_properties['in_taxon'],
+                                               taxon_id)
 
         with gzip.open(myfile, 'rb') as f:
             for line in f:
@@ -180,8 +189,10 @@ class Monochrom(Source):
                 if re.match('g(neg|pos|var)', rtype):
                     stain_type = Feature.types.get(rtype)
                     if stain_type is not None:
-                        self.gu.addTriple(self.graph, maplocclass_id, Feature.properties['has_staining_intensity'],
-                                          Feature.types.get(rtype))
+                        self.gu.addOWLPropertyClassRestriction(self.graph, maplocclass_id,
+                                                       Feature.properties['has_staining_intensity'],
+                                                       Feature.types.get(rtype))
+
                     else:
                         logger.warn('staining type not found: %s', rtype)
 

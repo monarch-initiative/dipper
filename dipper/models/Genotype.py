@@ -373,7 +373,6 @@ class Genotype():
         genome_label = taxon_label+' genome'
         genome_id = self.makeGenomeID(taxon_id)
         self.gu.addClassToGraph(self.graph, genome_id, genome_label, Feature.types['genome'])
-        self.addTaxon(taxon_id, genome_id)
 
         return
 

@@ -22,7 +22,7 @@ class GraphUtils:
     OWLPROP = OWL['ObjectProperty']
     OBJPROP = OWL['ObjectProperty']
     ANNOTPROP = OWL['AnnotationProperty']
-    DATAPROP = OWL['DataProperty']
+    DATAPROP = OWL['DatatypeProperty']
     SUBCLASS = RDFS['subClassOf']
     PERSON = FOAF['person']
 
