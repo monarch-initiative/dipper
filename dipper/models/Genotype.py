@@ -303,12 +303,9 @@ class Genotype():
 
         return
 
-
     def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
-        gu = self.gu
-
-        self.graph.add((gu.getNode(background_id), RDF['type'], gu.getNode(self.genoparts['genomic_background'])))
-        self.graph.add((gu.getNode(genotype_id), gu.getNode(self.properties['has_reference_part']), gu.getNode(background_id)))
+        self.gu.addType(self.graph, background_id, self.genoparts['genomic_background'])
+        self.addParts(background_id, genotype_id, self.object_properties['has_reference_part'])
 
         return
 
@@ -459,3 +456,29 @@ class Genotype():
             self.gu.addMemberOf(self.graph,chrinbuild_id,build_id)
 
         return
+
+    def make_vslc_label(self, gene_label, allele1_label, allele2_label):
+        """
+        Make a Variant Single Locus Complement (VSLC) in monarch-style.
+        :param gene_label:
+        :param allele1_label:
+        :param allele2_label:
+        :return:
+        """
+        vslc_label = ''
+
+        if (gene_label is None and allele1_label is None and allele2_label is None):
+            logger.error("Not enough info to make vslc label")
+            return None
+
+        if gene_label is None:
+            gene_label = ''
+
+        top = gene_label+'<' + allele1_label + '>'
+        bottom = ''
+        if allele2_label is not None:
+            bottom = gene_label+'<'+allele2_label+'>'
+
+        vslc_label = '/'.join((top,bottom))
+
+        return vslc_label
