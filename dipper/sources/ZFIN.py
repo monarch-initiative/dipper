@@ -784,6 +784,8 @@ class ZFIN(Source):
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 env_id = 'ZFIN:' + env_id.strip()
                 extrinsic_geno_id = self.make_id(env_id)
+                start_stage_id = 'ZFIN:' + start_stage_id.strip()
+                end_stage_id = 'ZFIN:' + end_stage_id.strip()
 
                 geno = Genotype(g)
                 geno.addGenotype(genotype_id,genotype_name)
@@ -840,11 +842,11 @@ class ZFIN(Source):
                     assoc.addAssociationNodeToGraph(g)
                     #FIXME: Hanging the environment and stages on the G2P association for now.
                     # Add environment to G2P association.
-                    gu.addTriple(g,assoc,gu.object_properties['has_environment_qualifier'],env_id)
+                    gu.addTriple(g,assoc_id,gu.object_properties['has_environment_qualifier'],env_id)
                     # Add starting stage to G2P association.
-                    gu.addTriple(g,assoc,gu.object_properties['has_begin_stage_qualifier'],start_stage_id)
-                    # Add ending stage to G2P association.
-                    gu.addTriple(g,assoc,gu.object_properties['has_end_stage_qualifier'],end_stage_id)
+                    gu.addTriple(g,assoc_id,gu.object_properties['has_begin_stage_qualifier'],start_stage_id)
+                    # Add ending stage to G2P association
+                    gu.addTriple(g,assoc_id,gu.object_properties['has_end_stage_qualifier'],end_stage_id)
                 else:
                     # add normal phenotypes
                     logger.warn("Found normal phenotype; skipping for now")
