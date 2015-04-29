@@ -4,6 +4,8 @@ import re
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -67,7 +69,7 @@ class KEGG(Source):
 
         if self.testOnly:
             self.testMode = True
-
+        self.label_hash = {'gene': {}, 'disease': {}}
         self._process_pathways(limit)
         self._process_diseases(limit)
         self._process_genes(limit)
@@ -147,6 +149,8 @@ class KEGG(Source):
                 disease_id = 'KEGG:'+disease_id.strip()
                 # Add the disease as a class.
                 gu.addClassToGraph(g, disease_id, disease_name)
+                if disease_id not in self.label_hash['disease']:
+                    self.label_hash['disease'][disease_id] = disease_name
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -181,6 +185,8 @@ class KEGG(Source):
                 gene_id = 'KEGG:'+gene_id.strip()
                 # Add the disease as a class.
                 gu.addClassToGraph(g, gene_id, gene_name)
+                if gene_id not in self.label_hash['gene']:
+                    self.label_hash['gene'][gene_id] = gene_name
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -237,6 +243,7 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
+        geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         raw = ('/').join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -251,7 +258,27 @@ class KEGG(Source):
                 gene_id = 'KEGG:'+gene_id.strip()
                 disease_id = 'KEGG:'+disease_id.strip()
 
+                # Make an association ID.
+                assoc_id = self.make_id((disease_id+gene_id))
+
+                # we actually want the association between the gene and the disease to be via an alternate locus
+                # not the "wildtype" gene itself.
+                # so we make an anonymous alternate locus, and put that in the association.
+                alt_locus = '_'+gene_id+'-'+disease_id+'VL'
+                alt_label = self.label_hash['gene'].get(gene_id)
+                disease_label = self.label_hash['disease'].get(disease_id)
+                if alt_label is not None and alt_label != '':
+                    alt_label = 'some variant of '+alt_label+' that causes '+disease_label
+                else:
+                    alt_label = None
+                gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
+                geno.addAlleleOfGene(alt_locus, gene_id)
                 # Add the disease to gene relationship.
+                assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
+                assoc.loadAllProperties(g)
+                assoc.addAssociationToGraph(g)
+
+
 
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
