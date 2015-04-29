@@ -48,8 +48,8 @@ class Monochrom(Source):
     Since this is small, and we have not limited other items in our test set to a small region, we
     simply use the whole graph (genome) for testing purposes, and copy the main graph to the test graph.
 
-    Remember, this Dipper class is building an ONTOLOGY, therefore we must also include domain and range
-    constraints, and other owl-isms.  Some of these functions can be generalized and
+    Since this Dipper class is building an ONTOLOGY, rather than instance-level data,
+    we must also include domain and range constraints, and other owl-isms.
 
     TODO: any species by commandline argument
 
@@ -83,6 +83,23 @@ class Monochrom(Source):
             'build_num': 'rn6',
             'genome_label': 'Rat'
         },
+    }
+
+    region_type_map = {
+        'acen': Feature.types['centromere'],
+        'gvar': Feature.types['chromosome_band'],
+        'stalk': Feature.types['chromosome_band'],
+        'gneg': Feature.types['chromosome_band'],
+        'gpos100': Feature.types['chromosome_band'],
+        'gpos25': Feature.types['chromosome_band'],
+        'gpos33': Feature.types['chromosome_band'],
+        'gpos50': Feature.types['chromosome_band'],
+        'gpos66': Feature.types['chromosome_band'],
+        'gpos75': Feature.types['chromosome_band'],
+        'chromosome': Feature.types['chromosome'],
+        'chromosome_arm': Feature.types['chromosome_arm'],
+        'chromosome_band': Feature.types['chromosome_band'],
+        'chromosome_part': Feature.types['chromosome_part']
     }
 
     def __init__(self, tax_ids=None):
@@ -182,7 +199,7 @@ class Monochrom(Source):
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
                 maplocclass_label = makeChromLabel(chrom+band, genome_label)
-                region_type_id = self._map_type_of_region(rtype)
+                region_type_id = self.map_type_of_region(rtype)
                 self.gu.addClassToGraph(self.graph, maplocclass_id, maplocclass_label, region_type_id)
 
                 # add the staining intensity of the band
@@ -197,7 +214,7 @@ class Monochrom(Source):
                         logger.warn('staining type not found: %s', rtype)
 
                 # get the parent bands, and make them unique
-                parents = list(self._make_parent_bands(band, set()))
+                parents = list(self.make_parent_bands(band, set()))
                 # alphabetical sort will put them in smallest to biggest
                 parents.sort(reverse=True)
 
@@ -208,18 +225,7 @@ class Monochrom(Source):
                     pclassid = cclassid+parents[i]  # class chr parts
                     pclass_label = makeChromLabel(chrom+parents[i], genome_label)
 
-                    if re.match('p$', parents[i]):
-                        rti = Feature.types['short_chromosome_arm']
-                    elif re.match('q$', parents[i]):
-                        rti = Feature.types['long_chromosome_arm']
-                    elif re.match('[pq][A-H\d]$', parents[i]):
-                        rti = Feature.types['chromosome_region']
-                    elif re.match('[pq][A-H\d]\d', parents[i]):
-                        rti = Feature.types['chromosome_band']
-                    elif re.match('[pq][A-H\d]\d\.\d+', parents[i]):
-                        rti = Feature.types['chromosome_subband']
-                    else:
-                        rti = self._map_type_of_region('chromosome_part')
+                    rti = getChrPartTypeByNotation(parents[i])
 
                     self.gu.addClassToGraph(self.graph, pclassid, pclass_label, rti)
 
@@ -256,7 +262,7 @@ class Monochrom(Source):
 
         return
 
-    def _make_parent_bands(self, band, child_bands):
+    def make_parent_bands(self, band, child_bands):
         """
         this will determine the grouping bands that it belongs to, recursively
         13q21.31 ==>  13, 13q, 13q2, 13q21, 13q21.3, 13q21.31
@@ -272,38 +278,21 @@ class Monochrom(Source):
                 p = re.sub('\.$', '', p)
                 if p is not None:
                     child_bands.add(p)
-                    self._make_parent_bands(p, child_bands)
+                    self.make_parent_bands(p, child_bands)
         else:
             child_bands = set()
         return child_bands
 
-    def _map_type_of_region(self, regiontype):
+    def map_type_of_region(self, regiontype):
         """
         Note that "stalk" refers to the short arm of acrocentric chromosomes chr13,14,15,21,22 for human.
         :param regiontype:
         :return:
         """
-        so_id = 'SO:0000830'
-        types = Feature.types
-        type_to_so_map = {
-            'acen': types['centromere'],
-            'gvar': types['chromosome_band'],
-            'stalk': types['chromosome_band'],  # FIXME using chromosome part for now
-            'gneg': types['chromosome_band'],
-            'gpos100': types['chromosome_band'],
-            'gpos25': types['chromosome_band'],
-            'gpos33': types['chromosome_band'],
-            'gpos50': types['chromosome_band'],
-            'gpos66': types['chromosome_band'],
-            'gpos75': types['chromosome_band'],
-            'chromosome': types['chromosome'],
-            'chromosome_arm': types['chromosome_arm'],
-            'chromosome_band': types['chromosome_band'],
-            'chromosome_part': types['chromosome_part']
-        }
+        so_id = Feature.types['chromosome_part']
 
-        if regiontype in type_to_so_map:
-            so_id = type_to_so_map.get(regiontype)
+        if regiontype in self.region_type_map.keys():
+            so_id = self.region_type_map.get(regiontype)
         else:
             logger.warn("Unmapped code %s. "
                         "Defaulting to chr_part 'SO:0000830'.", regiontype)
@@ -323,3 +312,32 @@ class Monochrom(Source):
         # test_suite = unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
 
         return test_suite
+
+
+def getChrPartTypeByNotation(notation):
+    """
+    This method will figure out the kind of feature that a given band is based on
+    pattern matching to standard karyotype notation. (e.g. 13q22.2 ==> chromosome sub-band)
+
+    This has been validated against human, mouse, fish, and rat nomenclature.
+    :param notation: the band (without the chromosome prefix)
+    :return:
+    """
+
+    # Note that for mouse, they don't usually include the "q" in their notation, though UCSC does.
+    # We may need to adjust for that here
+
+    if re.match('p$', notation):
+        rti = Feature.types['short_chromosome_arm']
+    elif re.match('q$', notation):
+        rti = Feature.types['long_chromosome_arm']
+    elif re.match('[pq][A-H\d]$', notation):
+        rti = Feature.types['chromosome_region']
+    elif re.match('[pq][A-H\d]\d', notation):
+        rti = Feature.types['chromosome_band']
+    elif re.match('[pq][A-H\d]\d\.\d+', notation):
+        rti = Feature.types['chromosome_subband']
+    else:
+        rti = Feature.types['chromosome_part']
+
+    return rti
