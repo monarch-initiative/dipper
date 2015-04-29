@@ -153,34 +153,36 @@ class ZFIN(Source):
         self.genotype_id_to_background_id_hash = {'genotype_id': {}}
         self.extrinsic_id_to_enviro_id_hash = {'extrinsic_id': {}}
 
-        # These must be processed in a specific order
+
+        # basic information on classes and instances
+        self._process_genes(limit)   #REVIEWED-COMPLETE
+        self._process_stages(limit)  #REVIEWED-COMPLETE
+        self._process_pubinfo(limit)  #REVIEWED-COMPLETE
+        self._process_pub2pubmed(limit)  #REVIEWED-COMPLETE
         self._process_wildtypes(limit)  # Must be processed before wildtype_expression  #REVIEWED
+
+        # The knockdown reagents
+        for t in ['morph','crispr','talen']:
+            self._process_targeting_reagents(t, limit)
+
+        self._process_gene_marker_relationships(limit)  #REVIEW-IN PROCESS
+        self._process_features(limit)  #REVIEWED-COMPLETE
+        self._process_feature_affected_genes(limit)  #NEEDS MORE REVIEW
+
+        # These must be processed in a specific order
         self._process_genotype_backgrounds(limit)  #REVIEWED
         self._process_genotype_features(limit)
 
-        self._process_morpholinos(limit)  # Process before talens/crisprs
         # NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the env label.
-        # FIXME consider making one function for all talen/crispr/morph processing, looping through each file
-        # and applying the same function, to avoid duplication of code [nlw]
-        self._process_talens(limit)  # Leaving TALENs out until further review.
-        self._process_crisprs(limit)  # Leaving CRISPRs out until further review.
-
         self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
-        self._process_feature_affected_genes(limit)  #NEEDS MORE REVIEW
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
         self._process_g2p(limit)
 
         #self._process_wildtype_expression(limit)
-        self._process_gene_marker_relationships(limit)  #REVIEW-IN PROCESS
-        self._process_features(limit)  #REVIEWED-COMPLETE
-        self._process_genes(limit)   #REVIEWED-COMPLETE
         #self._process_genbank_ids(limit)  #HOLDING OFF FOR NOW
         #self._process_uniprot_ids(limit)  #HOLDING OFF FOR NOW
         #self._process_human_orthos(limit)
-        self._process_stages(limit)  #REVIEWED-COMPLETE
-        self._process_pubinfo(limit)
-        self._process_pub2pubmed(limit)
         #self._process_mappings(limit)  #NEEDS WORK-DO NOT INCLUDE YET
 
         logger.info("Finished parsing.")
@@ -1055,7 +1057,7 @@ class ZFIN(Source):
     def _process_pub2pubmed(self, limit=None):
         """
         This will pull the zfin internal publication to pubmed mappings. Somewhat redundant with the
-        process_pubinfo method, but this mapping includes additional internal pub to pubmed mappings.
+        process_pubinfo method, but this mapping includes additional mappings.
 
         <pub_id> is an individual
         <pub_id> rdfs:label <pub_label>
@@ -1091,253 +1093,114 @@ class ZFIN(Source):
                     gu.addIndividualToGraph(g, pubmed_id, None)
                     gu.addSameIndividual(g, pub_id, pubmed_id)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
 
-    def _process_morpholinos(self, limit=None):
+    def _process_targeting_reagents(self, reagent_type, limit=None):
         """
-        This method processes the morpholino knockdown reagents, creating triples for the
-        morpholinos and passing the morpholino data into a hash map for use in the pheno_enviro method.
+        This method processes the gene targeting knockdown reagents, such as morpholinos,
+        talens, and crisprs.  We create triples for the reagents and pass the
+        data into a hash map for use in the pheno_enviro method.
+
+        Morpholinos work similar to RNAi.
+        TALENs are artificial restriction enzymes that can be used for genome editing in situ.
+        CRISPRs are knockdown reagents, working similar to RNAi but at the transcriptional level instead of mRNA level.
+
+        You can read more about TALEN and CRISPR techniques in review [Gaj et al](http://www.cell.com/trends/biotechnology/abstract/S0167-7799%2813%2900087-5)
 
         TODO add sequences
 
         Triples created:
-        <morpholino_id> is a gene_targeting_reagent
-        <morpholino_id> rdfs:label <morpholino_symbol>
-        <morpholino_id> has type <morpholino_so_id>
-        <morpholino_id> has comment <note>
+        <reagent_id> is a gene_targeting_reagent
+        <reagent_id> rdfs:label <reagent_symbol>
+        <reagent_id> has type <reagent_so_id>
+        <reagent_id> has comment <note>
 
         <publication_id> is an individual
         <publication_id> mentions <morpholino_id>
+        :param reagent_type: should be one of: morph, talen, crispr
         :param limit:
         :return:
         """
 
-        logger.info("Processing Morpholinos")
+        logger.info("Processing Gene Targeting Ragents")
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = '/'.join((self.rawdir, self.files['morph']['file']))
+        geno = Genotype(g)
+
+        if reagent_type not in ['morph','talen','crispr']:
+            logger.error("You didn't specify the right kind of file type.")
+            return
+
+        raw = '/'.join((self.rawdir, self.files[reagent_type]['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
 
-                (gene_id, gene_so_id, gene_symbol, morpholino_id, morpholino_so_id,
-                 morpholino_symbol, morpholino_sequence, publication, note) = row
+                if reagent_type in ['morph','crispr']:
+                    (gene_id, gene_so_id, gene_symbol, reagent_id, reagent_so_id,
+                     reagent_symbol, reagent_sequence, publication, note) = row
+                elif reagent_type == 'talen':
+                    (gene_id, gene_so_id, gene_symbol, reagent_id, reagent_so_id,
+                     reagent_symbol, reagent_sequence, reagent_sequence2,
+                     publication, note) = row
+                else:
+                    # should not get here
+                    return
 
-                if self.testMode and morpholino_id not in self.test_ids['morpholino']:
+                if self.testMode and reagent_id not in self.test_ids['morpholino']:
                     continue
 
-                geno = Genotype(g)
-                morpholino_id = 'ZFIN:'+morpholino_id.strip()
+                reagent_id = 'ZFIN:'+reagent_id.strip()
                 gene_id = 'ZFIN:'+gene_id.strip()
-
-                # TODO: map target sequence to morpholino.
-                # FIXME: Is this correct? Leaving out for now.
-                # Commenting out for now
-                # Is the reverse complement of the morpholino sequence the target sequence or, like miRNAs, is there
-                # a seed sequence that is the target sequence and it is not the full reverse complement of the sequence?
-                # Also, does the morpholino require the exact sequence match or can there be mismatches?
-                # Take the morpholino sequence and get the reverse complement as the target sequence.
-                #seq = Seq(morpholino_sequence)
-                #target_sequence = seq.reverse_complement()
-                #print(seq)
-                #print(target_sequence)
-                #print(morpholino_id)
 
                 # FIXME: This is incorrect, as it requires the concentration if available, and is related to the extrinsic genotype.
                 # Should add the morpholino as a typed individual instead. Same for TALENs/CRISPRs.
-                geno.addGeneTargetingReagent(morpholino_id,morpholino_symbol,morpholino_so_id)
+                geno.addGeneTargetingReagent(reagent_id, reagent_symbol, reagent_so_id)
                 # Now adding the reagent targeted gene in the pheno_environment processing function.
                 #geno.addReagentTargetedGene(morpholino_id,gene_id, gene_id)
 
                 # Add publication
-                if(publication != ''):
-                    pub_id = 'ZFIN:'+publication.strip()
-                    gu.addIndividualToGraph(g, pub_id, None)
-                    gu.addTriple(g, pub_id, gu.properties['mentions'], morpholino_id)
-
-                # Add comment?
-                if(note != ''):
-                    gu.addComment(g, morpholino_id, note)
-
-                # Build the hash for the reagents and the gene targets
-                if self.kd_reagent_hash['kd_reagent_id'].get(morpholino_id) is None:
-                    reagent_target = []
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
-                else:
-                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][morpholino_id]
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][morpholino_id] = reagent_target
-
-                if self.kd_reagent_hash['kd_reagent_label'].get(morpholino_id) is None:
-                    self.kd_reagent_hash['kd_reagent_label'][morpholino_id] = morpholino_symbol
-                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
-                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
-
-                if self.label_hash['morpholino_label'].get(morpholino_id) is None:
-                    self.label_hash['morpholino_label'][morpholino_id] = morpholino_symbol
-
-                if (not self.testMode) and (limit is not None and line_counter > limit):
-                    break
-
-        logger.info("Done with Morpholinos")
-        return
-
-    def _process_talens(self, limit=None):
-        """
-        TALENs are artificial restriction enzymes that can be used for genome editing in situ.
-
-        Triples created:
-        <talen_id> is a gene_targeting_reagent
-        <talen_id> rdfs:label <talen_symbol>
-        <talen_id> has type <talen_so_id>
-        <talen_id> has comment <note>
-
-        <publication_id> is an individual
-        <publication_id> mentions <talen_id>
-        :param limit:
-        :return:
-        """
-
-        logger.info("Processing TALENs")
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-        line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        raw = '/'.join((self.rawdir, self.files['talen']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
-                (gene_id, gene_so_id, gene_symbol, talen_id, talen_so_id,
-                 talen_symbol, talen_target_sequence_1, talen_target_sequence_2, publication, note) = row
-
-                if self.testMode and gene_id not in self.test_ids['gene']:
-                    continue
-
-                geno = Genotype(g)
-                talen_id = 'ZFIN:'+talen_id.strip()
-                gene_id = 'ZFIN:'+gene_id.strip()
-
-                geno.addGeneTargetingReagent(talen_id, talen_symbol, talen_so_id)
-                # Now adding the reagent targeted gene in the pheno_environment processing function.
-                #geno.addReagentTargetedGene(talen_id,gene_id,gene_id)
-
-                # Add publication
                 if publication != '':
                     pub_id = 'ZFIN:'+publication.strip()
                     gu.addIndividualToGraph(g, pub_id, None)
-                    gu.addTriple(g, pub_id, gu.properties['mentions'], talen_id)
+                    gu.addTriple(g, pub_id, gu.properties['mentions'], reagent_id)
 
                 # Add comment?
                 if note != '':
-                    gu.addComment(g, talen_id, note)
+                    gu.addComment(g, reagent_id, note)
 
                 # Build the hash for the reagents and the gene targets
-                if self.kd_reagent_hash['kd_reagent_id'].get(talen_id) is None:
+                if self.kd_reagent_hash['kd_reagent_id'].get(reagent_id) is None:
                     reagent_target = []
                     reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
+                    self.kd_reagent_hash['kd_reagent_id'][reagent_id] = reagent_target
                 else:
-                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][talen_id]
+                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][reagent_id]
                     reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][talen_id] = reagent_target
+                    self.kd_reagent_hash['kd_reagent_id'][reagent_id] = reagent_target
 
-                if self.kd_reagent_hash['kd_reagent_label'].get(talen_id) is None:
-                    self.kd_reagent_hash['kd_reagent_label'][talen_id] = talen_symbol
+                if self.kd_reagent_hash['kd_reagent_label'].get(reagent_id) is None:
+                    self.kd_reagent_hash['kd_reagent_label'][reagent_id] = reagent_symbol
                 if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
                     self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
+
+                if self.label_hash['morpholino_label'].get(reagent_id) is None:
+                    self.label_hash['morpholino_label'][reagent_id] = reagent_symbol
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with TALENS")
+        logger.info("Done with Reagent type %s", reagent_type)
         return
 
-    def _process_crisprs(self, limit=None):
-        """
-        CRISPRs are knockdown reagents, working similar to RNAi but at the transcriptional level instead of mRNA level.
-
-        Triples created:
-        <crispr_id> is a gene_targeting_reagent
-        <crispr_id> rdfs:label <crispr_symbol>
-        <crispr_id> has type <crispr_so_id>
-        <crispr_id> has comment <note>
-
-        <publication_id> is an individual
-        <publication_id> mentions <crispr_id>
-        :param limit:
-        :return:
-        """
-        logger.info("Processing CRISPRs")
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-        line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        raw = '/'.join((self.rawdir, self.files['crispr']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-
-                (gene_id, gene_so_id, gene_symbol, crispr_id, crispr_so_id,
-                crispr_symbol, crispr_target_sequence, publication, note) = row
-
-                if self.testMode and gene_id not in self.test_ids['gene']:
-                    continue
-
-                geno = Genotype(g)
-                crispr_id = 'ZFIN:'+crispr_id.strip()
-                gene_id = 'ZFIN:'+gene_id.strip()
-
-                geno.addGeneTargetingReagent(crispr_id, crispr_symbol, crispr_so_id)
-                # Now adding the reagent targeted gene in the pheno_environment processing function.
-                #geno.addReagentTargetedGene(crispr_id, gene_id, gene_id)
-
-                # Add publication
-                if publication != '':
-                    pub_id = 'ZFIN:'+publication.strip()
-                    gu.addIndividualToGraph(g, pub_id, None)
-                    gu.addTriple(g, pub_id, gu.properties['mentions'], crispr_id)
-
-                # Add comment?
-                if note != '':
-                    gu.addComment(g, crispr_id, note)
-
-                # Build the hash for the reagents and the gene targets
-                if self.kd_reagent_hash['kd_reagent_id'].get(crispr_id) is None:
-                    reagent_target = []
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
-                else:
-                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][crispr_id]
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][crispr_id] = reagent_target
-
-                if self.kd_reagent_hash['kd_reagent_label'].get(crispr_id) is None:
-                    self.kd_reagent_hash['kd_reagent_label'][crispr_id] = crispr_symbol
-                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
-                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
-
-                if (not self.testMode) and (limit is not None and line_counter > limit):
-                    break
-
-
-        logger.info("Done with CRISPRs")
-        return
 
     def _process_pheno_enviro(self, limit=None):
         """
