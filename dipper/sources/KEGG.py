@@ -18,14 +18,19 @@ class KEGG(Source):
         'pathway': {'file': 'pathway',
                  'url': 'http://rest.genome.jp/list/pathway'},
         'genes': {'file': 'genes',
-                 'url': 'http://rest.genome.jp/list/hsa'}
+                 'url': 'http://rest.genome.jp/list/hsa'},
+        'orthology': {'file': 'orthology',
+                 'url': 'http://rest.genome.jp/list/orthology'},
+        'disease_gene': {'file': 'disease_gene',
+                 'url': 'http://rest.kegg.jp/link/disease/hsa'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340"],
         "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736"],
-        "genes": ["hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387"]
+        "genes": ["hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387"],
+        "orthology": ["ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
     def __init__(self):
@@ -66,6 +71,7 @@ class KEGG(Source):
         self._process_pathways(limit)
         self._process_diseases(limit)
         self._process_genes(limit)
+        self._process_disease2gene(limit)
 
 
 
@@ -180,4 +186,76 @@ class KEGG(Source):
                     break
 
         logger.info("Done with genes")
+        return
+
+    def _process_orthology(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing orthology")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['orthology']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (orthology_id, gene_name) = row
+
+                if self.testMode and gene_id not in self.test_ids['orthology']:
+                    continue
+
+                gene_id = 'KEGG:'+gene_id.strip()
+                # Add the disease as a class.
+                #gu.addClassToGraph(g, gene_id, gene_name)
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with orthology")
+        return
+
+
+
+    def _process_disease2gene(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing disease to gene")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['disease_gene']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (gene_id, disease_id) = row
+
+                if self.testMode and gene_id not in self.test_ids['']:
+                    continue
+
+                gene_id = 'KEGG:'+gene_id.strip()
+                disease_id = 'KEGG:'+disease_id.strip()
+
+                # Add the disease to gene relationship.
+
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with disease to gene")
         return
