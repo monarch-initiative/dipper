@@ -26,6 +26,9 @@ class G2PAssoc(Assoc):
         self.cu = CurieUtil(curie_map.get())
 #        self.gu = GraphUtils(curie_map.get())
         self.pub_list = None
+        self.start_stage_id = None
+        self.end_stage_id = None
+        self.environment_id = None
 
         self.setSubject(entity_id)
         self.setObject(phenotype_id)
@@ -36,12 +39,20 @@ class G2PAssoc(Assoc):
         return
 
     def set_stage(self, start_stage_id, end_stage_id):
-        self.start_stage_id = start_stage_id
-        self.end_stage_id = end_stage_id
+        if start_stage_id is not None and start_stage_id.strip() != '':
+            self.start_stage_id = start_stage_id
+        if end_stage_id is not None and end_stage_id.strip() != '':
+            self.end_stage_id = end_stage_id
+        return
+
+    def set_environment(self, environment_id):
+        if environment_id is not None and environment_id.strip() != '':
+            self.environment_id = environment_id
+
         return
 
     def addAssociationNodeToGraph(self, g):
-        '''
+        """
         The reified relationship between a genotype (or any genotype part) and a phenotype
         is decorated with some provenance information.
         This makes the assumption that both the genotype and phenotype are classes.
@@ -49,13 +60,22 @@ class G2PAssoc(Assoc):
         currently hardcoded to map the annotation to the monarch namespace
         :param g:
         :return:
-        '''
+        """
 
         self.addAssociationToGraph(g)
 
-        #TODO add staging information here
-        #if (self.start_stage_id is not None):
-        #    g.add((node, self.BASE['during'], URIRef(self.cu.get_uri(self.start_stage_id))))
+        if self.start_stage_id is not None:
+            self.gu.addTriple(g, self.annot_id,
+                              self.gu.object_properties['has_begin_stage_qualifier'],
+                              self.start_stage_id)
+        if self.end_stage_id is not None:
+            self.gu.addTriple(g, self.annot_id,
+                              self.gu.object_properties['has_end_stage_qualifier'],
+                              self.end_stage_id)
+
+        if self.environment_id is not None:
+            self.gu.addTriple(g, self.annot_id,
+                              self.gu.object_properties['has_environment_qualifier'],
+                              self.environment_id)
 
         return g
-
