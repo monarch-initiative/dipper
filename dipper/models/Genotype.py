@@ -141,7 +141,7 @@ class Genotype():
         return
 
     def addGene(self, gene_id, gene_label, gene_type=None, gene_description=None):
-        if (gene_type is None):
+        if gene_type is None:
             gene_type = self.genoparts['gene']
         # genes are classes
         self.gu.addClassToGraph(self.graph, gene_id, gene_label, gene_type, gene_description)
@@ -170,7 +170,6 @@ class Genotype():
         self.gu.addTriple(self.graph, child_id, self.properties['derives_from'], parent_id)
 
         return
-
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
         """
