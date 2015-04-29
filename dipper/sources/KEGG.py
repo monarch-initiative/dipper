@@ -24,7 +24,9 @@ class KEGG(Source):
         'orthology': {'file': 'orthology',
                  'url': 'http://rest.genome.jp/list/orthology'},
         'disease_gene': {'file': 'disease_gene',
-                 'url': 'http://rest.kegg.jp/link/disease/hsa'}
+                 'url': 'http://rest.kegg.jp/link/disease/hsa'},
+        'ncbi': {'file': 'ncbi',
+                 'url': 'http://rest.kegg.jp/conv/ncbi-geneid/hsa'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -44,9 +46,7 @@ class KEGG(Source):
 
         # source-specific warnings.  will be cleared when resolved.
 
-
         return
-
 
     def fetch(self, is_dl_forced):
         self.get_files(is_dl_forced)
@@ -74,6 +74,7 @@ class KEGG(Source):
         self._process_diseases(limit)
         self._process_genes(limit)
         self._process_disease2gene(limit)
+        self._process_genes_kegg2ncbi(limit)
 
 
 
@@ -84,8 +85,6 @@ class KEGG(Source):
 
         logger.info("Found %d nodes", len(self.graph))
         return
-
-
 
     def _process_pathways(self, limit=None):
         """
@@ -183,7 +182,7 @@ class KEGG(Source):
                     continue
 
                 gene_id = 'KEGG:'+gene_id.strip()
-                # Add the disease as a class.
+                # Add the gene as a class.
                 gu.addClassToGraph(g, gene_id, gene_name)
                 if gene_id not in self.label_hash['gene']:
                     self.label_hash['gene'][gene_id] = gene_name
@@ -227,8 +226,6 @@ class KEGG(Source):
 
         logger.info("Done with orthology")
         return
-
-
 
     def _process_disease2gene(self, limit=None):
         """
@@ -278,11 +275,48 @@ class KEGG(Source):
                 assoc.loadAllProperties(g)
                 assoc.addAssociationToGraph(g)
 
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
 
+        logger.info("Done with disease to gene")
+        return
+
+    def _process_genes_kegg2ncbi(self, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing KEGG gene IDs to NCBI gene IDs")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['ncbi']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (kegg_gene_id, ncbi_gene_id) = row
+
+                if self.testMode and gene_id not in self.test_ids['']:
+                    continue
+
+                # Adjust the NCBI gene ID prefix.
+                ncbi_gene_id = re.sub('ncbi-geneid','NCBIGene',ncbi_gene_id)
+                kegg_gene_id = 'KEGG:'+kegg_gene_id
+
+                #FIXME: DO you have to declare an ID as a class before making it an equivalent class?
+                gu.addClassToGraph(g, ncbi_gene_id,None)
+                gu.addEquivalentClass(g, kegg_gene_id, ncbi_gene_id)
 
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with disease to gene")
+        logger.info("Done with KEGG gene IDs to NCBI gene IDs")
         return
