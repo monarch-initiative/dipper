@@ -14,6 +14,7 @@ class BioGridTestCase(SourceTestCase):
     def setUp(self):
         self.source = BioGrid()
         self.source.settestonly(True)
+        #self.source.test_ids = self._get_conf()['test_ids']['gene']
         self._setDirToSource()
         return
 
