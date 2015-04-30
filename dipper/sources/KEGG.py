@@ -35,7 +35,13 @@ class KEGG(Source):
         'mmu_orthologs': {'file': 'mmu_orthologs',
                  'url': 'http://rest.kegg.jp/link/orthology/mmu'},
         'rno_orthologs': {'file': 'rno_orthologs',
-                 'url': 'http://rest.kegg.jp/link/orthology/rno'}
+                 'url': 'http://rest.kegg.jp/link/orthology/rno'},
+        'dme_orthologs': {'file': 'dme_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/dme'},
+        'dre_orthologs': {'file': 'dre_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/dre'},
+        'cel_orthologs': {'file': 'cel_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/cel'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -86,7 +92,7 @@ class KEGG(Source):
         self._process_genes_kegg2ncbi(limit)
         self._process_ortholog_classes(limit)
 
-        for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs']:
+        for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
             file = '/'.join((self.rawdir, self.files[f]['file']))
             self._process_orthologs(file, limit)
 
