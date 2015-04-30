@@ -160,7 +160,7 @@ class Feature():
 
         return strand_id
 
-    def addFeatureToGraph(self, graph, add_region=True):
+    def addFeatureToGraph(self, graph, add_region=True, region_id=None):
         """
         We make the assumption here that all features are instances.
         The features are located on a region, which begins and ends with faldo:Position
@@ -185,7 +185,9 @@ class Feature():
 
         if add_region:
             # create a region that has the begin/end positions
-            region_id = '_'+self.id+'Region'
+            # create a region that has the begin/end positions
+            if region_id is None:
+                region_id = '_'+self.id+'Region'
             self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
             self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
         else:

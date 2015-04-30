@@ -18,6 +18,7 @@ from dipper.sources.UCSCBands import UCSCBands
 from dipper.sources.CTD import CTD
 from dipper.sources.GeneReviews import GeneReviews
 from dipper.sources.EOM import EOM
+from dipper.sources.KEGG import KEGG
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
 from dipper.sources.Monochrom import Monochrom
@@ -45,7 +46,8 @@ def main():
         'eom': EOM,  # Takes about 5 seconds.
         'coriell': Coriell,
         'clinvar': ClinVar,
-        'monochrom': Monochrom
+        'monochrom': Monochrom,
+        'kegg': KEGG
     }
 
     logger = logging.getLogger(__name__)
