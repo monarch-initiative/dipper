@@ -93,7 +93,9 @@ class Genotype():
         'hemizygous-y': 'GENO:0000604',
         'hemizygous-x': 'GENO:0000605',
         'homozygous': 'GENO:0000136',
-        'hemizygous': 'GENO:0000606'
+        'hemizygous': 'GENO:0000606',
+        'complex_heterozygous': 'GENO:0000402',
+        'simple_heterozygous': 'GENO:0000458'
     }
 
     properties = object_properties.copy()
@@ -220,7 +222,7 @@ class Genotype():
         return
 
 
-    def addPartsToVSLC(self, vslc_id, allele1_id, allele2_id, zygosity_id=None):
+    def addPartsToVSLC(self, vslc_id, allele1_id, allele2_id, zygosity_id=None, allele1_rel=None, allele2_rel=None):
         """
         Here we add the parts to the VSLC.  While traditionally alleles (reference or variant loci) are
         traditionally added, you can add any node (such as sequence_alterations for unlocated variations)
@@ -230,6 +232,8 @@ class Genotype():
         :param allele1_id:
         :param allele2_id:
         :param zygosity_id:
+        :param allele1_rel:
+        :param allele2_rel:
         :return:
         """
 
@@ -239,9 +243,9 @@ class Genotype():
 
         vslc = gu.getNode(vslc_id)
         if allele1_id is not None:
-            self.addParts(allele1_id, vslc_id)
-        if allele2_id is not None:
-            self.addParts(allele2_id, vslc_id)
+            self.addParts(allele1_id, vslc_id, allele1_rel)
+        if allele2_id is not None and allele2_id.strip() != '':
+            self.addParts(allele2_id, vslc_id, allele2_rel)
 
         #figure out zygosity if it's not supplied
         if (zygosity_id is None):
@@ -437,8 +441,8 @@ class Genotype():
         genome_id = self.makeGenomeID(tax_id)
         self.gu.addClassToGraph(self.graph,chr_id,chr_label,Feature.types['chromosome'])
         #add it as a member of the genome (both ways)
-        self.gu.addMember(self.graph,genome_id,chr_id)
-        self.gu.addMemberOf(self.graph,chr_id,genome_id)
+        self.gu.addMember(self.graph, genome_id, chr_id)
+        self.gu.addMemberOf(self.graph, chr_id, genome_id)
 
         self.addTaxon(tax_id,genome_id)  #add the taxon to the genome
 
@@ -449,13 +453,20 @@ class Genotype():
                 build_label = build_id
             chrinbuild_label = makeChromLabel(chr,build_label)
             #add the build-specific chromosome as an instance of the chr class
-            self.gu.addIndividualToGraph(self.graph,chrinbuild_id,chrinbuild_label,chr_id)
+            self.gu.addIndividualToGraph(self.graph, chrinbuild_id, chrinbuild_label, chr_id)
 
             #add the build-specific chromosome as a member of the build  (both ways)
-            self.gu.addMember(self.graph,build_id,chrinbuild_id)
-            self.gu.addMemberOf(self.graph,chrinbuild_id,build_id)
+            self.gu.addMember(self.graph, build_id, chrinbuild_id)
+            self.gu.addMemberOf(self.graph, chrinbuild_id, build_id)
 
         return
+
+    def make_variant_locus_label(self, gene_label, allele_label):
+        if gene_label is None:
+            gene_label = ''
+        label = gene_label.strip()+'<' + allele_label.strip() + '>'
+
+        return label
 
     def make_vslc_label(self, gene_label, allele1_label, allele2_label):
         """
@@ -471,13 +482,10 @@ class Genotype():
             logger.error("Not enough info to make vslc label")
             return None
 
-        if gene_label is None:
-            gene_label = ''
-
-        top = gene_label+'<' + allele1_label + '>'
+        top = self.make_variant_locus_label(gene_label, allele1_label)
         bottom = ''
         if allele2_label is not None:
-            bottom = gene_label+'<'+allele2_label+'>'
+            bottom = self.make_variant_locus_label(gene_label, allele2_label)
 
         vslc_label = '/'.join((top,bottom))
 

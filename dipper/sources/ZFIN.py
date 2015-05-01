@@ -66,7 +66,8 @@ class ZFIN(Source):
                      "ZDB-GENO-100325-3", "ZDB-GENO-100325-4", "ZDB-GENO-100325-5", "ZDB-GENO-100325-6",
                      "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
-                     "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3"],
+                     "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
+                     "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -74,12 +75,16 @@ class ZFIN(Source):
                  "ZDB-GENE-980526-166", "ZDB-GENE-980526-196", "ZDB-GENE-980526-265", "ZDB-GENE-980526-299",
                  "ZDB-GENE-980526-41", "ZDB-GENE-980526-437", "ZDB-GENE-980526-44", "ZDB-GENE-980526-481",
                  "ZDB-GENE-980526-561", "ZDB-GENE-980526-89", "ZDB-GENE-990415-181", "ZDB-GENE-990415-72",
-                 "ZDB-GENE-990415-75"],
+                 "ZDB-GENE-990415-75", "ZDB-GENE-980526-44", "ZDB-GENE-030421-3", "ZDB-GENE-980526-196",
+                 "ZDB-GENE-050320-62", "ZDB-GENE-061013-403", "ZDB-GENE-041114-104", "ZDB-GENE-030131-9700",
+                 "ZDB-GENE-031114-1"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
                    "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
-                   "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2"],
+                   "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
+                   "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
+                   "ZDB-ALT-001129-2"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -94,7 +99,8 @@ class ZFIN(Source):
                         "ZDB-EXP-100330-7", "ZDB-EXP-100402-1", "ZDB-EXP-100402-2", "ZDB-EXP-100422-3",
                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
-                        "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2"],
+                        "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
+                        "ZDB-EXP-041102-1"],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
                 "PMID:18201692", "PMID:18358464", "PMID:18388326", "PMID:18638469", "PMID:18846223",
@@ -102,7 +108,7 @@ class ZFIN(Source):
                 "PMID:20306498", "PMID:20442775", "PMID:20603019", "PMID:21147088", "PMID:21893049",
                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
-                "ZFIN:ZDB-PUB-140404-9"]
+                "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16"]
     }
 
     def __init__(self):
@@ -145,39 +151,46 @@ class ZFIN(Source):
         
         if self.testOnly:
             self.testMode = True
-            
-        self.kd_reagent_hash = {'kd_reagent_id': {}, 'kd_reagent_label': {}, 'gene_label': {}}
-        self.wildtype_hash = {'id': {}, 'symbol': {}}
+
+        self.wildtype_hash = {}  # to hold the w.t. background id:symbol mappings
+
+        self.kd_reagent_hash = {} # to hold the reagent symbol and list of target ids
+
         self.label_hash = {'gene_label': {}, 'allele_label': {}, 'construct_label': {}, 'genotype_label': {},
                            'background_label': {}, 'morpholino_label': {}}
-        self.genotype_id_to_background_id_hash = {'genotype_id': {}}
-        self.extrinsic_id_to_enviro_id_hash = {'extrinsic_id': {}}
-
+        self.id_label_map = {}
+        self.genotype_backgrounds = {}  # to hold the mappings between genotype and background
+        self.extrinsic_id_to_enviro_id_hash = {}
+        self.variant_loci_genes = {}   #to hold the genes variant due to a seq alt
 
         # basic information on classes and instances
         self._process_genes(limit)   #REVIEWED-COMPLETE
         self._process_stages(limit)  #REVIEWED-COMPLETE
         self._process_pubinfo(limit)  #REVIEWED-COMPLETE
         self._process_pub2pubmed(limit)  #REVIEWED-COMPLETE
-        self._process_wildtypes(limit)  # Must be processed before wildtype_expression  #REVIEWED
 
         # The knockdown reagents
         for t in ['morph','crispr','talen']:
-            self._process_targeting_reagents(t, limit)
+            self._process_targeting_reagents(t, limit)  #REVIEWED-COMPLETE
 
         self._process_gene_marker_relationships(limit)  #REVIEW-IN PROCESS
         self._process_features(limit)  #REVIEWED-COMPLETE
-        self._process_feature_affected_genes(limit)  #NEEDS MORE REVIEW
+        self._process_feature_affected_genes(limit)  #REVIEWED-COMPLETE
 
         # These must be processed in a specific order
-        self._process_genotype_backgrounds(limit)  #REVIEWED
+        # Must be processed before wildtype_expression
+        self._process_wildtypes(limit)    #REVIEWED-COMPLETE
+        self._process_genotype_backgrounds(limit)  #REVIEWED-COMPLETE
         self._process_genotype_features(limit)
 
+        # materialize the genotype parts (vslcs, gvcs, etc.)
+        #self._build_genotype_parts(limit)  #TODO
+
         # NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the env label.
-        self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
+        #self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
-        self._process_g2p(limit)
+        #self._process_g2p(limit)
 
         #self._process_wildtype_expression(limit)
         #self._process_genbank_ids(limit)  #HOLDING OFF FOR NOW
@@ -193,7 +206,15 @@ class ZFIN(Source):
 
     def _process_genotype_features(self, limit=None):
         """
-        We don't actually know the allele pairs, so we'll store some info in a hashmap for post-processing
+        Here we process the genotype_features file, which lists genotypes together with
+        any intrinsic sequence alterations, their zygosity, and affected gene.
+        We don't get allele pair (VSLC) ids in a single row, so we iterate through the
+        file and build up a hash that contains all of a genotype's partonomy.
+        We can then assemble a genotype based on that partonomy.
+        This table does not list the background genotype/strain: that is listed elsewhere.
+
+        ZFIN "ALT" objects are mapped to sequence alterations in our system.
+
         :param limit:
         :return:
         """
@@ -206,9 +227,9 @@ class ZFIN(Source):
 
         gu = GraphUtils(curie_map.get())
 
-        geno_hash = {}  #This is used to store the genotype partonomy
+        geno_hash = {}  # This is used to store the genotype partonomy
         gvc_hash = {}
-        vslc_label_hash = {}
+
         logger.info("Processing Genotypes")
         line_counter = 0
         geno = Genotype(g)
@@ -217,205 +238,285 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (genotype_id, genotype_name, genotype_unique_name, allele_id, allele_name, allele_ab,
-                 allele_type, allele_disp_type, gene_symbol, gene_id, zygosity,
-                 construct_name, construct_id, other) = row
+                (genotype_num, genotype_name, genotype_unique_name, allele_num, allele_name, allele_ab,
+                 allele_type, allele_disp_type, gene_symbol, gene_num, zygosity,
+                 construct_name, construct_num, other) = row
 
-                if self.testMode and genotype_id not in self.test_ids['genotype']:
+                if self.testMode and genotype_num not in self.test_ids['genotype']:
                     continue
 
                 # add the genotype to the graph
                 # not adding the genotype label here, since it doesn't include the background
                 # that will be done in another method
-                genotype_id = 'ZFIN:' + genotype_id.strip()
+                genotype_id = 'ZFIN:' + genotype_num.strip()
                 geno.addGenotype(genotype_id, None)
+
+                # add the given name and uniquename as synonyms
+                gu.addSynonym(g, genotype_id, genotype_name)
+                gu.addSynonym(g, genotype_id, genotype_unique_name)
 
                 if genotype_id not in geno_hash:
                     geno_hash[genotype_id] = {}
+
                 genoparts = geno_hash[genotype_id]
 
-                # FIXME: This seems incorrect. Shouldn't the types available here be added to the sequence alteration?
                 # reassign the allele_type to a proper GENO or SO class
                 allele_type = self._map_allele_type_to_geno(allele_type)
 
-                allele_id = 'ZFIN:' + allele_id.strip()
-                geno.addAllele(allele_id, allele_name, allele_type)
+                allele_id = 'ZFIN:' + allele_num.strip()
 
-                if gene_id is not None and gene_id.strip() != '':
+                if allele_num != '':
+                    self.id_label_map[allele_id] = allele_name
+
+                # alleles in zfin are really sequence alterations in our system
+                geno.addSequenceAlteration(allele_id, allele_name, allele_type)
+                gu.addSynonym(g, allele_id, allele_ab)
+
+                # here, we assemble the items into a genotype hash
+                # we need to do this because each row only holds a single allele of a gene
+                # but a genotype may have many alleles and therefore many rows
+                # so we loop through the file once to build a hash of genotype components
+                if gene_num is not None and gene_num.strip() != '':
                     # add the gene to the graph, along with it's symbol as the primary label
-                    gene_id = 'ZFIN:' + gene_id.strip()
+                    gene_id = 'ZFIN:' + gene_num.strip()
                     geno.addGene(gene_id, gene_symbol)
-
-                    if gene_id is not None and gene_id not in self.label_hash['gene_label']:
-                        self.label_hash['gene_label'][gene_id] = gene_symbol
-                    if allele_id is not None and allele_id not in self.label_hash['allele_label']:
-                        self.label_hash['allele_label'][allele_id] = allele_name
+                    self.id_label_map[gene_id] = gene_symbol
 
                     # if it's a transgenic construct, then we'll have to get the other bits
-                    if construct_id is not None and construct_id.strip() != '':
-                        construct_id = 'ZFIN:' + construct_id.strip()
+                    if construct_num is not None and construct_num.strip() != '':
+                        construct_id = 'ZFIN:' + construct_num.strip()
                         geno.addDerivesFrom(allele_id, construct_id)
-                        if construct_id not in self.label_hash['construct_label']:
-                            self.label_hash['construct_label'][construct_id] = construct_name
+                        self.id_label_map[construct_id] = construct_name
 
                     # allele to gene
-                    geno.addAlleleOfGene(allele_id, gene_id)
+                    if allele_id not in self.variant_loci_genes:
+                        self.variant_loci_genes[allele_id] = [gene_id]
+                    else:
+                        if gene_id not in self.variant_loci_genes[allele_id]:
+                            self.variant_loci_genes[allele_id] += [gene_id]
+
                     if gene_id not in genoparts:
                         genoparts[gene_id] = [allele_id]
                     else:
                         genoparts[gene_id].append(allele_id)
 
-                    if zygosity == 'homozygous':
-                        genoparts[gene_id].append(allele_id)  # add the allele again
-                    elif zygosity == 'unknown':
-                        genoparts[gene_id].append('?')  # we'll just use this as a convention for unknown
-                    #elif (zygosity == 'complex'):  # what are these?
-                    #    genoparts[gene_id].append('complex')
-                    geno_hash[genotype_id] = genoparts
+                    other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
+                    genoparts[gene_id].append(other_allele)
+
+                    # geno_hash[genotype_id] = genoparts
                 else:
                     # if the gene is not known, still need to add the allele to the genotype hash
                     # these will be added as sequence alterations.
                     genoparts[allele_id] = [allele_id]
-                    if zygosity == 'homozygous':
-                        genoparts[allele_id].append(allele_id)
-                    elif zygosity == 'unknown':
-                        genoparts[allele_id].append('?')
-                    #elif zygosity == 'complex':  #not sure what to do with these?
-                    #    genoparts[allele_id].append('complex')
+                    other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
+                    genoparts[allele_id].append(other_allele)
 
-                    geno_hash[allele_id] = genoparts    #CHECK should this be genotype_id instead of allele_id?
-                    if allele_id is not None and allele_id not in self.label_hash['allele_label']:
-                        self.label_hash['allele_label'][allele_id] = allele_name
+                    # geno_hash[allele_id] = genoparts    #CHECK should this be genotype_id instead of allele_id?
 
-                if limit is not None and line_counter > limit:
+                geno_hash[genotype_id] = genoparts
+
+                # fetch the other affected genes, and make sure they are in the geno hash
+                # we have to do this because some of the affected genes are not listed in this file
+                genes_from_hash = None
+                if allele_id in self.variant_loci_genes:
+                    genes_from_hash = self.variant_loci_genes[allele_id]
+                else:
+                    logger.info('no gene found for %s', allele_id)
+
+                if genes_from_hash is not None and genes_from_hash != [gene_id] and gene_id not in genes_from_hash:
+                    logger.info("***Found other genes not in genotype_features for %s: %s", allele_id, genes_from_hash)
+                    for gh in genes_from_hash:
+                        if gh not in genoparts:
+                            genoparts[gh] = [allele_id]
+                        else:
+                            genoparts[gh] += [allele_id]
+
+                        other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
+                        genoparts[gene_id].append(other_allele)
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
                 # end loop through file
+        csvfile.close()
 
-            # now loop through the geno_hash, and build the vslcs
-            for gt in geno_hash:
-                if gt not in gvc_hash:
-                    gvc_hash[gt] = {}
-                gvcparts = gvc_hash[gt]
-                vslc_counter = 0
 
-                for gene_id in geno_hash.get(gt):
-                    gene_label = self.label_hash['gene_label'].get(gene_id)
-                    variant_locus_parts = geno_hash.get(gt).get(gene_id)
-                    if gene_id in variant_locus_parts:
-                        # reset the gene_id to none
-                        gene_id = None
+        # ############## BUILD THE INTRINSIC GENOTYPES ###############
+        # using the geno_hash, build the genotype parts, and add them to the graph
+        # the hash is organized like:
+        # genotype_id : { gene_id : [list, of, alleles], # for located things
+        #                 allele_id : [list, of, alleles] # for unlocated things
+        #               }
+        # now loop through the geno_hash, and build the vslcs
+        for gt in geno_hash:
 
-                    allele1_id = variant_locus_parts[0]
-                    allele1_label = self.label_hash['allele_label'].get(allele1_id)
-                    allele2_id = None
-                    allele2_label = None
-                    zygosity_id = None
-                    # making the assumption that there are not more than 2 variant_locus_parts
-                    if len(variant_locus_parts) > 1:
-                        allele2_id = variant_locus_parts[1]
-                        allele2_label = self.label_hash['allele_label'].get(allele2_id)
-                    if allele2_id is not None:
-                        if allele2_id == '?':
-                            zygosity_id = geno.zygosity['indeterminate']
-                            allele2_id = None
-                            allele2_label = '?'
-                        elif allele2_id == 'complex':
-                            pass  # not sure what to assign here
-                        elif allele1_id != allele2_id:
-                            zygosity_id = geno.zygosity['heterozygous']
-                            #print('heterozygous pair='+allele1_id+'_'+allele2_id)
-                        elif allele1_id == allele2_id:
-                            zygosity_id = geno.zygosity['homozygous']
-                    else:
-                        zygosity_id = geno.zygosity['indeterminate']
+            if self.testMode and re.sub('ZFIN:','',gt) not in self.test_ids['genotype']:
+                continue
 
-                    # create the vslc
-                    if gene_id is None:
-                        gn = ''
-                    else:
-                        gn = gene_id
-                    if (allele2_id is None):
-                        a2 = ''
-                    else:
-                        a2 = allele2_id
+            if gt not in gvc_hash:
+                gvc_hash[gt] = {}
+            gvcparts = gvc_hash[gt]
 
-                    # TODO consider making this anonymous
-                    # TODO also consider adding this to Genotype.py
-                    vslc_id = self.make_id(('-').join((gn, allele1_id, a2)))
-                    vslc_label = geno.make_vslc_label(gene_label,allele1_label,allele2_label)
+            for locus_id in geno_hash.get(gt):
+                locus_label = self.id_label_map[locus_id]
+                variant_locus_parts = geno_hash.get(gt).get(locus_id)
 
-                    gu.addIndividualToGraph(g, vslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
-                    geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id, zygosity_id)
-                    # Remove this since I am now adding the VSLC to the GVC?
-                    #geno.addVSLCtoParent(vslc_id,gt)
-
-                    gt_vslc = gt+'vslc'
-
-                    # FIXME: Refactor this. Don't like the counter approach.
-                    #gvc_hash[vslc_id] = {};
-                    if vslc_counter == 0:
-                        gvcparts[gt_vslc] = [vslc_id]
-                    elif vslc_id not in gvcparts:
-                        gvcparts[gt_vslc].append(vslc_id)
-                    vslc_counter += 1
-
-                    if gt_vslc not in vslc_label_hash:
-                        vslc_label_hash[gt_vslc] = [vslc_label]
-                    elif vslc_id not in vslc_label_hash[gt_vslc]:
-                        vslc_label_hash[gt_vslc].append(vslc_label)
-
-                    #print(gvcparts)
-                    # end loop through geno_hash
-
-            # now loop through the gvc_hash, and build the gvc
-            # TODO: Possible to pass through VSLC label, assemble GVC label?
-            for gt in gvc_hash:
-                gvc_id = '<empty>'
-                gvc_ids = []
-                gvc_labels = []
-                gvc = gvc_hash.get(gt)
-                for vslc_id in gvc:
-                    genomic_variation_complement_parts = gvc.get(vslc_id)
-                    gvc_label_parts = vslc_label_hash[vslc_id]
-                    #print(gvc_label_parts)
-                    #print(genomic_variation_complement_parts)
-                    gvc_id = self.make_id('-'.join(genomic_variation_complement_parts))
-                    #gvc_id = ('_split_').join(genomic_variation_complement_parts)
-                    gvc_label = '; '.join(gvc_label_parts)
-
-                    # Add the GVC
-                    gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
-                    #print(gvc_id)
-
-                    # Add the VSLCs to the GVC
-                    for i in genomic_variation_complement_parts:
-                        #geno.addVSLCtoParent(i,gt)
-                        gu.addTriple(g, gvc_id, geno.object_properties['has_alternate_part'], i)
-
-                background_id = self.genotype_id_to_background_id_hash['genotype_id'].get(gt)
-                if background_id is not None:
-                    genotype_name = gvc_label+' ['+self.label_hash['background_label'].get(background_id)+']'
+                # if the locus == part, then it isn't a gene location
+                if locus_id in variant_locus_parts:
+                    # set the gene_id to none
+                    gene_id = None
                 else:
-                    genotype_name = gvc_label+' [n.s.]'
-                #print(genotype_name)
-                geno.addGenotype(gt, genotype_name)
-                #gt = geno.addGenotype(genotype_id, None)
-                if gt not in geno_hash:
-                    geno_hash[gt] = {}
-                #genoparts = geno_hash[genotype_id]
-                if self.label_hash['genotype_label'].get(gt) is None:
-                    self.label_hash['genotype_label'][gt] = genotype_name
-                    #print(genotype_name)
+                    gene_id = locus_id
 
-                # Add the GVC to the genotype
-                geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
+                allele1_id = variant_locus_parts[0]
+                if allele1_id not in self.id_label_map:
+                    allele1_label = allele1_id
+                    logger.error('allele1 %s not in hash', allele1_id)
+                else:
+                    allele1_label = self.id_label_map[allele1_id]
+                allele2_id = None
+                allele2_label = None
+                zygosity_id = None
 
-                # end of gvc loop
+                if len(variant_locus_parts) > 2:
+                    logger.error("There may be a problem. >2 parts for this locus: %s", variant_locus_parts)
+                elif len(variant_locus_parts) > 1:
+                    allele2_id = variant_locus_parts[1]
+                    if allele2_id not in ['0','?']:
+                        allele2_label = self.id_label_map[allele2_id]
+                    else:
+                        allele2_label = allele2_id
+                if allele2_id is not None:
+                    if allele2_id == '?':
+                        zygosity_id = geno.zygosity['indeterminate']
+                        allele2_id = None
+                    elif allele2_id == '0':
+                        zygosity_id = geno.zygosity['hemizygous']
+                        allele2_id = None
+                    elif allele1_id != allele2_id:
+                        zygosity_id = geno.zygosity['complex_heterozygous']
+                        # print('heterozygous pair='+allele1_id+'_'+allele2_id)
+                    elif allele1_id == allele2_id:
+                        zygosity_id = geno.zygosity['homozygous']
+                else:
+                    zygosity_id = geno.zygosity['simple_heterozygous']
 
-            # end of genotype loop
+                # make variant_loci
+                vloci2 = vloci2_label = None
+                if gene_id is not None:
+                    vloci1 = self.make_id('-'.join((gene_id, allele1_id)))
+                    vloci1_label = geno.make_variant_locus_label(locus_label, allele1_label)
+                    geno.addSequenceAlterationToVariantLocus(allele1_id, vloci1)
+                    geno.addAlleleOfGene(allele1_id, gene_id, geno.object_properties['has_alternate_part'])
+                    gu.addIndividualToGraph(g, vloci1, vloci1_label, geno.genoparts['variant_locus'])
+                    if allele2_id is not None:
+                        vloci2 = self.make_id('-'.join((gene_id, allele2_id)))
+                        vloci2_label = geno.make_variant_locus_label(locus_label, allele2_label)
+                        geno.addSequenceAlterationToVariantLocus(allele2_id, vloci2)
+                        gu.addIndividualToGraph(g, vloci2, vloci2_label, geno.genoparts['variant_locus'])
+                        geno.addAlleleOfGene(allele2_id, gene_id, geno.object_properties['has_alternate_part'])
+                else:
+                    vloci1 = allele1_id
+                    vloci1_label = allele1_label
+                    vloci2 = allele2_id
+                    vloci2_label = allele2_label
 
-            logger.info("Done with genotypes")
+                # create the vslc
+                gene_label = ''
+                if gene_id is None:
+                    gn = ''
+                else:
+                    gn = gene_id
+                    gene_label = self.id_label_map[gene_id]
+                if allele2_id is None:
+                    a2 = ''
+                else:
+                    a2 = allele2_id
+
+                # TODO MAKE THIS ANONYMOUS (add a _ prefix)
+                # TODO also consider adding this to Genotype.py
+                vslc_id = self.make_id('-'.join((gn, allele1_id, a2)))
+                vslc_label = geno.make_vslc_label(gene_label, allele1_label, allele2_label)
+
+                #add to global hash
+                self.id_label_map[vslc_id] = vslc_label
+
+                gu.addIndividualToGraph(g, vslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
+                geno.addPartsToVSLC(vslc_id, vloci1, vloci2, zygosity_id,
+                                    geno.object_properties['has_alternate_part'],
+                                    geno.object_properties['has_alternate_part'])
+
+                if vslc_id not in gvcparts:
+                    gvcparts = [vslc_id]
+                else:
+                    gvcparts += [vslc_id]
+
+                gvc_hash[gt] = gvcparts
+                # end loop through geno_hash
+
+        # now loop through the gvc_hash, and build the gvc
+        for gt in gvc_hash:
+            if self.testMode and re.sub('ZFIN:','',gt) not in self.test_ids['genotype']:
+                continue
+
+            gvc_parts = gvc_hash.get(gt)
+
+            # only need to make a gvc specifically if there's >1 vslc
+            if len(gvc_parts) > 1:
+                gvc_labels = []
+                gvc_parts.sort()  # put these in order so they will always make the same id
+                gvc_id = self.make_id('-'.join(gvc_parts))
+                for vslc_id in gvc_parts:
+                    # add the vslc to the gvc
+                    geno.addVSLCtoParent(vslc_id, gvc_id)
+
+                    # build the gvc label
+                    vslc_label = self.id_label_map[vslc_id]
+                    if vslc_label is not None:
+                        gvc_labels += [vslc_label]
+                    else:
+                        gvc_labels += [vslc_id]
+
+                #todo make this anonymous
+
+                #todo sort
+                gvc_label = '; '.join(gvc_labels)
+
+                # add the gvc, and add to the genotype
+                gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
+            elif len(gvc_parts) == 1:
+                # assign the vslc to be also a gvc
+                vslc_id = gvc_parts[0]
+                gvc_id = vslc_id
+                gvc_label = self.id_label_map[vslc_id]
+                gu.addType(g, vslc_id, geno.genoparts['genomic_variation_complement'])
+            else:
+                logger.error("No GVC parts for %s", gt)
+
+            background_id = self.genotype_backgrounds[genotype_id]
+            if background_id is not None:
+                background_label = self.id_label_map[background_id]
+                if background_label is None:
+                    background_label = background_id
+                    logger.error("We don't have the label for %s stored", background_id)
+            else:
+                background_label = '[n.s.]'
+
+            genotype_name = gvc_label + ' [' + background_label + ']'
+
+            geno.addGenotype(gt, genotype_name)
+
+            self.id_label_map[gt] = genotype_name
+
+            # Add the GVC to the genotype
+            geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
+
+            # end of gvc loop
+
+        # end of genotype loop
+
+        logger.info("Done with genotypes")
+
         return
 
     def _map_allele_type_to_geno(self, allele_type):
@@ -475,18 +576,24 @@ class ZFIN(Source):
                 line_counter += 1
                 (genotype_id, genotype_name, background_id, empty) = row
 
+                if self.testMode and genotype_id not in self.test_ids['genotype']:
+                    continue
+
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 background_id = 'ZFIN:' + background_id.strip()
-                # FIXME is this necessary? [nlw]
-                if self.genotype_id_to_background_id_hash['genotype_id'].get(genotype_id) is None:
-                    self.genotype_id_to_background_id_hash['genotype_id'][genotype_id] = background_id
+
+                # store this in the hash for later lookup when building fish genotypes
+                self.genotype_backgrounds[genotype_id] = background_id
 
                 # add the background into the graph, in case we haven't seen it before
                 geno.addGenomicBackground(background_id, None)
+
+                # hang the taxon from the background
                 geno.addTaxon(taxon_id, background_id)
 
-                #add the intrinsic genotype to the graph
-                geno.addGenotype(genotype_id, genotype_name, geno.genoparts['intrinsic_genotype'])
+                # add the intrinsic genotype to the graph
+                # we DO NOT ADD THE LABEL here as it doesn't include the background
+                geno.addGenotype(genotype_id, None, geno.genoparts['intrinsic_genotype'])
 
                 # Add background to the intrinsic genotype
                 geno.addGenomicBackgroundToGenotype(background_id, genotype_id)
@@ -531,17 +638,9 @@ class ZFIN(Source):
                 geno.addGenotype(genotype_id, genotype_abbreviation,
                                  geno.genoparts['genomic_background'], genotype_name)
 
-                # FIXME why is this here? [nlw]
-                if self.label_hash['background_label'].get(genotype_id) is None:
-                    self.label_hash['background_label'][genotype_id] = genotype_name
-
-                if self.label_hash['genotype_label'].get(genotype_id) is None:
-                    self.label_hash['genotype_label'][genotype_id] = '['+genotype_name+']'
-
                 # Build the hash for the wild type genotypes.
-                if self.wildtype_hash['id'].get(genotype_name) is None:
-                    self.wildtype_hash['id'][genotype_name] = genotype_id
-                    self.wildtype_hash['symbol'][genotype_name] = genotype_abbreviation
+                self.wildtype_hash[genotype_id] = genotype_abbreviation
+                self.id_label_map[genotype_id] = genotype_abbreviation
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -810,8 +909,9 @@ class ZFIN(Source):
     def _process_features(self, limit=None):
         """
         This module provides information for the intrinsic and extrinsic genotype features of zebrafish.
+        All items here are 'alterations', and are therefore instances.
 
-         sequence alteration ID, SO type, abbreviation, and relationship to
+        sequence alteration ID, SO type, abbreviation, and relationship to
         the affected gene, with the gene's ID, symbol, and SO type (gene/pseudogene).
 
         Triples created:
@@ -827,7 +927,7 @@ class ZFIN(Source):
         logger.info("Processing features")
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        geno = Genotype(self.graph)
+        geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['features']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -847,7 +947,11 @@ class ZFIN(Source):
 
                 # Note, we don't really care about how the variant was derived.  so we skip that.
 
-                if limit is not None and line_counter > limit:
+                # add to the id-label map
+                self.id_label_map[genomic_feature_id] = genomic_feature_abbreviation
+                self.id_label_map[construct_id] = construct_name
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with features")
@@ -885,7 +989,12 @@ class ZFIN(Source):
         logger.info("Processing feature affected genes")
         line_counter = 0
         raw = '/'.join((self.rawdir, self.files['feature_affected_gene']['file']))
-        geno = Genotype(self.graph)
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -899,37 +1008,44 @@ class ZFIN(Source):
                 # SO:1000008 - point_mutation, SO:1000029 - chromosomal_deletion, SO:1000032 - indel
 
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
-                # TODO: Can build the variant locus, sequence alteration, and sequence alteration type here.
-
                 gene_id = 'ZFIN:' + gene_id.strip()
-                # NOTE: There are a few pseudogenes in the file, using the gene_so_id will identify them.
+
+                self.id_label_map[genomic_feature_id] = genomic_feature_abbreviation
+                self.id_label_map[gene_id] = gene_symbol
+
                 geno.addGene(gene_id, gene_symbol, gene_so_id)
 
-                # Add variant locus (allele)
-                # TODO: Confirm this is correct/holds true for all variant loci.
-                # FIXME I am not sure this is necessary if it affects >1 gene, like a deficiency [nlw]
-                # Should a different format be used for transgenic insertions?
-                variant_locus_label = gene_symbol+'<'+genomic_feature_abbreviation+'>'
-                #print(variant_locus)
-                variant_locus_id = self.make_id(genomic_feature_id+gene_id)
-
-                # FIXME:Do we want to filter out the translocations/deletions, or include them?
-                geno.addAllele(variant_locus_id,variant_locus_label)
-
-                #gu.addIndividualToGraph(self.graph,genomic_feature_id,genomic_feature_abbreviation,feature_so_id)
-
-                # Add the gene to the allele.
-                geno.addAlleleOfGene(variant_locus_id, gene_id)
+                # add the gene to the list of things altered by this thing
+                if genomic_feature_id not in self.variant_loci_genes:
+                    self.variant_loci_genes[genomic_feature_id] = [gene_id]
+                else:
+                    if gene_id not in self.variant_loci_genes[genomic_feature_id]:
+                        self.variant_loci_genes[genomic_feature_id] += [gene_id]
 
                 sequence_alteration_type = feature_so_id
-
                 # Add the sequence alteration id, label, and type
                 geno.addSequenceAlteration(genomic_feature_id, genomic_feature_abbreviation, sequence_alteration_type)
 
-                # Add the sequence alteration to the variant locus
-                geno.addSequenceAlterationToVariantLocus(genomic_feature_id, variant_locus_id)
+                if sequence_alteration_type == 'is allele of':
+                    vl_label = geno.make_variant_locus_label(gene_symbol, genomic_feature_abbreviation)
+                    vl_id = self.make_id('-'.join((gene_id, genomic_feature_id)))
 
-                if limit is not None and line_counter > limit:
+                    self.id_label_map[vl_id] = vl_label
+
+                    # create the variant locus, add it's parts and relationship to the gene
+                    geno.addSequenceAlterationToVariantLocus(genomic_feature_id, vl_id)
+                    geno.addAlleleOfGene(vl_id, gene_id, geno.object_properties['has_alternate_part'])
+                    gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
+
+                    # note that deficiencies or translocations that affect only one gene are
+                    # considered alleles here by zfin, which is appropriate.
+                    # i don't yet see duplications
+                else:
+                    # don't make the variant loci for the other things
+                    # which include deficiencies, translocations, transgenes
+                    geno.addAlleleOfGene(genomic_feature_id, gene_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with feature affected genes")
@@ -948,7 +1064,7 @@ class ZFIN(Source):
         :param limit:
         :return:
         """
-
+        # TODO need to review relationships with @mbrush
         if self.testMode:
             g = self.testgraph
         else:
@@ -978,29 +1094,40 @@ class ZFIN(Source):
                                     'gene product recognized by antibody', 'promoter of',
                                     'transcript targets gene']:
                     gene_id = 'ZFIN:'+gene_id.strip()
-                    geno.addGene(gene_id, gene_symbol,gene_so_id)
+                    geno.addGene(gene_id, gene_symbol, gene_so_id)
 
                     marker_id = 'ZFIN:'+marker_id.strip()
                     if relationship == 'knockdown reagent targets gene':
-                        geno.addGeneTargetingReagent(marker_id,marker_symbol,marker_so_id)
+                        geno.addGeneTargetingReagent(marker_id, marker_symbol, marker_so_id)
                         geno.addReagentTargetedGene(marker_id,gene_id)
+                        if marker_id not in self.kd_reagent_hash:
+                            self.kd_reagent_hash[marker_id] = {'label': marker_symbol,
+                                                               'targets': [gene_id]}
+                        else:
+                            if gene_id not in self.kd_reagent_hash[marker_id]['targets']:
+                                self.kd_reagent_hash[marker_id]['targets'] += [gene_id]
                     elif relationship == 'coding sequence of':
                         # transgenic constructs with coding regions
-                        geno.addConstruct(marker_id,marker_symbol,marker_so_id)
-                        geno.addParts(gene_id,marker_id,geno.object_properties['has_alternate_part'])
+                        # but we don't know if they are wild-type or mutant, so just has_part for now
+                        geno.addConstruct(marker_id, marker_symbol, marker_so_id)
+                        geno.addParts(gene_id, marker_id, geno.object_properties['has_part'])
                     elif relationship == 'gene product recognized by antibody':
                         # TODO for ticket #32
                         pass
                     elif relationship == 'promoter of':
-                        # transgenic constructs with promotor regions
-                        geno.addConstruct(marker_id,marker_symbol,marker_so_id)
-                        geno.addParts(gene_id,marker_id,geno.object_properties['has_alternate_part'])
+                        # transgenic constructs with promoters regions
+                        # we are making the assumption that they are wild-type promoters
+                        geno.addConstruct(marker_id, marker_symbol, marker_so_id)
+                        geno.addParts(gene_id, marker_id, geno.object_properties['has_reference_part'])
                     elif relationship == 'transcript targets gene':  #miRNAs
                         # TODO should this be an interaction instead of this special relationship?
                         gu.addIndividualToGraph(g, marker_id, marker_symbol, marker_so_id)
                         gu.addTriple(g, marker_id, geno.object_properties['targets_instance_of'], gene_id)
                     else:
                         pass  #skip
+
+                self.id_label_map[marker_id] = marker_symbol
+                self.id_label_map[gene_id] = gene_symbol  # just in case we haven't seen it before
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1178,22 +1305,13 @@ class ZFIN(Source):
                     gu.addComment(g, reagent_id, note)
 
                 # Build the hash for the reagents and the gene targets
-                if self.kd_reagent_hash['kd_reagent_id'].get(reagent_id) is None:
-                    reagent_target = []
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][reagent_id] = reagent_target
+                if reagent_id not in self.kd_reagent_hash:
+                    self.kd_reagent_hash[reagent_id] = {'label': reagent_symbol,
+                                                        'targets': [gene_id]}
                 else:
-                    reagent_target = self.kd_reagent_hash['kd_reagent_id'][reagent_id]
-                    reagent_target.append(gene_id)
-                    self.kd_reagent_hash['kd_reagent_id'][reagent_id] = reagent_target
+                    self.kd_reagent_hash[reagent_id]['targets']+=[gene_id]
 
-                if self.kd_reagent_hash['kd_reagent_label'].get(reagent_id) is None:
-                    self.kd_reagent_hash['kd_reagent_label'][reagent_id] = reagent_symbol
-                if self.kd_reagent_hash['gene_label'].get(gene_id) is None:
-                    self.kd_reagent_hash['gene_label'][gene_id] = gene_symbol
-
-                if self.label_hash['morpholino_label'].get(reagent_id) is None:
-                    self.label_hash['morpholino_label'][reagent_id] = reagent_symbol
+                self.id_label_map[reagent_id] = reagent_symbol
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1269,11 +1387,10 @@ class ZFIN(Source):
                 if self.testMode and environment_id not in self.test_ids['environment']:
                     continue
 
-                # FIXME: Can the environment serve as the extrinsic genotype ID?
+                # FIXME: Can the environment serve as the extrinsic genotype ID?  ***NO***
                 # For now, making an ID from environment ID only, but may want to revisit.
                 extrinsic_geno_id = self.make_id(environment_id)
-                self.extrinsic_id_to_enviro_id_hash['extrinsic_id'][extrinsic_geno_id] = environment_id
-
+                self.extrinsic_id_to_enviro_id_hash[extrinsic_geno_id] = environment_id
 
                 # We can start to build the extrinsic genotype using this file.
                 # Requires creating a hash similar to what is used for genotypes to get the VSLCs and GVCs.
@@ -1864,6 +1981,32 @@ class ZFIN(Source):
     def _make_zpkey(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
         key = self.make_id('_'.join((superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier)))
         return key
+
+    def _get_other_allele_by_zygosity(self, allele_id, zygosity):
+        """
+        A helper function to switch on the zygosity, and return the appropriate allele id, or symbol.
+        :param allele_id:
+        :param zygosity:
+        :return:
+        """
+        other_allele = None
+        if zygosity == 'homozygous':
+            other_allele = allele_id
+        elif zygosity == 'hemizygous':
+            other_allele = '0'
+        elif zygosity == 'unknown':  # we'll use this as a convention
+            other_allele = '?'
+        elif zygosity == 'complex':  # transgenics
+            other_allele = '0'
+        elif zygosity == 'heterozygous':
+            # passing on hets until a different fxn
+            pass
+        else:
+            logger.warn("Unconfigured zygosity: %s", zygosity)
+
+        return other_allele
+
+
 
     def getTestSuite(self):
         import unittest
