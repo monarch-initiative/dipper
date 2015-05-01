@@ -199,6 +199,9 @@ class ZFIN(Source):
 
         self.load_bindings()
 
+        logger.info("Found %d nodes in graph", len(self.graph))
+        logger.info("Found %d nodes in testgraph", len(self.testgraph))
+
         return
 
     def _process_genotype_features(self, limit=None):
@@ -295,20 +298,19 @@ class ZFIN(Source):
                     if gene_id not in genoparts:
                         genoparts[gene_id] = [allele_id]
                     else:
-                        genoparts[gene_id].append(allele_id)
+                        genoparts[gene_id] += [allele_id]
 
                     other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
-                    genoparts[gene_id].append(other_allele)
+                    if other_allele is not None:
+                        genoparts[gene_id] += [other_allele]
 
-                    # geno_hash[genotype_id] = genoparts
                 else:
                     # if the gene is not known, still need to add the allele to the genotype hash
                     # these will be added as sequence alterations.
                     genoparts[allele_id] = [allele_id]
                     other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
-                    genoparts[allele_id].append(other_allele)
-
-                    # geno_hash[allele_id] = genoparts    #CHECK should this be genotype_id instead of allele_id?
+                    if other_allele is not None:
+                        genoparts[allele_id] += [other_allele]
 
                 geno_hash[genotype_id] = genoparts
 
@@ -336,7 +338,8 @@ class ZFIN(Source):
 
                 # end loop through file
         csvfile.close()
-
+        logger.info("Finished parsing file")
+        logger.info("Building intrinsic genotypes from partonomy")
 
         # ############## BUILD THE INTRINSIC GENOTYPES ###############
         # using the geno_hash, build the genotype parts, and add them to the graph
@@ -345,19 +348,30 @@ class ZFIN(Source):
         #                 allele_id : [list, of, alleles] # for unlocated things
         #               }
         # now loop through the geno_hash, and build the vslcs
-        for gt in geno_hash:
 
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+
+        #pp.pprint(geno_hash)
+        #logger.info('genohash: %s', pp.pformat(geno_hash))
+
+
+        for gt in geno_hash:
+            #logger.info("looking for gt in test_ids: %s",gt)
             if self.testMode and re.sub('ZFIN:','',gt) not in self.test_ids['genotype']:
+                print('skipping ',gt)
                 continue
 
             if gt not in gvc_hash:
                 gvc_hash[gt] = {}
             gvcparts = gvc_hash[gt]
 
-            for locus_id in geno_hash.get(gt):
+
+            for locus_id in geno_hash[gt]:
+                #logger.info("locus id %s",locus_id)
                 locus_label = self.id_label_map[locus_id]
                 variant_locus_parts = geno_hash.get(gt).get(locus_id)
-
+                #logger.info('vl parts: %s',pp.pformat(variant_locus_parts))
                 # if the locus == part, then it isn't a gene location
                 if locus_id in variant_locus_parts:
                     # set the gene_id to none
@@ -397,6 +411,7 @@ class ZFIN(Source):
                         zygosity_id = geno.zygosity['homozygous']
                 else:
                     zygosity_id = geno.zygosity['simple_heterozygous']
+                    allele2_label = '+'
 
                 # make variant_loci
                 vloci2 = vloci2_label = None
@@ -425,10 +440,15 @@ class ZFIN(Source):
                 else:
                     gn = gene_id
                     gene_label = self.id_label_map[gene_id]
+
+                # allele2 is only None if it's a simple het
                 if allele2_id is None:
+                    a2 = '+'
+                elif allele2_label is None:
                     a2 = ''
+                    logger.error("Something is wrong with allele2 label")
                 else:
-                    a2 = allele2_id
+                    a2 = allele2_label
 
                 # TODO MAKE THIS ANONYMOUS (add a _ prefix)
                 # TODO also consider adding this to Genotype.py
@@ -449,8 +469,12 @@ class ZFIN(Source):
                     gvcparts += [vslc_id]
 
                 gvc_hash[gt] = gvcparts
-                # end loop through geno_hash
 
+
+        # end loop through geno_hash
+
+        logger.info('Finished finding all the intrinsic genotype parts')
+        logger.info('Build pretty genotype labels')
         # now loop through the gvc_hash, and build the gvc
         for gt in gvc_hash:
             if self.testMode and re.sub('ZFIN:','',gt) not in self.test_ids['genotype']:
@@ -517,6 +541,7 @@ class ZFIN(Source):
         # end of genotype loop
 
         # TODO this is almost complete; deficiencies with >1 locus deleted are still not right
+        logger.info("Finished building genotype labels")
 
         logger.info("Done with genotypes")
 
@@ -1391,12 +1416,12 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (environment_id, condition_group, condition, values, units, comment, empty) = row
+                (environment_num, condition_group, condition, values, units, comment, empty) = row
 
                 if re.match("\\\\", values):
                     values = ''
-                environment_id = 'ZFIN:'+environment_id.strip()
-                if self.testMode and environment_id not in self.test_ids['environment']:
+                environment_id = 'ZFIN:'+environment_num.strip()
+                if self.testMode and environment_num not in self.test_ids['environment']:
                     continue
 
                 # We can start to build the extrinsic genotype using this file.
@@ -1438,8 +1463,8 @@ class ZFIN(Source):
                     else:
                         unit_id = units.replace(' ','-')
 
-                print('values=',values,'value_id=',value_id)
-                print('units=',units,'unit_id=',unit_id)
+                #print('values=',values,'value_id=',value_id)
+                #print('units=',units,'unit_id=',unit_id)
 
                 if comment == 'NULL' or comment == '':
                     comment = None
@@ -1458,7 +1483,7 @@ class ZFIN(Source):
                         morph_label = morph_id
                         logger.warn('morph label not found %s',morph_id)
 
-                    print('FOUND A MORPH:', morph_label)
+                    #print('FOUND A MORPH:', morph_label)
 
                     # Create the targeted sequence id
                     if units is not None and values is not None:
@@ -1509,7 +1534,7 @@ class ZFIN(Source):
                 elif not re.match('ZDB.*', condition):
                     # create fake environmental components, and add to the hash
                     if units is not None and values is not None:
-                        print(environment_id, condition_group)
+                        #print(environment_id, condition_group)
                         env_component_id = '-'.join((condition_group.strip(),condition.strip(),value_id,unit_id))
                         if values == '':
                             conc_label = '('+units+')'
@@ -1542,6 +1567,8 @@ class ZFIN(Source):
                 # End of loop
 
         csvfile.close()
+
+        logger.info("Building complex environments from components")
 
         # iterate through the env hash to build the full environment label
         for env_id in env_hash:
@@ -1949,7 +1976,6 @@ class ZFIN(Source):
             logger.warn("Unconfigured zygosity: %s", zygosity)
 
         return other_allele
-
 
 
     def getTestSuite(self):
