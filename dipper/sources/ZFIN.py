@@ -67,7 +67,7 @@ class ZFIN(Source):
                      "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
-                     "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8"],
+                     "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -77,14 +77,14 @@ class ZFIN(Source):
                  "ZDB-GENE-980526-561", "ZDB-GENE-980526-89", "ZDB-GENE-990415-181", "ZDB-GENE-990415-72",
                  "ZDB-GENE-990415-75", "ZDB-GENE-980526-44", "ZDB-GENE-030421-3", "ZDB-GENE-980526-196",
                  "ZDB-GENE-050320-62", "ZDB-GENE-061013-403", "ZDB-GENE-041114-104", "ZDB-GENE-030131-9700",
-                 "ZDB-GENE-031114-1"],
+                 "ZDB-GENE-031114-1","ZDB-GENE-990415-72"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
                    "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
-                   "ZDB-ALT-001129-2"],
+                   "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -920,9 +920,9 @@ class ZFIN(Source):
         :return:
         """
         if self.testMode:
-            g = self.graph
-        else:
             g = self.testgraph
+        else:
+            g = self.graph
 
         logger.info("Processing features")
         line_counter = 0
@@ -1099,7 +1099,13 @@ class ZFIN(Source):
                     marker_id = 'ZFIN:'+marker_id.strip()
                     if relationship == 'knockdown reagent targets gene':
                         geno.addGeneTargetingReagent(marker_id, marker_symbol, marker_so_id)
-                        geno.addReagentTargetedGene(marker_id,gene_id)
+
+                        # should probably wait to add this until processing the environments
+                        #targeted_gene_id = '-'.join((gene_id,marker_id))
+                        #targeted_gene_label = geno.make_variant_locus_label(gene_id,marker_id)
+                        #geno.addReagentTargetedGene(marker_id,gene_id,targeted_gene_id, targeted_gene_label)
+                        #self.id_label_map[targeted_gene_id] = targeted_gene_label
+
                         if marker_id not in self.kd_reagent_hash:
                             self.kd_reagent_hash[marker_id] = {'label': marker_symbol,
                                                                'targets': [gene_id]}

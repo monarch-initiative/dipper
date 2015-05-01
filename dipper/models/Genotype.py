@@ -372,6 +372,7 @@ class Genotype():
         targets = gu.getNode(self.properties['targets_instance_of'])
         self.graph.add((gu.getNode(reagent_id), targets, gu.getNode(gene_id)))
 
+        # akin to a variant locus
         if (targeted_gene_id is None):
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
         self.gu.addIndividualToGraph(self.graph, targeted_gene_id, targeted_gene_label,
