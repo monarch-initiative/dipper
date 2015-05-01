@@ -240,7 +240,11 @@ class KEGG(Source):
                 # The orthology class is essentially a KEGG gene ID that is species agnostic.
                 # Add the ID and label as a class. Would it be considered a gene as well?
                 orthology_class_id = 'KEGG:'+orthology_class_id.strip()
-                gu.addClassToGraph(g, orthology_class_id, orthology_class_name)
+                orthology_symbols = re.sub(';.*','',orthology_class_name)
+                orthology_description = re.sub('.*;','',orthology_class_name)
+                #FIXME: Problem if there is more than one symbol?
+                #FIXME: Is there a designated type for these orthology classes?
+                gu.addClassToGraph(g, orthology_class_id, orthology_symbols, None, orthology_description)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
