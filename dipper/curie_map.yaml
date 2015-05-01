@@ -41,6 +41,7 @@
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
+'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
 
 
 # publication/reference sources
@@ -57,11 +58,10 @@
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
 'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
-'dbSNP' : 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
-'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?path:map'
+'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
@@ -74,12 +74,13 @@
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
 'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
-'dbVAR' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
+'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 'CGD' : 'http://phsu.edu/cgd/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
+'HGMD' : http://identifiers.org/hgmd/'
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
@@ -111,6 +112,6 @@
 'EC' : 'http://identifiers.org/EC:'  #FIXME: Enzyme Commission numbers. Any preferred url that can resolve this?
 
 #chemicals
+'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
 'CHEBI' : 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId='
 'DB' : 'http://www.drugbank.ca/drugs/'
-'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'

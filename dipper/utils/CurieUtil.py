@@ -1,5 +1,9 @@
 __author__ = 'condit@sdsc.edu'
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class CurieUtil:
 
@@ -9,7 +13,7 @@ class CurieUtil:
     def __init__(self, curie_map):
         self.curie_map = curie_map
         self.uri_map = {}
-        if (curie_map is not None):
+        if curie_map is not None:
             for key, value in curie_map.items():
                 self.uri_map[value] = key
         return
@@ -23,15 +27,15 @@ class CurieUtil:
 
     # Get a URI from a CURIE
     def get_uri(self, curie):
-        if (curie is None):
+        if curie is None:
             return None
         parts = curie.split(':')
         if 1 == len(parts):
-            if (curie != ''):
-                print ("ERROR: Not a properly formed curie: \"",curie,"\"",sep='')
+            if curie != '':
+                logger.error("Not a properly formed curie: \"%s\"", curie)
             return None
         prefix = parts[0]
         if prefix in self.curie_map:
             return '%s%s' % (self.curie_map.get(prefix), curie[(curie.index(':') + 1):])
-        print("ERROR: Curie prefix not defined for",curie)
+        logger.error("Curie prefix not defined for %s", curie)
         return None

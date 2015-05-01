@@ -13,6 +13,7 @@ class DispositionAssoc(Assoc):
     """
 
     def __init__(self, annot_id, entity_id, heritability_id, pub, evidence_code):
+        super().__init__()
         self.annot_id = annot_id
         self.entity_id = entity_id
         self.heritability_id = heritability_id
@@ -32,15 +33,14 @@ class DispositionAssoc(Assoc):
         self.rel = rel
         return
 
-
     def addAssociationNodeToGraph(self, g):
-        '''
+        """
         The reified relationship between a disease and the heritability is decorated with some provenance information.
         This makes the assumption that both the disease and heritability are classes.
 
         :param g:
         :return:
-        '''
+        """
 
         # add the basic association nodes
         self.addAssociationToGraph(g)

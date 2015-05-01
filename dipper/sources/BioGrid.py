@@ -51,9 +51,9 @@ class BioGrid(Source):
         # Defaults
         # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090]
+            self.tax_ids = [9606, 10090, 7955]
 
-        if ('test_ids' not in config.get_config()) and ('gene' not in config.get_config()['test_ids']):
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -62,7 +62,7 @@ class BioGrid(Source):
         logger.warn("several MI experimental codes do not exactly map to ECO; using approximations.")
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         """
 
         :param is_dl_forced:
@@ -70,22 +70,14 @@ class BioGrid(Source):
         """
 
         st = None
-
-        for f in self.files.keys():
-            file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced)
-            self.dataset.setFileAccessUrl(file['url'])
-
-            st = os.stat('/'.join((self.rawdir, file['file'])))
-
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        self.get_files(is_dl_forced)
 
         # the version number is encoded in the filename in the zip.
         # for example, the interactions file may unzip to BIOGRID-ALL-3.2.119.mitab.txt,
         # where the version number is 3.2.119
         f = '/'.join((self.rawdir, self.files['interactions']['file']))
+        st = os.stat(f)
+        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         with ZipFile(f, 'r') as myzip:
             flist = myzip.namelist()
             # assume that the first entry is the item
@@ -111,9 +103,7 @@ class BioGrid(Source):
         self._get_identifiers(limit)
 
         self.load_bindings()
-        g = self.graph
-        if self.testMode:
-            g = self.testgraph
+
         logger.info("Loaded %d test graph nodes", len(self.testgraph))
         logger.info("Loaded %d full graph nodes", len(self.graph))
 
@@ -144,8 +134,8 @@ class BioGrid(Source):
                  source_db, interaction_id, confidence_val) = line.split('\t')
 
                 # get the actual gene ids, typically formated like: gene/locuslink:351|BIOGRID:106848
-                gene_a_num = re.search('locuslink\:(\d+)\|', interactor_a).groups()[0]
-                gene_b_num = re.search('locuslink\:(\d+)\|', interactor_b).groups()[0]
+                gene_a_num = re.search('locuslink\:(\d+)\|?', interactor_a).groups()[0]
+                gene_b_num = re.search('locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
                 if testMode:
                     g = self.testgraph
@@ -258,7 +248,7 @@ class BioGrid(Source):
                     # elif (id_type == 'SYNONYM'):
                     #    gu.addSynonym(g,biogrid_id,id_num)  #FIXME - i am not sure these are synonyms, altids?
 
-                if not testMode and (limit is not None and line_counter > limit):
+                if not testMode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()
@@ -308,6 +298,11 @@ class BioGrid(Source):
         return eco_id
 
     def _map_idtype_to_prefix(self, idtype):
+        """
+        Here we need to reformat the BioGrid source prefixes to standard ones used in our curie-map.
+        :param idtype:
+        :return:
+        """
         prefix = idtype
         idtype_to_prefix_map = {
             'XENBASE': 'XenBase',
@@ -351,7 +346,27 @@ class BioGrid(Source):
             'GENBANK_PROTEIN_GI': 'NCBIgi',
             'REFSEQ_PROTEIN_ACCESSION': 'RefSeqProt',
             'SYNONYM': None,
-            'GRID_LEGACY': None
+            'GRID_LEGACY': None,
+            # the following showed up in 3.3.124
+            'UNIPROT-ACCESSION': 'UniprotKB',
+            'SWISS-PROT': 'Swiss-Prot',
+            'OFFICIAL SYMBOL': None,
+            'ENSEMBL RNA': None,
+            'GRID LEGACY': None,
+            'ENSEMBL PROTEIN': None,
+            'REFSEQ-RNA-GI': None,
+            'REFSEQ-RNA-ACCESSION': None,
+            'REFSEQ-PROTEIN-GI': None,
+            'REFSEQ-PROTEIN-ACCESSION-VERSIONED': None,
+            'REFSEQ-PROTEIN-ACCESSION': None,
+            'REFSEQ-LEGACY': None,
+            'SYSTEMATIC NAME': None,
+            'ORDERED LOCUS': None,
+            'UNIPROT-ISOFORM': 'UniprotKB',
+            'ENSEMBL GENE': 'ENSEMBL',
+            'CGD': None,  # Not sure what this is?
+            'WORMBASE-OLD': 'WormBase'
+
         }
         if idtype in idtype_to_prefix_map:
             prefix = idtype_to_prefix_map.get(idtype)
@@ -363,7 +378,8 @@ class BioGrid(Source):
     def getTestSuite(self):
         import unittest
         from tests.test_biogrid import BioGridTestCase
-        #TODO add InteractionAssoc tests
+        # TODO add InteractionAssoc tests
+        # TODO add test about if all prefixes are mapped?
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
 

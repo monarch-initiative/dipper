@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class HPOATestCase(SourceTestCase):
-
     def setUp(self):
         self.source = HPOAnnotations()
         self.source.settestonly(True)
@@ -31,6 +30,8 @@ class HPOATestCase(SourceTestCase):
         logger.info("A HPO-specific test")
 
         return
+
+        # TODO test if we know all of the aspect codes
 
 
 if __name__ == '__main__':

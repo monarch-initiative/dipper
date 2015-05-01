@@ -52,7 +52,7 @@ class Panther(Source):
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090]
 
-        if 'test_ids' not in config.get_config() and 'protein' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'protein' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['protein']

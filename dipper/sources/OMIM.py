@@ -78,7 +78,7 @@ class OMIM(Source):
             logger.error("not configured with API key.")
 
         # check to see if there's any ids configured in the config; otherwise, warn
-        if 'test_ids' not in config.get_config() and 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
             logger.warn("not configured with disease test ids.")
         else:
             # select ony those test ids that are omim's.

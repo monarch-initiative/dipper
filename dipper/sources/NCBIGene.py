@@ -72,11 +72,8 @@ class NCBIGene(Source):
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
-        # if self.testmode:
-        #    self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
-        #    self.filter = 'geneids'
         self.gene_ids = []
-        if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']

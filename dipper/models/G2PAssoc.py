@@ -6,14 +6,14 @@ from dipper import curie_map
 
 
 class G2PAssoc(Assoc):
-    '''
+    """
     A specific association class for defining Genotype-to-Phenotype relationships
     This assumes that a graph is created outside of this class, and nodes get added.
     By default, an association will assume the "has_phenotype" relationship, unless
     otherwise specified.
     Note that genotypes are expected to be created and defined outside of this association,
     most likely by calling methods in the Genotype() class.
-    '''
+    """
 
     def __init__(self, assoc_id, entity_id, phenotype_id, pub, evidence_code):
         super().__init__()
@@ -64,6 +64,7 @@ class G2PAssoc(Assoc):
 
         self.addAssociationToGraph(g)
 
+
         if self.start_stage_id is not None:
             self.gu.addTriple(g, self.annot_id,
                               self.gu.object_properties['has_begin_stage_qualifier'],
@@ -78,4 +79,6 @@ class G2PAssoc(Assoc):
                               self.gu.object_properties['has_environment_qualifier'],
                               self.environment_id)
 
+
         return g
+

@@ -41,8 +41,8 @@ class ClinVar(Source):
 
     }
 
-    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 8877, 9295, 9296, 9297,
-                   9298, 9449, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823, 17232, 17233,
+    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 7105, 8877, 9295, 9296,
+                   9297, 9298, 9449, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823, 17232, 17233,
                    17234, 17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179, 18180, 18181,
                    37123, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055,
                    112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
@@ -60,35 +60,25 @@ class ClinVar(Source):
                                'http://www.ncbi.nlm.nih.gov/clinvar/', None,
                                'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
                                'https://creativecommons.org/publicdomain/mark/1.0/')
-        # data-source specific warnings (will be removed when issues are cleared)
 
-        if self.testMode:
-            self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
-            self.filter = 'geneids'
-
-        if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
+
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+        else:
+            self.disease_ids = config.get_config()['test_ids']['disease']
 
         self.properties = Feature.properties
 
         return
 
-    def fetch(self, is_dl_forced):
-        st = None
-        # this is fetching the standard files, not from the API/REST service
-        for f in self.files.keys():
-            file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced)
-            self.dataset.setFileAccessUrl(file['url'])
-            st = os.stat('/'.join((self.rawdir, file['file'])))
+    def fetch(self, is_dl_forced=False):
 
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        self.dataset.setVersion(filedate)
+        # note: version set from the file date
+        self.get_files(is_dl_forced)
 
         return
 
@@ -144,7 +134,7 @@ class ClinVar(Source):
         gu.loadAllProperties(g)
 
         # not unzipping the file
-        print("INFO: Processing Variant records")
+        logger.info("Processing Variant records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['variant_summary']['file']))
         print("FILE:", myfile)
@@ -204,8 +194,19 @@ class ClinVar(Source):
 
                 line_counter += 1
 
+                pheno_list = []
+                if phenotype_ids != '-':
+                    # trim any leading/trailing semicolons/commas
+                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
+                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
+                    pheno_list = re.split('[,;]', phenotype_ids)
+
+
                 if self.testMode:
-                    if int(gene_num) not in self.gene_ids or int(variant_num) not in self.variant_ids:
+                    # get intersection of test disease ids and these phenotype_ids
+                    intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
+                    if int(gene_num) not in self.gene_ids and int(variant_num) not in self.variant_ids \
+                            and len(intersect) < 1 :
                         continue
 
                 seqalt_id = ':'.join(('ClinVarVariant', variant_num))
@@ -252,11 +253,12 @@ class ClinVar(Source):
                 if dbsnp_num != '-':
                     dbsnp_id = 'dbSNP:rs'+dbsnp_num
                     gu.addIndividualToGraph(g, dbsnp_id, None)
-                    gu.addEquivalentClass(g, seqalt_id, dbsnp_id)
+                    gu.addSameIndividual(g, seqalt_id, dbsnp_id)
                 if dbvar_num != '-':
-                    dbvar_id = 'dbVAR:'+dbvar_num
+                    dbvar_id = 'dbVar:'+dbvar_num
                     gu.addIndividualToGraph(g, dbvar_id, None)
-                    gu.addEquivalentClass(g, seqalt_id, dbvar_id)
+                    gu.addSameIndividual(g, seqalt_id, dbvar_id)
+
                 # TODO - not sure if this is right
                 # the rcv is like the combo of the phenotype with the variant
                 # if rcv_num != '-':
@@ -279,11 +281,6 @@ class ClinVar(Source):
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
                 # the list is both semicolon delimited and comma delimited, but i don't know why!
                 if phenotype_ids != '-':
-                    # trim any leading/trailing semicolons/commas
-                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
-                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
-                    pheno_list = re.split('[,;]', phenotype_ids)
-                    # print('list:',pheno_list)
                     for p in pheno_list:
                         if re.match('Orphanet:ORPHA', p):
                             p = re.sub('Orphanet:ORPHA', 'Orphanet:', p)
@@ -296,9 +293,32 @@ class ClinVar(Source):
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')
+                    # process the "other ids"
+                    # ex: CFTR2:F508del,HGMD:CD890142,OMIM Allelic Variant:602421.0001
                     # TODO make xrefs
+                    for xrefid in id_list:
+                        prefix = xrefid.split(':')[0].strip()
+                        if prefix == 'OMIM Allelic Variant':
+                            xrefid = 'OMIM:'+xrefid.split(':')[1]
+                            gu.addIndividualToGraph(g, xrefid, None)
+                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                        elif prefix == 'HGMD':
+                            gu.addIndividualToGraph(g, xrefid, None)
+                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                        elif prefix == 'dbVar' and dbvar_num == xrefid.split(':')[1].strip():
+                            pass  #skip over this one
+                        elif re.search('\s', prefix):
+                            pass
+                            # logger.debug('xref prefix has a space: %s', xrefid)
+                        else:
+                            # should be a good clean prefix
+                            # note that HGMD variants are in here as Xrefs because we can't resolve URIs for them
+                            # logger.info("Adding xref: %s", xrefid)
+                            # gu.addXref(g, seqalt_id, xrefid)
+                            # logger.info("xref prefix to add: %s", xrefid)
+                            pass
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return

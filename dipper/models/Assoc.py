@@ -1,10 +1,10 @@
-__author__ = 'nicole'
+__author__ = 'nlw'
 
 import re
 import logging
 
 from rdflib import Namespace, URIRef, Literal
-from rdflib.namespace import RDF,DC,OWL,RDFS,XSD
+from rdflib.namespace import RDF, DC, OWL, RDFS, XSD
 
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
@@ -12,50 +12,51 @@ from dipper import curie_map
 
 logger = logging.getLogger(__name__)
 
+
 class Assoc:
-    '''
-    An abstract class for Monarch-style associations, to enable attribution of source and evidence
+    """
+    An abstract class for OBAN (Monarch)-style associations, to enable attribution of source and evidence
     on statements.
-    '''
+    """
 
     annotation_properties = {
-        'replaced_by' : 'IAO:0100001',
-        'consider' : 'OIO:consider',
-        'hasExactSynonym' : 'OIO:hasExactSynonym',
-        'hasRelatedSynonym' : 'OIO:hasRelatedSynonym',
-        'definition' : 'IAO:0000115',
-        'has_xref' : 'OIO:hasDbXref',
+        'replaced_by': 'IAO:0100001',
+        'consider': 'OIO:consider',
+        'hasExactSynonym': 'OIO:hasExactSynonym',
+        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
+        'definition': 'IAO:0000115',
+        'has_xref': 'OIO:hasDbXref',
     }
 
     object_properties = {
-        'has_disposition':'GENO:0000208',
-        'has_phenotype':'RO:0002200',
-        'in_taxon' : 'RO:0002162',
-        'has_quality' : 'RO:0000086',
-        'towards' : 'RO:0002503',
-        'has_subject' : ':hasSubject',
-        'has_object' : ':hasObject',
-        'has_predicate' : ':hasPredicate',
-        'is_about' : 'IAO:00000136',
+        'has_disposition': 'GENO:0000208',
+        'has_phenotype': 'RO:0002200',
+        'in_taxon': 'RO:0002162',
+        'has_quality': 'RO:0000086',
+        'towards': 'RO:0002503',
+        'has_subject': ':hasSubject',
+        'has_object': ':hasObject',
+        'has_predicate': ':hasPredicate',
+        'is_about': 'IAO:00000136',
     }
 
     datatype_properties = {
-        'position' : 'faldo:position',
-        'has_measurement' : 'IAO:0000004'
+        'position': 'faldo:position',
+        'has_measurement': 'IAO:0000004'
     }
 
     properties = annotation_properties.copy()
     properties.update(object_properties)
     properties.update(datatype_properties)
 
-    OWLCLASS=OWL['Class']
-    OWLIND=OWL['NamedIndividual']
+    OWLCLASS = OWL['Class']
+    OWLIND = OWL['NamedIndividual']
     OBJECTPROP = OWL['ObjectProperty']
-    ANNOTPROP=OWL['AnnotationProperty']
-    DATAPROP=OWL['DataProperty']
+    ANNOTPROP = OWL['AnnotationProperty']
+    DATAPROP = OWL['DataProperty']
 
-    SUBCLASS=RDFS['subClassOf']
-    BASE=Namespace(curie_map.get()[''])
+    SUBCLASS = RDFS['subClassOf']
+    BASE = Namespace(curie_map.get()[''])
 
 
     def __init__(self):
@@ -64,7 +65,7 @@ class Assoc:
         return
 
     def get_namespaces(self):
-        if (self.namespaces):
+        if self.namespaces:
             return self.namespaces
 
         return None
@@ -80,8 +81,8 @@ class Assoc:
     def addAssociationToGraph(self, g):
         cu = self.cu
         gu = self.gu
-        #first, add the direct triple
-        #anonymous nodes are indicated with underscore
+        # first, add the direct triple
+        # anonymous nodes are indicated with underscore
         s = gu.getNode(self.sub)
         o = gu.getNode(self.obj)
         p = gu.getNode(self.rel)
@@ -104,8 +105,6 @@ class Assoc:
 
         if self.evidence is None or self.evidence.strip() == '':
             pass
-            #TODO remove this warning, it's annoying
-            #print("WARN:", self.sub, '+', self.obj, 'has no evidence code')
         else:
             self.addEvidence(g,self.evidence,self.annot_id)
 
@@ -115,19 +114,19 @@ class Assoc:
 
         return
 
-    def setSubject(self,identifier):
+    def setSubject(self, identifier):
         self.sub = identifier
         return
 
-    def setObject(self,identifier):
+    def setObject(self, identifier):
         self.obj = identifier
         return
 
-    def setRelationship(self,identifier):
+    def setRelationship(self, identifier):
         self.rel = identifier
         return
 
-    def addEvidence(self,g,evidence_identifier,annot_id=None):
+    def addEvidence(self, g, evidence_identifier, annot_id=None):
         """
         Add the evidence to the annotation object; if one is supplied, add it to that.
         :param g:
@@ -140,12 +139,10 @@ class Assoc:
         if annot_id is not None:
             node = self.gu.getNode(annot_id)
             g.add((node, DC['evidence'], evidence))
-        else:
-            pass
-            #todo print warning.
+
         return
 
-    def addSource(self,g,assoc,source_id):
+    def addSource(self, g, assoc, source_id):
         """
         TODO we need to greatly expand this function!
         :param g:
@@ -160,26 +157,25 @@ class Assoc:
 
         return
 
-    def addDescription(self,g,assoc,description):
+    def addDescription(self, g, assoc, description):
         node = self.gu.getNode(assoc)
-        g.add((node,DC['description'],Literal(description)))
+        g.add((node,DC['description'], Literal(description)))
         return
 
-
-    def loadAllProperties(self,g):
-        props = { self.OBJECTPROP : self.object_properties,
-              self.ANNOTPROP : self.annotation_properties,
-              self.DATAPROP : self.datatype_properties}
+    def loadAllProperties(self, g):
+        props = { self.OBJECTPROP: self.object_properties,
+              self.ANNOTPROP: self.annotation_properties,
+              self.DATAPROP: self.datatype_properties}
 
         for p in props:
-            self.gu.loadProperties(g,props[p],p)
+            self.gu.loadProperties(g, props[p], p)
 
         return
 
-    def addScore(self,g,assoc,score,score_type=None):
+    def addScore(self, g, assoc, score, score_type=None):
         node = self.gu.getNode(assoc)
         has_measurement=self.gu.getNode(self.properties['has_measurement'])
-        g.add((node,has_measurement,Literal(score,datatype=XSD['float'])))
+        g.add((node, has_measurement, Literal(score, datatype=XSD['float'])))
         return
 
     def _process_pub_list(self, pub_list, g, node):
