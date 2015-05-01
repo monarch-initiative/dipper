@@ -65,7 +65,6 @@ class GraphUtils:
     datatype_properties = {
         'position' : 'faldo:position',
         'has_measurement' : 'IAO:0000004',
-        'environment' : 'GENO:0000099',
         'hours' : 'UO:0000032'
     }
 

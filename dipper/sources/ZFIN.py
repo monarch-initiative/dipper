@@ -181,13 +181,10 @@ class ZFIN(Source):
         # Must be processed before wildtype_expression
         self._process_wildtypes(limit)    #REVIEWED-COMPLETE
         self._process_genotype_backgrounds(limit)  #REVIEWED-COMPLETE
-        self._process_genotype_features(limit)
-
-        # materialize the genotype parts (vslcs, gvcs, etc.)
-        #self._build_genotype_parts(limit)  #TODO
+        self._process_genotype_features(limit) #REVIEWED - NEED TO REVIEW LABELS ON Deficiencies
 
         # NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the env label.
-        #self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
+        self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
         #self._process_g2p(limit)
@@ -332,7 +329,7 @@ class ZFIN(Source):
                             genoparts[gh] += [allele_id]
 
                         other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
-                        genoparts[gene_id].append(other_allele)
+                        genoparts[gh].append(other_allele)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -407,14 +404,14 @@ class ZFIN(Source):
                     vloci1 = self.make_id('-'.join((gene_id, allele1_id)))
                     vloci1_label = geno.make_variant_locus_label(locus_label, allele1_label)
                     geno.addSequenceAlterationToVariantLocus(allele1_id, vloci1)
-                    geno.addAlleleOfGene(allele1_id, gene_id, geno.object_properties['has_alternate_part'])
+                    geno.addAlleleOfGene(allele1_id, gene_id)
                     gu.addIndividualToGraph(g, vloci1, vloci1_label, geno.genoparts['variant_locus'])
                     if allele2_id is not None:
                         vloci2 = self.make_id('-'.join((gene_id, allele2_id)))
                         vloci2_label = geno.make_variant_locus_label(locus_label, allele2_label)
                         geno.addSequenceAlterationToVariantLocus(allele2_id, vloci2)
                         gu.addIndividualToGraph(g, vloci2, vloci2_label, geno.genoparts['variant_locus'])
-                        geno.addAlleleOfGene(allele2_id, gene_id, geno.object_properties['has_alternate_part'])
+                        geno.addAlleleOfGene(allele2_id, gene_id)
                 else:
                     vloci1 = allele1_id
                     vloci1_label = allele1_label
@@ -491,16 +488,20 @@ class ZFIN(Source):
                 gvc_label = self.id_label_map[vslc_id]
                 gu.addType(g, vslc_id, geno.genoparts['genomic_variation_complement'])
             else:
+                gvc_id = None
+                gvc_label = ''
                 logger.error("No GVC parts for %s", gt)
 
-            background_id = self.genotype_backgrounds[genotype_id]
-            if background_id is not None:
-                background_label = self.id_label_map[background_id]
-                if background_label is None:
+            if genotype_id in self.genotype_backgrounds:
+                background_id = self.genotype_backgrounds[genotype_id]
+                if background_id in self.id_label_map:
+                    background_label = self.id_label_map[background_id]
+                else:
                     background_label = background_id
                     logger.error("We don't have the label for %s stored", background_id)
             else:
-                background_label = '[n.s.]'
+                background_id = None
+                background_label = 'n.s.'
 
             genotype_name = gvc_label + ' [' + background_label + ']'
 
@@ -514,6 +515,8 @@ class ZFIN(Source):
             # end of gvc loop
 
         # end of genotype loop
+
+        # TODO this is almost complete; deficiencies with >1 locus deleted are still not right
 
         logger.info("Done with genotypes")
 
@@ -1034,7 +1037,6 @@ class ZFIN(Source):
 
                     # create the variant locus, add it's parts and relationship to the gene
                     geno.addSequenceAlterationToVariantLocus(genomic_feature_id, vl_id)
-                    geno.addAlleleOfGene(vl_id, gene_id, geno.object_properties['has_alternate_part'])
                     gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
 
                     # note that deficiencies or translocations that affect only one gene are
@@ -1043,7 +1045,8 @@ class ZFIN(Source):
                 else:
                     # don't make the variant loci for the other things
                     # which include deficiencies, translocations, transgenes
-                    geno.addAlleleOfGene(genomic_feature_id, gene_id)
+                    pass
+                geno.addAlleleOfGene(genomic_feature_id, gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1278,21 +1281,23 @@ class ZFIN(Source):
                 line_counter += 1
 
                 if reagent_type in ['morph','crispr']:
-                    (gene_id, gene_so_id, gene_symbol, reagent_id, reagent_so_id,
+                    (gene_num, gene_so_id, gene_symbol, reagent_num, reagent_so_id,
                      reagent_symbol, reagent_sequence, publication, note) = row
                 elif reagent_type == 'talen':
-                    (gene_id, gene_so_id, gene_symbol, reagent_id, reagent_so_id,
+                    (gene_num, gene_so_id, gene_symbol, reagent_num, reagent_so_id,
                      reagent_symbol, reagent_sequence, reagent_sequence2,
                      publication, note) = row
                 else:
                     # should not get here
                     return
 
-                if self.testMode and reagent_id not in self.test_ids['morpholino']:
-                    continue
+                reagent_id = 'ZFIN:'+reagent_num.strip()
+                gene_id = 'ZFIN:'+gene_num.strip()
 
-                reagent_id = 'ZFIN:'+reagent_id.strip()
-                gene_id = 'ZFIN:'+gene_id.strip()
+                self.id_label_map[reagent_id] = reagent_symbol
+
+                if self.testMode and (reagent_num not in self.test_ids['morpholino'] or gene_num not in self.test_ids['gene']):
+                    continue
 
                 # FIXME: This is incorrect, as it requires the concentration if available, and is related to the extrinsic genotype.
                 # Should add the morpholino as a typed individual instead. Same for TALENs/CRISPRs.
@@ -1366,7 +1371,7 @@ class ZFIN(Source):
         :return:
         """
 
-        logger.info("Processing phenotype environments")
+        logger.info("Processing environments")
         if self.testMode:
             g = self.testgraph
         else:
@@ -1376,9 +1381,10 @@ class ZFIN(Source):
         kd_reagent_conc_hash = {}
         kd_reagent_conc_label_hash= {}
         extrinsic_part_hash = {}
+        env_hash = {}
         enviro_label_hash = {}
-        geno = Genotype(self.graph)
-        # condition_
+        geno = Genotype(g)
+
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1393,306 +1399,238 @@ class ZFIN(Source):
                 if self.testMode and environment_id not in self.test_ids['environment']:
                     continue
 
-                # FIXME: Can the environment serve as the extrinsic genotype ID?  ***NO***
-                # For now, making an ID from environment ID only, but may want to revisit.
-                extrinsic_geno_id = self.make_id(environment_id)
-                self.extrinsic_id_to_enviro_id_hash[extrinsic_geno_id] = environment_id
-
                 # We can start to build the extrinsic genotype using this file.
-                # Requires creating a hash similar to what is used for genotypes to get the VSLCs and GVCs.
-                # TODO: For now adding Morpholinos and not working with temp/chemical/physical/etc, aside from labels
-                # FIXME: For now using the general "Environment" geno ID (GENO:0000099)
-                # There are a few specific environments available in GENO, including some standard
-                # zfin environments (standard salinity and temperature, heat shock (37C), etc), which
-                # includes the zfin ID instead of a GENO ID for those environments.
+                # A single environment can have >1 row in the file, so we build a hash to store all the components
+                # of the environment first.  Then we can build a label containing all the parts.
+                # Using a strategy similar to what is used for genotypes to get the VSLCs and GVCs.
+
+                # FIXME: For now using the general "Environment" geno ID (GENO:0000099) to type
 
                 # Clean up the units
+                units = units.strip()
                 if units == 'N/A' or units == '':
                     units = None
 
                 # Clean up the values
+                values = values.strip()
                 if values == '' or values == 'N/A':
                     values = None
+                else:
+                    values = values.replace('<', 'less than')
+                    values = values.replace('>', 'greater than')
+
+                if values is None and units is not None:
+                    #sometimes they just annotate to "ug" to indicate that scale, but no value
+                    logger.warn("A unit without a value is indicated for env %s (condition %s)", environment_id, condition)
+                    values = ''
+
+                if values is not None and units is None:
+                    logger.warn("A value without a unit is indicated for env %s (condition %s)", environment_id, condition)
+                    units = ''
+
+                # "IDify the values and units
+                value_id = unit_id = None
+                if values is not None:
+                    value_id = values.replace(' ', '-')
+                if units is not None:
+                    if re.match('.*\/.*', units):
+                        unit_id = re.sub(r"/", '-per-', units)
+                    else:
+                        unit_id = units.replace(' ','-')
+
+                print('values=',values,'value_id=',value_id)
+                print('units=',units,'unit_id=',unit_id)
 
                 if comment == 'NULL' or comment == '':
                     comment = None
 
-                # Use this regex match if using all knockdown reagents.
-                #if re.match('ZDB.*',condition):
-                # Use this regex match if using only morpholino knockdown reagents.
-                if re.match('ZDB-MRPHLNO.*', condition):
+                if environment_id not in env_hash:
+                    env_hash[environment_id] = []
 
-                    condition = 'ZFIN:'+condition.strip()
-                    # TODO: In the future may want to subdivide from the general "environment" type
-                    # and map to specific environment types (altered chemical environment,
-                    # elevated temperature environment, altered light environment, etc.)
-                    gu.addIndividualToGraph(self.graph, environment_id, None, gu.datatype_properties['environment'])
-                    geno.addGenotype(extrinsic_geno_id, None, geno.genoparts['extrinsic_genotype'])
+                if re.match('ZDB-(MRPHLNO|CRISPR|TALEN)', condition):
+                    # this is the actual use of the knockdown reagent in the environment, including
+                    # concentration.
+                    # we build a node that contains this "application" of the morpholino
+                    morph_id = 'ZFIN:'+condition.strip()
+                    if morph_id in self.id_label_map:
+                        morph_label = self.id_label_map[morph_id]
+                    else:
+                        morph_label = morph_id
+                        logger.warn('morph label not found %s',morph_id)
 
-                    # Clean up the units
-                    if units is not None and re.match('.*\/.*', units):
-                        units = re.sub(r"/", '_', units)
-
-                    # Clean up the values
-                    if values == '' or values == 'N/A':
-                        values = None
-                    if values is not None:
-                        values = values.replace(' ', '_')
-                        # FIXME: Better way to indicate > and < ?
-                        values = values.replace('<', 'less_than_')
-                        values = values.replace('>', 'greater_than_')
-
-                    #if units is not None and values is not None:
-                        #print(values+units)
+                    print('FOUND A MORPH:', morph_label)
 
                     # Create the targeted sequence id
                     if units is not None and values is not None:
-                        targeted_sequence_id = condition+'_'+values+units
-                        conc_label = '('+values+' '+units+')'
+                        applied_morph_id = '-'.join((condition.strip(),value_id,unit_id))
+                        if values == '':
+                            conc_label = '('+units+')'
+                        else:
+                            conc_label = '('+values+' '+units+')'
                     else:
-                        # FIXME: Better way to indicate that the concentration is not provided?
-                        targeted_sequence_id = condition+'_ns'
+                        applied_morph_id = condition+'_ns'
                         conc_label = '(n.s.)'
-                    #print(targeted_sequence_id)
 
-                    if extrinsic_geno_id not in extrinsic_part_hash:
-                        extrinsic_part_hash[extrinsic_geno_id] = [condition]
-                        #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id]
-                        #print(extrinsic_parts)
+                    # TODO make targeted_sequence identifyable?
+                    applied_morph_id = '_'+applied_morph_id
+                    applied_morph_label = ' '.join((morph_label,conc_label))
 
-                    if condition not in extrinsic_part_hash[extrinsic_geno_id]:
-                        extrinsic_part_hash[extrinsic_geno_id].append(condition)
+                    # add this morpholino applied at this concentration, as an instance of
+                    # the morpholino itself
+                    geno.addGeneTargetingReagent(applied_morph_id,applied_morph_label,morph_id)
+                    if comment is not None:
+                        gu.addComment(g, applied_morph_id, comment)
 
-                    if extrinsic_geno_id not in kd_reagent_conc_hash:
-                        kd_reagent_conc_hash[extrinsic_geno_id] = {}
-                    # TODO:Change to a make_id after testing.
-                    targeted_sequence_key = extrinsic_geno_id+condition
+                    env_hash[environment_id] += [applied_morph_id]
 
-                    if condition not in kd_reagent_conc_hash[extrinsic_geno_id]:
-                        kd_reagent_conc_hash[extrinsic_geno_id][condition] = targeted_sequence_id
+                    self.id_label_map[applied_morph_id] = applied_morph_label
 
-                    if condition not in self.kd_reagent_hash['kd_reagent_label']:
-                        kd_reagent_label = ''
-                    else:
-                        # targeted gene subregion label will come from hash
-                        kd_reagent_label = self.kd_reagent_hash['kd_reagent_label'][condition]
-                    #print(kd_reagent_label)
-                    targeted_gene_subregion_label = '<'+kd_reagent_label+' '+conc_label+'>'
-                    #print(targeted_gene_subregion_label)
+                    #FIXME i think this goes later
+                    # if comment is None or comment == '':
+                    #     environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
+                    # else:
+                    #     environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+\
+                    #                         conc_label+' ('+comment+')]'
+                    #
+                    # if environment_id not in enviro_label_hash:
+                    #     enviro_label_hash[environment_id] = [environment_label]
+                    # else:
+                    #     enviro_label_hash[environment_id].append(environment_label)
+                    #
+                    # if extrinsic_geno_id not in kd_reagent_conc_label_hash:
+                    #     kd_reagent_conc_label_hash[extrinsic_geno_id] = {}
+                    #
+                    # if condition not in kd_reagent_conc_label_hash[extrinsic_geno_id]:
+                    #     kd_reagent_conc_label_hash[extrinsic_geno_id][condition] = targeted_gene_subregion_label
+                    #
 
-                    if comment is None or comment == '':
-                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
-                    else:
-                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+\
-                                            conc_label+' ('+comment+')]'
-
-                    if environment_id not in enviro_label_hash:
-                        enviro_label_hash[environment_id] = [environment_label]
-                    else:
-                        enviro_label_hash[environment_id].append(environment_label)
-
-                    if extrinsic_geno_id not in kd_reagent_conc_label_hash:
-                        kd_reagent_conc_label_hash[extrinsic_geno_id] = {}
-
-                    if condition not in kd_reagent_conc_label_hash[extrinsic_geno_id]:
-                        kd_reagent_conc_label_hash[extrinsic_geno_id][condition] = targeted_gene_subregion_label
-
-                    #print(kd_reagent_conc_hash[extrinsic_geno_id][condition])
-                    #print(kd_reagent_conc_hash[extrinsic_geno_id])
-
-                    #if condition not in extrinsic_part_hash[extrinsic_geno_id]:
-
-                    #gvc_hash[vslc_id] = {};
-                    #if vslc_counter == 0:
-                        #gvcparts[gt_vslc] = [vslc_id]
-                    #elif vslc_id not in gvcparts:
-                        #gvcparts[gt_vslc].append(vslc_id)
-                    #vslc_counter += 1
-
-                    #if extrinsic_geno_id[morpholino] not in extrinsic_parts:
-                            #extrinsic_geno_hash[extrinsic_geno_id][morpholino] = {};
-                            #extrinsic_parts = extrinsic_geno_hash[extrinsic_geno_id][morpholino]
-                            #extrinsic_parts[enviro_con].append(condition)
-                    #except KeyError:
-                        #extrinsic_parts[enviro_con] = [condition]
-
-
-                # Add the TALENs/CRISPRs to the environment but not the extrinsic genotype
-                elif re.match('ZDB.*', condition):
-                    condition = 'ZFIN:'+condition.strip()
-                    gu.addIndividualToGraph(self.graph, environment_id, None, gu.datatype_properties['environment'])
-
-                    # Clean up the units
-                    if units is not None and re.match('.*\/.*', units):
-                        units = re.sub(r"/", '_', units)
-
-                    # Clean up the values
-                    if values == '' or values == 'N/A':
-                        values = None
-                    if values is not None:
-                        values = values.replace(' ', '_')
-                        # FIXME: Better way to indicate > and < ?
-                        values = values.replace('<', 'less_than_')
-                        values = values.replace('>', 'greater_than_')
-
-                    # if units is not None and values is not None:
-                        #print(values+units)
-
-                    # Create the targeted sequence id
-                    if units is not None and values is not None:
-                        targeted_sequence_id = condition+'_'+values+units
-                        conc_label = '('+values+' '+units+')'
-                    else:
-                        # FIXME: Better way to indicate that the concentration is not provided?
-                        targeted_sequence_id = condition+'_ns'
-                        conc_label = '(n.s.)'
-                    #print(targeted_sequence_id
-
-                    # targeted gene subregion label will come from hash
-                    kd_reagent_label = self.kd_reagent_hash['kd_reagent_label'][condition]
-
-                    if comment is None or comment == '':
-                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
-                    else:
-                        environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+' ('+comment+')]'
-
-                    if environment_id not in enviro_label_hash:
-                        enviro_label_hash[environment_id] = [environment_label]
-                    else:
-                        enviro_label_hash[environment_id].append(environment_label)
 
                 # FIXME: Can remove this if we don't want to deal with any other abnormal environments.
                 elif not re.match('ZDB.*', condition):
-                    # FIXME:Need to adjust label for non-knockdown reagent environments
-
-                    if values is not None and units is not None and comment is not None:
-                        enviro_label = condition_group+'['+condition+': '+values+units+' ('+comment+')]'
-                    elif values is not None and units is not None and comment is None:
-                        enviro_label = condition_group+'['+condition+': '+values+units+']'
-                    elif values is not None and units is None and comment is not None:
-                        enviro_label = condition_group+'['+condition+': '+values+' ('+comment+')]'
-                    elif values is not None and units is None and comment is None:
-                        enviro_label = condition_group+'['+condition+': '+values+']'
-                    elif values is None and units is None and comment is None:
-                        enviro_label = condition_group+'['+condition+']'
-                    elif values is None and units is None and comment is not None:
-                        enviro_label = condition_group+'['+condition+' ('+comment+')]'
-                    elif values is None and units is not None and comment is None:
-                        enviro_label = condition_group+'['+condition+': '+units+']'
-                    elif values is None and units is not None and comment is not None:
-                        enviro_label = condition_group+'['+condition+': '+units+' ('+comment+')]'
+                    # create fake environmental components, and add to the hash
+                    if units is not None and values is not None:
+                        print(environment_id, condition_group)
+                        env_component_id = '-'.join((condition_group.strip(),condition.strip(),value_id,unit_id))
+                        if values == '':
+                            conc_label = '('+units+')'
+                        else:
+                            conc_label = '('+values+' '+units+')'
                     else:
-                        logger.warn('No environment label created for environment %s.', environment_id)
-                        #enviro_label = '<empty>'
-                        enviro_label = ''
-                    #print(enviro_label)
+                        env_component_id = '-'.join((condition_group.strip(),condition.strip()))
+                        conc_label = ''
+
+                    env_condition = condition.strip()
+                    if conc_label != '':
+                        env_condition += ' '+conc_label
+
+                    env_component_label = condition_group + '[' + env_condition + ']'
+
+                    self.id_label_map[env_component_id] = env_component_label
+                    env_hash[environment_id] += [env_component_id]
 
                     if environment_id not in enviro_label_hash:
-                        enviro_label_hash[environment_id] = [enviro_label]
+                        enviro_label_hash[environment_id] = [env_component_id]
                     else:
-                        enviro_label_hash[environment_id].append(enviro_label)
+                        enviro_label_hash[environment_id].append(env_component_id)
 
-                    # Adding this results in additional environmental variables being added
-                    # to the morpholino environment.
-                    #gu.addIndividualToGraph(self.graph,environment_id,None,gu.datatype_properties['environment'],condition_group)
+                    #TODO add the individual component into the graph
 
-                # TODO: Need to wrangle a better description, alternative parsing of variables
-                # (condition_group, condition, values, units, comment). Leaving as condition group for now.
-                # Data is problematic with differing values (numeric values, N/A's, blanks).
-                #if(comment !=''):
-                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units+comment
-                #else:
-                    #enviro_description = condition_group+': '+condition+' at '+values+' '+units
-                #print(enviro_description)
-                #gu.addIndividualToGraph(g,environment_id,None,gu.datatype_properties['environment'],condition_group)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
                 # End of loop
 
-            # Now process through the enviro_label_hash to add labels to the environments.
+        csvfile.close()
 
-            for environment_id in enviro_label_hash:
-                environment_label = '; '.join(enviro_label_hash[environment_id])
-                #print(environment_id+': '+environment_label)
-                gu.addIndividualToGraph(self.graph, environment_id, environment_label,
-                                        gu.datatype_properties['environment'])
+        # iterate through the env hash to build the full environment label
+        for env_id in env_hash:
+            environment_labels = []
+            env_hash[env_id].sort()
+            env_component_list = env_hash[env_id]
+            for env_comp_id in env_component_list:
+                env_comp_label = self.id_label_map[env_comp_id]
+                environment_labels += [env_comp_label]
+            environment_labels.sort()
+            env_label = '; '.join(environment_labels)
 
-            # Now process through the extrinsic_part_hash to produce targeted_gene_subregion and targeted_gene_variant
-            #print(extrinsic_part_hash)
-            tgc_hash = {}
-            for extrinsic_geno_id in extrinsic_part_hash:
-                #print(extrinsic_part_hash[extrinsic_geno_id])
+            gu.addIndividualToGraph(g, env_id, env_label, 'GENO:0000099')
 
-                geno = Genotype(self.graph)
-                ex_geno = geno.addGenotype(extrinsic_geno_id, None, geno.genoparts['extrinsic_genotype'])
-                for condition in extrinsic_part_hash[extrinsic_geno_id]:
-                    kd_reagent_conc_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
-                    if condition not in self.kd_reagent_hash['kd_reagent_id']:
-                        logger.error("%s not in kd_reagent_id")
-                        kd_reagent_gene_ids = []
-                    else:
-                        kd_reagent_gene_ids = self.kd_reagent_hash['kd_reagent_id'][condition]
-                        #print(kd_reagent_gene_ids)
+            print('env:',env_id,':',env_label)
 
-                    # Make the tgs id and label, add tgs to graph
-                    targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
-                    # TODO: Change to makeID after testing.
-                    #targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
-                    targeted_gene_subregion_id = self.make_id(kd_reagent_conc_id+ '_'.join(kd_reagent_gene_ids))
-                    #print(targeted_gene_subregion_label)
-                    geno.addTargetedGeneSubregion(targeted_gene_subregion_id, targeted_gene_subregion_label)
-                    geno.addParts(condition, targeted_gene_subregion_id)
-
-                    for i in kd_reagent_gene_ids:
-                        # TODO: Change to a makeID after testing.
-                        #targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
-                        targeted_gene_variant_id = self.make_id(i+'_'+kd_reagent_conc_id)
-                        # FIXME: What about for reagents that target more than one gene? Concatenated or separate?
-                        #print(targeted_gene_variant_id)
-                        kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
-                        kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
-                        targeted_gene_variant_label = kd_reagent_gene_label+targeted_gene_subregion_label
-                        #print('tgv_id='+targeted_gene_variant_id)
-                        #print('tgv_label='+targeted_gene_variant_label)
-                        geno.addReagentTargetedGene(condition, i, targeted_gene_variant_id, targeted_gene_variant_label)
-                        geno.addParts(targeted_gene_subregion_id, targeted_gene_variant_id)
-
-                        if extrinsic_geno_id not in tgc_hash:
-                            tgc_hash[extrinsic_geno_id] = {}
-
-                        if targeted_gene_variant_id not in tgc_hash[extrinsic_geno_id]:
-                            tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] = targeted_gene_variant_label
-
-                # End of loop
-            # Now process through the tgc_hash to produce the targeted_gene_variant_complement
-            for extrinsic_geno_id in tgc_hash:
-                tgc_ids = []
-                tgc_labels = []
-                geno = Genotype(self.graph)
-
-                for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
-                    if targeted_gene_variant_id not in tgc_ids:
-                        tgc_ids.append(targeted_gene_variant_id)
-                    if tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] not in tgc_labels:
-                        tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
-                # FIXME:Change to MakeID after QA testing.
-                #targeted_gene_complement_id = ('_').join(tgc_ids)
-                targeted_gene_complement_id = self.make_id('_'.join(tgc_ids))
-                targeted_gene_complement_label = ('; ').join(tgc_labels)
-                # FIXME: For now just using the TGC label as the extrinsic genotype label
-                ex_geno = geno.addGenotype(extrinsic_geno_id, targeted_gene_complement_label,
-                                           geno.genoparts['extrinsic_genotype'])
-                geno.addTargetedGeneComplement(targeted_gene_complement_id, targeted_gene_complement_label)
-                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is None:
-                    self.label_hash['genotype_label'][extrinsic_geno_id] = targeted_gene_complement_label
-                # TODO: Abstract adding TGC to Genotype.
-                # Add the TGC to the genotype.
-                geno.addParts(targeted_gene_complement_id, extrinsic_geno_id)
-                # TODO: Abstract adding TGVs to TGCs.
-                for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
-                    geno.addParts(targeted_gene_variant_id, targeted_gene_complement_id)
+        #
+        # tgc_hash = {}
+        # for extrinsic_geno_id in extrinsic_part_hash:
+        #     #print(extrinsic_part_hash[extrinsic_geno_id])
+        #
+        #     geno = Genotype(self.graph)
+        #     ex_geno = geno.addGenotype(extrinsic_geno_id, None, geno.genoparts['extrinsic_genotype'])
+        #     for condition in extrinsic_part_hash[extrinsic_geno_id]:
+        #         kd_reagent_conc_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
+        #         if condition not in self.kd_reagent_hash['kd_reagent_id']:
+        #             logger.error("%s not in kd_reagent_id")
+        #             kd_reagent_gene_ids = []
+        #         else:
+        #             kd_reagent_gene_ids = self.kd_reagent_hash['kd_reagent_id'][condition]
+        #             #print(kd_reagent_gene_ids)
+        #
+        #         # Make the tgs id and label, add tgs to graph
+        #         targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
+        #         # TODO: Change to makeID after testing.
+        #         #targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
+        #         targeted_gene_subregion_id = self.make_id(kd_reagent_conc_id + '_'.join(kd_reagent_gene_ids))
+        #         #print(targeted_gene_subregion_label)
+        #         geno.addTargetedGeneSubregion(targeted_gene_subregion_id, targeted_gene_subregion_label)
+        #         geno.addParts(condition, targeted_gene_subregion_id)
+        #
+        #         for i in kd_reagent_gene_ids:
+        #             # TODO: Change to a makeID after testing.
+        #             #targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
+        #             targeted_gene_variant_id = self.make_id(i + '_' + kd_reagent_conc_id)
+        #             # FIXME: What about for reagents that target more than one gene? Concatenated or separate?
+        #             #print(targeted_gene_variant_id)
+        #             kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
+        #             kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
+        #             targeted_gene_variant_label = kd_reagent_gene_label + targeted_gene_subregion_label
+        #             #print('tgv_id='+targeted_gene_variant_id)
+        #             #print('tgv_label='+targeted_gene_variant_label)
+        #             geno.addReagentTargetedGene(condition, i, targeted_gene_variant_id, targeted_gene_variant_label)
+        #             geno.addParts(targeted_gene_subregion_id, targeted_gene_variant_id)
+        #
+        #             if extrinsic_geno_id not in tgc_hash:
+        #                 tgc_hash[extrinsic_geno_id] = {}
+        #
+        #             if targeted_gene_variant_id not in tgc_hash[extrinsic_geno_id]:
+        #                 tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] = targeted_gene_variant_label
+        #
+        #                 # End of loop
+        # # Now process through the tgc_hash to produce the targeted_gene_variant_complement
+        # for extrinsic_geno_id in tgc_hash:
+        #     tgc_ids = []
+        #     tgc_labels = []
+        #     geno = Genotype(self.graph)
+        #
+        #     for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
+        #         if targeted_gene_variant_id not in tgc_ids:
+        #             tgc_ids.append(targeted_gene_variant_id)
+        #         if tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] not in tgc_labels:
+        #             tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
+        #     # FIXME:Change to MakeID after QA testing.
+        #     #targeted_gene_complement_id = ('_').join(tgc_ids)
+        #     targeted_gene_complement_id = self.make_id('_'.join(tgc_ids))
+        #     targeted_gene_complement_label = ('; ').join(tgc_labels)
+        #     # FIXME: For now just using the TGC label as the extrinsic genotype label
+        #     ex_geno = geno.addGenotype(extrinsic_geno_id, targeted_gene_complement_label,
+        #                                geno.genoparts['extrinsic_genotype'])
+        #     geno.addTargetedGeneComplement(targeted_gene_complement_id, targeted_gene_complement_label)
+        #     if self.label_hash['genotype_label'].get(extrinsic_geno_id) is None:
+        #         self.label_hash['genotype_label'][extrinsic_geno_id] = targeted_gene_complement_label
+        #     # TODO: Abstract adding TGC to Genotype.
+        #     # Add the TGC to the genotype.
+        #     geno.addParts(targeted_gene_complement_id, extrinsic_geno_id)
+        #     # TODO: Abstract adding TGVs to TGCs.
+        #     for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
+        #         geno.addParts(targeted_gene_variant_id, targeted_gene_complement_id)
 
         #print(extrinsic_part_hash)
         logger.info("Done with phenotype environments")
