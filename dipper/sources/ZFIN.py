@@ -161,7 +161,8 @@ class ZFIN(Source):
         self.id_label_map = {}
         self.genotype_backgrounds = {}  # to hold the mappings between genotype and background
         self.extrinsic_id_to_enviro_id_hash = {}
-        self.variant_loci_genes = {}   #to hold the genes variant due to a seq alt
+        self.variant_loci_genes = {}   # to hold the genes variant due to a seq alt
+        self.environment_hash = {}  # to hold the parts of an environment
 
         # basic information on classes and instances
         self._process_genes(limit)   #REVIEWED-COMPLETE
@@ -187,7 +188,7 @@ class ZFIN(Source):
         self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
-        #self._process_g2p(limit)
+        self._process_g2p(limit)
 
         #self._process_wildtype_expression(limit)
         #self._process_genbank_ids(limit)  #HOLDING OFF FOR NOW
@@ -776,7 +777,9 @@ class ZFIN(Source):
 
         missing_zpids = list()
         mapped_zpids = list()
-        gu = GraphUtils(curie_map.get())
+
+        geno = Genotype(g)
+
         # hardcode
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
         raw = '/'.join((self.rawdir, self.files['pheno']['file']))
@@ -797,58 +800,45 @@ class ZFIN(Source):
                  superterm2_id, superterm2_name,
                  pub_id, env_id, empty) = row
 
-                if self.testMode and genotype_id not in self.test_ids['genotype']\
-                        and env_id not in self.test_ids['environment']:
+                if self.testMode and (genotype_id not in self.test_ids['genotype']
+                        or env_id not in self.test_ids['environment']):
                     continue
 
                 # deal with environments
-                # FIXME i am only dealing with 'wild-type' environments for now
-                #if (not re.match('ZDB-EXP-041102-1', env_id)):
-                    #logger.info("Skipping non-wildtype environment %s for %s", env_id, genotype_id)
-                    #continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
                 env_id = 'ZFIN:' + env_id.strip()
-                extrinsic_geno_id = self.make_id(env_id)
                 start_stage_id = 'ZFIN:' + start_stage_id.strip()
                 end_stage_id = 'ZFIN:' + end_stage_id.strip()
 
-                geno = Genotype(g)
-                geno.addGenotype(genotype_id, genotype_name)
-                # because we are using only w.t. environments, the genotype is just intrinsic.
+                # the intrinsic genotype
+                intrinsic_genotype_label = self.id_label_map[genotype_id]
+                geno.addGenotype(genotype_id, intrinsic_genotype_label)
 
-                # FIXME: Switch to make_id after QA testing.
-                # make an ID for the effective genotype
-                # effective_genotype_id = self.make_id(genotype_id+env_id)
-                effective_genotype_id = self.make_id(genotype_id+'_'+env_id)
+                # get the extrinsic genotype
+                # find the extrinsic parts in the hash, and add them here
+                extrinsic_genotype_id = None
+                if env_id in self.extrinsic_id_to_enviro_id_hash:
+                    extrinsic_genotype_id = self.extrinsic_id_to_enviro_id_hash[env_id]
+                    if extrinsic_genotype_id in self.id_label_map:
+                        extrinsic_genotype_label = self.id_label_map[extrinsic_genotype_id]
 
-                # FIXME: Need to pass in labels for the intrinsic/extrinsic genotypes to make the effective labels.
-                # Only adding the effective genotype if there is an extrinsic genotype present.
-                if self.label_hash['genotype_label'].get(extrinsic_geno_id) is not None and self.label_hash['genotype_label'].get(extrinsic_geno_id) != '':
-                    intrinsic_genotype_label = self.label_hash['genotype_label'].get(genotype_id)
-                    extrinsic_genotype_label = self.label_hash['genotype_label'].get(extrinsic_geno_id)
-                    if intrinsic_genotype_label is not None and extrinsic_genotype_label is not None:
-                        effective_genotype_label = intrinsic_genotype_label+'; '+extrinsic_genotype_label
-                    elif intrinsic_genotype_label is None and extrinsic_genotype_label is not None:
-                        effective_genotype_label = extrinsic_genotype_label
-                    elif intrinsic_genotype_label is not None and extrinsic_genotype_label is None:
-                        effective_genotype_label = intrinsic_genotype_label
-                    else:
-                        #print(intrinsic_genotype_label)
-                        #print(genotype_id)
-                        logger.error('No effective genotype label created.')
-                        effective_genotype_label = ''
-                        #effective_genotype_label = '<empty>'
-                    #if intrinsic_genotype_label is not None:
-                        #print(intrinsic_genotype_label)
-                    #print(effective_genotype_label)
-                    geno.addGenotype(effective_genotype_id, effective_genotype_label,
-                                     geno.genoparts['effective_genotype'])
-                    if extrinsic_genotype_label is not None and extrinsic_genotype_label != '':
-                        geno.addParts(extrinsic_geno_id, effective_genotype_id)
-                    if intrinsic_genotype_label is not None and intrinsic_genotype_label != '':
-                        geno.addParts(genotype_id, effective_genotype_id)
+                # build an effective genotype, if relevant
+                effective_genotype_id = genotype_id
+                effective_genotype_label = intrinsic_genotype_label
+                if extrinsic_genotype_id is not None:
+                    effective_genotype_id = self.make_id('-'.join(genotype_id+'_'+extrinsic_genotype_id))
+                    effective_genotype_label = '; '.join((intrinsic_genotype_label,extrinsic_genotype_label))
+                    self.id_label_map[effective_genotype_id] = effective_genotype_label
+                    geno.addParts(genotype_id,effective_genotype_id)
+                    geno.addParts(extrinsic_genotype_id,effective_genotype_id)
 
+                geno.addGenotype(effective_genotype_id,effective_genotype_label,
+                                 geno.genoparts['effective_genotype'])
+
+                logger.info("added: %s",effective_genotype_label)
+
+                # ########### PHENOTYPES ##########
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
                                                                superterm2_id, subterm2_id, modifier)
 
@@ -863,7 +853,7 @@ class ZFIN(Source):
                 if not re.match('^normal', modifier):
                     assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
                     pub_id = 'ZFIN:' + pub_id.strip()
-                    # FIXME: Assuming we change from the intrinsic genotype_id to the effective genotype ID.
+
                     assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
                     assoc.set_environment(env_id)
 
@@ -872,6 +862,7 @@ class ZFIN(Source):
                         start_stage_id = 'ZFIN:'+start_stage_id
                     if end_stage_id != '':
                         end_stage_id = 'ZFIN:'+end_stage_id
+
                     assoc.set_stage(start_stage_id, end_stage_id)
                     assoc.addAssociationNodeToGraph(g)
 
@@ -1403,9 +1394,7 @@ class ZFIN(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        kd_reagent_conc_hash = {}
-        kd_reagent_conc_label_hash= {}
-        extrinsic_part_hash = {}
+        extrgeno_hash_by_env_id = {}
         env_hash = {}
         enviro_label_hash = {}
         geno = Genotype(g)
@@ -1463,14 +1452,13 @@ class ZFIN(Source):
                     else:
                         unit_id = units.replace(' ','-')
 
-                #print('values=',values,'value_id=',value_id)
-                #print('units=',units,'unit_id=',unit_id)
-
                 if comment == 'NULL' or comment == '':
                     comment = None
 
                 if environment_id not in env_hash:
                     env_hash[environment_id] = []
+                if environment_id not in extrgeno_hash_by_env_id:
+                    extrgeno_hash_by_env_id[environment_id] = []
 
                 if re.match('ZDB-(MRPHLNO|CRISPR|TALEN)', condition):
                     # this is the actual use of the knockdown reagent in the environment, including
@@ -1510,27 +1498,9 @@ class ZFIN(Source):
 
                     self.id_label_map[applied_morph_id] = applied_morph_label
 
-                    #FIXME i think this goes later
-                    # if comment is None or comment == '':
-                    #     environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+conc_label+']'
-                    # else:
-                    #     environment_label = condition_group+'['+condition+': '+kd_reagent_label+' '+\
-                    #                         conc_label+' ('+comment+')]'
-                    #
-                    # if environment_id not in enviro_label_hash:
-                    #     enviro_label_hash[environment_id] = [environment_label]
-                    # else:
-                    #     enviro_label_hash[environment_id].append(environment_label)
-                    #
-                    # if extrinsic_geno_id not in kd_reagent_conc_label_hash:
-                    #     kd_reagent_conc_label_hash[extrinsic_geno_id] = {}
-                    #
-                    # if condition not in kd_reagent_conc_label_hash[extrinsic_geno_id]:
-                    #     kd_reagent_conc_label_hash[extrinsic_geno_id][condition] = targeted_gene_subregion_label
-                    #
+                    # also add these reagents to the extrinsic geno hash to be accessed by env id
+                    extrgeno_hash_by_env_id[environment_id] += [applied_morph_id]
 
-
-                # FIXME: Can remove this if we don't want to deal with any other abnormal environments.
                 elif not re.match('ZDB.*', condition):
                     # create fake environmental components, and add to the hash
                     if units is not None and values is not None:
@@ -1570,6 +1540,8 @@ class ZFIN(Source):
 
         logger.info("Building complex environments from components")
 
+        self.environment_hash = env_hash
+
         # iterate through the env hash to build the full environment label
         for env_id in env_hash:
             environment_labels = []
@@ -1583,7 +1555,34 @@ class ZFIN(Source):
 
             gu.addIndividualToGraph(g, env_id, env_label, 'GENO:0000099')
 
-            print('env:',env_id,':',env_label)
+        # iterate over the env hash to build the extrinsic genotypes that are lumped
+        # together by the environment id.  these can then be accessed outside of this
+        # function via the EXP id
+        # for clarity i do this in another loop, rather than combining it with the above
+
+        logger.info("Building extrinsic genotype using environmental id groupings")
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+        logger.info(pp.pformat(extrgeno_hash_by_env_id))
+        for env_id in extrgeno_hash_by_env_id:
+            extrgeno_labels = []
+            extrgeno_hash_by_env_id[env_id].sort()
+            # build an identifier for the extrinsic genotype
+            extr_id = '-'.join(extrgeno_hash_by_env_id[env_id])
+            env_component_list = extrgeno_hash_by_env_id[env_id]
+            for env_comp_id in env_component_list:
+                env_comp_label = self.id_label_map[env_comp_id]
+                extrgeno_labels += [env_comp_label]
+                geno.addGeneTargetingReagentToGenotype(env_comp_id, extr_id)
+
+            extrgeno_labels.sort()
+            if len(extrgeno_labels) > 0:
+                extr_label = '; '.join(extrgeno_labels)
+                gu.addIndividualToGraph(g, extr_id, extr_label, geno.genoparts['extrinsic_genotype'])
+                self.extrinsic_id_to_enviro_id_hash[env_id] = extr_id
+                self.id_label_map[extr_id] = extr_label
+
+                logger.info('extr %s | %s',extr_id, extr_label)
 
         #
         # tgc_hash = {}
