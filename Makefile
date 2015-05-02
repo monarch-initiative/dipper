@@ -44,16 +44,16 @@ ncbi-test:
 	$(NOSE) tests/test_ncbi.py
 
 Panther-fetch:
-	$(DIPPER_BIN) --sources Panther --no_verify --fetch_only
+	$(DIPPER_BIN) --sources panther --no_verify --fetch_only
 
 Panther-test:
-	$(NOSE) tests/test_Panther.py
+	$(NOSE) tests/test_panther.py
 
 ucscBands-fetch:
-	$(DIPPER_BIN) --sources ucscBands --no_verify --fetch_only
+	$(DIPPER_BIN) --sources ucscbands --no_verify --fetch_only
 
 ucscBands-test:
-	$(NOSE) tests/test_ucscBands.py
+	$(NOSE) tests/test_ucscbands.py
 
 zfin-fetch:
 	$(DIPPER_BIN) --sources zfin --no_verify --fetch_only

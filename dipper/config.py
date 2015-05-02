@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 #read configuration file
-conf = None
+conf = {}
 
 #load the configuration file, if it exists.
 #it isn't required, but may be for some sources

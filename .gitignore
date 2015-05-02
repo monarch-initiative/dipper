@@ -7,7 +7,6 @@ raw
 out
 owltools*
 conf.json
-!tests/conf.json
 docs/_build/
 
 ### Python ###

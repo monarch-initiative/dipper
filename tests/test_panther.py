@@ -14,7 +14,7 @@ class PantherTestCase(SourceTestCase):
 
     def setUp(self):
         self.source = Panther()
-        self.source.test_ids = self._get_conf()['test_ids']['disease']
+        self.source.test_ids = self._get_conf()['test_ids']['protein']
         self.source.settestonly(True)
         self._setDirToSource()
         return
