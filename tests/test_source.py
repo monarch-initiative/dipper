@@ -67,9 +67,9 @@ class SourceTestCase(unittest.TestCase):
         return
 
     def _get_conf(self):
-        if os.path.exists(os.path.join(os.path.dirname(__file__), 'conf.json')):
+        if os.path.exists(os.path.join(os.path.dirname(__file__), 'test_ids.json')):
             with open(os.path.join(os.path.dirname(__file__),
-                           'conf.json')) as json_file:
+                           'test_ids.json')) as json_file:
                 conf = json.load(json_file)
         return conf
 
