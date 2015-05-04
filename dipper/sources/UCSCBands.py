@@ -110,6 +110,8 @@ class UCSCBands(Source):
         for taxon in self.tax_ids:
             self._get_chrbands(limit, str(taxon))
 
+        self._create_genome_builds()
+
         self.load_core_bindings()
         self.load_bindings()
 
@@ -253,6 +255,54 @@ class UCSCBands(Source):
 
             # type the band as a faldo:Region directly (add_region=False)
             bfeature.addFeatureToGraph(self.graph, False)
+
+        return
+
+    def _create_genome_builds(self):
+        """
+        Various resources will map variations to either UCSC (hg*) or to NCBI assemblies.
+        Here we create the equivalences between them.
+        Data taken from:
+        https://genome.ucsc.edu/FAQ/FAQreleases.html#release1
+
+
+        :return:
+        """
+        # TODO add more species
+        ucsc_assembly_id_map = {
+            "9606" : {
+            "UCSC:hg38": "NCBIGenome:GRCh38",
+            "UCSC:hg19": "NCBIGenome:GRCh37",
+            "UCSC:hg18": "NCBIGenome:36.1",
+            "UCSC:hg17": "NCBIGenome:35",
+            "UCSC:hg16": "NCBIGenome:34",
+            "UCSC:hg15": "NCBIGenome:33",
+            },
+            "7955" : {
+            "UCSC:danRer10": "NCBIGenome:GRCz10",
+            "UCSC:danRer7":	"NCBIGenome:Zv9",
+            "UCSC:danRer6": "NCBIGenome:Zv8",
+            },
+            "10090" : {
+            "UCSC:mm10": "NCBIGenome:GRCm38",
+            "UCSC:mm9":	"NCBIGenome:37"
+        }
+        }
+        g = self.graph
+        geno = Genotype(g)
+        logger.info("Adding equivalent assembly identifiers")
+        for sp in ucsc_assembly_id_map:
+            tax_num = sp
+            tax_id = 'NCBITaxon:'+tax_num
+            mappings = ucsc_assembly_id_map[sp]
+            for i in mappings:
+                ucsc_id = i
+                ucsc_label = re.split(':',i)[1]
+                mapped_id = mappings[i]
+                mapped_label = re.split(':',mapped_id)[1]
+                geno.addReferenceGenome(ucsc_id,ucsc_label, tax_id)
+                geno.addReferenceGenome(mapped_id,mapped_label, tax_id)
+                self.gu.addSameIndividual(g,ucsc_id,mapped_id)
 
         return
 

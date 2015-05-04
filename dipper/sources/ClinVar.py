@@ -13,6 +13,8 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.Assoc import Assoc
+
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper import config
@@ -132,6 +134,16 @@ class ClinVar(Source):
 
         geno = Genotype(g)
         gu.loadAllProperties(g)
+        f = Feature(None,None,None)
+        f.loadAllProperties(g)
+        Assoc().loadAllProperties(g)
+
+        # add the taxon and the genome
+        tax_num = '9606'  # HARDCODE
+        tax_id = 'NCBITaxon:'+tax_num
+        tax_label = 'Human'
+        gu.addClassToGraph(g, tax_id, None)
+        geno.addGenome(tax_id, None)  #label gets added elsewhere
 
         # not unzipping the file
         logger.info("Processing Variant records")
@@ -201,7 +213,6 @@ class ClinVar(Source):
                     phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
                     pheno_list = re.split('[,;]', phenotype_ids)
 
-
                 if self.testMode:
                     # get intersection of test disease ids and these phenotype_ids
                     intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
@@ -209,14 +220,10 @@ class ClinVar(Source):
                             and len(intersect) < 1 :
                         continue
 
-                seqalt_id = ':'.join(('ClinVarVariant', variant_num))
-                gene_id = ':'.join(('NCBIGene', gene_num))
-                tax_id = 'NCBITaxon:9606'   # all are human, so hardcode
+                # TODO may need to switch on assembly to create correct assembly/build identifiers
                 build_id = ':'.join(('NCBIGenome', assembly))
 
-                # make the build
-                tax_label = 'Human'
-                geno.addGenome(tax_id, tax_label)
+                # make the reference genome build
                 geno.addReferenceGenome(build_id, assembly, tax_id)
 
                 allele_type_id = self._map_type_of_allele(allele_type)
@@ -224,8 +231,14 @@ class ClinVar(Source):
                 if str(chr) == '':
                     pass
                 else:
-                    geno.addChromosome(str(chr), tax_id, tax_label, build_id, assembly)
-                    chrinbuild_id = makeChromID(str(chr), build_id)
+                    # add the human chromosome class to the graph, and add the build-specific version of it
+                    chr_id = makeChromID(str(chr), tax_num)
+                    geno.addChromosomeClass(str(chr), tax_id, tax_label)
+                    geno.addChromosomeInstance(str(chr), build_id, assembly, chr_id)
+                    chrinbuild_id = makeChromID(str(chr), assembly)
+
+                seqalt_id = ':'.join(('ClinVarVariant', variant_num))
+                gene_id = ':'.join(('NCBIGene', gene_num))
 
                 # note that there are some "variants" that are actually haplotypes:
                 # for example, variant_num = 38562
@@ -243,6 +256,9 @@ class ClinVar(Source):
 
                 f.addFeatureToGraph(g)
 
+                # CHECK - this makes the assumption that there is only one affected chromosome per variant
+                # what happens with chromosomal rearrangement variants?  shouldn't both chromosomes be here?
+
                 # add the hgvs as synonyms
                 if hgvs_c != '-' and hgvs_c.strip() != '':
                     gu.addSynonym(g, seqalt_id, hgvs_c)
@@ -259,7 +275,7 @@ class ClinVar(Source):
                     gu.addIndividualToGraph(g, dbvar_id, None)
                     gu.addSameIndividual(g, seqalt_id, dbvar_id)
 
-                # TODO - not sure if this is right
+                # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
                 # if rcv_num != '-':
                 #    rcv_id = 'ClinVar:'+rcv_num
@@ -275,8 +291,6 @@ class ClinVar(Source):
                 # geno.addSequenceAlterationToVariantLocus(seqalt_id,vl_id)
                 # geno.addAlleleOfGene(seqalt_id,gene_id,geno.properties['has_alternate_part'])
 
-                f.loadAllProperties(g)   # FIXME inefficient
-
                 # parse the list of "phenotypes" which are diseases.  add them as an association
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
                 # the list is both semicolon delimited and comma delimited, but i don't know why!
@@ -289,7 +303,6 @@ class ClinVar(Source):
                         assoc_id = self.make_id(seqalt_id+p.strip())
                         assoc = G2PAssoc(assoc_id, seqalt_id, p.strip(), None, None)
                         assoc.addAssociationToGraph(g)
-                        assoc.loadAllProperties(g)
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')

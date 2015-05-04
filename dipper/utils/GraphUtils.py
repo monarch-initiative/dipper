@@ -58,7 +58,6 @@ class GraphUtils:
     datatype_properties = {
         'position': 'faldo:position',
         'has_measurement': 'IAO:0000004',
-        'environment': 'GENO:0000099'
     }
 
     properties = annotation_properties.copy()
@@ -338,7 +337,7 @@ class GraphUtils:
         """
 
         if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error("bad property type assigned: %s", property_type)
+            logger.error("bad property type assigned: %s, %s", property_type, op)
         else:
             for k in op:
                 graph.add((self.getNode(op[k]), RDF['type'], property_type))
