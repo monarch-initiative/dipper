@@ -6,6 +6,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -19,14 +20,28 @@ class KEGG(Source):
                  'url': 'http://rest.genome.jp/list/disease'},
         'pathway': {'file': 'pathway',
                  'url': 'http://rest.genome.jp/list/pathway'},
-        'genes': {'file': 'genes',
+        'hsa_genes': {'file': 'hsa_genes',
                  'url': 'http://rest.genome.jp/list/hsa'},
-        'orthology': {'file': 'orthology',
+        'ortholog_classes': {'file': 'ortholog_classes',
                  'url': 'http://rest.genome.jp/list/orthology'},
         'disease_gene': {'file': 'disease_gene',
                  'url': 'http://rest.kegg.jp/link/disease/hsa'},
         'ncbi': {'file': 'ncbi',
-                 'url': 'http://rest.kegg.jp/conv/ncbi-geneid/hsa'}
+                 'url': 'http://rest.kegg.jp/conv/ncbi-geneid/hsa'},
+        'hsa_gene2pathway': {'file': 'human_gene2pathway',
+                 'url': 'http://rest.kegg.jp/link/pathway/hsa'},
+        'hsa_orthologs': {'file': 'hsa_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/hsa'},
+        'mmu_orthologs': {'file': 'mmu_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/mmu'},
+        'rno_orthologs': {'file': 'rno_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/rno'},
+        'dme_orthologs': {'file': 'dme_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/dme'},
+        'dre_orthologs': {'file': 'dre_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/dre'},
+        'cel_orthologs': {'file': 'cel_orthologs',
+                 'url': 'http://rest.kegg.jp/link/orthology/cel'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -34,7 +49,7 @@ class KEGG(Source):
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340"],
         "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736"],
         "genes": ["hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387"],
-        "orthology": ["ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
+        "orthology_classes": ["ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
     def __init__(self):
@@ -75,7 +90,11 @@ class KEGG(Source):
         self._process_genes(limit)
         self._process_disease2gene(limit)
         self._process_genes_kegg2ncbi(limit)
+        self._process_ortholog_classes(limit)
 
+        for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
+            file = '/'.join((self.rawdir, self.files[f]['file']))
+            self._process_orthologs(file, limit)
 
 
 
@@ -171,7 +190,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['genes']['file']))
+        raw = ('/').join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -193,38 +212,96 @@ class KEGG(Source):
         logger.info("Done with genes")
         return
 
-    def _process_orthology(self, limit=None):
+    def _process_ortholog_classes(self, limit=None):
         """
 
         :param limit:
         :return:
         """
 
-        logger.info("Processing orthology")
+        logger.info("Processing ortholog classes")
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['orthology']['file']))
+        raw = ('/').join((self.rawdir, self.files['ortholog_classes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (orthology_id, gene_name) = row
+                (orthology_class_id, orthology_class_name) = row
 
-                if self.testMode and gene_id not in self.test_ids['orthology']:
+                if self.testMode and orthology_class_id not in self.test_ids['ortholog_classes']:
                     continue
 
-                gene_id = 'KEGG:'+gene_id.strip()
-                # Add the disease as a class.
-                #gu.addClassToGraph(g, gene_id, gene_name)
+                #FIXME: What's the proper route for this?
+                # The orthology class is essentially a KEGG gene ID that is species agnostic.
+                # Add the ID and label as a class. Would it be considered a gene as well?
+                orthology_class_id = 'KEGG:'+orthology_class_id.strip()
+                orthology_symbols = re.sub(';.*','',orthology_class_name)
+                orthology_description = re.sub('.*;','',orthology_class_name)
+                #FIXME: Problem if there is more than one symbol?
+                #FIXME: Is there a designated type for these orthology classes?
+                gu.addClassToGraph(g, orthology_class_id, orthology_symbols, None, orthology_description)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with orthology")
+        logger.info("Done with ortholog classes")
+        return
+
+
+    def _process_orthologs(self, raw, limit=None):
+        """
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing orthologs")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        #raw = ('/').join((self.rawdir, self.files['ortholog_classes']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (gene_id, orthology_class_id) = row
+
+                #if self.testMode and orthology_id not in self.test_ids['ortholog_classes']:
+                    #continue
+
+                orthology_class_id = 'KEGG:'+orthology_class_id.strip()
+                gene_id = 'KEGG:'+gene_id.strip()
+
+
+                # note that the panther_id references a group of orthologs, and is not 1:1 with the rest
+                assoc_id = self.make_id(''.join((gene_id, orthology_class_id)))
+                #ortho = OrthologyAssoc()
+                rel = OrthologyAssoc.ortho_rel['orthologous']
+                # add the association and relevant nodes to graph
+                assoc = OrthologyAssoc(assoc_id, gene_id, orthology_class_id, None, None)
+                assoc.setRelationship(rel)
+                assoc.loadAllProperties(g)  # FIXME inefficient
+
+                # add gene and orthology class to graph; assume labels will be taken care of elsewhere
+                gu.addClassToGraph(g, gene_id, None)
+                gu.addClassToGraph(g, orthology_class_id, None)
+                assoc.addAssociationToGraph(g)
+
+
+                #TODO: What's the proper route to
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with orthologs")
         return
 
     def _process_disease2gene(self, limit=None):
@@ -283,7 +360,11 @@ class KEGG(Source):
 
     def _process_genes_kegg2ncbi(self, limit=None):
         """
-
+        This method will map the KEGG human gene IDs to the corresponding NCBI Gene IDs.
+        Triples created:
+        <kegg_gene_id> is a class
+        <ncbi_gene_id> is a class
+        <kegg_gene_id> equivalentClass <ncbi_gene_id>
         :param limit:
         :return:
         """
@@ -303,15 +384,17 @@ class KEGG(Source):
                 line_counter += 1
                 (kegg_gene_id, ncbi_gene_id) = row
 
-                if self.testMode and gene_id not in self.test_ids['']:
+                if self.testMode and kegg_gene_id not in self.test_ids['']:
                     continue
 
                 # Adjust the NCBI gene ID prefix.
                 ncbi_gene_id = re.sub('ncbi-geneid','NCBIGene',ncbi_gene_id)
                 kegg_gene_id = 'KEGG:'+kegg_gene_id
 
-                #FIXME: DO you have to declare an ID as a class before making it an equivalent class?
-                gu.addClassToGraph(g, ncbi_gene_id,None)
+                # Adding the KEGG gene ID to the graph here is redundant, unless there happens to be
+                # additional gene IDs in this table not present in the genes table.
+                gu.addClassToGraph(g, kegg_gene_id, None)
+                gu.addClassToGraph(g, ncbi_gene_id, None)
                 gu.addEquivalentClass(g, kegg_gene_id, ncbi_gene_id)
 
 

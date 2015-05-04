@@ -3,8 +3,15 @@ python:
   - "3.3"
   - "3.4"
   - "nightly"
+
 # command to install dependencies
 install:
   - "pip install ."
+
 # command to run tests
-script: nosetests
+script: make test
+
+# whitelist
+branches:
+  only:
+    - master
