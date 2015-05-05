@@ -119,8 +119,6 @@ class Monochrom(Source):
         self.dataset = Dataset('monochrom', 'Monarch Chromosome Ontology', 'http://monarchinitiative.org',
                                None, 'http://creativecommons.org/licenses/by/4.0/')
 
-        # data-source specific warnings (will be removed when issues are cleared)
-
         return
 
     def fetch(self, is_dl_forced=False):
