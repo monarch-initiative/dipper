@@ -39,4 +39,4 @@ zfin-fetch:
 dipper-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_biogrid.py tests/test_clinvar.py \
 tests/test_genereviews.py tests/test_hpoa.py tests/test_ncbi.py tests/test_panther.py \
-tests/test_zfin.py
+tests/test_ucscbands.py tests/test_zfin.py
