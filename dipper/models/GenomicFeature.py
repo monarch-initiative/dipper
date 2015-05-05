@@ -74,7 +74,9 @@ class Feature():
         'gpos75': 'GENO:0000623',
         'gpos50': 'GENO:0000624',
         'gpos25': 'GENO:0000625',
-        'gvar': 'GENO:0000621'
+        'gvar': 'GENO:0000621',
+        'gpos33': 'GENO:0000633',
+        'gpos66': 'GENO:0000632'
     }
 
     def __init__(self, id, label, type, description=None):
@@ -158,7 +160,7 @@ class Feature():
 
         return strand_id
 
-    def addFeatureToGraph(self, graph, region_id=None):
+    def addFeatureToGraph(self, graph, add_region=True, region_id=None):
         """
         We make the assumption here that all features are instances.
         The features are located on a region, which begins and ends with faldo:Position
@@ -181,12 +183,16 @@ class Feature():
         """
         self.gu.addIndividualToGraph(graph, self.id, self.label, self.type, self.description)
 
-        # create a region that has the begin/end positions
-        if region_id is None:
-            region_id = ':_'+self.id+'Region'  # FIXME make this anonymous
-        self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
+        if add_region:
+            # create a region that has the begin/end positions
+            if region_id is None:
+                region_id = '_'+self.id+'Region'
+            self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
+            self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
+        else:
+            region_id = self.id
+            self.gu.addType(graph, region_id, 'faldo:Region')
 
-        self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
         # add the start/end positions to the region
         if self.start is not None:
             self.gu.addTriple(graph, region_id, self.properties['begin'],
@@ -318,7 +324,7 @@ def makeChromID(chrom, reference=None):
     r = reference
     if re.match('.+:.+', reference):
         r = re.match('.*:(.*)', reference).group(1)
-    id = ''.join((':', r, 'chr', c))
+    id = ''.join(('CHR:', r, 'chr', c))
     return id
 
 

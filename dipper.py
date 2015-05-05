@@ -21,6 +21,8 @@ from dipper.sources.EOM import EOM
 from dipper.sources.KEGG import KEGG
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
+from dipper.sources.Monochrom import Monochrom
+
 from dipper.utils.TestUtils import TestUtils
 
 from tests.test_general import GeneralGraphTestCase
@@ -44,6 +46,7 @@ def main():
         'eom': EOM,  # Takes about 5 seconds.
         'coriell': Coriell,
         'clinvar': ClinVar,
+        'monochrom': Monochrom,
         'kegg': KEGG
     }
 

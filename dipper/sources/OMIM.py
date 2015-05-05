@@ -234,7 +234,14 @@ class OMIM(Source):
             entries = myjson['omim']['entryList']
 
             geno = Genotype(g)
-            geno.addGenome('NCBITaxon:9606', 'Homo sapiens')
+
+            # add genome and taxon
+            tax_num = '9606'
+            tax_id = 'NCBITaxon:9606'
+            tax_label = 'Human'
+
+            geno.addGenome(tax_id, str(tax_num))   # tax label can get added elsewhere
+            gu.addClassToGraph(g, tax_id, None)   # label added elsewhere
 
             for e in entries:
 
@@ -296,10 +303,10 @@ class OMIM(Source):
                                 cytoloc = cytoloc.split('-')[0]
                                 f = Feature(omimid, None, None)
                                 if 'chromosome' in genemap:
-                                    chrom = makeChromID(str(genemap['chromosome']), 'NCBITaxon:9606')
-                                    geno.addChromosome(str(genemap['chromosome']), 'NCBITaxon:9606', 'Homo sapiens')
-                                    loc = makeChromID(cytoloc, 'NCBITaxon:9606')
-                                    geno.addChromosome(cytoloc, 'NCBITaxon:9606', 'Homo sapiens')
+                                    chrom = makeChromID(str(genemap['chromosome']), tax_num)
+                                    geno.addChromosomeClass(str(genemap['chromosome']),tax_id, tax_label)
+                                    loc = makeChromID(cytoloc, tax_num)
+                                    gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
                                     f.addSubsequenceOfFeature(g, loc)
                                     f.addFeatureToGraph(g)
                                 pass

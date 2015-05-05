@@ -53,7 +53,7 @@ class Assoc:
     OWLIND = OWL['NamedIndividual']
     OBJECTPROP = OWL['ObjectProperty']
     ANNOTPROP = OWL['AnnotationProperty']
-    DATAPROP = OWL['DataProperty']
+    DATAPROP = OWL['DatatypeProperty']
 
     SUBCLASS = RDFS['subClassOf']
     BASE = Namespace(curie_map.get()[''])

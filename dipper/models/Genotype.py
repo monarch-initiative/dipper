@@ -372,7 +372,6 @@ class Genotype():
         genome_label = taxon_label+' genome'
         genome_id = self.makeGenomeID(taxon_id)
         self.gu.addClassToGraph(self.graph, genome_id, genome_label, Feature.types['genome'])
-        self.addTaxon(taxon_id, genome_id)
 
         return
 
@@ -380,7 +379,7 @@ class Genotype():
         genome_id = self.makeGenomeID(taxon_id)
         self.gu.addIndividualToGraph(self.graph, build_id, build_label, Feature.types['reference_genome'])
         self.gu.addType(self.graph, build_id, genome_id)
-        self.gu.addSubclass(self.graph, genome_id, build_id)
+        self.addTaxon(taxon_id, build_id)
 
         return
 
@@ -405,10 +404,6 @@ class Genotype():
             chr_label = makeChromLabel(chr)
         genome_id = self.makeGenomeID(tax_id)
         self.gu.addClassToGraph(self.graph, chr_id, chr_label, Feature.types['chromosome'])
-        # add it as a member of the genome (both ways)
-        self.gu.addMember(self.graph, genome_id, chr_id)
-        self.gu.addMemberOf(self.graph, chr_id, genome_id)
-
         self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
 
         if build_id is not None:
@@ -422,5 +417,36 @@ class Genotype():
             # add the build-specific chromosome as a member of the build  (both ways)
             self.gu.addMember(self.graph, build_id, chrinbuild_id)
             self.gu.addMemberOf(self.graph, chrinbuild_id, build_id)
+
+        return
+
+    def addChromosomeClass(self, chrom_num, taxon_id, taxon_label):
+        taxon = re.sub('NCBITaxon:','',taxon_id)
+        chrom_class_id = makeChromID(chrom_num, taxon)  # the chrom class (generic) id
+        chrom_class_label = makeChromLabel(chrom_num, taxon_label)
+        self.gu.addClassToGraph(self.graph, chrom_class_id, chrom_class_label,
+                                Feature.types['chromosome'])
+
+        return
+
+    def addChromosomeInstance(self, chr_num, reference_id, reference_label, chr_type=None):
+        """
+        Add the supplied chromosome as an instance within the given reference
+        :param chr:
+        :param reference_id: for example, a build id like UCSC:hg19
+        :param reference_label:
+        :param chr_type: this is the class that this is an instance of.  typically a genome-specific chr
+        :return:
+        """
+
+        chr_id = makeChromID(str(chr_num), reference_id)
+        chr_label = makeChromLabel(str(chr_num), reference_label)
+
+        self.gu.addIndividualToGraph(self.graph, chr_id, chr_label, Feature.types['chromosome'])
+        self.gu.addType(self.graph, chr_id, chr_type)
+
+        # add the build-specific chromosome as a member of the build  (both ways)
+        self.gu.addMember(self.graph, reference_id, chr_id)
+        self.gu.addMemberOf(self.graph, chr_id, reference_id)
 
         return
