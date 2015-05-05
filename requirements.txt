@@ -7,4 +7,3 @@ pyyaml
 pysftp
 biopython
 docx
-python-coveralls
