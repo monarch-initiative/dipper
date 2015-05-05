@@ -3,8 +3,20 @@ python:
   - "3.3"
   - "3.4"
   - "nightly"
+
 # command to install dependencies
 install:
+  - "pip install -r requirements.txt"
+  - "pip install python-coveralls"
   - "pip install ."
+
 # command to run tests
-script: nosetests
+script: make test
+
+after_success:
+  coveralls
+
+# whitelist
+branches:
+  only:
+    - master

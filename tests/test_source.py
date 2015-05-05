@@ -6,6 +6,7 @@ from tests import test_general
 import unittest
 import logging
 import os
+import json
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -19,7 +20,6 @@ class SourceTestCase(unittest.TestCase):
 
     def setUp(self):
         self.source = None
-
         return
 
     def tearDown(self):
@@ -43,11 +43,12 @@ class SourceTestCase(unittest.TestCase):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
             p = os.path.abspath(f)
-            self.assertTrue(os.path.exists(f), "path does not exist for "+f)
+            self.assertTrue(os.path.exists(f), "path does not exist for {0}".format(f))
             test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
 
         return
 
+    @unittest.skip
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
@@ -64,6 +65,13 @@ class SourceTestCase(unittest.TestCase):
             p = os.path.abspath(self.source.rawdir)
             logging.info("Resetting the rawdir to %s", p)
         return
+
+    def _get_conf(self):
+        if os.path.exists(os.path.join(os.path.dirname(__file__), 'test_ids.json')):
+            with open(os.path.join(os.path.dirname(__file__),
+                           'test_ids.json')) as json_file:
+                conf = json.load(json_file)
+        return conf
 
 
 if __name__ == '__main__':
