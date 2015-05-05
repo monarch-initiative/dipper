@@ -306,7 +306,15 @@ class KEGG(Source):
 
     def _process_disease2gene(self, limit=None):
         """
+        This method creates an association between diseases and their associated genes.
 
+        Triples created:
+        <alternate_locus> is an Individual
+        <alternate_locus> has type <variant_locus>
+        <alternate_locus> is an allele of  <gene_id>
+
+        <assoc_id> has subject <disease_id>
+        <assoc_id> has object <gene_id>
         :param limit:
         :return:
         """
@@ -338,6 +346,8 @@ class KEGG(Source):
                 # we actually want the association between the gene and the disease to be via an alternate locus
                 # not the "wildtype" gene itself.
                 # so we make an anonymous alternate locus, and put that in the association.
+                #FIXME: Should we use the self.makeID here,
+                # or is it better to see the gene & disease IDs for this alt_locus?
                 alt_locus = '_'+gene_id+'-'+disease_id+'VL'
                 alt_label = self.label_hash['gene'].get(gene_id)
                 disease_label = self.label_hash['disease'].get(disease_id)
