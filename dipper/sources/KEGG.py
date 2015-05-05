@@ -379,8 +379,11 @@ class KEGG(Source):
     def _process_omim2disease(self, limit=None):
         """
         This method will map the KEGG disease IDs to the corresponding OMIM disease IDs.
+        Currently this only maps KEGG diseases and OMIM diseases that have a 1:1 mapping.
         Triples created:
-
+        <kegg_disease_id> is a class
+        <omim_disease_id> is a class
+        <kegg_disease_id> hasEquivalentClass <omim_disease_id>
         :param limit:
         :return:
         """
@@ -391,7 +394,8 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        disease_hash = {}
+        omim_disease_hash = {}
+        kegg_disease_hash = {}
         gu = GraphUtils(curie_map.get())
         raw = ('/').join((self.rawdir, self.files['omim2disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -403,19 +407,33 @@ class KEGG(Source):
                 if self.testMode and omim_disease_id not in self.test_ids['']:
                     continue
 
-                if omim_disease_id not in disease_hash:
-                    disease_hash[omim_disease_id] = [kegg_disease_id]
+                kegg_disease_id = 'KEGG:'+kegg_disease_id.strip()
+                omim_disease_id = re.sub('omim','OMIM',omim_disease_id)
+
+                if omim_disease_id not in omim_disease_hash:
+                    omim_disease_hash[omim_disease_id] = [kegg_disease_id]
                 else:
-                    disease_hash[omim_disease_id].append(kegg_disease_id)
-                    print('Found additional kegg disease id for '+omim_disease_id)
+                    omim_disease_hash[omim_disease_id].append(kegg_disease_id)
+                    #print('Found additional kegg disease id for '+omim_disease_id)
+
+                if kegg_disease_id not in kegg_disease_hash:
+                    kegg_disease_hash[kegg_disease_id] = [omim_disease_id]
+                else:
+                    kegg_disease_hash[kegg_disease_id].append(omim_disease_id)
+                    #print('Found additional omim disease id for '+kegg_disease_id)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        #Now process the disease hash and only process omim diseases with a single KEGG disease ID.
-        for omim_disease_id in disease_hash:
-            if len(disease_hash[omim_disease_id]) == 1:
-                print(disease_hash[omim_disease_id])
+        #Now process the disease hashes and only process 1:1 omim disease:KEGG disease entries.
+        for omim_disease_id in omim_disease_hash:
+            if len(omim_disease_hash[omim_disease_id]) == 1:
+                kegg_disease_id = ('').join(omim_disease_hash.get(omim_disease_id))
+                if len(kegg_disease_hash[kegg_disease_id]) == 1:
+                    #print(kegg_disease_id+'_'+omim_disease_id)
+                    gu.addClassToGraph(g, kegg_disease_id, None)
+                    gu.addClassToGraph(g, omim_disease_id, None)
+                    gu.addEquivalentClass(g,kegg_disease_id,omim_disease_id)
 
         logger.info("Done with KEGG disease to OMIM disease mappings.")
         return
