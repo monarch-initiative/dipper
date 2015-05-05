@@ -67,6 +67,9 @@ def main():
     parser.add_argument('--debug', help='turn on debug logging',
                         action="store_true")
 
+    # BNodes can't be visualized in Protege, so you can materialize them for testing purposes with this flag
+    parser.add_argument('-nb', '--no_bnodes', help="convert blank nodes into identified nodes", action="store_true")
+
     # TODO this preconfiguration should probably live in the conf.json, and the same filter be applied to all sources
     parser.add_argument('-t', '--taxon', type=str,
                         help='Add a taxon constraint on a source. Enter 1+ NCBITaxon numbers, comma delimited\n'
@@ -92,6 +95,9 @@ def main():
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
+
+    if args.no_bnodes is True:
+        logger.info("Will materialize all BNodes into BASE space")
 
     if args.query is not None:
         test_query = TestUtils()
@@ -122,6 +128,7 @@ def main():
             mysource.fetch(args.force)
 
         mysource.settestonly(args.test_only)
+        mysource.setnobnodes(args.no_bnodes)
 
         # run tests first
         if args.no_verify is not True:

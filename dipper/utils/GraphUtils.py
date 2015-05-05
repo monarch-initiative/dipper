@@ -91,7 +91,7 @@ class GraphUtils:
         :return:
         """
 
-        n = self._getNode(id)
+        n = self.getNode(id)
 
         g.add((n, RDF['type'], self.OWLCLASS))
         if label is not None:
@@ -104,7 +104,7 @@ class GraphUtils:
         return g
 
     def addIndividualToGraph(self, g, id, label, type=None, description=None):
-        n = self._getNode(id)
+        n = self.getNode(id)
 
         if label is not None:
             g.add((n, RDFS['label'], Literal(label)))
@@ -118,8 +118,8 @@ class GraphUtils:
         return g
 
     def addEquivalentClass(self, g, id1, id2):
-        n1 = self._getNode(id1)
-        n2 = self._getNode(id2)
+        n1 = self.getNode(id1)
+        n2 = self.getNode(id2)
 
         if n1 is not None and n2 is not None:
             g.add((n1, OWL['equivalentClass'], n2))
@@ -127,8 +127,8 @@ class GraphUtils:
         return
 
     def addSameIndividual(self, g, id1, id2):
-        n1 = self._getNode(id1)
-        n2 = self._getNode(id2)
+        n1 = self.getNode(id1)
+        n2 = self.getNode(id2)
 
         if n1 is not None and n2 is not None:
             g.add((n1, OWL['sameAs'], n2))
@@ -199,7 +199,7 @@ class GraphUtils:
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :return:
         """
-        n = self._getNode(cid)
+        n = self.getNode(cid)
         if synonym_type is None:
             synonym_type = URIRef(self.cu.get_uri(self.properties['hasExactSynonym']))  # default
         else:
@@ -210,15 +210,15 @@ class GraphUtils:
 
     def addDefinition(self, g, cid, definition):
         if definition is not None:
-            n = self._getNode(cid)
+            n = self.getNode(cid)
             p = URIRef(self.cu.get_uri(self.properties['definition']))
             g.add((n, p, Literal(definition)))
 
         return
 
     def addXref(self, g, cid, xrefid):
-        n1 = self._getNode(cid)
-        n2 = self._getNode(xrefid)
+        n1 = self.getNode(cid)
+        n2 = self.getNode(xrefid)
         p = URIRef(self.cu.get_uri(self.properties['has_xref']))
         if n1 is not None and n2 is not None:
             g.add((n1, p, n2))
@@ -272,10 +272,12 @@ class GraphUtils:
         return
 
 
-    def _getNode(self, id):
+    def _getNode(self, id, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.  If an id starts with an
         underscore, it assigns it to a BNode, otherwise it creates it with a standard URIRef.
+        Alternatively, if materialize_bnode is True, it will add any nodes that would have been
+        blank into the BASE space.
         This will return None if it can't map the node properly.
         :param id:
         :return:
@@ -283,7 +285,10 @@ class GraphUtils:
         base = Namespace(self.curie_map.get(''))
         n = None
         if id is not None and re.match('^_', id):
-            n = BNode(re.sub('_', '', id, 1))  # replace the leading underscore to make it cleaner
+            if materialize_bnode is True:
+                n = base[id]
+            else:
+                n = BNode(re.sub('_', '', id, 1))  # replace the leading underscore to make it cleaner
         elif re.match('^\:', id):
             n = base[re.sub(':', '', id, 1)]   # do we need to remove embedded colons in the ids?
         else:
@@ -294,9 +299,9 @@ class GraphUtils:
                 logger.error("couldn't make URI for %s", id)
         return n
 
-    def getNode(self,id):
+    def getNode(self, id, materialize_bnode=False):
 
-        return self._getNode(id)
+        return self._getNode(id, materialize_bnode)
 
     def addTriple(self, graph, subject_id, predicate_id, object, object_is_literal=False):
         if object_is_literal is True:

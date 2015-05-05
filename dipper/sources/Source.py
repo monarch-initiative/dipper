@@ -42,6 +42,7 @@ class Source:
         self.outdir = 'out'
         self.testdir = 'tests'
         self.rawdir = 'raw'
+        self.nobnodes = False  # set to True if you want to materialze identifiers for BNodes
         if self.name is not None:
             self.rawdir = '/'.join((self.rawdir, self.name))
             self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
@@ -493,3 +494,15 @@ class Source:
         :return:
         """
         return None
+
+    def setnobnodes(self, materialize_bnodes):
+        """
+        If materialze_bnodes is True, then all usages of BNodes will be materialized by putting the BNodes
+        into the BASE space, and prefixing the numeric portion (after the colon) with an underscore.
+        :param materialize_bnodes:
+        :return:
+        """
+
+        self.nobnodes = materialize_bnodes
+
+        return
