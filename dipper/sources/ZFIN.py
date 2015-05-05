@@ -92,7 +92,7 @@ class ZFIN(Source):
                        "ZDB-MRPHLNO-080919-4", "ZDB-MRPHLNO-081110-3", "ZDB-MRPHLNO-090106-5", "ZDB-MRPHLNO-090114-1",
                        "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
-                       "ZDB-MRPHLNO-130222-4"],
+                       "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
@@ -836,7 +836,7 @@ class ZFIN(Source):
                 geno.addGenotype(effective_genotype_id,effective_genotype_label,
                                  geno.genoparts['effective_genotype'])
 
-                logger.info("added: %s",effective_genotype_label)
+                logger.debug("added: %s",effective_genotype_label)
 
                 # ########### PHENOTYPES ##########
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
@@ -1331,14 +1331,12 @@ class ZFIN(Source):
                 if note != '':
                     gu.addComment(g, reagent_id, note)
 
-                # Build the hash for the reagents and the gene targets
-                if reagent_id not in self.kd_reagent_hash:
-                    self.kd_reagent_hash[reagent_id] = {'label': reagent_symbol,
-                                                        'targets': [gene_id]}
+                # use the variant hash for morpholinos to list the affected genes
+                if reagent_id not in self.variant_loci_genes:
+                    self.variant_loci_genes[reagent_id] = [gene_id]
                 else:
-                    self.kd_reagent_hash[reagent_id]['targets']+=[gene_id]
-
-                self.id_label_map[reagent_id] = reagent_symbol
+                    if gene_id not in self.variant_loci_genes[reagent_id]:
+                        self.variant_loci_genes[reagent_id] += [gene_id]
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1398,6 +1396,8 @@ class ZFIN(Source):
         env_hash = {}
         enviro_label_hash = {}
         geno = Genotype(g)
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
 
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1486,20 +1486,43 @@ class ZFIN(Source):
 
                     # TODO make targeted_sequence identifyable?
                     applied_morph_id = '_'+applied_morph_id
-                    applied_morph_label = ' '.join((morph_label,conc_label))
+                    if self.nobnodes:
+                        applied_morph_id = ':'+applied_morph_id
+                    applied_morph_label = ' '.join((morph_label, conc_label))
 
                     # add this morpholino applied at this concentration, as an instance of
                     # the morpholino itself
-                    geno.addGeneTargetingReagent(applied_morph_id,applied_morph_label,morph_id)
+                    geno.addGeneTargetingReagent(applied_morph_id, applied_morph_label, morph_id)
                     if comment is not None:
                         gu.addComment(g, applied_morph_id, comment)
+
+                    # link the morpholino to the genes that it affects
+                    ag = self.variant_loci_genes.get(morph_id)
+                    logger.info("%s affected genes %s", morph_id, pp.pformat(ag))
+
+                    # create variant gene(s) that have been targeted by the reagent
+                    list_of_targeted_genes = []
+                    for gid in ag:
+                        glabel = self.id_label_map[gid]
+
+                        targeted_gene_id = '-'.join((gid,morph_id))
+                        # replace the zfin prefixes - these are not zfin resolvable
+                        targeted_gene_id = re.sub('ZFIN:','',targeted_gene_id)
+                        targeted_gene_id = '_'+targeted_gene_id
+                        if self.nobnodes:
+                            targeted_gene_id = ':'+targeted_gene_id
+                        targeted_gene_label = glabel+'<'+morph_label+'>'
+
+                        geno.addReagentTargetedGene(applied_morph_id, gid, targeted_gene_id, targeted_gene_label)
+                        self.id_label_map[targeted_gene_id] = targeted_gene_label
+                        list_of_targeted_genes += [targeted_gene_id]
 
                     env_hash[environment_id] += [applied_morph_id]
 
                     self.id_label_map[applied_morph_id] = applied_morph_label
 
-                    # also add these reagents to the extrinsic geno hash to be accessed by env id
-                    extrgeno_hash_by_env_id[environment_id] += [applied_morph_id]
+                    # also add these reagent-targeted-genes to the extrinsic geno hash to be accessed by env id
+                    extrgeno_hash_by_env_id[environment_id] += list_of_targeted_genes
 
                 elif not re.match('ZDB.*', condition):
                     # create fake environmental components, and add to the hash
@@ -1513,6 +1536,11 @@ class ZFIN(Source):
                     else:
                         env_component_id = '-'.join((condition_group.strip(),condition.strip()))
                         conc_label = ''
+
+                    # make them blank nodes
+                    env_component_id = '_'+env_component_id
+                    if self.nobnodes:
+                        env_component_id = ':'+env_component_id
 
                     env_condition = condition.strip()
                     if conc_label != '':
@@ -1528,7 +1556,7 @@ class ZFIN(Source):
                     else:
                         enviro_label_hash[environment_id].append(env_component_id)
 
-                    #TODO add the individual component into the graph
+                    #TODO add the individual environmental component into the graph
 
 
                 if not self.testMode and limit is not None and line_counter > limit:
