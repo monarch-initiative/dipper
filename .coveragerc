@@ -10,3 +10,4 @@ omit =
  dipper/utils/TestUtils.py
  dipper/utils/romanplus.py
  dipper/utils/pysed.py
+ dipper/models/Chem2DiseaseAssoc.py
