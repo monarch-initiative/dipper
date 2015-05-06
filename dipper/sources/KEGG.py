@@ -92,11 +92,16 @@ class KEGG(Source):
         self._process_pathways(limit)
         self._process_diseases(limit)
         self._process_genes(limit)
-        self._process_kegg_disease2gene(limit)
-        #TODO: Finish omim2gene
-        #self._process_omim2gene(limit)
-        self._process_omim2disease(limit)
         self._process_genes_kegg2ncbi(limit)
+        #TODO: Finish omim2gene
+        self._process_omim2gene(limit)
+
+        self._process_kegg_disease2gene(limit)
+
+
+        self._process_omim2disease(limit)
+
+
         self._process_ortholog_classes(limit)
 
         for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
@@ -329,7 +334,10 @@ class KEGG(Source):
         :return:
         """
 
-        logger.info("Processing disease to gene")
+        #FIXME: Need to adjust this so it only maps KEGG disease IDs to genes
+        # only when there is not already an OMIM disease to gene mapping.
+
+        logger.info("Processing KEGG disease to gene")
         if self.testMode:
             g = self.testgraph
         else:
@@ -375,12 +383,12 @@ class KEGG(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with disease to gene")
+        logger.info("Done with KEGG disease to gene")
         return
 
     def _process_omim2gene(self, limit=None):
         """
-        This method creates an association between omim diseases and their associated genes.
+
 
         Triples created:
         <alternate_locus> is an Individual
@@ -393,7 +401,7 @@ class KEGG(Source):
         :return:
         """
 
-        logger.info("Processing OMIM to gene")
+        logger.info("Processing OMIM to KEGG gene")
         if self.testMode:
             g = self.testgraph
         else:
@@ -406,40 +414,53 @@ class KEGG(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (gene_id, disease_id) = row
+                (kegg_gene_id, omim_id, link_type) = row
 
-                if self.testMode and gene_id not in self.test_ids['']:
+                if self.testMode and kegg_gene_id not in self.test_ids['']:
                     continue
 
-                gene_id = 'KEGG:'+gene_id.strip()
-                disease_id = 'KEGG:'+disease_id.strip()
 
-                # Make an association ID.
-                assoc_id = self.make_id((disease_id+gene_id))
+                #NOTE: It appears that entries with link_type = equivalent are genes in OMIM,
+                # while reverse is a disease (but are there other entries besides disease for reverse,
+                # such as grouping classes?)
+                kegg_gene_id = 'KEGG:'+kegg_gene_id.strip()
+                if link_type == 'equivalent':
+                    omim_gene_id = re.sub('omim', 'OMIM', omim_id)
+                    geno.addGene(omim_gene_id, None)
+                    geno.addGene(kegg_gene_id, None)
+                    # FIXME: Add Xref or addEquivalentClass?
+                    gu.addXref(g, kegg_gene_id, omim_gene_id)
 
+                    # Make an association ID.
+                    assoc_id = self.make_id((omim_gene_id+kegg_gene_id))
+
+                if link_type == 'reverse':
+                    #How to be sure that this is a disease and not a grouping class?
+                    # Do we want to do anything with the remaining OMIM entries?
+                    continue
+                else:
+                    logger.warn('Unhandled link type: %s', link_type)
                 # we actually want the association between the gene and the disease to be via an alternate locus
                 # not the "wildtype" gene itself.
                 # so we make an anonymous alternate locus, and put that in the association.
-                #FIXME: Should we use the self.makeID here,
-                # or is it better to see the gene & disease IDs for this alt_locus?
-                alt_locus = '_'+gene_id+'-'+disease_id+'VL'
-                alt_label = self.label_hash['gene'].get(gene_id)
-                disease_label = self.label_hash['disease'].get(disease_id)
-                if alt_label is not None and alt_label != '':
-                    alt_label = 'some variant of '+alt_label+' that causes '+disease_label
-                else:
-                    alt_label = None
-                gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
-                geno.addAlleleOfGene(alt_locus, gene_id)
+                #alt_locus = '_'+gene_id+'-'+disease_id+'VL'
+                #alt_label = self.label_hash['gene'].get(gene_id)
+                #disease_label = self.label_hash['disease'].get(disease_id)
+                #if alt_label is not None and alt_label != '':
+                    #alt_label = 'some variant of '+alt_label+' that causes '+disease_label
+                #else:
+                    #alt_label = None
+                #gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
+                #geno.addAlleleOfGene(alt_locus, gene_id)
                 # Add the disease to gene relationship.
-                assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
-                assoc.loadAllProperties(g)
-                assoc.addAssociationToGraph(g)
+                #assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
+                #assoc.loadAllProperties(g)
+                #assoc.addAssociationToGraph(g)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with disease to gene")
+        logger.info("Done with OMIM to KEGG gene")
         return
 
     def _process_omim2disease(self, limit=None):
@@ -449,7 +470,7 @@ class KEGG(Source):
         Triples created:
         <kegg_disease_id> is a class
         <omim_disease_id> is a class
-        <kegg_disease_id> hasEquivalentClass <omim_disease_id>
+        <kegg_disease_id> hasXref <omim_disease_id>
         :param limit:
         :return:
         """
