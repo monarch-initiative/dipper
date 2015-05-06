@@ -499,7 +499,7 @@ class KEGG(Source):
                     #print(kegg_disease_id+'_'+omim_disease_id)
                     gu.addClassToGraph(g, kegg_disease_id, None)
                     gu.addClassToGraph(g, omim_disease_id, None)
-                    gu.addEquivalentClass(g, kegg_disease_id, omim_disease_id)
+                    gu.addXref(g, kegg_disease_id, omim_disease_id)
 
         logger.info("Done with KEGG disease to OMIM disease mappings.")
         return
