@@ -28,7 +28,7 @@ class KEGG(Source):
                  'url': 'http://rest.kegg.jp/link/disease/hsa'},
         'omim2disease': {'file': 'omim2disease',
                  'url': 'http://rest.genome.jp/link/disease/omim'},
-        'hsa_gene2omim': {'file': 'hsa_gene2omim',
+        'omim2gene': {'file': 'omim2gene',
                  'url': 'http://rest.genome.jp/link/omim/hsa'},
         'ncbi': {'file': 'ncbi',
                  'url': 'http://rest.kegg.jp/conv/ncbi-geneid/hsa'},
@@ -92,7 +92,9 @@ class KEGG(Source):
         self._process_pathways(limit)
         self._process_diseases(limit)
         self._process_genes(limit)
-        self._process_disease2gene(limit)
+        self._process_kegg_disease2gene(limit)
+        #TODO: Finish omim2gene
+        #self._process_omim2gene(limit)
         self._process_omim2disease(limit)
         self._process_genes_kegg2ncbi(limit)
         self._process_ortholog_classes(limit)
@@ -312,7 +314,7 @@ class KEGG(Source):
         logger.info("Done with orthologs")
         return
 
-    def _process_disease2gene(self, limit=None):
+    def _process_kegg_disease2gene(self, limit=None):
         """
         This method creates an association between diseases and their associated genes.
 
@@ -336,6 +338,70 @@ class KEGG(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         raw = ('/').join((self.rawdir, self.files['disease_gene']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (gene_id, disease_id) = row
+
+                if self.testMode and gene_id not in self.test_ids['']:
+                    continue
+
+                gene_id = 'KEGG:'+gene_id.strip()
+                disease_id = 'KEGG:'+disease_id.strip()
+
+                # Make an association ID.
+                assoc_id = self.make_id((disease_id+gene_id))
+
+                # we actually want the association between the gene and the disease to be via an alternate locus
+                # not the "wildtype" gene itself.
+                # so we make an anonymous alternate locus, and put that in the association.
+                #FIXME: Should we use the self.makeID here,
+                # or is it better to see the gene & disease IDs for this alt_locus?
+                alt_locus = '_'+gene_id+'-'+disease_id+'VL'
+                alt_label = self.label_hash['gene'].get(gene_id)
+                disease_label = self.label_hash['disease'].get(disease_id)
+                if alt_label is not None and alt_label != '':
+                    alt_label = 'some variant of '+alt_label+' that causes '+disease_label
+                else:
+                    alt_label = None
+                gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
+                geno.addAlleleOfGene(alt_locus, gene_id)
+                # Add the disease to gene relationship.
+                assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
+                assoc.loadAllProperties(g)
+                assoc.addAssociationToGraph(g)
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with disease to gene")
+        return
+
+    def _process_omim2gene(self, limit=None):
+        """
+        This method creates an association between omim diseases and their associated genes.
+
+        Triples created:
+        <alternate_locus> is an Individual
+        <alternate_locus> has type <variant_locus>
+        <alternate_locus> is an allele of  <gene_id>
+
+        <assoc_id> has subject <disease_id>
+        <assoc_id> has object <gene_id>
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing OMIM to gene")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['omim2gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -433,7 +499,7 @@ class KEGG(Source):
                     #print(kegg_disease_id+'_'+omim_disease_id)
                     gu.addClassToGraph(g, kegg_disease_id, None)
                     gu.addClassToGraph(g, omim_disease_id, None)
-                    gu.addEquivalentClass(g,kegg_disease_id,omim_disease_id)
+                    gu.addEquivalentClass(g, kegg_disease_id, omim_disease_id)
 
         logger.info("Done with KEGG disease to OMIM disease mappings.")
         return
