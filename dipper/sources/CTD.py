@@ -40,6 +40,10 @@ class CTD(Source):
         'gene_pathway': {
             'file': 'CTD_genes_pathways.tsv.gz',
             'url': 'http://ctdbase.org/reports/CTD_genes_pathways.tsv.gz'
+        },
+        'gene_disease': {
+            'file': 'CTD_genes_diseases.tsv.gz',
+            'url': 'http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz'
         }
     }
     static_files = {
@@ -102,6 +106,7 @@ class CTD(Source):
 
         self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'], pub_map)
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
+        self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self.load_bindings()
         logger.info("Done parsing files.")
 
@@ -142,6 +147,9 @@ class CTD(Source):
                         self._process_interactions(row, pub_map)
                     elif file == self.files['gene_pathway']['file']:
                         self._process_pathway(row)
+                    elif file == self.files['gene_disease']['file']:
+                        #self.process_disease2gene(row)
+                        continue
                     row_count += 1
                     if (not self.testMode) and (limit is not None and row_count >= limit):
                         break
@@ -216,6 +224,30 @@ class CTD(Source):
         else:
             # there's dual evidence, but haven't mapped the pubs
             logger.info("Dual evidence for %s and %s but no pub map", chem_name, disease_id)
+
+        return
+
+    def _process_disease2gene(self, row):
+        """
+        Process row of CTD data from CTD_genes_pathways.tsv.gz
+        and generate triples
+        Args:
+            :param row (list): row of CTD data
+        Returns:
+            :return None
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        self._check_list_len(row, 9)
+        gu = GraphUtils(curie_map.get())
+        (gene_symbol, gene_id, disease_name, disease_id, direct_evidence, inference,
+         chemical_name, inference_score, omim_ids, pubmed_ids) = row
+
+        if self.testMode and (int(gene_id) not in self.test_geneids):
+            return
+
 
         return
 
