@@ -451,9 +451,11 @@ class ZFIN(Source):
                 else:
                     a2 = allele2_label
 
-                # TODO MAKE THIS ANONYMOUS (add a _ prefix)
                 # TODO also consider adding this to Genotype.py
                 vslc_id = self.make_id('-'.join((gn, allele1_id, a2)))
+                vslc_id = '_'+vslc_id
+                if self.nobnodes:
+                    vslc_id = ':'+vslc_id
                 vslc_label = geno.make_vslc_label(gene_label, allele1_label, allele2_label)
 
                 #add to global hash
@@ -478,7 +480,7 @@ class ZFIN(Source):
         logger.info('Build pretty genotype labels')
         # now loop through the gvc_hash, and build the gvc
         for gt in gvc_hash:
-            if self.testMode and re.sub('ZFIN:','',gt) not in self.test_ids['genotype']:
+            if self.testMode and re.sub('ZFIN:', '', gt) not in self.test_ids['genotype']:
                 continue
 
             gvc_parts = gvc_hash.get(gt)
@@ -488,6 +490,9 @@ class ZFIN(Source):
                 gvc_labels = []
                 gvc_parts.sort()  # put these in order so they will always make the same id
                 gvc_id = self.make_id('-'.join(gvc_parts))
+                gvc_id = '_' + gvc_id
+                if self.nobnodes:
+                    gvc_id = ':'+gvc_id
                 for vslc_id in gvc_parts:
                     # add the vslc to the gvc
                     geno.addVSLCtoParent(vslc_id, gvc_id)
@@ -498,8 +503,6 @@ class ZFIN(Source):
                         gvc_labels += [vslc_label]
                     else:
                         gvc_labels += [vslc_id]
-
-                #todo make this anonymous
 
                 #todo sort
                 gvc_label = '; '.join(gvc_labels)
@@ -549,7 +552,7 @@ class ZFIN(Source):
         return
 
     def _map_allele_type_to_geno(self, allele_type):
-        type = 'SO:0001059'  # default: sequence_alteration
+        t = 'SO:0001059'  # default: sequence_alteration
         type_map = {
             'complex_substitution': 'SO:1000005',  # complex substitution
             'deficiency': 'SO:1000029',  # incomplete chromosome
@@ -564,11 +567,11 @@ class ZFIN(Source):
             'unspecified': 'SO:0001059'  # sequence alteration
         }
         if allele_type.strip() in type_map:
-            type = type_map.get(allele_type)
+            t = type_map.get(allele_type)
         else:
             logger.error("Allele Type (%s) not mapped", allele_type)
 
-        return type
+        return t
 
     def _process_genotype_backgrounds(self, limit=None):
         """
@@ -762,9 +765,6 @@ class ZFIN(Source):
         """
         This module currently filters for only wild-type environments, which clearly excludes application
         of morpholinos.  Very stringent filter.  To be updated at a later time.
-        :param raw:
-        :param out:
-        :param g:
         :param limit:
         :return:
         """
@@ -801,7 +801,7 @@ class ZFIN(Source):
                  pub_id, env_id, empty) = row
 
                 if self.testMode and (genotype_id not in self.test_ids['genotype']
-                        or env_id not in self.test_ids['environment']):
+                                      or env_id not in self.test_ids['environment']):
                     continue
 
                 # deal with environments
@@ -828,15 +828,15 @@ class ZFIN(Source):
                 effective_genotype_label = intrinsic_genotype_label
                 if extrinsic_genotype_id is not None:
                     effective_genotype_id = self.make_id('-'.join(genotype_id+'_'+extrinsic_genotype_id))
-                    effective_genotype_label = '; '.join((intrinsic_genotype_label,extrinsic_genotype_label))
+                    effective_genotype_label = '; '.join((intrinsic_genotype_label, extrinsic_genotype_label))
                     self.id_label_map[effective_genotype_id] = effective_genotype_label
-                    geno.addParts(genotype_id,effective_genotype_id)
-                    geno.addParts(extrinsic_genotype_id,effective_genotype_id)
+                    geno.addParts(genotype_id, effective_genotype_id)
+                    geno.addParts(extrinsic_genotype_id, effective_genotype_id)
 
-                geno.addGenotype(effective_genotype_id,effective_genotype_label,
+                geno.addGenotype(effective_genotype_id, effective_genotype_label,
                                  geno.genoparts['effective_genotype'])
 
-                logger.debug("added: %s",effective_genotype_label)
+                logger.debug("added: %s", effective_genotype_label)
 
                 # ########### PHENOTYPES ##########
                 phenotype_id = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
@@ -958,7 +958,7 @@ class ZFIN(Source):
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
 
                 gu.addIndividualToGraph(g, genomic_feature_id, genomic_feature_name, feature_so_id)
-                gu.addSynonym(g, genomic_feature_id,genomic_feature_abbreviation)
+                gu.addSynonym(g, genomic_feature_id, genomic_feature_abbreviation)
                 if construct_id is not None and construct_id != '':
                     construct_id = 'ZFIN:' + construct_id.strip()
                     geno.addConstruct(construct_id, construct_name, construct_so_id)
@@ -1296,7 +1296,7 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                if reagent_type in ['morph','crispr']:
+                if reagent_type in ['morph', 'crispr']:
                     (gene_num, gene_so_id, gene_symbol, reagent_num, reagent_so_id,
                      reagent_symbol, reagent_sequence, publication, note) = row
                 elif reagent_type == 'talen':
@@ -1450,7 +1450,7 @@ class ZFIN(Source):
                     if re.match('.*\/.*', units):
                         unit_id = re.sub(r"/", '-per-', units)
                     else:
-                        unit_id = units.replace(' ','-')
+                        unit_id = units.replace(' ', '-')
 
                 if comment == 'NULL' or comment == '':
                     comment = None
@@ -1469,13 +1469,13 @@ class ZFIN(Source):
                         morph_label = self.id_label_map[morph_id]
                     else:
                         morph_label = morph_id
-                        logger.warn('morph label not found %s',morph_id)
+                        logger.warn('morph label not found %s', morph_id)
 
                     #print('FOUND A MORPH:', morph_label)
 
                     # Create the targeted sequence id
                     if units is not None and values is not None:
-                        applied_morph_id = '-'.join((condition.strip(),value_id,unit_id))
+                        applied_morph_id = '-'.join((condition.strip(), value_id, unit_id))
                         if values == '':
                             conc_label = '('+units+')'
                         else:
