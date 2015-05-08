@@ -26,6 +26,7 @@ class CTD(Source):
     direct evidence (not using the inferred associations).  We currently only process the following associations:
         *chemical-disease
         *gene-pathway
+        *gene-disease
 
     As part of a separate process through human-disease-ontology, we pull in the disease identifiers as mapped to
     MESH.
@@ -148,7 +149,7 @@ class CTD(Source):
                     elif file == self.files['gene_pathway']['file']:
                         self._process_pathway(row)
                     elif file == self.files['gene_disease']['file']:
-                        #self.process_disease2gene(row)
+                        #self._process_disease2gene(row)
                         continue
                     row_count += 1
                     if (not self.testMode) and (limit is not None and row_count >= limit):
@@ -242,11 +243,51 @@ class CTD(Source):
             g = self.graph
         self._check_list_len(row, 9)
         gu = GraphUtils(curie_map.get())
-        (gene_symbol, gene_id, disease_name, disease_id, direct_evidence, inference,
-         chemical_name, inference_score, omim_ids, pubmed_ids) = row
+        (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,
+         inference_chemical_name, inference_score, omim_ids, pubmed_ids) = row
 
         if self.testMode and (int(gene_id) not in self.test_geneids):
             return
+
+        #
+        if direct_evidence != 'marker/mechanism':
+            next
+
+        rel = gu.object_properties['correlates_with']
+
+        # If there is only one OMIM ID for the Disease ID or in the omim_ids list,
+        # use the OMIM ID preferentially over any MeSH ID.
+
+        if re.match('OMIM:.*', disease_id) and re.match('.*\|.*', omim_ids) and omim_ids != '' and omim_ids is not None:
+            # Currently no entries with an OMIM ID as the disease ID and additional OMIM IDs in the omim_ids field.
+            # This is when the disease ID is an OMIM ID and there is more than one OMIM entry in omim_ids.
+            preferred_disease_id = disease_id
+            #print('Disease ID is OMIM ID: '+disease_id+' & More than one OMIM ID in omim_ids: '+omim_ids)
+        elif re.match('OMIM:.*', disease_id) and not re.match('.*\|.*', omim_ids) and omim_ids != '' and omim_ids is not None:
+            # This is when the disease ID is an OMIM ID and there is only one OMIM entry in omim_ids.
+            preferred_disease_id = disease_id
+            if disease_id != ('OMIM:'+omim_ids):
+                #print('IDs do not match! '+disease_id+' != '+omim_ids)
+                alternate_disease_ids = ['OMIM:'+omim_ids]
+            #print('Disease ID is OMIM ID: '+disease_id+' & Single OMIM ID in omim_ids: '+omim_ids)
+        elif not re.match('OMIM:.*', disease_id) and omim_ids != '' and omim_ids is not None and not re.match('.*\|.*', omim_ids):
+            # This is when the disease ID is not an OMIM ID and there is only one OMIM entry in omim_ids.
+            #print('Disease ID is not OMIM ID: '+disease_id+' & Single OMIM ID in omim_ids: '+omim_ids)
+            preferred_disease_id = 'OMIM:'+omim_ids
+        elif not re.match('OMIM:.*', disease_id) and omim_ids != '' and omim_ids is not None and re.match('.*\|.*', omim_ids):
+            # This is when the disease ID is an OMIM ID and there is more than one OMIM entry in omim_ids.
+            #print('Disease ID is not OMIM ID: '+disease_id+' & More than one OMIM ID in omim_ids: '+omim_ids)
+            #FIXME:Correct handling, or avoid given the existence of multiple OMIM IDs?
+            preferred_disease_id = disease_id
+        else:
+            # This is when the omim_ids field is empty. May be either a MeSH ID or an OMIM ID.
+            preferred_disease_id = disease_id
+
+
+
+
+
+
 
 
         return

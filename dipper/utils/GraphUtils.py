@@ -52,7 +52,8 @@ class GraphUtils:
         'part_of': 'BFO:0000050',
         'mentions': 'IAO:0000142',
         'model_of': 'ERO:0000233',
-        'has_gene_product': 'RO:0002205'
+        'has_gene_product': 'RO:0002205',
+        'correlates_with': 'MONARCH:correlates_with'
     }
 
     datatype_properties = {
