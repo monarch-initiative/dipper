@@ -56,7 +56,9 @@ def main():
                         help='comma separated list of sources')
     parser.add_argument('-l', '--limit', type=int, help='limit number of rows')
     parser.add_argument('--parse_only', action='store_true',
-                        help='parse files without writing')
+                        help='parse files without writing'),
+    parser.add_argument('--fetch_only', action='store_true',
+                        help='fetch sources without parsing')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force re-download of files')
     parser.add_argument('--no_verify', help='ignore the verification step',
@@ -140,7 +142,7 @@ def main():
         else:
             logger.info("Skipping Tests for source: %s", source)
 
-        if not args.test_only:
+        if args.test_only is False and args.fetch_only is False:
             mysource.parse(args.limit)
             mysource.write(format='turtle')
 
