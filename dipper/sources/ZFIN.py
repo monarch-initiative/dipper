@@ -31,7 +31,9 @@ class ZFIN(Source):
         'pheno': {'file': 'phenotype.txt', 'url': 'http://zfin.org/downloads/phenotype.txt'},
         'pubs': {'file': 'zfinpubs.txt', 'url': 'http://zfin.org/downloads/zfinpubs.txt'},
         'zpmap': {'file': 'zp-mapping.txt',
-                  'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt'},
+                  'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt',},
+        #'zpmap': {'file': 'zp-mapping.txt',
+        #          'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
         'morph': {'file': 'Morpholinos.txt', 'url': 'http://zfin.org/downloads/Morpholinos.txt'},
         'enviro': {'file': 'pheno_environment.txt', 'url': 'http://zfin.org/Downloads/pheno_environment.txt'},
         'stage': {'file': 'stage_ontology.txt', 'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
@@ -1842,6 +1844,7 @@ class ZFIN(Source):
         """
         zp_id = None
         # TODO check that we are using the most relevant zp.annot file due to recent changes
+        # see https://github.com/sba1/bio-ontology-zp/issues/8
 
         # zfin uses free-text modifiers, but we need to convert them to proper PATO classes for the mapping
         mod_id = modifier
@@ -1856,9 +1859,9 @@ class ZFIN(Source):
         mapping = self.zp_map.get(key)
 
         if (mapping is None):
-            pass
-            # logger.warn("Couldn't map ZP id to %s",("_").join(
-            #    (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
+            # pass
+            logger.warn("Couldn't map ZP id to %s",("_").join(
+                (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
         else:
             zp_id = mapping['zp_id']
 
