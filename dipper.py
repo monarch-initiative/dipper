@@ -22,6 +22,7 @@ from dipper.sources.KEGG import KEGG
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
 from dipper.sources.Monochrom import Monochrom
+from dipper.sources.AnimalQTLdb import AnimalQTLdb
 
 from dipper.utils.TestUtils import TestUtils
 
@@ -47,7 +48,8 @@ def main():
         'coriell': Coriell,
         'clinvar': ClinVar,
         'monochrom': Monochrom,
-        'kegg': KEGG
+        'kegg': KEGG,
+        'animalqtldb': AnimalQTLdb
     }
 
     logger = logging.getLogger(__name__)
