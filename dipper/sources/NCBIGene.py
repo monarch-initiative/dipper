@@ -11,7 +11,7 @@ from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper import config
-from dipper.models.GenomicFeature import Feature,makeChromID
+from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +131,12 @@ class NCBIGene(Source):
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_info']['file']))
         logger.info("FILE: %s", myfile)
+
+        # Add taxa and genome classes for those in our filter
+        for tax_num in self.tax_ids:
+            tax_id = ':'.join(('NCBITaxon', str(tax_num)))
+            geno.addGenome(tax_id, str(tax_num))   # tax label can get added elsewhere
+            gu.addClassToGraph(g, tax_id, None)   # label added elsewhere
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
@@ -202,11 +208,12 @@ class NCBIGene(Source):
 
                     # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-                    geno.addGenome(tax_id, tax_num)   # tax label can get added elsewhere
 
                     # temporarily use the taxnum for the disambiguating label
-                    geno.addChromosome(str(chr), tax_id, tax_num)
-                    mychrom = makeChromID(str(chr), tax_id)
+                    geno.addChromosomeClass(str(chr), tax_id, None)  # assume that the chromosome label will get added elsewhere
+                    mychrom = makeChromID(str(chr), tax_num)
+                    mychrom_syn = makeChromLabel(str(chr), tax_num)
+                    gu.addSynonym(g, mychrom,  mychrom_syn)
                     if tax_num == '9606' and map_loc != '-':
                         # this matches the regular kind of chrs, so make that kind of band
                         # not sure why this matches? chrX|Y or 10090chr12|Un"

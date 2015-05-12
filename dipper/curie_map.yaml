@@ -42,6 +42,7 @@
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
 'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
+'CHR' : 'http://purl.obolibrary.org/obo/CHR_'
 
 
 # publication/reference sources

@@ -17,46 +17,46 @@ BioGrid-fetch:
 	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only
 
 BioGrid-test:
-	$(NOSE) tests/test_biogrid.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_biogrid.py
 
 ClinVar-fetch:
 	$(DIPPER_BIN) --sources clinvar --no_verify --fetch_only
 
 ClinVar-test:
-	$(NOSE) tests/test_clinvar.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_clinvar.py
 
 GeneReviews-fetch:
 	$(DIPPER_BIN) --sources genereviews --no_verify --fetch_only
 
 GeneReviews-test:
-	$(NOSE) tests/test_genereviews.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_genereviews.py
 
 hpoa-fetch:
 	$(DIPPER_BIN) --sources hpoa --no_verify --fetch_only
 
 hpoa-test:
-	$(NOSE) tests/test_hpoa.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_hpoa.py
 
 ncbi-fetch:
 	$(DIPPER_BIN) --sources ncbigene --no_verify --fetch_only
 
 ncbi-test:
-	$(NOSE) tests/test_ncbi.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_ncbi.py
 
 Panther-fetch:
 	$(DIPPER_BIN) --sources panther --no_verify --fetch_only
 
 Panther-test:
-	$(NOSE) tests/test_panther.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_panther.py
 
 ucscBands-fetch:
 	$(DIPPER_BIN) --sources ucscbands --no_verify --fetch_only
 
 ucscBands-test:
-	$(NOSE) tests/test_ucscbands.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_ucscbands.py
 
 zfin-fetch:
 	$(DIPPER_BIN) --sources zfin --no_verify --fetch_only
 
 zfin-test:
-	$(NOSE) tests/test_zfin.py
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_zfin.py
