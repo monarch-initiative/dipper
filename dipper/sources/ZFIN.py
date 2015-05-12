@@ -169,26 +169,26 @@ class ZFIN(Source):
         for t in ['morph', 'crispr', 'talen']:
             self._process_targeting_reagents(t, limit)  # REVIEWED-COMPLETE
 
-        self._process_gene_marker_relationships(limit)  # REVIEW-IN PROCESS
+        self._process_gene_marker_relationships(limit)  # REVIEW-COMPLETE
         self._process_features(limit)  # REVIEWED-COMPLETE
         self._process_feature_affected_genes(limit)  # REVIEWED-COMPLETE
 
-        # These must be processed in a specific order
-        # Must be processed before wildtype_expression
+        # These must be processed before G2P and expression
         self._process_wildtypes(limit)    # REVIEWED-COMPLETE
         self._process_genotype_backgrounds(limit)  # REVIEWED-COMPLETE
         self._process_genotype_features(limit)  # REVIEWED - NEED TO REVIEW LABELS ON Deficiencies
 
-        # NOTE: TALENs/CRISPRs are not currently added to the extrinsic genotype, but are added to the env label.
-        self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs
+        self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs id/label
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
         self._process_g2p(limit)
 
+        # zfin-curated orthology calls to human genes
+        self._process_human_orthos(limit)
+
+        # FOR THE FUTURE - needs verification
         #self._process_wildtype_expression(limit)
-        #self._process_uniprot_ids(limit)  #HOLDING OFF FOR NOW
-        #self._process_human_orthos(limit)
-        #self._process_mappings(limit)  #NEEDS WORK-DO NOT INCLUDE YET
+        #self._process_uniprot_ids(limit)
 
         logger.info("Finished parsing.")
 
@@ -203,12 +203,21 @@ class ZFIN(Source):
         """
         Here we process the genotype_features file, which lists genotypes together with
         any intrinsic sequence alterations, their zygosity, and affected gene.
-        We don't get allele pair (VSLC) ids in a single row, so we iterate through the
-        file and build up a hash that contains all of a genotype's partonomy.
-        We can then assemble a genotype based on that partonomy.
+        Because we don't necessarily get allele pair (VSLC) ids in a single row,
+        we therefore iterate through the file and build up a hash that contains all
+        of a genotype's partonomy.
+        We then assemble a genotype based on that partonomy.
         This table does not list the background genotype/strain: that is listed elsewhere.
 
         ZFIN "ALT" objects are mapped to sequence alterations in our system.
+
+        By the end of this method, we have built up the intrinsic genotype, with Monarch-style labels.
+        All ZFIN labels are added as synonyms (including the "sup" html tags).
+
+        We make assumptions here that any variants that affect the same locus are in trans.  All of the
+        genotype parts are created as BNodes at the moment, to avoid minting new Monarch ids, which means
+        for anyone consuming this data they are inherently unstable.  This may change in the future.
+
 
         :param limit:
         :return:
@@ -344,13 +353,11 @@ class ZFIN(Source):
         #               }
         # now loop through the geno_hash, and build the vslcs
 
-        pp = pprint.PrettyPrinter(indent=4)
-
+        #pp = pprint.PrettyPrinter(indent=4)
         #pp.pprint(geno_hash)
         #logger.info('genohash: %s', pp.pformat(geno_hash))
 
         for gt in geno_hash:
-            #logger.info("looking for gt in test_ids: %s",gt)
             if self.testMode and re.sub('ZFIN:', '', gt) not in self.test_ids['genotype']:
                 print('skipping ', gt)
                 continue
@@ -398,7 +405,6 @@ class ZFIN(Source):
                         allele2_id = None
                     elif allele1_id != allele2_id:
                         zygosity_id = geno.zygosity['complex_heterozygous']
-                        # print('heterozygous pair='+allele1_id+'_'+allele2_id)
                     elif allele1_id == allele2_id:
                         zygosity_id = geno.zygosity['homozygous']
                 else:
@@ -449,7 +455,7 @@ class ZFIN(Source):
                     vslc_id = ':'+vslc_id
                 vslc_label = geno.make_vslc_label(gene_label, allele1_label, allele2_label)
 
-                #add to global hash
+                # add to global hash
                 self.id_label_map[vslc_id] = vslc_label
 
                 gu.addIndividualToGraph(g, vslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
@@ -887,7 +893,6 @@ class ZFIN(Source):
                     assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
                     assoc.set_environment(env_id)
 
-                    # TODO look up zfin stage id to ZFS id.
                     if start_stage_id != '':
                         start_stage_id = 'ZFIN:'+start_stage_id
                     if end_stage_id != '':

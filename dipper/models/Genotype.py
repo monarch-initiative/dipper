@@ -487,6 +487,6 @@ class Genotype():
         if allele2_label is not None:
             bottom = self.make_variant_locus_label(gene_label, allele2_label)
 
-        vslc_label = '/'.join((top,bottom))
+        vslc_label = '/'.join((top, bottom))
 
         return vslc_label
