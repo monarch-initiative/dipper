@@ -271,6 +271,7 @@ class CTD(Source):
             preferred_disease_id = disease_id
             if disease_id != ('OMIM:'+omim_ids):
                 #print('IDs do not match! '+disease_id+' != '+omim_ids)
+                #TODO: What should be done with the alternate disease IDs?
                 alternate_disease_ids = ['OMIM:'+omim_ids]
             #print('Disease ID is OMIM ID: '+disease_id+' & Single OMIM ID in omim_ids: '+omim_ids)
         elif not re.match('OMIM:.*', disease_id) and omim_ids != '' and omim_ids is not None and not re.match('.*\|.*', omim_ids):

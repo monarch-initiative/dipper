@@ -95,13 +95,8 @@ class KEGG(Source):
         self._process_genes_kegg2ncbi(limit)
         #TODO: Finish omim2gene
         self._process_omim2gene(limit)
-
         self._process_kegg_disease2gene(limit)
-
-
-        self._process_omim2disease(limit)
-
-
+        self._process_omim2disease(limit)  # DONE #
         self._process_ortholog_classes(limit)
 
         for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
@@ -190,7 +185,12 @@ class KEGG(Source):
 
     def _process_genes(self, limit=None):
         """
+        This method processes the KEGG gene IDs. Currently just processes human genes.
 
+        Triples created:
+        <gene_id> is a class
+        <gene_id> has label <gene_name>
+        <gene_id> has type 'gene'
         :param limit:
         :return:
         """
@@ -202,6 +202,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
+        geno = Genotype(g)
         raw = ('/').join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -213,8 +214,13 @@ class KEGG(Source):
                     continue
 
                 gene_id = 'KEGG:'+gene_id.strip()
+                print(gene_id)
+                print(gene_name)
                 # Add the gene as a class.
-                gu.addClassToGraph(g, gene_id, gene_name)
+                #FIXME: Adding using the addGene function fails, but adding as a class does not fail.
+                # Related to the double-colon format of the gene_id (KEGG:hsa:12345)?
+                #geno.addGene(g, gene_id, gene_name)
+                gu.addClassToGraph(g, gene_id, gene_name, geno.genoparts['gene'])
                 if gene_id not in self.label_hash['gene']:
                     self.label_hash['gene'][gene_id] = gene_name
 
@@ -226,7 +232,12 @@ class KEGG(Source):
 
     def _process_ortholog_classes(self, limit=None):
         """
+        This method add the KEGG orthology classes to the graph.
 
+        Triples created:
+        <orthology_class_id> is a class
+        <orthology_class_id> has label <orthology_symbols>
+        <orthology_class_id> has description <orthology_description>
         :param limit:
         :return:
         """
@@ -465,7 +476,7 @@ class KEGG(Source):
 
     def _process_omim2disease(self, limit=None):
         """
-        This method will map the KEGG disease IDs to the corresponding OMIM disease IDs.
+        This method maps the KEGG disease IDs to the corresponding OMIM disease IDs.
         Currently this only maps KEGG diseases and OMIM diseases that have a 1:1 mapping.
         Triples created:
         <kegg_disease_id> is a class
@@ -497,17 +508,17 @@ class KEGG(Source):
                 kegg_disease_id = 'KEGG:'+kegg_disease_id.strip()
                 omim_disease_id = re.sub('omim','OMIM',omim_disease_id)
 
+                # Create hash for the links from OMIM ID -> KEGG ID
                 if omim_disease_id not in omim_disease_hash:
                     omim_disease_hash[omim_disease_id] = [kegg_disease_id]
                 else:
                     omim_disease_hash[omim_disease_id].append(kegg_disease_id)
-                    #print('Found additional kegg disease id for '+omim_disease_id)
 
+                # Create hash for the links from KEGG ID -> OMIM ID
                 if kegg_disease_id not in kegg_disease_hash:
                     kegg_disease_hash[kegg_disease_id] = [omim_disease_id]
                 else:
                     kegg_disease_hash[kegg_disease_id].append(omim_disease_id)
-                    #print('Found additional omim disease id for '+kegg_disease_id)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -527,7 +538,7 @@ class KEGG(Source):
 
     def _process_genes_kegg2ncbi(self, limit=None):
         """
-        This method will map the KEGG human gene IDs to the corresponding NCBI Gene IDs.
+        This method maps the KEGG human gene IDs to the corresponding NCBI Gene IDs.
         Triples created:
         <kegg_gene_id> is a class
         <ncbi_gene_id> is a class
