@@ -16,29 +16,31 @@ logger = logging.getLogger(__name__)
 class AnimalQTLdb(Source):
 
     files = {
-        'Bos_taurus': {'file': 'QTL_Btau_4.6.gff.txt.gz',
+        'cattle_btau_bp': {'file': 'QTL_Btau_4.6.gff.txt.gz',
                  'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_Btau_4.6.gff.txt.gz'},
-        'UMD': {'file': 'QTL_UMD_3.1.gff.txt.gz',
+        'cattle_umd_bp': {'file': 'QTL_UMD_3.1.gff.txt.gz',
                  'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_UMD_3.1.gff.txt.gz'},
-        'gallus_gallus': {'file': 'QTL_GG_4.0.gff.txt.gz',
+        'cattle_cm': {'file': 'cattle_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
+        'chicken_bp': {'file': 'QTL_GG_4.0.gff.txt.gz',
                  'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_GG_4.0.gff.txt.gz'},
-        'sus_scrofa': {'file': 'QTL_SS_10.2.gff.txt.gz',
+        'chicken_cm': {'file': 'chicken_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
+        'pig_bp': {'file': 'QTL_SS_10.2.gff.txt.gz',
                  'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_SS_10.2.gff.txt.gz'},
-        'OAR': {'file': 'QTL_OAR_3.1.gff.txt.gz',
+        'pig_cm': {'file': 'pig_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/pig_QTLdata.txt'},
+        'sheep_bp': {'file': 'QTL_OAR_3.1.gff.txt.gz',
                  'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_OAR_3.1.gff.txt.gz'},
-        'EquCab': {'file': 'QTL_EquCab2.0.gff.txt.gz',
-                 'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_EquCab2.0.gff.txt.gz'}
+        'sheep_cm': {'file': 'sheep_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
+        'horse_bp': {'file': 'QTL_EquCab2.0.gff.txt.gz',
+                 'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_EquCab2.0.gff.txt.gz'},
+        'horse_cm': {'file': 'horse_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt'},
+        'rainbow_trout_cm': {'file': 'rainbow_trout_QTLdata.txt',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'}
     }
-
-#CM files
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/cattle_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/chicken_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/pig_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/sheep_QTLdata.txt
-#http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt
-
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
