@@ -93,15 +93,14 @@ class KEGG(Source):
         self._process_diseases(limit)
         self._process_genes(limit)
         self._process_genes_kegg2ncbi(limit)
-        #TODO: Finish omim2gene
         self._process_omim2gene(limit)
         self._process_kegg_disease2gene(limit)
-        self._process_omim2disease(limit)  # DONE #
+        self._process_omim2disease(limit)
         self._process_ortholog_classes(limit)
 
         for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
             file = '/'.join((self.rawdir, self.files[f]['file']))
-            self._process_orthologs(file, limit)
+            self._process_orthologs(file, limit)  # DONE #
 
 
 
@@ -114,7 +113,11 @@ class KEGG(Source):
 
     def _process_pathways(self, limit=None):
         """
+        This method adds the KEGG pathway IDs.
 
+        Triples created:
+        <pathway_id> is a class
+        <pathway_id> rdfs:label <pathway_name>
         :param limit:
         :return:
         """
@@ -138,8 +141,8 @@ class KEGG(Source):
 
                 pathway_id = 'KEGG:'+pathway_id.strip()
                 # Add the pathway as a class.
+                # FIXME: Is there a type for pathway?
                 gu.addClassToGraph(g, pathway_id, pathway_name)
-
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -149,7 +152,11 @@ class KEGG(Source):
 
     def _process_diseases(self, limit=None):
         """
+        This method processes the KEGG disease IDs.
 
+        Triples created:
+        <disease_id> is a class
+        <disease_id> rdfs:label <disease_name>
         :param limit:
         :return:
         """
@@ -189,7 +196,7 @@ class KEGG(Source):
 
         Triples created:
         <gene_id> is a class
-        <gene_id> has label <gene_name>
+        <gene_id> rdfs:label <gene_name>
         <gene_id> has type 'gene'
         :param limit:
         :return:
@@ -214,8 +221,6 @@ class KEGG(Source):
                     continue
 
                 gene_id = 'KEGG:'+gene_id.strip()
-                print(gene_id)
-                print(gene_name)
                 # Add the gene as a class.
                 #FIXME: Adding using the addGene function fails, but adding as a class does not fail.
                 # Related to the double-colon format of the gene_id (KEGG:hsa:12345)?
@@ -317,7 +322,7 @@ class KEGG(Source):
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(assoc_id, gene_id, orthology_class_id, None, None)
                 assoc.setRelationship(rel)
-                assoc.loadAllProperties(g)  # FIXME inefficient
+                assoc.loadAllProperties(g)
 
                 # add gene and orthology class to graph; assume labels will be taken care of elsewhere
                 gu.addClassToGraph(g, gene_id, None)
@@ -375,8 +380,6 @@ class KEGG(Source):
                 # we actually want the association between the gene and the disease to be via an alternate locus
                 # not the "wildtype" gene itself.
                 # so we make an anonymous alternate locus, and put that in the association.
-                #FIXME: Should we use the self.makeID here,
-                # or is it better to see the gene & disease IDs for this alt_locus?
                 alt_locus = '_'+gene_id+'-'+disease_id+'VL'
                 alt_label = self.label_hash['gene'].get(gene_id)
                 disease_label = self.label_hash['disease'].get(disease_id)
@@ -399,15 +402,18 @@ class KEGG(Source):
 
     def _process_omim2gene(self, limit=None):
         """
-
+        This method maps the OMIM IDs and KEGG gene ID. Currently split based on the link_type field.
+        Equivalent link types are mapped as gene XRefs.
+        Reverse link types are mapped as disease to gene associations.
+        Original link types are currently skipped.
 
         Triples created:
-        <alternate_locus> is an Individual
-        <alternate_locus> has type <variant_locus>
-        <alternate_locus> is an allele of  <gene_id>
+        <kegg_gene_id> is a Gene
+        <omim_gene_id> is a Gene
+        <kegg_gene_id>> hasXref <omim_gene_id>
 
-        <assoc_id> has subject <disease_id>
-        <assoc_id> has object <gene_id>
+        <assoc_id> has subject <omim_disease_id>
+        <assoc_id> has object <kegg_gene_id>
         :param limit:
         :return:
         """
@@ -430,7 +436,6 @@ class KEGG(Source):
                 if self.testMode and kegg_gene_id not in self.test_ids['']:
                     continue
 
-
                 #NOTE: It appears that entries with link_type = equivalent are genes in OMIM,
                 # while reverse is a disease (but are there other entries besides disease for reverse,
                 # such as grouping classes?)
@@ -439,34 +444,40 @@ class KEGG(Source):
                     omim_gene_id = re.sub('omim', 'OMIM', omim_id)
                     geno.addGene(omim_gene_id, None)
                     geno.addGene(kegg_gene_id, None)
-                    # FIXME: Add Xref or addEquivalentClass?
+                    # FIXME: Add as Xref or addEquivalentClass?
                     gu.addXref(g, kegg_gene_id, omim_gene_id)
 
+                elif link_type == 'reverse':
+                    # FIXME: How to be sure that this is a disease and not a grouping class?
+                    # The code below will create an association between the OMIM ID and the KEGG gene ID
+                    omim_disease_id = re.sub('omim', 'OMIM', omim_id)
                     # Make an association ID.
-                    assoc_id = self.make_id((omim_gene_id+kegg_gene_id))
+                    assoc_id = self.make_id((omim_disease_id+kegg_gene_id))
+                    # we actually want the association between the gene and the disease to be via an alternate locus
+                    # not the "wildtype" gene itself.
+                    # so we make an anonymous alternate locus, and put that in the association.
+                    alt_locus = '_'+kegg_gene_id+'-'+omim_disease_id+'VL'
+                    alt_label = self.label_hash['gene'].get(kegg_gene_id)
+                    disease_label = self.label_hash['disease'].get(omim_disease_id)
+                    # FIXME: Unless we can grab labels for the OMIM disease IDs, the alt_label will always include the OMIM ID.
+                    if alt_label is not None and alt_label != '' and disease_label is not None and disease_label != '':
+                        alt_label = 'some variant of '+alt_label+' that causes '+disease_label
+                    elif alt_label is not None and alt_label != '':
+                        alt_label = 'some variant of '+alt_label+' that causes '+omim_disease_id
+                    else:
+                        alt_label = None
 
-                if link_type == 'reverse':
-                    #How to be sure that this is a disease and not a grouping class?
-                    # Do we want to do anything with the remaining OMIM entries?
+                    gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
+                    geno.addAlleleOfGene(alt_locus, kegg_gene_id)
+                    # Add the disease to gene relationship.
+                    assoc = G2PAssoc(assoc_id, alt_locus, omim_disease_id, None, None)
+                    assoc.loadAllProperties(g)
+                    assoc.addAssociationToGraph(g)
                     continue
                 else:
                     logger.warn('Unhandled link type: %s', link_type)
-                # we actually want the association between the gene and the disease to be via an alternate locus
-                # not the "wildtype" gene itself.
-                # so we make an anonymous alternate locus, and put that in the association.
-                #alt_locus = '_'+gene_id+'-'+disease_id+'VL'
-                #alt_label = self.label_hash['gene'].get(gene_id)
-                #disease_label = self.label_hash['disease'].get(disease_id)
-                #if alt_label is not None and alt_label != '':
-                    #alt_label = 'some variant of '+alt_label+' that causes '+disease_label
-                #else:
-                    #alt_label = None
-                #gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
-                #geno.addAlleleOfGene(alt_locus, gene_id)
-                # Add the disease to gene relationship.
-                #assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
-                #assoc.loadAllProperties(g)
-                #assoc.addAssociationToGraph(g)
+                    # FIXME: 35 entries with link_type = original, may be disease or gene.
+                    # Skipping for now.
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -478,6 +489,7 @@ class KEGG(Source):
         """
         This method maps the KEGG disease IDs to the corresponding OMIM disease IDs.
         Currently this only maps KEGG diseases and OMIM diseases that have a 1:1 mapping.
+
         Triples created:
         <kegg_disease_id> is a class
         <omim_disease_id> is a class
@@ -539,6 +551,7 @@ class KEGG(Source):
     def _process_genes_kegg2ncbi(self, limit=None):
         """
         This method maps the KEGG human gene IDs to the corresponding NCBI Gene IDs.
+
         Triples created:
         <kegg_gene_id> is a class
         <ncbi_gene_id> is a class
