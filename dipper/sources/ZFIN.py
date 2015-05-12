@@ -1801,6 +1801,9 @@ class ZFIN(Source):
                 line_counter += 1
                 (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name, omim_id, gene_id, empty) = row
 
+                if self.testMode and zfin_id not in self.test_ids['gene']:
+                    continue
+
                 # Add the zebrafish gene.
                 zfin_id = 'ZFIN:' + zfin_id.strip()
                 geno.addGene(zfin_id, zfin_symbol, None, zfin_name)
