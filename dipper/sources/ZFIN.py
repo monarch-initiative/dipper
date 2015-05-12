@@ -856,9 +856,7 @@ class ZFIN(Source):
                 effective_genotype_id = genotype_id
                 effective_genotype_label = intrinsic_genotype_label
                 if extrinsic_genotype_id is not None:
-                    effective_genotype_id = self.make_id('-'.join(genotype_id+'_'+extrinsic_genotype_id))
-                    #effective_genotype_id = ('-'.join(genotype_id+'_'+extrinsic_genotype_id))
-                    #effective_genotype_id = ':'+re.sub('(ZFIN)?:','',effective_genotype_id)
+                    effective_genotype_id = self._make_effective_genotype_id(genotype_id, extrinsic_genotype_id)
 
                     effective_genotype_label = '; '.join((intrinsic_genotype_label, extrinsic_genotype_label))
                     self.id_label_map[effective_genotype_id] = effective_genotype_label
@@ -1933,6 +1931,11 @@ class ZFIN(Source):
             i = ':' + i
 
         return i
+
+    def _make_effective_genotype_id(self,intrinsic_id, extrinsic_id):
+        effective_genotype_id = self.make_id('-'.join(intrinsic_id+'-'+extrinsic_id))
+
+        return effective_genotype_id
 
     def getTestSuite(self):
         import unittest
