@@ -417,13 +417,15 @@ class ZFIN(Source):
                 # make variant_loci
                 vloci2 = vloci2_label = None
                 if gene_id is not None:
-                    vloci1 = self.make_id('-'.join((gene_id, allele1_id)))
+                    # vloci1 = self.make_id('-'.join((gene_id, allele1_id)))
+                    vloci1 = self._make_variant_locus_id(gene_id, allele1_id)
                     vloci1_label = geno.make_variant_locus_label(locus_label, allele1_label)
                     geno.addSequenceAlterationToVariantLocus(allele1_id, vloci1)
                     geno.addAlleleOfGene(allele1_id, gene_id)
                     gu.addIndividualToGraph(g, vloci1, vloci1_label, geno.genoparts['variant_locus'])
                     if allele2_id is not None:
-                        vloci2 = self.make_id('-'.join((gene_id, allele2_id)))
+                        #vloci2 = self.make_id('-'.join((gene_id, allele2_id)))
+                        vloci2 = self._make_variant_locus_id(gene_id, allele2_id)
                         vloci2_label = geno.make_variant_locus_label(locus_label, allele2_label)
                         geno.addSequenceAlterationToVariantLocus(allele2_id, vloci2)
                         gu.addIndividualToGraph(g, vloci2, vloci2_label, geno.genoparts['variant_locus'])
@@ -452,9 +454,9 @@ class ZFIN(Source):
                     a2 = allele2_label
 
                 # TODO also consider adding this to Genotype.py
-                vslc_id = self.make_id('-'.join((gn, allele1_id, a2)))
-                vslc_id = '_'+vslc_id
-                if self.nobnodes:
+                vslc_id = '-'.join((gn, allele1_id, a2))
+                vslc_id = '_'+re.sub('(ZFIN)?:', '', vslc_id)
+                if self.nobnodes is True:
                     vslc_id = ':'+vslc_id
                 vslc_label = geno.make_vslc_label(gene_label, allele1_label, allele2_label)
 
@@ -489,7 +491,9 @@ class ZFIN(Source):
             if len(gvc_parts) > 1:
                 gvc_labels = []
                 gvc_parts.sort()  # put these in order so they will always make the same id
-                gvc_id = self.make_id('-'.join(gvc_parts))
+                #gvc_id = self.make_id('-'.join(gvc_parts))  #FIXME - materialize?
+                gvc_id = '-'.join(gvc_parts)
+                gvc_id = re.sub('(ZFIN)?:', '', gvc_id)
                 gvc_id = '_' + gvc_id
                 if self.nobnodes:
                     gvc_id = ':'+gvc_id
@@ -828,6 +832,9 @@ class ZFIN(Source):
                 effective_genotype_label = intrinsic_genotype_label
                 if extrinsic_genotype_id is not None:
                     effective_genotype_id = self.make_id('-'.join(genotype_id+'_'+extrinsic_genotype_id))
+                    #effective_genotype_id = ('-'.join(genotype_id+'_'+extrinsic_genotype_id))
+                    #effective_genotype_id = ':'+re.sub('(ZFIN)?:','',effective_genotype_id)
+
                     effective_genotype_label = '; '.join((intrinsic_genotype_label, extrinsic_genotype_label))
                     self.id_label_map[effective_genotype_id] = effective_genotype_label
                     geno.addParts(genotype_id, effective_genotype_id)
@@ -1047,7 +1054,9 @@ class ZFIN(Source):
 
                 if sequence_alteration_type == 'is allele of':
                     vl_label = geno.make_variant_locus_label(gene_symbol, genomic_feature_abbreviation)
-                    vl_id = self.make_id('-'.join((gene_id, genomic_feature_id)))
+
+                    # vl_id = self.make_id('-'.join((gene_id, genomic_feature_id)))
+                    vl_id = self._make_variant_locus_id(gene_id,genomic_feature_id)
 
                     self.id_label_map[vl_id] = vl_label
 
@@ -1434,7 +1443,7 @@ class ZFIN(Source):
                     values = values.replace('>', 'greater than')
 
                 if values is None and units is not None:
-                    #sometimes they just annotate to "ug" to indicate that scale, but no value
+                    # sometimes they just annotate to "ug" to indicate that scale, but no value
                     logger.warn("A unit without a value is indicated for env %s (condition %s)", environment_id, condition)
                     values = ''
 
@@ -1442,7 +1451,7 @@ class ZFIN(Source):
                     logger.warn("A value without a unit is indicated for env %s (condition %s)", environment_id, condition)
                     units = ''
 
-                # "IDify the values and units
+                # IDify the values and units
                 value_id = unit_id = None
                 if values is not None:
                     value_id = values.replace(' ', '-')
@@ -1505,7 +1514,7 @@ class ZFIN(Source):
                     for gid in ag:
                         glabel = self.id_label_map[gid]
 
-                        targeted_gene_id = '-'.join((gid,morph_id))
+                        targeted_gene_id = '-'.join((gid, morph_id))
                         # replace the zfin prefixes - these are not zfin resolvable
                         targeted_gene_id = re.sub('ZFIN:','',targeted_gene_id)
                         targeted_gene_id = '_'+targeted_gene_id
@@ -1558,7 +1567,6 @@ class ZFIN(Source):
 
                     #TODO add the individual environmental component into the graph
 
-
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
@@ -1586,10 +1594,9 @@ class ZFIN(Source):
         # iterate over the env hash to build the extrinsic genotypes that are lumped
         # together by the environment id.  these can then be accessed outside of this
         # function via the EXP id
-        # for clarity i do this in another loop, rather than combining it with the above
+        # for clarity i do this in the separate loop below, rather than combining it with the above
 
         logger.info("Building extrinsic genotype using environmental id groupings")
-        import pprint
         pp = pprint.PrettyPrinter(indent=4)
         logger.info(pp.pformat(extrgeno_hash_by_env_id))
         for env_id in extrgeno_hash_by_env_id:
@@ -1597,11 +1604,19 @@ class ZFIN(Source):
             extrgeno_hash_by_env_id[env_id].sort()
             # build an identifier for the extrinsic genotype
             extr_id = '-'.join(extrgeno_hash_by_env_id[env_id])
+
+            # replace any colons (for example, when we materialze the b nodes for the components)
+            extr_id = re.sub(':', '', extr_id)
+            if self.nobnodes:
+                extr_id = ':'+extr_id
+
             env_component_list = extrgeno_hash_by_env_id[env_id]
             for env_comp_id in env_component_list:
                 env_comp_label = self.id_label_map[env_comp_id]
                 extrgeno_labels += [env_comp_label]
-                geno.addGeneTargetingReagentToGenotype(env_comp_id, extr_id)
+                if len(env_component_list) > 1:
+                    geno.addGeneTargetingReagentToGenotype(env_comp_id, extr_id)
+                logger.info("add GTR %s TO EXTRGENO %s", env_comp_id, extr_id)
 
             extrgeno_labels.sort()
             if len(extrgeno_labels) > 0:
@@ -1612,81 +1627,6 @@ class ZFIN(Source):
 
                 logger.info('extr %s | %s',extr_id, extr_label)
 
-        #
-        # tgc_hash = {}
-        # for extrinsic_geno_id in extrinsic_part_hash:
-        #     #print(extrinsic_part_hash[extrinsic_geno_id])
-        #
-        #     geno = Genotype(self.graph)
-        #     ex_geno = geno.addGenotype(extrinsic_geno_id, None, geno.genoparts['extrinsic_genotype'])
-        #     for condition in extrinsic_part_hash[extrinsic_geno_id]:
-        #         kd_reagent_conc_id = kd_reagent_conc_hash[extrinsic_geno_id][condition]
-        #         if condition not in self.kd_reagent_hash['kd_reagent_id']:
-        #             logger.error("%s not in kd_reagent_id")
-        #             kd_reagent_gene_ids = []
-        #         else:
-        #             kd_reagent_gene_ids = self.kd_reagent_hash['kd_reagent_id'][condition]
-        #             #print(kd_reagent_gene_ids)
-        #
-        #         # Make the tgs id and label, add tgs to graph
-        #         targeted_gene_subregion_label = kd_reagent_conc_label_hash[extrinsic_geno_id][condition]
-        #         # TODO: Change to makeID after testing.
-        #         #targeted_gene_subregion_id = kd_reagent_conc_id+ ('_').join(kd_reagent_gene_ids)
-        #         targeted_gene_subregion_id = self.make_id(kd_reagent_conc_id + '_'.join(kd_reagent_gene_ids))
-        #         #print(targeted_gene_subregion_label)
-        #         geno.addTargetedGeneSubregion(targeted_gene_subregion_id, targeted_gene_subregion_label)
-        #         geno.addParts(condition, targeted_gene_subregion_id)
-        #
-        #         for i in kd_reagent_gene_ids:
-        #             # TODO: Change to a makeID after testing.
-        #             #targeted_gene_variant_id = i+'_'+kd_reagent_conc_id
-        #             targeted_gene_variant_id = self.make_id(i + '_' + kd_reagent_conc_id)
-        #             # FIXME: What about for reagents that target more than one gene? Concatenated or separate?
-        #             #print(targeted_gene_variant_id)
-        #             kd_reagent_gene_label = self.kd_reagent_hash['gene_label'][i]
-        #             kd_reagent_conc_label = self.kd_reagent_hash['kd_reagent_id'][condition]
-        #             targeted_gene_variant_label = kd_reagent_gene_label + targeted_gene_subregion_label
-        #             #print('tgv_id='+targeted_gene_variant_id)
-        #             #print('tgv_label='+targeted_gene_variant_label)
-        #             geno.addReagentTargetedGene(condition, i, targeted_gene_variant_id, targeted_gene_variant_label)
-        #             geno.addParts(targeted_gene_subregion_id, targeted_gene_variant_id)
-        #
-        #             if extrinsic_geno_id not in tgc_hash:
-        #                 tgc_hash[extrinsic_geno_id] = {}
-        #
-        #             if targeted_gene_variant_id not in tgc_hash[extrinsic_geno_id]:
-        #                 tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] = targeted_gene_variant_label
-        #
-        #                 # End of loop
-        # # Now process through the tgc_hash to produce the targeted_gene_variant_complement
-        # for extrinsic_geno_id in tgc_hash:
-        #     tgc_ids = []
-        #     tgc_labels = []
-        #     geno = Genotype(self.graph)
-        #
-        #     for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
-        #         if targeted_gene_variant_id not in tgc_ids:
-        #             tgc_ids.append(targeted_gene_variant_id)
-        #         if tgc_hash[extrinsic_geno_id][targeted_gene_variant_id] not in tgc_labels:
-        #             tgc_labels.append(tgc_hash[extrinsic_geno_id][targeted_gene_variant_id])
-        #     # FIXME:Change to MakeID after QA testing.
-        #     #targeted_gene_complement_id = ('_').join(tgc_ids)
-        #     targeted_gene_complement_id = self.make_id('_'.join(tgc_ids))
-        #     targeted_gene_complement_label = ('; ').join(tgc_labels)
-        #     # FIXME: For now just using the TGC label as the extrinsic genotype label
-        #     ex_geno = geno.addGenotype(extrinsic_geno_id, targeted_gene_complement_label,
-        #                                geno.genoparts['extrinsic_genotype'])
-        #     geno.addTargetedGeneComplement(targeted_gene_complement_id, targeted_gene_complement_label)
-        #     if self.label_hash['genotype_label'].get(extrinsic_geno_id) is None:
-        #         self.label_hash['genotype_label'][extrinsic_geno_id] = targeted_gene_complement_label
-        #     # TODO: Abstract adding TGC to Genotype.
-        #     # Add the TGC to the genotype.
-        #     geno.addParts(targeted_gene_complement_id, extrinsic_geno_id)
-        #     # TODO: Abstract adding TGVs to TGCs.
-        #     for targeted_gene_variant_id in tgc_hash[extrinsic_geno_id]:
-        #         geno.addParts(targeted_gene_variant_id, targeted_gene_complement_id)
-
-        #print(extrinsic_part_hash)
         logger.info("Done with phenotype environments")
 
         return
@@ -2013,3 +1953,13 @@ class ZFIN(Source):
 
         return test_suite
 
+
+    def _make_variant_locus_id(self, gene_id, allele_id):
+        i = None
+
+        i = '-'.join((gene_id, allele_id))
+        i = '_'+re.sub('(ZFIN)?:', '', i)
+        if self.nobnodes:
+            i = ':' + i
+
+        return i

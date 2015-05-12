@@ -76,7 +76,10 @@ class Genotype():
         'has_genotype': 'GENO:0000222',
         'has_phenotype': 'RO:0002200',
         'transcribed_to': 'RO:0002205',
-        'translates_to': 'RO:0002513'
+        'translates_to': 'RO:0002513',
+        'is_targeted_expression_variant_of' : 'GENO:0000443',
+        'is_transgene_variant_of': 'GENO:0000444',
+        'has_expression-variant_part' : 'GENO:0000532'
     }
 
     annotation_properties = {
@@ -325,6 +328,8 @@ class Genotype():
 
     def addGeneTargetingReagentToGenotype(self, reagent_id, genotype_id):
         # for example, add a morphant reagent thingy to the genotype, assuming it's a extrinsic_genotype
+        p = self.object_properties['has_expression-variant_part']
+        self.gu.addTriple(self.graph, genotype_id, p, reagent_id)
 
         return
 
@@ -371,6 +376,9 @@ class Genotype():
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
         self.gu.addIndividualToGraph(self.graph, targeted_gene_id, targeted_gene_label,
                                      self.genoparts['reagent_targeted_gene'], description)
+
+        p = self.object_properties['is_targeted_expression_variant_of']
+        self.gu.addTriple(self.graph, targeted_gene_id, p, gene_id)
 
         return
 
