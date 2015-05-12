@@ -10,6 +10,8 @@ from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
+from dipper.models.Genotype import Genotype
+from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 
 
@@ -242,6 +244,7 @@ class CTD(Source):
         else:
             g = self.graph
         self._check_list_len(row, 9)
+        geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,
          inference_chemical_name, inference_score, omim_ids, pubmed_ids) = row
@@ -254,10 +257,10 @@ class CTD(Source):
             next
 
         rel = gu.object_properties['correlates_with']
+        gene_id = 'NCBIGene:'+gene_id
 
         # If there is only one OMIM ID for the Disease ID or in the omim_ids list,
         # use the OMIM ID preferentially over any MeSH ID.
-
         if re.match('OMIM:.*', disease_id) and re.match('.*\|.*', omim_ids) and omim_ids != '' and omim_ids is not None:
             # Currently no entries with an OMIM ID as the disease ID and additional OMIM IDs in the omim_ids field.
             # This is when the disease ID is an OMIM ID and there is more than one OMIM entry in omim_ids.
@@ -285,10 +288,20 @@ class CTD(Source):
 
 
 
+        # Make an association ID.
+        assoc_id = self.make_id((preferred_disease_id+gene_id))
 
-
-
-
+        # we actually want the association between the gene and the disease to be via an alternate locus
+        # not the "wildtype" gene itself.
+        # so we make an anonymous alternate locus, and put that in the association.
+        alt_locus = '_'+gene_id+'-'+preferred_disease_id+'VL'
+        alt_label = 'some variant of '+gene_symbol+' that causes '+disease_name
+        gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
+        geno.addAlleleOfGene(alt_locus, gene_id)
+        # Add the disease to gene relationship.
+        assoc = G2PAssoc(assoc_id, alt_locus, disease_id, None, None)
+        assoc.loadAllProperties(g)
+        assoc.addAssociationToGraph(g)
 
         return
 
