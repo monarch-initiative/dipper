@@ -1036,7 +1036,6 @@ class ZFIN(Source):
         :return:
         """
 
-        # FIXME THIS NEEDS MAJOR WORK [nlw]
         # can use this to process and build the variant locus.  but will need to process through some kind of
         # helper hash, just like we do with the genotype file.  that's because each gene is on a separate line
         # for example, ZDB-ALT-021021-2 is a deficiency that affects 4 genes
@@ -1100,6 +1099,7 @@ class ZFIN(Source):
                     # don't make the variant loci for the other things
                     # which include deficiencies, translocations, transgenes
                     pass
+
                 geno.addAlleleOfGene(genomic_feature_id, gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
