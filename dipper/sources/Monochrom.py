@@ -187,29 +187,55 @@ class Monochrom(Source):
                 (chrom, start, stop, band, rtype) = line.split('\t')
                 line_counter += 1
 
+                # NOTE some less-finished genomes have placed and unplaced scaffolds
+                # * Placed scaffolds: the scaffolds have been placed within a chromosome.
+                # * Unlocalized scaffolds: although the chromosome within which the scaffold occurs is known,
+                #   the scaffold's position or orientation is not known.
+                # *Unplaced scaffolds: it is not known which chromosome the scaffold belongs to.
+
+                # find out if the thing is a full on chromosome, or a scaffold:
+                # ex: unlocalized scaffold: chr10_KL568008v1_random
+                # ex: unplaced scaffold: chrUn_AABR07022428v1
+                placed_scaffold_pattern = 'chr(\d+|X|Y|Z|W|MT)'
+                unlocalized_scaffold_pattern = placed_scaffold_pattern+'_(\w+)_random'
+                unplaced_scaffold_pattern = 'chrUn_(\w+)'
+
+                m = re.match(placed_scaffold_pattern+'$', chrom)
+                if m is not None and len(m.groups()) == 1:
+                    ch = m.group(1)   # the chromosome is the first match of the pattern
+                else:
+                    # let's skip over anything that isn't a placed_scaffold at the class level
+                    logger.info("Skipping non-placed chromosome %s", chrom)
+                    continue
+
                 cclassid = makeChromID(chrom, taxon)  # the chrom class, taxon as the reference
 
-                # add the generic and build-specific chromosome
-                geno.addChromosome(chrom, taxon_id, genome_label)
+                # add the chromosome as a class
+                geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 self.gu.addOWLPropertyClassRestriction(self.graph, cclassid,
                                                        self.gu.object_properties['member_of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
                 maplocclass_label = makeChromLabel(chrom+band, genome_label)
-                region_type_id = self.map_type_of_region(rtype)
-                self.gu.addClassToGraph(self.graph, maplocclass_id, maplocclass_label, region_type_id)
-
+                if band is not None and band.strip() != '':
+                    region_type_id = self.map_type_of_region(rtype)
+                    self.gu.addClassToGraph(self.graph, maplocclass_id, maplocclass_label, region_type_id)
+                else:
+                    region_type_id = Feature.types['chromosome']
                 # add the staining intensity of the band
                 if re.match('g(neg|pos|var)', rtype):
-                    stain_type = Feature.types.get(rtype)
-                    if stain_type is not None:
-                        self.gu.addOWLPropertyClassRestriction(self.graph, maplocclass_id,
-                                                       Feature.properties['has_staining_intensity'],
-                                                       Feature.types.get(rtype))
-
+                    if region_type_id in [Feature.types['chromosome_band'],Feature.types['chromosome_subband']]:
+                        stain_type = Feature.types.get(rtype)
+                        if stain_type is not None:
+                            self.gu.addOWLPropertyClassRestriction(self.graph, maplocclass_id,
+                                                           Feature.properties['has_staining_intensity'],
+                                                           Feature.types.get(rtype))
                     else:
-                        logger.warn('staining type not found: %s', rtype)
+                        # usually happens if it's a chromosome because they don't actually have banding info
+                        logger.info("feature type %s != chr band", region_type_id)
+                else:
+                    logger.warn('staining type not found: %s', rtype)
 
                 # get the parent bands, and make them unique
                 parents = list(self.make_parent_bands(band, set()))
