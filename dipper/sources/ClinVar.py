@@ -185,6 +185,13 @@ class ClinVar(Source):
                 #                            e.g. http://www.ncbi.nlm.nih.gov/clinvar/variation/1756/
                 #
 
+                # a crude check that there's an expected number of cols.  if not, error out because something changed.
+                num_cols = len(line.split('\t'))
+                expected_numcols = 28
+                if num_cols != expected_numcols:
+                    logger.error("Unexpected number of columns in raw file (%d actual vs %d expected)",
+                                 num_cols, expected_numcols)
+
                 (allele_num, allele_type, allele_name, gene_num, gene_symbol, clinical_significance,
                  dbsnp_num, dbvar_num, rcv_num, tested_in_gtr, phenotype_ids, origin,
                  assembly, chr, start, stop, cytogenetic_loc,
