@@ -79,6 +79,7 @@ class AnimalQTLdb(Source):
         if self.testOnly:
             self.testMode = True
 
+        self._process_cattle_cm(limit)
 
         logger.info("Finished parsing")
 
@@ -87,3 +88,41 @@ class AnimalQTLdb(Source):
         logger.info("Found %d nodes", len(self.graph))
         return
 
+
+    def _process_cattle_cm(self, limit=None):
+        """
+        This method processes the cattle QTLs in cm format.
+
+        Triples created:
+
+        :param limit:
+        :return:
+        """
+
+        logger.info("Processing cattle QTLs in cM")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+        raw = ('/').join((self.rawdir, self.files['cattle_cm']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (qtl_id, qtl_symbol, trait_name, assotype, empty, chromosome, position_cm, range_cm,
+                 flankmark_a2, flankmark_a1, peak_mark, flankmark_b1, flankmark_b2, exp_id, model, test_base,
+                 sig_level, lod_score, ls_mean, p_values, f_statistics, variance, bayes_value, likelihood_ratio,
+                 trait_id, dom_effect, add_effect, pubmed_id, gene_id, gene_id_src, gene_id_type, empty2) = row
+
+                #if self.testMode and disease_id not in self.test_ids['disease']:
+                    #continue
+                #print(row)
+
+
+                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    break
+
+        logger.info("Done with diseases")
+        return
