@@ -79,7 +79,13 @@ class AnimalQTLdb(Source):
         if self.testOnly:
             self.testMode = True
 
-        self._process_cattle_cm(limit)
+        logger.info("Processing QTLs in cM")
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['chicken_cm']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['pig_cm']['file'])), 'AQTLPig:', 'AQTLTraitPig:', 'NCBITaxon:9823', limit)
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['sheep_cm']['file'])), 'AQTLSheep:', 'AQTLTraitSheep:', 'NCBITaxon:9940', limit)
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['horse_cm']['file'])), 'AQTLHorse:', 'AQTLTraitHorse:', 'NCBITaxon:9796', limit)
+        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['rainbow_trout_cm']['file'])), 'AQTLRainbowTrout:', 'AQTLTraitRainbowTrout:', 'NCBITaxon:8022', limit)
 
         # TODO: Need to bring in the Animal QTL trait map?
         logger.info("Finished parsing")
@@ -90,7 +96,10 @@ class AnimalQTLdb(Source):
         return
 
 
-    def _process_cattle_cm(self, limit=None):
+    #TODO: Abstract this into a general function
+    # Need to pass in: file, qtl prefix, trait prefix, taxon,
+
+    def _process_QTLs_genetic_location(self, raw, qtl_prefix, trait_prefix, taxon_id, limit=None):
         """
         This method processes the cattle QTLs in cm format.
 
@@ -100,7 +109,7 @@ class AnimalQTLdb(Source):
         :return:
         """
 
-        logger.info("Processing cattle QTLs in cM")
+
         if self.testMode:
             g = self.testgraph
         else:
@@ -108,7 +117,7 @@ class AnimalQTLdb(Source):
         line_counter = 0
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['cattle_cm']['file']))
+        #raw = ('/').join((self.rawdir, self.files['cattle_cm']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -123,22 +132,28 @@ class AnimalQTLdb(Source):
                 #print(row)
 
                 #FIXME: Not sure that I like these prefixes. Is there a better approach?
-                qtl_id = 'AQTL_cattle:'+qtl_id
-                trait_id = 'AQTL_Trait_cattle:'+trait_id
+                qtl_id = qtl_prefix+qtl_id
+                trait_id = trait_prefix+trait_id
+
                 #FIXME: For assotype, the QTL is indicated either as a QTL or an Association.
                 # Should Associations be handled differently?
 
                 # Add QTL to graph
                 gu.addIndividualToGraph(g, qtl_id, qtl_symbol, geno.genoparts['QTL'])
+
+                geno.addTaxon(taxon_id,qtl_id)
                 # Add trait to graph as a phenotype - QTL has phenotype?
 
-                eco_id = "ECO:0000059"  # Using experimental phenotypic evidence
 
-                assoc_id = self.make_id((qtl_id+trait_id+pubmed_id))
                 if re.match('ISU.*', pubmed_id):
                     pub_id = 'AQTLPub:'+pubmed_id
                 else:
                     pub_id = 'PMID:'+pubmed_id
+
+                # Add publication
+                gu.addIndividualToGraph(g,pub_id,None)
+                eco_id = "ECO:0000059"  # Using experimental phenotypic evidence
+                assoc_id = self.make_id((qtl_id+trait_id+pub_id))
                 assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
                 assoc.addAssociationNodeToGraph(g)
 

@@ -80,8 +80,19 @@
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
 'HGMD' : 'http://identifiers.org/hgmd/'
-'AQTL_cattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
-'AQTL_Trait_cattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qtrait?trait_ID='
+'AQTLCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
+'AQTLTraitCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qtrait?trait_ID='
+'AQTLChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
+'AQTLTraitChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qtrait?trait_ID='
+'AQTLPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
+'AQTLTraitPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qtrait?trait_ID='
+'AQTLSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
+'AQTLTraitSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qtrait?trait_ID='
+'AQTLHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
+'AQTLTraitHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qtrait?trait_ID='
+'AQTLRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
+'AQTLTraitRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qtrait?trait_ID='
+'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 
 
 # genes
