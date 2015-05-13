@@ -152,6 +152,8 @@ class CTD(Source):
                         self._process_pathway(row)
                     elif file == self.files['gene_disease']['file']:
                         #self._process_disease2gene(row)
+                        #print(row_count)
+                        #Note: 40,148,312 rows present.
                         continue
                     row_count += 1
                     if (not self.testMode) and (limit is not None and row_count >= limit):

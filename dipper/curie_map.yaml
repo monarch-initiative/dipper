@@ -79,7 +79,10 @@
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
-'HGMD' : http://identifiers.org/hgmd/'
+'HGMD' : 'http://identifiers.org/hgmd/'
+'AQTL_cattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
+'AQTL_Trait_cattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qtrait?trait_ID='
+
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'

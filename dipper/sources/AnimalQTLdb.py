@@ -81,6 +81,7 @@ class AnimalQTLdb(Source):
 
         self._process_cattle_cm(limit)
 
+        # TODO: Need to bring in the Animal QTL trait map?
         logger.info("Finished parsing")
 
         self.load_bindings()
@@ -105,6 +106,7 @@ class AnimalQTLdb(Source):
         else:
             g = self.graph
         line_counter = 0
+        geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         raw = ('/').join((self.rawdir, self.files['cattle_cm']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -119,6 +121,33 @@ class AnimalQTLdb(Source):
                 #if self.testMode and disease_id not in self.test_ids['disease']:
                     #continue
                 #print(row)
+
+                #FIXME: Not sure that I like these prefixes. Is there a better approach?
+                qtl_id = 'AQTL_cattle:'+qtl_id
+                trait_id = 'AQTL_Trait_cattle:'+trait_id
+                #FIXME: For assotype, the QTL is indicated either as a QTL or an Association.
+                # Should Associations be handled differently?
+
+                # Add QTL to graph
+                gu.addIndividualToGraph(g, qtl_id, qtl_symbol, geno.genoparts['QTL'])
+                # Add trait to graph as a phenotype - QTL has phenotype?
+
+                eco_id = "ECO:0000059"  # Using experimental phenotypic evidence
+
+                assoc_id = self.make_id((qtl_id+trait_id+pubmed_id))
+                if re.match('ISU.*', pubmed_id):
+                    pub_id = 'AQTLPub:'+pubmed_id
+                else:
+                    pub_id = 'PMID:'+pubmed_id
+                assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
+                assoc.addAssociationNodeToGraph(g)
+
+                # Add gene to graph,
+
+                # Add cm data as location?
+
+                # Add publication
+
 
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
