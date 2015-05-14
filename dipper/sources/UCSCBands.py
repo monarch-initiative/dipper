@@ -68,6 +68,13 @@ class UCSCBands(Source):
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
+        # Note that there are no bands, arms or staining components for zfish at the moment
+        '7955': {
+            'file': 'danRer10cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
+            'build_num': 'danRer10',
+            'genome_label': 'Zebrafish'
+        },
     }
 
     def __init__(self, tax_ids=None):
@@ -79,7 +86,7 @@ class UCSCBands(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090]
+            self.tax_ids = [9606, 10090, 7955]
 
         # TODO add other species as defaults
 
