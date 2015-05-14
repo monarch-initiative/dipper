@@ -205,6 +205,24 @@ class AnimalQTLdb(Source):
                     (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand, score, multi) = row
                     #print(multi)
                     element_hash = {}
+                    qtl_id = ''
+                    trait_name = ''
+                    trait_symbol = ''
+                    pub_id = ''
+                    trait_id = ''
+                    peak_cm = ''
+                    gene_id = ''
+                    cmo_name = ''
+                    pto_name = ''
+                    vto_name = ''
+                    significance = ''
+                    p_value = ''
+                    flankmarkers = ''
+                    map_type = ''
+                    model = ''
+                    test_base = ''
+                    gene_id_src = ''
+                    breed = ''
 
                     #How best to split up the multi column?
                     # Could do it in a hash...
@@ -218,28 +236,12 @@ class AnimalQTLdb(Source):
                             # Variables available in 'multi' column: QTL_ID,Name,Abbrev,PUBMED_ID,trait_ID,trait,
                             # FlankMarkers,VTO_name,Map_Type,Significance,P-value,Model,Test_Base,Variance,
                             # Bayes-value,PTO_name,gene_IDsrc,peak_cM,CMO_name,gene_ID,F-Stat,LOD-score,Additive_Effect,
-                            # Dominance_Effect,Likelihood_Ratio,LS-means
+                            # Dominance_Effect,Likelihood_Ratio,LS-means,Breed
 
                             # Unused variables available in 'multi' column: trait (duplicate),Variance,Bayes-value,
                             # F-Stat,LOD-score,Additive_Effect,Dominance_Effect,Likelihood_Ratio,LS-means
 
-                            qtl_id = ''
-                            trait_name = ''
-                            trait_symbol = ''
-                            pub_id = ''
-                            trait_id = ''
-                            peak_cm = ''
-                            gene_id = ''
-                            cmo_name = ''
-                            pto_name = ''
-                            vto_name = ''
-                            significance = ''
-                            p_value = ''
-                            flankmarkers = ''
-                            map_type = ''
-                            model = ''
-                            test_base = ''
-                            gene_id_src = ''
+
 
                             element_pair = elements.split('=')
 
@@ -284,11 +286,26 @@ class AnimalQTLdb(Source):
                                     test_base = value
                                 elif key == 'gene_IDsrc':
                                     gene_id_src = value
+                                elif key == 'Breed':
+                                    breed = value
 
 
                     qtl_id = qtl_prefix+qtl_id
                     trait_id = trait_prefix+trait_id
+                    #FIXME: For assotype, the QTL is indicated either as a QTL or an Association.
+                    # Should Associations be handled differently?
 
+                    # Add QTL to graph
+                    gu.addIndividualToGraph(g, qtl_id, None, geno.genoparts['QTL'])
+
+                    geno.addTaxon(taxon_id,qtl_id)
+                    # Add trait to graph as a phenotype - QTL has phenotype?
+                    # Add publication
+                    gu.addIndividualToGraph(g,pub_id,None)
+                    eco_id = "ECO:0000059"  # Using experimental phenotypic evidence
+                    assoc_id = self.make_id((qtl_id+trait_id+pub_id))
+                    assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
+                    assoc.addAssociationNodeToGraph(g)
 
 
 
