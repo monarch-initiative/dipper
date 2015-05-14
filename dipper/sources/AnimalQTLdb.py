@@ -2,7 +2,7 @@ import csv
 import logging
 import re
 import gzip
-
+import gffutils
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -82,7 +82,7 @@ class AnimalQTLdb(Source):
             self.testMode = True
 
         #self._alternate_process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
-        #self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
 
         #logger.info("Processing QTLs with genetic locations")
         #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
@@ -175,7 +175,7 @@ class AnimalQTLdb(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        #logger.info("Done with diseases")
+        #logger.info("Done with QTLs")
         return
 
     def _process_QTLs_genomic_location(self, raw, qtl_prefix, trait_prefix, taxon_id, limit=None):
@@ -213,13 +213,85 @@ class AnimalQTLdb(Source):
                         elements = str(i)
                         #print(elements)
                         if re.match('.*=.*', elements):
+
+                            # Variables available in 'multi' column: QTL_ID,Name,Abbrev,PUBMED_ID,trait_ID,trait,
+                            # FlankMarkers,VTO_name,Map_Type,Significance,P-value,Model,Test_Base,Variance,
+                            # Bayes-value,PTO_name,gene_IDsrc,peak_cM,CMO_name,gene_ID,F-Stat,LOD-score,Additive_Effect,
+                            # Dominance_Effect,Likelihood_Ratio,LS-means
+
+                            # Unused variables available in 'multi' column: trait (duplicate),Variance,Bayes-value,
+                            # F-Stat,LOD-score,Additive_Effect,Dominance_Effect,Likelihood_Ratio,LS-means
+
+                            qtl_id = ''
+                            trait_name = ''
+                            trait_symbol = ''
+                            pub_id = ''
+                            trait_id = ''
+                            peak_cm = ''
+                            gene_id = ''
+                            cmo_name = ''
+                            pto_name = ''
+                            vto_name = ''
+                            significance = ''
+                            p_value = ''
+                            flankmarkers = ''
+                            map_type = ''
+                            model = ''
+                            test_base = ''
+                            gene_id_src = ''
+
                             element_pair = elements.split('=')
-                            #print(element_pair)
+
                             key = element_pair[0]
                             value = element_pair[1]
+                            if value != '-' and value != '' and value is not None:
+                                if key == 'QTL_ID':
+                                    qtl_id = value
+                                elif key == 'Name':
+                                    trait_name = value
+                                elif key == 'Abbrev':
+                                    trait_symbol = value
+                                elif key == 'PUBMED_ID':
+                                    pub_id = value
+                                    if re.match('ISU.*', pub_id):
+                                        pub_id = 'AQTLPub:'+pub_id.strip()
+                                    else:
+                                        pub_id = 'PMID:'+pub_id.strip()
+                                elif key == 'trait_ID':
+                                    trait_id = value
+                                elif key == 'peak_cM':
+                                    peak_cm = value
+                                elif key == 'gene_ID':
+                                    gene_id = value
+                                elif key == 'VTO_name':
+                                    vto_name = value
+                                elif key == 'CMO_name':
+                                    cmo_name = value
+                                elif key == 'PTO_name':
+                                    pto_name = value
+                                elif key == 'Significance':
+                                    significance = value
+                                elif key == 'P-value':
+                                    p_value = value
+                                elif key == 'FlankMarkers':
+                                    flankmarkers = value
+                                elif key == 'Map_Type':
+                                    map_type = value
+                                elif key == 'Model':
+                                    model = value
+                                elif key == 'Test_Base':
+                                    test_base = value
+                                elif key == 'gene_IDsrc':
+                                    gene_id_src = value
+
+
+
+
 
 
 
 
         #logger.info("Done with diseases")
         return
+
+
