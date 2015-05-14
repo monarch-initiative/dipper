@@ -87,6 +87,7 @@ class Feature():
         self.gu = GraphUtils(curie_map.get())
         self.start = None
         self.stop = None
+        self.nobnodes = True  # TODO remove this before official release
         return
 
     def addFeatureStartLocation(self, coordinate, reference_id, strand=None, position_types=None):
@@ -186,7 +187,12 @@ class Feature():
         if add_region:
             # create a region that has the begin/end positions
             if region_id is None:
-                region_id = '_'+self.id+'Region'
+                region_id = '-'.join((self.id, self.start, self.stop))
+                rid = region_id
+                rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
+                rid = '_'+rid+"Region"
+                if self.nobnodes is False:
+                    region_id = ':'+rid
             self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
             self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
         else:
@@ -211,8 +217,11 @@ class Feature():
         return
 
     def _makePositionId(self, reference, coordinate, types=None):
-        i = ':_'
+        i = '_'
+        if self.nobnodes:
+            i = ':'+i
         if reference is not None:
+            reference = re.sub('\w+\:', '', reference, 1)
             i += reference + '-'
         i += str(coordinate)      # just in case it isn't a string already
         if types is not None:
@@ -301,6 +310,9 @@ class Feature():
         self.gu.addTriple(graph, self.id, property_type, property)
         return
 
+    def setNoBNodes(self, nobnodes):
+        self.nobnodes = nobnodes
+        return
 
 def makeChromID(chrom, reference=None):
     """
