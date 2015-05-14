@@ -3,6 +3,7 @@ import logging
 import re
 import gzip
 
+
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
@@ -202,6 +203,21 @@ class AnimalQTLdb(Source):
                 else:
                     (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand, score, multi) = row
                     #print(multi)
+                    element_hash = {}
+
+                    #How best to split up the multi column?
+                    # Could do it in a hash...
+                    multi_list = multi.split(';')
+                    #print(multi_list)
+                    for i in multi_list:
+                        elements = str(i)
+                        #print(elements)
+                        if re.match('.*=.*', elements):
+                            element_pair = elements.split('=')
+                            #print(element_pair)
+                            key = element_pair[0]
+                            value = element_pair[1]
+
 
 
 
