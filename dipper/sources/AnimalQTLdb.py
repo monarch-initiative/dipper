@@ -1,6 +1,7 @@
 import csv
 import logging
 import re
+import gzip
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -79,13 +80,16 @@ class AnimalQTLdb(Source):
         if self.testOnly:
             self.testMode = True
 
-        logger.info("Processing QTLs in cM")
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['chicken_cm']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['pig_cm']['file'])), 'AQTLPig:', 'AQTLTraitPig:', 'NCBITaxon:9823', limit)
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['sheep_cm']['file'])), 'AQTLSheep:', 'AQTLTraitSheep:', 'NCBITaxon:9940', limit)
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['horse_cm']['file'])), 'AQTLHorse:', 'AQTLTraitHorse:', 'NCBITaxon:9796', limit)
-        self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['rainbow_trout_cm']['file'])), 'AQTLRainbowTrout:', 'AQTLTraitRainbowTrout:', 'NCBITaxon:8022', limit)
+
+        self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+
+        #logger.info("Processing QTLs with genetic locations")
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['chicken_cm']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['pig_cm']['file'])), 'AQTLPig:', 'AQTLTraitPig:', 'NCBITaxon:9823', limit)
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['sheep_cm']['file'])), 'AQTLSheep:', 'AQTLTraitSheep:', 'NCBITaxon:9940', limit)
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['horse_cm']['file'])), 'AQTLHorse:', 'AQTLTraitHorse:', 'NCBITaxon:9796', limit)
+        #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['rainbow_trout_cm']['file'])), 'AQTLRainbowTrout:', 'AQTLTraitRainbowTrout:', 'NCBITaxon:8022', limit)
 
         # TODO: Need to bring in the Animal QTL trait map?
         logger.info("Finished parsing")
@@ -101,15 +105,13 @@ class AnimalQTLdb(Source):
 
     def _process_QTLs_genetic_location(self, raw, qtl_prefix, trait_prefix, taxon_id, limit=None):
         """
-        This method processes the cattle QTLs in cm format.
+        This method processes
 
         Triples created:
 
         :param limit:
         :return:
         """
-
-
         if self.testMode:
             g = self.testgraph
         else:
@@ -146,9 +148,9 @@ class AnimalQTLdb(Source):
 
 
                 if re.match('ISU.*', pubmed_id):
-                    pub_id = 'AQTLPub:'+pubmed_id
+                    pub_id = 'AQTLPub:'+pubmed_id.strip()
                 else:
-                    pub_id = 'PMID:'+pubmed_id
+                    pub_id = 'PMID:'+pubmed_id.strip()
 
                 # Add publication
                 gu.addIndividualToGraph(g,pub_id,None)
@@ -158,15 +160,50 @@ class AnimalQTLdb(Source):
                 assoc.addAssociationNodeToGraph(g)
 
                 # Add gene to graph,
+                #TODO: Should this be altered this to an 'alternate locus' like in CTD, elsewhere.
+                # As it isn't the gene tha
+                if gene_id_src == 'NCBIgene' and gene_id is not None and gene_id != '':
+                    gene_id = 'NCBIGene:'+gene_id.strip()
+                    # Note: no gene labels provided, NIF view used NCBIGene table lookups to get symbols.
+                    geno.addGene(gene_id, None)
 
                 # Add cm data as location?
 
                 # Add publication
 
-
-
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with diseases")
+        #logger.info("Done with diseases")
+        return
+
+    def _process_QTLs_genomic_location(self, raw, qtl_prefix, trait_prefix, taxon_id, limit=None):
+        """
+        This method
+
+        Triples created:
+
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
+
+        with gzip.open(raw, 'rt') as tsvfile:
+            reader = csv.reader(tsvfile, delimiter="\t")
+            for row in reader:
+                if re.match('^#', ' '.join(row)):
+                    next
+                else:
+                    (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand, score, multi) = row
+                    #print(multi)
+
+
+
+        #logger.info("Done with diseases")
         return
