@@ -2,7 +2,7 @@ import csv
 import logging
 import re
 import gzip
-import gffutils
+
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -46,6 +46,7 @@ class AnimalQTLdb(Source):
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
+        "qtls": ["", ""]
     }
 
     def __init__(self):
@@ -53,7 +54,7 @@ class AnimalQTLdb(Source):
 
         # update the dataset object with details about this resource
         # TODO put this into a conf file?
-        self.dataset = Dataset('animalqtldb', 'Animal QTL db', 'http://www.genome.jp/kegg/', None, None)
+        self.dataset = Dataset('animalqtldb', 'Animal QTL db', 'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None)
 
         # source-specific warnings.  will be cleared when resolved.
 
@@ -285,13 +286,13 @@ class AnimalQTLdb(Source):
                                     gene_id_src = value
 
 
+                    qtl_id = qtl_prefix+qtl_id
+                    trait_id = trait_prefix+trait_id
 
 
 
 
-
-
-        #logger.info("Done with diseases")
+        logger.info("Done with QTLs")
         return
 
 
