@@ -41,12 +41,13 @@ class AnimalQTLdb(Source):
         'horse_cm': {'file': 'horse_QTLdata.txt',
                  'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt'},
         'rainbow_trout_cm': {'file': 'rainbow_trout_QTLdata.txt',
-                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'}
+                 'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
+        'trait_mappings': {'file': 'trait_mappings',
+                 'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
     test_ids = {
-        "qtls": ["", ""]
     }
 
     def __init__(self):
@@ -82,6 +83,7 @@ class AnimalQTLdb(Source):
         if self.testOnly:
             self.testMode = True
 
+        self._process_trait_mappings(('/').join((self.rawdir, self.files['trait_mappings']['file'])), limit)
         #self._alternate_process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
         self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
 
@@ -238,13 +240,10 @@ class AnimalQTLdb(Source):
                             # Bayes-value,PTO_name,gene_IDsrc,peak_cM,CMO_name,gene_ID,F-Stat,LOD-score,Additive_Effect,
                             # Dominance_Effect,Likelihood_Ratio,LS-means,Breed
 
-                            # Unused variables available in 'multi' column: trait (duplicate),Variance,Bayes-value,
+                            # Unused variables available in 'multi' column: trait (duplicate with Name),Variance,Bayes-value,
                             # F-Stat,LOD-score,Additive_Effect,Dominance_Effect,Likelihood_Ratio,LS-means
 
-
-
                             element_pair = elements.split('=')
-
                             key = element_pair[0]
                             value = element_pair[1]
                             if value != '-' and value != '' and value is not None:
@@ -289,7 +288,6 @@ class AnimalQTLdb(Source):
                                 elif key == 'Breed':
                                     breed = value
 
-
                     qtl_id = qtl_prefix+qtl_id
                     trait_id = trait_prefix+trait_id
                     #FIXME: For assotype, the QTL is indicated either as a QTL or an Association.
@@ -307,9 +305,36 @@ class AnimalQTLdb(Source):
                     assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
                     assoc.addAssociationNodeToGraph(g)
 
-
-
         logger.info("Done with QTLs")
         return
 
 
+    def _process_trait_mappings(self, raw, limit=None):
+        """
+        This method
+
+        Triples created:
+
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'rt') as tsvfile:
+            reader = csv.reader(tsvfile, delimiter="\t")
+            for row in reader:
+                if re.match('^#', ' '.join(row)):
+                    next
+                else:
+                    (data) = row
+                    #print(row)
+
+
+        logger.info("Done with trait mappings")
+        return
