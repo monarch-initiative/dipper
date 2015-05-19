@@ -35,8 +35,8 @@ class Panther(Source):
     files = {
         'refgenome': {'file': 'RefGenomeOrthologs.tar.gz',
                       'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/RefGenomeOrthologs.tar.gz'},
-        'hcop': {'file': 'orthologs_HCOP.tar.gz',
-                 'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/orthologs_HCOP.tar.gz'}
+        'hcop': {'file': 'Orthologs_HCOP.tar.gz',
+                 'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/Orthologs_HCOP.tar.gz'}
     }
 
     def __init__(self, tax_ids=None):
