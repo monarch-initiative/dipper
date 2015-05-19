@@ -257,7 +257,8 @@ class Panther(Source):
             'PANTR': 9598,
             'ANOCA': 28377,
             'MONDO': 13616,
-            'BOVIN': 9913
+            'BOVIN': 9913,
+            'ECOLI': 562
         }
         if ptax in ptax_to_taxid_map:
             taxid = ':'.join(('NCBITaxon', str(ptax_to_taxid_map.get(ptax))))

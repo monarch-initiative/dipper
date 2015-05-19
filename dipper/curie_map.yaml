@@ -114,6 +114,7 @@
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
+'EcoGene' : 'http://ecogene.org/gene/'
 
 
 # proteins
