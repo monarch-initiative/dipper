@@ -2,8 +2,7 @@ import csv
 import logging
 import re
 import gzip
-
-
+from bs4 import BeautifulSoup
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
@@ -326,14 +325,28 @@ class AnimalQTLdb(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
 
-        with open(raw, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                if re.match('^#', ' '.join(row)):
-                    next
-                else:
-                    (data) = row
-                    #print(row)
+        with open(raw, 'rt') as html_doc:
+            soup = BeautifulSoup(html_doc)
+        #print(soup)
+        for row in soup("tr"):
+            if line_counter > 2:
+                #print(row)
+                elements = row.find_all("td")
+                vto_id = elements[0].string
+                pto_id = elements[1].string
+                cmo_id = elements[2].string
+                #FIXME: ATO is outdated/legacy data, and instead the VTO, PO, and CMO are used. Is there a use for ATO?
+                ato_id = re.sub('\[ATO #', 'ATO:',(re.sub('\].*', '',elements[3].string)))
+                ato_label = re.sub('\[.*\]', '', elements[3].string)
+                #print('ato ID: '+ato_id+' ato label: '+ato_label)
+                species = elements[4].string
+                trait_class = elements[5].string
+                qtl_count = elements[6].string
+
+                #print(vto_id)
+            line_counter += 1
+
+
 
 
         logger.info("Done with trait mappings")
