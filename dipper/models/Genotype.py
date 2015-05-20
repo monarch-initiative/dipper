@@ -79,7 +79,8 @@ class Genotype():
         'translates_to': 'RO:0002513',
         'is_targeted_expression_variant_of' : 'GENO:0000443',
         'is_transgene_variant_of': 'GENO:0000444',
-        'has_expression-variant_part' : 'GENO:0000532'
+        'has_expression-variant_part' : 'GENO:0000532',
+        'targeted_by' : 'GENO:0000634'  # between a (reagent-targeted gene) and a morpholino
     }
 
     annotation_properties = {
@@ -368,7 +369,7 @@ class Genotype():
         # but maybe that's not right, because i bet some reagents might target sequence_alterations.
         gu = self.gu
         targets = gu.getNode(self.properties['targets_instance_of'])
-        self.graph.add((gu.getNode(reagent_id), targets, gu.getNode(gene_id)))
+        self.gu.addTriple(reagent_id, self.object_properties['targets_instance_of'], gene_id)
 
         # akin to a variant locus
         if (targeted_gene_id is None):
@@ -378,6 +379,8 @@ class Genotype():
 
         p = self.object_properties['is_targeted_expression_variant_of']
         self.gu.addTriple(self.graph, targeted_gene_id, p, gene_id)
+
+        self.gu.addTriple(self.graph, targeted_gene_id, self.object_properties['targeted_by'], reagent_id)
 
         return
 
