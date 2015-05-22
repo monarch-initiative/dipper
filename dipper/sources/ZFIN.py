@@ -882,8 +882,18 @@ class ZFIN(Source):
                                                                superterm2_id, subterm2_id, modifier)
 
                 if phenotype_id is None:
-                    # add this phenotype to a set to report at the end
-                    missing_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier])
+                    # check to see if it is a "normal" phenotype;
+                    # if so, then check to see if the "abnormal" version is found
+                    # if the abnormal version is not found, then report it
+                    if modifier == 'normal':
+                        p2 = self._map_sextuple_to_phenotype(superterm1_id, subterm1_id, quality_id,
+                                                               superterm2_id, subterm2_id, 'abnormal')
+                        if p2 is None:
+                            missing_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id,
+                                                  subterm2_id, modifier])
+                        else:
+                            pass
+                            # logger.info("Normal phenotype found, and abnormal version exists")
                 else:
                     mapped_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier])
 
@@ -922,11 +932,39 @@ class ZFIN(Source):
                     break
 
         myset = set([','.join(x) for x in mapped_zpids])
-        logger.info("%d phenotype-sextuples were mapped", len(myset))
-        myset = set([','.join(x) for x in missing_zpids])
-        logger.warn("The following %d phenotype-sextuples were not mapped:\n,%s", len(myset), str(myset))
+        myset2 = set([','.join(x) for x in missing_zpids])
+        logger.info("Phenotype-sextuples: %d mapped : %d unmapped", len(myset), len(myset2))
+        self._write_missing_zp_report(missing_zpids)
 
         Assoc().loadAllProperties(g)
+
+        return
+
+    def _write_missing_zp_report(self, missing_zpids, include_normal=True):
+        """
+        This will write the sextuples of anatomy+quality to a file if they do not map to any current
+        ZP definition.
+        Set include_normal to False if you do not want to log the unmatched "normal" phenotypes.
+        :param missing_zpids:
+        :param include_normal:
+        :return:
+        """
+        # TODO configure for outtput to stdout
+        f = '/'.join((self.outdir,'missing_zps.txt'))
+        print('gonna write to',f)
+        myset = set([','.join(x) for x in missing_zpids])
+        # missing_zpids = set(missing_zpids)  # make it a unique set
+        with open(f, 'w', newline='\n') as csvfile:
+            writer = csv.writer(csvfile, delimiter='\t')
+            # write header
+            h = ['superterm1_id', 'subterm1_id', 'quality_id','superterm2_id', 'subterm2_id', 'modifier']
+            writer.writerow(h)
+            for x in myset:
+                writer.writerow(x.split(','))
+        csvfile.close()
+        print('writing outfile')
+        logger.info("Wrote %d missing zp defs to %s", len(myset), f)
+        # logger.warn("The following %d phenotype-sextuples were not mapped:\n,%s", len(myset), str(myset))
 
         return
 
@@ -1875,8 +1913,12 @@ class ZFIN(Source):
 
         if (mapping is None):
             # pass
-            logger.warn("Couldn't map ZP id to %s",("_").join(
-                (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
+            if modifier == 'normal':
+                pass
+                # logger.info("Normal phenotypes not yet supported")
+            else:
+                logger.warn("Couldn't map ZP id to %s",("_").join(
+                    (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
         else:
             zp_id = mapping['zp_id']
 
