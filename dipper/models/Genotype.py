@@ -84,6 +84,7 @@ class Genotype():
     }
 
     annotation_properties = {
+        # TODO change properties with https://github.com/monarch-initiative/GENO-ontology/issues/21
         'reference_nucleotide': 'GENO:reference_nucleotide',  # Made up term
         'reference_amino_acid': 'GENO:reference_amino_acid',  # Made up term
         'altered_nucleotide': 'GENO:altered_nucleotide',  # Made up term
@@ -333,7 +334,7 @@ class Genotype():
 
         return
 
-    def addGeneTargetingReagent(self, reagent_id, reagent_label, reagent_type, description=None):
+    def addGeneTargetingReagent(self, reagent_id, reagent_label, reagent_type, gene_id, description=None):
         """
         Here, a gene-targeting reagent is added.  The actual targets of this reagent should be added separately.
         :param reagent_id:
@@ -343,6 +344,8 @@ class Genotype():
         """
         # TODO add default type to reagent_type
         self.gu.addIndividualToGraph(self.graph, reagent_id, reagent_label, reagent_type, description)
+
+        self.gu.addTriple(self.graph, reagent_id, self.object_properties['targets_instance_of'], gene_id)
 
         return
 
@@ -364,21 +367,14 @@ class Genotype():
         :return:
         """
 
-        # TODO is this a bad to assume the reagent is targeting at GENE specifically?
-        # we are assuming that the reagent targets a GENE as opposed to any genomic feature.
-        # but maybe that's not right, because i bet some reagents might target sequence_alterations.
-        gu = self.gu
-        targets = gu.getNode(self.properties['targets_instance_of'])
-        self.gu.addTriple(reagent_id, self.object_properties['targets_instance_of'], gene_id)
-
         # akin to a variant locus
         if (targeted_gene_id is None):
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
         self.gu.addIndividualToGraph(self.graph, targeted_gene_id, targeted_gene_label,
                                      self.genoparts['reagent_targeted_gene'], description)
 
-        p = self.object_properties['is_targeted_expression_variant_of']
-        self.gu.addTriple(self.graph, targeted_gene_id, p, gene_id)
+        self.gu.addTriple(self.graph, targeted_gene_id,
+                          self.object_properties['is_targeted_expression_variant_of'], gene_id)
 
         self.gu.addTriple(self.graph, targeted_gene_id, self.object_properties['targeted_by'], reagent_id)
 
