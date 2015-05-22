@@ -30,10 +30,10 @@ class ZFIN(Source):
         'geno': {'file': 'genotype_features.txt', 'url': 'http://zfin.org/downloads/genotype_features.txt'},
         'pheno': {'file': 'phenotype.txt', 'url': 'http://zfin.org/downloads/phenotype.txt'},
         'pubs': {'file': 'zfinpubs.txt', 'url': 'http://zfin.org/downloads/zfinpubs.txt'},
-        'zpmap': {'file': 'zp-mapping.txt',
-                  'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt',},
         #'zpmap': {'file': 'zp-mapping.txt',
-        #          'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
+        #          'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt',},
+        'zpmap': {'file': 'zp-mapping.txt',
+                  'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
         'morph': {'file': 'Morpholinos.txt', 'url': 'http://zfin.org/downloads/Morpholinos.txt'},
         'enviro': {'file': 'pheno_environment.txt', 'url': 'http://zfin.org/Downloads/pheno_environment.txt'},
         'stage': {'file': 'stage_ontology.txt', 'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
@@ -70,7 +70,8 @@ class ZFIN(Source):
                      "ZDB-GENO-100524-2", "ZDB-GENO-100601-2", "ZDB-GENO-100910-1", "ZDB-GENO-111025-3",
                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
-                     "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1"],
+                     "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
+                     "ZDB-GENO-070118-1"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -80,14 +81,15 @@ class ZFIN(Source):
                  "ZDB-GENE-980526-561", "ZDB-GENE-980526-89", "ZDB-GENE-990415-181", "ZDB-GENE-990415-72",
                  "ZDB-GENE-990415-75", "ZDB-GENE-980526-44", "ZDB-GENE-030421-3", "ZDB-GENE-980526-196",
                  "ZDB-GENE-050320-62", "ZDB-GENE-061013-403", "ZDB-GENE-041114-104", "ZDB-GENE-030131-9700",
-                 "ZDB-GENE-031114-1", "ZDB-GENE-990415-72"],
+                 "ZDB-GENE-031114-1", "ZDB-GENE-990415-72", "ZDB-GENE-030131-2211", "ZDB-GENE-030131-3063",
+                 "ZDB-GENE-030131-9460"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
                    "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
-                   "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091"],
+                   "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -95,7 +97,7 @@ class ZFIN(Source):
                        "ZDB-MRPHLNO-080919-4", "ZDB-MRPHLNO-081110-3", "ZDB-MRPHLNO-090106-5", "ZDB-MRPHLNO-090114-1",
                        "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
-                       "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6"],
+                       "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-140822-1"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
@@ -103,7 +105,7 @@ class ZFIN(Source):
                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
-                        "ZDB-EXP-041102-1",
+                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -112,7 +114,7 @@ class ZFIN(Source):
                 "PMID:20306498", "PMID:20442775", "PMID:20603019", "PMID:21147088", "PMID:21893049",
                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
-                "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7"]
+                "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2"]
     }
 
     def __init__(self):
@@ -371,10 +373,10 @@ class ZFIN(Source):
             gvcparts = gvc_hash[gt]
 
             for locus_id in geno_hash[gt]:
-                logger.info("locus id %s",locus_id)
+                # logger.info("locus id %s",locus_id)
                 locus_label = self.id_label_map[locus_id]
                 variant_locus_parts = geno_hash.get(gt).get(locus_id)
-                logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
+                # logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
                 # if the locus == part, then it isn't a gene, rather a variant not in a specific gene
                 if locus_id in variant_locus_parts:
                     # set the gene_id to none
@@ -885,7 +887,6 @@ class ZFIN(Source):
                 else:
                     mapped_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier])
 
-
                 # add abnormal phenotypes
                 # logger.info("modifier for %s = %s",effective_genotype_label,modifier)
                 if not re.match('^normal', modifier):
@@ -906,7 +907,7 @@ class ZFIN(Source):
                     assoc.addAssociationNodeToGraph(g)
 
                 else:
-                    # TODO add normal phenotypes as associations
+                    # TODO add normal phenotypes as associations #134
                     # add normal phenotypes as a comment on the genotype for now
                     clist = []
                     for x in [superterm1_name, subterm1_name, quality_name,superterm2_name, subterm2_name, modifier]:
@@ -1163,7 +1164,7 @@ class ZFIN(Source):
 
                     marker_id = 'ZFIN:'+marker_id.strip()
                     if relationship == 'knockdown reagent targets gene':
-                        geno.addGeneTargetingReagent(marker_id, marker_symbol, marker_so_id)
+                        geno.addGeneTargetingReagent(marker_id, marker_symbol, marker_so_id, gene_id)
                         # waiting to add the reagent_targeted_gene until processing environments
 
                     elif relationship == 'coding sequence of':
@@ -1351,10 +1352,11 @@ class ZFIN(Source):
 
                 self.id_label_map[reagent_id] = reagent_symbol
 
-                if self.testMode and (reagent_num not in self.test_ids['morpholino'] or gene_num not in self.test_ids['gene']):
+                if self.testMode and (reagent_num not in self.test_ids['morpholino']
+                                      or gene_num not in self.test_ids['gene']):
                     continue
 
-                geno.addGeneTargetingReagent(reagent_id, reagent_symbol, reagent_so_id)
+                geno.addGeneTargetingReagent(reagent_id, reagent_symbol, reagent_so_id, gene_id)
                 # The reagent targeted gene is added in the pheno_environment processing function.
 
                 # Add publication
@@ -1534,13 +1536,14 @@ class ZFIN(Source):
 
                     # add this morpholino applied at this concentration, as an instance of
                     # the morpholino itself
-                    geno.addGeneTargetingReagent(applied_morph_id, applied_morph_label, morph_id)
+                    gu.addIndividualToGraph(g, applied_morph_id, applied_morph_label, morph_id)
+
                     if comment is not None:
                         gu.addComment(g, applied_morph_id, comment)
 
                     # link the morpholino to the genes that it affects
                     ag = self.variant_loci_genes.get(morph_id)
-                    logger.info("%s affected genes %s", morph_id, pp.pformat(ag))
+                    #logger.info("%s affected genes %s", morph_id, pp.pformat(ag))
                     list_of_targeted_genes = []
                     if ag is None:
                         logger.warn("No affected genes for $s", morph_id)
@@ -1554,13 +1557,13 @@ class ZFIN(Source):
                             else:
                                 glabel = self.id_label_map[gid]
 
-                            targeted_gene_id = '-'.join((gid, morph_id))
+                            targeted_gene_id = '-'.join((gid, applied_morph_id))
                             # these are not zfin resolvable, so make BNodes
-                            targeted_gene_id = re.sub('ZFIN:', '', targeted_gene_id)
+                            targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
                             targeted_gene_id = '_'+targeted_gene_id
                             if self.nobnodes:
                                 targeted_gene_id = ':'+targeted_gene_id
-                            targeted_gene_label = glabel+'<'+morph_label+'>'
+                            targeted_gene_label = glabel+'<'+applied_morph_label+'>'
 
                             geno.addReagentTargetedGene(applied_morph_id, gid, targeted_gene_id, targeted_gene_label)
                             self.id_label_map[targeted_gene_id] = targeted_gene_label
@@ -1647,7 +1650,7 @@ class ZFIN(Source):
             # build an identifier for the extrinsic genotype, based on it's components
             extr_id = '-'.join(extrgeno_hash_by_env_id[env_id])
 
-            # replace any colons (for example, when we materialze the b nodes for the components)
+            # replace any colons (for example, when we materialize the b nodes for the components)
             extr_id = re.sub(':', '', extr_id)
             if self.nobnodes:
                 extr_id = ':'+extr_id
@@ -1666,7 +1669,7 @@ class ZFIN(Source):
                 self.extrinsic_id_to_enviro_id_hash[env_id] = extr_id
                 self.id_label_map[extr_id] = extr_label
 
-                logger.info('extr %s | %s', extr_id, extr_label)
+                # logger.info('extr %s | %s', extr_id, extr_label)
 
         logger.info("Done with environments")
 
@@ -1729,7 +1732,7 @@ class ZFIN(Source):
     
     def _process_uniprot_ids(self, limit=None):
         """
-        This method processes the the mappings from ZFIN gene IDs to UniProtKB IDs.
+        This method processes the mappings from ZFIN gene IDs to UniProtKB IDs.
 
         Triples created:
         <zfin_gene_id> a class
@@ -1780,7 +1783,7 @@ class ZFIN(Source):
     def _process_human_orthos(self, limit=None):
         """
         This table provides ortholog mappings between zebrafish and humans.
-                ZFIN has their own process of creating orthology mappings, that we take in addition to other
+        ZFIN has their own process of creating orthology mappings, that we take in addition to other
         orthology-calling sources (like PANTHER).
         We ignore the omim ids, and only use the gene_id.
 
@@ -1955,7 +1958,7 @@ class ZFIN(Source):
 
         return i
 
-    def _make_effective_genotype_id(self,intrinsic_id, extrinsic_id):
+    def _make_effective_genotype_id(self, intrinsic_id, extrinsic_id):
         effective_genotype_id = self.make_id('-'.join(intrinsic_id+'-'+extrinsic_id))
 
         return effective_genotype_id
