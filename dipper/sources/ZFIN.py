@@ -71,7 +71,7 @@ class ZFIN(Source):
                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
                      "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
-                     "ZDB-GENO-070118-1"],
+                     "ZDB-GENO-070118-1", "ZDB-GENO-140529-1"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -82,14 +82,14 @@ class ZFIN(Source):
                  "ZDB-GENE-990415-75", "ZDB-GENE-980526-44", "ZDB-GENE-030421-3", "ZDB-GENE-980526-196",
                  "ZDB-GENE-050320-62", "ZDB-GENE-061013-403", "ZDB-GENE-041114-104", "ZDB-GENE-030131-9700",
                  "ZDB-GENE-031114-1", "ZDB-GENE-990415-72", "ZDB-GENE-030131-2211", "ZDB-GENE-030131-3063",
-                 "ZDB-GENE-030131-9460"],
+                 "ZDB-GENE-030131-9460", "ZDB-GENE-980526-26", "ZDB-GENE-980526-27", "ZDB-GENE-980526-29"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
                    "ZDB-ALT-111024-1", "ZDB-ALT-980203-1374", "ZDB-ALT-980203-412", "ZDB-ALT-980203-465",
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
-                   "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2"],
+                   "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2", "ZDB-ALT-991005-33"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -105,7 +105,7 @@ class ZFIN(Source):
                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
-                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13"
+                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -114,7 +114,8 @@ class ZFIN(Source):
                 "PMID:20306498", "PMID:20442775", "PMID:20603019", "PMID:21147088", "PMID:21893049",
                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
-                "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2"]
+                "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2",
+                "ZFIN:ZDB-PUB-120927-26"]
     }
 
     def __init__(self):
@@ -341,7 +342,8 @@ class ZFIN(Source):
                             genoparts[gh] += [allele_id]
 
                         other_allele = self._get_other_allele_by_zygosity(allele_id, zygosity)
-                        genoparts[gh].append(other_allele)
+                        if other_allele is not None:
+                            genoparts[gh].append(other_allele)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -373,10 +375,10 @@ class ZFIN(Source):
             gvcparts = gvc_hash[gt]
 
             for locus_id in geno_hash[gt]:
-                # logger.info("locus id %s",locus_id)
+                logger.info("locus id %s",locus_id)
                 locus_label = self.id_label_map[locus_id]
                 variant_locus_parts = geno_hash.get(gt).get(locus_id)
-                # logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
+                logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
                 # if the locus == part, then it isn't a gene, rather a variant not in a specific gene
                 if locus_id in variant_locus_parts:
                     # set the gene_id to none
@@ -395,7 +397,7 @@ class ZFIN(Source):
                 zygosity_id = None
 
                 if len(variant_locus_parts) > 2:
-                    logger.error("There may be a problem. >2 parts for this locus: %s", variant_locus_parts)
+                    logger.error("There may be a problem. >2 parts for this locus (%s): %s", locus_id, variant_locus_parts)
                 elif len(variant_locus_parts) > 1:
                     allele2_id = variant_locus_parts[1]
                     if allele2_id not in ['0', '?']:
@@ -918,6 +920,7 @@ class ZFIN(Source):
 
                 else:
                     # TODO add normal phenotypes as associations #134
+                    # when https://github.com/sba1/bio-ontology-zp/issues/9 is finished, we can use these
                     # add normal phenotypes as a comment on the genotype for now
                     clist = []
                     for x in [superterm1_name, subterm1_name, quality_name,superterm2_name, subterm2_name, modifier]:
