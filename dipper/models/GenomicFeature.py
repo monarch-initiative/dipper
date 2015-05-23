@@ -184,10 +184,14 @@ class Feature():
         """
         self.gu.addIndividualToGraph(graph, self.id, self.label, self.type, self.description)
 
+        if self.start is None and self.stop is None:
+            add_region = False
+
         if add_region:
             # create a region that has the begin/end positions
             if region_id is None:
-                region_id = '-'.join((self.id, self.start, self.stop))
+                region_id = '-'.join((self.id, self.start['coordinate'],
+                                      self.stop['coordinate']))
                 rid = region_id
                 rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
                 rid = '_'+rid+"Region"
