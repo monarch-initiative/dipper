@@ -11,7 +11,7 @@ NOSE = nosetests
 
 test: BioGrid-fetch BioGrid-test ClinVar-fetch ClinVar-test GeneReviews-fetch GeneReviews-test \
 hpoa-fetch hpoa-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test \
-zfin-fetch zfin-test
+zfin-fetch zfin-test kegg-fetch kegg-test
 
 BioGrid-fetch:
 	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only
@@ -60,3 +60,9 @@ zfin-fetch:
 
 zfin-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_zfin.py
+
+kegg-fetch:
+	$(DIPPER_BIN) --sources kegg --no_verify --fetch_only
+
+kegg-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_kegg.py
