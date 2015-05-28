@@ -151,7 +151,7 @@ class Assoc:
         :return:
         """
         source = self.gu.getNode(source_id)
-        self.gu.addIndividualToGraph(g,source_id,None)
+        self.gu.addIndividualToGraph(g, source_id, None)
         node = self.gu.getNode(assoc)
         g.add((node, DC['source'], source))
 
@@ -159,7 +159,7 @@ class Assoc:
 
     def addDescription(self, g, assoc, description):
         node = self.gu.getNode(assoc)
-        g.add((node,DC['description'], Literal(description)))
+        g.add((node, DC['description'], Literal(description)))
         return
 
     def loadAllProperties(self, g):
