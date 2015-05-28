@@ -15,38 +15,37 @@ logger = logging.getLogger(__name__)
 
 
 class KEGG(Source):
-
     files = {
         'disease': {'file': 'disease',
-                 'url': 'http://rest.genome.jp/list/disease'},
+                    'url': 'http://rest.genome.jp/list/disease'},
         'pathway': {'file': 'pathway',
-                 'url': 'http://rest.genome.jp/list/pathway'},
+                    'url': 'http://rest.genome.jp/list/pathway'},
         'hsa_genes': {'file': 'hsa_genes',
-                 'url': 'http://rest.genome.jp/list/hsa'},
+                      'url': 'http://rest.genome.jp/list/hsa'},
         'ortholog_classes': {'file': 'ortholog_classes',
-                 'url': 'http://rest.genome.jp/list/orthology'},
+                             'url': 'http://rest.genome.jp/list/orthology'},
         'disease_gene': {'file': 'disease_gene',
-                 'url': 'http://rest.KEGG:jp/link/disease/hsa'},
+                         'url': 'http://rest.KEGG:jp/link/disease/hsa'},
         'omim2disease': {'file': 'omim2disease',
-                 'url': 'http://rest.genome.jp/link/disease/omim'},
+                         'url': 'http://rest.genome.jp/link/disease/omim'},
         'omim2gene': {'file': 'omim2gene',
-                 'url': 'http://rest.genome.jp/link/omim/hsa'},
+                      'url': 'http://rest.genome.jp/link/omim/hsa'},
         'ncbi': {'file': 'ncbi',
                  'url': 'http://rest.KEGG:jp/conv/ncbi-geneid/hsa'},
         'hsa_gene2pathway': {'file': 'human_gene2pathway',
-                 'url': 'http://rest.KEGG:jp/link/pathway/hsa'},
+                             'url': 'http://rest.KEGG:jp/link/pathway/hsa'},
         'hsa_orthologs': {'file': 'hsa_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/hsa'},
+                          'url': 'http://rest.KEGG:jp/link/orthology/hsa'},
         'mmu_orthologs': {'file': 'mmu_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/mmu'},
+                          'url': 'http://rest.KEGG:jp/link/orthology/mmu'},
         'rno_orthologs': {'file': 'rno_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/rno'},
+                          'url': 'http://rest.KEGG:jp/link/orthology/rno'},
         'dme_orthologs': {'file': 'dme_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/dme'},
+                          'url': 'http://rest.KEGG:jp/link/orthology/dme'},
         'dre_orthologs': {'file': 'dre_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/dre'},
+                          'url': 'http://rest.KEGG:jp/link/orthology/dre'},
         'cel_orthologs': {'file': 'cel_orthologs',
-                 'url': 'http://rest.KEGG:jp/link/orthology/cel'}
+                          'url': 'http://rest.KEGG:jp/link/orthology/cel'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -79,7 +78,7 @@ class KEGG(Source):
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
         #if self.compare_checksums():
             #logger.debug('Files have same checksum as reference')
@@ -143,7 +142,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['pathway']['file']))
+        raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -153,7 +152,7 @@ class KEGG(Source):
                 if self.testMode and pathway_id not in self.test_ids['pathway']:
                     continue
 
-                pathway_id = 'KEGG:'+pathway_id.strip()
+                pathway_id = 'KEGG-'+pathway_id.strip()
                 # Add the pathway as a class.
                 # FIXME: Is there a type for pathway?
                 gu.addClassToGraph(g, pathway_id, pathway_name)
@@ -182,7 +181,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['disease']['file']))
+        raw = '/'.join((self.rawdir, self.files['disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -229,7 +228,7 @@ class KEGG(Source):
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         geno = Genotype(g)
-        raw = ('/').join((self.rawdir, self.files['hsa_genes']['file']))
+        raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -295,7 +294,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['ortholog_classes']['file']))
+        raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -305,14 +304,14 @@ class KEGG(Source):
                 if self.testMode and orthology_class_id not in self.test_ids['ortholog_classes']:
                     continue
 
-                #FIXME: What's the proper route for this?
+                # FIXME: What's the proper route for this?
                 # The orthology class is essentially a KEGG gene ID that is species agnostic.
                 # Add the ID and label as a class. Would it be considered a gene as well?
                 orthology_class_id = 'KEGG:'+orthology_class_id.strip()
-                orthology_symbols = re.sub(';.*','',orthology_class_name)
-                orthology_description = re.sub('.*;','',orthology_class_name)
-                #FIXME: Problem if there is more than one symbol?
-                #FIXME: Is there a designated type for these orthology classes?
+                orthology_symbols = re.sub(';.*', '', orthology_class_name)
+                orthology_description = re.sub('.*;', '', orthology_class_name)
+                # FIXME: Problem if there is more than one symbol?
+                # FIXME: Is there a designated type for these orthology classes?
                 gu.addClassToGraph(g, orthology_class_id, orthology_symbols, None, orthology_description)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
@@ -342,7 +341,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        #raw = ('/').join((self.rawdir, self.files['ortholog_classes']['file']))
+
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -392,9 +391,6 @@ class KEGG(Source):
         :return:
         """
 
-        #FIXME: Need to adjust this so it only maps KEGG disease IDs to genes
-        # only when there is not already an OMIM disease to gene mapping.
-
         logger.info("Processing KEGG disease to gene")
         if self.testMode:
             g = self.testgraph
@@ -403,9 +399,9 @@ class KEGG(Source):
         line_counter = 0
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
-        noomim_counter = 0
+
         noomimset = set()
-        raw = ('/').join((self.rawdir, self.files['disease_gene']['file']))
+        raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -437,7 +433,7 @@ class KEGG(Source):
                     break
 
         logger.info("Done with KEGG disease to gene")
-        logger.info("Found %d diseases with no omim id",len(noomimset))
+        logger.info("Found %d diseases with no omim id", len(noomimset))
 
         return
 
@@ -467,7 +463,7 @@ class KEGG(Source):
         line_counter = 0
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['omim2gene']['file']))
+        raw = '/'.join((self.rawdir, self.files['omim2gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -477,10 +473,6 @@ class KEGG(Source):
                 if self.testMode and kegg_gene_id not in self.test_ids['genes']:
                     continue
 
-                #NOTE: It appears that entries with link_type = equivalent are genes in OMIM,
-                # while reverse is a disease
-                #
-                # CHECK: are there other entries besides disease for reverse?
                 kegg_gene_id = 'KEGG:'+kegg_gene_id.strip()
                 omim_id = re.sub('omim', 'OMIM', omim_id)
                 if link_type == 'equivalent':
@@ -534,14 +526,14 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        raw = ('/').join((self.rawdir, self.files['omim2disease']['file']))
+        raw = '/'.join((self.rawdir, self.files['omim2disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 (omim_disease_id, kegg_disease_id, link_type) = row
 
                 kegg_disease_id = 'KEGG:'+kegg_disease_id.strip()
-                omim_disease_id = re.sub('omim','OMIM',omim_disease_id)
+                omim_disease_id = re.sub('omim', 'OMIM', omim_disease_id)
 
                 # Create hash for the links from OMIM ID -> KEGG ID
                 if omim_disease_id not in self.omim_disease_hash:
@@ -555,8 +547,7 @@ class KEGG(Source):
                 else:
                     self.kegg_disease_hash[kegg_disease_id].append(omim_disease_id)
 
-
-        #Now process the disease hashes and only process 1:1 omim disease:KEGG disease entries.
+        # Now process the disease hashes and only process 1:1 omim disease:KEGG disease entries.
         for omim_disease_id in self.omim_disease_hash:
             if self.testMode and omim_disease_id not in self.test_ids['disease']:
                 continue
@@ -607,7 +598,7 @@ class KEGG(Source):
                     continue
 
                 # Adjust the NCBI gene ID prefix.
-                ncbi_gene_id = re.sub('ncbi-geneid','NCBIGene',ncbi_gene_id)
+                ncbi_gene_id = re.sub('ncbi-geneid', 'NCBIGene', ncbi_gene_id)
                 kegg_gene_id = 'KEGG:'+kegg_gene_id
 
                 # Adding the KEGG gene ID to the graph here is redundant, unless there happens to be
