@@ -21,7 +21,8 @@ class Pathway():
     }
 
     object_properties = {
-        'involved_in': 'RO:0002331'
+        'involved_in': 'RO:0002331',
+        'gene_product_of' : 'RO:0002204'
     }
 
     properties = object_properties.copy()
@@ -59,11 +60,15 @@ class Pathway():
         :param gene_id:
         :return:
         """
-        # TODO consider converting this and creating a BNode of a "gene product of gene_id"
-        self.gu.addTriple(self.graph, gene_id, self.object_properties['involved_in'], pathway_id)
+        gene_product = '_'+gene_id+'product'
+        # FIXME figure out what the type of the gene product is (not necessarily a protein)
+        self.gu.addClassToGraph(self.graph, gene_product, None)
+        self.gu.addTriple(self.graph, gene_product, self.object_properties['gene_product_of'], gene_id)
+        self.addComponentToPathway(pathway_id, gene_product)
+
         return
 
-    def addProteinToPathway(self, pathway_id, protein_id):
-        self.gu.addTriple(self.graph, protein_id, self.object_properties['involved_in'], pathway_id)
+    def addComponentToPathway(self, pathway_id, component_id):
+        self.gu.addTriple(self.graph, component_id, self.object_properties['involved_in'], pathway_id)
 
         return
