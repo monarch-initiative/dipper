@@ -2,7 +2,6 @@
 omit =
  dipper/sources/MGI.py
  dipper/sources/OMIM.py
- dipper/sources/KEGG.py
  dipper/sources/IMPC.py
  dipper/sources/EOM.py
  dipper/sources/Coriell.py

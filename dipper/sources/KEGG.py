@@ -73,8 +73,11 @@ class KEGG(Source):
         self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/', None, None)
 
         # source-specific warnings.  will be cleared when resolved.
-
-        self.test_ids['disease'] += config.get_config()['test_ids']['disease']
+        # check to see if there's any ids configured in the config; otherwise, warn
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+        else:
+            self.test_ids['disease'] += config.get_config()['test_ids']['disease']
 
         return
 
