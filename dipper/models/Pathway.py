@@ -22,7 +22,8 @@ class Pathway():
 
     object_properties = {
         'involved_in': 'RO:0002331',
-        'gene_product_of' : 'RO:0002204'
+        'gene_product_of' : 'RO:0002204',
+        'has_gene_product' : 'RO:0002205'
     }
 
     properties = object_properties.copy()
@@ -63,7 +64,8 @@ class Pathway():
         gene_product = '_'+gene_id+'product'
         # FIXME figure out what the type of the gene product is (not necessarily a protein)
         self.gu.addClassToGraph(self.graph, gene_product, None)
-        self.gu.addTriple(self.graph, gene_product, self.object_properties['gene_product_of'], gene_id)
+        #self.gu.addTriple(self.graph, gene_product, self.object_properties['gene_product_of'], gene_id)
+        self.gu.addTriple(self.graph, gene_id, self.object_properties['has_gene_product'], gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
 
         return

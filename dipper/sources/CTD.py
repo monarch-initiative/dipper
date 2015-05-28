@@ -11,6 +11,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.Pathway import Pathway
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 
@@ -124,6 +125,7 @@ class CTD(Source):
         else:
             self.g = self.graph
         self.geno = Genotype(self.g)
+        self.path = Pathway(self.g)
         self.gu = GraphUtils(curie_map.get())
 
         self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'], pub_map)
@@ -198,19 +200,15 @@ class CTD(Source):
             return
 
         entrez_id = 'NCBIGene:'+gene_id
-        # Adding all pathways as classes, may refactor in the future
-        # to only add Reactome pathways from CTD
 
-        # note that KEGG pathway ids are not properly formed... KEGG:12345 --> KEGG:path:map12345
+        # convert KEGG pathway ids... KEGG:12345 --> KEGG:path:map12345
         if re.match('KEGG', pathway_id):
             pathway_id = re.sub('KEGG:', 'KEGG-path:map', pathway_id)
 
-        self.gu.addClassToGraph(self.g, pathway_id, pathway_name, self._get_class_id('signal transduction'))
-        self.gu.addClassToGraph(self.g, entrez_id, gene_symbol)
-        self.gu.addInvolvedIn(self.g, entrez_id, pathway_id)
+        self.gu.addClassToGraph(self.graph, entrez_id, None)  # just in case, add it as a class
 
-        # if re.match(re.compile('^REACT'),pathway_id):
-        #    gu.addClassToGraph(g, pathway_id, pathway_name)
+        self.path.addPathway(pathway_id, pathway_name)
+        self.path.addGeneToPathway(entrez_id, pathway_id)
 
         return
 

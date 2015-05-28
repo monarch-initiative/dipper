@@ -8,6 +8,7 @@ from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Pathway import Pathway
 from dipper import curie_map
 from dipper import config
 
@@ -132,8 +133,9 @@ class KEGG(Source):
         This method adds the KEGG pathway IDs.
 
         Triples created:
-        <pathway_id> is a class
+        <pathway_id> is a GO:signal_transduction
         <pathway_id> rdfs:label <pathway_name>
+        <gene_id> RO:involved_in <pathway_id>
         :param limit:
         :return:
         """
@@ -145,6 +147,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
+        path = Pathway(g)
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -156,9 +159,9 @@ class KEGG(Source):
                     continue
 
                 pathway_id = 'KEGG-'+pathway_id.strip()
-                # Add the pathway as a class.
-                # FIXME: Is there a type for pathway?
+
                 gu.addClassToGraph(g, pathway_id, pathway_name)
+                path.addPathway(pathway_id, pathway_name)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
