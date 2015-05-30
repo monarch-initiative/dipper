@@ -186,7 +186,9 @@ class Genotype():
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
         """
         We make the assumption here that if the relationship is not provided, it is a
-        GENO:is_sequence_variant_instance_of
+        GENO:is_sequence_variant_instance_of.
+
+        Here, the allele should be a variant_locus, not a sequence alteration.
         :param allele_id:
         :param gene_id:
         :param rel_id:
