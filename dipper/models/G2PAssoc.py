@@ -64,7 +64,6 @@ class G2PAssoc(Assoc):
 
         self.addAssociationToGraph(g)
 
-
         if self.start_stage_id is not None:
             self.gu.addTriple(g, self.annot_id,
                               self.gu.object_properties['has_begin_stage_qualifier'],
@@ -78,7 +77,4 @@ class G2PAssoc(Assoc):
             self.gu.addTriple(g, self.annot_id,
                               self.gu.object_properties['has_environment_qualifier'],
                               self.environment_id)
-
-
         return g
-

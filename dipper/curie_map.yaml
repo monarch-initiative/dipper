@@ -43,6 +43,7 @@
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
 'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
 'CHR' : 'http://purl.obolibrary.org/obo/CHR_'
+'XCO' : 'http://purl.obolibrary.org/obo/XCO_'
 
 
 # publication/reference sources

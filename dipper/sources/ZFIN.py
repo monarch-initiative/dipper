@@ -12,6 +12,7 @@ from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.GenomicFeature import Feature, makeChromID
+from dipper.models.Environment import Environment
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -159,6 +160,11 @@ class ZFIN(Source):
         if self.testOnly:
             self.testMode = True
 
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
         self.id_label_map = {}   # to hold any label for a given id
         self.genotype_backgrounds = {}  # to hold the mappings between genotype and background
         self.extrinsic_id_to_enviro_id_hash = {}
@@ -199,6 +205,8 @@ class ZFIN(Source):
         logger.info("Finished parsing.")
 
         self.load_bindings()
+        gu = GraphUtils(curie_map.get())
+        gu.loadAllProperties(g)
 
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
@@ -375,10 +383,10 @@ class ZFIN(Source):
             gvcparts = gvc_hash[gt]
 
             for locus_id in geno_hash[gt]:
-                logger.info("locus id %s",locus_id)
+                # logger.info("locus id %s",locus_id)
                 locus_label = self.id_label_map[locus_id]
                 variant_locus_parts = geno_hash.get(gt).get(locus_id)
-                logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
+                # logger.info('vl parts: %s',pprint.pformat(variant_locus_parts))
                 # if the locus == part, then it isn't a gene, rather a variant not in a specific gene
                 if locus_id in variant_locus_parts:
                     # set the gene_id to none
@@ -871,11 +879,12 @@ class ZFIN(Source):
 
                     effective_genotype_label = '; '.join((intrinsic_genotype_label, extrinsic_genotype_label))
                     self.id_label_map[effective_genotype_id] = effective_genotype_label
+                    # TODO check if the intrinsic genotype is w.t., then add it as a reference, otherwise use has_alternate_part
                     geno.addParts(genotype_id, effective_genotype_id)
                     geno.addParts(extrinsic_genotype_id, effective_genotype_id)
 
-                geno.addGenotype(effective_genotype_id, effective_genotype_label,
-                                 geno.genoparts['effective_genotype'])
+                    geno.addGenotype(effective_genotype_id, effective_genotype_label,
+                                     geno.genoparts['effective_genotype'])
 
                 # logger.debug("added: %s", effective_genotype_label)
 
@@ -904,17 +913,20 @@ class ZFIN(Source):
                 if not re.match('^normal', modifier):
                     if phenotype_id is None:
                         continue
-                    assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
-                    pub_id = 'ZFIN:' + pub_id.strip()
-
-                    assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
-                    assoc.set_environment(env_id)
-
                     if start_stage_id != '':
                         start_stage_id = 'ZFIN:'+start_stage_id.strip()
                     if end_stage_id != '':
                         end_stage_id = 'ZFIN:'+end_stage_id.strip()
+                    if pub_id != '':
+                        pub_id = 'ZFIN:' + pub_id.strip()
 
+                    # assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
+                    assoc_id = self.make_association_id(self.name, genotype_id, gu.object_properties['has_phenotype'],
+                                                        phenotype_id, eco_id, pub_id,
+                                                        [env_id, start_stage_id, end_stage_id])
+
+                    assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
+                    assoc.set_environment(env_id)
                     assoc.set_stage(start_stage_id, end_stage_id)
                     assoc.addAssociationNodeToGraph(g)
 
@@ -1214,7 +1226,13 @@ class ZFIN(Source):
                         # transgenic constructs with coding regions
                         # but we don't know if they are wild-type or mutant, so just has_part for now
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
-                        geno.addParts(gene_id, marker_id, geno.object_properties['has_part'])
+                        # add a trangene part - TODO move to Genotype.py
+                        transgene_part_id = '_'+('-').join((marker_id, gene_id, re.sub('\W+','-',relationship)))
+                        gu.addIndividualToGraph(g, transgene_part_id, 'Tg('+relationship+' '+gene_symbol+')',
+                                                geno.genoparts['coding_transgene_feature'])
+                        geno.addParts(transgene_part_id, marker_id)
+                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
+                                     gene_id)
                     elif relationship == 'gene product recognized by antibody':
                         # TODO for ticket #32
                         pass
@@ -1222,7 +1240,14 @@ class ZFIN(Source):
                         # transgenic constructs with promoters regions
                         # we are making the assumption that they are wild-type promoters
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
-                        geno.addParts(gene_id, marker_id, geno.object_properties['has_reference_part'])
+
+                        # add a trangene part
+                        transgene_part_id = '_'+('-').join((marker_id, gene_id, re.sub('\W+','-',relationship)))
+                        gu.addIndividualToGraph(g, transgene_part_id, 'Tg('+relationship+' '+gene_symbol+')',
+                                                geno.genoparts['regulatory_transgene_feature'])
+                        geno.addParts(transgene_part_id, marker_id)
+                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
+                                     gene_id)
                     elif relationship == 'transcript targets gene':  # miRNAs
                         # TODO should this be an interaction instead of this special relationship?
                         gu.addIndividualToGraph(g, marker_id, marker_symbol, marker_so_id)
@@ -1485,6 +1510,7 @@ class ZFIN(Source):
         env_hash = {}
         enviro_label_hash = {}
         geno = Genotype(g)
+        envo = Environment(g)
         pp = pprint.PrettyPrinter(indent=4)
 
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
@@ -1575,13 +1601,6 @@ class ZFIN(Source):
                         applied_morph_id = ':'+applied_morph_id
                     applied_morph_label = ' '.join((morph_label, conc_label))
 
-                    # add this morpholino applied at this concentration, as an instance of
-                    # the morpholino itself
-                    gu.addIndividualToGraph(g, applied_morph_id, applied_morph_label, morph_id)
-
-                    if comment is not None:
-                        gu.addComment(g, applied_morph_id, comment)
-
                     # link the morpholino to the genes that it affects
                     ag = self.variant_loci_genes.get(morph_id)
                     #logger.info("%s affected genes %s", morph_id, pp.pformat(ag))
@@ -1606,7 +1625,7 @@ class ZFIN(Source):
                                 targeted_gene_id = ':'+targeted_gene_id
                             targeted_gene_label = glabel+'<'+applied_morph_label+'>'
 
-                            geno.addReagentTargetedGene(applied_morph_id, gid, targeted_gene_id, targeted_gene_label)
+                            geno.addReagentTargetedGene(morph_id, gid, targeted_gene_id, targeted_gene_label)
                             self.id_label_map[targeted_gene_id] = targeted_gene_label
                             list_of_targeted_genes += [targeted_gene_id]
 
@@ -1614,21 +1633,33 @@ class ZFIN(Source):
 
                     self.id_label_map[applied_morph_id] = applied_morph_label
 
+                    # add to the environment as a part
+                    envo.addEnvironmentalCondition(applied_morph_id, applied_morph_label)
+                    envo.addComponentAttributes(applied_morph_id, morph_id)  # TODO add value/unit
+                    if comment is not None:
+                        gu.addComment(g, morph_id, comment)
+                    self.id_label_map[applied_morph_id] = applied_morph_label
+
                     # also add these reagent-targeted-genes to the extrinsic geno hash to be accessed by env id
                     extrgeno_hash_by_env_id[environment_id] += list_of_targeted_genes
 
                 elif not re.match('ZDB.*', condition):
-                    # create fake environmental components, and add to the hash
+                    # create environmental components, and add to the hash
+                    # cleanup the "condition" to remove non-id-friendly chars
+                    cond_id = condition.strip()
+                    cond_id = re.sub('\W+', '-', cond_id)
+
                     if units is not None and values is not None:
-                        env_component_id = '-'.join((condition_group.strip(), condition.strip(), value_id, unit_id))
+                        env_component_id = '-'.join((condition_group.strip(), cond_id.strip(), value_id, unit_id))
                         if values == '':
                             conc_label = '('+units+')'
                         else:
                             conc_label = '('+values+' '+units+')'
                     else:
-                        env_component_id = '-'.join((condition_group.strip(), condition.strip()))
+                        env_component_id = '-'.join((condition_group.strip(), cond_id.strip()))
                         conc_label = ''
 
+                    logger.info('id = %s',env_component_id)
                     # make them blank nodes
                     env_component_id = '_'+env_component_id
                     if self.nobnodes:
@@ -1648,7 +1679,10 @@ class ZFIN(Source):
                     else:
                         enviro_label_hash[environment_id].append(env_component_id)
 
-                    # TODO add the individual environmental component into the graph
+                    # add each component to the environment as a part
+                    envo.addEnvironmentalCondition(env_component_id, env_component_label)
+                    if comment is not None:
+                        gu.addComment(g, env_component_id, comment)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1669,12 +1703,10 @@ class ZFIN(Source):
             for env_comp_id in env_component_list:
                 env_comp_label = self.id_label_map[env_comp_id]
                 environment_labels += [env_comp_label]
+                envo.addComponentToEnvironment(env_id, env_comp_id)
             environment_labels.sort()
             env_label = '; '.join(environment_labels)
-
-            # Using the general "Environment" geno ID (GENO:0000099) to type
-            # TODO identify and use OBI, ENVO, or other environment ontology
-            gu.addIndividualToGraph(g, env_id, env_label, 'GENO:0000099')
+            envo.addEnvironment(env_id, env_label)
 
         # iterate over the env hash to build the extrinsic genotypes that are lumped
         # together by the environment id.  these can then be accessed outside of this
@@ -2015,3 +2047,4 @@ class ZFIN(Source):
         test_suite = unittest.TestLoader().loadTestsFromTestCase(ZFINTestCase)
 
         return test_suite
+

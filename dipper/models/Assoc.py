@@ -2,6 +2,7 @@ __author__ = 'nlw'
 
 import re
 import logging
+import hashlib
 
 from rdflib import Namespace, URIRef, Literal
 from rdflib.namespace import RDF, DC, OWL, RDFS, XSD
@@ -221,7 +222,6 @@ class Assoc:
         else:
             logger.warn("source as a literal -- is this ok?")
             g.add((node, DC['source'], Literal(pub_id)))
-            # else:
-            #   print("WARN:",self.entity_id,'+',self.phenotype_id,'has no source information for the association (',self.evidence,')')
 
         return
+

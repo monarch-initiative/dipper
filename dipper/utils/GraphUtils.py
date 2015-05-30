@@ -50,6 +50,7 @@ class GraphUtils:
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050',
+        'has_part': 'BFO:0000051',
         'mentions': 'IAO:0000142',
         'model_of' : 'ERO:0000233',
         'has_gene_product' : 'RO:0002205',

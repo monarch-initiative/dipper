@@ -180,6 +180,39 @@ class Source:
 
         return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
 
+    def make_association_id(self, definedby, subject, predicate, object, evidence, source, attributes=None):
+        """
+        A method to create unique identifiers for OBAN-style associations, based on all the parts of the assn
+        If any of the items is empty or None, it will convert it to blank.
+        It effectively md5 hashes the (+)-joined string from the values.
+        Subclasses of Assoc can submit an additional array of attributes that will be added to the ID.
+
+        :param definedby: The (data) resource that provided the annotation
+        :param subject:
+        :param predicate:
+        :param object:
+        :param evidence:
+        :param source:
+        :param attributes:
+        :return:
+        """
+        # FIXME this gets at #144.  but should be moved into the Assoc classes.
+        # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
+
+        # putting definedby first, as this will usually be the datasource providing the annotation
+        # this will end up making the first few parts of the id be the same for all annotations in that resource
+        items_to_hash = [definedby, subject, predicate, object, evidence, source]
+        if attributes is not None:
+            items_to_hash += attributes
+
+        for i, val in enumerate(items_to_hash):
+            if val is None:
+                items_to_hash[i] = ''
+
+        byte_string = '+'.join(items_to_hash).encode("utf-8")
+
+        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
+
     def checkIfRemoteIsNewer(self, remote, local):
         """
         Given a remote file location, and the corresponding local file
