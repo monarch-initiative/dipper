@@ -2,6 +2,10 @@ import logging
 import csv
 import re
 import unicodedata
+import pysftp
+from datetime import datetime
+import stat
+import os
 
 from dipper.sources.Source import Source
 from dipper.models.Assoc import Assoc
@@ -34,7 +38,7 @@ class Coriell(Source):
 
     Notice: The Coriell catalog is delivered to Monarch in a specific format, and requires ssh rsa fingerprint
     identification.  Other groups wishing to get this data in it's raw form will need to contact Coriell
-    for credentials.
+    for credentials.  This needs to be placed into your configuration file for it to work.
 
     """
 
@@ -90,28 +94,65 @@ class Coriell(Source):
 
     def fetch(self, is_dl_forced):
         """
+        Here we connect to the coriell sftp server using private connection details.  They dump bi-weekly files
+        with a timestamp in the filename.  For each catalog, we poll the remote site and pull the most-recently
+        updated file, renaming it to our local *_latest.csv.
+
         Be sure to have pg user/password connection details in your conf.json file, like:
         dbauth : {
-        "coriell" : {"user" : "<username>", "password" : "<password>", "host" : <host>}
+        "coriell" : {"user" : "<username>", "password" : "<password>", "host" : <host>, "private_key"=path/to/rsa_key}
         }
 
         :param is_dl_forced:
         :return:
         """
-        host1 = config.get_config()['keys']['coriell']['host']
-        user1 = 'username=\''+ config.get_config()['keys']['coriell']['user']+'\''
-        passwd1 = 'password=\''+ config.get_config()['keys']['coriell']['password']+'\''
-        #print(host1,user1,passwd1)
-        #ftp = FTP(config.get_config()['keys']['coriell']['host'],config.get_config()['keys']['coriell']['user'],config.get_config()['keys']['coriell']['password'],timeout=None)
-        #ftp = FTP(host1,user1,passwd1,timeout=None)
-        #ftp.login()
-        #FIXME: Still resulting in login time out.
-        #with pysftp.Connection(host1, user1, passwd1) as sftp:
-            #with sftp.cd('public'):
-                #print('success!')
-                #sftp.get_r()
-        #Will need to rename the files, or handle changing file names with the same beginning (NIGMS_..., etc.)
+        host = config.get_config()['keys']['coriell']['host']
+        user = config.get_config()['keys']['coriell']['user']
+        passwd = config.get_config()['keys']['coriell']['password']
+        key = config.get_config()['keys']['coriell']['private_key']
 
+        with pysftp.Connection(host, username=user, password=passwd, private_key=key) as sftp:
+            files_by_repo = {'NIGMS': [], 'NIA': [], 'NHGRI': [], 'NINDS': []}
+            most_recent_files = {}
+            for attr in sftp.listdir_attr():
+                # for each catalog, get the most-recent filename
+                m = re.match('(NIGMS|NIA|NHGRI|NINDS)', attr.filename)
+                if m is not None and len(m.groups()) > 0:
+                    files_by_repo[m.group(1)] += [attr]
+            # sort each array in hash, and get the name and time of the most-recent file for each catalog
+            for r in files_by_repo:
+                files_by_repo[r].sort(key=lambda x: x.st_mtime, reverse=True)
+                if len(files_by_repo[r]) < 1:
+                    # pass
+                    logger.error("There were no files to download for the %s catalog", r)
+                most_recent_file = files_by_repo[r][0]
+                most_recent_files[r] = most_recent_file
+            for r in most_recent_files:
+                f = most_recent_files[r]
+                target_name = r+"_latest.csv"
+                target_name = '/'.join((self.rawdir, target_name))
+                # check if the local file is out of date, if so, download.  otherwise, skip.
+                # we rename (for simplicity) the original file
+                st = None
+                if os.path.exists(target_name):
+                    st = os.stat(target_name)
+                if st is None or f.st_mtime > st[stat.ST_CTIME]:
+                    if st is None:
+                        logger.info("File does not exist locally; downloading...")
+                    else:
+                        logger.info("There's a new version of %s catalog available; downloading...", r)
+                    sftp.get(f.filename)
+                    logger.info("Fetched %s", f.filename)
+                    # move to the "latest" name
+                    os.rename(f.filename, target_name)
+                    # in our file hash, set the filename
+                else:
+                    logger.info("File %s exists; using local copy", f.filename)
+                t = datetime.utcfromtimestamp(f.st_mtime).strftime("%Y-%m-%d")
+                logger.info("Local file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
+                self.dataset.setFileAccessUrl(f.filename)
+                filedate = datetime.utcfromtimestamp(f.st_mtime).strftime("%Y-%m-%d")
+                self.dataset.setVersion(filedate)
         return
 
     def parse(self, limit=None):
