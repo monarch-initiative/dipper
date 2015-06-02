@@ -87,7 +87,7 @@ class Coriell(Source):
         logger.warn('We map all omim ids as a disease/phenotype entity, but should be fixed in the future')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'keys' not in config.get_config() or 'coriell' not in config.get_config()['keys']:
+        if 'dbauth' not in config.get_config() or 'coriell' not in config.get_config()['dbauth']:
             logger.error("not configured with FTP user/password.")
 
         return
@@ -106,10 +106,10 @@ class Coriell(Source):
         :param is_dl_forced:
         :return:
         """
-        host = config.get_config()['keys']['coriell']['host']
-        user = config.get_config()['keys']['coriell']['user']
-        passwd = config.get_config()['keys']['coriell']['password']
-        key = config.get_config()['keys']['coriell']['private_key']
+        host = config.get_config()['dbauth']['coriell']['host']
+        user = config.get_config()['dbauth']['coriell']['user']
+        passwd = config.get_config()['dbauth']['coriell']['password']
+        key = config.get_config()['dbauth']['coriell']['private_key']
 
         with pysftp.Connection(host, username=user, password=passwd, private_key=key) as sftp:
             files_by_repo = {'NIGMS': [], 'NIA': [], 'NHGRI': [], 'NINDS': []}
