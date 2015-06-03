@@ -53,7 +53,8 @@ class GraphUtils:
         'mentions': 'IAO:0000142',
         'model_of': 'ERO:0000233',
         'has_gene_product': 'RO:0002205',
-        'correlates_with': 'MONARCH:correlates_with'
+        'correlates_with': 'MONARCH:correlates_with',
+        'substance_that_treats': 'RO:0002606'
     }
 
     datatype_properties = {

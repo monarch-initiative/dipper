@@ -59,11 +59,6 @@ class CTD(Source):
         'publications': {'file': 'CTD_curated_references.tsv.gz'}
     }
 
-    REL_MAP = {
-        'therapeutic': 'MONARCH:treats',
-        'marker/mechanism': 'MONARCH:correlates_with'
-    }
-
     def __init__(self):
         Source.__init__(self, 'ctd')
         self.dataset = Dataset('ctd', 'CTD', 'http://ctdbase.org', None, 'http://ctdbase.org/about/legal.jsp')
@@ -132,7 +127,7 @@ class CTD(Source):
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self.gu.loadAllProperties(self.g)
-        self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
+        # self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
 
         self.load_bindings()
         logger.info("Done parsing files.")
@@ -413,7 +408,12 @@ class CTD(Source):
         Returns:
             :return str: curie for relationship label
         """
-        return self.REL_MAP[rel]
+        gu = GraphUtils(curie_map.get())
+        rel_map = {
+            'therapeutic': gu.object_properties['substance_that_treats'],
+            'marker/mechanism': gu.object_properties['correlates_with'],
+        }
+        return str(rel_map[rel])
 
     def _get_class_id(self, cls):
         """
