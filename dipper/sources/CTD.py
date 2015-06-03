@@ -411,7 +411,7 @@ class CTD(Source):
         gu = GraphUtils(curie_map.get())
         rel_map = {
             'therapeutic': gu.object_properties['substance_that_treats'],
-            'marker/mechanism': gu.object_properties['correlates_with'],
+            'marker/mechanism': gu.object_properties['is_marker_for'],
         }
         return str(rel_map[rel])
 

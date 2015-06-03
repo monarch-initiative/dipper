@@ -54,7 +54,8 @@ class GraphUtils:
         'model_of': 'ERO:0000233',
         'has_gene_product': 'RO:0002205',
         'correlates_with': 'MONARCH:correlates_with',
-        'substance_that_treats': 'RO:0002606'
+        'substance_that_treats': 'RO:0002606',
+        'is_marker_for': 'MONARCH:is_marker_for'
     }
 
     datatype_properties = {
