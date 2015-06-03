@@ -1819,14 +1819,22 @@ class ZFIN(Source):
                 # chr_label = makeChromLabel(chromosome, taxon_label)
                 geno.addChromosomeClass(chromosome, taxon_id, taxon_label)
 
-                # add the mapping-panel chromosome
-                panel_id = 'ZFIN:'+panel_symbol
-                geno.addChromosomeInstance(chromosome, panel_id, panel_symbol, chr_id)
+                pinfo = self._get_mapping_panel_info(panel_symbol)
+                if pinfo is not None:
+                    # add the panel as a genome build
+                    panel_id = 'ZFIN:' + pinfo['id']
+                    geno.addReferenceGenome(panel_id, panel_symbol, taxon_id)
+                    gu.addDescription(g, panel_id, pinfo['name'])
 
-                # add the feature to the mapping-panel chromosome
-                f = Feature(zfin_id, None, None)
-                f.addSubsequenceOfFeature(g, panel_id)
-                # TODO add the coordinates see https://github.com/JervenBolleman/FALDO/issues/24
+                    # add the mapping-panel chromosome
+                    chr_inst_id = makeChromID(chromosome, panel_id)
+                    geno.addChromosomeInstance(chromosome, panel_id, panel_symbol, chr_id)
+                    # add the feature to the mapping-panel chromosome
+                    f = Feature(zfin_id, None, None)
+                    f.addSubsequenceOfFeature(g, chr_inst_id)
+                    # TODO add the coordinates see https://github.com/JervenBolleman/FALDO/issues/24
+                else:
+                    logger.error("There's a panel (%s) we don't have info for", panel_symbol)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -2047,6 +2055,22 @@ class ZFIN(Source):
             logger.warn("Unconfigured zygosity: %s", zygosity)
 
         return other_allele
+
+
+    def _get_mapping_panel_info(self, panel):
+        panel_hash = {
+            'HS': {'id': 'ZDB-REFCROSS-000320-1', 'name': 'Heat Shock', 'type': 'meiotic', 'num_meioses': 42},
+            'GAT': {'id': 'ZDB-REFCROSS-990308-7', 'name': 'Gates et al', 'type': 'meiotic', 'num_meioses' : 96},
+            'LN54': {'id': 'ZDB-REFCROSS-990426-6', 'name': 'Loeb/NIH/5000/4000', 'dose': '4000 rads', 'type': 'Radiation Hybrid'},
+            'MGH': {'id': 'ZDB-REFCROSS-980521-11', 'name': 'Boston MGH Cross', 'type': 'meiotic', 'num_meioses' : 40},
+            'MOP': {'id': 'ZDB-REFCROSS-980526-5', 'name': 'Mother of Pearl', 'type': 'meiotic', 'num_meioses' : 96},
+            'T51': {'id': 'ZDB-REFCROSS-990707-1', 'name': 'Goodfellow T51', 'dose': '3000 rads', 'type': 'Radiation Hybrid'},
+        }
+        p = None
+        if panel in panel_hash:
+            p = panel_hash[panel]
+
+        return p
 
     def _make_variant_locus_id(self, gene_id, allele_id):
         """
