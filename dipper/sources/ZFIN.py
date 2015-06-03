@@ -1,8 +1,6 @@
 import csv
 import re
 import logging
-import pprint
-# from Bio.Seq import Seq
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -11,8 +9,9 @@ from dipper.models.Genotype import Genotype
 from dipper.models.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
-from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Environment import Environment
+from dipper.models.GenomicFeature import makeChromID
+from dipper.models.GenomicFeature import Feature
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -107,7 +106,7 @@ class ZFIN(Source):
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
                         "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1"
-        ],
+                        ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
                 "PMID:18201692", "PMID:18358464", "PMID:18388326", "PMID:18638469", "PMID:18846223",
@@ -185,6 +184,7 @@ class ZFIN(Source):
         self._process_gene_marker_relationships(limit)  # REVIEW-COMPLETE
         self._process_features(limit)  # REVIEWED-COMPLETE
         self._process_feature_affected_genes(limit)  # REVIEWED-COMPLETE
+        self._process_mappings(limit)  # only adds features on chromosomes, not positions
 
         # These must be processed before G2P and expression
         self._process_wildtypes(limit)  # REVIEWED-COMPLETE
@@ -201,7 +201,7 @@ class ZFIN(Source):
 
         # FOR THE FUTURE - needs verification
         # self._process_wildtype_expression(limit)
-        #self._process_uniprot_ids(limit)
+        # self._process_uniprot_ids(limit)
 
         logger.info("Finished parsing.")
 
@@ -368,10 +368,6 @@ class ZFIN(Source):
         # allele_id : [list, of, alleles] # for unlocated things
         #               }
         # now loop through the geno_hash, and build the vslcs
-
-        #pp = pprint.PrettyPrinter(indent=4)
-        #pp.pprint(geno_hash)
-        #logger.info('genohash: %s', pp.pformat(geno_hash))
 
         logger.info("Building intrinsic genotypes from partonomy")
         for gt in geno_hash:
@@ -871,6 +867,7 @@ class ZFIN(Source):
                 # get the extrinsic genotype
                 # find the extrinsic parts in the hash, and add them here
                 extrinsic_genotype_id = None
+                extrinsic_genotype_label = ''
                 if env_id in self.extrinsic_id_to_enviro_id_hash:
                     extrinsic_genotype_id = self.extrinsic_id_to_enviro_id_hash[env_id]
                     if extrinsic_genotype_id in self.id_label_map:
@@ -884,7 +881,7 @@ class ZFIN(Source):
 
                     effective_genotype_label = '; '.join((intrinsic_genotype_label, extrinsic_genotype_label))
                     self.id_label_map[effective_genotype_id] = effective_genotype_label
-                    # TODO check if the intrinsic genotype is w.t., then add it as a reference, otherwise use has_alternate_part
+
                     if genotype_id in self.wildtype_genotypes:
                         intrinsic_part_rel = geno.object_properties['has_reference_part']
                     else:
@@ -974,9 +971,9 @@ class ZFIN(Source):
         :param include_normal:
         :return:
         """
-        # TODO configure for outtput to stdout
+
         f = '/'.join((self.outdir, 'missing_zps.txt'))
-        print('gonna write to', f)
+
         myset = set([','.join(x) for x in missing_zpids])
         # missing_zpids = set(missing_zpids)  # make it a unique set
         with open(f, 'w', newline='\n') as csvfile:
@@ -987,9 +984,8 @@ class ZFIN(Source):
             for x in myset:
                 writer.writerow(x.split(','))
         csvfile.close()
-        print('writing outfile')
+
         logger.info("Wrote %d missing zp defs to %s", len(myset), f)
-        # logger.warn("The following %d phenotype-sextuples were not mapped:\n,%s", len(myset), str(myset))
 
         return
 
@@ -1146,7 +1142,7 @@ class ZFIN(Source):
                 self.id_label_map[gene_id] = gene_symbol
 
                 if self.testMode and (gene_id not in self.test_ids['gene'] or
-                                              genomic_feature_id not in self.test_ids['allele']):
+                                      genomic_feature_id not in self.test_ids['allele']):
                     continue
 
                 geno.addGene(gene_id, gene_symbol, gene_so_id)
@@ -1230,7 +1226,6 @@ class ZFIN(Source):
                                       or 'ZFIN:' + marker_id not in self.test_ids['morpholino']):
                     continue
 
-
                 # there are many relationships, but we only take a few for now
                 if relationship in ['knockdown reagent targets gene', 'coding sequence of',
                                     'gene product recognized by antibody', 'promoter of',
@@ -1250,7 +1245,7 @@ class ZFIN(Source):
                         # but we don't know if they are wild-type or mutant, so just has_part for now
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
                         # add a trangene part - TODO move to Genotype.py
-                        transgene_part_id = '_' + ('-').join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
+                        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
                         gu.addIndividualToGraph(g, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
                                                 geno.genoparts['coding_transgene_feature'])
                         geno.addParts(transgene_part_id, marker_id)
@@ -1265,7 +1260,7 @@ class ZFIN(Source):
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
 
                         # add a trangene part
-                        transgene_part_id = '_' + ('-').join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
+                        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
                         gu.addIndividualToGraph(g, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
                                                 geno.genoparts['regulatory_transgene_feature'])
                         geno.addParts(transgene_part_id, marker_id)
@@ -1319,10 +1314,15 @@ class ZFIN(Source):
                                       or 'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
 
-                # TODO convert into a nice journal label
-
                 pub_id = 'ZFIN:' + pub_id.strip()
-                pub_label = '; '.join((authors, title, journal, year, vol, pages))
+                # trim the author list for ease of reading
+                alist = re.split(',', authors)
+                if len(alist) > 1:
+                    astring = ' '.join((alist[0].strip(), 'et al'))
+                else:
+                    astring = authors
+
+                pub_label = '; '.join((astring, title, journal, year, vol, pages))
                 gu.addIndividualToGraph(g, pub_id, pub_label)
 
                 if pubmed_id is not None and pubmed_id != '':
@@ -1474,7 +1474,6 @@ class ZFIN(Source):
         logger.info("Done with Reagent type %s", reagent_type)
         return
 
-
     def _process_pheno_enviro(self, limit=None):
         """
         The pheno_environment.txt file ties experimental conditions to an environment ID.
@@ -1534,7 +1533,7 @@ class ZFIN(Source):
         enviro_label_hash = {}
         geno = Genotype(g)
         envo = Environment(g)
-        pp = pprint.PrettyPrinter(indent=4)
+        # pp = pprint.PrettyPrinter(indent=4)
 
         raw = '/'.join((self.rawdir, self.files['enviro']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1737,8 +1736,7 @@ class ZFIN(Source):
         # for clarity i do this in the separate loop below, rather than combining it with the above
 
         logger.info("Building extrinsic genotype using environmental id groupings")
-        pp = pprint.PrettyPrinter(indent=4)
-        # logger.info(pp.pformat(extrgeno_hash_by_env_id))
+
         for env_id in extrgeno_hash_by_env_id:
             extrgeno_labels = []
             extrgeno_hash_by_env_id[env_id].sort()
@@ -1808,17 +1806,27 @@ class ZFIN(Source):
                 zfin_id = 'ZFIN:' + zfin_num.strip()
                 if re.match('ZDB-GENE.*', zfin_num):
                     gu.addClassToGraph(g, zfin_id, None)  # assume type and label get added elsewhere
+                    geno.addTaxon(taxon_id, zfin_id)
                 elif re.match('ZDB-ALT.*', zfin_num):
                     gu.addIndividualToGraph(g, zfin_id, None)  # assume type and label get added elsewhere
+                    geno.addTaxon(taxon_id, zfin_id)
                 else:
                     continue
                     # skip any of the others
 
-                # todo
-                # add chromosome
-                # add panel as a version of the genome
-                # add chromosome in the panel
-                # add location of the item w.r.t. build of the genome/chromosome
+                # make the chromosome class
+                chr_id = makeChromID(chromosome, taxon_id)
+                # chr_label = makeChromLabel(chromosome, taxon_label)
+                geno.addChromosomeClass(chromosome, taxon_id, taxon_label)
+
+                # add the mapping-panel chromosome
+                panel_id = 'ZFIN:'+panel_symbol
+                geno.addChromosomeInstance(chromosome, panel_id, panel_symbol, chr_id)
+
+                # add the feature to the mapping-panel chromosome
+                f = Feature(zfin_id, None, None)
+                f.addSubsequenceOfFeature(g, panel_id)
+                # TODO add the coordinates see https://github.com/JervenBolleman/FALDO/issues/24
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1932,6 +1940,7 @@ class ZFIN(Source):
                 assoc.addOrthologyAssociationToGraph(g)
 
                 # FIXME we have requested that ZFIN add evidence codes and papers to the orthology calls
+                # TODO we can get this from zfin mine
                 # (This data is in their web front-end, but not in the downloads)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -1953,8 +1962,6 @@ class ZFIN(Source):
         :return: ZP id
         """
         zp_id = None
-        # TODO check that we are using the most relevant zp.annot file due to recent changes
-        # see https://github.com/sba1/bio-ontology-zp/issues/8
 
         # zfin uses free-text modifiers, but we need to convert them to proper PATO classes for the mapping
         mod_id = modifier
@@ -1962,19 +1969,19 @@ class ZFIN(Source):
             'abnormal': 'PATO:0000460',
             'normal': 'PATO:0000461'
         }
-        if (modifier in modifiers.keys()):
+        if modifier in modifiers.keys():
             mod_id = modifiers.get(modifier)
 
         key = self._make_zpkey(superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)
         mapping = self.zp_map.get(key)
 
-        if (mapping is None):
+        if mapping is None:
             # pass
             if modifier == 'normal':
                 pass
                 # logger.info("Normal phenotypes not yet supported")
             else:
-                logger.warn("Couldn't map ZP id to %s", ("_").join(
+                logger.warn("Couldn't map ZP id to %s", "_".join(
                     (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
         else:
             zp_id = mapping['zp_id']
@@ -2058,7 +2065,7 @@ class ZFIN(Source):
         return i
 
     def _make_effective_genotype_id(self, intrinsic_id, extrinsic_id):
-        effective_genotype_id = self.make_id('-'.join((intrinsic_id,extrinsic_id)))
+        effective_genotype_id = self.make_id('-'.join((intrinsic_id, extrinsic_id)))
 
         return effective_genotype_id
 
@@ -2069,4 +2076,3 @@ class ZFIN(Source):
         test_suite = unittest.TestLoader().loadTestsFromTestCase(ZFINTestCase)
 
         return test_suite
-
