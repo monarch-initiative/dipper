@@ -26,19 +26,18 @@ class CTD(Source):
     susceptibility and environmentally influenced diseases.
 
     Here, we fetch, parse, and convert data from CTD into triples, leveraging only the associations based on
-    direct evidence (not using the inferred associations).  We currently process the following associations:
-        *chemical-disease
-        *gene-pathway
-        *gene-disease
+    DIRECT evidence (not using the inferred associations).  We currently process the following associations:
+        * chemical-disease
+        * gene-pathway
+        * gene-disease
 
     CTD curates relationships between genes and chemicals/diseases with marker/mechanism and/or therapeutic.
     Unfortunately, we cannot disambiguate between marker (gene expression) and mechanism (causation)
-    for these associations.  Therefore, we are left to relate these simply by "correlation".
+    for these associations.  Therefore, we are left to relate these simply by "marker".
 
     CTD also pulls in genes and pathway membership from KEGG and REACTOME.  We create groups of these following
-    the pattern that the specific pathway is a subclass of 'signal transduction' (a go process), and
+    the pattern that the specific pathway is a subclass of 'cellular process' (a go process), and
     the gene is "involved in" that process.
-
     """
 
     files = {
