@@ -27,15 +27,17 @@ class SourceTestCase(unittest.TestCase):
         return
 
     def test_parse(self):
-        # TODO figure out how to skip this if we are running this from the source itself
-        if self.source != Source():  # don't test the abstract class
+        if self.source is not None:  # don't test the abstract class
             try:
                 self.source.parse()
-                self.assertTrue(True)
+            except Exception as ParseException:
+                logger.error(ParseException)
+                self.assertFalse(True, "Parsing failed")
+            try:
                 self.source.write(format='turtle')
-                self.assertTrue(True)
-            except:
-                self.assertFalse(False, "Parsing failed")
+            except Exception as WriteException:
+                logger.error(WriteException)
+                self.assertFalse(True, "Write failed")
 
         return
 

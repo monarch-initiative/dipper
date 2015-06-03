@@ -366,7 +366,7 @@ class MGI(Source):
 
         <alleleid> a OWL:NamedIndividual
             rdf:label "allele symbol"
-            dc:descirption "long allele name"
+            dc:description "long allele name"
 
         :param limit:
         :return:

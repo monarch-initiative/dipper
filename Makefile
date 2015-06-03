@@ -60,3 +60,9 @@ zfin-fetch:
 
 zfin-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_zfin.py
+
+kegg-fetch:
+	$(DIPPER_BIN) --sources kegg --no_verify --fetch_only
+
+kegg-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_kegg.py

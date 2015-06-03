@@ -64,6 +64,7 @@
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?'
+'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
@@ -82,7 +83,21 @@
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
-'HGMD' : http://identifiers.org/hgmd/'
+'HGMD' : 'http://identifiers.org/hgmd/'
+'AQTLCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
+'AQTLTraitCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qtrait?trait_ID='
+'AQTLChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
+'AQTLTraitChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qtrait?trait_ID='
+'AQTLPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
+'AQTLTraitPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qtrait?trait_ID='
+'AQTLSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
+'AQTLTraitSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qtrait?trait_ID='
+'AQTLHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
+'AQTLTraitHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qtrait?trait_ID='
+'AQTLRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
+'AQTLTraitRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qtrait?trait_ID='
+'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
+
 
 # genes
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
@@ -103,6 +118,7 @@
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
+'EcoGene' : 'http://ecogene.org/gene/'
 
 
 # proteins

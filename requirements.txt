@@ -7,3 +7,4 @@ pyyaml
 pysftp
 biopython
 docx
+beautifulsoup4

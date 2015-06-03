@@ -35,8 +35,8 @@ class Panther(Source):
     files = {
         'refgenome': {'file': 'RefGenomeOrthologs.tar.gz',
                       'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/RefGenomeOrthologs.tar.gz'},
-        'hcop': {'file': 'orthologs_HCOP.tar.gz',
-                 'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/orthologs_HCOP.tar.gz'}
+        'hcop': {'file': 'Orthologs_HCOP.tar.gz',
+                 'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/Orthologs_HCOP.tar.gz'}
     }
 
     def __init__(self, tax_ids=None):
@@ -257,7 +257,8 @@ class Panther(Source):
             'PANTR': 9598,
             'ANOCA': 28377,
             'MONDO': 13616,
-            'BOVIN': 9913
+            'BOVIN': 9913,
+            'ECOLI': 562
         }
         if ptax in ptax_to_taxid_map:
             taxid = ':'.join(('NCBITaxon', str(ptax_to_taxid_map.get(ptax))))

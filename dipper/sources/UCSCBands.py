@@ -68,6 +68,13 @@ class UCSCBands(Source):
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
+        # Note that there are no bands, arms or staining components for zfish at the moment
+        '7955': {
+            'file': 'danRer10cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
+            'build_num': 'danRer10',
+            'genome_label': 'Zebrafish'
+        },
     }
 
     def __init__(self, tax_ids=None):
@@ -79,7 +86,7 @@ class UCSCBands(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090]
+            self.tax_ids = [9606, 10090, 7955]
 
         # TODO add other species as defaults
 
@@ -162,42 +169,89 @@ class UCSCBands(Source):
                     continue
 
                 # chr13	4500000	10000000	p12	stalk
-                (chrom_num, start, stop, band_num, rtype) = line.split('\t')
+                (scaffold, start, stop, band_num, rtype) = line.split('\t')
                 line_counter += 1
 
-                # add the generic and build-specific chromosome
-                chrom_class_id = makeChromID(chrom_num, taxon)  # the chrom class (generic) id
+                # NOTE some less-finished genomes have placed and unplaced scaffolds
+                # * Placed scaffolds: the scaffolds have been placed within a chromosome.
+                # * Unlocalized scaffolds: although the chromosome within which the scaffold occurs is known,
+                #   the scaffold's position or orientation is not known.
+                # *Unplaced scaffolds: it is not known which chromosome the scaffold belongs to.
 
-                # first, add the chromosome class (in the taxon)
-                geno.addChromosomeClass(chrom_num, taxon_id, self.files[taxon]['genome_label'])
+                # find out if the thing is a full on chromosome, or a scaffold:
+                # ex: unlocalized scaffold: chr10_KL568008v1_random
+                # ex: unplaced scaffold: chrUn_AABR07022428v1
+                placed_scaffold_pattern = '(chr(?:\d+|X|Y|Z|W|M))'
+                unlocalized_scaffold_pattern = placed_scaffold_pattern+'_(\w+)_random'
+                unplaced_scaffold_pattern = 'chrUn_(\w+)'
 
-                # then, add the chromosome instance (from the given build)
-                geno.addChromosomeInstance(chrom_num, build_id, build_num, chrom_class_id)
+                m = re.match(placed_scaffold_pattern+'$', scaffold)
+                if m is not None and len(m.groups()) == 1:
+                    chrom_num = m.group(1)   # the chromosome is the first match of the pattern
+                else:
+                    # let's skip over anything that isn't a placed_scaffold at the class level
+                    logger.info("Found non-placed chromosome %s", scaffold)
+                    chrom_num = None
 
-                # add the chr to the hashmap of coordinates for this build
-                # the chromosome coordinate space is itself
-                if chrom_num not in mybands.keys():
-                    mybands[chrom_num] = {'min': 0, 'max': 0, 'chr': chrom_num,
-                                          'ref': build_id, 'parent': None, 'stain': None,
-                                          'type': Feature.types['chromosome']}
+                m_chr_unloc = re.match(unlocalized_scaffold_pattern, scaffold)
+                m_chr_unplaced = re.match(unplaced_scaffold_pattern, scaffold)
 
-                # add the specific band
-                mybands[chrom_num+band_num] = {'min': start, 'max': stop, 'chr': chrom_num,
-                                               'ref': build_id, 'parent': None, 'stain': None,
-                                               'type': None}
+                scaffold_num = None
+                if m:
+                    pass
+                elif m_chr_unloc is not None and len(m_chr_unloc.groups()) == 2:
+                    chrom_num = m_chr_unloc.group(1)
+                    scaffold_num = m_chr_unloc.group(2)
+                elif m_chr_unplaced is not None and len(m_chr_unplaced.groups()) == 1:
+                    scaffold_num = m_chr_unplaced.group(1)
+                else:
+                    logger.error("There's a chr pattern that we aren't matching: %s", scaffold)
 
-                # add the staining intensity of the band
-                if re.match('g(neg|pos|var)', rtype):
-                    mybands[chrom_num+band_num]['stain'] = Feature.types.get(rtype)
+                if chrom_num is not None:
+                    chrom_class_id = makeChromID(chrom_num, taxon)  # the chrom class (generic) id
 
-                # get the parent bands, and make them unique
-                parents = list(monochrom.make_parent_bands(band_num, set()))
-                # alphabetical sort will put them in smallest to biggest, so we reverse
-                parents.sort(reverse=True)
-                # print('parents of',chrom,band,':',parents)
+                    # first, add the chromosome class (in the taxon)
+                    geno.addChromosomeClass(chrom_num, taxon_id, self.files[taxon]['genome_label'])
 
-                if len(parents) > 0:
-                    mybands[chrom_num+band_num]['parent'] = chrom_num+parents[0]
+                    # then, add the chromosome instance (from the given build)
+                    geno.addChromosomeInstance(chrom_num, build_id, build_num, chrom_class_id)
+
+                    # add the chr to the hashmap of coordinates for this build
+                    # the chromosome coordinate space is itself
+                    if chrom_num not in mybands.keys():
+                        mybands[chrom_num] = {'min': 0, 'max': 0, 'chr': chrom_num,
+                                              'ref': build_id, 'parent': None, 'stain': None,
+                                              'type': Feature.types['chromosome']}
+
+                if scaffold_num is not None:
+                    # this will put the coordinates of the scaffold in the scaffold-space
+                    # and make sure that the scaffold is part of the correct parent.
+                    # if chrom_num is None, then it will attach it to the genome, just like a reg chrom
+                    mybands[scaffold_num] = {'min': start, 'max': stop, 'chr': scaffold_num,
+                                             'ref': build_id, 'parent': chrom_num, 'stain': None,
+                                             'type': Feature.types['chromosome_part'],
+                                             'synonym': scaffold}
+
+                if band_num is not None and band_num.strip() != '':
+                    # add the specific band
+                    mybands[chrom_num+band_num] = {'min': start, 'max': stop, 'chr': chrom_num,
+                                                   'ref': build_id, 'parent': None, 'stain': None,
+                                                   'type': None}
+
+                    # add the staining intensity of the band
+                    if re.match('g(neg|pos|var)', rtype):
+                        mybands[chrom_num+band_num]['stain'] = Feature.types.get(rtype)
+
+                    # get the parent bands, and make them unique
+                    parents = list(monochrom.make_parent_bands(band_num, set()))
+                    # alphabetical sort will put them in smallest to biggest, so we reverse
+                    parents.sort(reverse=True)
+                    # print('parents of',chrom,band,':',parents)
+
+                    if len(parents) > 0:
+                        mybands[chrom_num+band_num]['parent'] = chrom_num+parents[0]
+                else:
+                    parents = set()
 
                 # loop through the parents and add them to the hash
                 # add the parents to the graph, in hierarchical order
@@ -243,17 +297,32 @@ class UCSCBands(Source):
             band_build_label = makeChromLabel(b, build_num)
             chrom_in_build_id = makeChromID(myband['chr'], build_num)  # the build-specific chrom
 
-            # add the band as a class
-            self.gu.addClassToGraph(self.graph, band_class_id, band_class_label, myband['type'])
+            # if it's != part, then add the class
+            if myband['type'] != Feature.types['chromosome_part']:
+                self.gu.addClassToGraph(self.graph, band_class_id, band_class_label, myband['type'])
+                bfeature = Feature(band_build_id, band_build_label, band_class_id)
+            else:
+                band_class_id = myband['type']
+                bfeature = Feature(band_build_id, band_build_label, myband['type'])
+                if 'synonym' in myband:
+                    self.gu.addSynonym(self.graph, band_build_id, myband['synonym'])
+
+            if myband['parent'] is None:
+                # since we likely don't know the chr, add it as a part of the build
+                geno.addParts(band_build_id, build_id)
+            else:
+                # geno.addParts(band_build_id, chrom_in_build_id)
+                parent_chrom_in_build = makeChromID(myband['parent'], build_num)
+                bfeature.addSubsequenceOfFeature(self.graph, parent_chrom_in_build)
 
             # add the band as a feature (which also instantiates the owl:Individual)
-            bfeature = Feature(band_build_id, band_build_label, band_class_id)
             bfeature.addFeatureStartLocation(myband['min'], chrom_in_build_id)
             bfeature.addFeatureEndLocation(myband['max'], chrom_in_build_id)
             if 'stain' in myband and myband['stain'] is not None:
                 bfeature.addFeatureProperty(self.graph, Feature.properties['has_staining_intensity'], myband['stain'])
 
             # type the band as a faldo:Region directly (add_region=False)
+            # bfeature.setNoBNodes(self.nobnodes)  # to come when we merge in ZFIN.py
             bfeature.addFeatureToGraph(self.graph, False)
 
         return

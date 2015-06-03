@@ -1,10 +1,6 @@
-import os
 import csv
-from stat import *
 import re
-from datetime import datetime
 import gzip
-import os.path
 import unicodedata
 import logging
 from dipper.utils import pysed
@@ -134,7 +130,7 @@ class ClinVar(Source):
 
         geno = Genotype(g)
         gu.loadAllProperties(g)
-        f = Feature(None,None,None)
+        f = Feature(None, None, None)
         f.loadAllProperties(g)
         Assoc().loadAllProperties(g)
 
@@ -143,19 +139,19 @@ class ClinVar(Source):
         tax_id = 'NCBITaxon:'+tax_num
         tax_label = 'Human'
         gu.addClassToGraph(g, tax_id, None)
-        geno.addGenome(tax_id, None)  #label gets added elsewhere
+        geno.addGenome(tax_id, None)  # label gets added elsewhere
 
         # not unzipping the file
         logger.info("Processing Variant records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['variant_summary']['file']))
-        print("FILE:", myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
                 line = line.decode().strip()
                 if re.match('^#', line):
                     continue
+
                 # AlleleID               integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
                 # Type                   character, the type of variation
                 # Name                   character, the preferred name for the variation
@@ -189,11 +185,18 @@ class ClinVar(Source):
                 #                            e.g. http://www.ncbi.nlm.nih.gov/clinvar/variation/1756/
                 #
 
+                # a crude check that there's an expected number of cols.  if not, error out because something changed.
+                num_cols = len(line.split('\t'))
+                expected_numcols = 28
+                if num_cols != expected_numcols:
+                    logger.error("Unexpected number of columns in raw file (%d actual vs %d expected)",
+                                 num_cols, expected_numcols)
+
                 (allele_num, allele_type, allele_name, gene_num, gene_symbol, clinical_significance,
                  dbsnp_num, dbvar_num, rcv_num, tested_in_gtr, phenotype_ids, origin,
                  assembly, chr, start, stop, cytogenetic_loc,
                  review_status, hgvs_c, hgvs_p, number_of_submitters, last_eval,
-                 guidelines, other_ids, variant_num) = line.split('\t')
+                 guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories) = line.split('\t')
 
                 # #### set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
@@ -201,8 +204,6 @@ class ClinVar(Source):
                 #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
                 #        continue
                 # #### end filter
-
-                # print(line)
 
                 line_counter += 1
 
@@ -217,7 +218,7 @@ class ClinVar(Source):
                     # get intersection of test disease ids and these phenotype_ids
                     intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
                     if int(gene_num) not in self.gene_ids and int(variant_num) not in self.variant_ids \
-                            and len(intersect) < 1 :
+                            and len(intersect) < 1:
                         continue
 
                 # TODO may need to switch on assembly to create correct assembly/build identifiers
@@ -319,7 +320,7 @@ class ClinVar(Source):
                             gu.addIndividualToGraph(g, xrefid, None)
                             gu.addSameIndividual(g, seqalt_id, xrefid)
                         elif prefix == 'dbVar' and dbvar_num == xrefid.split(':')[1].strip():
-                            pass  #skip over this one
+                            pass  # skip over this one
                         elif re.search('\s', prefix):
                             pass
                             # logger.debug('xref prefix has a space: %s', xrefid)
@@ -333,6 +334,8 @@ class ClinVar(Source):
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
+
+        logger.info("Finished parsing variants")
 
         return
 
@@ -393,6 +396,8 @@ class ClinVar(Source):
                 if not self.testMode and (limit is not None and line_counter > limit):
                     break
 
+        logger.info("Finished processing citations for variants")
+
         return
 
     def _map_type_of_allele(self, alleletype):
@@ -426,11 +431,10 @@ class ClinVar(Source):
         # TODO move this into utils function
         return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
 
-
     def getTestSuite(self):
         import unittest
         from tests.test_clinvar import ClinVarTestCase
-        #TODO add G2PAssoc, Genotype tests
+        # TODO add G2PAssoc, Genotype tests
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(ClinVarTestCase)
 
