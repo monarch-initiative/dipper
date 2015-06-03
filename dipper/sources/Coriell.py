@@ -28,9 +28,10 @@ class Coriell(Source):
 
     We create a handle for a patient from which the given cell line is derived (since there may be multiple
     cell lines created from a given patient).  A genotype is assembled for a patient, which includes
-    a karyotype (if specified) or a collection of variants.  Both the genotype and disease are linked
-    to the patient, and the cell line is listed as derived from the patient.  The cell line is classified
-    by it's cell type (which itself is linked to a tissue of origin).
+    a karyotype (if specified) or a collection of variants.  Both the genotype (has_genotype) and disease are linked
+    to the patient (has_phenotype), and the cell line is listed as derived from the patient.
+    The cell line is classified by it's [CLO cell type](http://www.ontobee.org/browser/index.php?o=clo),
+    which itself is linked to a tissue of origin.
 
     Unfortunately, the omim numbers listed in this file are both for genes and diseases; we have no way of knowing
     a priori if a designated omim number is a gene or disease; so we presently link the patient to any omim id
@@ -39,7 +40,6 @@ class Coriell(Source):
     Notice: The Coriell catalog is delivered to Monarch in a specific format, and requires ssh rsa fingerprint
     identification.  Other groups wishing to get this data in it's raw form will need to contact Coriell
     for credentials.  This needs to be placed into your configuration file for it to work.
-
     """
 
     terms = {
@@ -177,32 +177,34 @@ class Coriell(Source):
 
     def _process_data(self, raw, limit=None):
         """
-        This function will process the data files from Coriell.
+        This function will process the data files from Coriell.  We make the assumption that any alleles
+        listed are variants (alternates to w.t.)
 
         Triples: (examples)
 
-            :NIGMSrepository a CLO_0000008 #repository  ?
+            :NIGMSrepository a CLO_0000008 #repository
                 label : NIGMS Human Genetic Cell Repository
                 foaf:page https://catalog.coriell.org/0/sections/collections/NIGMS/?SsId=8
 
             line_id a CL_0000057,  #fibroblast line
-                derives_from patient_id, uberon:Fibroblast
+                derives_from patient_id
                 part_of :NIGMSrepository
-                #we also have the age_at_sampling type of property
+                RO:model_of OMIM:disease_id
 
-            patient id a foaf:person, proband, OMIM:disease_id
+            patient id a foaf:person,
                 label: "fibroblast from patient 12345 with disease X"
                 member_of family_id  #what is the right thing here?
                 SIO:race EFO:caucasian  #subclass of EFO:0001799
                 in_taxon NCBITaxon:9606
                 dc:description Literal(remark)
+                RO:has_phenotype OMIM:disease_id
                 GENO:has_genotype genotype_id
 
             family_id a owl:NamedIndividual
                 foaf:page "https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?PgId=402&fam=2104&coll=GM"
 
             genotype_id a intrinsic_genotype
-                GENO:has_variant_part allelic_variant_id
+                GENO:has_alternate_part allelic_variant_id
                 #we don't necessarily know much about the genotype, other than the allelic variant.
                 #also there's the sex here)
 
@@ -275,7 +277,7 @@ class Coriell(Source):
                     # Make the patient ID
 
                     if family_id != '':
-                        patient_id = 'MONARCH:Coriell'+family_id+'-'+family_member  # FIXME this won't resolve like this
+                        patient_id = 'MONARCH:Coriell-'+family_id+'-'+family_member  # FIXME this won't resolve like this
                     else:
                         patient_id = cell_line_id   # otherwise, just default to the cell line as the patient id
 
@@ -381,7 +383,7 @@ class Coriell(Source):
                     # some of the karyotypes are encoded with terrible hidden codes. remove them here
                     # i've seen a <98> character
                     karyotype = self.remove_control_characters(karyotype)
-                    # TODO break down the karyotype into parts and map into GENO
+                    # TODO break down the karyotype into parts and map into GENO. depends on #77
 
                     if gene != '':
                         vl = gene+'['+mutation+']'
@@ -398,7 +400,7 @@ class Coriell(Source):
 
                     if variant_id.strip() != '':
                         # split the variants and add them as part of the genotype
-                        # we don't know their zygosity, just that they are part of the genotype
+                        # we don't necessarily know their zygosity, just that they are part of the genotype
                         # variant ids are from OMIM, so prefix as such
                         # we assume that the variants will be defined in OMIM rather than here.
                         # TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
@@ -429,7 +431,10 @@ class Coriell(Source):
                                 vslc_label = vl
                                 allele2_id = 'OMIM:'+o+'.'+omim_map.get(o)[1]
                                 gu.addIndividualToGraph(g, allele2_id, None, geno.genoparts['variant_locus'])
-                                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id)
+
+                                # making the assumption that the alleles are variants!
+                                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id,
+                                                    geno.object_properties['has_alternate_part'])
                                 geno.addVSLCtoParent(vslc_id, gvc_id)
                                 gu.addIndividualToGraph(g, vslc_id, vslc_label,
                                                         geno.genoparts['variant_single_locus_complement'])
@@ -471,11 +476,11 @@ class Coriell(Source):
                     else:
                         geno.addTaxon(taxon, patient_id)
 
-                    # TODO: Add sex/gender
+                    # TODO: Add sex/gender  (as part of the karyotype?)
 
                     ##############    DEAL WITH THE DISEASES   #############
 
-                    #what has the disease, the genotype or patient?
+                    # we associate the disease to the patient
                     if affected == 'affected':
                         if omim_number != '':
                             for d in omim_number.split(';'):
@@ -645,7 +650,6 @@ class Coriell(Source):
             logger.warn("Species type not mapped: %s", species)
 
         return tax
-
 
     def _map_collection(self, collection):
         ctype = None
