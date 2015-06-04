@@ -22,18 +22,31 @@ class ZFIN(Source):
     """
     This is the parser for the [Zebrafish Model Organism Database (ZFIN)](http://www.zfin.org),
     from which we process genotype and phenotype data for laboratory zebrafish.
-    Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.
 
+    We generate the zfin graph to include the following information:
+    * genes
+    * sequence alterations (includes SNPs/del/ins/indel and large chromosomal rearrangements)
+    * transgenic constructs
+    * morpholinos, talens, crisprs as expression-affecting reagents
+    * genotypes, and their components
+    * publications (and their mapping to PMIDs, if available)
+    * genotype-to-phenotype associations (including environments and stages at which they are assayed)
+    * environmental components
+    * orthology to human genes
+    * genetic positional information for genes and sequence alterations
+
+    Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.  Where necessary,
+    we create anonymous nodes of the genotype partonomy (such as for variant single locus complements,
+    genomic variation complements, variant loci, extrinsic genotypes, and extrinsic genotype parts).
     """
 
     files = {
         'geno': {'file': 'genotype_features.txt', 'url': 'http://zfin.org/downloads/genotype_features.txt'},
         'pheno': {'file': 'phenotype.txt', 'url': 'http://zfin.org/downloads/phenotype.txt'},
         'pubs': {'file': 'zfinpubs.txt', 'url': 'http://zfin.org/downloads/zfinpubs.txt'},
-        # 'zpmap': {'file': 'zp-mapping.txt',
-        #          'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt',},
         'zpmap': {'file': 'zp-mapping.txt',
                   'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
+        # old     'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/zp/zp-mapping.txt',},
         'morph': {'file': 'Morpholinos.txt', 'url': 'http://zfin.org/downloads/Morpholinos.txt'},
         'enviro': {'file': 'pheno_environment.txt', 'url': 'http://zfin.org/Downloads/pheno_environment.txt'},
         'stage': {'file': 'stage_ontology.txt', 'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
@@ -172,23 +185,23 @@ class ZFIN(Source):
         self.wildtype_genotypes = []
 
         # basic information on classes and instances
-        self._process_genes(limit)  # REVIEWED-COMPLETE
-        self._process_stages(limit)  # REVIEWED-COMPLETE
-        self._process_pubinfo(limit)  # REVIEWED-COMPLETE
-        self._process_pub2pubmed(limit)  # REVIEWED-COMPLETE
+        self._process_genes(limit)
+        self._process_stages(limit)
+        self._process_pubinfo(limit)
+        self._process_pub2pubmed(limit)
 
         # The knockdown reagents
         for t in ['morph', 'crispr', 'talen']:
-            self._process_targeting_reagents(t, limit)  # REVIEWED-COMPLETE
+            self._process_targeting_reagents(t, limit)
 
-        self._process_gene_marker_relationships(limit)  # REVIEW-COMPLETE
-        self._process_features(limit)  # REVIEWED-COMPLETE
-        self._process_feature_affected_genes(limit)  # REVIEWED-COMPLETE
+        self._process_gene_marker_relationships(limit)
+        self._process_features(limit)
+        self._process_feature_affected_genes(limit)
         self._process_mappings(limit)  # only adds features on chromosomes, not positions
 
         # These must be processed before G2P and expression
-        self._process_wildtypes(limit)  # REVIEWED-COMPLETE
-        self._process_genotype_backgrounds(limit)  # REVIEWED-COMPLETE
+        self._process_wildtypes(limit)
+        self._process_genotype_backgrounds(limit)
         self._process_genotype_features(limit)  # REVIEWED - NEED TO REVIEW LABELS ON Deficiencies
 
         self._process_pheno_enviro(limit)  # Must be processed after morpholinos/talens/crisprs id/label
@@ -413,11 +426,9 @@ class ZFIN(Source):
                 if allele2_id is not None:
                     if allele2_id == '?':
                         zygosity_id = geno.zygosity['indeterminate']
-                        #allele2_id = None
                         allele2_id = 'UN'
                     elif allele2_id == '0':
                         zygosity_id = geno.zygosity['hemizygous']
-                        #allele2_id = None
                     elif allele1_id != allele2_id:
                         zygosity_id = geno.zygosity['complex_heterozygous']
                     elif allele1_id == allele2_id:
@@ -693,34 +704,35 @@ class ZFIN(Source):
         logger.info("Done with wildtype genotypes")
         return
 
-    def _process_wildtype_expression(self, limit=None):
-        """
-
-        :param limit:
-        :return:
-        """
-
-        logger.info("Processing wildtype expression")
-        line_counter = 0
-
-        raw = '/'.join((self.rawdir, self.files['wild_expression']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
-                geno = Genotype(self.graph)
-                (gene_id, gene_symbol, genotype_name, super_structure_id, super_structure_name, sub_structure_id,
-                 sub_structure_name, start_stage, end_stage, assay, publication_id, probe_id, antibody_id, empty) = row
-
-                # TODO: Consider how to model wildtype genotypes with genes and associated expression.
-                gene_id = 'ZFIN:' + gene_id.strip()
-                geno.addGene(gene_id, gene_symbol)
-
-                if limit is not None and line_counter > limit:
-                    break
-
-        logger.info("Done with wildtype expression")
-        return
+    # def _process_wildtype_expression(self, limit=None):
+    #     """
+    #
+    #     :param limit:
+    #     :return:
+    #     """
+    #
+    #     logger.info("Processing wildtype expression")
+    #     line_counter = 0
+    #
+    #     raw = '/'.join((self.rawdir, self.files['wild_expression']['file']))
+    #     with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+    #         filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+    #         for row in filereader:
+    #             line_counter += 1
+    #             geno = Genotype(self.graph)
+    #             (gene_id, gene_symbol, genotype_name, super_structure_id, super_structure_name, sub_structure_id,
+    #              sub_structure_name, start_stage, end_stage, assay,
+    #              publication_id, probe_id, antibody_id, empty) = row
+    #
+    #             # TODO: Consider how to model wildtype genotypes with genes and associated expression.
+    #             gene_id = 'ZFIN:' + gene_id.strip()
+    #             geno.addGene(gene_id, gene_symbol)
+    #
+    #             if limit is not None and line_counter > limit:
+    #                 break
+    #
+    #     logger.info("Done with wildtype expression")
+    #     return
 
     def _process_stages(self, limit=None):
         """
