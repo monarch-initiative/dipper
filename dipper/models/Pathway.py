@@ -17,7 +17,8 @@ class Pathway():
     """
 
     pathway_parts = {
-        'signal_transduction' : 'GO:0007165'
+        'signal_transduction' : 'GO:0007165',
+        'cellular_process' : 'GO:0009987'
     }
 
     object_properties = {
@@ -49,7 +50,7 @@ class Pathway():
         :return:
         """
         if pathway_type is None:
-            pathway_type = self.pathway_parts['signal_transduction']
+            pathway_type = self.pathway_parts['cellular_process']
         self.gu.addClassToGraph(self.graph, pathway_id, pathway_label, pathway_type, pathway_description)
         return
 

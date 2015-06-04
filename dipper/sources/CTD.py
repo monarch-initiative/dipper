@@ -26,19 +26,18 @@ class CTD(Source):
     susceptibility and environmentally influenced diseases.
 
     Here, we fetch, parse, and convert data from CTD into triples, leveraging only the associations based on
-    direct evidence (not using the inferred associations).  We currently process the following associations:
-        *chemical-disease
-        *gene-pathway
-        *gene-disease
+    DIRECT evidence (not using the inferred associations).  We currently process the following associations:
+        * chemical-disease
+        * gene-pathway
+        * gene-disease
 
     CTD curates relationships between genes and chemicals/diseases with marker/mechanism and/or therapeutic.
     Unfortunately, we cannot disambiguate between marker (gene expression) and mechanism (causation)
-    for these associations.  Therefore, we are left to relate these simply by "correlation".
+    for these associations.  Therefore, we are left to relate these simply by "marker".
 
     CTD also pulls in genes and pathway membership from KEGG and REACTOME.  We create groups of these following
-    the pattern that the specific pathway is a subclass of 'signal transduction' (a go process), and
+    the pattern that the specific pathway is a subclass of 'cellular process' (a go process), and
     the gene is "involved in" that process.
-
     """
 
     files = {
@@ -57,11 +56,6 @@ class CTD(Source):
     }
     static_files = {
         'publications': {'file': 'CTD_curated_references.tsv.gz'}
-    }
-
-    REL_MAP = {
-        'therapeutic': 'MONARCH:treats',
-        'marker/mechanism': 'MONARCH:correlates_with'
     }
 
     def __init__(self):
@@ -132,7 +126,7 @@ class CTD(Source):
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self.gu.loadAllProperties(self.g)
-        self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
+        # self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
 
         self.load_bindings()
         logger.info("Done parsing files.")
@@ -413,7 +407,12 @@ class CTD(Source):
         Returns:
             :return str: curie for relationship label
         """
-        return self.REL_MAP[rel]
+        gu = GraphUtils(curie_map.get())
+        rel_map = {
+            'therapeutic': gu.object_properties['substance_that_treats'],
+            'marker/mechanism': gu.object_properties['is_marker_for'],
+        }
+        return str(rel_map[rel])
 
     def _get_class_id(self, cls):
         """
