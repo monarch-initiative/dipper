@@ -160,6 +160,9 @@ class ZFIN(Source):
         # scrub file of the oddities where there are "\" instead of empty strings
         pysed.replace("\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
 
+        # pubs has control characters!
+        self._remove_backslash_r('/'.join((self.rawdir, self.files['pubs']['file'])), 'latin-1')
+
         return
 
     def parse(self, limit=None):
@@ -1697,7 +1700,6 @@ class ZFIN(Source):
                         env_component_id = '-'.join((condition_group.strip(), cond_id.strip()))
                         conc_label = ''
 
-                    logger.info('id = %s', env_component_id)
                     # make them blank nodes
                     env_component_id = '_' + env_component_id
                     if self.nobnodes:
@@ -1990,6 +1992,7 @@ class ZFIN(Source):
 
         # zfin uses free-text modifiers, but we need to convert them to proper PATO classes for the mapping
         mod_id = modifier
+
         modifiers = {
             'abnormal': 'PATO:0000460',
             'normal': 'PATO:0000461'
@@ -2006,8 +2009,9 @@ class ZFIN(Source):
                 pass
                 # logger.info("Normal phenotypes not yet supported")
             else:
-                logger.warn("Couldn't map ZP id to %s", "_".join(
-                    (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)))
+                logger.warn("Couldn't map ZP id to %s with modifier %s", "_".join(
+                    (superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, mod_id)),
+                            modifier)
         else:
             zp_id = mapping['zp_id']
 
@@ -2109,6 +2113,23 @@ class ZFIN(Source):
         effective_genotype_id = self.make_id('-'.join((intrinsic_id, extrinsic_id)))
 
         return effective_genotype_id
+
+    def _remove_backslash_r(self, filename, encoding):
+        """
+        A helpful utility to remove '\r' from any file
+        :param filename:
+        :return:
+        """
+
+        f = open(filename, 'r', encoding=encoding, newline='\n')
+        contents = f.read()
+        f.close()
+        contents = re.sub(r'\r', '', contents)
+        with open(filename, "w") as f:
+            f.truncate()
+            f.write(contents)
+
+        return
 
     def getTestSuite(self):
         import unittest
