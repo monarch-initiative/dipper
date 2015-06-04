@@ -276,10 +276,12 @@ class Coriell(Source):
 
                     # Make the patient ID
 
+                    patient_id = ':_person'
                     if family_id != '':
-                        patient_id = 'MONARCH:Coriell-'+family_id+'-'+family_member  # FIXME this won't resolve like this
+                        patient_id = '-'.join((patient_id, family_id, family_member))
                     else:
-                        patient_id = cell_line_id   # otherwise, just default to the cell line as the patient id
+                        # make an anonymous patient
+                        patient_id = '-'.join((patient_id, cell_line_id))
 
                     # properties of the individual patients:  sex, family id, member/relproband, description
                     # descriptions are really long and ugly SCREAMING text, so need to clean up
@@ -299,10 +301,13 @@ class Coriell(Source):
                     # #############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
-                    gu.addIndividualToGraph(g, cell_line_id, line_label, cell_type)
+                    # FIXME make sure this typing is right
+                    cell_line_reagent_id = 'ERO:0000009'
+                    gu.addIndividualToGraph(g, cell_line_id, line_label, cell_line_reagent_id)
 
                     # Cell line derives from patient
                     geno.addDerivesFrom(cell_line_id, patient_id)
+                    geno.addDerivesFrom(cell_line_id, cell_type)
 
                     # Cell line a member of repository
                     gu.addMember(g, repository, cell_line_id)
