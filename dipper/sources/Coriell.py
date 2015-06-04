@@ -282,6 +282,7 @@ class Coriell(Source):
                     if family_id != '':
                         patient_id = '-'.join((patient_id, family_id, family_member))
                     else:
+                        # make an anonymous patient
                         patient_id = '-'.join((patient_id, catalog_id.strip()))
 
                     # properties of the individual patients:  sex, family id, member/relproband, description
