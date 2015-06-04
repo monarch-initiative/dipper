@@ -862,7 +862,11 @@ class ZFIN(Source):
 
                 # the intrinsic genotype
                 intrinsic_genotype_label = self.id_label_map[genotype_id]
-                geno.addGenotype(genotype_id, intrinsic_genotype_label)
+                if genotype_id not in self.wildtype_genotypes:
+                    geno.addGenotype(genotype_id, intrinsic_genotype_label)
+                else:
+                    pass
+                    # wildtype (genomic backgrounds) have already been added
 
                 # get the extrinsic genotype
                 # find the extrinsic parts in the hash, and add them here
@@ -1248,7 +1252,7 @@ class ZFIN(Source):
                         transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
                         gu.addIndividualToGraph(g, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
                                                 geno.genoparts['coding_transgene_feature'])
-                        geno.addParts(transgene_part_id, marker_id)
+                        geno.addParts(transgene_part_id, marker_id, geno.object_properties['has_alternate_part'])
                         gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
                                      gene_id)
                     elif relationship == 'gene product recognized by antibody':
@@ -1792,6 +1796,7 @@ class ZFIN(Source):
         taxon_id = 'NCBITaxon:' + taxon_num
         taxon_label = 'Danio rerio'
         # genome_id = geno.makeGenomeID(taxon_id)
+        geno.addGenome(taxon_id, taxon_label)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
