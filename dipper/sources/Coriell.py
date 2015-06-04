@@ -276,12 +276,13 @@ class Coriell(Source):
 
                     # Make the patient ID
 
+                    # make an anonymous patient
+                    # TODO make actually anonymous with flag nobnodes
                     patient_id = ':_person'
                     if family_id != '':
                         patient_id = '-'.join((patient_id, family_id, family_member))
                     else:
-                        # make an anonymous patient
-                        patient_id = '-'.join((patient_id, cell_line_id))
+                        patient_id = '-'.join((patient_id, catalog_id.strip()))
 
                     # properties of the individual patients:  sex, family id, member/relproband, description
                     # descriptions are really long and ugly SCREAMING text, so need to clean up
