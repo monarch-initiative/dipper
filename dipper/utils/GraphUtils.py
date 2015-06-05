@@ -125,13 +125,15 @@ class GraphUtils:
 
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
-        n = self._getNode('_'+re.sub(':','',property_id)+re.sub(':', '', property_value))
+        nid = '_'+re.sub(':','',property_id)+re.sub(':', '', property_value)
+        n = self.getNode(nid)
 
         g.add((n, RDF['type'], self.OWLRESTRICTION))
-        g.add((n, OWL['onProperty'], self._getNode(property_id)))
-        g.add((n, OWL['someValuesFrom'], self._getNode(property_value)))
+        g.add((n, OWL['onProperty'], self.getNode(property_id)))
+        g.add((n, OWL['someValuesFrom'], self.getNode(property_value)))
 
-        g.add((self._getNode(class_id), self.SUBCLASS, n))
+        g.add((self.getNode(class_id), self.SUBCLASS, n))
+
 
         return
 
