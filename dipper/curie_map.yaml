@@ -61,7 +61,6 @@
 'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
-'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'
 'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
@@ -134,4 +133,4 @@
 #chemicals
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
 'CHEBI' : 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId='
-'DB' : 'http://www.drugbank.ca/drugs/'
+'DrugBank' : 'http://www.drugbank.ca/drugs/'
