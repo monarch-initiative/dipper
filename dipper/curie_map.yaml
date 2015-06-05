@@ -63,8 +63,10 @@
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
-'KEGG' : 'http://www.kegg.jp/dbget-bin/www_bget?'
+'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'
 'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
+'KEGG-hsa' : 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
+'KEGG-ko' : 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
