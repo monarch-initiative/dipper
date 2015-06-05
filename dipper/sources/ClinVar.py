@@ -133,6 +133,7 @@ class ClinVar(Source):
         f = Feature(None, None, None)
         f.loadAllProperties(g)
         Assoc().loadAllProperties(g)
+        gu.loadAllProperties(g)
 
         # add the taxon and the genome
         tax_num = '9606'  # HARDCODE
@@ -295,12 +296,14 @@ class ClinVar(Source):
                 # parse the list of "phenotypes" which are diseases.  add them as an association
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
                 # the list is both semicolon delimited and comma delimited, but i don't know why!
+                # some are bad, like: Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
                 if phenotype_ids != '-':
                     for p in pheno_list:
-                        if re.match('Orphanet:ORPHA', p):
-                            p = re.sub('Orphanet:ORPHA', 'Orphanet:', p)
+                        m = re.match("(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
+                        if m is not None and len(m.groups()) > 0:
+                            p = re.sub(m.group(1), 'Orphanet:', p.strip())
                         elif re.match('SNOMED CT', p):
-                            p = re.sub('SNOMED CT', 'SNOMED', p)
+                            p = re.sub('SNOMED CT', 'SNOMED', p.strip())
                         assoc_id = self.make_id(seqalt_id+p.strip())
                         assoc = G2PAssoc(assoc_id, seqalt_id, p.strip(), None, None)
                         assoc.addAssociationToGraph(g)
