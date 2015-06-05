@@ -20,6 +20,10 @@ class OrthologyAssoc(Assoc):
         'has_member': 'RO:0002351'
         }
 
+    terms = {
+        'gene_family': 'DATA:3148'  # http://edamontology.org/data_3148
+    }
+
     def __init__(self, assoc_id, gene1, gene2, pub, evidence_code):
         super().__init__()
         self.cu = CurieUtil(curie_map.get())
@@ -61,7 +65,7 @@ class OrthologyAssoc(Assoc):
         :param g: the graph to modify
         :return:
         """
-        gene_family = 'DATA:3148'  # http://edamontology.org/data_3148
+        gene_family = self.terms['gene_family']  # http://edamontology.org/data_3148
 
         # make the assumption that the genes have already been added as classes previously
         self.gu.addIndividualToGraph(g, family_id, None, gene_family)
