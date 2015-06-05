@@ -49,7 +49,6 @@ class KEGG(Source):
                           'url': 'http://rest.KEGG:jp/link/orthology/cel'}
     }
 
-    # I do not love putting these here; but I don't know where else to put them
     test_ids = {
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340", "path:hsa05223"],
         "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736", "ds:H00014"],
@@ -70,7 +69,6 @@ class KEGG(Source):
         Source.__init__(self, 'kegg')
 
         # update the dataset object with details about this resource
-        # TODO put this into a conf file?
         self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/', None, None)
 
         # source-specific warnings.  will be cleared when resolved.
@@ -194,7 +192,7 @@ class KEGG(Source):
                 line_counter += 1
                 (disease_id, disease_name) = row
 
-                disease_id = 'KEGG:'+disease_id.strip()
+                disease_id = 'KEGG-'+disease_id.strip()
                 if disease_id not in self.label_hash:
                     self.label_hash[disease_id] = disease_name
 
@@ -204,6 +202,7 @@ class KEGG(Source):
                 # Add the disease as a class....we don't get all of these from MONDO yet
                 # see https://github.com/monarch-initiative/human-disease-ontology/issues/3
                 gu.addClassToGraph(g, disease_id, disease_name)
+                # not typing the diseases as DOID:4 yet because I don't want to bulk up the graph unnecessarily
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -241,7 +240,7 @@ class KEGG(Source):
                 line_counter += 1
                 (gene_id, gene_name) = row
 
-                gene_id = 'KEGG:'+gene_id.strip()
+                gene_id = 'KEGG-'+gene_id.strip()
 
                 # the gene listing has a bunch of labels that are delimited, like:
                 # DST, BP240, BPA, BPAG1, CATX-15, CATX15, D6S1101, DMH, DT, EBSB2, HSAN6, MACF2; dystonin; K10382 dystonin
@@ -301,6 +300,7 @@ class KEGG(Source):
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
+        ortho = OrthologyAssoc(None, None, None, None, None)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -313,12 +313,22 @@ class KEGG(Source):
                 # FIXME: What's the proper route for this?
                 # The orthology class is essentially a KEGG gene ID that is species agnostic.
                 # Add the ID and label as a class. Would it be considered a gene as well?
-                orthology_class_id = 'KEGG:'+orthology_class_id.strip()
-                orthology_symbols = re.sub(';.*', '', orthology_class_name)
-                orthology_description = re.sub('.*;', '', orthology_class_name)
-                # FIXME: Problem if there is more than one symbol?
-                # FIXME: Is there a designated type for these orthology classes?
-                gu.addClassToGraph(g, orthology_class_id, orthology_symbols, None, orthology_description)
+
+                other_labels = re.split(';', orthology_class_name)
+                orthology_label = other_labels[0]  #the first one is the label we'll use
+
+                orthology_class_id = 'KEGG-'+orthology_class_id.strip()
+
+                orthology_type = OrthologyAssoc.terms['gene_family']
+                gu.addClassToGraph(g, orthology_class_id, orthology_label, orthology_type)
+                if len(other_labels) > 1:
+                    # add the rest as synonyms
+                    # todo skip the first
+                    for s in other_labels:
+                        gu.addSynonym(g, orthology_class_id, s)
+
+                    # add the last one as the description
+                    gu.addDescription(g, orthology_class_id, other_labels[len(other_labels)-1])
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -417,14 +427,16 @@ class KEGG(Source):
                 if self.testMode and gene_id not in self.test_ids['genes']:
                     continue
 
-                gene_id = 'KEGG:'+gene_id.strip()
-                disease_id = 'KEGG:'+disease_id.strip()
+                gene_id = 'KEGG-'+gene_id.strip()
+                disease_id = 'KEGG-'+disease_id.strip()
 
                 # Make an association ID.
-                assoc_id = self.make_id((disease_id+gene_id))
+                assoc_id = self.make_association_id(self.name, gene_id, gu.object_properties['has_phenotype'],
+                                                    disease_id, None, None)
 
                 # only add diseases for which there is no omim id
                 if disease_id not in self.kegg_disease_hash:
+                    gu.addType(g, disease_id, 'DOID:4')  # type this disease_id as a disease
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
                     alt_label = self.label_hash[alt_locus_id]
@@ -479,7 +491,7 @@ class KEGG(Source):
                 if self.testMode and kegg_gene_id not in self.test_ids['genes']:
                     continue
 
-                kegg_gene_id = 'KEGG:'+kegg_gene_id.strip()
+                kegg_gene_id = 'KEGG-'+kegg_gene_id.strip()
                 omim_id = re.sub('omim', 'OMIM', omim_id)
                 if link_type == 'equivalent':
                     # these are genes!  so add them as a class then make equivalence
@@ -504,6 +516,7 @@ class KEGG(Source):
                     # these are sometimes a gene, and sometimes a disease
                     logger.info('Unable to handle original link for %s-%s', kegg_gene_id, omim_id)
                 else:
+                    # don't know what these are
                     logger.warn('Unhandled link type for %s-%s: %s', kegg_gene_id, omim_id, link_type)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
@@ -538,7 +551,7 @@ class KEGG(Source):
             for row in filereader:
                 (omim_disease_id, kegg_disease_id, link_type) = row
 
-                kegg_disease_id = 'KEGG:'+kegg_disease_id.strip()
+                kegg_disease_id = 'KEGG-'+kegg_disease_id.strip()
                 omim_disease_id = re.sub('omim', 'OMIM', omim_disease_id)
 
                 # Create hash for the links from OMIM ID -> KEGG ID
@@ -568,7 +581,8 @@ class KEGG(Source):
                     # add ids, and deal with the labels separately
                     gu.addClassToGraph(g, kegg_disease_id, None)
                     gu.addClassToGraph(g, omim_disease_id, None)
-                    gu.addXref(g, kegg_disease_id, omim_disease_id)
+                    gu.addEquivalentClass(g, kegg_disease_id, omim_disease_id)  # safe?
+                    # gu.addXref(g, kegg_disease_id, omim_disease_id)
 
         logger.info("Done with KEGG disease to OMIM disease mappings.")
         return
@@ -605,7 +619,7 @@ class KEGG(Source):
 
                 # Adjust the NCBI gene ID prefix.
                 ncbi_gene_id = re.sub('ncbi-geneid', 'NCBIGene', ncbi_gene_id)
-                kegg_gene_id = 'KEGG:'+kegg_gene_id
+                kegg_gene_id = 'KEGG-'+kegg_gene_id
 
                 # Adding the KEGG gene ID to the graph here is redundant, unless there happens to be
                 # additional gene IDs in this table not present in the genes table.
