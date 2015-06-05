@@ -26,27 +26,27 @@ class KEGG(Source):
         'ortholog_classes': {'file': 'ortholog_classes',
                              'url': 'http://rest.genome.jp/list/orthology'},
         'disease_gene': {'file': 'disease_gene',
-                         'url': 'http://rest.KEGG:jp/link/disease/hsa'},
+                         'url': 'http://rest.kegg.jp/link/disease/hsa'},
         'omim2disease': {'file': 'omim2disease',
                          'url': 'http://rest.genome.jp/link/disease/omim'},
         'omim2gene': {'file': 'omim2gene',
                       'url': 'http://rest.genome.jp/link/omim/hsa'},
         'ncbi': {'file': 'ncbi',
-                 'url': 'http://rest.KEGG:jp/conv/ncbi-geneid/hsa'},
+                 'url': 'http://rest.genome.jp/conv/ncbi-geneid/hsa'},
         'hsa_gene2pathway': {'file': 'human_gene2pathway',
-                             'url': 'http://rest.KEGG:jp/link/pathway/hsa'},
+                             'url': 'http://rest.kegg.jp/link/pathway/hsa'},
         'hsa_orthologs': {'file': 'hsa_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/hsa'},
+                          'url': 'http://rest.kegg.jp/link/orthology/hsa'},
         'mmu_orthologs': {'file': 'mmu_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/mmu'},
+                          'url': 'http://rest.kegg.jp/link/orthology/mmu'},
         'rno_orthologs': {'file': 'rno_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/rno'},
+                          'url': 'http://rest.kegg.jp/link/orthology/rno'},
         'dme_orthologs': {'file': 'dme_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/dme'},
+                          'url': 'http://rest.kegg.jp/link/orthology/dme'},
         'dre_orthologs': {'file': 'dre_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/dre'},
+                          'url': 'http://rest.kegg.jp/link/orthology/dre'},
         'cel_orthologs': {'file': 'cel_orthologs',
-                          'url': 'http://rest.KEGG:jp/link/orthology/cel'}
+                          'url': 'http://rest.kegg.jp/link/orthology/cel'}
     }
 
     test_ids = {
@@ -612,7 +612,7 @@ class KEGG(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (kegg_gene_id, ncbi_gene_id) = row
+                (kegg_gene_id, ncbi_gene_id, link_type) = row
 
                 if self.testMode and kegg_gene_id not in self.test_ids['genes']:
                     continue
