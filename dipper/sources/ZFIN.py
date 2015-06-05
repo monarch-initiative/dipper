@@ -931,6 +931,10 @@ class ZFIN(Source):
                         else:
                             pass
                             # logger.info("Normal phenotype found, and abnormal version exists")
+                    else:
+                        missing_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id,
+                                              subterm2_id, modifier])
+
                 else:
                     mapped_zpids.append([superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier])
 
