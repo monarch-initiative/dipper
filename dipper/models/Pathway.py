@@ -18,7 +18,8 @@ class Pathway():
 
     pathway_parts = {
         'signal_transduction' : 'GO:0007165',
-        'cellular_process' : 'GO:0009987'
+        'cellular_process' : 'GO:0009987',
+        'pathway' : 'PW:0000001'
     }
 
     object_properties = {
@@ -42,7 +43,7 @@ class Pathway():
     def addPathway(self, pathway_id, pathway_label, pathway_type=None, pathway_description=None):
         """
         Adds a pathway as a class.  If no specific type is specified, it will
-        default to a subclass of "signal transduction".
+        default to a subclass of "GO:cellular_process" and "PW:pathway".
         :param pathway_id:
         :param pathway_label:
         :param pathway_type:
@@ -52,6 +53,8 @@ class Pathway():
         if pathway_type is None:
             pathway_type = self.pathway_parts['cellular_process']
         self.gu.addClassToGraph(self.graph, pathway_id, pathway_label, pathway_type, pathway_description)
+        self.gu.addSubclass(self.graph, self.pathway_parts['pathway'], pathway_id)
+
         return
 
     def addGeneToPathway(self, pathway_id, gene_id):
