@@ -23,6 +23,7 @@ from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
 from dipper.sources.Monochrom import Monochrom
 from dipper.sources.AnimalQTLdb import AnimalQTLdb
+from dipper.sources.Ensembl import Ensembl
 
 from dipper.utils.TestUtils import TestUtils
 
@@ -49,7 +50,8 @@ def main():
         'clinvar': ClinVar,
         'monochrom': Monochrom,
         'kegg': KEGG,
-        'animalqtldb': AnimalQTLdb
+        'animalqtldb': AnimalQTLdb,
+        'ensembl': Ensembl
     }
 
     logger = logging.getLogger(__name__)
