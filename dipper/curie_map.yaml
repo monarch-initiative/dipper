@@ -103,7 +103,7 @@
 'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
 'FlyBase' : 'http://identifiers.org/FB:'
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
-'HGNC' : 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:'
+'HGNC' : 'http://identifiers.org/hgnc/'
 'HPRD' : 'http://www.hprd.org/protein/'
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # Note this will work for marker(gene), allele, and references, but not genotype
