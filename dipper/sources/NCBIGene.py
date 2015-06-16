@@ -366,17 +366,17 @@ class NCBIGene(Source):
         return
 
     def _map_type_of_gene(self, sotype):
-        so_id = 'SO:0000704'
+        so_id = 'SO:0000110'
         type_to_so_map = {
             'ncRNA': 'SO:0001263',
-            'other': 'SO:0000704',
+            'other': 'SO:0000110',
             'protein-coding': 'SO:0001217',
             'pseudo': 'SO:0000336',
             'rRNA': 'SO:0001637',
             'snRNA': 'SO:0001268',
             'snoRNA': 'SO:0001267',
             'tRNA': 'SO:0001272',
-            'unknown': 'SO:0000704',
+            'unknown': 'SO:0000110',
             'scRNA': 'SO:0000013',
             'miscRNA': 'SO:0000233',  # mature transcript - there is no good mapping
             'chromosome': 'SO:0000340',
@@ -388,7 +388,7 @@ class NCBIGene(Source):
         if sotype in type_to_so_map:
             so_id = type_to_so_map.get(sotype)
         else:
-            logger.warn("unmapped code %s. Defaulting to 'SO:0000704'.", sotype)
+            logger.warn("unmapped code %s. Defaulting to 'SO:0000110', sequence_feature.", sotype)
 
         return so_id
 
