@@ -24,6 +24,7 @@ from dipper.sources.Coriell import Coriell
 from dipper.sources.Monochrom import Monochrom
 from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from dipper.sources.Ensembl import Ensembl
+from dipper.sources.HGNC import HGNC
 
 from dipper.utils.TestUtils import TestUtils
 
@@ -51,7 +52,8 @@ def main():
         'monochrom': Monochrom,
         'kegg': KEGG,
         'animalqtldb': AnimalQTLdb,
-        'ensembl': Ensembl
+        'ensembl': Ensembl,
+        'hgnc': HGNC
     }
 
     logger = logging.getLogger(__name__)
