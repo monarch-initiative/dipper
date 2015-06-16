@@ -103,11 +103,11 @@
 'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
 'FlyBase' : 'http://identifiers.org/FB:'
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
-'HGNC' : 'http://identifiers.org/hgnc/'
+'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
 'HPRD' : 'http://www.hprd.org/protein/'
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # Note this will work for marker(gene), allele, and references, but not genotype
-'miRBase' : 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='
+'miRBase' : 'http://identifiers.org/mirbase/'
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
 'PomBase' : 'http://identifiers.org/PomBase:'
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
