@@ -42,7 +42,7 @@ class AnimalQTLdb(Source):
         'rainbow_trout_cm': {'file': 'rainbow_trout_QTLdata.txt',
                  'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
         'trait_mappings': {'file': 'trait_mappings',
-                 'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings'}
+                 'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -84,7 +84,7 @@ class AnimalQTLdb(Source):
 
         self._process_trait_mappings(('/').join((self.rawdir, self.files['trait_mappings']['file'])), limit)
         #self._alternate_process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
-        self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        #self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
 
         #logger.info("Processing QTLs with genetic locations")
         #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
@@ -325,6 +325,17 @@ class AnimalQTLdb(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
 
+
+
+        with open(raw, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter='\t', quotechar='\"')
+            with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+                filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+                next(filereader,None)
+                for row in filereader:
+                    (vto_id, pto_id, cmo_id, ato_id, species, trait_class, trait_type, qtl_count) = row
+
+        '''
         with open(raw, 'rt') as html_doc:
             soup = BeautifulSoup(html_doc)
         #print(soup)
@@ -343,8 +354,8 @@ class AnimalQTLdb(Source):
                 trait_class = elements[5].string
                 qtl_count = elements[6].string
 
-                #print(vto_id)
-            line_counter += 1
+                #print(vto_id)'''
+        line_counter += 1
 
 
 
