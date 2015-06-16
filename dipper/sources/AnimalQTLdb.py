@@ -42,7 +42,7 @@ class AnimalQTLdb(Source):
         'rainbow_trout_cm': {'file': 'rainbow_trout_QTLdata.txt',
                  'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
         'trait_mappings': {'file': 'trait_mappings',
-                 'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings'}
+                 'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -84,7 +84,7 @@ class AnimalQTLdb(Source):
 
         self._process_trait_mappings(('/').join((self.rawdir, self.files['trait_mappings']['file'])), limit)
         #self._alternate_process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
-        self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        #self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
 
         #logger.info("Processing QTLs with genetic locations")
         #self._process_QTLs_genetic_location(('/').join((self.rawdir, self.files['cattle_cm']['file'])), 'AQTLCattle:', 'AQTLTraitCattle:', 'NCBITaxon:9913', limit)
@@ -325,26 +325,34 @@ class AnimalQTLdb(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
 
-        with open(raw, 'rt') as html_doc:
-            soup = BeautifulSoup(html_doc)
-        #print(soup)
-        for row in soup("tr"):
-            if line_counter > 2:
-                #print(row)
-                elements = row.find_all("td")
-                vto_id = elements[0].string
-                pto_id = elements[1].string
-                cmo_id = elements[2].string
-                #FIXME: ATO is outdated/legacy data, and instead the VTO, PO, and CMO are used. Is there a use for ATO?
-                ato_id = re.sub('\[ATO #', 'ATO:',(re.sub('\].*', '',elements[3].string)))
-                ato_label = re.sub('\[.*\]', '', elements[3].string)
-                #print('ato ID: '+ato_id+' ato label: '+ato_label)
-                species = elements[4].string
-                trait_class = elements[5].string
-                qtl_count = elements[6].string
+        with open(raw, 'r') as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',')
+            row_count = sum(1 for row in filereader)
+            row_count = row_count - 1
 
-                #print(vto_id)
-            line_counter += 1
+
+
+        with open(raw, 'r') as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',')
+            next(filereader, None)
+            for row in filereader:
+                line_counter += 1
+                if line_counter < row_count:
+                    (vto_id, pto_id, cmo_id, ato_id, species, trait_class, trait_type, qtl_count) = row
+
+                    if re.match('VT:.*', vto_id):
+                        print(vto_id)
+
+                    if re.match('PT:.*', pto_id):
+                        print(pto_id)
+                    if re.match('CMO:.*', cmo_id):
+                        print(cmo_id)
+                    #print(ato_id)
+                    print(row)
+
+
+
+
 
 
 
