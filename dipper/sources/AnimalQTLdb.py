@@ -325,37 +325,34 @@ class AnimalQTLdb(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
 
+        with open(raw, 'r') as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',')
+            row_count = sum(1 for row in filereader)
+            row_count = row_count - 1
 
 
-        with open(raw, 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter='\t', quotechar='\"')
-            with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-                filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-                next(filereader,None)
-                for row in filereader:
+
+        with open(raw, 'r') as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',')
+            next(filereader, None)
+            for row in filereader:
+                line_counter += 1
+                if line_counter < row_count:
                     (vto_id, pto_id, cmo_id, ato_id, species, trait_class, trait_type, qtl_count) = row
 
-        '''
-        with open(raw, 'rt') as html_doc:
-            soup = BeautifulSoup(html_doc)
-        #print(soup)
-        for row in soup("tr"):
-            if line_counter > 2:
-                #print(row)
-                elements = row.find_all("td")
-                vto_id = elements[0].string
-                pto_id = elements[1].string
-                cmo_id = elements[2].string
-                #FIXME: ATO is outdated/legacy data, and instead the VTO, PO, and CMO are used. Is there a use for ATO?
-                ato_id = re.sub('\[ATO #', 'ATO:',(re.sub('\].*', '',elements[3].string)))
-                ato_label = re.sub('\[.*\]', '', elements[3].string)
-                #print('ato ID: '+ato_id+' ato label: '+ato_label)
-                species = elements[4].string
-                trait_class = elements[5].string
-                qtl_count = elements[6].string
+                    if re.match('VT:.*', vto_id):
+                        print(vto_id)
 
-                #print(vto_id)'''
-        line_counter += 1
+                    if re.match('PT:.*', pto_id):
+                        print(pto_id)
+                    if re.match('CMO:.*', cmo_id):
+                        print(cmo_id)
+                    #print(ato_id)
+                    print(row)
+
+
+
+
 
 
 
