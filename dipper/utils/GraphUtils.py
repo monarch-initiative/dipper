@@ -64,7 +64,8 @@ class GraphUtils:
         'has_end_stage_qualifier' : 'GENO:0000631',
         'correlates_with': 'MONARCH:correlates_with',
         'substance_that_treats': 'RO:0002606',
-        'is_marker_for': 'RO:0002607'
+        'is_marker_for': 'RO:0002607',
+        'contributes_to': 'RO:0002326'
     }
 
     datatype_properties = {

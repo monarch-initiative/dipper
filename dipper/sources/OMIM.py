@@ -400,10 +400,13 @@ class OMIM(Source):
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = ':'.join(('OMIM', gene_num))
                     disorder_id = ':'.join(('OMIM', disorder_num))
+                    rel_id = gu.object_properties['has_phenotype']  #default
+                    if re.match('\[', disorder_label):
+                        rel_id = gu.object_properties['is_marker_for']
+                    elif re.match('\{', disorder_label):
+                        rel_id = gu.object_properties['contributes_to']
 
                     evidence = self._map_phene_mapping_code_to_eco(phene_key)
-
-                    assoc_id = self.make_id((disorder_id+gene_id+phene_key))
 
                     # we actually want the association between the gene and the disease to be via an alternate locus
                     # not the "wildtype" gene itself.
@@ -416,8 +419,10 @@ class OMIM(Source):
                         alt_label = None
                     gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus, gene_id)
+                    assoc_id = self.make_association_id(self.name, alt_locus, rel_id, disorder_id, evidence, None)
 
                     assoc = G2PAssoc(assoc_id, alt_locus, disorder_id, None, evidence)
+                    assoc.setRelationship(rel_id)
                     assoc.loadAllProperties(g)
                     assoc.addAssociationToGraph(g)
 
