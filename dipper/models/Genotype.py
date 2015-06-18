@@ -25,6 +25,7 @@ class Genotype():
         'effective_genotype': 'GENO:0000525',
         'genomic_background': 'GENO:0000611',
         'genomic_variation_complement': 'GENO:0000009',
+        'karyotype_variation_complement': 'GENO:0000644',
         'variant_single_locus_complement': 'GENO:0000030',
         'variant_locus': 'GENO:0000002',
         'reference_locus': 'GENO:0000036',
@@ -44,7 +45,8 @@ class Genotype():
         'inversion': 'SO:1000036',
         'tandem_duplication': 'SO:1000173',
         'point_mutation': 'SO:1000008',
-        'population': 'GENO:0000110',  # collection of organisms; consider OBI:population or EFO:population
+        'population': 'PCO:0000001',  # population
+        'family': 'PCO:0000020',  # family
         'wildtype': 'GENO:0000511',
         'reagent_targeted_gene': 'GENO:0000504',
         'targeted_gene_subregion' : 'GENO:0000534',
