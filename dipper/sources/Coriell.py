@@ -15,6 +15,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.Reference import Reference
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,8 @@ class Coriell(Source):
 
     # the following will house the specific cell lines to use for test output
     test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
-                  'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602',
-                  'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142']
-
+                  'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
+                  'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944']
     def __init__(self):
         Source.__init__(self, 'coriell')
 
@@ -172,6 +172,9 @@ class Coriell(Source):
         logger.info("Finished parsing.")
 
         self.load_bindings()
+
+        logger.info("Found %d nodes in graph", len(self.graph))
+        logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
         return
 
@@ -277,8 +280,9 @@ class Coriell(Source):
                     # Make the patient ID
 
                     # make an anonymous patient
-                    # TODO make actually anonymous with flag nobnodes
-                    patient_id = ':_person'
+                    patient_id = '_person'
+                    if self.nobnodes:
+                        patient_id = ':'+patient_id
                     if family_id != '':
                         patient_id = '-'.join((patient_id, family_id, family_member))
                     else:
@@ -291,21 +295,28 @@ class Coriell(Source):
                     short_desc = (description.split(';')[0]).capitalize()
                     if affected == 'Yes':
                         affected = 'affected'
-                    else:
+                    elif affected == 'No':
                         affected = 'unaffected'
                     gender = gender.lower()
                     patient_label = ' '.join((affected, gender, relprob))
                     if relprob == 'proband':
-                        patient_label = ' '.join((patient_label, 'with', short_desc))
+                        patient_label = ' '.join((patient_label.strip(), 'with', short_desc))
                     else:
-                        patient_label = ' '.join((patient_label, 'of proband with', short_desc))
+                        patient_label = ' '.join((patient_label.strip(), 'of proband with', short_desc))
 
                     # #############    BUILD THE CELL LINE    #############
 
                     # Adding the cell line as a typed individual.
-                    # FIXME make sure this typing is right
-                    cell_line_reagent_id = 'ERO:0000009'
+                    cell_line_reagent_id = 'CLO:0000031'
+
                     gu.addIndividualToGraph(g, cell_line_id, line_label, cell_line_reagent_id)
+
+                    # add the equivalent id == dna_ref
+                    if dna_ref != '' and dna_ref != catalog_id:
+                        equiv_cell_line = 'Coriell:'+dna_ref
+                        # some of the equivalent ids are not defined in the source data; so add them
+                        gu.addIndividualToGraph(g, equiv_cell_line, None, cell_line_reagent_id)
+                        gu.addSameIndividual(g, cell_line_id, equiv_cell_line)
 
                     # Cell line derives from patient
                     geno.addDerivesFrom(cell_line_id, patient_id)
@@ -325,8 +336,6 @@ class Coriell(Source):
                         # age_id = '_'+re.sub('\s+','_',age)
                         # gu.addIndividualToGraph(g,age_id,age,self.terms['age'])
                         # gu.addTriple(g,age_id,self.properties['has_measurement'],age,True)
-
-                    # that the cell line is a model for a disease is dealt with below
 
                     # #############    BUILD THE PATIENT    #############
 
@@ -351,12 +360,11 @@ class Coriell(Source):
                     # #############    BUILD THE FAMILY    #############
 
                     # Add triples for family_id, if present.
-                    # a family is just a small population
                     if family_id != '':
                         family_comp_id = 'CoriellFamily:'+family_id
 
                         # Add the family ID as a named individual
-                        gu.addIndividualToGraph(g, family_comp_id, None, geno.genoparts['population'])
+                        gu.addIndividualToGraph(g, family_comp_id, None, geno.genoparts['family'])
 
                         # Add the patient as a member of the family
                         gu.addMemberOf(g, patient_id, family_comp_id)
@@ -364,11 +372,11 @@ class Coriell(Source):
                     # #############    BUILD THE GENOTYPE   #############
 
                     # the important things to pay attention to here are:
-                    # karyotype (used when there isn't a typical mutation), esp for chr rearrangements
+                    # karyotype = chr rearrangements  (somatic?)
                     # mutation = protein-level mutation as a label, often from omim
                     # gene = gene symbol - TODO get id
                     # variant_id = omim variant ids (; delimited)
-                    # dbsnp_id = snp individual ids, is == patient id == haplotype?
+                    # dbsnp_id = snp individual ids = full genotype?
 
                     # note GM00633 is a good example of chromosomal variation - do we have enough to capture this?
                     # GM00325 has both abnormal karyotype and variation
@@ -390,66 +398,91 @@ class Coriell(Source):
                     # some of the karyotypes are encoded with terrible hidden codes. remove them here
                     # i've seen a <98> character
                     karyotype = self.remove_control_characters(karyotype)
+                    karyotype_id = None
+                    if karyotype.strip() != '':
+                        karyotype_id = self.make_id(karyotype)
+                        # add karyotype as karyotype_variation_complement
+                        gu.addIndividualToGraph(g, karyotype_id, karyotype,
+                                                geno.genoparts['karyotype_variation_complement'])
                     # TODO break down the karyotype into parts and map into GENO. depends on #77
 
                     if gene != '':
-                        vl = gene+'['+mutation+']'
-                    if karyotype.strip() != '' and karyotype != '46;XX' and karyotype != '46;XY':
+                        vl = gene+'('+mutation+')'
+
+                    # fix the variant_id so that we make sure it's always in the same order
+                    vids=variant_id.split(';')
+                    variant_id = ';'.join(sorted(list(set(vids))))
+
+                    if karyotype.strip() != '':
                         mutation = mutation.strip()
-                        gvc_id = self.make_id(variant_id.strip()+karyotype)
+                        gvc_id = karyotype_id
+                        if variant_id != '':
+                            gvc_id = '_'+variant_id.replace(';','-')+'-'+re.sub(r'\w+:','',karyotype_id)
                         if mutation.strip() != '':
-                            gvc_label = ';'.join((vl, karyotype))
+                            gvc_label = '; '.join((vl, karyotype))
                         else:
                             gvc_label = karyotype
                     elif variant_id.strip() != '':
-                        gvc_id = self.make_id(variant_id)
+                        gvc_id = '_'+variant_id.replace(';','-')
                         gvc_label = vl
+                    else:
+                        # wildtype?
+                        pass
+
+                    if gvc_id is not None and gvc_id != karyotype_id and self.nobnodes:
+                        gvc_id = ':'+gvc_id
+
+                    # add the karyotype to the gvc. use reference if normal karyotype
+                    karyo_rel = geno.object_properties['has_alternate_part']
+                    if (karyotype == '46;XX' or karyotype == '46;XY'):
+                        karyo_rel = geno.object_properties['has_reference_part']
+                    if (karyotype_id is not None and gvc_id is not None and karyotype_id != gvc_id):
+                        geno.addParts(karyotype_id, gvc_id, karyo_rel)
 
                     if variant_id.strip() != '':
                         # split the variants and add them as part of the genotype
                         # we don't necessarily know their zygosity, just that they are part of the genotype
                         # variant ids are from OMIM, so prefix as such
-                        # we assume that the variants will be defined in OMIM rather than here.
+                        # we assume that the sequence alts will be defined in OMIM rather than here.
                         # TODO sort the variant_id list, if the omim prefix is the same, then assume it's the locus
                         # make a hashmap of the omim id to variant id list; then build the genotype
-                        # hashmap is also useful for removing the "genes" from the list of phenotypes
-                        omim_map = {}
+                        # hashmap is also useful for removing the "genes" from the list of "phenotypes"
+                        omim_map = {}  # will hold gene/locus id to variant list
 
                         locus_num = None
                         for v in variant_id.split(';'):
                             # handle omim-style and odd var ids like 610661.p.R401X
                             m = re.match('(\d+)\.+(.*)', v.strip())
-
                             if m is not None and len(m.groups()) == 2:
                                 (locus_num, var_num) = m.groups()
 
                             if locus_num is not None and locus_num not in omim_map:
                                 omim_map[locus_num] = [var_num]
                             else:
-                                omim_map[locus_num] = omim_map[locus_num]+[var_num]
+                                omim_map[locus_num] += [var_num]
 
                         for o in omim_map:
-
-                            allele1_id = 'OMIM:'+o+'.'+omim_map.get(o)[0]
-                            gu.addIndividualToGraph(g, allele1_id, None, geno.genoparts['variant_locus'])
-                            if len(omim_map.get(o)) > 1:
-                                # build a vslc
-                                vslc_id = self.make_id(o + ' '.join(omim_map.get(o)))
-                                vslc_label = vl
-                                allele2_id = 'OMIM:'+o+'.'+omim_map.get(o)[1]
-                                gu.addIndividualToGraph(g, allele2_id, None, geno.genoparts['variant_locus'])
+                            gene_id = 'OMIM:'+o
+                            vslc_id = '_'+'OMIM'+o+'-'+'-'.join(omim_map.get(o))
+                            if self.nobnodes:
+                                vslc_id = ':'+vslc_id
+                            vslc_label = vl
+                            # we don't really know the zygosity of the alleles at all.
+                            # so the vslcs are just a pot of them
+                            gu.addIndividualToGraph(g, vslc_id, vslc_label,
+                                                    geno.genoparts['variant_single_locus_complement'])
+                            for v in omim_map.get(o):
+                                allele1_id = 'OMIM:'+o+'.'+v
+                                gu.addIndividualToGraph(g, allele1_id, None, geno.genoparts['variant_locus'])
+                                geno.addAlleleOfGene(allele1_id, gene_id)
 
                                 # making the assumption that the alleles are variants!
-                                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id,
+                                geno.addPartsToVSLC(vslc_id, allele1_id, None,
+                                                    geno.zygosity['indeterminate'],
                                                     geno.object_properties['has_alternate_part'])
-                                geno.addVSLCtoParent(vslc_id, gvc_id)
-                                gu.addIndividualToGraph(g, vslc_id, vslc_label,
-                                                        geno.genoparts['variant_single_locus_complement'])
-                                # note, we do not add the gene id to the variation because we don't have it.
-                                # this will have to come from OMIM or ClinVar.
 
-                            else:
-                                geno.addParts(allele1_id, gvc_id, geno.properties['has_alternate_part'])
+                            geno.addVSLCtoParent(vslc_id, gvc_id)
+
                     #else:
                         #genotype_id = None
                         #if affected == 'affected':
@@ -460,7 +493,9 @@ class Coriell(Source):
                         gu.addType(g, patient_id, geno.genoparts['wildtype'])
                     elif genotype_id is None:
                         # make an anonymous genotype id
-                        genotype_id = '_geno'+cell_line_id
+                        genotype_id = '_geno'+catalog_id.strip()
+                        if self.nobnodes:
+                            genotype_id = ':'+genotype_id
 
                     # add the gvc
                     if gvc_id is not None:
@@ -473,12 +508,14 @@ class Coriell(Source):
                             else:
                                 rel = geno.object_properties['has_alternate_part']
                             geno.addParts(gvc_id, genotype_id, rel)
-                        genotype_label = gvc_label
+                        genotype_label = gvc_label + ' ['+catalog_id.strip()+']'  # use the catalog id as the background
 
-                    if genotype_id is not None:
+                    if genotype_id is not None and gvc_id is not None:
+                        # only add the genotype if it has some parts
                         geno.addGenotype(genotype_id, genotype_label, geno.genoparts['intrinsic_genotype'])
                         geno.addTaxon(taxon, genotype_id)
                         # add that the patient has the genotype
+                        # TODO check if the genotype belongs to the cell line or to the patient
                         gu.addTriple(g, patient_id, geno.properties['has_genotype'], genotype_id)
                     else:
                         geno.addTaxon(taxon, patient_id)
@@ -498,7 +535,9 @@ class Coriell(Source):
                                         gu.addClassToGraph(g, disease_id, None)   # assume the label is taken care of
 
                                         # add the association: the patient has the disease
-                                        assoc_id = self.make_id(patient_id+disease_id)
+                                        assoc_id = self.make_association_id(self.name, patient_id,
+                                                                            gu.object_properties['has_phenotype'],
+                                                                            disease_id, None, None)
                                         assoc = G2PAssoc(assoc_id, patient_id, disease_id, None, None)
                                         assoc.addAssociationToGraph(g)
 
@@ -508,18 +547,14 @@ class Coriell(Source):
                                     else:
                                         logger.info('removing %s from disease list since it is a gene', d)
 
-                                        # BEWARE
-                                        # Coriell currently seems to sometimes annotate variants to phenotype ids rather
-                                        # than gene ids!  YIKES
-                                        # we are checking with them now to find out why.
-                                        # ex: GM16467 is annotated to 278720.0006, but it should be 613208.0006
-                                        # so this current solution is aggressive, and might mean missing data
-
                     # #############    ADD PUBLICATIONS   #############
 
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
+                            ref = Reference(pubmed_id)
+                            ref.setType(Reference.ref_types['journal_article'])
+                            ref.addRefToGraph(g)
                             gu.addTriple(g, pubmed_id, gu.properties['mentions'], cell_line_id)
 
                     if not self.testMode and (limit is not None and line_counter > limit):
@@ -550,7 +585,7 @@ class Coriell(Source):
             repo_id = 'CoriellCollection:'+id
             repo_label = label
             repo_page = page
-            #gu.addClassToGraph(g,repo_id,repo_label)
+
             gu.addIndividualToGraph(g, repo_id, repo_label, self.terms['cell_line_repository'])
             gu.addPage(g, repo_id, repo_page)
 
