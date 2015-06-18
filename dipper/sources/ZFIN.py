@@ -118,7 +118,7 @@ class ZFIN(Source):
                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
-                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1"
+                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1", "ZDB-EXP-070129-3"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -1608,6 +1608,8 @@ class ZFIN(Source):
                 if units is not None:
                     if re.match('.*\/.*', units):
                         unit_id = re.sub(r"/", '-per-', units)
+                    elif re.search('%', units):
+                        unit_id = re.sub(r"%", 'percent', units)
                     else:
                         unit_id = units.replace(' ', '-')
 
