@@ -29,6 +29,7 @@
 'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
 'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_'
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'
+'PCO': 'http://purl.obolibrary.org/obo/PCO_'
 'PR': 'http://purl.obolibrary.org/obo/PR_'
 'PW' : 'http://purl.obolibrary.org/obo/PW_'
 'RO': 'http://purl.obolibrary.org/obo/RO_'
@@ -114,7 +115,7 @@
 'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'SGD' : 'http://identifiers.org/SGD:'
 'TAIR' : 'http://identifiers.org/TAIR:'
-'WormBase' : 'http://identifiers.org/WormBase:'
+'WormBase' : 'http://identifiers.org/wormbase/'
 'ZFIN' : 'http://zfin.org/'
 
 # proteins
