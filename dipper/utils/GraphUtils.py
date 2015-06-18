@@ -52,7 +52,7 @@ class GraphUtils:
         'part_of': 'BFO:0000050',
         'has_part': 'BFO:0000051',
         'mentions': 'IAO:0000142',
-        'model_of' : 'ERO:0000233',
+        'model_of' : 'RO:0003301',
         'has_gene_product' : 'RO:0002205',
         'existence_starts_at' : 'UBERON:existence_starts_at',
         'existence_starts_during' : 'RO:0002488',
@@ -65,7 +65,9 @@ class GraphUtils:
         'correlates_with': 'MONARCH:correlates_with',
         'substance_that_treats': 'RO:0002606',
         'is_marker_for': 'RO:0002607',
-        'contributes_to': 'RO:0002326'
+        'contributes_to': 'RO:0002326',
+        'has_origin': 'GENO:0000643',
+        'has_author': 'ERO:0000232'
     }
 
     datatype_properties = {
