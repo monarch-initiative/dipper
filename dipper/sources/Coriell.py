@@ -74,7 +74,7 @@ class Coriell(Source):
     test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
                   'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
                   'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505',
-                  'GM01602', 'GM02455']
+                  'GM01602', 'GM02455', 'AG00364']
     def __init__(self):
         Source.__init__(self, 'coriell')
 
@@ -401,7 +401,7 @@ class Coriell(Source):
                     karyotype = self.remove_control_characters(karyotype)
                     karyotype_id = None
                     if karyotype.strip() != '':
-                        karyotype_id = '_'+re.sub('MONARCH', '', self.make_id(karyotype))
+                        karyotype_id = '_'+re.sub('MONARCH:', '', self.make_id(karyotype))
                         if self.nobnodes:
                             karyotype_id = ':'+karyotype_id
                         # add karyotype as karyotype_variation_complement
@@ -420,7 +420,7 @@ class Coriell(Source):
                         mutation = mutation.strip()
                         gvc_id = karyotype_id
                         if variant_id != '':
-                            gvc_id = '_'+variant_id.replace(';','-')+'-'+re.sub(r'\w+:','',karyotype_id)
+                            gvc_id = '_'+variant_id.replace(';','-')+'-'+re.sub(r'\w*:','',karyotype_id)
                         if mutation.strip() != '':
                             gvc_label = '; '.join((vl, karyotype))
                         else:
