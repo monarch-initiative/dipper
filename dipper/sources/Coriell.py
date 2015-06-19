@@ -73,7 +73,8 @@ class Coriell(Source):
     # the following will house the specific cell lines to use for test output
     test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
                   'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
-                  'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505']
+                  'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505',
+                  'GM01602', 'GM02455']
     def __init__(self):
         Source.__init__(self, 'coriell')
 
@@ -465,7 +466,8 @@ class Coriell(Source):
 
                         for o in omim_map:
                             gene_id = 'OMIM:'+o
-                            vslc_id = '_'+'OMIM'+o+'-'+'-'.join(omim_map.get(o))
+                            #vslc_id = '_'+'OMIM'+o+'-'+'-'.join(omim_map.get(o))
+                            vslc_id = '_'+'-'.join([o+'.'+a for a in omim_map.get(o)])
                             if self.nobnodes:
                                 vslc_id = ':'+vslc_id
                             vslc_label = vl
@@ -483,7 +485,8 @@ class Coriell(Source):
                                                     geno.zygosity['indeterminate'],
                                                     geno.object_properties['has_alternate_part'])
 
-                            geno.addVSLCtoParent(vslc_id, gvc_id)
+                            if vslc_id != gvc_id:
+                                geno.addVSLCtoParent(vslc_id, gvc_id)
 
                     #else:
                         #genotype_id = None
