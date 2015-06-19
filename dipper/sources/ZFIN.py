@@ -118,7 +118,8 @@ class ZFIN(Source):
                         "ZDB-EXP-100511-5", "ZDB-EXP-101025-12", "ZDB-EXP-101025-13", "ZDB-EXP-110926-4",
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
-                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1", "ZDB-EXP-070129-3"
+                        "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1", "ZDB-EXP-070129-3",
+                        "ZDB-EXP-110929-7"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -1581,6 +1582,8 @@ class ZFIN(Source):
                 units = units.strip()
                 if units == 'N/A' or units == '':
                     units = None
+                if units is not None:
+                    units = re.sub('[\(\)]','', units)
 
                 # Clean up the values
                 values = values.strip()
@@ -1653,7 +1656,7 @@ class ZFIN(Source):
                     # logger.info("%s affected genes %s", morph_id, pp.pformat(ag))
                     list_of_targeted_genes = []
                     if ag is None:
-                        logger.warn("No affected genes for $s", morph_id)
+                        logger.warn("No affected genes for %s", morph_id)
                     else:
                         # create variant gene(s) that have been targeted by the reagent
                         for gid in ag:
