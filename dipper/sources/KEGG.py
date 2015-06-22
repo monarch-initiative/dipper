@@ -49,6 +49,9 @@ class KEGG(Source):
                           'url': 'http://rest.kegg.jp/link/orthology/cel'}
     }
 
+    # TODO http://rest.kegg.jp/link/pathway/pubmed
+    # TODO http://rest.kegg.jp/link/pathway/ds  # disease pathway assoc
+
     test_ids = {
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340", "path:hsa05223"],
         "disease": ["ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736", "ds:H00014"],
@@ -86,6 +89,9 @@ class KEGG(Source):
             #logger.debug('Files have same checksum as reference')
         #else:
             #raise Exception('Reference checksums do not match disk')
+
+        # TODO add versioning information from info rest call, like http://rest.kegg.jp/info/pathway
+
         return
 
     def parse(self, limit=None):
