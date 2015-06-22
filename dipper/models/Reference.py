@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Reference:
     """
-    To model references for assocations (such as journal articles, books, etc.).
+    To model references for associations (such as journal articles, books, etc.).
 
     By default, references will be typed as "documents", unless if the type is set otherwise.
 
