@@ -128,5 +128,4 @@
 
 #chemicals
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
-'CHEBI' : 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId='
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
