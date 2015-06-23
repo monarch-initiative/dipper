@@ -3,17 +3,19 @@ import re
 import gzip
 import os
 import logging
-import sys
+import urllib
+import urllib.parse
+import urllib.request
 
 from dipper import curie_map
 from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.Chem2DiseaseAssoc import Chem2DiseaseAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Reference import Reference
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +40,9 @@ class CTD(Source):
     CTD also pulls in genes and pathway membership from KEGG and REACTOME.  We create groups of these following
     the pattern that the specific pathway is a subclass of 'cellular process' (a go process), and
     the gene is "involved in" that process.
+
+    For diseases, we preferentially use OMIM identifiers when they can be used uniquely over MESH.  Otherwise,
+    we use MESH ids.
     """
 
     files = {
@@ -55,7 +60,7 @@ class CTD(Source):
         }
     }
     static_files = {
-        'publications': {'file': 'CTD_curated_references.tsv.gz'}
+        'publications': {'file': 'CTD_curated_references.tsv'}
     }
 
     def __init__(self):
@@ -87,6 +92,8 @@ class CTD(Source):
         """
         self.get_files(is_dl_forced)
 
+        self._fetch_disambiguating_assoc()
+
         # consider creating subsets of the files that only have direct annotations (not inferred)
         return
 
@@ -103,13 +110,13 @@ class CTD(Source):
             logger.info("Only parsing first %d rows", limit)
 
         logger.info("Parsing files...")
-        pub_map = dict()
-        file_path = '/'.join((self.rawdir,
-                              self.static_files['publications']['file']))
-        if os.path.exists(file_path) is True:
-            pub_map = self._parse_publication_file(
-                self.static_files['publications']['file']
-            )
+        # pub_map = dict()
+        # file_path = '/'.join((self.rawdir,
+        #                       self.static_files['publications']['file']))
+        # if os.path.exists(file_path) is True:
+        #     pub_map = self._parse_publication_file(
+        #         self.static_files['publications']['file']
+        #     )
 
         if self.testOnly:
             self.testMode = True
@@ -122,9 +129,10 @@ class CTD(Source):
         self.path = Pathway(self.g)
         self.gu = GraphUtils(curie_map.get())
 
-        self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'], pub_map)
+        self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'])
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
+        self._parse_curated_chem_disease(limit)
         self.gu.loadAllProperties(self.g)
         # self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
 
@@ -133,15 +141,12 @@ class CTD(Source):
 
         return
 
-    def _parse_ctd_file(self, limit, file, pub_map=None):
+    def _parse_ctd_file(self, limit, file):
         """
         Parses files in CTD.files dictionary
         Args:
             :param limit (int): limit the number of rows processed
             :param file (str): file name (must be defined in CTD.file)
-            :param pub_map(dict, optional):
-                    publication mapping dictionary
-                    generated with _split_pub_ids_by_evidence()
         Returns:
             :return None
         """
@@ -167,7 +172,7 @@ class CTD(Source):
                 else:
                     row_count += 1
                     if file == self.files['chemical_disease_interactions']['file']:
-                        self._process_interactions(row, pub_map)
+                        self._process_interactions(row)
                     elif file == self.files['gene_pathway']['file']:
                         self._process_pathway(row)
                     elif file == self.files['gene_disease']['file']:
@@ -195,25 +200,96 @@ class CTD(Source):
 
         entrez_id = 'NCBIGene:'+gene_id
 
-        # convert KEGG pathway ids... KEGG:12345 --> KEGG:path:map12345
+        # convert KEGG pathway ids... KEGG:12345 --> KEGG-path:map12345
         if re.match('KEGG', pathway_id):
             pathway_id = re.sub('KEGG:', 'KEGG-path:map', pathway_id)
 
         self.gu.addClassToGraph(self.graph, entrez_id, None)  # just in case, add it as a class
 
         self.path.addPathway(pathway_id, pathway_name)
-        self.path.addGeneToPathway(entrez_id, pathway_id)
+        self.path.addGeneToPathway(pathway_id, entrez_id)
 
         return
 
-    def _process_interactions(self, row, pub_map):
+    def _fetch_disambiguating_assoc(self):
         """
-        Process row of CTD data from CTD_genes_pathways.tsv.gz
+        For any of the items in the chemical-disease association file that have ambiguous association types
+        we fetch the disambiguated associations using the batch query API, and store these in a file.
+        Elsewhere, we can loop through the file and create the appropriate associations.
+
+        :return:
+        """
+
+        disambig_file = '/'.join((self.rawdir, self.static_files['publications']['file']))
+        assoc_file = '/'.join((self.rawdir, self.files['chemical_disease_interactions']['file']))
+
+        # check if there is a local association file, and download if it's dated later than the original intxn file
+        if os.path.exists(disambig_file):
+            dfile_dt = os.stat(disambig_file)
+            afile_dt = os.stat(assoc_file)
+            if dfile_dt < afile_dt:
+                logger.info("Local disambiguating file date < chem-disease assoc file.  Downloading...")
+            else:
+                logger.info("Local disambiguating file date > chem-disease assoc file.  Skipping download.")
+                return
+
+        all_pubs = set()
+        dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
+        # first get all the unique publications
+        with gzip.open(assoc_file, 'rt') as tsvfile:
+            reader = csv.reader(tsvfile, delimiter="\t")
+            for row in reader:
+                if re.match('^#', ' '.join(row)):
+                    continue
+                self._check_list_len(row, 10)
+                (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
+                 inferred_gene_symbol, inference_score, omim_ids, pubmed_ids) = row
+                if direct_evidence == '' or not re.match(dual_evidence, direct_evidence):
+                    continue
+                if pubmed_ids is not None and pubmed_ids != '':
+                    all_pubs.update(set(re.split('\|', pubmed_ids)))
+        sorted_pubs = sorted(list(all_pubs))
+
+        # now in batches of 4000, we fetch the chemical-disease associations
+        batch_size = 4000
+        params = {
+            'inputType': 'reference',
+            'report': 'diseases_curated',
+            'format': 'tsv',
+            'action': 'Download'
+        }
+
+        url = 'http://ctdbase.org/tools/batchQuery.go?q'
+        start = 0
+        end = min((batch_size, len(all_pubs)))  # get them in batches of 4000
+
+        with open(disambig_file, 'wb') as f:
+            while start < len(sorted_pubs):
+                params['inputTerms'] = '|'.join(sorted_pubs[start:end])
+                # fetch the data from url
+                logger.info('fetching %d (%d-%d) refs: %s', len(re.split('\|', params['inputTerms'])),
+                            start, end, params['inputTerms'])
+                data = urllib.parse.urlencode(params)
+                encoding = 'utf-8'
+                binary_data = data.encode(encoding)
+                req = urllib.request.Request(url, binary_data)
+                resp = urllib.request.urlopen(req)
+                f.write(resp.read())
+                start = end
+                end = min((start+batch_size, len(sorted_pubs)))
+
+        return
+
+    def _process_interactions(self, row):
+        """
+        Process row of CTD data from CTD_chemicals_diseases.tsv.gz
         and generate triples.
-        Only create associations based on direct evidence (not using the inferred-via-gene)
+        Only create associations based on direct evidence (not using the inferred-via-gene),
+        and unambiguous relationships.  (Ambiguous ones will be processed in the sister method using the
+        disambiguated file). There are no OMIM ids for diseases in these cases, so we associate with only
+        the mesh disease ids.
         Args:
             :param row (list): row of CTD data
-            :param pub_map(dict, optional): publication mapping dictionary
         Returns:
             :return None
         """
@@ -221,28 +297,25 @@ class CTD(Source):
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
          inferred_gene_symbol, inference_score, omim_ids, pubmed_ids) = row
 
+        if direct_evidence == '':
+            return
+
         evidence_pattern = re.compile('^therapeutic|marker\/mechanism$')
-        dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
+        # dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
 
         # filter on those diseases that are mapped to omim ids in the test set
         intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
         if self.testMode and len(intersect) < 1:
             return
-
-        if direct_evidence == '':
-            pass
-        elif re.match(evidence_pattern, direct_evidence):
-            reference_list = self._process_pubmed_ids(pubmed_ids)
-            self._make_association(chem_id, disease_id, direct_evidence, reference_list)
-        elif ((re.match(dual_evidence, direct_evidence))
-              and (len(pub_map.keys()) > 0)):
-            reference_list = self._process_pubmed_ids(pubmed_ids)
-            pub_evidence_map = self._split_pub_ids_by_evidence(reference_list, chem_id, disease_id, pub_map)
-            for val in direct_evidence.split('|'):
-                self._make_association(chem_id, disease_id, val, pub_evidence_map[val])
+        chem_id = 'MESH:'+chem_id
+        reference_list = self._process_pubmed_ids(pubmed_ids)
+        if re.match(evidence_pattern, direct_evidence):
+            rel_id = self._get_relationship_id(direct_evidence)
+            self._make_association(chem_id, disease_id, rel_id, reference_list)
         else:
             # there's dual evidence, but haven't mapped the pubs
-            logger.info("Dual evidence for %s and %s but no pub map", chem_name, disease_id)
+            pass
+            # logger.debug("Dual evidence for %s (%s) and %s (%s)", chem_name, chem_id, disease_name, disease_id)
 
         return
 
@@ -276,16 +349,17 @@ class CTD(Source):
         (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,
          inference_chemical_name, inference_score, omim_ids, pubmed_ids) = row
 
+        # we only want the direct associations; skipping inferred for now
+        if direct_evidence == '' or direct_evidence != 'marker/mechanism':
+            return
+
         intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
         if self.testMode and (int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
 
-        # we only want the direct associations; skipping inferred for now
         # there are three kinds of direct evidence: (marker/mechanism | marker/mechanism|therapeutic | therapeutic)
         # we are only using the "marker/mechanism" for now
-        if direct_evidence != 'marker/mechanism':
-            return
-        # TODO add therapeutic!
+        # TODO what does it mean for a gene to be therapeutic for disease?  a therapeutic target?
 
         gene_id = 'NCBIGene:'+gene_id
 
@@ -312,65 +386,62 @@ class CTD(Source):
                     # This is when the disease ID is not an OMIM ID and there is more than one OMIM entry in omim_ids.
                     pass
 
-        # Make an association ID.
-        assoc_id = self.make_id((preferred_disease_id+gene_id))
-
         # we actually want the association between the gene and the disease to be via an alternate locus
         # not the "wildtype" gene itself.
         # so we make an anonymous alternate locus, and put that in the association.
         alt_locus = '_'+gene_id+'-'+preferred_disease_id+'VL'
+        alt_locus = re.sub(':', '', alt_locus)  # can't have colons in the bnodes
         alt_label = 'some variant of '+gene_symbol+' that is '+direct_evidence+' for '+disease_name
         self.gu.addIndividualToGraph(self.g, alt_locus, alt_label, self.geno.genoparts['variant_locus'])
         self.gu.addClassToGraph(self.g, gene_id, None)  # assume that the label gets added elsewhere
         self.geno.addAlleleOfGene(alt_locus, gene_id)
-        self.gu.addClassToGraph(self.g, preferred_disease_id, None)
+
+        # not sure if MESH is getting added separately.  adding labels here for good measure
+        dlabel = None
+        if re.match('MESH', preferred_disease_id):
+            dlabel = disease_name
+        self.gu.addClassToGraph(self.g, preferred_disease_id, dlabel)
 
         # Add the disease to gene relationship.
-        assoc = G2PAssoc(assoc_id, alt_locus, preferred_disease_id, None, None)
-        assoc.setRelationship(self._get_relationship_id(direct_evidence))
-        assoc.addAssociationToGraph(self.g)
-
-        # add the papers
-        if pubmed_ids is not None and pubmed_ids != '':
-            assoc.addEvidence(self.g, self._get_evidence_code('TAS'), assoc_id)  # Traceable author statement
-            for i in re.split('\|', pubmed_ids.strip()):
-                pmid = 'PMID:'+str(i)
-                assoc.addSource(self.g, assoc_id, pmid)
+        rel_id = self._get_relationship_id(direct_evidence)
+        refs = self._process_pubmed_ids(pubmed_ids)
+        self._make_association(alt_locus, preferred_disease_id, rel_id, refs)
 
         return
 
-    def _make_association(self, chem_id, disease_id, direct_evidence, pubmed_ids):
+    def _make_association(self, subject_id, object_id, rel_id, pubmed_ids):
         """
-        Make a reified chemical-phenotype association
-        using the Chem2DiseaseAssoc class
+        Make a reified association given an array of pubmed identifiers.
+
         Args:
-            :param chem_id
-            :param disease_id
-            :param direct_evidence
-            :param pubmed_ids
+            :param subject_id  id of the subject of the association (gene/chem)
+            :param object_id  id of the object of the association (disease)
+            :param rel_id  relationship id
+            :param pubmed_ids an array of pubmed identifiers
         Returns:
             :return None
         """
 
-        if self.testMode:
-            g = self.testgraph
+        eco = self._get_evidence_code('TAS')
+        # TODO pass in the relevant Assoc class rather than relying on G2P
+        if pubmed_ids is not None and len(pubmed_ids) > 0:
+            for pmid in pubmed_ids:
+                r = Reference(pmid, Reference.ref_types['journal_article'])
+                r.addRefToGraph(self.g)
+
+                assoc_id = self.make_association_id(self.name, subject_id, rel_id, object_id, eco, pmid)
+                assoc = G2PAssoc(assoc_id, subject_id, object_id, pmid, eco)
+                assoc.setRelationship(rel_id)
+                assoc.addAssociationToGraph(self.g)
+                assoc.loadAllProperties(self.g)
         else:
-            g = self.graph
-        assoc_id = self.make_ctd_chem_disease_assoc_id(chem_id, disease_id, direct_evidence)
-        evidence_code = self._get_evidence_code('TAS')
-        chem_mesh_id = 'MESH:'+chem_id
-        relationship = self._get_relationship_id(direct_evidence)
-        assoc = Chem2DiseaseAssoc(assoc_id, chem_mesh_id, disease_id,
-                                  pubmed_ids, relationship, evidence_code)
-        assoc.loadAllProperties(g)
-        assoc.addAssociationNodeToGraph(g)
+            assoc_id = self.make_association_id(self.name, subject_id, rel_id, object_id, None, None)
+            assoc = G2PAssoc(assoc_id, subject_id, object_id, None, None)
+            assoc.setRelationship(rel_id)
+            assoc.addAssociationToGraph(self.g)
+            assoc.loadAllProperties(self.g)
 
-        return g
-
-    def make_ctd_chem_disease_assoc_id(self, chem_id, disease_id, direct_evidence):
-        assoc_id = self.make_id('ctd' + chem_id + disease_id + direct_evidence)
-
-        return assoc_id
+        return
 
     def _process_pubmed_ids(self, pubmed_ids):
         """
@@ -426,69 +497,29 @@ class CTD(Source):
             'pathway': 'PW:0000001',
             'signal transduction': 'GO:0007165'
         }
+
         return CLASS_MAP[cls]
 
-    def _split_pub_ids_by_evidence(self, pub_ids, chem_id, disease_id, pub_map):
-        """
-        Split a list of ambiguous sources to chemical-phenotype relationship
-        Args:
-            :param pub_ids (list): list of publication IDs
-            :param disease_id (str): disease curie
-            :param chem_id (str): chemical curie
-            :param pub_map (dict): publication dictionary
-        Returns:
-            :return dictionary in the following structure:
-                     {
-                      'therapeutic': [1234,2345],
-                      'marker/mechanism': [4567,5678]
-                     }
-        """
-        publication = {'therapeutic': [], 'marker/mechanism': []}
-        for val in pub_ids:
-            key = disease_id+'-'+chem_id+'-'+val
-            if pub_map.get(key):
-                publication[pub_map[key]].append(val)
-            else:
-                logger.error("Could not disambiguate publication "
-                             "for disease id: %s"
-                             "\nchemical id: %s"
-                             "\npublication id: %s", disease_id, chem_id, str(val))
-
-        return publication
-
-    def _parse_publication_file(self, file):
-        """
-        Parse publication file found in CTD.static_files
-        Args:
-            :param file (str): file name
-        Returns:
-            :return dict: key containing the chemID, phenotypeID, and pubID
-                           mapped to relationship
-        """
-        pub_map = dict()
-        file_path = '/'.join((self.rawdir, file))
-        with gzip.open(file_path, 'rt') as tsvfile:
+    def _parse_curated_chem_disease(self, limit):
+        line_counter = 0
+        file_path = '/'.join((self.rawdir, self.static_files['publications']['file']))
+        with open(file_path, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
-                self._check_list_len(row, 10)
                 # catch comment lines
                 if re.match('^#', ' '.join(row)):
-                    pass
-                else:
-                    (pub_id, disease_label, disease_id, disease_cat, evidence,
-                     chem_label, chem_id, cas_rn, gene_symbol, gene_acc) = row
-                    key = disease_id+'-'+chem_id+'-PMID:'+pub_id
-                    if chem_id is '' or disease_id is '':
-                        pass
-                    elif pub_map.get(key) is not None:
-                        logger.error("Ambiguous publication mapping for"
-                                     " key: %s\n "
-                                     "This is not yet handled by Dipper", key)
-                        sys.exit(1)
-                    else:
-                        pub_map[key] = evidence
+                    continue
+                line_counter += 1
+                self._check_list_len(row, 10)
+                (pub_id, disease_label, disease_id, disease_cat, evidence,
+                 chem_label, chem_id, cas_rn, gene_symbol, gene_acc) = row
 
-        return pub_map
+                rel_id = self._get_relationship_id(evidence)
+                self._make_association('MESH:'+chem_id, disease_id, rel_id, ['PMID:'+pub_id])
+
+                if not self.testMode and limit is not None and line_counter >= limit:
+                    break
+        return
 
     def getTestSuite(self):
         import unittest
@@ -496,6 +527,6 @@ class CTD(Source):
         from tests.test_interactions import InteractionsTestCase
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(CTDTestCase)
-        test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(InteractionsTestCase))
+        # test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(InteractionsTestCase))
 
         return test_suite
