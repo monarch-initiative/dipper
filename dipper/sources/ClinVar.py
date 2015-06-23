@@ -268,8 +268,8 @@ class ClinVar(Source):
                     gu.addSynonym(g, seqalt_id, hgvs_p)
 
                 # add the dbsnp and dbvar ids as equivalent
-                if dbsnp_num != '-':
-                    dbsnp_id = 'dbSNP:rs'+dbsnp_num
+                if dbsnp_num != '-' and int(dbsnp_num) != -1:
+                    dbsnp_id = 'dbSNP:rs'+str(dbsnp_num)
                     gu.addIndividualToGraph(g, dbsnp_id, None)
                     gu.addSameIndividual(g, seqalt_id, dbsnp_id)
                 if dbvar_num != '-':
