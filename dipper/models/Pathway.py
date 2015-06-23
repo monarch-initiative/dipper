@@ -19,7 +19,8 @@ class Pathway():
     pathway_parts = {
         'signal_transduction' : 'GO:0007165',
         'cellular_process' : 'GO:0009987',
-        'pathway' : 'PW:0000001'
+        'pathway' : 'PW:0000001',
+        'gene_product': 'CHEBI:33695'  # bioinformation molecule
     }
 
     object_properties = {
@@ -59,22 +60,32 @@ class Pathway():
 
     def addGeneToPathway(self, pathway_id, gene_id):
         """
-        gene_id involved_in pathway_id
+        When adding a gene to a pathway, we create an intermediate 'gene product' that is involved in
+        the pathway, through a blank node.
+
+        gene_id RO:has_gene_product _gene_product
+        _gene_product RO:involved_in pathway_id
 
         :param pathway_id:
         :param gene_id:
         :return:
         """
-        gene_product = '_'+gene_id+'product'
-        # FIXME figure out what the type of the gene product is (not necessarily a protein)
-        self.gu.addClassToGraph(self.graph, gene_product, None)
-        #self.gu.addTriple(self.graph, gene_product, self.object_properties['gene_product_of'], gene_id)
+        gene_product = '_'+re.sub(':', '', gene_id)+'product'
+        self.gu.addIndividualToGraph(self.graph, gene_product, None, self.pathway_parts['gene_product'])
         self.gu.addTriple(self.graph, gene_id, self.object_properties['has_gene_product'], gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
 
         return
 
     def addComponentToPathway(self, pathway_id, component_id):
+        """
+        This can be used directly when the component is directly involved in the pathway.  If a transforming
+        event is performed on the component first, then the addGeneToPathway should be used instead.
+
+        :param pathway_id:
+        :param component_id:
+        :return:
+        """
         self.gu.addTriple(self.graph, component_id, self.object_properties['involved_in'], pathway_id)
 
         return
