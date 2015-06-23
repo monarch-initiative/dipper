@@ -47,6 +47,7 @@ class GeneralGraphTestCase(unittest.TestCase):
         import os
         vg = Graph()
         p = os.path.abspath(f)
+        logger.info("Testing reading turtle file from %s", p)
         vg.parse(f, format="turtle")
         logger.info('Found %s graph nodes in %s', len(vg), p)
         self.assertTrue(len(vg) > 0, "No nodes found in "+p)
