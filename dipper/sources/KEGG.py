@@ -85,10 +85,6 @@ class KEGG(Source):
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-        #if self.compare_checksums():
-            #logger.debug('Files have same checksum as reference')
-        #else:
-            #raise Exception('Reference checksums do not match disk')
 
         # TODO add versioning information from info rest call, like http://rest.kegg.jp/info/pathway
 
@@ -118,7 +114,7 @@ class KEGG(Source):
         self._process_omim2disease(limit)
         self._process_kegg_disease2gene(limit)
 
-        # self._process_pathways(limit)  # add in for #89
+        self._process_pathways(limit)
 
         # self._process_ortholog_classes(limit)  #add in when refactoring for #141
         # for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
@@ -134,7 +130,8 @@ class KEGG(Source):
 
     def _process_pathways(self, limit=None):
         """
-        This method adds the KEGG pathway IDs.
+        This method adds the KEGG pathway IDs.  These are the canonical pathways as defined in KEGG.
+        We also encode the graphical depiction which maps 1:1 with the identifier.
 
         Triples created:
         <pathway_id> is a GO:signal_transduction
@@ -150,8 +147,8 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         path = Pathway(g)
+        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -164,10 +161,14 @@ class KEGG(Source):
 
                 pathway_id = 'KEGG-'+pathway_id.strip()
 
-                gu.addClassToGraph(g, pathway_id, pathway_name)
                 path.addPathway(pathway_id, pathway_name)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                # we know that the pathway images from kegg map 1:1 here.  so add those
+                image_filename = re.sub('path:','',pathway_id) + '.png'
+                image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
+                gu.addDepiction(g, pathway_id, image_url)
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with pathways")
@@ -306,7 +307,6 @@ class KEGG(Source):
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
-        ortho = OrthologyAssoc(None, None, None, None, None)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -321,7 +321,7 @@ class KEGG(Source):
                 # Add the ID and label as a class. Would it be considered a gene as well?
 
                 other_labels = re.split(';', orthology_class_name)
-                orthology_label = other_labels[0]  #the first one is the label we'll use
+                orthology_label = other_labels[0]  # the first one is the label we'll use
 
                 orthology_class_id = 'KEGG-'+orthology_class_id.strip()
 
@@ -370,15 +370,12 @@ class KEGG(Source):
                 line_counter += 1
                 (gene_id, orthology_class_id) = row
 
-                #if self.testMode and orthology_id not in self.test_ids['ortholog_classes']:
-                    #continue
-
                 orthology_class_id = 'KEGG:'+orthology_class_id.strip()
                 gene_id = 'KEGG:'+gene_id.strip()
 
                 # note that the panther_id references a group of orthologs, and is not 1:1 with the rest
                 assoc_id = self.make_id(''.join((gene_id, orthology_class_id)))
-                #ortho = OrthologyAssoc()
+
                 rel = OrthologyAssoc.ortho_rel['orthologous']
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(assoc_id, gene_id, orthology_class_id, None, None)
@@ -390,7 +387,7 @@ class KEGG(Source):
                 gu.addClassToGraph(g, orthology_class_id, None)
                 assoc.addAssociationToGraph(g)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with orthologs")
