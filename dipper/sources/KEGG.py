@@ -164,7 +164,7 @@ class KEGG(Source):
                 path.addPathway(pathway_id, pathway_name)
 
                 # we know that the pathway images from kegg map 1:1 here.  so add those
-                image_filename = re.sub('path:','',pathway_id) + '.png'
+                image_filename = re.sub('KEGG-path:','',pathway_id) + '.png'
                 image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
                 gu.addDepiction(g, pathway_id, image_url)
 
