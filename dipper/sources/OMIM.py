@@ -338,6 +338,8 @@ class OMIM(Source):
 
                     self._get_pubs(e['entry'], g)
 
+                    self._get_process_allelic_variants(e['entry'], g)
+
                 ###end iterating over batch of entries
 
             # can't have more than 4 req per sec,
@@ -456,6 +458,53 @@ class OMIM(Source):
                         break
 
         return d
+
+    def _get_process_allelic_variants(self, entry, g):
+        gu = GraphUtils(curie_map.get())
+        geno = Genotype(g)
+        if entry is not None:
+            entry_num = entry['mimNumber']
+            if 'allelicVariantList' in entry:
+                allelicVariantList = entry['allelicVariantList']
+                for al in allelicVariantList:
+                    al_num = al['allelicVariant']['number']
+                    al_id = 'OMIM:'+str(entry_num)+'.'+str(al_num).zfill(4)
+                    al_label = None
+                    al_description = None
+                    if al['allelicVariant']['status'] == 'live':
+                        if 'mutations' in al['allelicVariant']:
+                            al_label = al['allelicVariant']['mutations']
+                        if 'text' in al['allelicVariant']:
+                            al_description =  al['allelicVariant']['text']
+                        geno.addAllele(al_id, al_label, geno.genoparts['variant_locus'], al_description)
+                        geno.addAlleleOfGene(al_id, 'OMIM:'+str(entry_num),
+                                             geno.object_properties['is_sequence_variant_instance_of'])
+                        if 'dbSnps' in al['allelicVariant']:
+                            dbsnp_ids = re.split(',', al['allelicVariant']['dbSnps'])
+                            for dnum in dbsnp_ids:
+                                did = 'dbSNP:'+dnum.strip()
+                                gu.addIndividualToGraph(g, did, None)
+                                gu.addEquivalentClass(g, al_id, did)
+                        if 'clinvarAccessions' in al['allelicVariant']:
+                            #clinvarAccessions triple semicolon delimited, each lik eRCV000020059;;1
+                            rcv_ids = re.split(';;;', al['allelicVariant']['clinvarAccessions'])
+                            rcv_ids = [(re.match('(RCV\d+)\;\;', r)).group(1) for r in rcv_ids]
+                            for rnum in rcv_ids:
+                                rid = 'ClinVar:'+rnum
+                                gu.addXref(g, al_id, rid)
+                    elif re.search('moved', al['allelicVariant']['status']):
+                        # for both 'moved' and 'removed'
+                        moved_ids = None
+                        if 'movedTo' in al['allelicVariant']:
+                            moved_id = 'OMIM:'+al['allelicVariant']['movedTo']
+                            print(moved_id)
+                            moved_ids = [moved_id]
+                        gu.addDeprecatedClass(g, al_id, moved_ids)
+                    else:
+                        logger.error('Uncaught alleleic variant status %s', al['allelicVariant']['status'])
+                # end loop allelicVariantList
+
+        return
 
     def _map_phene_mapping_code_to_eco(self, code):
         # phenotype mapping code
