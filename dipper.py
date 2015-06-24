@@ -25,6 +25,7 @@ from dipper.sources.Monochrom import Monochrom
 from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from dipper.sources.Ensembl import Ensembl
 from dipper.sources.HGNC import HGNC
+from dipper.sources.Orphanet import Orphanet
 
 from dipper.utils.TestUtils import TestUtils
 
@@ -53,7 +54,8 @@ def main():
         'kegg': KEGG,
         'animalqtldb': AnimalQTLdb,
         'ensembl': Ensembl,
-        'hgnc': HGNC
+        'hgnc': HGNC,
+        'orphanet': Orphanet
     }
 
     logger = logging.getLogger(__name__)
