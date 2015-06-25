@@ -16,6 +16,7 @@ from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
+from dipper.utils.DipperUtil import DipperUtil
 
 logger = logging.getLogger(__name__)
 
@@ -228,6 +229,7 @@ class Coriell(Source):
 
         line_counter = 0
         geno = Genotype(g)
+        du = DipperUtil()
 
         gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
         gu.loadAllProperties(g)
@@ -398,7 +400,7 @@ class Coriell(Source):
 
                     # some of the karyotypes are encoded with terrible hidden codes. remove them here
                     # i've seen a <98> character
-                    karyotype = self.remove_control_characters(karyotype)
+                    karyotype = du.remove_control_characters(karyotype)
                     karyotype_id = None
                     if karyotype.strip() != '':
                         karyotype_id = '_'+re.sub('MONARCH:', '', self.make_id(karyotype))
@@ -712,9 +714,6 @@ class Coriell(Source):
             logger.warn("ERROR: Collection type not mapped: %s", collection)
 
         return ctype
-
-    def remove_control_characters(self, s):
-        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
 
     def getTestSuite(self):
         import unittest

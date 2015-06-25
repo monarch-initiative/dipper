@@ -430,10 +430,6 @@ class ClinVar(Source):
 
         return so_id
 
-    def remove_control_characters(self, s):
-        # TODO move this into utils function
-        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
-
     def getTestSuite(self):
         import unittest
         from tests.test_clinvar import ClinVarTestCase
