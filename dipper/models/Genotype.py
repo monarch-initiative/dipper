@@ -62,6 +62,8 @@ class Genotype():
         'sequence_variant_affecting_polypeptide_function': 'SO:1000117',
         'regulatory_transgene_feature': 'GENO:0000638',
         'coding_transgene_feature': 'GENO:0000637',
+        'protein_coding_gene': 'SO:0001217',
+        'ncRNA_gene': 'SO:0001263'
     }
 
     object_properties = {
