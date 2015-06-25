@@ -480,6 +480,7 @@ class OMIM(Source):
                     al_label = None
                     al_description = None
                     if al['allelicVariant']['status'] == 'live':
+                        publist[al_id] = set()
                         if 'mutations' in al['allelicVariant']:
                             al_label = al['allelicVariant']['mutations']
                         if 'text' in al['allelicVariant']:
