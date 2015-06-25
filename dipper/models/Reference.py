@@ -1,6 +1,7 @@
 __author__ = 'nlw'
 
 from rdflib.namespace import DCTERMS
+from rdflib import Literal
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 import logging
@@ -80,7 +81,7 @@ class Reference:
         gu.addIndividualToGraph(g, self.ref_id, n, self.ref_type)
 
         if self.title is not None:
-            gu.addTriple(g, self.ref_id, DCTERMS['title'], self.title)
+            gu.addTitle(g, self.ref_id, self.title)
 
         # todo what is the property here to add the date?
         #if self.year is not None:
