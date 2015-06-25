@@ -4,7 +4,7 @@ import re
 import logging
 
 from rdflib import Literal, URIRef, BNode, Namespace
-from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
+from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF, DCTERMS
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -176,11 +176,36 @@ class GraphUtils:
         :return:
         """
 
+        n1 = URIRef(self.cu.get_uri(oldid))
+        g.add((n1, RDF['type'], self.OWLCLASS))
+
+        self._addReplacementIds(g, oldid, newids)
+
+        return
+
+    def addDeprecatedIndividual(self, g, oldid, newids=None):
+        """
+        Will mark the oldid as a deprecated individual.
+        if one newid is supplied, it will mark it as replaced by.
+        if >1 newid is supplied, it will mark it with consider properties
+        :param g:
+        :param oldid: the individual id to deprecate
+        :param newids: the individual idlist that is the replacement(s) of the old individual.  Not required.
+        :return:
+        """
+
+        n1 = URIRef(self.cu.get_uri(oldid))
+        g.add((n1, RDF['type'], self.OWLIND))
+
+        self._addReplacementIds(g, oldid, newids)
+
+        return
+
+    def _addReplacementIds(self, g, oldid, newids):
         consider = URIRef(self.cu.get_uri(self.properties['consider']))
         replaced_by = URIRef(self.cu.get_uri(self.properties['replaced_by']))
 
         n1 = URIRef(self.cu.get_uri(oldid))
-        g.add((n1, RDF['type'], self.OWLCLASS))
         g.add((n1, OWL['deprecated'], Literal(True, datatype=XSD[bool])))
 
         if newids is not None:
@@ -191,6 +216,8 @@ class GraphUtils:
                 for i in newids:
                     n = URIRef(self.cu.get_uri(i.strip()))
                     g.add((n1, consider, n))
+
+
         return
 
     def addSubclass(self, g, parentid, childid):
@@ -263,6 +290,11 @@ class GraphUtils:
 
     def addPage(self, g, subject_id, page_url):
         g.add((self.getNode(subject_id), FOAF['page'], Literal(page_url)))
+        return
+
+    def addTitle(self, g, subject_id, title):
+        g.add((self.getNode(subject_id), DC['title'], Literal(title)))
+
         return
 
     def addMember(self, g, group_id, member_id):

@@ -13,7 +13,9 @@ from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
@@ -304,7 +306,7 @@ class OMIM(Source):
                                 f = Feature(omimid, None, None)
                                 if 'chromosome' in genemap:
                                     chrom = makeChromID(str(genemap['chromosome']), tax_num)
-                                    geno.addChromosomeClass(str(genemap['chromosome']),tax_id, tax_label)
+                                    geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
                                     loc = makeChromID(cytoloc, tax_num)
                                     gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
                                     f.addSubsequenceOfFeature(g, loc)
@@ -340,7 +342,7 @@ class OMIM(Source):
 
                     self._get_process_allelic_variants(e['entry'], g)
 
-                ###end iterating over batch of entries
+                ### end iterating over batch of entries
 
             # can't have more than 4 req per sec,
             # so wait the remaining time, if necessary
@@ -462,8 +464,14 @@ class OMIM(Source):
     def _get_process_allelic_variants(self, entry, g):
         gu = GraphUtils(curie_map.get())
         geno = Genotype(g)
+        du = DipperUtil()
         if entry is not None:
+            publist = {}  # to hold the entry-specific publication mentions for the allelic variants
             entry_num = entry['mimNumber']
+
+            # process the ref list just to get the pmids
+            ref_to_pmid = self._get_pubs(entry, g)
+
             if 'allelicVariantList' in entry:
                 allelicVariantList = entry['allelicVariantList']
                 for al in allelicVariantList:
@@ -475,10 +483,16 @@ class OMIM(Source):
                         if 'mutations' in al['allelicVariant']:
                             al_label = al['allelicVariant']['mutations']
                         if 'text' in al['allelicVariant']:
-                            al_description =  al['allelicVariant']['text']
+                            al_description = al['allelicVariant']['text']
+                            m = re.findall('\{(\d+)\:', al_description)
+                            publist[al_id] = set(m)
                         geno.addAllele(al_id, al_label, geno.genoparts['variant_locus'], al_description)
                         geno.addAlleleOfGene(al_id, 'OMIM:'+str(entry_num),
                                              geno.object_properties['is_sequence_variant_instance_of'])
+                        for r in publist[al_id]:
+                            pmid = ref_to_pmid[int(r)]
+                            gu.addTriple(g, pmid, gu.object_properties['is_about'], al_id)
+                        # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
                             dbsnp_ids = re.split(',', al['allelicVariant']['dbSnps'])
                             for dnum in dbsnp_ids:
@@ -486,20 +500,20 @@ class OMIM(Source):
                                 gu.addIndividualToGraph(g, did, None)
                                 gu.addEquivalentClass(g, al_id, did)
                         if 'clinvarAccessions' in al['allelicVariant']:
-                            #clinvarAccessions triple semicolon delimited, each lik eRCV000020059;;1
+                            # clinvarAccessions triple semicolon delimited, each lik eRCV000020059;;1
                             rcv_ids = re.split(';;;', al['allelicVariant']['clinvarAccessions'])
                             rcv_ids = [(re.match('(RCV\d+)\;\;', r)).group(1) for r in rcv_ids]
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:'+rnum
                                 gu.addXref(g, al_id, rid)
+                        gu.addPage(g, al_id, "http://omim.org/entry/"+str(entry_num)+"#"+str(al_num).zfill(4))
                     elif re.search('moved', al['allelicVariant']['status']):
                         # for both 'moved' and 'removed'
                         moved_ids = None
                         if 'movedTo' in al['allelicVariant']:
                             moved_id = 'OMIM:'+al['allelicVariant']['movedTo']
-                            print(moved_id)
                             moved_ids = [moved_id]
-                        gu.addDeprecatedClass(g, al_id, moved_ids)
+                        gu.addDeprecatedIndividual(g, al_id, moved_ids)
                     else:
                         logger.error('Uncaught alleleic variant status %s', al['allelicVariant']['status'])
                 # end loop allelicVariantList
@@ -555,7 +569,7 @@ class OMIM(Source):
                 n = fromRoman(w)
                 # make the assumption that the number of syndromes are <100
                 # this allows me to retain "SYNDROME C" and not convert it to "SYNDROME 100"
-                if (0 < n < 100):
+                if 0 < n < 100:
                     # get the non-roman suffix, if present.  for example, IIIB or IVA
                     suffix = w.replace(toRoman(n), '', 1)
                     fixed = ''.join((str(n), suffix))
@@ -571,7 +585,7 @@ class OMIM(Source):
             fixedwords.append(w)
 
         l = ' '.join(fixedwords)
-        #print (label,'-->',l)
+        # print (label,'-->',l)
         return l
 
     def _process_phenotypicseries(self, limit):
@@ -702,22 +716,42 @@ class OMIM(Source):
         :return:
         """
 
+        ref_to_pmid = {}
+        du = DipperUtil()
+        entry_num = entry['mimNumber']
         gu = GraphUtils(curie_map.get())
         if 'referenceList' in entry:
-            for r in entry['referenceList']:
-                if 'reference' in r:
-                    omimid = 'OMIM:'+str(r['reference']['mimNumber'])
-                    if 'pubmedID' in r['reference']:
-                        pmid = 'PMID:'+str(r['reference']['pubmedID'])
-                        gu.addTriple(g, omimid, gu.object_properties['mentions'], pmid)
-                    elif 'articleUrl' in r['reference']:
-                        logger.info('No PMID for reference %s in %s', str(r['reference']['referenceNumber']), omimid)
-                        #articleurl = r['reference']['articleUrl']
-                        #gu.addTriple(g,omimid,gu.object_properties['mentions'],articleurl)
+            reflist = entry['referenceList']
+            for r in reflist:
+                if 'pubmedID' in r['reference']:
+                    pub_id = 'PMID:' + str(r['reference']['pubmedID'])
+                    ref = Reference(pub_id, Reference.ref_types['journal_article'])
                 else:
-                    logger.info('keys for item in reference list: %s', r.keys())
+                    # make blank node for internal reference
+                    pub_id = '_OMIM' + str(entry_num) + 'ref' + str(r['reference']['referenceNumber'])
+                    if self.nobnodes:
+                        pub_id = ':' + pub_id
+                    ref = Reference(pub_id)
+                    title = author_list = source = citation = None
+                    if 'title' in r['reference']:
+                        title = r['reference']['title']
+                        ref.setTitle(title)
+                    if 'authors' in r['reference']:
+                        author_list = r['reference']['authors']
+                        ref.setAuthorList(author_list)
+                        citation = re.split('\.\,', author_list)[0] + ' et al'
+                    if 'source' in r['reference']:
+                        source = r['reference']['source']
+                    citation = '; '.join(du.flatten([citation, title, source]))
+                    ref.setShortCitation(citation)
+                ref.addRefToGraph(g)
+                ref_to_pmid[r['reference']['referenceNumber']] = pub_id
 
-        return
+                # add is_about for the pub
+                omim_id = 'OMIM:'+str(entry_num)
+                gu.addTriple(g, omim_id, gu.object_properties['mentions'], pub_id)
+
+        return ref_to_pmid
 
     def _get_omimtype(self, entry):
         """
