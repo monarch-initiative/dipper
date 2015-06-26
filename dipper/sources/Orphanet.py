@@ -90,7 +90,12 @@ class Orphanet(Source):
                 # get the element name and id
                 # id = elem.get('id') # some internal identifier
                 disorder_num = elem.find('OrphaNumber').text
+
                 disorder_id = 'Orphanet:'+str(disorder_num)
+
+                if self.testMode and disorder_id not in config.get_config()['test_ids']['disease']:
+                    continue
+
                 disorder_label = elem.find('Name').text
 
                 # make a hash of internal gene id to type for later lookup
@@ -210,10 +215,10 @@ class Orphanet(Source):
 
         return type_id
 
-    # def getTestSuite(self):
-    #     import unittest
-    #     from tests.test_omim import OMIMTestCase
-    #
-    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
-    #
-    #     return test_suite
+    def getTestSuite(self):
+        import unittest
+        from tests.test_orphanet import OrphanetTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
+
+        return test_suite
