@@ -44,7 +44,7 @@ class GraphUtils:
         'has_subject': ':hasSubject',
         'has_object': ':hasObject',
         'has_predicate': ':hasPredicate',
-        'is_about': 'IAO:00000136',
+        'is_about': 'IAO:0000136',
         'has_member': 'RO:0002351',
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
