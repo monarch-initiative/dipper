@@ -15,6 +15,7 @@ class CoriellTestCase(SourceTestCase):
     def setUp(self):
         self.source = Coriell()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 
