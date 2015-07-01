@@ -79,9 +79,10 @@ class GraphUtils:
     properties.update(object_properties)
     properties.update(datatype_properties)
 
-    def __init__(self, curie_map):
+    def __init__(self, curie_map, materialize_bnodes=False):
         self.curie_map = curie_map
         self.cu = CurieUtil(curie_map)
+        self.nobnodes = materialize_bnodes
         return
 
     def addClassToGraph(self, g, id, label, type=None, description=None):
