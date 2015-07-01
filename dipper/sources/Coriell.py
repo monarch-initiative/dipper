@@ -1,7 +1,7 @@
 import logging
 import csv
 import re
-import unicodedata
+
 import pysftp
 from datetime import datetime
 import stat
@@ -16,6 +16,7 @@ from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
+from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.DipperUtil import DipperUtil
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ class Coriell(Source):
                   'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
                   'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505',
                   'GM01602', 'GM02455', 'AG00364']
+
     def __init__(self):
         Source.__init__(self, 'coriell')
 
@@ -95,7 +97,7 @@ class Coriell(Source):
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         """
         Here we connect to the coriell sftp server using private connection details.  They dump bi-weekly files
         with a timestamp in the filename.  For each catalog, we poll the remote site and pull the most-recently
@@ -151,7 +153,7 @@ class Coriell(Source):
                     # in our file hash, set the filename
                 else:
                     logger.info("File %s exists; using local copy", f.filename)
-                t = datetime.utcfromtimestamp(f.st_mtime).strftime("%Y-%m-%d")
+
                 logger.info("Local file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
                 self.dataset.setFileAccessUrl(f.filename)
                 filedate = datetime.utcfromtimestamp(f.st_mtime).strftime("%Y-%m-%d")
@@ -169,7 +171,7 @@ class Coriell(Source):
 
         for f in ['ninds', 'nigms', 'nia', 'nhgri']:
             file = '/'.join((self.rawdir, self.files[f]['file']))
-            self._process_repository(self.files[f]['id'], self.files[f]['label'], self.files[f]['page'])
+            self._process_collection(self.files[f]['id'], self.files[f]['label'], self.files[f]['page'])
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
@@ -367,8 +369,10 @@ class Coriell(Source):
                     if family_id != '':
                         family_comp_id = 'CoriellFamily:'+family_id
 
+                        family_label = ' '.join(('Family of proband with', short_desc))
+
                         # Add the family ID as a named individual
-                        gu.addIndividualToGraph(g, family_comp_id, None, geno.genoparts['family'])
+                        gu.addIndividualToGraph(g, family_comp_id, family_label, geno.genoparts['family'])
 
                         # Add the patient as a member of the family
                         gu.addMemberOf(g, patient_id, family_comp_id)
@@ -410,26 +414,39 @@ class Coriell(Source):
                         # add karyotype as karyotype_variation_complement
                         gu.addIndividualToGraph(g, karyotype_id, karyotype,
                                                 geno.genoparts['karyotype_variation_complement'])
-                    # TODO break down the karyotype into parts and map into GENO. depends on #77
+                        # TODO break down the karyotype into parts and map into GENO. depends on #77
+
+                        # place the karyotype in a location(s).
+                        karyo_chrs = self._get_affected_chromosomes_from_karyotype(karyotype)
+                        for c in karyo_chrs:
+                            chr_id = makeChromID(c, taxon)
+                            # add an anonymous sequence feature, each located on chr
+                            karyotype_feature_id = '-'.join((karyotype_id, c))
+                            f = Feature(karyotype_feature_id, None, None)
+                            f.addFeatureStartLocation(None, chr_id)
+                            f.addFeatureToGraph(g)
+                            f.loadAllProperties(g)
+                            geno.addParts(karyotype_feature_id, karyotype_id,
+                                          geno.object_properties['has_alternate_part'])
 
                     if gene != '':
                         vl = gene+'('+mutation+')'
 
                     # fix the variant_id so that we make sure it's always in the same order
-                    vids=variant_id.split(';')
+                    vids = variant_id.split(';')
                     variant_id = ';'.join(sorted(list(set(vids))))
 
                     if karyotype.strip() != '':
                         mutation = mutation.strip()
                         gvc_id = karyotype_id
                         if variant_id != '':
-                            gvc_id = '_'+variant_id.replace(';','-')+'-'+re.sub(r'\w*:','',karyotype_id)
+                            gvc_id = '_' + variant_id.replace(';', '-') + '-' + re.sub(r'\w*:', '', karyotype_id)
                         if mutation.strip() != '':
                             gvc_label = '; '.join((vl, karyotype))
                         else:
                             gvc_label = karyotype
                     elif variant_id.strip() != '':
-                        gvc_id = '_'+variant_id.replace(';','-')
+                        gvc_id = '_'+variant_id.replace(';', '-')
                         gvc_label = vl
                     else:
                         # wildtype?
@@ -440,9 +457,9 @@ class Coriell(Source):
 
                     # add the karyotype to the gvc. use reference if normal karyotype
                     karyo_rel = geno.object_properties['has_alternate_part']
-                    if (karyotype == '46;XX' or karyotype == '46;XY'):
+                    if karyotype == '46;XX' or karyotype == '46;XY':
                         karyo_rel = geno.object_properties['has_reference_part']
-                    if (karyotype_id is not None and gvc_id is not None and karyotype_id != gvc_id):
+                    if karyotype_id is not None and gvc_id is not None and karyotype_id != gvc_id:
                         geno.addParts(karyotype_id, gvc_id, karyo_rel)
 
                     if variant_id.strip() != '':
@@ -469,7 +486,6 @@ class Coriell(Source):
 
                         for o in omim_map:
                             gene_id = 'OMIM:'+o
-                            #vslc_id = '_'+'OMIM'+o+'-'+'-'.join(omim_map.get(o))
                             vslc_id = '_'+'-'.join([o+'.'+a for a in omim_map.get(o)])
                             if self.nobnodes:
                                 vslc_id = ':'+vslc_id
@@ -479,7 +495,7 @@ class Coriell(Source):
                             gu.addIndividualToGraph(g, vslc_id, vslc_label,
                                                     geno.genoparts['variant_single_locus_complement'])
                             for v in omim_map.get(o):
-                                allele1_id = 'OMIM:'+o+'.'+v   #this is actually a sequence alt
+                                allele1_id = 'OMIM:'+o+'.'+v   # this is actually a sequence alt
                                 geno.addSequenceAlteration(allele1_id, None)
 
                                 # assume that the sa -> var_loc -> gene is taken care of in OMIM
@@ -489,11 +505,6 @@ class Coriell(Source):
 
                             if vslc_id != gvc_id:
                                 geno.addVSLCtoParent(vslc_id, gvc_id)
-
-                    #else:
-                        #genotype_id = None
-                        #if affected == 'affected':
-                        #    logger.info('affected individual without recorded variants: %s, %s',cell_line_id,description)
 
                     if affected == 'unaffected':
                         # let's just say that this person is wildtype
@@ -571,25 +582,25 @@ class Coriell(Source):
 
         return
 
-    def _process_repository(self, id, label, page):
+    def _process_collection(self, collection_id, label, page):
         """
         This function will process the data supplied internally about the repository from Coriell.
 
         Triples:
-            Repository a CLO_0000008 #repository
+            Repository a ERO:collection
             rdf:label Literal(label)
             foaf:page Literal(page)
 
-
-        :param raw:
-        :param limit:
+        :param collection_id:
+        :param label:
+        :param page:
         :return:
         """
         # #############    BUILD THE CELL LINE REPOSITORY    #############
         for g in [self.graph, self.testgraph]:
             # FIXME: How to devise a label for each repository?
             gu = GraphUtils(curie_map.get())
-            repo_id = 'CoriellCollection:'+id
+            repo_id = 'CoriellCollection:'+collection_id
             repo_label = label
             repo_page = page
 
@@ -715,10 +726,40 @@ class Coriell(Source):
 
         return ctype
 
+    def _get_affected_chromosomes_from_karyotype(self, karyotype):
+
+        affected_chromosomes = set()
+        chr_regex = '(\d+|X|Y|M|\?);?'
+        abberation_regex = '(?:add|del|der|i|idic|inv|r|rec|t)\([\w;]+\)'
+        sex_regex = '(?:;)(X{2,}Y+|X?Y{2,}|X{3,}|X|Y)(?:;|$)'
+
+        # first fetch the set of abberations
+        abberations = re.findall(abberation_regex, karyotype)
+
+        #iterate over them to get the chromosomes
+        for a in abberations:
+            chrs = re.findall(chr_regex, a)
+            affected_chromosomes = affected_chromosomes.union(set(chrs))
+
+        # remove the ? as a chromosome, since it isn't valid
+        if '?' in affected_chromosomes:
+            affected_chromosomes.remove('?')
+
+        # check to see if there are any abnormal sex chromosomes
+        m = re.search(sex_regex, karyotype)
+        if m is not None:
+            if re.search('X?Y{2,}',m.group(1)):
+                # this is the only case where there is an extra Y chromosome
+                affected_chromosomes.add('Y')
+            else:
+                affected_chromosomes.add('X')
+
+        return affected_chromosomes
+
     def getTestSuite(self):
         import unittest
         from tests.test_coriell import CoriellTestCase
-        #TODO add G2PAssoc, Genotype tests
+        # TODO add G2PAssoc, Genotype tests
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(CoriellTestCase)
 

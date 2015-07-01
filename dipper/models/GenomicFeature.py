@@ -191,8 +191,13 @@ class Feature():
             # create a region that has the begin/end positions
             regionchr = re.sub('\w+\:_?', '', self.start['reference'])
             if region_id is None:
-                region_id = '-'.join((regionchr, self.start['coordinate'],
-                                      self.stop['coordinate']))
+                # in case the values are undefined
+                st = sp = 'U'
+                if self.start is not None:
+                    st = str(self.start['coordinate'])
+                if self.stop is not None:
+                    sp = str(self.stop['coordinate'])
+                region_id = '-'.join((regionchr, st, sp))
                 rid = region_id
                 rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
                 rid = '_'+rid+"Region"
@@ -256,7 +261,8 @@ class Feature():
         n = self.gu.getNode(iid)
         pos = self.gu.getNode(self.properties['position'])
         ref = self.gu.getNode(self.properties['reference'])
-        graph.add((n, pos, Literal(position, datatype=XSD['integer'])))
+        if position is not None:
+            graph.add((n, pos, Literal(position, datatype=XSD['integer'])))
         graph.add((n, ref, self.gu.getNode(reference_id)))
         if position_types is not None:
             for t in position_types:
