@@ -40,9 +40,11 @@ class ClinVar(Source):
     }
 
     variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 7105, 8877, 9295, 9296,
-                   9297, 9298, 9449, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823, 17232, 17233,
+                   9297, 9298, 9449, 10072, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823,
+                   15872, 17232, 17233,
                    17234, 17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179, 18180, 18181,
-                   37123, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055,
+                   18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195,
+                   98196, 98197, 98198, 100055,
                    112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
                    146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132]
 
@@ -194,7 +196,7 @@ class ClinVar(Source):
                                  num_cols, expected_numcols)
 
                 (allele_num, allele_type, allele_name, gene_num, gene_symbol, clinical_significance,
-                 dbsnp_num, dbvar_num, rcv_num, tested_in_gtr, phenotype_ids, origin,
+                 dbsnp_num, dbvar_num, rcv_nums, tested_in_gtr, phenotype_ids, origin,
                  assembly, chr, start, stop, cytogenetic_loc,
                  review_status, hgvs_c, hgvs_p, number_of_submitters, last_eval,
                  guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories) = line.split('\t')
@@ -229,9 +231,19 @@ class ClinVar(Source):
                 geno.addReferenceGenome(build_id, assembly, tax_id)
 
                 allele_type_id = self._map_type_of_allele(allele_type)
-
+                bandinbuild_id = None
                 if str(chr) == '':
-                    pass
+                    # check cytogenic location
+                    if str(cytogenetic_loc).strip() != '':
+                        # use cytogenic location to get the approximate location
+                        # strangely, they still put an assembly number even when there's no numeric location
+                        if not re.search('-',str(cytogenetic_loc)):
+                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num)
+                            geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
+                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly)
+                        else:
+                            # can't deal with ranges yet
+                            pass
                 else:
                     # add the human chromosome class to the graph, and add the build-specific version of it
                     chr_id = makeChromID(str(chr), tax_num)
@@ -240,7 +252,9 @@ class ClinVar(Source):
                     chrinbuild_id = makeChromID(str(chr), assembly)
 
                 seqalt_id = ':'.join(('ClinVarVariant', variant_num))
-                gene_id = ':'.join(('NCBIGene', gene_num))
+                gene_id = None
+                if str(gene_num) != '-1' and str(gene_num) != 'more than 10':  # they use -1 to indicate unknown gene
+                    gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
                 # note that there are some "variants" that are actually haplotypes:
                 # for example, variant_num = 38562
@@ -257,6 +271,9 @@ class ClinVar(Source):
                     f.addFeatureEndLocation(stop, chrinbuild_id)
 
                 f.addFeatureToGraph(g)
+
+                if bandinbuild_id is not None:
+                    f.addSubsequenceOfFeature(g, bandinbuild_id)
 
                 # CHECK - this makes the assumption that there is only one affected chromosome per variant
                 # what happens with chromosomal rearrangement variants?  shouldn't both chromosomes be here?
@@ -279,19 +296,32 @@ class ClinVar(Source):
 
                 # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
-                # if rcv_num != '-':
-                #    rcv_id = 'ClinVar:'+rcv_num
-                #    gu.addIndividualToGraph(g,rcv_id,None)
-                #    gu.addEquivalentClass(g,seqalt_id,rcv_id)
+                if rcv_nums != '-':
+                    for rcv_num in re.split(';',rcv_nums):
+                        rcv_id = 'ClinVar:'+rcv_num
+                        gu.addIndividualToGraph(g, rcv_id, None)
+                        gu.addXref(g, seqalt_id, rcv_id)
 
-                # add the gene
-                gu.addClassToGraph(g, gene_id, gene_symbol)
-
-                gu.addTriple(g, seqalt_id, geno.object_properties['is_sequence_variant_instance_of'], gene_id)
-                # make the variant locus
-                # vl_id = ':'+gene_id+'-'+variant_num
-                # geno.addSequenceAlterationToVariantLocus(seqalt_id,vl_id)
-                # geno.addAlleleOfGene(seqalt_id,gene_id,geno.properties['has_alternate_part'])
+                if gene_id is not None:
+                    # add the gene
+                    gu.addClassToGraph(g, gene_id, gene_symbol)
+                    # make a variant locus
+                    vl_id = '_'+gene_num+'-'+variant_num
+                    if self.nobnodes:
+                        vl_id = ':'+vl_id
+                    vl_label = allele_name
+                    gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
+                    geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
+                    geno.addAlleleOfGene(vl_id, gene_id)
+                else:
+                    # some basic reporting
+                    gmatch = re.search('\(\w+\)', allele_name)
+                    if gmatch is not None and len(gmatch.groups()) > 0:
+                        logger.info("Gene found in allele label, but no id provided: %s", gmatch.group(1))
+                    elif re.match('more than 10', gene_symbol):
+                        logger.info("More than 10 genes found; need to process XML to fetch (variant=%d)", int(variant_num))
+                    else:
+                        logger.info("No gene listed for variant %d", int(variant_num))
 
                 # parse the list of "phenotypes" which are diseases.  add them as an association
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
@@ -312,7 +342,7 @@ class ClinVar(Source):
                     id_list = other_ids.split(',')
                     # process the "other ids"
                     # ex: CFTR2:F508del,HGMD:CD890142,OMIM Allelic Variant:602421.0001
-                    # TODO make xrefs
+                    # TODO make more xrefs
                     for xrefid in id_list:
                         prefix = xrefid.split(':')[0].strip()
                         if prefix == 'OMIM Allelic Variant':
