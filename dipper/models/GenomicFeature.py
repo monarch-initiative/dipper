@@ -189,14 +189,16 @@ class Feature():
 
         if add_region:
             # create a region that has the begin/end positions
+            regionchr = re.sub('\w+\:_?', '', self.start['reference'])
             if region_id is None:
-                region_id = '-'.join((self.id, self.start['coordinate'],
+                region_id = '-'.join((regionchr, self.start['coordinate'],
                                       self.stop['coordinate']))
                 rid = region_id
                 rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
                 rid = '_'+rid+"Region"
-                if self.nobnodes is False:
-                    region_id = ':'+rid
+                region_id = rid
+                if self.nobnodes is True:
+                    region_id = ':'+region_id
             self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
             self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
         else:
