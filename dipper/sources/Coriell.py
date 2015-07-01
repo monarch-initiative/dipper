@@ -50,6 +50,7 @@ class Coriell(Source):
         'ethnic_group': 'EFO:0001799',
         'age': 'EFO:0000246',
         'sampling_time': 'EFO:0000689',
+        'collection': 'ERO:0002190'
     }
 
     files = {
@@ -478,11 +479,10 @@ class Coriell(Source):
                             gu.addIndividualToGraph(g, vslc_id, vslc_label,
                                                     geno.genoparts['variant_single_locus_complement'])
                             for v in omim_map.get(o):
-                                allele1_id = 'OMIM:'+o+'.'+v
-                                gu.addIndividualToGraph(g, allele1_id, None, geno.genoparts['variant_locus'])
-                                geno.addAlleleOfGene(allele1_id, gene_id)
+                                allele1_id = 'OMIM:'+o+'.'+v   #this is actually a sequence alt
+                                geno.addSequenceAlteration(allele1_id, None)
 
-                                # making the assumption that the alleles are variants!
+                                # assume that the sa -> var_loc -> gene is taken care of in OMIM
                                 geno.addPartsToVSLC(vslc_id, allele1_id, None,
                                                     geno.zygosity['indeterminate'],
                                                     geno.object_properties['has_alternate_part'])
@@ -577,8 +577,8 @@ class Coriell(Source):
 
         Triples:
             Repository a CLO_0000008 #repository
-            rdf:label Literal (label)
-            foaf:page Literal (page)
+            rdf:label Literal(label)
+            foaf:page Literal(page)
 
 
         :param raw:
@@ -593,7 +593,7 @@ class Coriell(Source):
             repo_label = label
             repo_page = page
 
-            gu.addIndividualToGraph(g, repo_id, repo_label, self.terms['cell_line_repository'])
+            gu.addIndividualToGraph(g, repo_id, repo_label, self.terms['collection'])
             gu.addPage(g, repo_id, repo_page)
 
         return
