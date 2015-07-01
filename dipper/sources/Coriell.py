@@ -422,7 +422,9 @@ class Coriell(Source):
                             chr_id = makeChromID(c, taxon)
                             # add an anonymous sequence feature, each located on chr
                             karyotype_feature_id = '-'.join((karyotype_id, c))
-                            f = Feature(karyotype_feature_id, None, None)
+                            karyotype_feature_label = 'some sequence alteration on chr'+str(c)
+                            f = Feature(karyotype_feature_id, karyotype_feature_label,
+                                        geno.genoparts['sequence_alteration'])
                             f.addFeatureStartLocation(None, chr_id)
                             f.addFeatureToGraph(g)
                             f.loadAllProperties(g)
