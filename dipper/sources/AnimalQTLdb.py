@@ -82,8 +82,10 @@ class AnimalQTLdb(Source):
         if self.testOnly:
             self.testMode = True
 
+        #self.ato_id_mapping = {}
+
         self._process_trait_mappings(('/').join((self.rawdir, self.files['trait_mappings']['file'])), limit)
-        #self._alternate_process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
+        self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
         #self._process_QTLs_genomic_location(('/').join((self.rawdir, self.files['chicken_bp']['file'])), 'AQTLChicken:', 'AQTLTraitChicken:', 'NCBITaxon:9031', limit)
 
         #logger.info("Processing QTLs with genetic locations")
@@ -108,7 +110,7 @@ class AnimalQTLdb(Source):
 
     def _process_QTLs_genetic_location(self, raw, qtl_prefix, trait_prefix, taxon_id, limit=None):
         """
-        This method processes
+        This function processes
 
         Triples created:
 
@@ -139,6 +141,7 @@ class AnimalQTLdb(Source):
                 #FIXME: Not sure that I like these prefixes. Is there a better approach?
                 qtl_id = qtl_prefix+qtl_id
                 trait_id = trait_prefix+trait_id
+                #print(trait_id)
 
                 #FIXME: For assotype, the QTL is indicated either as a QTL or an Association.
                 # Should Associations be handled differently?
@@ -330,25 +333,53 @@ class AnimalQTLdb(Source):
             row_count = sum(1 for row in filereader)
             row_count = row_count - 1
 
-
-
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',')
             next(filereader, None)
             for row in filereader:
                 line_counter += 1
                 if line_counter < row_count:
-                    (vto_id, pto_id, cmo_id, ato_id, species, trait_class, trait_type, qtl_count) = row
+                    (vto_id, pto_id, cmo_id, ato_column, species, trait_class, trait_type, qtl_count) = row
+
+                    ato_id = re.sub('ATO #', 'ATO:',re.sub('\].*', '', re.sub('\[', '', ato_column)))
+
+                    #print(ato_id)
+                    ato_label = re.sub('.*\]\s', '', ato_column)
+                    if species == 'Cattle':
+                        ato_id = re.sub('ATO:', 'AQTLTraitCattle:', ato_id)
+                    elif species == 'Chicken':
+                        ato_id = re.sub('ATO:', 'AQTLTraitChicken:', ato_id)
+                    elif species == 'Sheep':
+                        ato_id = re.sub('ATO:', 'AQTLTraitSheep:', ato_id)
+                    elif species == 'Horse':
+                        ato_id = re.sub('ATO:', 'AQTLTraitHorse:', ato_id)
+                    elif species == 'Pig':
+                        ato_id = re.sub('ATO:', 'AQTLTraitPig:', ato_id)
+                    elif species == 'Rainbow trout':
+                        ato_id = re.sub('ATO:', 'AQTLTraitRainbowTrout:', ato_id)
+                    else:
+                        logger.warn(' Unknown species %s found in trait mapping file.', species)
+                        continue
+                    #print(ato_label)
+
+                    gu.addClassToGraph(g, ato_id, ato_label)
 
                     if re.match('VT:.*', vto_id):
-                        print(vto_id)
+                        gu.addEquivalentClass(g, ato_id, vto_id)
+                        #print(vto_id)
 
                     if re.match('PT:.*', pto_id):
-                        print(pto_id)
+                        gu.addEquivalentClass(g, ato_id, pto_id)
+                        #print(pto_id)
                     if re.match('CMO:.*', cmo_id):
-                        print(cmo_id)
+                        gu.addEquivalentClass(g, ato_id, cmo_id)
+                        #print(cmo_id)
                     #print(ato_id)
-                    print(row)
+                    #print(row)
+                    #print(ato_column)
+
+
+                    #print(trait_type)
 
 
 
