@@ -363,7 +363,7 @@ class CTD(Source):
         ]
 
         if disease_id in diseases_to_scrub:
-            logger.info("Skipping association to %s", disease_id)
+            logger.info("Skipping association between NCBIGene:%s and %s", str(gene_id), disease_id)
             return
 
 
@@ -468,7 +468,10 @@ class CTD(Source):
         Returns:
             :return list: Pubmed curies
         """
-        id_list = pubmed_ids.split('|')
+        if pubmed_ids.strip() == '':
+            id_list = []
+        else:
+            id_list = pubmed_ids.split('|')
         for (i, val) in enumerate(id_list):
             id_list[i] = 'PMID:'+val
         return id_list

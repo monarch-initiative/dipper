@@ -411,6 +411,10 @@ class ClinVar(Source):
                     if int(variant_num) not in self.variant_ids:
                         continue
 
+                if citation_id.strip() == '':
+                    logger.info("Skipping blank citation for ClinVarVariant:%s", str(variant_num))
+                    continue
+
                 # the citation for a variant is made to some kind of combination of the ids here.
                 # but i'm not sure which we don't know what the citation is for exactly, other
                 # than the variant.  so use mentions
