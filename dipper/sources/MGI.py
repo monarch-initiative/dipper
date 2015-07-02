@@ -66,7 +66,7 @@ class MGI(Source):
         'marker': [38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
                    377, 77197, 18436, 30157, 14252],
         'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
-                  189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029,
+                  189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
                   928426, 5647502, 6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
                   13487624, 23241933, 23534428, 23535949, 23546035, 24722398, 29645663, 29645664,
                   29645665, 29645666, 29645667, 29645682, 43803707, 43804057, 43805682, 43815003,
@@ -224,6 +224,9 @@ class MGI(Source):
         self.load_bindings()
         for g in [self.graph,self.testgraph]:
             Assoc().loadAllProperties(g)
+            gu = GraphUtils(curie_map.get())
+            gu.loadAllProperties(g)
+
 
         logger.info("Loaded %d nodes", len(self.graph))
         return
@@ -281,7 +284,9 @@ class MGI(Source):
                     # some of the strains don't have public identifiers!
                     # so we make one up, and add it to the hash
                     logger.warn("adding background as internal id: %s %s", strain_key, strain)
-                    strain_id = ':'+self._makeInternalIdentifier('strain', strain_key)
+                    strain_id = self._makeInternalIdentifier('strain', strain_key)
+                    if self.nobnodes:
+                        strain_id = ':'+strain_id
                     # add it back to the idhash
                     self.idhash['strain'].update({strain_key: strain_id})
                     geno.addGenotype(strain_id, strain)
@@ -351,8 +356,8 @@ class MGI(Source):
         for g in geno_hash:
             geno = geno_hash.get(g)
             gvc = sorted(geno.get('vslcs'))
-            label = '; '.join(gvc) + '[' + geno.get('subtype') + ']'
-            gutil.addGenotype(g, label)
+            label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
+            gutil.addGenotype(g, label.strip())
 
         # TODO materialize a GVC here?
 
@@ -476,7 +481,7 @@ class MGI(Source):
 
                 strain_id = self.idhash['strain'].get(strain_key)
                 iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
-                if self.testMode:
+                if self.nobnodes:
                     # in test mode, we want to make these identified nodes
                     iseqalt_id = ':'+iseqalt_id
                 iseqalt = gu.getNode(iseqalt_id)
@@ -584,7 +589,7 @@ class MGI(Source):
                 # Need to map the allelestate to a zygosity term
                 zygosity_id = self._map_zygosity(allelestate)
                 ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key)
-                if self.testMode:
+                if self.nobnodes:
                     # make this a real id in test mode
                     ivslc_id = ':'+ivslc_id
 
@@ -628,7 +633,7 @@ class MGI(Source):
                 (allele_key, mutation_key, creation_date, modification_date, mutation) = line.split('\t')
                 iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
-                if self.testMode is True:
+                if self.nobnodes is True:
                     if int(allele_key) not in self.test_keys.get('allele'):
                         continue
                     iseqalt_id = ':'+iseqalt_id
@@ -680,6 +685,12 @@ class MGI(Source):
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
 
+                iassoc_id = self._makeInternalIdentifier('annot', annot_key)
+                assoc_id = self.make_id(iassoc_id)
+
+                # add the assoc to the hashmap (using the monarch id)
+                self.idhash['annot'][annot_key] = assoc_id
+
                 # Restricting to type 1002, as done in the MousePhenotypes view.
                 # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
                 if annot_type_key == '1002':
@@ -694,16 +705,24 @@ class MGI(Source):
                     # We expect the label for the phenotype to be taken care of elsewhere
                     gu.addClassToGraph(g, accid, None)
 
-                    iassoc_id = self._makeInternalIdentifier('annot', annot_key)
-                    assoc_id = ':' + self.make_id(iassoc_id)
-                    # add the assoc to the hashmap (using the monarch id)
-                    self.idhash['annot'][annot_key] = assoc_id
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
                         logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = G2PAssoc(assoc_id, genotype_id, accid, None, None)
+                        assoc.addAssociationNodeToGraph(g)
+                elif annot_type_key == '1005':  # OMIM/Genotype are disease-models
+                    if qualifier_key == '1614157':  # skip NOT annotations for now FIXME
+                        continue
+                    genotype_id = self.idhash['genotype'].get(object_key)
+                    omim_id = 'OMIM:'+str(accid)
+                    if genotype_id is None:
+                        logger.error("can't find genotype id for %s", object_key)
+                    else:
+                        # add the association
+                        assoc = G2PAssoc(assoc_id, genotype_id, omim_id, None, None)
+                        assoc.setRelationship(gu.object_properties['model_of'])
                         assoc.addAssociationNodeToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -1342,7 +1361,6 @@ class MGI(Source):
         logger.info("columns (%s): %s", table, colnames)
 
         return
-
 
     def file_len(self, fname):
         with open(fname) as f:
