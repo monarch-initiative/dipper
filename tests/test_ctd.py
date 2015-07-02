@@ -15,6 +15,7 @@ class CTDTestCase(SourceTestCase):
     def setUp(self):
         self.source = CTD()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

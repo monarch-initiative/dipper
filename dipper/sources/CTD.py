@@ -353,6 +353,20 @@ class CTD(Source):
         if direct_evidence == '' or direct_evidence != 'marker/mechanism':
             return
 
+        # scrub some of the associations... it seems odd to link human genes to the following "diseases"
+        diseases_to_scrub = [
+            'MESH:D004283',  # dog diseases
+            'MESH:D004195',  # disease models, animal
+            'MESH:D030342',  # genetic diseases, inborn
+            'MESH:D040181',  # genetic dieases, x-linked
+            'MESH:D020022'   # genetic predisposition to a disease
+        ]
+
+        if disease_id in diseases_to_scrub:
+            logger.info("Skipping association to %s", disease_id)
+            return
+
+
         intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
         if self.testMode and (int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
@@ -391,6 +405,8 @@ class CTD(Source):
         # so we make an anonymous alternate locus, and put that in the association.
         alt_locus = '_'+gene_id+'-'+preferred_disease_id+'VL'
         alt_locus = re.sub(':', '', alt_locus)  # can't have colons in the bnodes
+        if self.nobnodes:
+            alt_locus = ':'+alt_locus
         alt_label = 'some variant of '+gene_symbol+' that is '+direct_evidence+' for '+disease_name
         self.gu.addIndividualToGraph(self.g, alt_locus, alt_label, self.geno.genoparts['variant_locus'])
         self.gu.addClassToGraph(self.g, gene_id, None)  # assume that the label gets added elsewhere
