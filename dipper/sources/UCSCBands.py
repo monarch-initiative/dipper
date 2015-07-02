@@ -152,6 +152,7 @@ class UCSCBands(Source):
 
         self.gu.loadObjectProperties(self.graph, Feature.object_properties)
         self.gu.loadProperties(self.graph, Feature.data_properties, self.gu.DATAPROP)
+        self.gu.loadAllProperties(self.graph)
 
         geno.addGenome(taxon_id, genome_label)
 
@@ -176,7 +177,7 @@ class UCSCBands(Source):
                 # * Placed scaffolds: the scaffolds have been placed within a chromosome.
                 # * Unlocalized scaffolds: although the chromosome within which the scaffold occurs is known,
                 #   the scaffold's position or orientation is not known.
-                # *Unplaced scaffolds: it is not known which chromosome the scaffold belongs to.
+                # * Unplaced scaffolds: it is not known which chromosome the scaffold belongs to.
 
                 # find out if the thing is a full on chromosome, or a scaffold:
                 # ex: unlocalized scaffold: chr10_KL568008v1_random
@@ -229,7 +230,7 @@ class UCSCBands(Source):
                     # if chrom_num is None, then it will attach it to the genome, just like a reg chrom
                     mybands[scaffold_num] = {'min': start, 'max': stop, 'chr': scaffold_num,
                                              'ref': build_id, 'parent': chrom_num, 'stain': None,
-                                             'type': Feature.types['chromosome_part'],
+                                             'type': Feature.types['assembly_component'],
                                              'synonym': scaffold}
 
                 if band_num is not None and band_num.strip() != '':
@@ -298,7 +299,7 @@ class UCSCBands(Source):
             chrom_in_build_id = makeChromID(myband['chr'], build_num)  # the build-specific chrom
 
             # if it's != part, then add the class
-            if myband['type'] != Feature.types['chromosome_part']:
+            if myband['type'] != Feature.types['assembly_component']:
                 self.gu.addClassToGraph(self.graph, band_class_id, band_class_label, myband['type'])
                 bfeature = Feature(band_build_id, band_build_label, band_class_id)
             else:
@@ -307,7 +308,7 @@ class UCSCBands(Source):
                 if 'synonym' in myband:
                     self.gu.addSynonym(self.graph, band_build_id, myband['synonym'])
 
-            if myband['parent'] is None:
+            if myband['parent'] is None and myband['type'] == Feature.types['assembly_component']:
                 # since we likely don't know the chr, add it as a part of the build
                 geno.addParts(band_build_id, build_id)
             else:
@@ -369,9 +370,10 @@ class UCSCBands(Source):
                 ucsc_label = re.split(':',i)[1]
                 mapped_id = mappings[i]
                 mapped_label = re.split(':',mapped_id)[1]
-                geno.addReferenceGenome(ucsc_id,ucsc_label, tax_id)
-                geno.addReferenceGenome(mapped_id,mapped_label, tax_id)
-                self.gu.addSameIndividual(g,ucsc_id,mapped_id)
+                mapped_label = 'NCBI build '+str(mapped_label)
+                geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
+                geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
+                self.gu.addSameIndividual(g, ucsc_id, mapped_id)
 
         return
 
