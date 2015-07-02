@@ -65,6 +65,7 @@ class Feature():
         'score': 'SO:0001685',  # FIXME - this is not a good solution, too generic
         'reference_genome': 'SO:0001505',
         'genome': 'SO:0001026',
+        'assembly_component': 'SO:0000143',
 
         # the following are sequence attributes:
         'band_intensity':  'GENO:0000618',
@@ -342,7 +343,7 @@ def makeChromID(chrom, reference=None):
         logger.warn('no reference for this chrom.  you may have conflicting ids')
         taxon = ''
     # replace any chr-like prefixes with blank to standardize
-    c = re.sub('ch(r?)[omse]*', '', chrom)
+    c = re.sub('ch(r?)[omse]*', '', str(chrom))
 
     # remove the build/taxon prefixes to look cleaner
     r = reference
