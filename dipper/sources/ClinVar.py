@@ -256,8 +256,10 @@ class ClinVar(Source):
                 if str(gene_num) != '-1' and str(gene_num) != 'more than 10':  # they use -1 to indicate unknown gene
                     gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
-                # note that there are some "variants" that are actually haplotypes:
+                # FIXME there are some "variants" that are actually haplotypes
+                # probably will get taken care of when we switch to processing the xml
                 # for example, variant_num = 38562
+                # but there's no way to tell if it's a haplotype in the csv data
                 # so the dbsnp or dbvar should probably be primary, and the variant num be the vslc,
                 # with each of the dbsnps being added to it
 
