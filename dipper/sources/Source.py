@@ -124,6 +124,7 @@ class Source:
         }
 
         # make the regular graph output file
+        file = None
         if self.name is not None:
             file = '/'.join((self.outdir, self.name))
             if format in format_to_xtn:
