@@ -136,10 +136,10 @@ class Feature():
         strand_id = self._getStrandType(strand)
         if strand_id is not None:
             loc['type'].append(strand_id)
-        if position_types is None:
-            loc['type'].append(self.types['Position'])
-        else:
+        if position_types is not None:
             loc['type'] += position_types
+        if position_types == []:
+            loc['type'].append(self.types['Position'])
 
         return loc
 
@@ -194,16 +194,25 @@ class Feature():
             if region_id is None:
                 # in case the values are undefined
                 st = sp = 'U'
+                strand = None
                 if self.start is not None:
                     st = str(self.start['coordinate'])
+
+                    strand = self._getStrandStringFromPositionTypes(self.start['type'])
                 if self.stop is not None:
                     sp = str(self.stop['coordinate'])
-                region_id = '-'.join((regionchr, st, sp))
+                    if strand is not None:
+                        strand = self._getStrandStringFromPositionTypes(self.stop['type'])
+                # assume that the strand is the same for both start and stop.  this will need to be fixed in the future
+                region_items = [regionchr, st, sp]
+                if strand is not None:
+                    region_items += [strand]
+                region_id = '-'.join(region_items)
                 rid = region_id
                 rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
                 rid = '_'+rid+"Region"
                 region_id = rid
-                if self.nobnodes is True:
+                if self.nobnodes:
                     region_id = ':'+region_id
             self.gu.addTriple(graph, self.id, self.properties['location'], region_id)
             self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
@@ -214,10 +223,12 @@ class Feature():
         # add the start/end positions to the region
         if self.start is not None:
             self.gu.addTriple(graph, region_id, self.properties['begin'],
-                              self._makePositionId(self.start['reference'], self.start['coordinate']))
+                              self._makePositionId(self.start['reference'], self.start['coordinate'],
+                                                   self.start['type']))
         if self.stop is not None:
             self.gu.addTriple(graph, region_id, self.properties['end'],
-                              self._makePositionId(self.start['reference'], self.stop['coordinate']))
+                              self._makePositionId(self.stop['reference'], self.stop['coordinate'],
+                                                   self.stop['type']))
 
         # {coordinate : integer, reference : reference_id, types = []}
 
@@ -228,6 +239,19 @@ class Feature():
 
         return
 
+    def _getStrandStringFromPositionTypes(self, tylist):
+        strand = None
+        if self.types['plus_strand'] in tylist:
+            strand = 'plus'
+        elif self.types['minus_strand'] in tylist:
+            strand = 'minus'
+        elif self.types['both_strand'] in tylist:
+            strand = 'both'
+        else:
+            strand = None  # it is stranded, but we don't know what it is
+
+        return strand
+
     def _makePositionId(self, reference, coordinate, types=None):
         i = '_'
         if self.nobnodes:
@@ -237,14 +261,15 @@ class Feature():
             i += reference + '-'
         i += str(coordinate)      # just in case it isn't a string already
         if types is not None:
-            t = types.sort
-            i += '-'.join(t)
+            tstring = self._getStrandStringFromPositionTypes(types)
+            if tstring is not None:
+                i += '-' + tstring
         return i
 
-    def addPositionToGraph(self,graph,reference_id,position,position_types=None,strand=None):
+    def addPositionToGraph(self, graph, reference_id, position, position_types=None, strand=None):
         """
         Add the positional information to the graph, following the faldo model.
-        We assume that if the strand is None, it is meaning "Both".
+        We assume that if the strand is None, we give it a generic "Position" only.
         Triples:
         my_position a (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
             faldo:position Integer(numeric position)
@@ -258,7 +283,7 @@ class Feature():
         :return:
         """
 
-        iid = self._makePositionId(reference_id, position)
+        iid = self._makePositionId(reference_id, position, position_types)
         n = self.gu.getNode(iid)
         pos = self.gu.getNode(self.properties['position'])
         ref = self.gu.getNode(self.properties['reference'])
@@ -268,14 +293,19 @@ class Feature():
         if position_types is not None:
             for t in position_types:
                 graph.add((n, RDF['type'], self.gu.getNode(t)))
+        s = None
         if strand is not None:
             s = strand
             if not re.match('faldo', strand):
                 # not already mapped to faldo, so expect we need to map it
                 s = self._getStrandType(strand)
-        else:
-            s = self.types['both_strand']
-        graph.add((n, RDF['type'], self.gu.getNode(s)))
+        # else:
+        #    s = self.types['both_strand']
+        if strand is None and position_types is None:
+            s = self.types['Position']
+
+        if s is not None:
+            graph.add((n, RDF['type'], self.gu.getNode(s)))
 
         return iid
 
