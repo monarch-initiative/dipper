@@ -104,7 +104,7 @@
 'BIOGRID' : 'http://thebiogrid.org/'
 'dictyBase' : 'http://dictybase.org/gene/'
 'EcoGene' : 'http://ecogene.org/gene/'
-'ENSEMBL' : 'http://identifiers.org/ENSEMBL:'
+'ENSEMBL' : 'http://identifiers.org/ensembl/'
 'FlyBase' : 'http://identifiers.org/FB:'
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
 'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
