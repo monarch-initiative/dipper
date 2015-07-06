@@ -12,6 +12,7 @@ from dipper.models.Genotype import Genotype
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,8 @@ class MGI(Source):
         'mrk_summary_view',
         'mrk_acc_view',
         'prb_strain_acc_view',
-        'mgi_note_vocevidence_view'
+        'mgi_note_vocevidence_view',
+        'mrk_location_cache',  # gene locations
     ]
 
     # for testing purposes, this is a list of internal db keys to match and select only portions of the source
@@ -216,6 +218,7 @@ class MGI(Source):
         self._process_voc_annot_view(limit)
         self._process_voc_evidence_view(limit)
         self._process_mgi_note_vocevidence_view(limit)
+        self._process_mrk_location_cache(limit)
 
         logger.info("Finished parsing.")
 
@@ -227,10 +230,8 @@ class MGI(Source):
             gu = GraphUtils(curie_map.get())
             gu.loadAllProperties(g)
 
-
         logger.info("Loaded %d nodes", len(self.graph))
         return
-
 
     def _process_gxd_genotype_view(self, limit=None):
         """
@@ -363,11 +364,10 @@ class MGI(Source):
 
         return
 
-    # NOTE: might be best to process alleles initially from the all_allele_view, as this does not have any repeats of alleles!
     def _process_all_summary_view(self, limit):
         """
         Here, we get the allele definitions: id, label, description, type
-        We add the id to this source's global idhash for lookup later
+        We also add the id to this source's global idhash for lookup later
 
         <alleleid> a OWL:NamedIndividual
             rdf:label "allele symbol"
@@ -1304,6 +1304,53 @@ class MGI(Source):
                 if annot_id is not None:
                     assoc = Assoc()
                     assoc.addDescription(g, annot_id, note.strip())
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_mrk_location_cache(self, limit):
+        line_counter = 0
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        logger.info("getting free text descriptions for annotations")
+        raw = '/'.join((self.rawdir, 'mrk_location_cache'))
+        geno = Genotype(g)
+        genome_id = geno.makeGenomeID('NCBITaxon:10090')
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if line_counter == 1:
+                    continue
+
+                (cache_key, marker_key, marker_type_key, organism_key, chromosome, sequencenum,
+                 cytogeneticoffset, cmoffset, genomicchromosome, startcoordinate, endcoordinate,
+                 strand, mapunits, provider, version, createdby_key, modifiedby_key, creation_date,
+                 modification_date) = line
+
+                if self.testMode is True:
+                    if int(marker_key) not in self.test_keys.get('marker'):
+                        continue
+
+                # make the chromsomome, and the build-instance
+                chrom_id = makeChromID(chromosome, 'NCBITaxon:10090')
+                # switch on maptype or mapkey
+                assembly = version
+                build_id = 'NCBIGenome:'+assembly
+                geno.addChromosomeInstance(chromosome, build_id, assembly, chrom_id)
+                chrom_in_assembly_id = makeChromID(chromosome, build_id)
+
+                gene_id = self.idhash['marker'][marker_key]
+                f = Feature(gene_id, None, None)
+                if startcoordinate is not None and startcoordinate != '(null)' and startcoordinate != '':
+                    f.addFeatureStartLocation(int(float(startcoordinate)), chrom_in_assembly_id, strand)
+                if endcoordinate is not None and endcoordinate != '(null)' and endcoordinate != '':
+                    f.addFeatureEndLocation(int(float(endcoordinate)), chrom_in_assembly_id, strand)
+                f.addFeatureToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
