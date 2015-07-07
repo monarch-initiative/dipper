@@ -65,7 +65,7 @@ class MGI(Source):
     test_keys = {
         'allele': [1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
                    476, 42885, 3658, 1193, 6978, 6598, 16698],
-        'marker': [38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
+        'marker': [357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
                    377, 77197, 18436, 30157, 14252],
         'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
                   189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
@@ -1316,7 +1316,7 @@ class MGI(Source):
             g = self.testgraph
         else:
             g = self.graph
-        logger.info("getting free text descriptions for annotations")
+        logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(g)
         genome_id = geno.makeGenomeID('NCBITaxon:10090')
@@ -1332,25 +1332,45 @@ class MGI(Source):
                  strand, mapunits, provider, version, createdby_key, modifiedby_key, creation_date,
                  modification_date) = line
 
+                # only get the location information for mouse
+                if str(organism_key) != '1' or str(chromosome) == 'UN':
+                    continue
+
                 if self.testMode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
                         continue
 
                 # make the chromsomome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090')
-                # switch on maptype or mapkey
-                assembly = version
-                build_id = 'NCBIGenome:'+assembly
-                geno.addChromosomeInstance(chromosome, build_id, assembly, chrom_id)
-                chrom_in_assembly_id = makeChromID(chromosome, build_id)
+                if version is not None and version != '' and version != '(null)':
 
-                gene_id = self.idhash['marker'][marker_key]
-                f = Feature(gene_id, None, None)
-                if startcoordinate is not None and startcoordinate != '(null)' and startcoordinate != '':
-                    f.addFeatureStartLocation(int(float(startcoordinate)), chrom_in_assembly_id, strand)
-                if endcoordinate is not None and endcoordinate != '(null)' and endcoordinate != '':
-                    f.addFeatureEndLocation(int(float(endcoordinate)), chrom_in_assembly_id, strand)
-                f.addFeatureToGraph(g)
+                    # switch on maptype or mapkey
+                    assembly = version
+                    build_id = 'NCBIGenome:'+assembly
+                    geno.addChromosomeInstance(chromosome, build_id, assembly, chrom_id)
+                    chrom_id = makeChromID(chromosome, build_id)
+
+                if marker_key in self.idhash['marker']:
+                    gene_id = self.idhash['marker'][marker_key]
+                    f = Feature(gene_id, None, None)
+                    if strand == '(null)' or strand == '':
+                        strand = None
+                    if startcoordinate == '(null)' or startcoordinate == '':
+                        startcoordinate = None
+                    if endcoordinate == '(null)' or endcoordinate == '':
+                        endcoordinate = None
+
+                    if startcoordinate is not None:
+                        f.addFeatureStartLocation(int(float(startcoordinate)), chrom_id, strand)
+                    else:
+                        f.addFeatureStartLocation(startcoordinate, chrom_id, strand, [Feature.types['FuzzyPosition']])
+                    if endcoordinate is not None:
+                        f.addFeatureEndLocation(int(float(endcoordinate)), chrom_id, strand)
+                    # note we don't add the uncertain end coordinate, because we don't know what it is.
+                    f.addFeatureToGraph(g)
+
+                else:
+                    logger.warn('marker key %s not in idhash', str(marker_key))
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
