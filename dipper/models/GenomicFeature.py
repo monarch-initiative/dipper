@@ -50,6 +50,7 @@ class Feature():
     types = {
         'region': 'faldo:Region',
         'Position': 'faldo:Position',  # big P for Position type.  little p for position property
+        'FuzzyPosition': 'faldo:FuzzyPosition',
         'chromosome': 'SO:0000340',
         'chromosome_arm': 'SO:0000105',
         'chromosome_band': 'SO:0000341',
@@ -149,16 +150,18 @@ class Feature():
         :param strand:
         :return:
         """
-        # TODO make this a dictionary/enum:  PLUS, MINUS, BOTH
+        # TODO make this a dictionary/enum:  PLUS, MINUS, BOTH, UNKNOWN
         strand_id = None
         if strand == '+':
             strand_id = self.types['plus_strand']
         elif strand == '-':
             strand_id = self.types['minus_strand']
-        elif strand == '.' or strand is None:
+        elif strand == '.':
             strand_id = self.types['both_strand']
+        elif strand is None:  # assume this is Unknown
+            pass
         else:
-            logger.warn("strand type could not be mapped: %s", strand)
+            logger.warn("strand type could not be mapped: %s", str(strand))
 
         return strand_id
 
@@ -193,13 +196,13 @@ class Feature():
             regionchr = re.sub('\w+\:_?', '', self.start['reference'])
             if region_id is None:
                 # in case the values are undefined
-                st = sp = 'U'
+                # if we know only one of the coordinates, then we'll add an "unknown" other.
+                st = sp = 'UN'
                 strand = None
-                if self.start is not None:
+                if self.start is not None and self.start['coordinate'] is not None:
                     st = str(self.start['coordinate'])
-
                     strand = self._getStrandStringFromPositionTypes(self.start['type'])
-                if self.stop is not None:
+                if self.stop is not None and self.stop['coordinate'] is not None:
                     sp = str(self.stop['coordinate'])
                     if strand is not None:
                         strand = self._getStrandStringFromPositionTypes(self.stop['type'])
@@ -210,7 +213,7 @@ class Feature():
                 region_id = '-'.join(region_items)
                 rid = region_id
                 rid = re.sub('\w+\:', '', rid, 1)  # replace the id prefix
-                rid = '_'+rid+"Region"
+                rid = '_'+rid+"-Region"
                 region_id = rid
                 if self.nobnodes:
                     region_id = ':'+region_id
@@ -221,21 +224,18 @@ class Feature():
             self.gu.addType(graph, region_id, 'faldo:Region')
 
         # add the start/end positions to the region
+        beginp = endp = None
         if self.start is not None:
-            self.gu.addTriple(graph, region_id, self.properties['begin'],
-                              self._makePositionId(self.start['reference'], self.start['coordinate'],
-                                                   self.start['type']))
+            beginp = self._makePositionId(self.start['reference'], self.start['coordinate'], self.start['type'])
+            self.addPositionToGraph(graph, self.start['reference'], self.start['coordinate'], self.start['type'])
+
         if self.stop is not None:
-            self.gu.addTriple(graph, region_id, self.properties['end'],
-                              self._makePositionId(self.stop['reference'], self.stop['coordinate'],
-                                                   self.stop['type']))
+            endp = self._makePositionId(self.stop['reference'], self.stop['coordinate'], self.stop['type'])
+            self.addPositionToGraph(graph, self.stop['reference'], self.stop['coordinate'], self.stop['type'])
+
+        self.addRegionPositionToGraph(graph, region_id, beginp, endp)
 
         # {coordinate : integer, reference : reference_id, types = []}
-
-        if self.start is not None:
-            self.addPositionToGraph(graph, self.start['reference'], self.start['coordinate'], self.start['type'])
-        if self.stop is not None:
-            self.addPositionToGraph(graph, self.stop['reference'], self.stop['coordinate'], self.stop['type'])
 
         return
 
@@ -253,18 +253,44 @@ class Feature():
         return strand
 
     def _makePositionId(self, reference, coordinate, types=None):
+        """
+        Note that positions should have a reference (we will enforce).  Only exact positions need a coordinate.
+        :param reference:
+        :param coordinate:
+        :param types:
+        :return:
+        """
+        if reference is None:
+            logger.error("Trying to make position with no reference.")
+            return None
+
         i = '_'
         if self.nobnodes:
             i = ':'+i
-        if reference is not None:
-            reference = re.sub('\w+\:', '', reference, 1)
-            i += reference + '-'
-        i += str(coordinate)      # just in case it isn't a string already
+        reference = re.sub('\w+\:', '', reference, 1)
+        i += reference
+        if coordinate is not None:
+            i = '-'.join((i, str(coordinate)))      # just in case it isn't a string already
         if types is not None:
             tstring = self._getStrandStringFromPositionTypes(types)
             if tstring is not None:
-                i += '-' + tstring
+                i = '-'.join((i, tstring))
+
         return i
+
+    def addRegionPositionToGraph(self, graph, region_id, begin_position_id, end_position_id):
+
+        if begin_position_id is None:
+            logger.warn("No begin position specified for region %s", region_id)
+        else:
+            self.gu.addTriple(graph, region_id, self.properties['begin'], begin_position_id)
+
+        if end_position_id is None:
+            logger.warn("No end position specified for region %s", region_id)
+        else:
+            self.gu.addTriple(graph, region_id, self.properties['end'], end_position_id)
+
+        return
 
     def addPositionToGraph(self, graph, reference_id, position, position_types=None, strand=None):
         """
@@ -280,7 +306,7 @@ class Feature():
         :param position:
         :param position_types:
         :param strand:
-        :return:
+        :return:  Identifier of the position created
         """
 
         iid = self._makePositionId(reference_id, position, position_types)
