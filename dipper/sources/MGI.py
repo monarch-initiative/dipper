@@ -64,9 +64,9 @@ class MGI(Source):
     # for testing purposes, this is a list of internal db keys to match and select only portions of the source
     test_keys = {
         'allele': [1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
-                   476, 42885, 3658, 1193, 6978, 6598, 16698],
+                   476, 42885, 3658, 1193, 6978, 6598, 16698, 626329],
         'marker': [357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
-                   377, 77197, 18436, 30157, 14252],
+                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833],
         'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
                   189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
                   928426, 5647502, 6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
@@ -999,9 +999,10 @@ class MGI(Source):
 
                     mapped_marker_type = self._map_marker_type(marker_type)
 
-                    # if it's unlocated, then don't add it as a class because it's not added as a gene.
+                    # if it's unlocated, or is not a gene,
+                    # then don't add it as a class because it's not added as a gene.
                     # everything except for genes are modeled as individuals
-                    if chromosome is not None and chromosome.strip() != 'UN':
+                    if mapped_marker_type in ['SO:0000704','SO:0000336']:  #it's a gene or pseudogene
                         gu.addClassToGraph(g, marker_id, symbol, mapped_marker_type, name)
                         gu.addSynonym(g, marker_id, name, Assoc.properties['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
@@ -1079,7 +1080,7 @@ class MGI(Source):
                     # FIXME: The EC IDs are used for multiple genes, resulting in one EC number
 
                     if mapped_id is not None:
-                        if mgiid in self.markers['classes'] or subtype == 'Gene':
+                        if mgiid in self.markers['classes'] or subtype in ['Gene', 'Pseudogene']:
                             gu.addClassToGraph(g, mapped_id, None)
                             gu.addEquivalentClass(g, mgiid, mapped_id)
                         elif mgiid in self.markers['indiv']:
