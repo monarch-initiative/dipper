@@ -19,6 +19,7 @@ class IMPCTestCase(SourceTestCase):
     def setUp(self):
         self.source = IMPC()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 
