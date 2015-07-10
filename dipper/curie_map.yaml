@@ -1,7 +1,8 @@
 # base
 '': 'http://www.monarchinitiative.org/'
 'MONARCH': 'http://www.monarchinitiative.org/MONARCH_'
-
+'MonarchData': 'http://data.monarchinitiative.org/ttl/'
+'MonarchArchive': 'http://archive.monarchinitiative.org/ttl/'
 
 # ontologies
 'BFO': 'http://purl.obolibrary.org/obo/BFO_'

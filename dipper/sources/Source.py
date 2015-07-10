@@ -70,6 +70,9 @@ class Source:
         self.testOnly = False
         self.testMode = False
 
+        for g in [self.graph, self.testgraph]:
+            self.declareAsOntology(g)
+
         return
 
     def load_core_bindings(self):
@@ -538,5 +541,33 @@ class Source:
         """
 
         self.nobnodes = materialize_bnodes
+
+        return
+
+    def declareAsOntology(self, graph):
+        """
+        The file we output needs to be declared as an ontology, including it's version information.
+        Further information will be augmented in the dataset object.
+        :param version:
+        :return:
+        """
+        # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
+        # owl:versionInfo <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
+
+        gu = GraphUtils(curie_map.get())
+
+        ontology_file_id = 'MonarchData:'+self.name+".ttl"
+        gu.addOntologyDeclaration(graph, ontology_file_id)
+
+        # add timestamp as version info
+
+        t = datetime.now()
+        t_string = t.strftime("%Y-%m-%d-%H-%M")
+        ontology_version = self.name+'-'+t_string
+        archive_url = 'MonarchArchive:'+ontology_version+'.ttl'
+        gu.addOWLVersionIRI(graph, ontology_file_id, archive_url)
+        gu.addOWLVersionInfo(graph, ontology_file_id, ontology_version)
+
+        # TODO make sure this is synced with the Dataset class
 
         return

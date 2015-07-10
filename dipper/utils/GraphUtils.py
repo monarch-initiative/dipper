@@ -411,3 +411,19 @@ class GraphUtils:
         self.loadProperties(graph, self.datatype_properties, self.DATAPROP)
 
         return
+
+    def addOntologyDeclaration(self, graph, ontology_id):
+
+        graph.add((self.getNode(ontology_id), RDF['type'], OWL['Ontology']))
+
+        return
+
+    def addOWLVersionIRI(self, graph, ontology_id, version_iri):
+        graph.add((self.getNode(ontology_id), OWL['versionIRI'], self.getNode(version_iri)))
+
+        return
+
+    def addOWLVersionInfo(self, graph, ontology_id, version_info):
+        graph.add((self.getNode(ontology_id), OWL['versionInfo'], Literal(version_info)))
+
+        return
