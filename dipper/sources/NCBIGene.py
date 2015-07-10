@@ -9,6 +9,7 @@ from dipper.models.Assoc import Assoc
 from dipper.models.Genotype import Genotype
 
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.utils.DipperUtil import DipperUtil
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
@@ -199,43 +200,65 @@ class NCBIGene(Source):
                                 if fixedr.split(':')[0] not in ['Vega', 'IMGT/GENE-DB']:
                                     gu.addEquivalentClass(g, gene_id, fixedr)
 
+                # edge cases of id | symbol | chr | map_loc:
+                # 263     AMD1P2    X|Y  with   Xq28 and Yq12
+                # 438     ASMT      X|Y  with   Xp22.3 or Yp11.3    # in PAR
+                # 419     ART3      4    with   4q21.1|4p15.1-p14   # no idea why there's two bands listed - possibly 2 assemblies
+                # 28227   PPP2R3B   X|Y  Xp22.33; Yp11.3            # in PAR
+                # 619538  OMS     10|19|3 10q26.3;19q13.42-q13.43;3p25.3   #this is of "unknown" type == susceptibility
+                # 101928066       LOC101928066    1|Un    -         # unlocated scaffold
+                # 11435   Chrna1  2       2 C3|2 43.76 cM           # mouse --> 2C3
+                # 11548   Adra1b  11      11 B1.1|11 25.81 cM       # mouse --> 11B1.1
+                # 11717   Ampd3   7       7 57.85 cM|7 E2-E3        # mouse
+                # 14421   B4galnt1        10      10 D3|10 74.5 cM  # mouse
+                # 323212  wu:fb92e12      19|20   -                 # fish
+                # 323368  ints10  6|18    -                         # fish
+                # 323666  wu:fc06e02      11|23   -                 # fish
+
+                # feel that the chr placement can't be trusted in this table when there is > 1 listed
+                # with the exception of human X|Y, i will only take those that align to one chr
+
+                # FIXME remove the chr mapping below when we pull in the genomic coords
                 if str(chr) != '-' and str(chr) != '':
-                    if re.search('\|', str(chr)):
+                    if re.search('\|', str(chr)) and str(chr) != 'X|Y':
                         # this means that there's uncertainty in the mapping.  skip it
                         # TODO we'll need to figure out how to deal with >1 loc mapping
                         logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
                         continue
+                        # X|Y	Xp22.33;Yp11.3
 
                     # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
 
-                    # temporarily use the taxnum for the disambiguating label
-                    geno.addChromosomeClass(str(chr), tax_id, None)  # assume that the chromosome label will get added elsewhere
-                    mychrom = makeChromID(str(chr), tax_num)
-                    mychrom_syn = makeChromLabel(str(chr), tax_num)
-                    gu.addSynonym(g, mychrom,  mychrom_syn)
-                    if tax_num == '9606' and map_loc != '-':
-                        # this matches the regular kind of chrs, so make that kind of band
-                        # not sure why this matches? chrX|Y or 10090chr12|Un"
-                        # TODO we probably need a different regex per organism
-                        if re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc):
+                    # do this in a loop to allow PAR regions like X|Y
+                    for c in re.split('\|',str(chr)) :
+                        geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
+                        mychrom = makeChromID(c, tax_num)
+                        mychrom_syn = makeChromLabel(c, tax_num)  # temporarily use the taxnum for the disambiguating label
+                        gu.addSynonym(g, mychrom,  mychrom_syn)
+                        band_match = re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
+                        if band_match is not None and len(band_match.groups()) > 0:
+                            # if tax_num != '9606':
+                            #     continue
+                            # this matches the regular kind of chrs, so make that kind of band
+                            # not sure why this matches? chrX|Y or 10090chr12|Un"
+                            # TODO we probably need a different regex per organism
                             # the maploc_id already has the numeric chromosome in it, strip it first
-                            bid = re.sub('^'+str(chr), '', map_loc)
-                            maploc_id = makeChromID(str(chr)+bid, tax_num)  # the generic location (no coordinates)
+                            bid = re.sub('^'+c, '', map_loc)
+                            maploc_id = makeChromID(c+bid, tax_num)  # the generic location (no coordinates)
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             band = Feature(maploc_id, None, None)  # Assume it's type will be added elsewhere
                             band.addFeatureToGraph(g)
                             # add the band as the containing feature
                             gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], maploc_id)
                         else:
-                            gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
                             # TODO handle these cases
                             # examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
                             logger.info('not regular band pattern for %s: %s', gene_id, map_loc)
-                    else:
-                        # add the gene as a subsequence of the chromosome
-                        gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
+                            # add the gene as a subsequence of the chromosome
+                            gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
+
                 else:
                     # since the gene is unlocated, add the taxon as a property of it
                     # TODO should we add the gene to the "genome" instead of letting it dangle?
@@ -393,6 +416,11 @@ class NCBIGene(Source):
         return so_id
 
     def _cleanup_id(self, i):
+        """
+        Clean up messy id prefixes
+        :param i:
+        :return:
+        """
         cleanid = i
         # MIM:123456 --> #OMIM:123456
         cleanid = re.sub('^MIM', 'OMIM', cleanid)
@@ -407,10 +435,6 @@ class NCBIGene(Source):
         cleanid = re.sub('^MGI:MGI', 'MGI', cleanid)
 
         return cleanid
-
-    # TODO move to util
-    def remove_control_characters(self, s):
-        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
 
     def getTestSuite(self):
         import unittest
