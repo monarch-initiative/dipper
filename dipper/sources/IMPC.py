@@ -31,25 +31,21 @@ class IMPC(Source):
 
     # TODO move these into the conf.json
     # the following are gene ids for testing
-    test_ids = ["MGI:109380","MGI:1347004","MGI:1353495","MGI:1913840","MGI:2144157","MGI:2182928","MGI:88456",
-                "MGI:96704","MGI:1913649","MGI:95639","MGI:1341847","MGI:104848","MGI:2442444","MGI:2444584",
-                "MGI:1916948","MGI:107403","MGI:1860086","MGI:1919305","MGI:2384936","MGI:88135"]
+    test_ids = ["MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
+                "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
+                "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
+                "MGI:1919305", "MGI:2384936", "MGI:88135"]
 
     def __init__(self):
         Source.__init__(self, 'impc')
 
         # update the dataset object with details about this resource
-        # TODO put this into a conf file?
         self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org', None,
                                'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
 
-        # source-specific warnings.  will be cleared when resolved.
-        # print("WARN: we are filtering G2P on the wild-type environment data for now")
-
         return
 
-
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
         if self.compare_checksums():
             logger.debug('Files have same checksum as reference')
@@ -95,6 +91,9 @@ class IMPC(Source):
 
         geno = Genotype(g)
         line_counter = 0
+        gu.loadAllProperties(g)
+        gu.loadObjectProperties(g, geno.object_properties)
+
         # with open(raw, 'r', encoding="utf8") as csvfile:
         with gzip.open(raw, 'rt') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
@@ -134,16 +133,20 @@ class IMPC(Source):
                 # really attached to the colony.
 
                 # the colony/clone is reflective of the allele, with unknown zygosity
-                gu.addIndividualToGraph(g, colony_id, colony, geno.genoparts['population'])
+                stem_cell_class = 'CL:0000034'
+                gu.addIndividualToGraph(g, colony_id, colony, stem_cell_class)
 
                 # vslc of the colony has unknown zygosity
                 # note that we will define the allele (and it's relationship to the marker, etc.) later
-                vslc_colony = ':_'+allele_accession_id+geno.zygosity['indeterminate']
+                vslc_colony = '_'+allele_accession_id+geno.zygosity['indeterminate']
+                if self.nobnodes:
+                    vslc_colony = ':'+vslc_colony
                 vslc_colony_label = 'vslc'+colony  # TODO remove me
                 gu.addIndividualToGraph(g, vslc_colony, vslc_colony_label,
                                         geno.genoparts['variant_single_locus_complement'])
-                geno.addPartsToVSLC(vslc_colony, allele_accession_id, None, geno.zygosity['indeterminate'])
-                geno.addMemberOfPopulation(vslc_colony, colony_id)
+                geno.addPartsToVSLC(vslc_colony, allele_accession_id, None, geno.zygosity['indeterminate'],
+                                    geno.object_properties['has_alternate_part'])
+                gu.addTriple(g, colony_id, geno.object_properties['has_genotype'], vslc_colony)
 
                 ##############    BUILD THE ANNOTATED GENOTYPE    #############
                 # now, we'll build the genotype of the individual that derives from the colony/clone
@@ -171,8 +174,9 @@ class IMPC(Source):
                     geno.addAllele(variant_locus_id, variant_locus_name, variant_locus_type, None)
                     geno.addAlleleOfGene(variant_locus_id, marker_accession_id, geno.properties['has_alternate_part'])
 
-                    # these are materialized for now
-                    sequence_alteration_id = ':_seqalt'+re.sub(':', '-', allele_accession_id)
+                    sequence_alteration_id = '_seqalt'+re.sub(':', '-', allele_accession_id)
+                    if self.nobnodes:
+                        sequence_alteration_id = ':'+sequence_alteration_id
                     geno.addSequenceAlterationToVariantLocus(sequence_alteration_id, variant_locus_id)
 
                 else:
@@ -183,13 +187,15 @@ class IMPC(Source):
                                            geno.genoparts['insertion'])
 
                 allele1_id = variant_locus_id
-                allele2_id = None
+                allele2_id = allele2_rel = None
                 # Making VSLC labels from the various parts, can change later if desired.
                 if zygosity == 'heterozygote':
                     vslc_name = variant_locus_name+'/'+re.sub('<.*', '<+>', variant_locus_name)
+                    allele2_id = None
                 elif zygosity == 'homozygote':
                     vslc_name = variant_locus_name+'/'+variant_locus_name
                     allele2_id = allele_accession_id
+                    allele2_rel = geno.object_properties['has_alternate_part']
                 elif zygosity == 'hemizygote':
                     vslc_name = variant_locus_name+'/'+re.sub('<.*', '<0>', variant_locus_name)
                     allele2_id = None
@@ -201,9 +207,14 @@ class IMPC(Source):
                     break
 
                 # Add the VSLC
-                vslc_id = self.make_id((marker_accession_id+allele_accession_id+zygosity))
+                vslc_id = '_' + '-'.join((marker_accession_id, allele_accession_id, zygosity))
+                vslc_id = re.sub(':','',vslc_id)
+                if self.nobnodes:
+                    vslc_id = ':'+vslc_id
                 gu.addIndividualToGraph(g, vslc_id, vslc_name, geno.genoparts['variant_single_locus_complement'])
-                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id, zygosity_id)
+                geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id, zygosity_id,
+                                    geno.object_properties['has_alternate_part'], allele2_rel)
+
                 # add vslc to genotype
                 geno.addVSLCtoParent(vslc_id, genotype_id)
 
@@ -215,26 +226,28 @@ class IMPC(Source):
                     genomic_background_id = 'IMPC:'+strain_accession_id
                     # FIXME: Will this resolve, or do we need a separate IMPCStrain:?
 
+                geno.addGenotype(genomic_background_id, strain_name)
+
                 # make a phenotyping-center-specific strain to use as the background
                 pheno_center_strain_label = strain_name+'/'+phenotyping_center
-                pheno_center_strain_id = self.make_id((genomic_background_id+phenotyping_center))
-                geno.addGenotype(pheno_center_strain_id, pheno_center_strain_label, genomic_background_id)
+                pheno_center_strain_id = '_'+'-'.join((re.sub(':','',genomic_background_id), phenotyping_center))
+                if self.nobnodes:
+                    pheno_center_strain_id = ':'+pheno_center_strain_id
+                geno.addGenotype(pheno_center_strain_id, pheno_center_strain_label)
+                geno.addDerivesFrom(pheno_center_strain_id, genomic_background_id)
 
                 # Making genotype labels from the various parts, can change later if desired.
                 # since the genotype is reflective of the place it got made, should put that in to disambiguate
-                genotype_name = vslc_name+'['+pheno_center_strain_label+']'
-
-                geno.addGenotype(genomic_background_id, strain_name)
-                geno.addGenomicBackgroundToGenotype(pheno_center_strain_id, genotype_id)
-
+                genotype_name = vslc_name+' ['+pheno_center_strain_label+']'
                 geno.addGenotype(genotype_id, genotype_name)
+                geno.addGenomicBackgroundToGenotype(pheno_center_strain_id, genotype_id)
 
                 # Add the effective genotype, which is currently the genotype + sex
                 effective_genotype_id = self.make_id((allele_accession_id+zygosity+strain_accession_id+sex))
-                effective_genotype_label = genotype_name+'('+sex+')'
+                effective_genotype_label = genotype_name+' ('+sex+')'
                 geno.addGenotype(effective_genotype_id, effective_genotype_label, geno.genoparts['effective_genotype'])
-                geno.addParts(genotype_id, effective_genotype_id)
-                geno.addDerivesFrom(effective_genotype_id, colony_id)
+                geno.addParts(genotype_id, effective_genotype_id, geno.object_properties['has_alternate_part'])
+                geno.addDerivesFrom(effective_genotype_id, colony_id)  # this is redundant, but i'll keep in in for now
 
                 # Add the taxon as a class
                 taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
@@ -246,7 +259,6 @@ class IMPC(Source):
                 else:
                     # add it as the genomic background
                     geno.addTaxon(taxon_id, genotype_id)
-
 
                 ##############    BUILD THE G2P ASSOC    #############
                 # from an old email dated July 23 2014:
@@ -273,15 +285,13 @@ class IMPC(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        Assoc().loadAllProperties(g)
-
         return
 
     def _map_zygosity(self, zygosity):
         geno = Genotype(self.graph)
         typeid = geno.zygosity['indeterminate']
         type_map = {
-            'heterozygote': geno.zygosity['heterozygous'],
+            'heterozygote': geno.zygosity['simple_heterozygous'],
             'homozygote': geno.zygosity['homozygous'],
             'hemizygote': geno.zygosity['hemizygous'],
             'not_applicable': geno.zygosity['indeterminate']
