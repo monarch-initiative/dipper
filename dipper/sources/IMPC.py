@@ -230,7 +230,8 @@ class IMPC(Source):
 
                 # make a phenotyping-center-specific strain to use as the background
                 pheno_center_strain_label = strain_name+'/'+phenotyping_center
-                pheno_center_strain_id = '_'+'-'.join((re.sub(':','',genomic_background_id), phenotyping_center))
+                pheno_center_strain_id = '_'+'-'.join((re.sub(':','',genomic_background_id),
+                                                       re.sub('\s','_',phenotyping_center)))
                 if self.nobnodes:
                     pheno_center_strain_id = ':'+pheno_center_strain_id
                 geno.addGenotype(pheno_center_strain_id, pheno_center_strain_label)
