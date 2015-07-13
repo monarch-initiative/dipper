@@ -54,14 +54,16 @@ class IMPC(Source):
 
     # TODO change to ALL_genotype_phenotype.csv.gz
     files = {
-        'impc': {'file': 'IMPC_genotype_phenotype.csv.gz',
-                 'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
-        'euro': {'file': 'EuroPhenome_genotype_phenotype.csv.gz',
-                 'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
-        'mgd': {'file': 'MGP_genotype_phenotype.csv.gz',
-                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'},
-        '3i': {'file': '3I_genotype_phenotype.csv.gz',
-                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/3I_genotype_phenotype.csv.gz'},
+        # 'impc': {'file': 'IMPC_genotype_phenotype.csv.gz',
+        #          'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
+        # 'euro': {'file': 'EuroPhenome_genotype_phenotype.csv.gz',
+        #          'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
+        # 'mgd': {'file': 'MGP_genotype_phenotype.csv.gz',
+        #         'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'},
+        # '3i': {'file': '3I_genotype_phenotype.csv.gz',
+        #         'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/3I_genotype_phenotype.csv.gz'},
+        'all': {'file': 'ALL_genotype_phenotype.csv.gz',
+                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/ALL_genotype_phenotype.csv.gz'},
         'checksum': {'file': 'checksum.md5',
                      'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/checksum.md5'},
     }
@@ -110,7 +112,8 @@ class IMPC(Source):
         if self.testOnly:
             self.testMode = True
 
-        for f in ['impc', 'euro', 'mgd', '3i']:
+        # for f in ['impc', 'euro', 'mgd', '3i']:
+        for f in ['all']:
             file = '/'.join((self.rawdir, self.files[f]['file']))
             self._process_data(file, limit)
 
