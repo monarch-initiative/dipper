@@ -268,6 +268,8 @@ class Feature():
         if self.nobnodes:
             i = ':'+i
         reference = re.sub('\w+\:', '', reference, 1)
+        if re.match('^_', reference):
+            reference = re.sub('^_','',reference)  # this is in the case if the reference is a bnode
         i += reference
         if coordinate is not None:
             i = '-'.join((i, str(coordinate)))      # just in case it isn't a string already
