@@ -61,18 +61,8 @@
 
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
-'AQTLCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
-'AQTLTraitCattle' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qtrait?trait_ID='
-'AQTLChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
-'AQTLTraitChicken' : 'http://www.animalgenome.org/cgi-bin/QTLdb/GG/qtrait?trait_ID='
-'AQTLPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
-'AQTLTraitPig' : 'http://www.animalgenome.org/cgi-bin/QTLdb/SS/qtrait?trait_ID='
-'AQTLSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
-'AQTLTraitSheep' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OA/qtrait?trait_ID='
-'AQTLHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
-'AQTLTraitHorse' : 'http://www.animalgenome.org/cgi-bin/QTLdb/EC/qtrait?trait_ID='
-'AQTLRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
-'AQTLTraitRainbowTrout' : 'http://www.animalgenome.org/cgi-bin/QTLdb/OM/qtrait?trait_ID='
+'AQTL' : 'http://identifiers.org/animalqtl/'  # FIXME temporary
+'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # temporary
 'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
@@ -95,7 +85,8 @@
 'KEGG-hsa' : 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
 'KEGG-ko' : 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
-'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/?term='
+'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
+'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
@@ -111,7 +102,7 @@
 'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
 'HPRD' : 'http://www.hprd.org/protein/'
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
-'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # Note this will work for marker(gene), allele, and references, but not genotype
+'MGI': 'http://www.informatics.jax.org/accession/MGI:'
 'miRBase' : 'http://identifiers.org/mirbase/'
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
 'PomBase' : 'http://identifiers.org/PomBase:'
