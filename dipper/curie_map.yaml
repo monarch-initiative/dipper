@@ -58,12 +58,12 @@
 'J' : 'http://www.informatics.jax.org/reference/J:'
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
 'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
+'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
 'AQTL' : 'http://identifiers.org/animalqtl/'  # FIXME temporary
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # temporary
-'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
@@ -87,7 +87,7 @@
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
-'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   #protein/orthologous families
+'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
 'REACT' : 'http://www.reactome.org/content/detail/REACT_'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
 'HGMD' : 'http://identifiers.org/hgmd/'
