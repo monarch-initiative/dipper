@@ -75,8 +75,9 @@ class AnimalQTLdb(Source):
                            'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
     }
 
-    # I do not love putting these here; but I don't know where else to put them
+    # QTL ids
     test_ids = {
+        28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798
     }
 
     def __init__(self):
@@ -180,10 +181,8 @@ class AnimalQTLdb(Source):
                  sig_level, lod_score, ls_mean, p_values, f_statistics, variance, bayes_value, likelihood_ratio,
                  trait_id, dom_effect, add_effect, pubmed_id, gene_id, gene_id_src, gene_id_type, empty2) = row
 
-                # TODO set testing mode
-                #if self.testMode and disease_id not in self.test_ids['disease']:
-                    #continue
-                #print(row)
+                if self.testMode and int(qtl_id) not in self.test_ids:
+                    continue
 
                 qtl_id = 'AQTL:'+qtl_id
                 trait_id = 'AQTLTrait:'+trait_id
@@ -363,8 +362,12 @@ class AnimalQTLdb(Source):
                     continue
                 attribute_dict = dict(item.split("=") for item in re.sub('"', '', attr).split(";"))
 
+                qtl_num = attribute_dict.get('QTL_ID')
+                if self.testMode and int(qtl_num) not in self.test_ids:
+                    continue
+
                 # make association between QTL and trait
-                qtl_id = 'AQTL:' + attribute_dict.get('QTL_ID')
+                qtl_id = 'AQTL:' + str(qtl_num)
                 gu.addIndividualToGraph(g, qtl_id, None, geno.genoparts['QTL'])
                 geno.addTaxon(taxon_id, qtl_id)
 
