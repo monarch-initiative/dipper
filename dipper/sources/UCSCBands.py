@@ -68,13 +68,44 @@ class UCSCBands(Source):
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
-        # Note that there are no bands, arms or staining components for zfish at the moment
+        # Note that there are no bands, arms or staining components for the species below at the moment
         '7955': {
             'file': 'danRer10cytoBand.txt.gz',
             'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
             'build_num': 'danRer10',
             'genome_label': 'Zebrafish'
         },
+        '9913': {
+            'file': 'bosTau7cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/bosTau7/database/cytoBandIdeo.txt.gz',
+            'build_num': 'bosTau7',
+            'genome_label': 'cow'
+        },
+        '9031': {
+            'file': 'galGal4cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/galGal4/database/cytoBandIdeo.txt.gz',
+            'build_num': 'galGal4',
+            'genome_label': 'chicken'
+        },
+        '9823': {
+            'file': 'susScr3cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/susScr3/database/cytoBandIdeo.txt.gz',
+            'build_num': 'susScr3',
+            'genome_label': 'pig'
+        },
+        '9940': {
+            'file': 'oviAri3cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/oviAri3/database/cytoBandIdeo.txt.gz',
+            'build_num': 'oviAri3',
+            'genome_label': 'sheep'
+        },
+        '9796': {
+            'file': 'equCab2cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/equCab2/database/cytoBandIdeo.txt.gz',
+            'build_num': 'equCab2',
+            'genome_label': 'horse'
+        },
+        # TODO rainbow trout, 8022, when available
     }
 
     def __init__(self, tax_ids=None):
@@ -86,7 +117,8 @@ class UCSCBands(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
+            # self.tax_ids = [9606, 10090, 7955]
+            self.tax_ids = [9606, 10090, 7955, 9913, 9031, 9823, 9940, 9796]
 
         # TODO add other species as defaults
 
@@ -184,7 +216,7 @@ class UCSCBands(Source):
                 # ex: unplaced scaffold: chrUn_AABR07022428v1
                 placed_scaffold_pattern = '(chr(?:\d+|X|Y|Z|W|M))'
                 unlocalized_scaffold_pattern = placed_scaffold_pattern+'_(\w+)_random'
-                unplaced_scaffold_pattern = 'chrUn_(\w+)'
+                unplaced_scaffold_pattern = 'chr(Un(?:_\w+)?)'
 
                 m = re.match(placed_scaffold_pattern+'$', scaffold)
                 if m is not None and len(m.groups()) == 1:
@@ -202,7 +234,7 @@ class UCSCBands(Source):
                     pass
                 elif m_chr_unloc is not None and len(m_chr_unloc.groups()) == 2:
                     chrom_num = m_chr_unloc.group(1)
-                    scaffold_num = m_chr_unloc.group(2)
+                    scaffold_num = chrom_num+'_'+m_chr_unloc.group(2)
                 elif m_chr_unplaced is not None and len(m_chr_unplaced.groups()) == 1:
                     scaffold_num = m_chr_unplaced.group(1)
                 else:
@@ -220,7 +252,7 @@ class UCSCBands(Source):
                     # add the chr to the hashmap of coordinates for this build
                     # the chromosome coordinate space is itself
                     if chrom_num not in mybands.keys():
-                        mybands[chrom_num] = {'min': 0, 'max': 0, 'chr': chrom_num,
+                        mybands[chrom_num] = {'min': 0, 'max': int(stop), 'chr': chrom_num,
                                               'ref': build_id, 'parent': None, 'stain': None,
                                               'type': Feature.types['chromosome']}
 
@@ -303,15 +335,15 @@ class UCSCBands(Source):
                 self.gu.addClassToGraph(self.graph, band_class_id, band_class_label, myband['type'])
                 bfeature = Feature(band_build_id, band_build_label, band_class_id)
             else:
-                band_class_id = myband['type']
                 bfeature = Feature(band_build_id, band_build_label, myband['type'])
                 if 'synonym' in myband:
                     self.gu.addSynonym(self.graph, band_build_id, myband['synonym'])
 
-            if myband['parent'] is None and myband['type'] == Feature.types['assembly_component']:
-                # since we likely don't know the chr, add it as a part of the build
-                geno.addParts(band_build_id, build_id)
-            else:
+            if myband['parent'] is None:
+                if myband['type'] == Feature.types['assembly_component']:
+                    # since we likely don't know the chr, add it as a part of the build
+                    geno.addParts(band_build_id, build_id)
+            elif myband['type'] == Feature.types['assembly_component']:
                 # geno.addParts(band_build_id, chrom_in_build_id)
                 parent_chrom_in_build = makeChromID(myband['parent'], build_num)
                 bfeature.addSubsequenceOfFeature(self.graph, parent_chrom_in_build)
@@ -340,23 +372,38 @@ class UCSCBands(Source):
         """
         # TODO add more species
         ucsc_assembly_id_map = {
-            "9606" : {
-            "UCSC:hg38": "NCBIGenome:GRCh38",
-            "UCSC:hg19": "NCBIGenome:GRCh37",
-            "UCSC:hg18": "NCBIGenome:36.1",
-            "UCSC:hg17": "NCBIGenome:35",
-            "UCSC:hg16": "NCBIGenome:34",
-            "UCSC:hg15": "NCBIGenome:33",
+            "9606": {
+                "UCSC:hg38": "NCBIGenome:GRCh38",
+                "UCSC:hg19": "NCBIGenome:GRCh37",
+                "UCSC:hg18": "NCBIGenome:36.1",
+                "UCSC:hg17": "NCBIGenome:35",
+                "UCSC:hg16": "NCBIGenome:34",
+                "UCSC:hg15": "NCBIGenome:33",
+                },
+            "7955": {
+                "UCSC:danRer10": "NCBIGenome:GRCz10",
+                "UCSC:danRer7":	"NCBIGenome:Zv9",
+                "UCSC:danRer6": "NCBIGenome:Zv8",
+                },
+            "10090": {
+                "UCSC:mm10": "NCBIGenome:GRCm38",
+                "UCSC:mm9":	"NCBIGenome:37"
             },
-            "7955" : {
-            "UCSC:danRer10": "NCBIGenome:GRCz10",
-            "UCSC:danRer7":	"NCBIGenome:Zv9",
-            "UCSC:danRer6": "NCBIGenome:Zv8",
-            },
-            "10090" : {
-            "UCSC:mm10": "NCBIGenome:GRCm38",
-            "UCSC:mm9":	"NCBIGenome:37"
-        }
+            "9031": {
+                "UCSC:galGal4": "NCBIAssembly:317958",
+                },
+            "9913": {
+                "UCSC:bosTau7": "NCBIAssembly:GCF_000003205.5",
+                },
+            "9823": {
+                "UCSC:susScr3": "NCBIAssembly:304498",
+                },
+            "9940": {
+                "UCSC:oviAri3": "NCBIAssembly:GCF_000298735.1",
+                },
+            "9796": {
+                "UCSC:equCab2": "NCBIAssembly:GCF_000002305.2",
+                }
         }
         g = self.graph
         geno = Genotype(g)
@@ -367,9 +414,9 @@ class UCSCBands(Source):
             mappings = ucsc_assembly_id_map[sp]
             for i in mappings:
                 ucsc_id = i
-                ucsc_label = re.split(':',i)[1]
+                ucsc_label = re.split(':', i)[1]
                 mapped_id = mappings[i]
-                mapped_label = re.split(':',mapped_id)[1]
+                mapped_label = re.split(':', mapped_id)[1]
                 mapped_label = 'NCBI build '+str(mapped_label)
                 geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
                 geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
