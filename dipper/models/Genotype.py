@@ -87,7 +87,8 @@ class Genotype():
         'is_transgene_variant_of': 'GENO:0000444',
         'has_expression-variant_part' : 'GENO:0000532',
         'targeted_by' : 'GENO:0000634',  # between a (reagent-targeted gene) and a morpholino
-        'derives_sequence_from_gene': 'GENO:0000639'   # FIXME should this just be subsequence of?
+        'derives_sequence_from_gene': 'GENO:0000639',   # FIXME should this just be subsequence of?
+        'feature_to_gene_relation': 'GENO:0000418'
     }
 
     annotation_properties = {
