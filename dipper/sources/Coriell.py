@@ -31,7 +31,8 @@ class Coriell(Source):
 
     We create a handle for a patient from which the given cell line is derived (since there may be multiple
     cell lines created from a given patient).  A genotype is assembled for a patient, which includes
-    a karyotype (if specified) or a collection of variants.  Both the genotype (has_genotype) and disease are linked
+    a karyotype (if specified) and/or a collection of variants.
+    Both the genotype (has_genotype) and disease are linked
     to the patient (has_phenotype), and the cell line is listed as derived from the patient.
     The cell line is classified by it's [CLO cell type](http://www.ontobee.org/browser/index.php?o=clo),
     which itself is linked to a tissue of origin.
@@ -530,9 +531,14 @@ class Coriell(Source):
                                 rel = geno.object_properties['has_alternate_part']
                             geno.addParts(gvc_id, genotype_id, rel)
                         if karyotype_id is not None and self._is_normal_karyotype(karyotype):
-                            genotype_label = '; '.join((gvc_label, karyotype))
-                            # also add the karyotype as part of the genotype
-                            geno.addParts(karyotype_id, genotype_id, geno.object_properties['has_reference_part'])
+                            if gvc_label is not None and gvc_label != '':
+                                genotype_label = '; '.join((gvc_label, karyotype))
+                            else:
+                                genotype_label = karyotype
+                            if genotype_id is None:
+                                genotype_id = karyotype_id
+                            else:
+                                geno.addParts(karyotype_id, genotype_id, geno.object_properties['has_reference_part'])
                         else:
                             genotype_label = gvc_label
                         genotype_label += ' ['+catalog_id.strip()+']'  # use the catalog id as the background
