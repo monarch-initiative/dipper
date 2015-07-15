@@ -63,10 +63,10 @@ class MGI(Source):
 
     # for testing purposes, this is a list of internal db keys to match and select only portions of the source
     test_keys = {
-        'allele': [1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
+        'allele': [1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
                    476, 42885, 3658, 1193, 6978, 6598, 16698, 626329],
         'marker': [357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
-                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833],
+                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833, 35408],
         'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
                   189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
                   928426, 5647502, 6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
@@ -595,7 +595,22 @@ class MGI(Source):
 
                 # TODO: VSLC label likely needs processing similar to the processing in the all_allele_view
                 # FIXME: handle null alleles
-                vslc_label = (allele1+'/'+allele2)
+                vslc_label = allele1+'/'
+                if allele2_id is None:
+                    if zygosity_id in [geno.zygosity['hemizygous'], geno.zygosity['hemizygous-x'],
+                                       geno.zygosity['hemizygous-y']]:
+                        vslc_label += '0'
+                    elif zygosity_id == geno.zygosity['heterozygous']:
+                        vslc_label += '+'
+                    elif zygosity_id == geno.zygosity['indeterminate']:
+                        vslc_label += '?'
+                    elif zygosity_id == geno.zygosity['homozygous']:
+                        vslc_label += allele1  # we shouldn't get here, but for testing this is handy
+                    else:
+                        logger.info("A different kind of zygosity is found: %s", zygosity_id)
+                        vslc_label += '?'
+                else:
+                    vslc_label += allele2
 
                 gu.addIndividualToGraph(g, ivslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
                 geno.addVSLCtoParent(ivslc_id, genotype_id)
