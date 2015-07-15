@@ -329,7 +329,7 @@ class Feature():
                 s = self._getStrandType(strand)
         # else:
         #    s = self.types['both_strand']
-        if strand is None and position_types is None:
+        if s is None and (position_types is None or position_types == []):
             s = self.types['Position']
 
         if s is not None:
