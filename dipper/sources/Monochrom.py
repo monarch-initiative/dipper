@@ -63,25 +63,54 @@ class Monochrom(Source):
             'build_num': 'hg19',
             'genome_label': 'Human'
         },
-        # Note that there are no bands, arms or staining components for zfish at the moment
-        '7955': {
-            'file': '7955cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
-            'build_num': 'danRer10',
-            'genome_label': 'Zebrafish'
-        },
         '10090': {
             'file': '10090cytoBand.txt.gz',
             'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/cytoBandIdeo.txt.gz',
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
-        # Note that there are no bands, arms or staining components for rat at the moment
+        # Note that there are no bands, arms or staining components for the following genomes at the moment
+        '7955': {
+            'file': '7955cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
+            'build_num': 'danRer10',
+            'genome_label': 'Zebrafish'
+        },
         '10116': {
             'file': '10116cytoBand.txt.gz',
             'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/rn6/database/cytoBandIdeo.txt.gz',
             'build_num': 'rn6',
             'genome_label': 'Rat'
+        },
+        '9913': {
+            'file': 'bosTau7cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/bosTau7/database/cytoBandIdeo.txt.gz',
+            'build_num': 'bosTau7',
+            'genome_label': 'cow'
+        },
+        '9031': {
+            'file': 'galGal4cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/galGal4/database/cytoBandIdeo.txt.gz',
+            'build_num': 'galGal4',
+            'genome_label': 'chicken'
+        },
+        '9823': {
+            'file': 'susScr3cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/susScr3/database/cytoBandIdeo.txt.gz',
+            'build_num': 'susScr3',
+            'genome_label': 'pig'
+        },
+        '9940': {
+            'file': 'oviAri3cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/oviAri3/database/cytoBandIdeo.txt.gz',
+            'build_num': 'oviAri3',
+            'genome_label': 'sheep'
+        },
+        '9796': {
+            'file': 'equCab2cytoBand.txt.gz',
+            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/equCab2/database/cytoBandIdeo.txt.gz',
+            'build_num': 'equCab2',
+            'genome_label': 'horse'
         },
     }
 
@@ -111,7 +140,7 @@ class Monochrom(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 7955, 10090, 10116]
+            self.tax_ids = [9606, 10090, 7955, 10116, 9913, 9031, 9823, 9940, 9796]
 
         self._check_tax_ids()
 
@@ -196,7 +225,7 @@ class Monochrom(Source):
                 # find out if the thing is a full on chromosome, or a scaffold:
                 # ex: unlocalized scaffold: chr10_KL568008v1_random
                 # ex: unplaced scaffold: chrUn_AABR07022428v1
-                placed_scaffold_pattern = 'chr(\d+|X|Y|Z|W|MT)'
+                placed_scaffold_pattern = 'chr(\d+|X|Y|Z|W|MT|M)'
                 unlocalized_scaffold_pattern = placed_scaffold_pattern+'_(\w+)_random'
                 unplaced_scaffold_pattern = 'chrUn_(\w+)'
 
