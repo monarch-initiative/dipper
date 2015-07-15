@@ -438,7 +438,7 @@ class Coriell(Source):
                     vids = variant_id.split(';')
                     variant_id = ';'.join(sorted(list(set(vids))))
 
-                    if karyotype.strip() != '':
+                    if karyotype.strip() != '' and not self._is_normal_karyotype(karyotype):
                         mutation = mutation.strip()
                         gvc_id = karyotype_id
                         if variant_id != '':
@@ -459,10 +459,11 @@ class Coriell(Source):
 
                     # add the karyotype to the gvc. use reference if normal karyotype
                     karyo_rel = geno.object_properties['has_alternate_part']
-                    if karyotype == '46;XX' or karyotype == '46;XY':
+                    if self._is_normal_karyotype(karyotype):
                         karyo_rel = geno.object_properties['has_reference_part']
-                    if karyotype_id is not None and gvc_id is not None and karyotype_id != gvc_id:
-                        geno.addParts(karyotype_id, gvc_id, karyo_rel)
+                    if karyotype_id is not None and not self._is_normal_karyotype(karyotype) \
+                            and gvc_id is not None and karyotype_id != gvc_id:
+                            geno.addParts(karyotype_id, gvc_id, karyo_rel)
 
                     if variant_id.strip() != '':
                         # split the variants and add them as part of the genotype
@@ -528,7 +529,13 @@ class Coriell(Source):
                             else:
                                 rel = geno.object_properties['has_alternate_part']
                             geno.addParts(gvc_id, genotype_id, rel)
-                        genotype_label = gvc_label + ' ['+catalog_id.strip()+']'  # use the catalog id as the background
+                        if karyotype_id is not None and self._is_normal_karyotype(karyotype):
+                            genotype_label = '; '.join((gvc_label, karyotype))
+                            # also add the karyotype as part of the genotype
+                            geno.addParts(karyotype_id, genotype_id, geno.object_properties['has_reference_part'])
+                        else:
+                            genotype_label = gvc_label
+                        genotype_label += ' ['+catalog_id.strip()+']'  # use the catalog id as the background
 
                     if genotype_id is not None and gvc_id is not None:
                         # only add the genotype if it has some parts
@@ -541,6 +548,7 @@ class Coriell(Source):
                         geno.addTaxon(taxon, patient_id)
 
                     # TODO: Add sex/gender  (as part of the karyotype?)
+
 
                     ##############    DEAL WITH THE DISEASES   #############
 
@@ -757,6 +765,21 @@ class Coriell(Source):
                 affected_chromosomes.add('X')
 
         return affected_chromosomes
+
+    def _is_normal_karyotype(self, karyotype):
+        """
+        This will default to true if no karyotype is provided.  This is assuming human karyotypes.
+        :param karyotype:
+        :return:
+        """
+
+        is_normal = True
+        if karyotype is not None:
+            karyotype = karyotype.strip()
+            if karyotype not in ['46;XX', '46;XY', '']:
+                is_normal = False
+
+        return is_normal
 
     def getTestSuite(self):
         import unittest
