@@ -413,10 +413,11 @@ def makeChromID(chrom, reference=None):
 
 def makeChromLabel(chrom, reference=None):
     label = ''
-
+    c = re.sub('ch(r?)[omse\.]*', '', str(chrom))
+    c = 'chr'+c
     if reference is None:
-        label = chrom
+        label = c
     else:
-        label = chrom+' ('+reference+')'
+        label = c+' ('+reference+')'
 
     return label
