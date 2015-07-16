@@ -12,6 +12,7 @@ from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Environment import Environment
 from dipper.models.GenomicFeature import makeChromID
 from dipper.models.GenomicFeature import Feature
+from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -1354,12 +1355,22 @@ class ZFIN(Source):
                     astring = authors
 
                 pub_label = '; '.join((astring, title, journal, year, vol, pages))
-                gu.addIndividualToGraph(g, pub_id, pub_label)
+                r = Reference(pub_id)
+                r.setShortCitation(pub_label)
+                r.setYear(year)
+                r.setTitle(title)
 
                 if pubmed_id is not None and pubmed_id != '':
+                    # let's make an assumption that if there's a pubmed id, that it is a journal article
+                    r.setType(Reference.ref_types['journal_article'])
+
                     pubmed_id = 'PMID:' + pubmed_id.strip()
-                    gu.addIndividualToGraph(g, pubmed_id, None)
+                    rpm = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                    rpm.addRefToGraph(g)
+
                     gu.addSameIndividual(g, pub_id, pubmed_id)
+
+                r.addRefToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1691,6 +1702,16 @@ class ZFIN(Source):
                     self.id_label_map[applied_morph_id] = applied_morph_label
 
                     # add to the environment as a part
+                    if re.match('ZDB-MRPHLNO', condition):
+                        reagent_prefix = 'morpholino'
+                    elif re.match('ZDB-CRISPR', condition):
+                        reagent_prefix = 'crispr'
+                    elif re.match('ZDB-TALEN', condition):
+                        reagent_prefix = 'talen'
+                    else:
+                        reagent_prefix = 'reagent'
+
+                    applied_morph_label = reagent_prefix+'['+applied_morph_label+']'
                     envo.addEnvironmentalCondition(applied_morph_id, applied_morph_label)
                     envo.addComponentAttributes(applied_morph_id, morph_id)  # TODO add value/unit
                     if comment is not None:
@@ -1761,7 +1782,7 @@ class ZFIN(Source):
                 environment_labels += [env_comp_label]
                 envo.addComponentToEnvironment(env_id, env_comp_id)
             environment_labels.sort()
-            env_label = '; '.join(environment_labels)
+            env_label = 'Environment that includes: '+'; '.join(environment_labels)
             envo.addEnvironment(env_id, env_label)
 
         # iterate over the env hash to build the extrinsic genotypes that are lumped
