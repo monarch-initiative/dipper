@@ -444,9 +444,10 @@ class KEGG(Source):
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
                     alt_label = self.label_hash[alt_locus_id]
                     gu.addIndividualToGraph(g, alt_locus_id, alt_label, geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus_id, gene_id, geno.object_properties['has_alternate_part'])
+                    geno.addAlleleOfGene(alt_locus_id, gene_id)
                     # Add the disease to gene relationship.
                     assoc = G2PAssoc(assoc_id, alt_locus_id, disease_id, None, None)
+                    assoc.setRelationship(gu.object_properties['is_marker_for'])
                     assoc.loadAllProperties(g)
                     assoc.addAssociationToGraph(g)
 
