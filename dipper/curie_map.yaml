@@ -3,6 +3,7 @@
 'MONARCH': 'http://www.monarchinitiative.org/MONARCH_'
 'MonarchData': 'http://data.monarchinitiative.org/ttl/'
 'MonarchArchive': 'http://archive.monarchinitiative.org/ttl/'
+'dc': 'http://purl.org/dc/elements/1.1/'
 
 # ontologies
 'BFO': 'http://purl.obolibrary.org/obo/BFO_'
@@ -47,6 +48,7 @@
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'
+'OBAN': 'http://purl.org/oban/'
 
 
 # publication/reference sources

@@ -67,7 +67,10 @@ class GraphUtils:
         'is_marker_for': 'RO:0002607',
         'contributes_to': 'RO:0002326',
         'has_origin': 'GENO:0000643',
-        'has_author': 'ERO:0000232'
+        'has_author': 'ERO:0000232',
+        'dc:source': 'dc:source',
+        'dc:evidence': 'dc:evidence',
+        'has_evidence': 'RO:0002558'
     }
 
     datatype_properties = {
