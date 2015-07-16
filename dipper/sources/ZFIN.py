@@ -84,7 +84,8 @@ class ZFIN(Source):
                      "ZDB-GENO-120522-18", "ZDB-GENO-121210-1", "ZDB-GENO-130402-5", "ZDB-GENO-980410-268",
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
                      "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
-                     "ZDB-GENO-070118-1", "ZDB-GENO-140529-1", "ZDB-GENO-070820-1", "ZDB-GENO-071127-3"],
+                     "ZDB-GENO-070118-1", "ZDB-GENO-140529-1", "ZDB-GENO-070820-1", "ZDB-GENO-071127-3",
+                     "ZDB-GENO-000209-20"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -113,7 +114,7 @@ class ZFIN(Source):
                        "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
                        "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-140822-1",
-                       "ZDB-MRPHLNO-100520-4", "ZDB-MRPHLNO-100520-5", "ZDB-MRPHLNO-100920-3"],
+                       "ZDB-MRPHLNO-100520-4", "ZDB-MRPHLNO-100520-5", "ZDB-MRPHLNO-100920-3", "ZDB-MRPHLNO-050604-1"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
@@ -122,7 +123,8 @@ class ZFIN(Source):
                         "ZDB-EXP-110927-1", "ZDB-EXP-120809-5", "ZDB-EXP-120809-7", "ZDB-EXP-120809-9",
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
                         "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1", "ZDB-EXP-070129-3",
-                        "ZDB-EXP-110929-7", "ZDB-EXP-100520-2", "ZDB-EXP-100920-3", "ZDB-EXP-100920-5"
+                        "ZDB-EXP-110929-7", "ZDB-EXP-100520-2", "ZDB-EXP-100920-3", "ZDB-EXP-100920-5",
+                        "ZDB-EXP-090601-2"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -228,6 +230,7 @@ class ZFIN(Source):
         self.load_bindings()
         gu = GraphUtils(curie_map.get())
         gu.loadAllProperties(g)
+        gu.loadObjectProperties(g, Genotype.object_properties)
 
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
@@ -1090,12 +1093,12 @@ class ZFIN(Source):
                 (genomic_feature_id, feature_so_id, genomic_feature_abbreviation, genomic_feature_name,
                  genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id, empty) = row
 
-                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
-
                 if self.testMode and (genomic_feature_id not in self.test_ids['allele']):
                     continue
 
+                genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
                 gu.addIndividualToGraph(g, genomic_feature_id, genomic_feature_name, feature_so_id)
+
                 gu.addSynonym(g, genomic_feature_id, genomic_feature_abbreviation)
                 if construct_id is not None and construct_id != '':
                     construct_id = 'ZFIN:' + construct_id.strip()
@@ -1169,8 +1172,8 @@ class ZFIN(Source):
                 self.id_label_map[genomic_feature_id] = genomic_feature_abbreviation
                 self.id_label_map[gene_id] = gene_symbol
 
-                if self.testMode and (gene_id not in self.test_ids['gene'] or
-                                      genomic_feature_id not in self.test_ids['allele']):
+                if self.testMode and (re.sub('ZFIN:', '', gene_id) not in self.test_ids['gene'] and
+                                      re.sub('ZFIN:', '', genomic_feature_id) not in self.test_ids['allele']):
                     continue
 
                 geno.addGene(gene_id, gene_symbol, gene_so_id)
@@ -1250,8 +1253,8 @@ class ZFIN(Source):
                  marker_id, marker_so_id, marker_symbol, relationship, empty) = row
 
                 if self.testMode and ('ZFIN:' + gene_id not in self.test_ids['gene']
-                                      or 'ZFIN:' + marker_id not in self.test_ids['allele']
-                                      or 'ZFIN:' + marker_id not in self.test_ids['morpholino']):
+                                      and 'ZFIN:' + marker_id not in self.test_ids['allele']
+                                      and 'ZFIN:' + marker_id not in self.test_ids['morpholino']):
                     continue
 
                 # there are many relationships, but we only take a few for now
@@ -1339,7 +1342,7 @@ class ZFIN(Source):
                 (pub_id, pubmed_id, authors, title, journal, year, vol, pages, empty) = row
 
                 if self.testMode and ('ZFIN:' + pub_id not in self.test_ids['pub']
-                                      or 'PMID:' + pubmed_id not in self.test_ids['pub']):
+                                      and 'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
 
                 pub_id = 'ZFIN:' + pub_id.strip()
@@ -1391,7 +1394,7 @@ class ZFIN(Source):
                 (pub_id, pubmed_id, empty) = row
 
                 if self.testMode and ('ZFIN:' + pub_id not in self.test_ids['pub']
-                                      or 'PMID:' + pubmed_id not in self.test_ids['pub']):
+                                      and 'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
 
                 pub_id = 'ZFIN:' + pub_id.strip()
@@ -1470,7 +1473,7 @@ class ZFIN(Source):
                 self.id_label_map[reagent_id] = reagent_symbol
 
                 if self.testMode and (reagent_num not in self.test_ids['morpholino']
-                                      or gene_num not in self.test_ids['gene']):
+                                      and gene_num not in self.test_ids['gene']):
                     continue
 
                 geno.addGeneTargetingReagent(reagent_id, reagent_symbol, reagent_so_id, gene_id)
@@ -1852,18 +1855,21 @@ class ZFIN(Source):
                 geno.addChromosomeClass(chromosome, taxon_id, taxon_label)
 
                 pinfo = self._get_mapping_panel_info(panel_symbol)
+                panel_label = ' '.join((panel_symbol,pinfo['type'],'map'))
                 if pinfo is not None:
                     # add the panel as a genome build
                     panel_id = 'ZFIN:' + pinfo['id']
-                    geno.addReferenceGenome(panel_id, panel_symbol, taxon_id)
+                    geno.addReferenceGenome(panel_id, panel_label, taxon_id)
+                    gu.addSynonym(g, panel_id, panel_symbol)
                     gu.addDescription(g, panel_id, pinfo['name'])
 
                     # add the mapping-panel chromosome
                     chr_inst_id = makeChromID(chromosome, panel_id)
-                    geno.addChromosomeInstance(chromosome, panel_id, panel_symbol, chr_id)
+                    geno.addChromosomeInstance(chromosome, panel_id, panel_label, chr_id)
                     # add the feature to the mapping-panel chromosome
                     f = Feature(zfin_id, None, None)
                     f.addSubsequenceOfFeature(g, chr_inst_id)
+                    f.loadAllProperties(g)
                     # TODO add the coordinates see https://github.com/JervenBolleman/FALDO/issues/24
                 else:
                     logger.error("There's a panel (%s) we don't have info for", panel_symbol)
