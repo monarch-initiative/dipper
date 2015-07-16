@@ -434,7 +434,8 @@ class KEGG(Source):
                 disease_id = 'KEGG-'+disease_id.strip()
 
                 # Make an association ID.
-                assoc_id = self.make_association_id(self.name, gene_id, gu.object_properties['has_phenotype'],
+                rel = gu.object_properties['is_marker_for']
+                assoc_id = self.make_association_id(self.name, gene_id, rel,
                                                     disease_id, None, None)
 
                 # only add diseases for which there is no omim id
@@ -447,7 +448,7 @@ class KEGG(Source):
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
                     # Add the disease to gene relationship.
                     assoc = G2PAssoc(assoc_id, alt_locus_id, disease_id, None, None)
-                    assoc.setRelationship(gu.object_properties['is_marker_for'])
+                    assoc.setRelationship(rel)
                     assoc.loadAllProperties(g)
                     assoc.addAssociationToGraph(g)
 
@@ -509,13 +510,15 @@ class KEGG(Source):
                     alt_locus_id = self._make_variant_locus_id(kegg_gene_id, omim_id)
                     alt_label = self.label_hash[alt_locus_id]
                     gu.addIndividualToGraph(g, alt_locus_id, alt_label, geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus_id, kegg_gene_id, geno.object_properties['has_alternate_part'])
+                    geno.addAlleleOfGene(alt_locus_id, kegg_gene_id)
 
                     # Add the disease to gene relationship.
-                    assoc_id = self.make_id((omim_id+kegg_gene_id))
+                    rel = gu.object_properties['is_marker_for']
+                    assoc_id = self.make_association_id(self.name, alt_locus_id, rel, omim_id, None, None)
                     assoc = G2PAssoc(assoc_id, alt_locus_id, omim_id, None, None)
-                    assoc.loadAllProperties(g)
+                    assoc.setRelationship(rel)
                     assoc.addAssociationToGraph(g)
+                    assoc.loadAllProperties(g)
                 elif link_type == 'original':
                     # these are sometimes a gene, and sometimes a disease
                     logger.info('Unable to handle original link for %s-%s', kegg_gene_id, omim_id)
