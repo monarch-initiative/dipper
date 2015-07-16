@@ -202,15 +202,18 @@ class AnimalQTLdb(Source):
                 geno.addChromosomeInstance(chromosome, build_id, build_label, chrom_id)
                 start = stop = None
                 if re.search('-', range_cm):
-                    if len(re.split('-', range_cm)) == 2:
-                        (start, stop) = [x.strip() for x in re.split('-', range_cm)]
+                    range_parts = re.split('-', range_cm)
+                    # check for poorly formed ranges
+                    if len(range_parts) == 2 and range_parts[0] != '' and range_parts[1] != '':
+                        (start, stop) = [int(float(x.strip())) for x in re.split('-', range_cm)]
                     else:
                         logger.info("There's a cM range we can't handle for QTL %s: %s", qtl_id, range_cm)
                 elif position_cm != '':
-                    start = stop = position_cm
+                    start = stop = int(float(position_cm))
 
+
+                # FIXME remove converion to int for start/stop when schema can handle floats
                 # add in the genetic location based on the range
-
                 f.addFeatureStartLocation(start, chrom_in_build_id, None, [Feature.types['FuzzyPosition']])
                 f.addFeatureEndLocation(stop, chrom_in_build_id, None, [Feature.types['FuzzyPosition']])
                 f.addFeatureToGraph(g)
