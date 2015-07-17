@@ -323,6 +323,8 @@ class CTD(Source):
         reference_list = self._process_pubmed_ids(pubmed_ids)
         if re.match(evidence_pattern, direct_evidence):
             rel_id = self._get_relationship_id(direct_evidence)
+            self.gu.addClassToGraph(self.g, chem_id, chem_name)
+            self.gu.addClassToGraph(self.g, disease_id, None)
             self._make_association(chem_id, disease_id, rel_id, reference_list)
         else:
             # there's dual evidence, but haven't mapped the pubs
@@ -433,6 +435,7 @@ class CTD(Source):
         # Add the disease to gene relationship.
         rel_id = self._get_relationship_id(direct_evidence)
         refs = self._process_pubmed_ids(pubmed_ids)
+
         self._make_association(alt_locus, preferred_disease_id, rel_id, refs)
 
         return
@@ -534,6 +537,7 @@ class CTD(Source):
     def _parse_curated_chem_disease(self, limit):
         line_counter = 0
         file_path = '/'.join((self.rawdir, self.static_files['publications']['file']))
+        gu = GraphUtils(curie_map.get())
         with open(file_path, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -546,6 +550,15 @@ class CTD(Source):
                  chem_label, chem_id, cas_rn, gene_symbol, gene_acc) = row
 
                 rel_id = self._get_relationship_id(evidence)
+                chem_id = 'MESH:'+chem_id
+                gu.addClassToGraph(self.g, chem_id, chem_label)
+                gu.addClassToGraph(self.g, disease_id, None)
+                if pub_id != '':
+                    pub_id = 'PMID:'+pub_id
+                    r = Reference(pub_id, Reference.ref_types['journal_article'])
+                    r.addRefToGraph(self.g)
+                else:
+                    pub_id = None
                 self._make_association('MESH:'+chem_id, disease_id, rel_id, ['PMID:'+pub_id])
 
                 if not self.testMode and limit is not None and line_counter >= limit:
