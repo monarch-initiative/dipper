@@ -43,6 +43,14 @@ class CTD(Source):
 
     For diseases, we preferentially use OMIM identifiers when they can be used uniquely over MESH.  Otherwise,
     we use MESH ids.
+
+    Note that we scrub the following identifiers and their associated data:
+    * REACT:116125 - generic disease class
+    * MESH:D004283 - dog diseases
+    * MESH:D004195 - disease models, animal
+    * MESH:D030342 - genetic diseases, inborn
+    * MESH:D040181 - genetic dieases, x-linked
+    * MESH:D020022 - genetic predisposition to a disease
     """
 
     files = {
