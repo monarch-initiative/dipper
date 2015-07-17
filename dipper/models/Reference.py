@@ -27,8 +27,11 @@ class Reference:
 
     def __init__(self, ref_id, ref_type=None):
 
+        if ref_type is None:
+            self.ref_type = self.ref_types['document']
+        else:
+            self.ref_type = ref_type
         self.ref_id = ref_id
-        self.ref_type = self.ref_types['document']
         self.title = None
         self.year = None
         self.author_list = None
