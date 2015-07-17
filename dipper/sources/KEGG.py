@@ -64,7 +64,8 @@ class KEGG(Source):
                   "hsa:580", "hsa:5888", "hsa:5972", "hsa:6311", "hsa:64327", "hsa:6531", "hsa:6647",
                   "hsa:672", "hsa:675", "hsa:6908", "hsa:7040", "hsa:7045", "hsa:7048", "hsa:7157",
                   "hsa:7251", "hsa:7490", "hsa:7517", "hsa:79728", "hsa:83893", "hsa:83990", "hsa:841",
-                  "hsa:8438", "hsa:8493", "hsa:860", "hsa:9568", "hsa:9627", "hsa:9821", "hsa:999"],
+                  "hsa:8438", "hsa:8493", "hsa:860", "hsa:9568", "hsa:9627", "hsa:9821", "hsa:999",
+                  "hsa:3460"],
         "orthology_classes": ["ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
@@ -438,9 +439,17 @@ class KEGG(Source):
                 assoc_id = self.make_association_id(self.name, gene_id, rel,
                                                     disease_id, None, None)
 
-                # only add diseases for which there is no omim id
+                # only add diseases for which there is no omim id and not a grouping class
                 if disease_id not in self.kegg_disease_hash:
-                    gu.addType(g, disease_id, 'DOID:4')  # type this disease_id as a disease
+                    # add as a class
+                    disease_label = None
+                    if disease_id in self.label_hash:
+                        disease_label = self.label_hash[disease_id]
+                    if re.search('includ', str(disease_label)):
+                        # they use 'including' when it's a grouping class
+                        logger.info("Skipping this association because it's a grouping class: %s", disease_label)
+                        continue
+                    gu.addClassToGraph(g, disease_id, disease_label, 'DOID:4')  # type this disease_id as a disease
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
                     alt_label = self.label_hash[alt_locus_id]
@@ -652,12 +661,14 @@ class KEGG(Source):
         :return:
         """
         alt_locus_id = '_'+gene_id+'-'+disease_id+'VL'
+        if self.nobnodes:
+            alt_locus_id = ':'+alt_locus_id
         alt_label = self.label_hash.get(gene_id)
         disease_label = self.label_hash.get(disease_id)
         if alt_label is not None and alt_label != '':
             alt_label = 'some variant of ' + str(alt_label)
             if disease_label is not None and disease_label != '':
-                alt_label += ' that causes ' + str(disease_label)
+                alt_label += ' that is associated with ' + str(disease_label)
         else:
             alt_label = None
 
