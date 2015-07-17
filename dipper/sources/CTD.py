@@ -126,7 +126,7 @@ class CTD(Source):
         else:
             self.g = self.graph
         self.geno = Genotype(self.g)
-        self.path = Pathway(self.g)
+        self.path = Pathway(self.g, self.nobnodes)
         self.gu = GraphUtils(curie_map.get())
 
         self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'])

@@ -147,7 +147,7 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        path = Pathway(g)
+        path = Pathway(g, self.nobnodes)
         gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:

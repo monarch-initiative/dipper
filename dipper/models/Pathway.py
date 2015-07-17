@@ -31,11 +31,13 @@ class Pathway():
 
     properties = object_properties.copy()
 
-    def __init__(self, graph):
+    def __init__(self, graph, nobnodes=False):
 
         self.gu = GraphUtils(curie_map.get())
 
         self.graph = graph
+
+        self.nobnodes = nobnodes
 
         self.gu.loadProperties(self.graph, self.object_properties, self.gu.OBJPROP)
 
@@ -71,6 +73,8 @@ class Pathway():
         :return:
         """
         gene_product = '_'+re.sub(':', '', gene_id)+'product'
+        if self.nobnodes:
+            gene_product = ':'+gene_product
         self.gu.addIndividualToGraph(self.graph, gene_product, None, self.pathway_parts['gene_product'])
         self.gu.addTriple(self.graph, gene_id, self.object_properties['has_gene_product'], gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
