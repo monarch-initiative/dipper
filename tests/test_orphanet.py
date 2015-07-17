@@ -19,6 +19,7 @@ class OrphanetTestCase(SourceTestCase):
     def setUp(self):
         self.source = Orphanet()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

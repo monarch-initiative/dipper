@@ -122,20 +122,27 @@ class Orphanet(Source):
                         for s in syn_list.findall('./Synonym'):
                             gu.addSynonym(g, gene_id, s.text)
 
+
+                    dgtype = a.find('DisorderGeneAssociationType').get('id')
+                    rel_id = self._map_rel_id(dgtype)
+                    dg_label = a.find('./DisorderGeneAssociationType/Name').text
+                    if rel_id is None:
+                        logger.warn("Cannot map association type (%s) to RO for association (%s | %s).  Skipping.",
+                                    dg_label, disorder_label, gene_symbol)
+                        continue
+
                     alt_locus_id = '_'+gene_num+'-'+disorder_num+'VL'
-                    alt_label = 'some variant of '+gene_symbol.strip()+' that causes '+disorder_label
+                    alt_label = ' '.join(('some variant of', gene_symbol.strip(),
+                                          'that is a', dg_label.lower(), disorder_label))
                     if self.nobnodes:
                         alt_locus_id = ':'+alt_locus_id
                     gu.addIndividualToGraph(g, alt_locus_id, alt_label, geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
 
-                    dgtype = a.find('DisorderGeneAssociationType').get('id')
-                    rel_id = self._map_rel_id(dgtype)
-                    if rel_id is None:
-                        dg_label = a.find('./DisorderGeneAssociationType/Name').text
-                        logger.warn("Cannot map association type (%s) to RO for association (%s | %s).  Skipping.",
-                                    dg_label, disorder_label, gene_symbol)
-                        continue
+                    # consider typing the gain/loss-of-function variants like:
+                    # http://sequenceontology.org/browser/current_svn/term/SO:0002054
+                    # http://sequenceontology.org/browser/current_svn/term/SO:0002053
+
                     # use "assessed" status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
                     status_code = a.find('DisorderGeneAssociationStatus').get('id')
