@@ -9,6 +9,7 @@ from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.Reference import Reference
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
@@ -140,6 +141,8 @@ class MGI(Source):
                        'genotype': {}, 'annot': {}, 'notes': {}}
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
+        self.wildtype_alleles = set()
+
         return
 
     def fetch(self, is_dl_forced=False):
@@ -225,7 +228,7 @@ class MGI(Source):
         # TODO generate report of internal identifiers we created (eg for strains)
 
         self.load_bindings()
-        for g in [self.graph,self.testgraph]:
+        for g in [self.graph, self.testgraph]:
             Assoc().loadAllProperties(g)
             gu = GraphUtils(curie_map.get())
             gu.loadAllProperties(g)
@@ -277,7 +280,7 @@ class MGI(Source):
                     # just in case we haven't seen it before, catch and add the id mapping here
                     self.idhash['genotype'][genotype_key] = mgiid
                     geno.addGenotype(mgiid, None)
-                    # TODO get label
+                    # the label is elsewhere... need to add the MGI label as a synonym
 
                 # if it's in the hash, assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
@@ -322,6 +325,7 @@ class MGI(Source):
         geno_hash = {}
         raw = '/'.join((self.rawdir, 'gxd_genotype_summary_view'))
         logger.info("building labels for genotypes")
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -354,11 +358,12 @@ class MGI(Source):
 
         # now, loop through the hash and add the genotypes as individuals
         gutil = Genotype(g)
-        for g in geno_hash:
-            geno = geno_hash.get(g)
+        for gt in geno_hash:
+            geno = geno_hash.get(gt)
             gvc = sorted(geno.get('vslcs'))
             label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
-            gutil.addGenotype(g, label.strip())
+            gutil.addGenotype(gt, label.strip())
+            # TODO gu.addSynonym(g, gt, label.strip())
 
         # TODO materialize a GVC here?
 
@@ -493,6 +498,8 @@ class MGI(Source):
                 elif iswildtype == '1':
                     locus_type = geno.genoparts['reference_locus']
                     locus_rel = geno.properties['is_reference_instance_of']
+                    # add the allele to the wildtype set for lookup later
+                    self.wildtype_alleles.add(allele_id)
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
                 al = gu.getNode(allele_id)
@@ -558,6 +565,7 @@ class MGI(Source):
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, 'gxd_allelepair_view'))
         logger.info("processing allele pairs (VSLCs) for genotypes")
+        geno_hash = {}
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -614,10 +622,22 @@ class MGI(Source):
 
                 gu.addIndividualToGraph(g, ivslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
                 geno.addVSLCtoParent(ivslc_id, genotype_id)
-                geno.addPartsToVSLC(ivslc_id, allele1_id, allele2_id, zygosity_id)
+                rel1 = rel2 = geno.object_properties['has_alternate_part']
+                if allele1_id in self.wildtype_alleles:
+                    rel1 = geno.object_properties['has_reference_part']
+                if allele2_id in self.wildtype_alleles:
+                    rel2 = geno.object_properties['has_reference_part']
+                geno.addPartsToVSLC(ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
+
+                # if genotype_id not in geno_hash:
+                #     geno_hash[genotype_id] = [vslc_label]
+                # else:
+                #     geno_hash[genotype_id] += [vslc_label]
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
+
+            # TODO process the vslcs to make the gvc for the genotype..but need to store for later
 
         return
 
@@ -761,7 +781,6 @@ class MGI(Source):
         :return:
         """
 
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
@@ -795,9 +814,8 @@ class MGI(Source):
 
                 evidence_id = self._map_evidence_id(evidence_code)
 
-                # TODO add it as an instance of what type?
-                # add the pub as an individual;
-                gu.addIndividualToGraph(g, jnumid, None)
+                r = Reference(jnumid)
+                r.addRefToGraph(g)
 
                 # add the ECO and citation information to the annot
                 Assoc().addEvidence(g, evidence_id, assoc_id)
@@ -851,7 +869,8 @@ class MGI(Source):
                 if prefixpart != 'J:':
                     continue
                 self.idhash['publication'][object_key] = accid
-                gu.addIndividualToGraph(g, accid, None)
+                r = Reference(accid)
+                r.addRefToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -887,15 +906,21 @@ class MGI(Source):
                     # some DOIs seem to have spaces
                     # FIXME MGI needs to FIX THESE UPSTREAM!!!!
                     # we'll scrub them here for the time being
-                    pub_id = 'DOI:'+re.sub('\s+','',accid)
+                    pub_id = 'DOI:'+re.sub('\s+', '', accid)
                 elif logicaldb_key == '1' and re.match('J:', prefixpart):
                     # we can skip the J numbers
                     continue
 
                 if pub_id is not None:
                     # only add these to the graph if it's mapped to something we understand
-                    gu.addIndividualToGraph(g, pub_id, None)
-                    gu.addSameIndividual(g,jid, pub_id)
+                    r = Reference(pub_id)
+
+                    # make the assumption that if it is a PMID, it is a journal
+                    if re.match('PMID', pub_id):
+                        r.setType(Reference.ref_types['journal_article'])
+                    r.addRefToGraph(g)
+
+                    gu.addSameIndividual(g, jid, pub_id)
                 else:
                     logger.warn("Publication from (%s) not mapped for %s", logical_db, object_key)
 
@@ -1017,7 +1042,7 @@ class MGI(Source):
                     # if it's unlocated, or is not a gene,
                     # then don't add it as a class because it's not added as a gene.
                     # everything except for genes are modeled as individuals
-                    if mapped_marker_type in ['SO:0000704','SO:0000336']:  #it's a gene or pseudogene
+                    if mapped_marker_type in ['SO:0000704', 'SO:0000336']:  # it's a gene or pseudogene
                         gu.addClassToGraph(g, marker_id, symbol, mapped_marker_type, name)
                         gu.addSynonym(g, marker_id, name, Assoc.properties['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
@@ -1158,7 +1183,7 @@ class MGI(Source):
         # if nothing, then we should remove one or the other.
         logger.info("mapping marker equivalent identifiers in mrk_acc_view")
         line_counter = 0
-        with open(('/').join((self.rawdir,'mrk_acc_view')), 'r') as f:
+        with open('/'.join((self.rawdir, 'mrk_acc_view')), 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
@@ -1181,9 +1206,9 @@ class MGI(Source):
                     continue
                 marker_id = None
                 if preferred == '1':  # TODO what does it mean if it's 0?
-                    if logicaldb_key == '55':  #entrez/ncbi
+                    if logicaldb_key == '55':  # entrez/ncbi
                         marker_id = 'NCBIGene:'+accid
-                    elif logicaldb_key == '1' and prefix_part != 'MGI:':  #mgi
+                    elif logicaldb_key == '1' and prefix_part != 'MGI:':  # mgi
                         marker_id = accid
                     elif logicaldb_key == '60':
                         marker_id = 'ENSEMBL:'+accid
@@ -1688,7 +1713,7 @@ class MGI(Source):
             'M. terricolor': '254704',
             'M. m. domesticus (China)': '10092',
             'M. fragilicauda': '186193',
-            'Not Resolved': '10088',  #assume Mus
+            'Not Resolved': '10088',  # assume Mus
             'M. m. musculus or M. spretus and laboratory mouse': '10088',
             'M. macedonicus macedonicus': '270353',
             'laboratory mouse': '10090',
@@ -1752,7 +1777,7 @@ class MGI(Source):
         return 'NCBITaxon:'+tax
 
     def _map_evidence_id(self, evidence_code):
-        # TODO a default evidence code???  what should it be?
+
         ecotype = None
         type_map = {
             'EXP': 'ECO:0000006',
@@ -1780,44 +1805,6 @@ class MGI(Source):
             logger.error("Evidence code (%s) not mapped", evidence_code)
 
         return ecotype
-
-    # def _map_evidence_label(self, evidence_code):
-    #     """
-    #     TODO remove this probably
-    #     :param evidence_code:
-    #     :return:
-    #     """
-    #     type = None
-    #     type_map = {
-    #         'EXP': 'experimental evidence',
-    #         'IBA': 'biological aspect of ancestor evidence used in manual assertion',
-    #         'IC': 'inference from background scientific knowledge',
-    #         'IDA': 'direct assay evidence used in manual assertion',
-    #         'IEA': 'evidence used in automatic assertion',
-    #         'IEP': 'expression pattern evidence',
-    #         'IGI': 'genetic interaction evidence used in manual assertion',
-    #         'IKR': 'phylogenetic determination of loss of key residues evidence used in manual assertion',
-    #         'IMP': 'mutant phenotype evidence used in manual assertion',
-    #         'IPI': 'physical interaction evidence used in manual assertion',
-    #         'ISA': 'sequence alignment evidence',
-    #         'ISM': 'match to sequence model evidence',
-    #         'ISO': 'sequence orthology evidence',
-    #         'ISS': 'sequence similarity evidence used in manual assertion',
-    #         'NAS': 'non-traceable author statement used in manual assertion',
-    #         'ND': 'no biological data found',
-    #         'RCA': 'computational combinatorial evidence used in manual assertion',
-    #         'TAS': 'traceable author statement used in manual assertion'
-    #     }
-    #     if (evidence_code.strip() in type_map):
-    #         type = type_map.get(evidence_code)
-    #         # type = 'http://purl.obolibrary.org/obo/' + type_map.get(zygosity)
-    #     # print("Mapped: ", allele_type, "to", type)
-    #     else:
-    #         # TODO add logging
-    #         print("ERROR: Taxon Name (", evidence_code, ") not mapped")
-    #
-    #     return type
-
 
     def _makeInternalIdentifier(self, prefix, key):
         """
