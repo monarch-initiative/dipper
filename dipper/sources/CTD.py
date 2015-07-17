@@ -215,8 +215,6 @@ class CTD(Source):
         # convert KEGG pathway ids... KEGG:12345 --> KEGG-path:map12345
         if re.match('KEGG', pathway_id):
             pathway_id = re.sub('KEGG:', 'KEGG-path:map', pathway_id)
-        elif re.match('REACT', pathway_id):
-            pathway_id = re.sub('REACT:', 'REACTST:', pathway_id)
 
         self.gu.addClassToGraph(self.graph, entrez_id, None)  # just in case, add it as a class
 

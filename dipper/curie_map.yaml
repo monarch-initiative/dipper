@@ -90,8 +90,7 @@
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
-'REACT' : 'http://www.reactome.org/content/detail/REACT_'
-'REACTST' : 'http://www.reactome.org/cgi-bin/eventbrowser_st_id?ST_ID=REACT_'
+'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
 'HGMD' : 'http://identifiers.org/hgmd/'
 
