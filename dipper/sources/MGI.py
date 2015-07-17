@@ -13,7 +13,7 @@ from dipper.models.Reference import Reference
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.GenomicFeature import Feature, makeChromID
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +161,8 @@ class MGI(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        self.fetch_from_pgdb(self.tables, cxn)
-
-        # TODO force the download of the table 'mgi_dbinfo'
+        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
 
         datestamp = ver = None
         # get the resource version information from table mgi_dbinfo, already fetched above
@@ -500,6 +499,9 @@ class MGI(Source):
                     locus_rel = geno.properties['is_reference_instance_of']
                     # add the allele to the wildtype set for lookup later
                     self.wildtype_alleles.add(allele_id)
+                else:
+                    locus_rel = None
+                    locus_type = None
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
                 al = gu.getNode(allele_id)
