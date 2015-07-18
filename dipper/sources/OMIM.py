@@ -7,18 +7,18 @@ from datetime import datetime
 import json
 from subprocess import call
 
-
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
+
 
 logger = logging.getLogger(__name__)
 

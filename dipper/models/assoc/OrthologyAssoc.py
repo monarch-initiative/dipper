@@ -1,10 +1,6 @@
 __author__ = 'nlw'
 
-
-from dipper.utils.CurieUtil import CurieUtil
-from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.Assoc import Assoc
-from dipper import curie_map
+from dipper.models.assoc.Association import Assoc
 
 
 class OrthologyAssoc(Assoc):
@@ -24,32 +20,18 @@ class OrthologyAssoc(Assoc):
         'gene_family': 'DATA:3148'  # http://edamontology.org/data_3148
     }
 
-    def __init__(self, assoc_id, gene1, gene2, pub, evidence_code):
-        super().__init__()
-        self.cu = CurieUtil(curie_map.get())
-        self.gu = GraphUtils(curie_map.get())
-        self.object_properties.update(self.ortho_rel)
-        self.properties.update(self.ortho_rel)
-        self.annot_id = assoc_id
-        self.gene1 = gene1
-        self.gene2 = gene2
-        self.pub_id = pub
-        self.evidence = evidence_code
-        self.rel = self.properties['orthologous']  # default
-        self.pub_list = None
+    def __init__(self, definedby, gene1, gene2, rel=None):
+        super().__init__(definedby)
+        if rel is None:
+            rel = self.properties['orthologous']  # default
 
-        self.setSubject(gene1)
-        self.setObject(gene2)
+        self.set_subject(gene1)
+        self.set_object(gene2)
+        self.set_relationship(rel)
 
         return
 
-    def addOrthologyAssociationToGraph(self, g):
-
-        self.addAssociationToGraph(g)
-
-        return
-
-    def addGeneFamilyToGraph(self, g, family_id):
+    def add_gene_family_to_graph(self, g, family_id):
         """
         Make an association between a group of genes and some grouping class.
         We make the assumption that the genes in the association are part of the supplied
@@ -71,7 +53,14 @@ class OrthologyAssoc(Assoc):
         self.gu.addIndividualToGraph(g, family_id, None, gene_family)
 
         # add each gene to the family
-        self.gu.addMember(g, family_id, self.gene1)
-        self.gu.addMember(g, family_id, self.gene2)
+        self.gu.addMember(g, family_id, self.sub)
+        self.gu.addMember(g, family_id, self.obj)
+
+        return
+
+    def load_all_properties(self, g):
+
+        super().load_all_properties(g)
+        self.gu.loadObjectProperties(g, self.ortho_rel)
 
         return

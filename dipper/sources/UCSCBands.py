@@ -10,6 +10,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Genotype import Genotype
 from dipper import curie_map
 
+
 logger = logging.getLogger(__name__)
 
 

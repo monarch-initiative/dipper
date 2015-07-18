@@ -8,9 +8,9 @@ from dipper.utils import pysed
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
 from dipper.models.D2PAssoc import D2PAssoc
-from dipper.models.DispositionAssoc import DispositionAssoc
+from dipper.models.assoc import DispositionAssoc
 from dipper.models.Dataset import Dataset
-from dipper.models.Assoc import Assoc
+from dipper.models.Association import Assoc
 from dipper import curie_map
 from dipper import config
 

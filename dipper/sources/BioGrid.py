@@ -12,9 +12,10 @@ from rdflib.namespace import FOAF, DC, RDFS
 from dipper import curie_map
 from dipper import config
 from dipper.sources.Source import Source
-from dipper.models.InteractionAssoc import InteractionAssoc
+from dipper.models.assoc import InteractionAssoc
 from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
+
 
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 

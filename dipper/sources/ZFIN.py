@@ -4,9 +4,9 @@ import logging
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
-from dipper.models.Assoc import Assoc
+from dipper.models.Association import Assoc
 from dipper.models.Genotype import Genotype
-from dipper.models.OrthologyAssoc import OrthologyAssoc
+from dipper.models.assoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Environment import Environment
@@ -15,6 +15,7 @@ from dipper.models.GenomicFeature import Feature
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+
 
 logger = logging.getLogger(__name__)
 

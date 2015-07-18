@@ -4,16 +4,16 @@ from urllib import parse
 import http
 from http import client
 import csv
+import xml.etree.ElementTree as etree
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
-
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper import config
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
-import xml.etree.ElementTree as etree
+from dipper.models.GenomicFeature import Feature
+
 
 logger = logging.getLogger(__name__)
 

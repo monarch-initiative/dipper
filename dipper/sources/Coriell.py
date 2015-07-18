@@ -1,14 +1,14 @@
 import logging
 import csv
 import re
-
-import pysftp
 from datetime import datetime
 import stat
 import os
 
+import pysftp
+
 from dipper.sources.Source import Source
-from dipper.models.Assoc import Assoc
+from dipper.models.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.GraphUtils import GraphUtils
@@ -18,6 +18,7 @@ from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.DipperUtil import DipperUtil
+
 
 logger = logging.getLogger(__name__)
 

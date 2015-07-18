@@ -1,11 +1,6 @@
 __author__ = 'nlw'
 
-from rdflib import Literal
-
-from dipper.models.Assoc import Assoc
-from dipper.utils.CurieUtil import CurieUtil
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.assoc.Association import Assoc
 
 
 class D2PAssoc(Assoc):
@@ -30,13 +25,22 @@ class D2PAssoc(Assoc):
         if rel is None:
             rel = self.properties['has_phenotype']
 
-        self.setRelationship(rel)
-        self.setSubject(disease_id)
-        self.setObject(phenotype_id)
+        self.set_relationship(rel)
+        self.set_subject(disease_id)
+        self.set_object(phenotype_id)
 
         return
 
-    def addAssociationNodeToGraph(self, g):
+    def set_association_id(self, assoc_id=None):
+
+        if assoc_id is None:
+            self.assoc_id = self.make_d2p_id()
+        else:
+            self.assoc_id = assoc_id
+
+        return
+
+    def add_association_to_graph(self, g):
         """
         The reified relationship between a disease and a phenotype is decorated with some provenance information.
         This makes the assumption that both the disease and phenotype are classes.
@@ -46,8 +50,7 @@ class D2PAssoc(Assoc):
         """
 
         # add the basic association nodes
-        self.assoc_id = self.make_d2p_id(self.definedby)
-        self.addAssociationToGraph(g)
+        self._add_basic_association_to_graph(g)
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
@@ -58,23 +61,22 @@ class D2PAssoc(Assoc):
 
         return g
 
-    def make_d2p_id(self, definedby):
+    def make_d2p_id(self):
         """
         Make an association id for phenotypic associations with disease that is defined by:
             source of association + disease + relationship + phenotype
                 + onset + frequency
-        :param definedby:
         :return:
         """
 
         attributes = [self.onset, self.frequency]
-        assoc_id = self.make_association_id(definedby, self.disease_id, self.rel, self.phenotype_id, attributes)
+        assoc_id = self.make_association_id(self.definedby, self.disease_id, self.rel, self.phenotype_id, attributes)
 
         return assoc_id
 
-    def loadAllProperties(self, g):
+    def load_all_properties(self, g):
 
-        super().loadAllProperties(g)
+        super().load_all_properties(g)
         self.gu.loadObjectProperties(g, self.object_properties)
 
         return

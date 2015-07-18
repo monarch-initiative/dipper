@@ -8,7 +8,8 @@ from rdflib.namespace import RDF, XSD
 
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.Assoc import Assoc
+from dipper.models.assoc.Association import Assoc
+
 
 logger = logging.getLogger(__name__)
 

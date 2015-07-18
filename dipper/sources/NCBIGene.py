@@ -1,18 +1,16 @@
 import re
 import gzip
-import unicodedata
 import logging
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.Assoc import Assoc
+from dipper.models.Association import Assoc
 from dipper.models.Genotype import Genotype
-
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.utils.DipperUtil import DipperUtil
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+
 
 logger = logging.getLogger(__name__)
 

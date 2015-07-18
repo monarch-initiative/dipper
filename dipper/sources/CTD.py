@@ -13,7 +13,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Reference import Reference
 
@@ -568,7 +568,6 @@ class CTD(Source):
     def getTestSuite(self):
         import unittest
         from tests.test_ctd import CTDTestCase
-        from tests.test_interactions import InteractionsTestCase
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(CTDTestCase)
         # test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(InteractionsTestCase))

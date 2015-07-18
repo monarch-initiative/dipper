@@ -5,7 +5,7 @@ import logging
 import re
 
 from dipper.sources.Source import Source
-from dipper.models.Assoc import Assoc
+from dipper.models.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -14,6 +14,7 @@ from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.GenomicFeature import Feature, makeChromID
+
 
 logger = logging.getLogger(__name__)
 

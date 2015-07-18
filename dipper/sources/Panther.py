@@ -5,10 +5,11 @@ import re
 import logging
 
 from dipper.sources.Source import Source
-from dipper.models.OrthologyAssoc import OrthologyAssoc
+from dipper.models.assoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config, curie_map
+
 
 logger = logging.getLogger(__name__)
 

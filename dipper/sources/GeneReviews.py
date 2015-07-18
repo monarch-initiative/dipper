@@ -7,11 +7,12 @@ import logging
 
 from docx import Document
 
-from dipper.models.Assoc import Assoc
+from dipper.models.assoc.Association import Assoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+
 
 logger = logging.getLogger(__name__)
 

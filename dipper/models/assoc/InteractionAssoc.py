@@ -1,9 +1,6 @@
-__author__ = 'nicole'
+__author__ = 'nlw'
 
-from dipper.utils.CurieUtil import CurieUtil
-from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.Assoc import Assoc
-from dipper import curie_map
+from dipper.models.assoc.Association import Assoc
 
 
 class InteractionAssoc(Assoc):
@@ -18,18 +15,18 @@ class InteractionAssoc(Assoc):
 
     def __init__(self, definedby, subj, obj, rel=None):
         super().__init__(definedby)
-        self.pub_list = None
-        self.setSubject(subj)
-        self.setObject(obj)
+
+        self.set_subject(subj)
+        self.set_object(obj)
         if rel is None:
             rel = self.rel['interacts_with']
-        self.setRelationship(rel)
+        self.set_relationship(rel)
 
         return
 
-    def loadAllProperties(self, g):
+    def load_all_properties(self, g):
 
-        super().loadAllProperties(g)
+        super().load_all_properties(g)
         self.gu.loadObjectProperties(g, self.rel)
 
         return

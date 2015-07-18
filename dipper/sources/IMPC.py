@@ -7,7 +7,7 @@ import os
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 

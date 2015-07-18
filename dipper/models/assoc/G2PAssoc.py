@@ -1,8 +1,6 @@
 __author__ = 'nicole'
 
-from dipper.models.Assoc import Assoc
-from dipper.utils.CurieUtil import CurieUtil
-from dipper import curie_map
+from dipper.models.assoc.Association import Assoc
 
 
 class G2PAssoc(Assoc):
@@ -19,22 +17,18 @@ class G2PAssoc(Assoc):
         super().__init__(definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
-        self.pub_id = None
-        self.evidence = None
+
         if rel is None:
-            self.rel = self.properties['has_phenotype']  # default to has_phenotype
-        else:
-            self.rel = rel
+            rel = self.properties['has_phenotype']  # default to has_phenotype
+
         self.start_stage_id = None
         self.end_stage_id = None
         self.environment_id = None
 
-        self.setSubject(entity_id)
-        self.setObject(phenotype_id)
-        return
+        self.set_subject(entity_id)
+        self.set_object(phenotype_id)
+        self.set_relationship(rel)
 
-    def set_relationship(self, rel):
-        self.rel = rel
         return
 
     def set_stage(self, start_stage_id, end_stage_id):
@@ -50,7 +44,16 @@ class G2PAssoc(Assoc):
 
         return
 
-    def addAssociationToGraph(self, g):
+    def set_association_id(self, assoc_id=None):
+
+        if assoc_id is None:
+            self.assoc_id = self.make_g2p_id()
+        else:
+            self.assoc_id = assoc_id
+
+        return
+
+    def add_association_to_graph(self, g):
         """
         The reified relationship between a genotype (or any genotype part) and a phenotype
         is decorated with some provenance information.
@@ -60,36 +63,33 @@ class G2PAssoc(Assoc):
         :param g:
         :return:
         """
-        self.annot_id = self.make_g2p_id(self.definedby)
 
-        self.addAssociationToGraph(g)
+        self._add_basic_association_to_graph(g)
 
         if self.start_stage_id is not None:
-            self.gu.addTriple(g, self.annot_id,
+            self.gu.addTriple(g, self.assoc_id,
                               self.gu.object_properties['has_begin_stage_qualifier'],
                               self.start_stage_id)
         if self.end_stage_id is not None:
-            self.gu.addTriple(g, self.annot_id,
+            self.gu.addTriple(g, self.assoc_id,
                               self.gu.object_properties['has_end_stage_qualifier'],
                               self.end_stage_id)
 
         if self.environment_id is not None:
-            self.gu.addTriple(g, self.annot_id,
+            self.gu.addTriple(g, self.assoc_id,
                               self.gu.object_properties['has_environment_qualifier'],
                               self.environment_id)
         return g
 
-
-    def make_g2p_id(self, definedby):
+    def make_g2p_id(self):
         """
         Make an association id for phenotypic associations that is defined by:
             source of association + (Annot subject) + relationship + phenotype/disease
                 + environment + start stage + end stage
-        :param definedby:
         :return:
         """
 
         attributes = [self.environment_id, self.start_stage_id, self.end_stage_id]
-        assoc_id = self.make_association_id(definedby, self.entity_id, self.rel, self.phenotype_id, attributes)
+        assoc_id = self.make_association_id(self.definedby, self.entity_id, self.rel, self.phenotype_id, attributes)
 
         return assoc_id

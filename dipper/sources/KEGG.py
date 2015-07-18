@@ -6,11 +6,12 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
-from dipper.models.OrthologyAssoc import OrthologyAssoc
+from dipper.models.assoc import OrthologyAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Pathway import Pathway
 from dipper import curie_map
 from dipper import config
+
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,12 @@
 __author__ = 'nlw'
 
-from rdflib import RDF
 import logging
+import re
 
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
-import re
+
 
 logger = logging.getLogger(__name__)
 
