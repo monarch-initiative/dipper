@@ -4,9 +4,9 @@ import re
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
-from dipper.models.assoc import OrthologyAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Pathway import Pathway
 from dipper import curie_map
@@ -83,6 +83,10 @@ class KEGG(Source):
         else:
             self.test_ids['disease'] += config.get_config()['test_ids']['disease']
 
+        self.label_hash = {}
+        self.omim_disease_hash = {}  # to hold the mappings of omim:kegg ids
+        self.kegg_disease_hash = {}  # to hold the mappings of kegg:omim ids
+
         return
 
     def fetch(self, is_dl_forced=False):
@@ -105,9 +109,6 @@ class KEGG(Source):
 
         if self.testOnly:
             self.testMode = True
-        self.label_hash = {}
-        self.omim_disease_hash = {}  # to hold the mappings of omim:kegg ids
-        self.kegg_disease_hash = {}  # to hold the mappings of kegg:omim ids
 
         self._process_diseases(limit)
         self._process_genes(limit)
@@ -166,7 +167,7 @@ class KEGG(Source):
                 path.addPathway(pathway_id, pathway_name)
 
                 # we know that the pathway images from kegg map 1:1 here.  so add those
-                image_filename = re.sub('KEGG-path:','',pathway_id) + '.png'
+                image_filename = re.sub('KEGG-path:', '', pathway_id) + '.png'
                 image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
                 gu.addDepiction(g, pathway_id, image_url)
 
@@ -376,18 +377,13 @@ class KEGG(Source):
                 gene_id = 'KEGG:'+gene_id.strip()
 
                 # note that the panther_id references a group of orthologs, and is not 1:1 with the rest
-                assoc_id = self.make_id(''.join((gene_id, orthology_class_id)))
 
-                rel = OrthologyAssoc.ortho_rel['orthologous']
-                # add the association and relevant nodes to graph
-                assoc = OrthologyAssoc(assoc_id, gene_id, orthology_class_id, None, None)
-                assoc.setRelationship(rel)
-                assoc.loadAllProperties(g)
+                # add the KO id as a gene-family grouping class
+                OrthologyAssoc(self.name, gene_id, None).add_gene_family_to_graph(g, orthology_class_id)
 
                 # add gene and orthology class to graph; assume labels will be taken care of elsewhere
                 gu.addClassToGraph(g, gene_id, None)
                 gu.addClassToGraph(g, orthology_class_id, None)
-                assoc.addAssociationToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -420,6 +416,7 @@ class KEGG(Source):
         line_counter = 0
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
+        rel = gu.object_properties['is_marker_for']
 
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
@@ -434,11 +431,6 @@ class KEGG(Source):
 
                 gene_id = 'KEGG-'+gene_id.strip()
                 disease_id = 'KEGG-'+disease_id.strip()
-
-                # Make an association ID.
-                rel = gu.object_properties['is_marker_for']
-                assoc_id = self.make_association_id(self.name, gene_id, rel,
-                                                    disease_id, None, None)
 
                 # only add diseases for which there is no omim id and not a grouping class
                 if disease_id not in self.kegg_disease_hash:
@@ -457,10 +449,9 @@ class KEGG(Source):
                     gu.addIndividualToGraph(g, alt_locus_id, alt_label, geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
                     # Add the disease to gene relationship.
-                    assoc = G2PAssoc(assoc_id, alt_locus_id, disease_id, None, None)
-                    assoc.setRelationship(rel)
-                    assoc.loadAllProperties(g)
-                    assoc.addAssociationToGraph(g)
+                    assoc = G2PAssoc(self.name, alt_locus_id, disease_id, rel)
+                    assoc.load_all_properties(g)
+                    assoc.add_association_to_graph(g)
 
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
@@ -524,11 +515,10 @@ class KEGG(Source):
 
                     # Add the disease to gene relationship.
                     rel = gu.object_properties['is_marker_for']
-                    assoc_id = self.make_association_id(self.name, alt_locus_id, rel, omim_id, None, None)
-                    assoc = G2PAssoc(assoc_id, alt_locus_id, omim_id, None, None)
-                    assoc.setRelationship(rel)
-                    assoc.addAssociationToGraph(g)
-                    assoc.loadAllProperties(g)
+                    assoc = G2PAssoc(self.name, alt_locus_id, omim_id, rel)
+                    assoc.add_association_to_graph(g)
+                    assoc.load_all_properties(g)
+
                 elif link_type == 'original':
                     # these are sometimes a gene, and sometimes a disease
                     logger.info('Unable to handle original link for %s-%s', kegg_gene_id, omim_id)

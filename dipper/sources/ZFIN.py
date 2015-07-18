@@ -4,11 +4,11 @@ import logging
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
-from dipper.models.Association import Assoc
+from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Environment import Environment
 from dipper.models.GenomicFeature import makeChromID
 from dipper.models.GenomicFeature import Feature

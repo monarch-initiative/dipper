@@ -9,7 +9,7 @@ from subprocess import call
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference

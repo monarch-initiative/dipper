@@ -4,7 +4,7 @@ import logging
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.Association import Assoc
+from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
