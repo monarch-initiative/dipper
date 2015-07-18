@@ -50,7 +50,7 @@ class SourceTestCase(unittest.TestCase):
 
         return
 
-    @unittest.skip
+    # @unittest.skip
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile

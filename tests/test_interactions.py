@@ -3,7 +3,6 @@
 from dipper.sources.CTD import CTD
 from dipper import curie_map
 from rdflib import Graph
-from tests.test_source import SourceTestCase
 
 import unittest
 import logging
@@ -16,20 +15,20 @@ class InteractionsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.graph = Graph()
+
         self.curie_map = curie_map.get()
         self.ctd = CTD()
         self.ctd.graph = Graph()
-
+        self.ctd.g = self.ctd.graph
         row1 = ['06-Paris-LA-66 protocol', 'C046983', 'foo',
-               'Precursor Cell Lymphoblastic Leukemia-Lymphoma',
-               'MESH:D054198', 'therapeutic', 'bar', 'baz', 'foo', '4519131']
+                'Precursor Cell Lymphoblastic Leukemia-Lymphoma',
+                'MESH:D054198', 'therapeutic', 'bar', 'baz', 'foo', '4519131']
         row2 = ['10,10-bis(4-pyridinylmethyl)-9(10H)-anthracenone',
                 'C112297', 'foo', 'Hyperkinesis', 'MESH:D006948',
                 'marker/mechanism', 'bar', 'baz', 'foo', '19098162']
 
-        pub_map = {}
-        self.ctd._process_interactions(row1, pub_map)
-        self.ctd._process_interactions(row2, pub_map)
+        self.ctd._process_interactions(row1)
+        self.ctd._process_interactions(row2)
 
     def tearDown(self):
         self.ctd.graph = None
@@ -37,8 +36,7 @@ class InteractionsTestCase(unittest.TestCase):
 
     def test_therapeutic_relationship(self):
         from dipper.utils.TestUtils import TestUtils
-        from dipper.utils.CurieUtil import CurieUtil
-        from rdflib.namespace import URIRef
+        from dipper.utils.GraphUtils import GraphUtils
 
         # Make testutils object and load bindings
         test_query = TestUtils(self.ctd.graph)
@@ -52,30 +50,31 @@ class InteractionsTestCase(unittest.TestCase):
                            dc:evidence OBO:ECO_0000033 ;
                            dc:source ?pubmed ;
                            :hasObject ?disease ;
-                           :hasPredicate :MONARCH_treats ;
+                           :hasPredicate OBO:RO_0002606 ;
                            :hasSubject ?chemical .}
                        """
 
         # SPARQL variables to check
-        cu = CurieUtil(self.curie_map)
-        direct_evidence = 'therapeutic'
-        chem_id = 'MESH:C046983'
-        chem_uri = URIRef(cu.get_uri(chem_id))
-        disease_id = 'MESH:D054198'
-        disease_uri = URIRef(cu.get_uri(disease_id))
-        assoc_id = self.ctd.make_id('ctd' + chem_id.replace('MESH:', '')
-                                    + disease_id + direct_evidence)
-        assoc_uri = URIRef(cu.get_uri(assoc_id))
-        pubmed_id = 'PMID:4519131'
-        pubmed_uri = URIRef(cu.get_uri(pubmed_id))
+        gu = GraphUtils(curie_map.get())
+        chem_id = 'MESH:D009538'
+        chem_uri = gu.getNode(chem_id)
+        disease_id = 'OMIM:188890'
+        disease_uri = gu.getNode(disease_id)
+        pubmed_id = 'PMID:16785264'
+        pubmed_uri = gu.getNode(pubmed_id)
+        rel_id = gu.object_properties['substance_that_treats']
+        eco = 'ECO:0000033'
+
+        assoc_id = self.ctd.make_association_id('ctd', chem_id, rel_id, disease_id, eco, pubmed_id)
+        assoc_uri = gu.getNode(assoc_id)
 
         # Expected output from query
-        expected_output = [[assoc_uri, pubmed_uri, disease_uri, chem_uri]]
+        expected_output = [assoc_uri, pubmed_uri, disease_uri, chem_uri]
 
         # Query graph
         sparql_output = test_query.query_graph(sparql_query)
 
-        self.assertEqual(expected_output, sparql_output)
+        self.assertTrue(expected_output in sparql_output)
 
         logger.info("Test finished.")
 

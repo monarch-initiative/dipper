@@ -15,17 +15,16 @@ class G2PAssoc(Assoc):
     most likely by calling methods in the Genotype() class.
     """
 
-    def __init__(self, assoc_id, entity_id, phenotype_id, pub, evidence_code):
-        super().__init__()
-        self.annot_id = assoc_id
+    def __init__(self, definedby, entity_id, phenotype_id, rel=None):
+        super().__init__(definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
-        self.pub_id = pub
-        self.evidence = evidence_code
-        self.rel = self.properties['has_phenotype']  # default to has_phenotype
-        self.cu = CurieUtil(curie_map.get())
-#        self.gu = GraphUtils(curie_map.get())
-        self.pub_list = None
+        self.pub_id = None
+        self.evidence = None
+        if rel is None:
+            self.rel = self.properties['has_phenotype']  # default to has_phenotype
+        else:
+            self.rel = rel
         self.start_stage_id = None
         self.end_stage_id = None
         self.environment_id = None
@@ -51,7 +50,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def addAssociationNodeToGraph(self, g):
+    def addAssociationToGraph(self, g):
         """
         The reified relationship between a genotype (or any genotype part) and a phenotype
         is decorated with some provenance information.
@@ -61,6 +60,7 @@ class G2PAssoc(Assoc):
         :param g:
         :return:
         """
+        self.annot_id = self.make_g2p_id(self.definedby)
 
         self.addAssociationToGraph(g)
 
@@ -78,3 +78,18 @@ class G2PAssoc(Assoc):
                               self.gu.object_properties['has_environment_qualifier'],
                               self.environment_id)
         return g
+
+
+    def make_g2p_id(self, definedby):
+        """
+        Make an association id for phenotypic associations that is defined by:
+            source of association + (Annot subject) + relationship + phenotype/disease
+                + environment + start stage + end stage
+        :param definedby:
+        :return:
+        """
+
+        attributes = [self.environment_id, self.start_stage_id, self.end_stage_id]
+        assoc_id = self.make_association_id(definedby, self.entity_id, self.rel, self.phenotype_id, attributes)
+
+        return assoc_id

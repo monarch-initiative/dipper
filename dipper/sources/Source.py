@@ -201,11 +201,12 @@ class Source:
         :return:
         """
         # FIXME this gets at #144.  but should be moved into the Assoc classes.
+        # todo refactor the evidence/source parameters out
         # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
 
         # putting definedby first, as this will usually be the datasource providing the annotation
         # this will end up making the first few parts of the id be the same for all annotations in that resource
-        items_to_hash = [definedby, subject, predicate, object, evidence, source]
+        items_to_hash = [definedby, subject, predicate, object]
         if attributes is not None:
             items_to_hash += attributes
 

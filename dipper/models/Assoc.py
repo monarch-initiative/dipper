@@ -20,6 +20,10 @@ class Assoc:
     on statements.
     """
 
+    assoc_types = {
+        'association' : 'Annotation:'  # FIXME 'OBAN:association'
+    }
+
     annotation_properties = {
         'replaced_by': 'IAO:0100001',
         'consider': 'OIO:consider',
@@ -35,10 +39,11 @@ class Assoc:
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
         'towards': 'RO:0002503',
-        'has_subject': ':hasSubject',
-        'has_object': ':hasObject',
+        'has_subject': ':hasSubject',  # FIXME 'OBAN::association_has_subject'
+        'has_object': ':hasObject',  # FIXME 'OBAN:association_has_object'
         'has_predicate': ':hasPredicate',
         'is_about': 'IAO:00000136',
+        'has_evidence': 'RO:0002558'
     }
 
     datatype_properties = {
@@ -60,9 +65,12 @@ class Assoc:
     BASE = Namespace(curie_map.get()[''])
 
 
-    def __init__(self):
+    def __init__(self, definedby):
         self.cu = CurieUtil(curie_map.get())
         self.gu = GraphUtils(curie_map.get())
+        self.definedby = definedby
+        self.sub = self.obj = self.rel = None
+        self.assoc_id = None
         return
 
     def get_namespaces(self):
@@ -79,8 +87,17 @@ class Assoc:
 
         return
 
+    def set_assoc_id(self, assoc_id):
+        """
+        To be used in cases where an external association identifier should be used.
+        :param assoc_id:
+        :return:
+        """
+        self.annot_id = assoc_id
+
+        return
+
     def addAssociationToGraph(self, g):
-        cu = self.cu
         gu = self.gu
         # first, add the direct triple
         # anonymous nodes are indicated with underscore
@@ -91,8 +108,8 @@ class Assoc:
         g.add((s, p, o))
 
         # now, create the reified relationship with our annotation pattern
-        node = gu.getNode(self.annot_id)
-        g.add((node, RDF['type'], URIRef(cu.get_uri('Annotation:'))))
+        node = gu.getNode(self.assoc_id)
+        g.add((node, RDF['type'], gu.getNode(self.assoc_types['association'])))
         g.add((node, gu.getNode(self.properties['has_subject']), s))
         g.add((node, gu.getNode(self.properties['has_object']), o))
         g.add((node, gu.getNode(self.properties['has_predicate']), p))
@@ -139,7 +156,7 @@ class Assoc:
             annot_id = self.annot_id
         if annot_id is not None:
             node = self.gu.getNode(annot_id)
-            g.add((node, DC['evidence'], evidence))
+            g.add((node, self.object_properties['has_evidence'], evidence))
 
         return
 
@@ -220,8 +237,39 @@ class Assoc:
             g.add((node, DC['source'], source))
             g.add((source, RDF['type'], self.OWLIND))
         else:
-            logger.warn("source as a literal -- is this ok?")
-            g.add((node, DC['source'], Literal(pub_id)))
+            logger.warn("source as a literal -- skipping: %s", pub_id)
+            # g.add((node, DC['source'], Literal(pub_id)))
 
         return
 
+    def make_association_id(self, definedby, subject, predicate, object, attributes=None):
+        """
+        A method to create unique identifiers for OBAN-style associations, based on all the parts of the assn
+        If any of the items is empty or None, it will convert it to blank.
+        It effectively md5 hashes the (+)-joined string from the values.
+        Subclasses of Assoc can submit an additional array of attributes that will be added to the ID.
+
+        :param definedby: The (data) resource that provided the annotation
+        :param subject:
+        :param predicate:
+        :param object:
+        :param evidence:
+        :param source:
+        :param attributes:
+        :return:
+        """
+        # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
+
+        # putting definedby first, as this will usually be the datasource providing the annotation
+        # this will end up making the first few parts of the id be the same for all annotations in that resource
+        items_to_hash = [definedby, subject, predicate, object]
+        if attributes is not None:
+            items_to_hash += attributes
+
+        for i, val in enumerate(items_to_hash):
+            if val is None:
+                items_to_hash[i] = ''
+
+        byte_string = '+'.join(items_to_hash).encode("utf-8")
+
+        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))

@@ -16,30 +16,20 @@ class InteractionAssoc(Assoc):
         'ubiquitinates': 'RO:0002480'
     }
 
-    def __init__(self, assoc_id, subj, obj, pub, evidence_code):
-        super().__init__()
-        self.object_properties.update(self.rel)
-        self.properties.update(self.rel)
-        self.cu = CurieUtil(curie_map.get())
-        self.gu = GraphUtils(curie_map.get())
-        self.annot_id = assoc_id
-        self.subj = subj
-        self.obj = obj
-        self.pub_id = pub
-        self.evidence = evidence_code
-        self.rel = self.rel['interacts_with']  # default
-        self.cu = CurieUtil(curie_map.get())
+    def __init__(self, definedby, subj, obj, rel=None):
+        super().__init__(definedby)
         self.pub_list = None
-
         self.setSubject(subj)
         self.setObject(obj)
+        if rel is None:
+            rel = self.rel['interacts_with']
+        self.setRelationship(rel)
 
         return
 
-    def addInteractionAssociationToGraph(self, g):
+    def loadAllProperties(self, g):
 
-        self.addAssociationToGraph(g)
-
-        # todo add some other stuff related to the experimental methods?
+        super().loadAllProperties(g)
+        self.gu.loadObjectProperties(g, self.rel)
 
         return
