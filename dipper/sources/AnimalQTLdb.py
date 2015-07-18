@@ -211,7 +211,6 @@ class AnimalQTLdb(Source):
                 elif position_cm != '':
                     start = stop = int(float(position_cm))
 
-
                 # FIXME remove converion to int for start/stop when schema can handle floats
                 # add in the genetic location based on the range
                 f.addFeatureStartLocation(start, chrom_in_build_id, None, [Feature.types['FuzzyPosition']])
@@ -257,11 +256,9 @@ class AnimalQTLdb(Source):
                     r.addRefToGraph(g)
 
                 # make the association to the QTL
-                assoc_id = self.make_association_id(self.name, qtl_id, gu.object_properties['is_marker_for'],
-                                                    trait_id, eco_id, pub_id)
-                assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
-                assoc.setRelationship(gu.object_properties['is_marker_for'])
-                assoc.addAssociationNodeToGraph(g)
+                assoc = G2PAssoc(self.name, qtl_id, trait_id, gu.object_properties['is_marker_for'])
+                assoc.add_evidence(eco_id)
+                assoc.add_source(pub_id)
 
                 # create a description from the contents of the file
                 # desc = ''
@@ -275,17 +272,16 @@ class AnimalQTLdb(Source):
 
                 if p_values != '':
                     score = float(re.sub('<', '', p_values))
-                    assoc.addScore(g, assoc_id, score)  # todo add score type
+                    assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
+                assoc.add_association_to_graph(g)
 
                 # make the association to the dbsnp_id, if found
                 if dbsnp_id is not None:
-                    # make the association to the QTL
-                    assoc_id = self.make_association_id(self.name, dbsnp_id, gu.object_properties['is_marker_for'],
-                                                        trait_id, eco_id, pub_id)
-                    assoc = G2PAssoc(assoc_id, dbsnp_id, trait_id, pub_id, eco_id)
-                    assoc.setRelationship(gu.object_properties['is_marker_for'])
-                    assoc.addAssociationNodeToGraph(g)
+                    # make the association to the dbsnp_id
+                    assoc = G2PAssoc(self.name, dbsnp_id, trait_id, gu.object_properties['is_marker_for'])
+                    assoc.add_evidence(eco_id)
+                    assoc.add_source(pub_id)
 
                     # create a description from the contents of the file
                     # desc = ''
@@ -298,8 +294,10 @@ class AnimalQTLdb(Source):
 
                     if p_values != '':
                         score = float(re.sub('<', '', p_values))
-                        assoc.addScore(g, assoc_id, score)  # todo add score type
+                        assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
+
+                    assoc.add_association_to_graph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -389,15 +387,14 @@ class AnimalQTLdb(Source):
                     p.addRefToGraph(g)
 
                 # Add QTL to graph
-                assoc_id = self.make_association_id(self.name, qtl_id, gu.object_properties['is_marker_for'],
-                                                    trait_id, eco_id, pub_id)
-                assoc = G2PAssoc(assoc_id, qtl_id, trait_id, pub_id, eco_id)
-                assoc.setRelationship(gu.object_properties['is_marker_for'])
-                assoc.addAssociationNodeToGraph(g)
+                assoc = G2PAssoc(self.name, qtl_id, trait_id, gu.object_properties['is_marker_for'])
+                assoc.add_evidence(eco_id)
+                assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():
                     score = float(re.sub('<', '', attribute_dict.get('P-value')))
-                    assoc.addScore(g, assoc_id, score)
+                    assoc.set_score(score)
 
+                assoc.add_association_to_graph(g)
                 # TODO make association to breed (which means making QTL feature in Breed background)
 
                 # get location of QTL

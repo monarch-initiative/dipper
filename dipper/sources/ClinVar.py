@@ -133,7 +133,7 @@ class ClinVar(Source):
         gu.loadAllProperties(g)
         f = Feature(None, None, None)
         f.loadAllProperties(g)
-        Assoc().loadAllProperties(g)
+        Assoc(self.name).load_all_properties(g)
         gu.loadAllProperties(g)
 
         # add the taxon and the genome
@@ -335,9 +335,9 @@ class ClinVar(Source):
                             p = re.sub(m.group(1), 'Orphanet:', p.strip())
                         elif re.match('SNOMED CT', p):
                             p = re.sub('SNOMED CT', 'SNOMED', p.strip())
-                        assoc_id = self.make_id(seqalt_id+p.strip())
-                        assoc = G2PAssoc(assoc_id, seqalt_id, p.strip(), None, None)
-                        assoc.addAssociationToGraph(g)
+
+                        assoc = G2PAssoc(self.name, seqalt_id, p.strip())
+                        assoc.add_association_to_graph(g)
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')

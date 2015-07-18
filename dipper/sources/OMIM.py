@@ -89,7 +89,7 @@ class OMIM(Source):
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         """
         Get the preconfigured static files.  This DOES NOT fetch the individual records via REST...that is handled
         in the parsing function.  (To be refactored.)
@@ -225,8 +225,8 @@ class OMIM(Source):
             #     continue
             # ### end code block for testing
 
-            #print ('fetching:',(',').join(omimids[it:end]))
-            #print('url:',url)
+            # print ('fetching:',(',').join(omimids[it:end]))
+            # print('url:',url)
             d = urllib.request.urlopen(url)
             resp = d.read().decode()
             request_time = datetime.now()
@@ -404,11 +404,14 @@ class OMIM(Source):
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = ':'.join(('OMIM', gene_num))
                     disorder_id = ':'.join(('OMIM', disorder_num))
-                    rel_id = gu.object_properties['has_phenotype']  #default
+                    rel_id = gu.object_properties['has_phenotype']  # default
+                    rel_label = 'causes'
                     if re.match('\[', disorder_label):
                         rel_id = gu.object_properties['is_marker_for']
+                        rel_label = 'is a marker for'
                     elif re.match('\{', disorder_label):
                         rel_id = gu.object_properties['contributes_to']
+                        rel_label = 'contributes to'
 
                     evidence = self._map_phene_mapping_code_to_eco(phene_key)
 
@@ -418,17 +421,17 @@ class OMIM(Source):
                     alt_locus = '_'+gene_num+'-'+disorder_num+'VL'
                     alt_label = gene_symbols[0].strip()
                     if alt_label is not None and alt_label != '':
-                        alt_label = 'some variant of '+alt_label.strip()+' that causes '+disorder_label
+                        alt_label = ' '.join(('some variant of', alt_label.strip(),
+                                              'that', rel_label, disorder_label))
                     else:
                         alt_label = None
                     gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus, gene_id)
-                    assoc_id = self.make_association_id(self.name, alt_locus, rel_id, disorder_id, evidence, None)
 
-                    assoc = G2PAssoc(assoc_id, alt_locus, disorder_id, None, evidence)
-                    assoc.setRelationship(rel_id)
-                    assoc.loadAllProperties(g)
-                    assoc.addAssociationToGraph(g)
+                    assoc = G2PAssoc(self.name, alt_locus, disorder_id, rel_id)
+                    assoc.add_evidence(evidence)
+                    assoc.load_all_properties(g)
+                    assoc.add_association_to_graph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -521,7 +524,8 @@ class OMIM(Source):
 
         return
 
-    def _map_phene_mapping_code_to_eco(self, code):
+    @staticmethod
+    def _map_phene_mapping_code_to_eco(code):
         # phenotype mapping code
         # 1 - the disorder is placed on the map based on its association with a gene,
         #     but the underlying defect is not known.
@@ -544,7 +548,8 @@ class OMIM(Source):
 
         return eco_code
 
-    def _cleanup_label(self, label):
+    @staticmethod
+    def _cleanup_label(label):
         """
         Reformat the ALL CAPS OMIM labels to something more pleasant to read.  This will:
         1.  remove the abbreviation suffixes
@@ -622,7 +627,8 @@ class OMIM(Source):
 
         return
 
-    def _get_phenotypicseries_parents(self, entry, g):
+    @staticmethod
+    def _get_phenotypicseries_parents(entry, g):
         """
         Extract the phenotypic series parent relationship out of the entry
         :param entry:
@@ -707,7 +713,6 @@ class OMIM(Source):
             l = self._cleanup_label(l)
             labels.append(l)
 
-        #print('labels:',labels)
         return labels
 
     def _get_pubs(self, entry, g):
@@ -754,7 +759,8 @@ class OMIM(Source):
 
         return ref_to_pmid
 
-    def _get_omimtype(self, entry):
+    @staticmethod
+    def _get_omimtype(entry):
         """
         Here, we look at the omim 'prefix' to help to type the entry.  For now, we only classify omim entries
         as genes; the rest we leave alone.

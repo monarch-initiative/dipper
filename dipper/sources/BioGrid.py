@@ -12,7 +12,7 @@ from rdflib.namespace import FOAF, DC, RDFS
 from dipper import curie_map
 from dipper import config
 from dipper.sources.Source import Source
-from dipper.models.assoc import InteractionAssoc
+from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
 
@@ -70,7 +70,6 @@ class BioGrid(Source):
         :return:  None
         """
 
-        st = None
         self.get_files(is_dl_forced)
 
         # the version number is encoded in the filename in the zip.
@@ -111,7 +110,6 @@ class BioGrid(Source):
         return
 
     def _get_interactions(self, limit):
-        testMode = self.testMode
         logger.info("getting interactions")
         line_counter = 0
         f = '/'.join((self.rawdir, self.files['interactions']['file']))
@@ -138,10 +136,10 @@ class BioGrid(Source):
                 gene_a_num = re.search('locuslink\:(\d+)\|?', interactor_a).groups()[0]
                 gene_b_num = re.search('locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
-                if testMode:
+                if self.testMode:
                     g = self.testgraph
                     # skip any genes that don't match our test set
-                    if (int(gene_a_num) not in self.test_ids or int(gene_b_num) not in self.test_ids):
+                    if (int(gene_a_num) not in self.test_ids) or (int(gene_b_num) not in self.test_ids):
                         continue
                 else:
                     g = self.graph
@@ -171,13 +169,14 @@ class BioGrid(Source):
 
                 # note that the interaction_id is some kind of internal biogrid identifier that does not
                 # map to a public URI.  we will construct a monarch identifier from this
-                assoc_id = self.make_id(interaction_id)
 
-                assoc = InteractionAssoc(assoc_id, gene_a, gene_b, pub_id, evidence)
-                assoc.setRelationship(rel)
-                assoc.loadAllProperties(g)    # FIXME - this seems terribly inefficient
-                assoc.addInteractionAssociationToGraph(g)
-                if not testMode and (limit is not None and line_counter > limit):
+                assoc = InteractionAssoc(self.name, gene_a, gene_b, rel)
+                assoc.add_evidence(evidence)
+                assoc.add_source(pub_id)
+                assoc.add_association_to_graph(g)
+                assoc.load_all_properties(g)
+
+                if not self.testMode and (limit is not None and line_counter > limit):
                     break
 
         myzip.close()
@@ -191,10 +190,9 @@ class BioGrid(Source):
         equivalence axioms
 
         :param limit:
-        :param testMode:
         :return:
         """
-        testMode = self.testMode
+
         logger.info("getting identifier mapping")
         line_counter = 0
         f = '/'.join((self.rawdir, self.files['identifiers']['file']))
@@ -223,7 +221,7 @@ class BioGrid(Source):
                 # 1	814566	ENTREZ_GENE	Arabidopsis thaliana
                 (biogrid_num, id_num, id_type, organism_label) = line.split('\t')
 
-                if testMode:
+                if self.testMode:
                     g = self.testgraph
                     # skip any genes that don't match our test set
                     if int(biogrid_num) not in self.biogrid_ids:
@@ -249,15 +247,16 @@ class BioGrid(Source):
                     # elif (id_type == 'SYNONYM'):
                     #    gu.addSynonym(g,biogrid_id,id_num)  #FIXME - i am not sure these are synonyms, altids?
 
-                if not testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()
 
         return
 
-    def _map_MI_to_RO(self, mi_id):
-        rel = InteractionAssoc(None, None, None, None, None).get_properties()
+    @staticmethod
+    def _map_MI_to_RO(mi_id):
+        rel = InteractionAssoc.interaction_object_properties
         mi_ro_map = {
             'MI:0403': rel['colocalizes_with'],  # colocalization
             'MI:0407': rel['interacts_with'],  # direct interaction
@@ -274,7 +273,8 @@ class BioGrid(Source):
 
         return ro_id
 
-    def _map_MI_to_ECO(self, mi_id):
+    @staticmethod
+    def _map_MI_to_ECO(mi_id):
         eco_id = 'ECO:0000006'  # default to experimental evidence
         mi_to_eco_map = {
             'MI:0018': 'ECO:0000068',  # yeast two-hybrid
@@ -298,7 +298,8 @@ class BioGrid(Source):
 
         return eco_id
 
-    def _map_idtype_to_prefix(self, idtype):
+    @staticmethod
+    def _map_idtype_to_prefix(idtype):
         """
         Here we need to reformat the BioGrid source prefixes to standard ones used in our curie-map.
         :param idtype:

@@ -5,7 +5,7 @@ from dipper.models.assoc.Association import Assoc
 
 class InteractionAssoc(Assoc):
 
-    rel = {
+    interaction_object_properties = {
         'genetically_interacts_with': 'RO:0002435',
         'interacts_with': 'RO:0002434',  # using for directly interacts with.  better choice? psi-mi:"MI:0407"
         'molecularly_interacts_with': 'RO:0002436',  # should we use this instead for direct interaction?
@@ -27,6 +27,6 @@ class InteractionAssoc(Assoc):
     def load_all_properties(self, g):
 
         super().load_all_properties(g)
-        self.gu.loadObjectProperties(g, self.rel)
+        self.gu.loadObjectProperties(g, self.interaction_object_properties)
 
         return

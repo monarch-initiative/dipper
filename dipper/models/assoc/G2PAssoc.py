@@ -1,7 +1,11 @@
-__author__ = 'nicole'
+__author__ = 'nlw'
+
+import logging
 
 from dipper.models.assoc.Association import Assoc
 
+
+logger = logging.getLogger(__name__)
 
 class G2PAssoc(Assoc):
     """

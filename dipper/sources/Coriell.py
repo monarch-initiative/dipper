@@ -570,11 +570,8 @@ class Coriell(Source):
                                         gu.addClassToGraph(g, disease_id, None)   # assume the label is taken care of
 
                                         # add the association: the patient has the disease
-                                        assoc_id = self.make_association_id(self.name, patient_id,
-                                                                            gu.object_properties['has_phenotype'],
-                                                                            disease_id, None, None)
-                                        assoc = G2PAssoc(assoc_id, patient_id, disease_id, None, None)
-                                        assoc.addAssociationToGraph(g)
+                                        assoc = G2PAssoc(self.name, patient_id, disease_id)
+                                        assoc.add_association_to_graph(g)
 
                                         # also, this line is a model of this disease
                                         # TODO abstract out model into it's own association class?
@@ -595,7 +592,7 @@ class Coriell(Source):
                     if not self.testMode and (limit is not None and line_counter > limit):
                         break
 
-            Assoc().loadAllProperties(g)
+            Assoc(self.name).load_all_properties(g)
 
         return
 
@@ -626,7 +623,8 @@ class Coriell(Source):
 
         return
 
-    def _map_cell_type(self, sample_type):
+    @staticmethod
+    def _map_cell_type(sample_type):
         ctype = None
         type_map = {
             'Adipose stromal cell': 'CL:0002570',  # FIXME: mesenchymal stem cell of adipose
@@ -654,7 +652,8 @@ class Coriell(Source):
 
         return ctype
 
-    def _map_race(self, race):
+    @staticmethod
+    def _map_race(race):
         rtype = None
         type_map = {
             'African American': 'EFO:0003150',
@@ -685,7 +684,8 @@ class Coriell(Source):
 
         return rtype
 
-    def _map_species(self, species):
+    @staticmethod
+    def _map_species(species):
         tax = None
         type_map = {
             'Mus musculus': 'NCBITaxon:10090',
@@ -728,7 +728,8 @@ class Coriell(Source):
 
         return tax
 
-    def _map_collection(self, collection):
+    @staticmethod
+    def _map_collection(collection):
         ctype = None
         type_map = {
             'NINDS Repository': 'CoriellCollection:NINDS',
@@ -743,7 +744,8 @@ class Coriell(Source):
 
         return ctype
 
-    def _get_affected_chromosomes_from_karyotype(self, karyotype):
+    @staticmethod
+    def _get_affected_chromosomes_from_karyotype(karyotype):
 
         affected_chromosomes = set()
         chr_regex = '(\d+|X|Y|M|\?);?'
@@ -753,7 +755,7 @@ class Coriell(Source):
         # first fetch the set of abberations
         abberations = re.findall(abberation_regex, karyotype)
 
-        #iterate over them to get the chromosomes
+        # iterate over them to get the chromosomes
         for a in abberations:
             chrs = re.findall(chr_regex, a)
             affected_chromosomes = affected_chromosomes.union(set(chrs))
@@ -765,7 +767,7 @@ class Coriell(Source):
         # check to see if there are any abnormal sex chromosomes
         m = re.search(sex_regex, karyotype)
         if m is not None:
-            if re.search('X?Y{2,}',m.group(1)):
+            if re.search('X?Y{2,}', m.group(1)):
                 # this is the only case where there is an extra Y chromosome
                 affected_chromosomes.add('Y')
             else:
@@ -773,7 +775,8 @@ class Coriell(Source):
 
         return affected_chromosomes
 
-    def _is_normal_karyotype(self, karyotype):
+    @staticmethod
+    def _is_normal_karyotype(karyotype):
         """
         This will default to true if no karyotype is provided.  This is assuming human karyotypes.
         :param karyotype:

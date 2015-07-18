@@ -7,7 +7,7 @@ import os
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
-from dipper.models.assoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -330,11 +330,17 @@ class IMPC(Source):
 
                 # the association comes as a result of a g2p from a procedure in a pipeline at a center
                 # and parameter tested
-                assoc_id = self.make_id((effective_genotype_id + phenotype_id + phenotyping_center +
-                                         pipeline_stable_id + procedure_stable_id + parameter_stable_id))
+                # assoc_id = self.make_id((effective_genotype_id + phenotype_id + phenotyping_center +
+                #                          pipeline_stable_id + procedure_stable_id + parameter_stable_id))
 
-                assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, None, eco_id)
-                assoc.addAssociationNodeToGraph(g)
+                assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
+                assoc.add_evidence(eco_id)
+                assoc.set_score(float(p_value))
+
+                # TODO add evidence instance using pipeline_stable_id + procedure_stable_id + parameter_stable_id
+
+                assoc.add_association_to_graph(g)
+                assoc_id = assoc.get_association_id()
 
                 # add a free-text description
                 description = ' '.join((mp_term_name, 'phenotype determined by', phenotyping_center, 'in an',
@@ -344,7 +350,8 @@ class IMPC(Source):
 
 #                                        '(p =', "{:.4e}".format(float(p_value)), 'via', statistical_method, ').'))
 
-                assoc.addDescription(g, assoc_id, description)
+
+                gu.addDescription(g, assoc_id, description)
 
                 # TODO add provenance information
                 # resource_id = resource_name

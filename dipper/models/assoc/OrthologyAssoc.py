@@ -23,7 +23,7 @@ class OrthologyAssoc(Assoc):
     def __init__(self, definedby, gene1, gene2, rel=None):
         super().__init__(definedby)
         if rel is None:
-            rel = self.properties['orthologous']  # default
+            rel = self.ortho_rel['orthologous']  # default
 
         self.set_subject(gene1)
         self.set_object(gene2)

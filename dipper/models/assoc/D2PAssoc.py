@@ -11,7 +11,7 @@ class D2PAssoc(Assoc):
     otherwise specified.
     """
 
-    object_properties = {
+    d2p_object_properties = {
         'onset': ':onset',
         'frequency': ':frequencyOfPhenotype'
     }
@@ -54,10 +54,10 @@ class D2PAssoc(Assoc):
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id, self.object_properties['frequency'], self.frequency, True)
+            self.gu.addTriple(g, self.assoc_id, self.d2p_object_properties['frequency'], self.frequency, True)
         if self.onset is not None and self.onset != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id, self.object_properties['onset'], self.onset)
+            self.gu.addTriple(g, self.assoc_id, self.d2p_object_properties['onset'], self.onset)
 
         return g
 
@@ -77,6 +77,6 @@ class D2PAssoc(Assoc):
     def load_all_properties(self, g):
 
         super().load_all_properties(g)
-        self.gu.loadObjectProperties(g, self.object_properties)
+        self.gu.loadObjectProperties(g, self.d2p_object_properties)
 
         return

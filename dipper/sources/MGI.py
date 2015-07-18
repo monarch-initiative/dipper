@@ -229,7 +229,7 @@ class MGI(Source):
 
         self.load_bindings()
         for g in [self.graph, self.testgraph]:
-            Assoc().loadAllProperties(g)
+            Assoc(self.name).load_all_properties(g)
             gu = GraphUtils(curie_map.get())
             gu.loadAllProperties(g)
 
@@ -723,12 +723,10 @@ class MGI(Source):
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
 
-                iassoc_id = self._makeInternalIdentifier('annot', annot_key)
-                assoc_id = self.make_id(iassoc_id)
+                # iassoc_id = self._makeInternalIdentifier('annot', annot_key)
+                # assoc_id = self.make_id(iassoc_id)
 
-                # add the assoc to the hashmap (using the monarch id)
-                self.idhash['annot'][annot_key] = assoc_id
-
+                assoc_id = None
                 # Restricting to type 1002, as done in the MousePhenotypes view.
                 # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
                 if annot_type_key == '1002':
@@ -748,8 +746,9 @@ class MGI(Source):
                         logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = G2PAssoc(assoc_id, genotype_id, accid, None, None)
-                        assoc.addAssociationNodeToGraph(g)
+                        assoc = G2PAssoc(self.name, genotype_id, accid)
+                        assoc.add_association_to_graph(g)
+                        assoc_id = assoc.get_association_id()
                 elif annot_type_key == '1005':  # OMIM/Genotype are disease-models
                     if qualifier_key == '1614157':  # skip NOT annotations for now FIXME
                         continue
@@ -759,9 +758,17 @@ class MGI(Source):
                         logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = G2PAssoc(assoc_id, genotype_id, omim_id, None, None)
-                        assoc.setRelationship(gu.object_properties['model_of'])
-                        assoc.addAssociationNodeToGraph(g)
+                        assoc = Assoc(self.name)
+                        assoc.set_subject(genotype_id)
+                        assoc.set_object(omim_id)
+                        assoc.set_relationship(gu.object_properties['model_of'])
+                        assoc.add_association_to_graph(g)
+                        assoc_id = assoc.get_association_id()
+
+                if assoc_id is not None:
+                    # add the assoc to the hashmap (using the monarch id)
+                    self.idhash['annot'][annot_key] = assoc_id
+                    gu.addComment(g, assoc_id, "annot_key:"+annot_key)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -789,6 +796,7 @@ class MGI(Source):
         else:
             g = self.graph
 
+        gu = GraphUtils(curie_map.get())
         line_counter = 0
         logger.info("getting evidence and pubs for annotations")
         raw = '/'.join((self.rawdir, 'voc_evidence_view'))
@@ -821,8 +829,8 @@ class MGI(Source):
                 r.addRefToGraph(g)
 
                 # add the ECO and citation information to the annot
-                Assoc().addEvidence(g, evidence_id, assoc_id)
-                Assoc().addSource(g, assoc_id, jnumid)
+                gu.addTriple(g, assoc_id, Assoc.object_properties['has_evidence'], evidence_id)
+                gu.addTriple(g, assoc_id, Assoc.object_properties['has_source'], jnumid)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break

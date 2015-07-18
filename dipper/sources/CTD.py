@@ -13,7 +13,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
-from dipper.models.assoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Reference import Reference
 
@@ -87,6 +87,8 @@ class CTD(Source):
         else:
             self.test_diseaseids = config.get_config()['test_ids']['disease']
 
+        self.gu = GraphUtils(curie_map.get())
+
         return
 
     def fetch(self, is_dl_forced=False):
@@ -135,7 +137,6 @@ class CTD(Source):
             self.g = self.graph
         self.geno = Genotype(self.g)
         self.path = Pathway(self.g, self.nobnodes)
-        self.gu = GraphUtils(curie_map.get())
 
         self._parse_ctd_file(limit, self.files['chemical_disease_interactions']['file'])
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
@@ -380,7 +381,6 @@ class CTD(Source):
             logger.info("Skipping association between NCBIGene:%s and %s", str(gene_id), disease_id)
             return
 
-
         intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
         if self.testMode and (int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
@@ -453,28 +453,22 @@ class CTD(Source):
             :return None
         """
 
-        eco = self._get_evidence_code('TAS')
         # TODO pass in the relevant Assoc class rather than relying on G2P
+        assoc = G2PAssoc(self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
+            eco = self._get_evidence_code('TAS')
             for pmid in pubmed_ids:
                 r = Reference(pmid, Reference.ref_types['journal_article'])
                 r.addRefToGraph(self.g)
+                assoc.add_source(pmid)
+                assoc.add_evidence(eco)
 
-                assoc_id = self.make_association_id(self.name, subject_id, rel_id, object_id, eco, pmid)
-                assoc = G2PAssoc(assoc_id, subject_id, object_id, pmid, eco)
-                assoc.setRelationship(rel_id)
-                assoc.addAssociationToGraph(self.g)
-                assoc.loadAllProperties(self.g)
-        else:
-            assoc_id = self.make_association_id(self.name, subject_id, rel_id, object_id, None, None)
-            assoc = G2PAssoc(assoc_id, subject_id, object_id, None, None)
-            assoc.setRelationship(rel_id)
-            assoc.addAssociationToGraph(self.g)
-            assoc.loadAllProperties(self.g)
-
+        assoc.add_association_to_graph(self.g)
+        assoc.load_all_properties(self.g)
         return
 
-    def _process_pubmed_ids(self, pubmed_ids):
+    @staticmethod
+    def _process_pubmed_ids(pubmed_ids):
         """
         Take a list of pubmed IDs and add PMID prefix
         Args:
@@ -491,7 +485,8 @@ class CTD(Source):
             id_list[i] = 'PMID:'+val
         return id_list
 
-    def _get_evidence_code(self, evidence):
+    @staticmethod
+    def _get_evidence_code(evidence):
         """
         Get curie for evidence class label
         Args:
@@ -499,12 +494,13 @@ class CTD(Source):
         Label:
             :return str: curie for evidence label from ECO
         """
-        ECO_MAP = {
+        eco_map = {
             'TAS': 'ECO:0000033'
         }
-        return ECO_MAP[evidence]
+        return eco_map[evidence]
 
-    def _get_relationship_id(self, rel):
+    @staticmethod
+    def _get_relationship_id(rel):
         """
         Get curie from relationship property label
         Args:
@@ -519,7 +515,8 @@ class CTD(Source):
         }
         return str(rel_map[rel])
 
-    def _get_class_id(self, cls):
+    @staticmethod
+    def _get_class_id(cls):
         """
         Fet curie from CLASS_MAP dictionary
         Args:
@@ -527,12 +524,12 @@ class CTD(Source):
         Returns:
             :return str: curie for class label
         """
-        CLASS_MAP = {
+        class_map = {
             'pathway': 'PW:0000001',
             'signal transduction': 'GO:0007165'
         }
 
-        return CLASS_MAP[cls]
+        return class_map[cls]
 
     def _parse_curated_chem_disease(self, limit):
         line_counter = 0

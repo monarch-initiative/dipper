@@ -368,9 +368,9 @@ class Feature():
     def loadAllProperties(self, graph):
 
         prop_dict = {
-            Assoc().ANNOTPROP: self.annotation_properties,
-            Assoc().OBJECTPROP: self.object_properties,
-            Assoc().DATAPROP: self.data_properties
+            Assoc(None).ANNOTPROP: self.annotation_properties,
+            Assoc(None).OBJECTPROP: self.object_properties,
+            Assoc(None).DATAPROP: self.data_properties
         }
 
         for p in prop_dict:

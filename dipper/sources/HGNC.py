@@ -165,8 +165,8 @@ class HGNC(Source):
 
         return
 
-
-    def _get_gene_type(self, locus_type):
+    @staticmethod
+    def _get_gene_type(locus_type):
         """
         Given the locus_type string supplied by HGNC, we map them to relevant SO terms.  We use the
         mappings listed in the "?" popup on any HGNC gene page.
@@ -211,7 +211,6 @@ class HGNC(Source):
             logger.error("Unknown/unmapped locus type: %s", locus_type)
 
         return t
-
 
     def getTestSuite(self):
         import unittest

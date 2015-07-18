@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.assoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config
@@ -123,7 +123,6 @@ class Orphanet(Source):
                         for s in syn_list.findall('./Synonym'):
                             gu.addSynonym(g, gene_id, s.text)
 
-
                     dgtype = a.find('DisorderGeneAssociationType').get('id')
                     rel_id = self._map_rel_id(dgtype)
                     dg_label = a.find('./DisorderGeneAssociationType/Name').text
@@ -149,15 +148,14 @@ class Orphanet(Source):
                     status_code = a.find('DisorderGeneAssociationStatus').get('id')
                     eco_id = 'ECO:0000323'  # imported automatically asserted information used in automatic assertion
                     if status_code == '17991':  # Assessed  # TODO are these internal ids stable between releases?
-                        eco_id = 'ECO:0000322' # imported manually asserted information used in automatic assertion
+                        eco_id = 'ECO:0000322'  # imported manually asserted information used in automatic assertion
                     # Non-traceable author statement ECO_0000034
                     # imported information in automatic assertion ECO_0000313
 
-                    assoc_id = self.make_association_id(self.name, alt_locus_id, rel_id, disorder_id, eco_id, None)
-                    assoc = G2PAssoc(assoc_id, alt_locus_id, disorder_id, None, eco_id)
-                    assoc.setRelationship(rel_id)
-                    assoc.addAssociationToGraph(g)
-                    assoc.loadAllProperties(g)
+                    assoc = G2PAssoc(self.name, alt_locus_id, disorder_id, rel_id)
+                    assoc.add_evidence(eco_id)
+                    assoc.add_association_to_graph(g)
+                    assoc.load_all_properties(g)
 
                     rlist = a.find('./Gene/ExternalReferenceList')
                     eqid = None
@@ -182,7 +180,8 @@ class Orphanet(Source):
 
         return
 
-    def _map_rel_id(self, orphanet_rel_id):
+    @staticmethod
+    def _map_rel_id(orphanet_rel_id):
         # TODO check if these ids are stable for mapping
         rel_id = None
         gu = GraphUtils(curie_map.get())
@@ -206,7 +205,8 @@ class Orphanet(Source):
 
         return rel_id
 
-    def _map_gene_type_id(self, orphanet_type_id):
+    @staticmethod
+    def _map_gene_type_id(orphanet_type_id):
         # TODO check if these ids are stable for mapping
 
         type_id = Genotype.genoparts['sequence_feature']

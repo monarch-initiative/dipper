@@ -179,10 +179,10 @@ class NCBIGene(Source):
                     gu.addSynonym(g, gene_id, name)
                 if synonyms.strip() != '-':
                     for s in synonyms.split('|'):
-                        gu.addSynonym(g, gene_id, s.strip(), Assoc.properties['hasRelatedSynonym'])
+                        gu.addSynonym(g, gene_id, s.strip(), Assoc.annotation_properties['hasRelatedSynonym'])
                 if other_designations.strip() != '-':
                     for s in other_designations.split('|'):
-                        gu.addSynonym(g, gene_id, s.strip(), Assoc.properties['hasRelatedSynonym'])
+                        gu.addSynonym(g, gene_id, s.strip(), Assoc.annotation_properties['hasRelatedSynonym'])
 
                 # deal with the xrefs
                 # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
@@ -344,8 +344,7 @@ class NCBIGene(Source):
             g = self.testgraph
         else:
             g = self.graph
-        is_about = gu.getNode(Assoc.properties['is_about'])
-
+        is_about = gu.getNode(gu.object_properties['is_about'])
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))

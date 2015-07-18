@@ -6,7 +6,7 @@ from dipper.utils import pysed
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
-from dipper.models.assoc import OrthologyAssoc
+from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Environment import Environment
@@ -960,15 +960,13 @@ class ZFIN(Source):
                     if pub_id != '':
                         pub_id = 'ZFIN:' + pub_id.strip()
 
-                    # assoc_id = self.make_id((genotype_id+env_id+phenotype_id+pub_id))
-                    assoc_id = self.make_association_id(self.name, genotype_id, gu.object_properties['has_phenotype'],
-                                                        phenotype_id, eco_id, pub_id,
-                                                        [env_id, start_stage_id, end_stage_id])
-
-                    assoc = G2PAssoc(assoc_id, effective_genotype_id, phenotype_id, pub_id, eco_id)
+                    assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
                     assoc.set_environment(env_id)
                     assoc.set_stage(start_stage_id, end_stage_id)
-                    assoc.addAssociationNodeToGraph(g)
+                    assoc.add_evidence(eco_id)
+                    assoc.add_source(pub_id)
+                    assoc.add_association_to_graph(g)
+                    assoc.load_all_properties(g)
 
                 else:
                     # TODO add normal phenotypes as associations #134
@@ -980,7 +978,7 @@ class ZFIN(Source):
                             clist += [x]
 
                     c = '+'.join(clist)
-                    c = ' '.join(("Normal phenotype:", c, "(" + pub_id + ")"))
+                    c = ' '.join(("Normal phenotype observed:", c, "(" + pub_id + ")"))
                     gu.addComment(g, effective_genotype_id, c)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -990,8 +988,6 @@ class ZFIN(Source):
         myset2 = set([','.join(x) for x in missing_zpids])
         logger.info("Phenotype-sextuples: %d mapped : %d unmapped", len(myset), len(myset2))
         self._write_missing_zp_report(missing_zpids)
-
-        Assoc().loadAllProperties(g)
 
         return
 
@@ -2001,11 +1997,10 @@ class ZFIN(Source):
                 geno.addGene(gene_id, human_symbol, None, human_name)
 
                 # make the association
-                assoc_id = self.make_id(''.join((zfin_id, gene_id)))
-                assoc = OrthologyAssoc(assoc_id, zfin_id, gene_id, None, None)
+                assoc = OrthologyAssoc(self.name, zfin_id, gene_id)
                 # we don't know anything about the orthology type, so we just use the default
-                assoc.loadAllProperties(g)
-                assoc.addOrthologyAssociationToGraph(g)
+                assoc.load_all_properties(g)
+                assoc.add_association_to_graph(g)
 
                 # FIXME we have requested that ZFIN add evidence codes and papers to the orthology calls
                 # TODO we can get this from zfin mine

@@ -88,7 +88,7 @@ class Assoc:
         return self.properties
 
     def _is_valid(self):
-        vbool = False
+
         # check if sub/obj/rel are none...throw error
         if self.sub is None:
             raise ValueError('No subject set for this association')
@@ -97,7 +97,7 @@ class Assoc:
         if self.rel is None:
             raise ValueError('No relation set for this association')
 
-        return vbool
+        return True
 
     def _add_basic_association_to_graph(self, g):
 
@@ -131,14 +131,15 @@ class Assoc:
 
         if self.source is not None and len(self.source) > 0:
             for s in self.source:
-                sid = self._get_source_uri(s)
-                if sid is not None:
+                if re.match('http', s):
                     # TODO assume that the source is a publication?  use Reference class here
-                    self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], sid)
+                    self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s, True)
+                else:
+                    self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s)
 
         if self.score is not None:
             self.gu.addTriple(g, self.assoc_id, self.properties['has_measurement'],
-                              Literal(self.score, datatype=XSD['float']))
+                              Literal(self.score, datatype=XSD['float']), True)
             # TODO update with some kind of instance of scoring object that has a unit and type
 
         return
@@ -176,6 +177,10 @@ class Assoc:
 
         return
 
+    def get_association_id(self):
+
+        return self.assoc_id
+
     def set_description(self, description):
         self.description = description
 
@@ -195,7 +200,8 @@ class Assoc:
         :param identifier:
         :return:
         """
-        self.evidence += [identifier]
+        if identifier is not None and identifier.strip() != '':
+            self.evidence += [identifier]
 
         return
 
@@ -207,7 +213,8 @@ class Assoc:
         :param identifier:
         :return:
         """
-        self.source += [identifier]
+        if identifier is not None and identifier.strip() != '':
+            self.source += [identifier]
 
         return
 
