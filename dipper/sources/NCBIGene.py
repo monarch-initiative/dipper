@@ -223,7 +223,7 @@ class NCBIGene(Source):
 
                 # FIXME remove the chr mapping below when we pull in the genomic coords
                 if str(chr) != '-' and str(chr) != '':
-                    if re.search('\|', str(chr)) and str(chr) != 'X|Y':
+                    if re.search('\|', str(chr)) and str(chr) not in ['X|Y','X; Y']:
                         # this means that there's uncertainty in the mapping.  skip it
                         # TODO we'll need to figure out how to deal with >1 loc mapping
                         logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
@@ -232,7 +232,8 @@ class NCBIGene(Source):
 
                     # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-
+                    if str(chr) == 'X; Y':
+                        chr = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
                     for c in re.split('\|',str(chr)) :
                         geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
@@ -437,6 +438,8 @@ class NCBIGene(Source):
 
         # MGI:MGI --> MGI
         cleanid = re.sub('^MGI:MGI', 'MGI', cleanid)
+
+        cleanid = re.sub('FLYBASE', 'FlyBase', cleanid)
 
         return cleanid
 
