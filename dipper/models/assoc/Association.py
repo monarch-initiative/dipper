@@ -21,7 +21,7 @@ class Assoc:
     """
 
     assoc_types = {
-        'association': 'Annotation:'  # FIXME 'OBAN:association'
+        'association': 'OBAN:association'
     }
 
     annotation_properties = {
@@ -39,9 +39,9 @@ class Assoc:
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
         'towards': 'RO:0002503',
-        'has_subject': ':hasSubject',  # FIXME 'OBAN::association_has_subject'
-        'has_object': ':hasObject',  # FIXME 'OBAN:association_has_object'
-        'has_predicate': ':hasPredicate',
+        'has_subject': 'OBAN:association_has_subject',
+        'has_object': 'OBAN:association_has_object',
+        'has_predicate': 'OBAN:association_has_object_property',
         'is_about': 'IAO:00000136',
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source'
@@ -280,5 +280,4 @@ class Assoc:
         byte_string = '+'.join(items_to_hash).encode("utf-8")
 
         # TODO put this in a util?
-
         return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
