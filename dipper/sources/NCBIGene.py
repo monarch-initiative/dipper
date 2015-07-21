@@ -262,10 +262,7 @@ class NCBIGene(Source):
                             # add the gene as a subsequence of the chromosome
                             gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
 
-                else:
-                    # since the gene is unlocated, add the taxon as a property of it
-                    # TODO should we add the gene to the "genome" instead of letting it dangle?
-                    geno.addTaxon(tax_id, gene_id)
+                geno.addTaxon(tax_id, gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
