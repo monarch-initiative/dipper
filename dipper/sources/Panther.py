@@ -5,7 +5,7 @@ import re
 import logging
 
 from dipper.sources.Source import Source
-from dipper.models.assoc import OrthologyAssoc
+from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config, curie_map
@@ -209,26 +209,21 @@ class Panther(Source):
 
                     rel = self._map_orthology_code_to_RO(orthology_class)
 
-                    evidence = 'ECO:0000080'  # phylogenetic evidence
-
-                    # note that the panther_id references a group of orthologs, and is not 1:1 with the rest
-                    assoc_id = self.make_id(''.join((panther_id, species_a, gene_a,
-                                                     protein_a, species_b, gene_b,
-                                                     protein_b, orthology_class)))
+                    evidence_id = 'ECO:0000080'  # phylogenetic evidence
 
                     # add the association and relevant nodes to graph
-                    assoc = OrthologyAssoc(assoc_id, gene_a, gene_b, None, evidence)
-                    assoc.setRelationship(rel)
-                    assoc.loadAllProperties(g)  # FIXME inefficient
+                    assoc = OrthologyAssoc(self.name, gene_a, gene_b, rel)
+                    assoc.add_evidence(evidence_id)
+                    assoc.load_all_properties(g)  # FIXME inefficient
 
                     # add genes to graph; assume labels will be taken care of elsewhere
                     gu.addClassToGraph(g, gene_a, None)
                     gu.addClassToGraph(g, gene_b, None)
 
-                    assoc.addAssociationToGraph(g)
+                    assoc.add_association_to_graph(g)
 
                     # note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
-                    assoc.addGeneFamilyToGraph(self.graph, ':'.join(('PANTHER', panther_id)))
+                    assoc.add_gene_family_to_graph(g, ':'.join(('PANTHER', panther_id)))
 
                     if not self.testMode and limit is not None and line_counter > limit:
                         break
@@ -284,15 +279,14 @@ class Panther(Source):
         :param ortho: orthology code
         :return: RO identifier
         """
-        o = OrthologyAssoc(None, None, None, None, None)  # this is sneaky, needs refactor
-
-        ro_id = o.properties['orthologous']  # in orthology relationship with
+        ortho_rel = OrthologyAssoc.ortho_rel
+        ro_id = ortho_rel['orthologous']  # in orthology relationship with
         ortho_to_ro_map = {
-            'P': o.properties['paralogous'],
-            'O': o.properties['orthologous'],
-            'LDO': o.properties['least_diverged_orthologous'],
-            'X': o.properties['xenologous'],
-            'LDX': o.properties['xenologous']
+            'P': ortho_rel['paralogous'],
+            'O': ortho_rel['orthologous'],
+            'LDO': ortho_rel['least_diverged_orthologous'],
+            'X': ortho_rel['xenologous'],
+            'LDX': ortho_rel['xenologous']
         }
 
         if ortho in ortho_to_ro_map:
