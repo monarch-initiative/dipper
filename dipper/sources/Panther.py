@@ -31,6 +31,9 @@ class Panther(Source):
 
     The test graph of data is output based on configured "protein" identifiers in conf.json.
 
+    By default, this will produce a file with ALL orthologous relationships.
+    IF YOU WANT ONLY A SUBSET, YOU NEED TO PROVIDE A FILTER UPON CALLING THIS WITH THE TAX IDS
+
     """
 
     files = {
@@ -49,9 +52,9 @@ class Panther(Source):
                                'http://pantherdb.org/', None,
                                'http://www.pantherdb.org/terms/disclaimer.jsp')
 
-        # Defaults
-        if self.tax_ids is None:
-            self.tax_ids = [9606, 10090]
+        # # Defaults
+        # if self.tax_ids is None:
+        #     self.tax_ids = [9606, 10090, 7955]
 
         if 'test_ids' not in config.get_config() or 'protein' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
@@ -62,7 +65,7 @@ class Panther(Source):
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         """
         :return: None
         """
@@ -82,6 +85,11 @@ class Panther(Source):
 
         if self.testOnly:
             self.testMode = True
+
+        if self.tax_ids is None:
+            logger.info("No taxon filter set; Dumping all orthologous associations.")
+        else:
+            logger.info("Only the following taxa will be dumped: %s", str(self.tax_ids))
 
         self._get_orthologs(limit)
 
@@ -170,7 +178,6 @@ class Panther(Source):
                     taxon_a = self._map_taxon_abbr_to_id(species_a)
                     taxon_b = self._map_taxon_abbr_to_id(species_b)
 
-                    # TODO remove these filters, or parameterize them
 
                     # ###uncomment the following code block if you want to filter based on taxid
                     # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
@@ -178,7 +185,8 @@ class Panther(Source):
                     # retain only those orthologous relationships to genes in the specified taxids
                     # using AND will get you only those associations where gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where gene1 OR gene2 are in the taxid list (some-filter)
-                    if ((int(re.sub('NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
+                    if (self.tax_ids is not None and
+                        (int(re.sub('NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
                             (int(re.sub('NCBITaxon:', '', taxon_b.rstrip())) not in self.tax_ids)):
                         continue
                     else:
@@ -237,30 +245,31 @@ class Panther(Source):
         """
         taxid = None
         ptax_to_taxid_map = {
-            'HUMAN': 9606,
-            'SCHPO': 4896,
+            'ANOCA': 28377,
             'ARATH': 3702,
-            'MOUSE': 10090,
-            'DANRE': 7955,
-            'YEAST': 4932,
-            'RAT': 10116,
+            'BOVIN': 9913,
             'CAEEL': 6239,
-            'DICDI': 44689,
-            'CHICK': 9031,
-            'DROME': 7227,
-            'PIG': 9823,
-            'HORSE': 9796,
             'CANFA': 9615,
-            'XENTR': 8364,
-            'TAKRU': 31033,
+            'CHICK': 9031,
+            'DANRE': 7955,
+            'DICDI': 44689,
+            'DROME': 7227,
+            'ECOLI': 562,
+            'HORSE': 9796,
+            'HUMAN': 9606,
             'MACMU': 9544,
+            'MONDO': 13616,
+            'MOUSE': 10090,
             'ORNAN': 9258,
             'PANTR': 9598,
-            'ANOCA': 28377,
-            'MONDO': 13616,
-            'BOVIN': 9913,
-            'ECOLI': 562
+            'PIG': 9823,
+            'RAT': 10116,
+            'SCHPO': 4896,
+            'TAKRU': 31033,
+            'XENTR': 8364,
+            'YEAST': 4932,
         }
+
         if ptax in ptax_to_taxid_map:
             taxid = ':'.join(('NCBITaxon', str(ptax_to_taxid_map.get(ptax))))
         else:
@@ -325,6 +334,9 @@ class Panther(Source):
 
         # rewrite Gene:<ensembl ids> --> ENSEMBL:<id>
         geneid = re.sub('Gene:ENS', 'ENSEMBL:ENS', geneid)
+
+        # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
+        geneid = re.sub('Gene:Xenbase:', 'Xenbase:', geneid)
 
         if re.match('Gene:', geneid):
             logger.warn("Found something I don't know how to fix (species %s): %s", sp, geneid)

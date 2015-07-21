@@ -113,10 +113,11 @@
 'SGD' : 'http://identifiers.org/SGD:'
 'TAIR' : 'http://identifiers.org/TAIR:'
 'WormBase' : 'http://identifiers.org/wormbase/'
+'Xenbase' : 'http://identifiers.org/xenbase/'
 'ZFIN' : 'http://zfin.org/'
 
 # proteins
-'EC' : 'http://identifiers.org/EC:'  #FIXME: Enzyme Commission numbers. Any preferred url that can resolve this?
+'EC' : 'http://identifiers.org/ec-code/'
 'NCBIProtein' : 'http://www.ncbi.nlm.nih.gov/protein/'
 'PDB' : 'http://identifiers.org/PDB:'
 'SwissProt' : 'http://identifiers.org/SwissProt:'
