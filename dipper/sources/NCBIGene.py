@@ -72,6 +72,9 @@ class NCBIGene(Source):
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
+            logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
+        else:
+            logger.info("Filtering on the following taxa: %s", str(tax_ids))
 
         self.gene_ids = []
         if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
@@ -83,7 +86,7 @@ class NCBIGene(Source):
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
 
@@ -156,8 +159,10 @@ class NCBIGene(Source):
                 #        continue
                 ##### end filter
 
-                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
-                        (not self.testMode and (int(tax_num) not in self.tax_ids))):
+                if self.testMode and int(gene_num) not in self.gene_ids:
+                    continue
+
+                if int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
@@ -255,7 +260,7 @@ class NCBIGene(Source):
                             # TODO handle these cases
                             # examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
                             ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
-                            logger.info('not regular band pattern for %s: %s', gene_id, map_loc)
+                            logger.debug('not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
 
@@ -309,8 +314,10 @@ class NCBIGene(Source):
                 if gene_num == '-' or discontinued_num == '-':
                     continue
 
-                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
-                        (not self.testMode and (int(tax_num) not in self.tax_ids))):
+                if self.testMode and int(gene_num) not in self.gene_ids:
+                    continue
+
+                if int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
@@ -367,12 +374,15 @@ class NCBIGene(Source):
                 #        continue
                 ##### end filter
 
-                if ((self.testMode and (int(gene_num) not in self.gene_ids)) or
-                        (not self.testMode and (int(tax_num) not in self.tax_ids))):
+                if self.testMode and int(gene_num) not in self.gene_ids:
+                    continue
+
+                if int(tax_num) not in self.tax_ids:
                     continue
 
                 if gene_num == '-' or pubmed_num == '-':
                     continue
+
                 line_counter += 1
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 pubmed_id = ':'.join(('PMID', pubmed_num))
