@@ -12,7 +12,7 @@
 'CL' : 'http://purl.obolibrary.org/obo/CL_'
 'CLO' : 'http://purl.obolibrary.org/obo/CLO_'
 'CMO' : 'http://purl.obolibrary.org/obo/CMO_'
-'DATA' : 'http://purl.obolibrary.org/DATA_'
+'DATA' : 'http://edamontology.org/data_'
 'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'
