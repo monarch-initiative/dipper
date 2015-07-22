@@ -78,8 +78,6 @@ class Panther(Source):
 
     def parse(self, limit=None):
         """
-        abstract method to parse all data from an external resource, that was fetched in
-        fetch()
         :return: None
         """
 
@@ -136,7 +134,6 @@ class Panther(Source):
         :return:
         """
         logger.info("getting orthologs")
-        line_counter = 0
 
         if self.testMode:
             g = self.testgraph
@@ -146,6 +143,8 @@ class Panther(Source):
 
         gu = GraphUtils(curie_map.get())
 
+        unprocessed_gene_ids = set()
+
         for k in self.files.keys():
             f = '/'.join((self.rawdir, self.files[k]['file']))
             matchcounter = 0
@@ -154,6 +153,7 @@ class Panther(Source):
             # assume that the first entry is the item
             fname = mytar.getmembers()[0]
             logger.info("Parsing %s", fname.name)
+            line_counter = 0
             with mytar.extractfile(fname) as csvfile:
                 for line in csvfile:
                     # skip comment lines
@@ -161,6 +161,11 @@ class Panther(Source):
                         logger.info("Skipping header line")
                         continue
                     line_counter += 1
+
+                    # a little feedback to the user since there's so many
+                    if line_counter % 1000000 == 0:
+                        logger.info("Processed %d lines from %s", line_counter, fname.name)
+
                     line = line.decode().strip()
 
                     # parse each row
@@ -171,13 +176,12 @@ class Panther(Source):
 
                     # skip the entries that don't have homolog relationships with the test ids
                     if self.testMode and not (re.sub('UniProtKB=', '', protein_a) in self.test_ids or
-                                                 re.sub('UniProtKB=', '', protein_b) in self.test_ids):
+                                              re.sub('UniProtKB=', '', protein_b) in self.test_ids):
                         continue
 
                     # map the taxon abbreviations to ncbi taxon ids
                     taxon_a = self._map_taxon_abbr_to_id(species_a)
                     taxon_b = self._map_taxon_abbr_to_id(species_b)
-
 
                     # ###uncomment the following code block if you want to filter based on taxid
                     # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
@@ -200,8 +204,14 @@ class Panther(Source):
                     gene_a = re.sub('=', ':', gene_a)
                     gene_b = re.sub('=', ':', gene_b)
 
-                    gene_a = self._clean_up_gene_id(gene_a, species_a)
-                    gene_b = self._clean_up_gene_id(gene_b, species_b)
+                    clean_gene = self._clean_up_gene_id(gene_a, species_a)
+                    if clean_gene is None:
+                        unprocessed_gene_ids.add(gene_a)
+                    gene_a = clean_gene
+                    clean_gene = self._clean_up_gene_id(gene_b, species_b)
+                    if clean_gene is None:
+                        unprocessed_gene_ids.add(gene_b)
+                    gene_b = clean_gene
 
                     # a special case here; mostly some rat genes they use symbols instead of identifiers.  will skip
                     if gene_a is None or gene_b is None:
@@ -214,7 +224,6 @@ class Panther(Source):
                     # add the association and relevant nodes to graph
                     assoc = OrthologyAssoc(self.name, gene_a, gene_b, rel)
                     assoc.add_evidence(evidence_id)
-                    assoc.load_all_properties(g)  # FIXME inefficient
 
                     # add genes to graph; assume labels will be taken care of elsewhere
                     gu.addClassToGraph(g, gene_a, None)
@@ -229,10 +238,15 @@ class Panther(Source):
                         break
 
             logger.info("finished processing %s", f)
+            logger.warn("The following gene ids were unable to be processed: %s", str(unprocessed_gene_ids))
+
+        gu.loadProperties(g, OrthologyAssoc.object_properties, gu.OBJPROP)
+        gu.loadProperties(g, OrthologyAssoc.annotation_properties, gu.ANNOTPROP)
 
         return
 
-    def _map_taxon_abbr_to_id(self, ptax):
+    @staticmethod
+    def _map_taxon_abbr_to_id(ptax):
         """
         Will map the panther-specific taxon abbreviations to NCBI taxon numbers
         :param ptax:
@@ -240,29 +254,29 @@ class Panther(Source):
         """
         taxid = None
         ptax_to_taxid_map = {
-            'ANOCA': 28377,
-            'ARATH': 3702,
-            'BOVIN': 9913,
-            'CAEEL': 6239,
-            'CANFA': 9615,
-            'CHICK': 9031,
-            'DANRE': 7955,
-            'DICDI': 44689,
-            'DROME': 7227,
+            'ANOCA': 28377,  # green lizard
+            'ARATH': 3702,   # arabadopsis
+            'BOVIN': 9913,   # cow
+            'CAEEL': 6239,   # worm
+            'CANFA': 9615,   # dog
+            'CHICK': 9031,   # chicken
+            'DANRE': 7955,   # zebrafish
+            'DICDI': 44689,  # discodium
+            'DROME': 7227,   # drosophila melanogaster
             'ECOLI': 562,
-            'HORSE': 9796,
-            'HUMAN': 9606,
-            'MACMU': 9544,
-            'MONDO': 13616,
-            'MOUSE': 10090,
-            'ORNAN': 9258,
-            'PANTR': 9598,
+            'HORSE': 9796,   # horses
+            'HUMAN': 9606,   # humans
+            'MACMU': 9544,   # macaque
+            'MONDO': 13616,  # opossum
+            'MOUSE': 10090,  # mouse
+            'ORNAN': 9258,   # orangutan
+            'PANTR': 9598,   # chimp
             'PIG': 9823,
             'RAT': 10116,
-            'SCHPO': 4896,
-            'TAKRU': 31033,
-            'XENTR': 8364,
-            'YEAST': 4932,
+            'SCHPO': 4896,   # pombe yeast
+            'TAKRU': 31033,  # pufferfish
+            'XENTR': 8364,   # xenopus
+            'YEAST': 4932,   # yeast
         }
 
         if ptax in ptax_to_taxid_map:
@@ -272,7 +286,8 @@ class Panther(Source):
 
         return taxid
 
-    def _map_orthology_code_to_RO(self, ortho):
+    @staticmethod
+    def _map_orthology_code_to_RO(ortho):
         """
         Map the panther-specific orthology code (P,O,LDO,X,LDX) to relationship-ontology
         identifiers.
@@ -296,7 +311,8 @@ class Panther(Source):
 
         return ro_id
 
-    def _clean_up_gene_id(self, geneid, sp):
+    @staticmethod
+    def _clean_up_gene_id(geneid, sp):
         """
         A series of identifier rewriting to conform with standard gene identifiers.
         :param geneid:
@@ -337,7 +353,7 @@ class Panther(Source):
         geneid = re.sub('Gene:Xenbase:', 'Xenbase:', geneid)
 
         if re.match('(Gene|ENSEMBLGenome):', geneid):
-            logger.warn("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
+            # logger.warn("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
             geneid = None
 
         return geneid
