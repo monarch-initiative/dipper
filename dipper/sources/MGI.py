@@ -1336,6 +1336,7 @@ class MGI(Source):
             g = self.graph
         logger.info("getting free text descriptions for annotations")
         raw = '/'.join((self.rawdir, 'mgi_note_vocevidence_view'))
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1353,9 +1354,9 @@ class MGI(Source):
                 annotkey = self.idhash['notes'].get(object_key)  # object_key == evidence._annotevidence_key
                 annot_id = self.idhash['annot'].get(annotkey)
                 # only add the description for the annotations we have captured through processing
+
                 if annot_id is not None:
-                    assoc = Assoc()
-                    assoc.addDescription(g, annot_id, note.strip())
+                    gu.addDescription(g, annot_id, note.strip())
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
