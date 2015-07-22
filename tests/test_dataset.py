@@ -20,7 +20,11 @@ class DatasetTestCase(unittest.TestCase):
     def test_has_license(self):
 
         self.assertTrue(self.dataset.get_license() is not None, "Source not configured with a license")
+
         return
+
+    # TODO make a testing suite that has all musts
+    # TODO make a testing suite tha has all desired
 
 if __name__ == '__main__':
     unittest.main()
