@@ -195,46 +195,55 @@ class HPOAnnotations(Source):
             for row in filereader:
                 line_counter += 1
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w, asp, syn, date, curator) = row
-                disease_id = db + ":" + num
+                disease_id = db + ":" + str(num)
 
-                if self.testMode and (disease_id not in self.test_ids):
+                if self.testMode and disease_id.strip() not in config.get_config()['test_ids']['disease']:
                     continue
 
-                # blow these apart if there is a list of pubs
+                # logger.info('adding %s', disease_id)
+
+                gu.addClassToGraph(g, disease_id, None)
+                gu.addClassToGraph(g, pheno_id, None)
+                eco_id = self._map_evidence_to_codes(eco)
+                gu.addClassToGraph(g, eco_id, None)
+                if onset is not None and onset.strip() != '':
+                    gu.addClassToGraph(g, onset, None)
+
+                # we want to do things differently depending on the aspect of the annotation
+                if asp == 'O' or asp == 'M':  # organ abnormality or mortality
+                    assoc = D2PAssoc(self.name, disease_id, pheno_id, onset, freq)
+                elif asp == 'I':  # inheritance patterns for the whole disease
+                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                elif asp == 'C':  # clinical course / onset
+                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                else:
+                    logger.error("I don't know what this aspect is:", asp)
+
+                assoc.add_evidence(eco_id)
+
                 publist = publist.split(';')
+                # blow these apart if there is a list of pubs
                 for pub in publist:
                     pub = pub.strip()
-
-                    eco_id = self._map_evidence_to_codes(eco)
-                    # make sure to add the disease, phenotype, eco, as classes.
-                    # pub as individual is taken care of in the association function
-                    gu.addClassToGraph(g, disease_id, None)
-                    gu.addClassToGraph(g, pheno_id, None)
-                    gu.addClassToGraph(g, eco_id, None)
-                    if onset is not None and onset.strip() != '':
-                        gu.addClassToGraph(g, onset, None)
-
-                    # we want to do things differently depending on the aspect of the annotation
-                    if asp == 'O' or asp == 'M':  # organ abnormality or mortality
-                        assoc = D2PAssoc(self.name, disease_id, pheno_id, onset, freq)
-                    elif asp == 'I':  # inheritance patterns for the whole disease
-                        assoc = DispositionAssoc(self.name, disease_id, pheno_id)
-                    elif asp == 'C':  # clinical course / onset
-                        assoc = DispositionAssoc(self.name, disease_id, pheno_id)
-                    else:
-                        logger.error("I don't know what this aspect is:", asp)
-
                     if pub != '':
-                        r = Reference(pub)
-                        if re.match('PMID', pub):
-                            r.setType(Reference.ref_types['journal_article'])
-                        r.addRefToGraph(g)
+                        # if re.match('http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
+                        #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
+                        #     m = re.search('part\=(\w+)', pub)
+                        #     pub_id = 'GeneReviews:'+m.group(1)
+                        # elif re.search('http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
+                        #     m = re.search('Expert=(\d+)', pub)
+                        #     pub_id = 'Orphanet:'+m.group(1)
+                        if not re.match('http', pub):
+                            r = Reference(pub)
+                            if re.match('PMID', pub):
+                                r.setType(Reference.ref_types['journal_article'])
+                            r.addRefToGraph(g)
                         # TODO add curator
                         assoc.add_source(pub)
-                    assoc.add_evidence(eco_id)
-                    assoc.add_association_to_graph(g)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                assoc.add_association_to_graph(g)
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             Assoc(None).load_all_properties(g)
