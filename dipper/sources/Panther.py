@@ -204,7 +204,7 @@ class Panther(Source):
                     gene_b = self._clean_up_gene_id(gene_b, species_b)
 
                     # a special case here; mostly some rat genes they use symbols instead of identifiers.  will skip
-                    if re.match('Gene:', str(gene_a)) or re.match('Gene:', str(gene_b)):
+                    if gene_a is None or gene_b is None:
                         continue
 
                     rel = self._map_orthology_code_to_RO(orthology_class)
@@ -315,6 +315,10 @@ class Panther(Source):
             if re.match('(Gene|ENSEMBLGenome):\w+\\.\d+', geneid):
                 geneid = re.sub('(?:Gene|ENSEMBLGenome):(\w+\\.\d+)', 'WormBase:\\1', geneid)
 
+        if sp == 'DROME':
+            if re.match('(ENSEMBLGenome):\w+\\.\d+', geneid):
+                geneid = re.sub('(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
+
         # rewrite GeneID --> NCBIGene
         geneid = re.sub('GeneID', 'NCBIGene', geneid)
 
@@ -332,8 +336,9 @@ class Panther(Source):
         # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
         geneid = re.sub('Gene:Xenbase:', 'Xenbase:', geneid)
 
-        if re.match('Gene:', geneid):
-            logger.warn("Found something I don't know how to fix (species %s): %s", sp, geneid)
+        if re.match('(Gene|ENSEMBLGenome):', geneid):
+            logger.warn("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
+            geneid = None
 
         return geneid
 
