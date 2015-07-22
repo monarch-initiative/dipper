@@ -24,6 +24,7 @@ class Dataset:
     def __init__(self, identifier, title, url, description=None, license_url=None, data_rights=None):
         DCTYPES = Namespace(self.namespaces['dctypes'])
         self.identifier = URIRef(':'+identifier)
+        self.license = license_url
         self.graph = Graph()
         self.load_bindings()
         self.graph.add((self.identifier, RDF['type'], DCTYPES['Dataset']))
@@ -84,3 +85,11 @@ class Dataset:
 
     def getGraph(self):
         return self.graph
+
+    def set_license(self, license):
+        self.license = license
+        return
+
+    def get_license(self):
+
+        return self.license

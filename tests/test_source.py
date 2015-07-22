@@ -2,6 +2,7 @@
 
 from dipper.sources.Source import Source
 from tests import test_general
+from tests import test_dataset
 
 import unittest
 import logging
@@ -75,6 +76,11 @@ class SourceTestCase(unittest.TestCase):
                 conf = json.load(json_file)
         return conf
 
+    def test_source_has_license(self):
+        if self.source is not None:
+            d = self.source.dataset
+            test_dataset.DatasetTestCase(d).test_has_license()
+        return
 
 if __name__ == '__main__':
     unittest.main()
