@@ -34,6 +34,7 @@ class Source:
     def __init__(self, name=None):
         if name is not None:
             logger.info("Processing Source \"%s\"", name)
+        self.testOnly = False
         self.name = name
         self.path = ""
         self.graph = ConjunctiveGraph()
