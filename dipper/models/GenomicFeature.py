@@ -166,7 +166,7 @@ class Feature():
 
         return strand_id
 
-    def addFeatureToGraph(self, graph, add_region=True, region_id=None):
+    def addFeatureToGraph(self, graph, add_region=True, region_id=None, feature_as_class=False):
         """
         We make the assumption here that all features are instances.
         The features are located on a region, which begins and ends with faldo:Position
@@ -187,7 +187,10 @@ class Feature():
         :param graph:
         :return:
         """
-        self.gu.addIndividualToGraph(graph, self.id, self.label, self.type, self.description)
+        if feature_as_class:
+            self.gu.addClassToGraph(graph, self.id, self.label, self.type, self.description)
+        else:
+            self.gu.addIndividualToGraph(graph, self.id, self.label, self.type, self.description)
 
         if self.start is None and self.stop is None:
             add_region = False
