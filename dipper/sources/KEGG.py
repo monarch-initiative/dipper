@@ -74,7 +74,8 @@ class KEGG(Source):
         Source.__init__(self, 'kegg')
 
         # update the dataset object with details about this resource
-        self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/', None, None)
+        self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/', None, None,
+                               'http://www.kegg.jp/kegg/legal.html')
 
         # source-specific warnings.  will be cleared when resolved.
         # check to see if there's any ids configured in the config; otherwise, warn
@@ -366,7 +367,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-
+        gu.loadAllProperties(g)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -417,7 +418,7 @@ class KEGG(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         rel = gu.object_properties['is_marker_for']
-
+        gu.loadAllProperties(g)
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -517,7 +518,6 @@ class KEGG(Source):
                     rel = gu.object_properties['is_marker_for']
                     assoc = G2PAssoc(self.name, alt_locus_id, omim_id, rel)
                     assoc.add_association_to_graph(g)
-                    assoc.load_all_properties(g)
 
                 elif link_type == 'original':
                     # these are sometimes a gene, and sometimes a disease
@@ -530,6 +530,10 @@ class KEGG(Source):
                     break
 
         logger.info("Done with OMIM to KEGG gene")
+        gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
+        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+
         return
 
     def _process_omim2disease(self, limit=None):

@@ -155,7 +155,6 @@ class Orphanet(Source):
                     assoc = G2PAssoc(self.name, alt_locus_id, disorder_id, rel_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_association_to_graph(g)
-                    assoc.load_all_properties(g)
 
                     rlist = a.find('./Gene/ExternalReferenceList')
                     eqid = None
@@ -178,6 +177,11 @@ class Orphanet(Source):
             if self.testMode and limit is not None and line_counter > limit:
                 return
 
+        gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
+        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+        gu.loadAllProperties(g)
+
         return
 
     @staticmethod
@@ -188,7 +192,7 @@ class Orphanet(Source):
         id_map = {
             '17949': gu.object_properties['has_phenotype'],  # Disease-causing germline mutation(s) in
             '17955': gu.object_properties['has_phenotype'],  # Disease-causing somatic mutation(s) in
-            '17961': gu.object_properties['is_marker_for'],  # Major susceptibility factor in
+            '17961': gu.object_properties['contributes_to'],  # Major susceptibility factor in
             '17967': gu.object_properties['contributes_to'],  # Modifying germline mutation in
             '17973': gu.object_properties['contributes_to'],  # Modifying somatic mutation in
             '17979': gu.object_properties['contributes_to'],  # Part of a fusion gene in
