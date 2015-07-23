@@ -1,6 +1,7 @@
 __author__ = 'nlw'
 
 import logging
+import re
 
 from dipper.models.assoc.Association import Assoc
 
@@ -16,6 +17,10 @@ class G2PAssoc(Assoc):
     Note that genotypes are expected to be created and defined outside of this association,
     most likely by calling methods in the Genotype() class.
     """
+
+    g2p_types = {
+        'developmental_process': 'GO:0032502'
+    }
 
     def __init__(self, definedby, entity_id, phenotype_id, rel=None):
         super().__init__(definedby)
@@ -70,18 +75,27 @@ class G2PAssoc(Assoc):
 
         self._add_basic_association_to_graph(g)
 
-        if self.start_stage_id is not None:
-            self.gu.addTriple(g, self.assoc_id,
-                              self.gu.object_properties['has_begin_stage_qualifier'],
+        # make a blank stage
+        if self.start_stage_id or self.end_stage_id is not None:
+            stage_process_id = '-'.join((str(self.start_stage_id), str(self.end_stage_id)))
+            stage_process_id = '_'+re.sub(':', '', stage_process_id)
+            # TODO deal with nobnodes
+            self.gu.addIndividualToGraph(g, stage_process_id, None,
+                                         self.g2p_types['developmental_process'])
+            self.gu.addTriple(g, stage_process_id,
+                              self.gu.object_properties['starts_during'],
                               self.start_stage_id)
-        if self.end_stage_id is not None:
-            self.gu.addTriple(g, self.assoc_id,
-                              self.gu.object_properties['has_end_stage_qualifier'],
+            self.gu.addTriple(g, stage_process_id,
+                              self.gu.object_properties['ends_during'],
                               self.end_stage_id)
+            self.stage_process_id = stage_process_id
+
+            self.gu.addTriple(g, self.assoc_id, self.gu.object_properties['has_qualifier'],
+                              self.stage_process_id)
 
         if self.environment_id is not None:
             self.gu.addTriple(g, self.assoc_id,
-                              self.gu.object_properties['has_environment_qualifier'],
+                              self.gu.object_properties['has_qualifier'],
                               self.environment_id)
         return g
 
