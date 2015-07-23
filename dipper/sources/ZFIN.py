@@ -70,7 +70,11 @@ class ZFIN(Source):
         'crispr': {'file': 'CRISPR.txt', 'url': 'http://zfin.org/downloads/CRISPR.txt'},
         'talen': {'file': 'TALEN.txt', 'url': 'http://zfin.org/downloads/TALEN.txt'},
         'pub2pubmed': {'file': 'pub_to_pubmed_id_translation.txt',
-                       'url': 'http://zfin.org/downloads/pub_to_pubmed_id_translation.txt'}
+                       'url': 'http://zfin.org/downloads/pub_to_pubmed_id_translation.txt'},
+        'gene_coordinates': {
+            'file': 'E_zfin_gene_alias.gff3',
+            'url': 'http://zfin.org/downloads/E_zfin_gene_alias.gff3'
+        }
     }
 
     # I do not love putting these here; but I don't know where else to put them
@@ -222,6 +226,9 @@ class ZFIN(Source):
 
         # zfin-curated orthology calls to human genes
         self._process_human_orthos(limit)
+
+        # coordinates of all genes - from ensembl
+        self._process_gene_coordinates(limit)
 
         # FOR THE FUTURE - needs verification
         # self._process_wildtype_expression(limit)
@@ -560,12 +567,19 @@ class ZFIN(Source):
                     background_label = background_id
                     logger.error("We don't have the label for %s stored", background_id)
 
-                geno.addTaxon(taxon_id, background_id)  # this should already have been done
             else:
-                background_id = None
+                background_id = '_bkgd-'+re.sub('ZFIN:', '', gt)
+                if self.nobnodes:
+                    background_id = ':'+background_id
                 background_label = 'n.s.'
+                background_desc = 'This genomic background is unknown.  This is a placeholder background' \
+                                  'for '+gt+'.'
                 # there is no background for this genotype; need to add the taxon to this one!
-                geno.addTaxon(taxon_id, gt)
+                # make an anonymous background for this genotype
+                geno.addGenomicBackground(background_id, background_label, None, background_desc)
+                geno.addGenomicBackgroundToGenotype(background_id, gt)
+
+            geno.addTaxon(taxon_id, background_id)
 
             genotype_name = gvc_label + ' [' + background_label + ']'
 
@@ -950,6 +964,11 @@ class ZFIN(Source):
 
                 # add abnormal phenotypes
                 # logger.info("modifier for %s = %s",effective_genotype_label,modifier)
+                if pub_id != '':
+                    pub_id = 'ZFIN:' + pub_id.strip()
+                    r = Reference(pub_id)
+                    r.addRefToGraph(g)
+
                 if not re.match('^normal', modifier):
                     if phenotype_id is None:
                         continue
@@ -957,8 +976,6 @@ class ZFIN(Source):
                         start_stage_id = 'ZFIN:' + start_stage_id.strip()
                     if end_stage_id != '':
                         end_stage_id = 'ZFIN:' + end_stage_id.strip()
-                    if pub_id != '':
-                        pub_id = 'ZFIN:' + pub_id.strip()
 
                     assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
                     assoc.set_environment(env_id)
@@ -966,7 +983,6 @@ class ZFIN(Source):
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
                     assoc.add_association_to_graph(g)
-                    assoc.load_all_properties(g)
 
                 else:
                     # TODO add normal phenotypes as associations #134
@@ -980,6 +996,8 @@ class ZFIN(Source):
                     c = '+'.join(clist)
                     c = ' '.join(("Normal phenotype observed:", c, "(" + pub_id + ")"))
                     gu.addComment(g, effective_genotype_id, c)
+                    if pub_id != '':
+                        gu.addTriple(g, pub_id, gu.object_properties['mentions'], effective_genotype_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -988,6 +1006,10 @@ class ZFIN(Source):
         myset2 = set([','.join(x) for x in missing_zpids])
         logger.info("Phenotype-sextuples: %d mapped : %d unmapped", len(myset), len(myset2))
         self._write_missing_zp_report(missing_zpids)
+
+        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+        gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
 
         return
 
@@ -1406,11 +1428,12 @@ class ZFIN(Source):
                     continue
 
                 pub_id = 'ZFIN:' + pub_id.strip()
-                gu.addIndividualToGraph(g, pub_id, None)
+                r = Reference(pub_id)
 
                 if pubmed_id != '' and pubmed_id is not None:
                     pubmed_id = 'PMID:' + pubmed_id.strip()
-                    gu.addIndividualToGraph(g, pubmed_id, None)
+                    r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                    r.addRefToGraph(g)
                     gu.addSameIndividual(g, pub_id, pubmed_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -1493,7 +1516,8 @@ class ZFIN(Source):
                     pubs = re.split(',', publication.strip())
                     for p in pubs:
                         pub_id = 'ZFIN:' + p.strip()
-                        gu.addIndividualToGraph(g, pub_id, None)
+                        r = Reference(pub_id)
+                        r.addRefToGraph(g)
                         gu.addTriple(g, pub_id, gu.properties['mentions'], reagent_id)
 
                 # Add comment?
@@ -1977,7 +2001,7 @@ class ZFIN(Source):
         logger.info("Processing human orthos")
         line_counter = 0
         geno = Genotype(g)
-
+        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1999,17 +2023,72 @@ class ZFIN(Source):
                 # make the association
                 assoc = OrthologyAssoc(self.name, zfin_id, gene_id)
                 # we don't know anything about the orthology type, so we just use the default
-                assoc.load_all_properties(g)
+
                 assoc.add_association_to_graph(g)
 
                 # FIXME we have requested that ZFIN add evidence codes and papers to the orthology calls
-                # TODO we can get this from zfin mine
+                # TODO we can get this from zfin mine  #164
                 # (This data is in their web front-end, but not in the downloads)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
+        gu.loadObjectProperties(g, OrthologyAssoc.ortho_rel)
+
         logger.info("Done with human orthos")
+        return
+
+    def _process_gene_coordinates(self, limit=None):
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        logger.info("Processing human orthos")
+        line_counter = 0
+        geno = Genotype(g)
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, self.files['gene_coordinates']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                if re.match(r'^(\s|#|$)', ''.join(row)):
+                    continue # skip header
+                (chrom, source, type, start, end, score, strand, phase, attributes) = row
+
+                gene_id = None
+                if attributes == '':
+                    continue
+                else:
+                    attribute_dict = dict(item.split("=") for item in re.sub('"', '', attributes).split(";"))
+                    gene_id = attribute_dict.get('gene_id')
+
+                if self.testMode and gene_id not in self.test_ids['gene']:
+                    continue
+                gene_id = 'ZFIN:'+gene_id
+
+                # make chrom
+                chrom_id = makeChromID(chrom, 'NCBITaxon:7227', 'CHR')
+                gu.addClassToGraph(g, chrom_id, None)  # assume it gets added elsewhere
+                build_label = 'danRer10'  # FIXME - remove this hardcoding
+                build_id = 'UCSC:'+build_label
+                chrom_in_build = makeChromID(chrom, build_id, 'MONARCH')
+                geno.addChromosomeInstance(chrom, build_id, build_label, chrom_id)
+                f = Feature(gene_id, None, None)
+                f.addFeatureStartLocation(start, chrom_in_build, strand)
+                f.addFeatureEndLocation(end, chrom_in_build, strand)
+                f.addFeatureToGraph(g, True, None, True)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        gu.loadObjectProperties(g, OrthologyAssoc.ortho_rel)
+
+        logger.info("Done with gene coordinates")
+
+
         return
 
     def _map_sextuple_to_phenotype(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
