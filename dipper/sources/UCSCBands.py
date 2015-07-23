@@ -242,7 +242,7 @@ class UCSCBands(Source):
                     logger.error("There's a chr pattern that we aren't matching: %s", scaffold)
 
                 if chrom_num is not None:
-                    chrom_class_id = makeChromID(chrom_num, taxon)  # the chrom class (generic) id
+                    chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')  # the chrom class (generic) id
 
                     # first, add the chromosome class (in the taxon)
                     geno.addChromosomeClass(chrom_num, taxon_id, self.files[taxon]['genome_label'])
@@ -325,11 +325,11 @@ class UCSCBands(Source):
         # loop through the hash and add the bands to the graph
         for b in mybands.keys():
             myband = mybands.get(b)
-            band_class_id = makeChromID(b, taxon)
+            band_class_id = makeChromID(b, taxon, 'CHR')
             band_class_label = makeChromLabel(b, genome_label)
-            band_build_id = makeChromID(b, build_num)
+            band_build_id = makeChromID(b, build_num, 'MONARCH')
             band_build_label = makeChromLabel(b, build_num)
-            chrom_in_build_id = makeChromID(myband['chr'], build_num)  # the build-specific chrom
+            chrom_in_build_id = makeChromID(myband['chr'], build_num, 'MONARCH')  # the build-specific chrom
 
             # if it's != part, then add the class
             if myband['type'] != Feature.types['assembly_component']:
@@ -346,7 +346,7 @@ class UCSCBands(Source):
                     geno.addParts(band_build_id, build_id)
             elif myband['type'] == Feature.types['assembly_component']:
                 # geno.addParts(band_build_id, chrom_in_build_id)
-                parent_chrom_in_build = makeChromID(myband['parent'], build_num)
+                parent_chrom_in_build = makeChromID(myband['parent'], build_num, 'MONARCH')
                 bfeature.addSubsequenceOfFeature(self.graph, parent_chrom_in_build)
 
             # add the band as a feature (which also instantiates the owl:Individual)

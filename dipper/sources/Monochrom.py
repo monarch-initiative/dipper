@@ -238,7 +238,7 @@ class Monochrom(Source):
                     logger.info("Skipping non-placed chromosome %s", chrom)
                     continue
 
-                cclassid = makeChromID(chrom, taxon)  # the chrom class, taxon as the reference
+                cclassid = makeChromID(chrom, taxon, 'CHR')  # the chrom class, taxon as the reference
 
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)

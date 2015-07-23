@@ -421,7 +421,7 @@ class Coriell(Source):
                         # place the karyotype in a location(s).
                         karyo_chrs = self._get_affected_chromosomes_from_karyotype(karyotype)
                         for c in karyo_chrs:
-                            chr_id = makeChromID(c, taxon)
+                            chr_id = makeChromID(c, taxon, 'CHR')
                             # add an anonymous sequence feature, each located on chr
                             karyotype_feature_id = '-'.join((karyotype_id, c))
                             karyotype_feature_label = 'some sequence alteration on chr'+str(c)

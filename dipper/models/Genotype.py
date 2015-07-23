@@ -465,8 +465,8 @@ class Genotype():
         return
 
     def addChromosomeClass(self, chrom_num, taxon_id, taxon_label):
-        taxon = re.sub('NCBITaxon:','',taxon_id)
-        chrom_class_id = makeChromID(chrom_num, taxon)  # the chrom class (generic) id
+        taxon = re.sub('NCBITaxon:', '', taxon_id)
+        chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')  # the chrom class (generic) id
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
         self.gu.addClassToGraph(self.graph, chrom_class_id, chrom_class_label,
                                 Feature.types['chromosome'])
@@ -483,7 +483,7 @@ class Genotype():
         :return:
         """
 
-        chr_id = makeChromID(str(chr_num), reference_id)
+        chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
         self.gu.addIndividualToGraph(self.graph, chr_id, chr_label, Feature.types['chromosome'])

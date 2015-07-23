@@ -85,7 +85,8 @@ class AnimalQTLdb(Source):
 
         # update the dataset object with details about this resource
         self.dataset = Dataset('animalqtldb', 'Animal QTL db',
-                               'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None)
+                               'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
+                               'http://www.animalgenome.org/QTLdb/faq#23')
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("No licences or rights exist for the raw data from this resource.")
@@ -192,13 +193,13 @@ class AnimalQTLdb(Source):
                 f.addTaxonToFeature(g, taxon_id)
 
                 # deal with the chromosome
-                chrom_id = makeChromID(chromosome, taxon_id)
+                chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
                 # add a version of the chromosome which is defined as the genetic map
                 build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
-                chrom_in_build_id = makeChromID(chromosome, build_id)
+                chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(chromosome, build_id, build_label, chrom_id)
                 start = stop = None
                 if re.search('-', range_cm):
@@ -399,9 +400,9 @@ class AnimalQTLdb(Source):
 
                 # get location of QTL
                 chromosome = re.sub('Chr\.', '', chromosome)
-                chrom_id = makeChromID(chromosome, taxon_id)
+                chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
-                chrom_in_build_id = makeChromID(chromosome, build_id)
+                chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(chromosome, build_id, build_label, chrom_id)
                 qtl_feature = Feature(qtl_id, None, geno.genoparts['QTL'])
                 if start_bp == '':

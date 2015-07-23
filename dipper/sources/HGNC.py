@@ -137,7 +137,7 @@ class HGNC(Source):
                 chr_match = re.match(chr_pattern, location)
                 if chr_match is not None and len(chr_match.groups()) > 0:
                     chrom = chr_match.group(1)
-                    chrom_id = makeChromID(chrom, 'NCBITaxon:9606')
+                    chrom_id = makeChromID(chrom, 'NCBITaxon:9606', 'CHR')
                     band_pattern = '([pq][A-H\d]?\d?(?:\.\d+)?)'
                     band_match = re.search(band_pattern, location)
                     f = Feature(hgnc_id, None, None)
@@ -146,7 +146,7 @@ class HGNC(Source):
                         band = chrom + band
                         # add the chr band as the parent to this gene as a feature
                         # but assume that the band is created as a class with properties elsewhere in Monochrom
-                        band_id = makeChromID(band, 'NCBITaxon:9606')
+                        band_id = makeChromID(band, 'NCBITaxon:9606', 'CHR')
                         gu.addClassToGraph(g, band_id, None)
                         f.addSubsequenceOfFeature(g, band_id)
                     else:

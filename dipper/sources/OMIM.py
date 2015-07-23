@@ -305,9 +305,9 @@ class OMIM(Source):
                                 cytoloc = cytoloc.split('-')[0]
                                 f = Feature(omimid, None, None)
                                 if 'chromosome' in genemap:
-                                    chrom = makeChromID(str(genemap['chromosome']), tax_num)
+                                    chrom = makeChromID(str(genemap['chromosome']), tax_num, 'CHR')
                                     geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
-                                    loc = makeChromID(cytoloc, tax_num)
+                                    loc = makeChromID(cytoloc, tax_num, 'CHR')
                                     gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
                                     f.addSubsequenceOfFeature(g, loc)
                                     f.addFeatureToGraph(g)

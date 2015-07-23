@@ -1868,7 +1868,7 @@ class ZFIN(Source):
                     # skip any of the others
 
                 # make the chromosome class
-                chr_id = makeChromID(chromosome, taxon_id)
+                chr_id = makeChromID(chromosome, taxon_id, 'CHR')
                 # chr_label = makeChromLabel(chromosome, taxon_label)
                 geno.addChromosomeClass(chromosome, taxon_id, taxon_label)
 
@@ -1882,7 +1882,7 @@ class ZFIN(Source):
                     gu.addDescription(g, panel_id, pinfo['name'])
 
                     # add the mapping-panel chromosome
-                    chr_inst_id = makeChromID(chromosome, panel_id)
+                    chr_inst_id = makeChromID(chromosome, panel_id, 'MONARCH')
                     geno.addChromosomeInstance(chromosome, panel_id, panel_label, chr_id)
                     # add the feature to the mapping-panel chromosome
                     f = Feature(zfin_id, None, None)

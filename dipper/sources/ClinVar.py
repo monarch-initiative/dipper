@@ -237,18 +237,18 @@ class ClinVar(Source):
                         # use cytogenic location to get the approximate location
                         # strangely, they still put an assembly number even when there's no numeric location
                         if not re.search('-',str(cytogenetic_loc)):
-                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num)
+                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num, 'CHR')
                             geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
-                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly)
+                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly, 'MONARCH')
                         else:
                             # can't deal with ranges yet
                             pass
                 else:
                     # add the human chromosome class to the graph, and add the build-specific version of it
-                    chr_id = makeChromID(str(chr), tax_num)
+                    chr_id = makeChromID(str(chr), tax_num, 'CHR')
                     geno.addChromosomeClass(str(chr), tax_id, tax_label)
                     geno.addChromosomeInstance(str(chr), build_id, assembly, chr_id)
-                    chrinbuild_id = makeChromID(str(chr), assembly)
+                    chrinbuild_id = makeChromID(str(chr), assembly, 'MONARCH')
 
                 seqalt_id = ':'.join(('ClinVarVariant', variant_num))
                 gene_id = None

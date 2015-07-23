@@ -237,7 +237,7 @@ class NCBIGene(Source):
                     # do this in a loop to allow PAR regions like X|Y
                     for c in re.split('\|',str(chr)) :
                         geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
-                        mychrom = makeChromID(c, tax_num)
+                        mychrom = makeChromID(c, tax_num, 'CHR')
                         mychrom_syn = makeChromLabel(c, tax_num)  # temporarily use the taxnum for the disambiguating label
                         gu.addSynonym(g, mychrom,  mychrom_syn)
                         band_match = re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
@@ -249,7 +249,7 @@ class NCBIGene(Source):
                             # TODO we probably need a different regex per organism
                             # the maploc_id already has the numeric chromosome in it, strip it first
                             bid = re.sub('^'+c, '', map_loc)
-                            maploc_id = makeChromID(c+bid, tax_num)  # the generic location (no coordinates)
+                            maploc_id = makeChromID(c+bid, tax_num, 'CHR')  # the generic location (no coordinates)
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             band = Feature(maploc_id, None, None)  # Assume it's type will be added elsewhere
                             band.addFeatureToGraph(g)

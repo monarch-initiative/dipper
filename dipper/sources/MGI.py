@@ -1394,14 +1394,14 @@ class MGI(Source):
                         continue
 
                 # make the chromsomome, and the build-instance
-                chrom_id = makeChromID(chromosome, 'NCBITaxon:10090')
+                chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
                 if version is not None and version != '' and version != '(null)':
 
                     # switch on maptype or mapkey
                     assembly = version
                     build_id = 'NCBIGenome:'+assembly
                     geno.addChromosomeInstance(chromosome, build_id, assembly, chrom_id)
-                    chrom_id = makeChromID(chromosome, build_id)
+                    chrom_id = makeChromID(chromosome, build_id, 'MONARCH')
 
                 if marker_key in self.idhash['marker']:
                     gene_id = self.idhash['marker'][marker_key]
