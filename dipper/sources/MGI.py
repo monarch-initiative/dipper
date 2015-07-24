@@ -143,6 +143,7 @@ class MGI(Source):
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
         self.label_hash = {}  # use this to store internally generated labels for various features
+        self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
 
         self.wildtype_alleles = set()
 
@@ -312,6 +313,9 @@ class MGI(Source):
 
                 geno.addGenomicBackgroundToGenotype(strain_id, mgiid)
 
+                # add this to a hash lookup so we can build the genotype label later
+                self.geno_bkgd[mgiid] = strain_id
+
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
@@ -372,15 +376,14 @@ class MGI(Source):
                     break
 
         # now, loop through the hash and add the genotypes as individuals
+        # we add the mgi genotype as a synonym (we generate our own label later)
         gutil = Genotype(g)
         for gt in geno_hash:
             geno = geno_hash.get(gt)
             gvc = sorted(geno.get('vslcs'))
             label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
-            gutil.addGenotype(gt, label.strip())
-            # TODO gu.addSynonym(g, gt, label.strip())
-
-        # TODO materialize a GVC here?
+            geno.addGenotype(g, gt, None, geno.genoparts['intrinsic_genotype'])
+            gu.addSynonym(g, gt, label.strip())
 
         gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
         gu.loadProperties(g, gutil.annotation_properties, gu.ANNOTPROP)
@@ -666,8 +669,12 @@ class MGI(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
+        # build the gvc and the genotype label
         for gt in geno_hash.keys():
+            if gt is None:   #not sure why, but sometimes this is the case
+                continue
             vslcs = sorted(list(geno_hash[gt]))
+            gvc_label = None
             if len(vslcs) > 1:
                 gvc_id = re.sub('_', '', ('-'.join(vslcs)))
                 gvc_id = re.sub(':', '', gvc_id)
@@ -686,12 +693,27 @@ class MGI(Source):
                     geno.addVSLCtoParent(v, gvc_id)
                 geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
             elif len(vslcs) == 1:
-                v = vslcs[0]
+                gvc_label = vslcs[0]
                 # type the VSLC as also a GVC
-                gu.addIndividualToGraph(g, v, None, geno.genoparts['genomic_variation_complement'])
-                geno.addVSLCtoParent(v, gt)
+                gu.addIndividualToGraph(g, gvc_label, None, geno.genoparts['genomic_variation_complement'])
+                geno.addVSLCtoParent(gvc_label, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
+
+            # make the genotype label = gvc + background
+            bkgd_id = self.geno_bkgd.get(gt)
+            if bkgd_id is not None:
+                bkgd_label = self.label_hash.get(bkgd_id)
+                if bkgd_label is None:
+                    bkgd_label = bkgd_id  # just in case
+            else:
+                bkgd_label = 'n.s.'
+            if gvc_label is not None:
+                genotype_label = gvc_label + ' ['+bkgd_label+']'
+            else:
+                genotype_label = '['+bkgd_label+']'
+
+            gu.addIndividualToGraph(g, gt, genotype_label)
 
         return
 
@@ -1032,7 +1054,7 @@ class MGI(Source):
                 strain_id = self.idhash['strain'].get(strain_key)
 
                 if strain_id is not None:
-                    geno.addGenotype(strain_id, strain)
+                    geno.addGenotype(strain_id, strain)  # FIXME?
                     self.label_hash[strain_id] = strain
 
                     # add the species to the graph as a class
@@ -1426,6 +1448,7 @@ class MGI(Source):
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(g)
         genome_id = geno.makeGenomeID('NCBITaxon:10090')
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1483,6 +1506,10 @@ class MGI(Source):
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
+
+        gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
+        gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
+        gu.loadProperties(g, Feature.annotation_properties, gu.ANNOTPROP)
 
         return
 
@@ -1587,7 +1614,7 @@ class MGI(Source):
     def _map_marker_type(marker_type):
         marktype = None
         type_map = {
-            'Complex/Cluster/Region': 'SO:0000001',  # region. Something more specific available? # fixme
+            'Complex/Cluster/Region': 'SO:0000110',  # sequence feature
             'Transgene': 'SO:0000902',  # transgene
             'Gene': 'SO:0000704',  # gene
             'QTL': 'SO:0000771',  # QTL
