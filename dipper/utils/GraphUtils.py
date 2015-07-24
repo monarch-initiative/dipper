@@ -24,7 +24,7 @@ class GraphUtils:
     ANNOTPROP = OWL['AnnotationProperty']
     DATAPROP = OWL['DatatypeProperty']
     SUBCLASS = RDFS['subClassOf']
-    PERSON = FOAF['person']
+    PERSON = FOAF['Person']
 
     annotation_properties = {
         'replaced_by': 'IAO:0100001',
