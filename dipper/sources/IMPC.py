@@ -359,16 +359,20 @@ class IMPC(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
+            gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
+            gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
+            gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
+
         return
 
-    def _map_zygosity(self, zygosity):
-        geno = Genotype(self.graph)
-        typeid = geno.zygosity['indeterminate']
+    @staticmethod
+    def _map_zygosity(zygosity):
+        typeid = Genotype.zygosity['indeterminate']
         type_map = {
-            'heterozygote': geno.zygosity['simple_heterozygous'],
-            'homozygote': geno.zygosity['homozygous'],
-            'hemizygote': geno.zygosity['hemizygous'],
-            'not_applicable': geno.zygosity['indeterminate']
+            'heterozygote': Genotype.zygosity['simple_heterozygous'],
+            'homozygote': Genotype.zygosity['homozygous'],
+            'hemizygote': Genotype.zygosity['hemizygous'],
+            'not_applicable': Genotype.zygosity['indeterminate']
         }
         if zygosity.strip() in type_map:
             typeid = type_map.get(zygosity)
