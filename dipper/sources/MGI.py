@@ -228,14 +228,11 @@ class MGI(Source):
 
         logger.info("Finished parsing.")
 
-        # TODO generate report of internal identifiers we created (eg for strains)
-
         self.load_bindings()
         for g in [self.graph, self.testgraph]:
             Assoc(self.name).load_all_properties(g)
             gu = GraphUtils(curie_map.get())
             gu.loadAllProperties(g)
-
 
         logger.info("Loaded %d nodes", len(self.graph))
         return
@@ -295,17 +292,17 @@ class MGI(Source):
                         # so we make one up, and add it to the hash
                         strain_id = self._makeInternalIdentifier('strain', strain_key)
                         if self.nobnodes:
-                            strain_id = ':'+strain_id
+                            strain_id = ':' + strain_id
                         self.idhash['strain'].update({strain_key: strain_id})
                         gu.addComment(g, strain_id, "strain_key:"+strain_key)
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.  so add instances of each.
                         strain_id = self._makeInternalIdentifier('strain', re.sub(':', '', str(strain_id)))
-                        strain_id = strain_id+re.sub(':', '', str(mgiid))
+                        strain_id += re.sub(':', '', str(mgiid))
                         if self.nobnodes:
-                            strain_id = ':'+strain_id
-                        gu.addDescription(g, strain_id, "This genomic background is unknown.  "+
-                                                        "This is a placeholder background for "+mgiid+".")
+                            strain_id = ':' + strain_id
+                        gu.addDescription(g, strain_id, "This genomic background is unknown.  " +
+                                                        "This is a placeholder background for " + mgiid + ".")
                     # add it back to the idhash
                     logger.warn("adding background as internal id: %s %s: %s", strain_key, strain, strain_id)
                 geno.addGenomicBackground(strain_id, strain)
@@ -445,7 +442,6 @@ class MGI(Source):
 
         return
 
-
     def _process_all_allele_view(self, limit):
         """
         Add the allele as a variant locus (or reference locus if wild-type).
@@ -511,7 +507,7 @@ class MGI(Source):
                 if self.nobnodes:
                     # in test mode, we want to make these identified nodes
                     iseqalt_id = ':'+iseqalt_id
-                iseqalt = gu.getNode(iseqalt_id)
+
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = geno.genoparts['variant_locus']
@@ -528,7 +524,6 @@ class MGI(Source):
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
                 self.label_hash[allele_id] = symbol
-                al = gu.getNode(allele_id)
 
                 # HACK - if the label of the allele == marker, then make the thing a seq alt
                 allele_label = self.label_hash.get(allele_id)
@@ -671,7 +666,7 @@ class MGI(Source):
 
         # build the gvc and the genotype label
         for gt in geno_hash.keys():
-            if gt is None:   #not sure why, but sometimes this is the case
+            if gt is None:   # not sure why, but sometimes this is the case
                 continue
             vslcs = sorted(list(geno_hash[gt]))
             gvc_label = None
@@ -801,9 +796,7 @@ class MGI(Source):
                 # assoc_id = self.make_id(iassoc_id)
 
                 assoc_id = None
-                # Restricting to type 1002, as done in the MousePhenotypes view.
-                # Corresponds to 'Mammalian Phenotype/Genotype' and MP terms
-                if annot_type_key == '1002':
+                if annot_type_key == '1002':  # Mammalian Phenotype/Genotype are curated G2P assoc
                     line_counter += 1
 
                     # TODO add NOT annotations
@@ -931,7 +924,6 @@ class MGI(Source):
         else:
             g = self.graph
 
-        # TODO we may consider limiting the publication nodes
         # firstpass, get the J number mapping, and add to the global hash
         line_counter = 0
         logger.info('populating pub id hash')
@@ -1195,16 +1187,6 @@ class MGI(Source):
                         continue  # don't need to add the equivalence to itself.
                     elif logicaldb_key == '55':
                         mapped_id = 'NCBIGene:'+accid
-                    #elif logicaldb_key == '45':
-                    #    mapped_id = 'PDB:'+accid
-                    #ISSUE: MirBase accession ID can map to multiple MGI IDs if the miRNA is also part of a cluster (Mirlet7b is part of cluster Mirc31)
-                    #elif logicaldb_key == '83':
-                    #    mapped_id = 'miRBase:'+accid
-                    #elif logicaldb_key == '13':
-                    #    mapped_id = 'SwissProt:'+accid
-                    #elif logicaldb_key == '8':
-                    #    mapped_id = 'EC:'+accid
-                    # FIXME: The EC IDs are used for multiple genes, resulting in one EC number
 
                     if mapped_id is not None:
                         if mgiid in self.markers['classes'] or subtype in ['Gene', 'Pseudogene']:
@@ -1299,7 +1281,6 @@ class MGI(Source):
                         marker_id = accid
                     elif logicaldb_key == '60':
                         marker_id = 'ENSEMBL:'+accid
-                    # TODO get other identifiers
                     # TODO get non-preferred ids==deprecated?
 
                 if marker_id is not None:
@@ -1310,7 +1291,7 @@ class MGI(Source):
                         gu.addIndividualToGraph(g, marker_id, None)
                         gu.addSameIndividual(g, mgiid, marker_id)
                     else:
-                        logger.error("mgiid not in class or indiv hash %s",mgiid)
+                        logger.error("mgiid not in class or indiv hash %s", mgiid)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1448,7 +1429,7 @@ class MGI(Source):
         logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(g)
-        genome_id = geno.makeGenomeID('NCBITaxon:10090')
+
         gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1513,49 +1494,6 @@ class MGI(Source):
         gu.loadProperties(g, Feature.annotation_properties, gu.ANNOTPROP)
 
         return
-
-    # def _process_genoaggregate(self,raw,limit):
-    #     """
-    #     Here, we add the aggregated genotype labels to the graph.
-    #     This is the table that is created by us in a selection and aggregation of MGI data
-    #     in order to get a single label for a given genotype.
-    #     :param raw:
-    #     :param limit:
-    #     :return:
-    #     """
-    #
-    #     gu = GraphUtils(curie_map.get())
-    #
-    #     line_counter = 0
-    #     print("INFO: getting free text descriptions for annotations")
-    #     with open(raw, 'r', encoding="utf8") as csvfile:
-    #         filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-    #         for line in filereader:
-    #             line_counter += 1
-    #             if (line_counter == 1):
-    #                 continue
-    #
-    #             (mgiid,genotype_key,gvc,subtype) = line
-    #
-    #             if self.testMode is True:
-    #                 if int(genotype_key) not in self.test_keys.get('genotype'):
-    #                     continue
-    #
-    #            #add the internal genotype to mgi mapping
-    #             self.idhash['genotype'][genotype_key] = mgiid
-    #
-    #             if (preferred == '1'):
-    #                 geno_label = gvc.strip() + '[' + subtype + ']'
-    #                 gu.addIndividualToGraph(g,mgiid,geno_label,self.terms['intrinsic_genotype'])
-    #
-    #             #TODO what to do with != preferred
-    #             #TODO note the short_description is the GVC  (use this or reason?)
-    #
-    #             if (limit is not None and line_counter > limit):
-    #                 break
-    #
-    #
-    #     return
 
     # TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
     @staticmethod
