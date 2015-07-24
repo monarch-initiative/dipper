@@ -10,6 +10,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.Association import Assoc
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Reference import Reference
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
@@ -133,7 +134,7 @@ class ClinVar(Source):
         gu.loadAllProperties(g)
         f = Feature(None, None, None)
         f.loadAllProperties(g)
-        Assoc(self.name).load_all_properties(g)
+
         gu.loadAllProperties(g)
 
         # add the taxon and the genome
@@ -369,6 +370,10 @@ class ClinVar(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
+        gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
+        gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
+
         logger.info("Finished parsing variants")
 
         return
@@ -429,6 +434,8 @@ class ClinVar(Source):
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
+                    r = Reference(ref_id, Reference.ref_types['journal_article'])
+                    r.addRefToGraph(g)
                     gu.addTriple(g, ref_id, self.properties['is_about'], var_id)
 
                 if not self.testMode and (limit is not None and line_counter > limit):
@@ -440,7 +447,7 @@ class ClinVar(Source):
 
     def _map_type_of_allele(self, alleletype):
         # TODO this will get deprecated when we parse the xml file
-        so_id = 'SO:0001060'
+        so_id = 'SO:0001059'
         type_to_so_map = {
             'NT expansion': 'SO:1000039',  # direct tandem duplication
             'copy number gain': 'SO:0001742',
@@ -455,7 +462,7 @@ class ClinVar(Source):
             'short repeat': 'SO:0000657',   # repeat region - not sure if this is what's intended.
             'single nucleotide variant': 'SO:0001483',
             'structural variant': 'SO:0001537',
-            'undetermined variant': 'SO:0001060'    # sequence variant
+            'undetermined variant': 'SO:0001059'    # sequence variant
         }
 
         if alleletype in type_to_so_map:
