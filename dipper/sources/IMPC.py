@@ -159,7 +159,9 @@ class IMPC(Source):
                 zygosity_id = self._map_zygosity(zygosity)
 
                 # colony ids sometimes have <> in them, and break our system; replace these with underscores
-                colony_id = 'IMPC:'+re.sub('[<>\s]', '_', colony)
+                colony_id = '_'+re.sub('[<>\s]', '_', colony)
+                if self.nobnodes:
+                    colony_id = ':'+colony_id
 
                 if not re.match('MGI', allele_accession_id):
                     allele_accession_id = '_IMPC-'+re.sub(':', '', allele_accession_id)
@@ -347,9 +349,6 @@ class IMPC(Source):
                                         procedure_name, 'assay where', parameter_name.strip(),
                                         'was measured with an effect_size of', str(round(float(effect_size), 5)),
                                          '(p =', "{:.4e}".format(float(p_value)), ').'))
-
-#                                        '(p =', "{:.4e}".format(float(p_value)), 'via', statistical_method, ').'))
-
 
                 gu.addDescription(g, assoc_id, description)
 
