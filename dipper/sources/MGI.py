@@ -527,9 +527,13 @@ class MGI(Source):
                 self.label_hash[allele_id] = symbol
                 al = gu.getNode(allele_id)
 
-                # marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
-                if marker_id is not None:
-                    # add link between gene and allele
+                # HACK - if the label of the allele == marker, then make the thing a seq alt
+                allele_label = self.label_hash.get(allele_id)
+                marker_label = self.label_hash.get(marker_id)
+                if allele_label is not None and allele_label == marker_label:
+                    gu.addSameIndividual(g, allele_id, marker_id)
+                elif marker_id is not None:
+                    # marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
                     geno.addAlleleOfGene(allele_id, marker_id, locus_rel)
 
                 # sequence alteration in strain
