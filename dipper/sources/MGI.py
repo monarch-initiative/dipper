@@ -714,6 +714,7 @@ class MGI(Source):
                 genotype_label = '['+bkgd_label+']'
 
             gu.addIndividualToGraph(g, gt, genotype_label)
+            self.label_hash[gt] = genotype_label
 
         return
 
