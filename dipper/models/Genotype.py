@@ -188,6 +188,10 @@ class Genotype():
 
         return
 
+    def addSequenceDerivesFrom(self, child_id, parent_id):
+        self.gu.addTriple(self.graph, child_id, self.properties['derives_sequence_from_gene'], parent_id)
+        return
+
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
         """
         We make the assumption here that if the relationship is not provided, it is a

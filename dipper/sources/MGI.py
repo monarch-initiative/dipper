@@ -142,6 +142,8 @@ class MGI(Source):
                        'genotype': {}, 'annot': {}, 'notes': {}}
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
+        self.label_hash = {}  # use this to store internally generated labels for various features
+
         self.wildtype_alleles = set()
 
         return
@@ -233,6 +235,7 @@ class MGI(Source):
             gu = GraphUtils(curie_map.get())
             gu.loadAllProperties(g)
 
+
         logger.info("Loaded %d nodes", len(self.graph))
         return
 
@@ -264,6 +267,7 @@ class MGI(Source):
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, 'gxd_genotype_view'))
         logger.info("getting genotypes and their backgrounds")
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
             for line in f1:
@@ -284,16 +288,27 @@ class MGI(Source):
 
                 # if it's in the hash, assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
-                if strain_id is None:
-                    # some of the strains don't have public identifiers!
-                    # so we make one up, and add it to the hash
-                    logger.warn("adding background as internal id: %s %s", strain_key, strain)
-                    strain_id = self._makeInternalIdentifier('strain', strain_key)
-                    if self.nobnodes:
-                        strain_id = ':'+strain_id
+                if strain_id is None or int(strain_key) < 0:
+                    if strain_id is None:
+                        # some of the strains don't have public identifiers!
+                        # so we make one up, and add it to the hash
+                        strain_id = self._makeInternalIdentifier('strain', strain_key)
+                        if self.nobnodes:
+                            strain_id = ':'+strain_id
+                        self.idhash['strain'].update({strain_key: strain_id})
+                        gu.addComment(g, strain_id, "strain_key:"+strain_key)
+                    elif int(strain_key) < 0:
+                        # these are ones that are unidentified/unknown.  so add instances of each.
+                        strain_id = self._makeInternalIdentifier('strain', re.sub(':', '', str(strain_id)))
+                        strain_id = strain_id+re.sub(':', '', str(mgiid))
+                        if self.nobnodes:
+                            strain_id = ':'+strain_id
+                        gu.addDescription(g, strain_id, "This genomic background is unknown.  "+
+                                                        "This is a placeholder background for "+mgiid+".")
                     # add it back to the idhash
-                    self.idhash['strain'].update({strain_key: strain_id})
-                    geno.addGenotype(strain_id, strain)
+                    logger.warn("adding background as internal id: %s %s: %s", strain_key, strain, strain_id)
+                geno.addGenomicBackground(strain_id, strain)
+                self.label_hash[strain_id] = strain
 
                 geno.addGenomicBackgroundToGenotype(strain_id, mgiid)
 
@@ -367,6 +382,9 @@ class MGI(Source):
 
         # TODO materialize a GVC here?
 
+        gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
+        gu.loadProperties(g, gutil.annotation_properties, gu.ANNOTPROP)
+        gu.loadAllProperties(g)
         return
 
     def _process_all_summary_view(self, limit):
@@ -414,7 +432,8 @@ class MGI(Source):
                     # add the allele key to the hash for later lookup
                     self.idhash['allele'][object_key] = mgiid
                     # TODO consider not adding the individuals in this one
-                    gu.addIndividualToGraph(g,mgiid,short_description.strip(),altype,description.strip())
+                    gu.addIndividualToGraph(g, mgiid, short_description.strip(), altype, description.strip())
+                    self.label_hash[mgiid] = short_description.strip()
 
                 # TODO deal with non-preferreds, are these deprecated?
 
@@ -505,6 +524,7 @@ class MGI(Source):
                     locus_type = None
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
+                self.label_hash[allele_id] = symbol
                 al = gu.getNode(allele_id)
 
                 # marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
@@ -513,7 +533,7 @@ class MGI(Source):
                     geno.addAlleleOfGene(allele_id, marker_id, locus_rel)
 
                 # sequence alteration in strain
-                # FIXME change this to a different relation in_strain, genomically_related_to, sequence_derives_from
+
                 if iswildtype == '0':
                     sa_label = symbol
                     sa_id = iseqalt_id
@@ -537,8 +557,9 @@ class MGI(Source):
 
                     # gu.addIndividualToGraph(g,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id, sa_label, None, name)
+                    self.label_hash[sa_id] = sa_label
                     if strain_id is not None:
-                        geno.addDerivesFrom(allele_id, strain_id)
+                        geno.addSequenceDerivesFrom(allele_id, strain_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -558,7 +579,6 @@ class MGI(Source):
         :param limit:
         :return:
         """
-
         gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
@@ -589,7 +609,8 @@ class MGI(Source):
                         continue
 
                 genotype_id = self.idhash['genotype'].get(genotype_key)
-
+                if genotype_id not in geno_hash:
+                    geno_hash[genotype_id] = set()
                 if genotype_id is None:
                     logger.error("genotype_id not found for key %s; skipping", genotype_key)
                     continue
@@ -604,6 +625,7 @@ class MGI(Source):
                     # make this a real id in test mode
                     ivslc_id = ':'+ivslc_id
 
+                geno_hash[genotype_id].add(ivslc_id)
                 # TODO: VSLC label likely needs processing similar to the processing in the all_allele_view
                 # FIXME: handle null alleles
                 vslc_label = allele1+'/'
@@ -624,7 +646,7 @@ class MGI(Source):
                     vslc_label += allele2
 
                 gu.addIndividualToGraph(g, ivslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
-                geno.addVSLCtoParent(ivslc_id, genotype_id)
+                self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = geno.object_properties['has_alternate_part']
                 if allele1_id in self.wildtype_alleles:
                     rel1 = geno.object_properties['has_reference_part']
@@ -640,7 +662,32 @@ class MGI(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-            # TODO process the vslcs to make the gvc for the genotype..but need to store for later
+        for gt in geno_hash.keys():
+            vslcs = sorted(list(geno_hash[gt]))
+            if len(vslcs) > 1:
+                gvc_id = re.sub('_', '', ('-'.join(vslcs)))
+                gvc_id = re.sub(':', '', gvc_id)
+                gvc_id = '_'+gvc_id
+                if self.nobnodes:
+                    gvc_id = ':'+gvc_id
+                vslc_labels = []
+                for v in vslcs:
+                    vslc_labels.append(self.label_hash[v])
+                gvc_label = '; '.join(vslc_labels)
+
+                gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
+                self.label_hash[gvc_id] = gvc_label
+                for v in vslcs:
+                    geno.addParts(v, gvc_id, geno.object_properties['has_alternate_part'])
+                    geno.addVSLCtoParent(v, gvc_id)
+                geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
+            elif len(vslcs) == 1:
+                v = vslcs[0]
+                # type the VSLC as also a GVC
+                gu.addIndividualToGraph(g, v, None, geno.genoparts['genomic_variation_complement'])
+                geno.addVSLCtoParent(v, gt)
+            else:
+                logger.info("No VSLCs for %s", gt)
 
         return
 
@@ -982,6 +1029,7 @@ class MGI(Source):
 
                 if strain_id is not None:
                     geno.addGenotype(strain_id, strain)
+                    self.label_hash[strain_id] = strain
 
                     # add the species to the graph as a class
                     sp = self._map_strain_species(species)
@@ -1062,6 +1110,7 @@ class MGI(Source):
                         gu.addSynonym(g, marker_id, name, Assoc.properties['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
+                    self.label_hash[marker_id] = symbol
                     # add the taxon
                     taxon_id = self._map_taxon(latin_name)
                     geno.addTaxon(taxon_id, marker_id)
@@ -1420,7 +1469,10 @@ class MGI(Source):
                     if endcoordinate is not None:
                         f.addFeatureEndLocation(int(float(endcoordinate)), chrom_id, strand)
                     # note we don't add the uncertain end coordinate, because we don't know what it is.
-                    f.addFeatureToGraph(g)
+                    add_as_class = False
+                    if gene_id in self.markers['classes']:
+                        add_as_class = True
+                    f.addFeatureToGraph(g, True, None, add_as_class)
 
                 else:
                     logger.warn('marker key %s not in idhash', str(marker_key))
@@ -1473,21 +1525,9 @@ class MGI(Source):
     #
     #     return
 
-    # TODO generalize this to a set of utils
-    def _getcols(self, cur, table):
-        query=' '.join(("SELECT * FROM", table, "LIMIT 0"))  # for testing
-        cur.execute(query)
-        colnames = [desc[0] for desc in cur.description]
-        logger.info("columns (%s): %s", table, colnames)
-
-        return
-
-    def file_len(self, fname):
-        with open(fname) as f:
-            return sum(1 for line in f)
-
     # TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
-    def _map_seq_alt_type(self, sequence_alteration_type):
+    @staticmethod
+    def _map_seq_alt_type(sequence_alteration_type):
         seqalttype = 'SO:0001059'  # default to sequence_alteration
         type_map = {
             'Deletion': 'SO:0000159',  # deletion
@@ -1518,7 +1558,8 @@ class MGI(Source):
 
         return seqalttype
 
-    def _map_zygosity(self, zygosity):
+    @staticmethod
+    def _map_zygosity(zygosity):
         zygtype = None
         type_map = {
             'Heterozygous': 'GENO:0000135',
@@ -1538,7 +1579,8 @@ class MGI(Source):
 
         return zygtype
 
-    def _map_marker_type(self, marker_type):
+    @staticmethod
+    def _map_marker_type(marker_type):
         marktype = None
         type_map = {
             'Complex/Cluster/Region': 'SO:0000001',  # region. Something more specific available? # fixme
@@ -1558,28 +1600,25 @@ class MGI(Source):
 
         return marktype
 
-    def _map_allele_type(self, allele_type):
+    @staticmethod
+    def _map_allele_type(allele_type):
         """
         This makes the assumption that all things are variant_loci (including Not Specified)
         :param allele_type:
         :return:
         """
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-        geno = Genotype(g)
-        altype = geno.genoparts['variant_locus']  # assume it's a variant locus
+        altype = Genotype.genoparts['variant_locus']  # assume it's a variant locus
         type_map = {
-            'Not Applicable': geno.genoparts['reference_locus'],
-            'QTL': geno.genoparts['reference_locus'],  # should QTLs be something else?  or SO:QTL?
+            'Not Applicable': Genotype.genoparts['reference_locus'],
+            'QTL': Genotype.genoparts['reference_locus'],  # should QTLs be something else?  or SO:QTL?
         }
         if allele_type.strip() in type_map:
             altype = type_map.get(allele_type)
 
         return altype
 
-    def _map_taxon(self, taxon_name):
+    @staticmethod
+    def _map_taxon(taxon_name):
         taxtype = None
         type_map = {
             'Bos taurus': 'NCBITaxon:9913',
@@ -1614,7 +1653,8 @@ class MGI(Source):
 
         return taxtype
 
-    def _map_strain_species(self, species):
+    @staticmethod
+    def _map_strain_species(species):
         # make the assumption that it is a Mus genus, unless if specified
         tax = '10088'
         id_map = {
@@ -1788,7 +1828,8 @@ class MGI(Source):
 
         return 'NCBITaxon:'+tax
 
-    def _map_evidence_id(self, evidence_code):
+    @staticmethod
+    def _map_evidence_id(evidence_code):
 
         ecotype = None
         type_map = {
@@ -1818,7 +1859,8 @@ class MGI(Source):
 
         return ecotype
 
-    def _makeInternalIdentifier(self, prefix, key):
+    @staticmethod
+    def _makeInternalIdentifier(prefix, key):
         """
         This is a special MGI-to-MONARCH-ism.  MGI tables have unique keys that we use here, but don't want
         to necessarily re-distribute those internal identifiers.  Therefore, we make them into keys in a consistent
