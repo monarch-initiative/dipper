@@ -382,7 +382,7 @@ class MGI(Source):
             geno = geno_hash.get(gt)
             gvc = sorted(geno.get('vslcs'))
             label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
-            geno.addGenotype(g, gt, None, geno.genoparts['intrinsic_genotype'])
+            gutil.addGenotype(gt, None)
             gu.addSynonym(g, gt, label.strip())
 
         gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
