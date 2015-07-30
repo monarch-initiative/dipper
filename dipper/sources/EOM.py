@@ -6,11 +6,11 @@ import logging
 import csv
 
 from dipper.sources.Source import Source
-from dipper.models.Assoc import Assoc
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +56,14 @@ class EOM(Source):
                                'https://creativecommons.org/publicdomain/mark/1.0/')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and 'disco' not in config.get_config()['dbauth']:
+        if 'dbauth' not in config.get_config() or 'disco' not in config.get_config()['dbauth']:
             logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
 
         # create the connection details for DISCO
         cxn = config.get_config()['dbauth']['disco']
@@ -74,13 +74,13 @@ class EOM(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        self.fetch_from_pgdb(self.tables,cxn)
+        self.fetch_from_pgdb(self.tables, cxn)
 
         self.get_files(is_dl_forced)
 
         # FIXME: Everything needed for data provenance?
-        st = os.stat(('/').join((self.rawdir,'dvp.pr_nlx_157874_1')))
-        filedate=datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        st = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
+        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
 
         return
@@ -100,7 +100,6 @@ class EOM(Source):
         logger.info("Finished parsing.")
 
         self.load_bindings()
-        Assoc().loadAllProperties(self.graph)
 
         # since it's so small, we default to copying the entire graph to the test set
         self.testgraph = self.graph

@@ -15,6 +15,7 @@ class ZFINTestCase(SourceTestCase):
     def setUp(self):
         self.source = ZFIN()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

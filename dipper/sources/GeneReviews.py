@@ -7,11 +7,12 @@ import logging
 
 from docx import Document
 
-from dipper.models.Assoc import Assoc
+from dipper.models.assoc.Association import Assoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +131,7 @@ class GeneReviews(Source):
             # TODO add equivalences or types
             gu.addClassToGraph(self.graph, disease_id, disease_name, None, description)
             if synonyms is not None:
-                gu.addSynonym(self.graph, disease_id, synonyms, Assoc.properties['hasExactSynonym'])
+                gu.addSynonym(self.graph, disease_id, synonyms, Assoc(None).properties['hasExactSynonym'])
 
         return
 

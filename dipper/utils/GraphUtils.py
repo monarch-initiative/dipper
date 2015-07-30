@@ -4,7 +4,7 @@ import re
 import logging
 
 from rdflib import Literal, URIRef, BNode, Namespace
-from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
+from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF, DCTERMS
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -18,12 +18,13 @@ class GraphUtils:
 
     OWLCLASS = OWL['Class']
     OWLIND = OWL['NamedIndividual']
+    OWLRESTRICTION = OWL['Restriction']
     OWLPROP = OWL['ObjectProperty']
     OBJPROP = OWL['ObjectProperty']
     ANNOTPROP = OWL['AnnotationProperty']
-    DATAPROP = OWL['DataProperty']
+    DATAPROP = OWL['DatatypeProperty']
     SUBCLASS = RDFS['subClassOf']
-    PERSON = FOAF['person']
+    PERSON = FOAF['Person']
 
     annotation_properties = {
         'replaced_by': 'IAO:0100001',
@@ -39,34 +40,57 @@ class GraphUtils:
         'has_phenotype': 'RO:0002200',
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
+        'has_qualifier': 'GENO:0000580',
         'towards': 'RO:0002503',
         'has_subject': ':hasSubject',
         'has_object': ':hasObject',
         'has_predicate': ':hasPredicate',
-        'is_about': 'IAO:00000136',
+        'is_about': 'IAO:0000136',
         'has_member': 'RO:0002351',
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050',
+        'has_part': 'BFO:0000051',
         'mentions': 'IAO:0000142',
-        'model_of': 'ERO:0000233',
-        'has_gene_product': 'RO:0002205'
+        'model_of' : 'RO:0003301',
+        'has_gene_product': 'RO:0002205',
+        'existence_starts_at': 'UBERON:existence_starts_at',
+        'existence_starts_during': 'RO:0002488',
+        'existence_ends_at': 'UBERON:existence_ends_at',
+        'existence_ends_during': 'RO:0002492',
+        'starts_with': 'RO:0002224',
+        'starts_during': 'RO:0002091',
+        'ends_during': 'RO:0002093',
+        'ends_with': 'RO:0002230',
+        'occurs_in': 'BFO:0000066',
+        'has_environment_qualifier': 'GENO:0000580',
+        'has_begin_stage_qualifier': 'GENO:0000630',
+        'has_end_stage_qualifier': 'GENO:0000631',
+        'correlates_with': 'MONARCH:correlates_with',
+        'substance_that_treats': 'RO:0002606',
+        'is_marker_for': 'RO:0002607',
+        'contributes_to': 'RO:0002326',
+        'has_origin': 'GENO:0000643',
+        'has_author': 'ERO:0000232',
+        'dc:source': 'dc:source',
+        'dc:evidence': 'dc:evidence',
+        'has_evidence': 'RO:0002558'
     }
 
     datatype_properties = {
         'position': 'faldo:position',
         'has_measurement': 'IAO:0000004',
-        'environment': 'GENO:0000099'
     }
 
     properties = annotation_properties.copy()
     properties.update(object_properties)
     properties.update(datatype_properties)
 
-    def __init__(self, curie_map):
+    def __init__(self, curie_map, materialize_bnodes=False):
         self.curie_map = curie_map
         self.cu = CurieUtil(curie_map)
+        self.nobnodes = materialize_bnodes
         return
 
     def addClassToGraph(self, g, id, label, type=None, description=None):
@@ -83,7 +107,7 @@ class GraphUtils:
         :return:
         """
 
-        n = self._getNode(id)
+        n = self.getNode(id)
 
         g.add((n, RDF['type'], self.OWLCLASS))
         if label is not None:
@@ -96,7 +120,7 @@ class GraphUtils:
         return g
 
     def addIndividualToGraph(self, g, id, label, type=None, description=None):
-        n = self._getNode(id)
+        n = self.getNode(id)
 
         if label is not None:
             g.add((n, RDFS['label'], Literal(label)))
@@ -109,9 +133,25 @@ class GraphUtils:
             g.add((n, DC['description'], Literal(description)))
         return g
 
+    def addOWLPropertyClassRestriction(self, g, class_id, property_id, property_value):
+
+        # make a blank node to hold the property restrictions
+        # scrub the colons, they will make the ttl parsers choke
+        nid = '_'+re.sub(':','',property_id)+re.sub(':', '', property_value)
+        n = self.getNode(nid)
+
+        g.add((n, RDF['type'], self.OWLRESTRICTION))
+        g.add((n, OWL['onProperty'], self.getNode(property_id)))
+        g.add((n, OWL['someValuesFrom'], self.getNode(property_value)))
+
+        g.add((self.getNode(class_id), self.SUBCLASS, n))
+
+
+        return
+
     def addEquivalentClass(self, g, id1, id2):
-        n1 = self._getNode(id1)
-        n2 = self._getNode(id2)
+        n1 = self.getNode(id1)
+        n2 = self.getNode(id2)
 
         if n1 is not None and n2 is not None:
             g.add((n1, OWL['equivalentClass'], n2))
@@ -119,8 +159,8 @@ class GraphUtils:
         return
 
     def addSameIndividual(self, g, id1, id2):
-        n1 = self._getNode(id1)
-        n2 = self._getNode(id2)
+        n1 = self.getNode(id1)
+        n2 = self.getNode(id2)
 
         if n1 is not None and n2 is not None:
             g.add((n1, OWL['sameAs'], n2))
@@ -145,11 +185,36 @@ class GraphUtils:
         :return:
         """
 
+        n1 = URIRef(self.cu.get_uri(oldid))
+        g.add((n1, RDF['type'], self.OWLCLASS))
+
+        self._addReplacementIds(g, oldid, newids)
+
+        return
+
+    def addDeprecatedIndividual(self, g, oldid, newids=None):
+        """
+        Will mark the oldid as a deprecated individual.
+        if one newid is supplied, it will mark it as replaced by.
+        if >1 newid is supplied, it will mark it with consider properties
+        :param g:
+        :param oldid: the individual id to deprecate
+        :param newids: the individual idlist that is the replacement(s) of the old individual.  Not required.
+        :return:
+        """
+
+        n1 = URIRef(self.cu.get_uri(oldid))
+        g.add((n1, RDF['type'], self.OWLIND))
+
+        self._addReplacementIds(g, oldid, newids)
+
+        return
+
+    def _addReplacementIds(self, g, oldid, newids):
         consider = URIRef(self.cu.get_uri(self.properties['consider']))
         replaced_by = URIRef(self.cu.get_uri(self.properties['replaced_by']))
 
         n1 = URIRef(self.cu.get_uri(oldid))
-        g.add((n1, RDF['type'], self.OWLCLASS))
         g.add((n1, OWL['deprecated'], Literal(True, datatype=XSD[bool])))
 
         if newids is not None:
@@ -160,6 +225,8 @@ class GraphUtils:
                 for i in newids:
                     n = URIRef(self.cu.get_uri(i.strip()))
                     g.add((n1, consider, n))
+
+
         return
 
     def addSubclass(self, g, parentid, childid):
@@ -191,7 +258,7 @@ class GraphUtils:
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :return:
         """
-        n = self._getNode(cid)
+        n = self.getNode(cid)
         if synonym_type is None:
             synonym_type = URIRef(self.cu.get_uri(self.properties['hasExactSynonym']))  # default
         else:
@@ -202,15 +269,15 @@ class GraphUtils:
 
     def addDefinition(self, g, cid, definition):
         if definition is not None:
-            n = self._getNode(cid)
+            n = self.getNode(cid)
             p = URIRef(self.cu.get_uri(self.properties['definition']))
             g.add((n, p, Literal(definition)))
 
         return
 
     def addXref(self, g, cid, xrefid):
-        n1 = self._getNode(cid)
-        n2 = self._getNode(xrefid)
+        n1 = self.getNode(cid)
+        n2 = self.getNode(xrefid)
         p = URIRef(self.cu.get_uri(self.properties['has_xref']))
         if n1 is not None and n2 is not None:
             g.add((n1, p, n2))
@@ -232,6 +299,11 @@ class GraphUtils:
 
     def addPage(self, g, subject_id, page_url):
         g.add((self.getNode(subject_id), FOAF['page'], Literal(page_url)))
+        return
+
+    def addTitle(self, g, subject_id, title):
+        g.add((self.getNode(subject_id), DC['title'], Literal(title)))
+
         return
 
     def addMember(self, g, group_id, member_id):
@@ -264,10 +336,12 @@ class GraphUtils:
         return
 
 
-    def _getNode(self, id):
+    def _getNode(self, id, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.  If an id starts with an
         underscore, it assigns it to a BNode, otherwise it creates it with a standard URIRef.
+        Alternatively, if materialize_bnode is True, it will add any nodes that would have been
+        blank into the BASE space.
         This will return None if it can't map the node properly.
         :param id:
         :return:
@@ -275,7 +349,10 @@ class GraphUtils:
         base = Namespace(self.curie_map.get(''))
         n = None
         if id is not None and re.match('^_', id):
-            n = BNode(re.sub('_', '', id, 1))  # replace the leading underscore to make it cleaner
+            if materialize_bnode is True:
+                n = base[id]
+            else:
+                n = BNode(re.sub('_', '', id, 1))  # replace the leading underscore to make it cleaner
         elif re.match('^\:', id):
             n = base[re.sub(':', '', id, 1)]   # do we need to remove embedded colons in the ids?
         else:
@@ -286,9 +363,9 @@ class GraphUtils:
                 logger.error("couldn't make URI for %s", id)
         return n
 
-    def getNode(self,id):
+    def getNode(self, id, materialize_bnode=False):
 
-        return self._getNode(id)
+        return self._getNode(id, materialize_bnode)
 
     def addTriple(self, graph, subject_id, predicate_id, object, object_is_literal=False):
         if object_is_literal is True:
@@ -323,7 +400,7 @@ class GraphUtils:
         """
 
         if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error("bad property type assigned: %s", property_type)
+            logger.error("bad property type assigned: %s, %s", property_type, op)
         else:
             for k in op:
                 graph.add((self.getNode(op[k]), RDF['type'], property_type))
@@ -340,5 +417,21 @@ class GraphUtils:
         self.loadProperties(graph, self.object_properties, self.OBJPROP)
         self.loadProperties(graph, self.annotation_properties, self.ANNOTPROP)
         self.loadProperties(graph, self.datatype_properties, self.DATAPROP)
+
+        return
+
+    def addOntologyDeclaration(self, graph, ontology_id):
+
+        graph.add((self.getNode(ontology_id), RDF['type'], OWL['Ontology']))
+
+        return
+
+    def addOWLVersionIRI(self, graph, ontology_id, version_iri):
+        graph.add((self.getNode(ontology_id), OWL['versionIRI'], self.getNode(version_iri)))
+
+        return
+
+    def addOWLVersionInfo(self, graph, ontology_id, version_info):
+        graph.add((self.getNode(ontology_id), OWL['versionInfo'], Literal(version_info)))
 
         return

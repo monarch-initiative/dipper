@@ -18,8 +18,15 @@ from dipper.sources.UCSCBands import UCSCBands
 from dipper.sources.CTD import CTD
 from dipper.sources.GeneReviews import GeneReviews
 from dipper.sources.EOM import EOM
+from dipper.sources.KEGG import KEGG
 from dipper.sources.ClinVar import ClinVar
 from dipper.sources.Coriell import Coriell
+from dipper.sources.Monochrom import Monochrom
+from dipper.sources.AnimalQTLdb import AnimalQTLdb
+from dipper.sources.Ensembl import Ensembl
+from dipper.sources.HGNC import HGNC
+from dipper.sources.Orphanet import Orphanet
+
 from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
 
@@ -44,6 +51,12 @@ def main():
         'eom': EOM,  # Takes about 5 seconds.
         'coriell': Coriell,
         'clinvar': ClinVar,
+        'monochrom': Monochrom,
+        'kegg': KEGG,
+        'animalqtldb': AnimalQTLdb,
+        'ensembl': Ensembl,
+        'hgnc': HGNC,
+        'orphanet': Orphanet
         'mmrrc' : MMRRC
     }
 
@@ -56,7 +69,9 @@ def main():
                         help='comma separated list of sources')
     parser.add_argument('-l', '--limit', type=int, help='limit number of rows')
     parser.add_argument('--parse_only', action='store_true',
-                        help='parse files without writing')
+                        help='parse files without writing'),
+    parser.add_argument('--fetch_only', action='store_true',
+                        help='fetch sources without parsing')
     parser.add_argument('-f', '--force', action='store_true',
                         help='force re-download of files')
     parser.add_argument('--no_verify', help='ignore the verification step',
@@ -66,6 +81,10 @@ def main():
                         action="store_true")
     parser.add_argument('--debug', help='turn on debug logging',
                         action="store_true")
+    parser.add_argument('--skip_tests', help='skip any testing', action="store_true")
+
+    # BNodes can't be visualized in Protege, so you can materialize them for testing purposes with this flag
+    parser.add_argument('-nb', '--no_bnodes', help="convert blank nodes into identified nodes", action="store_true")
 
     # TODO this preconfiguration should probably live in the conf.json, and the same filter be applied to all sources
     parser.add_argument('-t', '--taxon', type=str,
@@ -93,6 +112,9 @@ def main():
         else:
             logging.basicConfig(level=logging.INFO)
 
+    if args.no_bnodes is True:
+        logger.info("Will materialize all BNodes into BASE space")
+
     if args.query is not None:
         test_query = TestUtils()
         for source in args.sources.split(','):
@@ -105,7 +127,7 @@ def main():
         exit(0)
 
     # run initial tests
-    if args.no_verify is not True:
+    if (args.no_verify or args.skip_tests) is not True:
         unittest.TextTestRunner(verbosity=2).run(test_suite)
 
     # iterate through all the sources
@@ -122,9 +144,10 @@ def main():
             mysource.fetch(args.force)
 
         mysource.settestonly(args.test_only)
+        mysource.setnobnodes(args.no_bnodes)
 
         # run tests first
-        if args.no_verify is not True:
+        if (args.no_verify or args.skip_tests) is not True:
             suite = mysource.getTestSuite()
             if suite is None:
                 logger.warn("No tests configured for this source: %s", source)
@@ -133,7 +156,7 @@ def main():
         else:
             logger.info("Skipping Tests for source: %s", source)
 
-        if not args.test_only:
+        if args.test_only is False and args.fetch_only is False:
             mysource.parse(args.limit)
             mysource.write(format='turtle')
 

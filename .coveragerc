@@ -1,0 +1,12 @@
+[run]
+omit =
+ dipper/sources/MGI.py
+ dipper/sources/OMIM.py
+ dipper/sources/IMPC.py
+ dipper/sources/EOM.py
+ dipper/sources/Coriell.py
+ dipper/sources/CTD.py
+ dipper/utils/TestUtils.py
+ dipper/utils/romanplus.py
+ dipper/utils/pysed.py
+ dipper/models/Chem2DiseaseAssoc.py

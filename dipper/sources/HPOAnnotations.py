@@ -3,14 +3,16 @@ import os
 from datetime import datetime
 from stat import *
 import logging
+import re
 
 from dipper.utils import pysed
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
-from dipper.models.D2PAssoc import D2PAssoc
-from dipper.models.DispositionAssoc import DispositionAssoc
+from dipper.models.assoc.D2PAssoc import D2PAssoc
+from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Dataset import Dataset
-from dipper.models.Assoc import Assoc
+from dipper.models.assoc.Association import Assoc
+from dipper.models.Reference import Reference
 from dipper import curie_map
 from dipper import config
 
@@ -45,6 +47,14 @@ class HPOAnnotations(Source):
     evidence, and age of onset and frequency (if known).
     The parser currently only processes the "abnormal" annotations.  Association to "remarkable normality"
     will be added in the near future.
+
+    In order to properly test this class, you should have a conf.json file configured with some test ids, in
+    the structure of:
+        <pre>
+        test_ids: {
+            "disease" : ["OMIM:119600", "OMIM:120160"]  # as examples.  put your favorite ids in the config.
+        }
+        </pre>
     """
 
     files = {
@@ -75,8 +85,8 @@ class HPOAnnotations(Source):
                                'http://www.human-phenotype-ontology.org', None,
                                'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
 
-        if 'test_ids' not in config.get_config() and 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
@@ -185,41 +195,58 @@ class HPOAnnotations(Source):
             for row in filereader:
                 line_counter += 1
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w, asp, syn, date, curator) = row
-                disease_id = db + ":" + num
+                disease_id = db + ":" + str(num)
 
-                if self.testMode and (disease_id not in self.test_ids):
+                if self.testMode and disease_id.strip() not in config.get_config()['test_ids']['disease']:
                     continue
 
-                # blow these apart if there is a list of pubs
+                # logger.info('adding %s', disease_id)
+
+                gu.addClassToGraph(g, disease_id, None)
+                gu.addClassToGraph(g, pheno_id, None)
+                eco_id = self._map_evidence_to_codes(eco)
+                gu.addClassToGraph(g, eco_id, None)
+                if onset is not None and onset.strip() != '':
+                    gu.addClassToGraph(g, onset, None)
+
+                # we want to do things differently depending on the aspect of the annotation
+                if asp == 'O' or asp == 'M':  # organ abnormality or mortality
+                    assoc = D2PAssoc(self.name, disease_id, pheno_id, onset, freq)
+                elif asp == 'I':  # inheritance patterns for the whole disease
+                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                elif asp == 'C':  # clinical course / onset
+                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                else:
+                    logger.error("I don't know what this aspect is:", asp)
+
+                assoc.add_evidence(eco_id)
+
                 publist = publist.split(';')
+                # blow these apart if there is a list of pubs
                 for pub in publist:
                     pub = pub.strip()
-                    assoc_id = self.make_id(db + num + qual + pheno_id + pub + eco + onset + freq + date + curator)
-                    assoc = None
-                    eco_id = self._map_evidence_to_codes(eco)
-                    # make sure to add the disease, phenotype, eco, as classes.
-                    # pub as individual is taken care of in the association function
-                    gu.addClassToGraph(g, disease_id, None)
-                    gu.addClassToGraph(g, pheno_id, None)
-                    gu.addClassToGraph(g, eco_id, None)
+                    if pub != '':
+                        # if re.match('http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
+                        #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
+                        #     m = re.search('part\=(\w+)', pub)
+                        #     pub_id = 'GeneReviews:'+m.group(1)
+                        # elif re.search('http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
+                        #     m = re.search('Expert=(\d+)', pub)
+                        #     pub_id = 'Orphanet:'+m.group(1)
+                        if not re.match('http', pub):
+                            r = Reference(pub)
+                            if re.match('PMID', pub):
+                                r.setType(Reference.ref_types['journal_article'])
+                            r.addRefToGraph(g)
+                        # TODO add curator
+                        assoc.add_source(pub)
 
-                    # we want to do things differently depending on the aspect of the annotation
-                    if asp == 'O' or asp == 'M':  # organ abnormality or mortality
-                        assoc = D2PAssoc(assoc_id, disease_id, pheno_id, onset, freq, pub, eco_id)
-                    elif asp == 'I':  # inheritance patterns for the whole disease
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, eco_id)
-                    elif asp == 'C':  # clinical course / onset
-                        assoc = DispositionAssoc(assoc_id, disease_id, pheno_id, pub, eco_id)
-                    else:
-                        logger.error("I don't know what this aspect is:", asp)
+                assoc.add_association_to_graph(g)
 
-                    if assoc is not None:
-                        assoc.addAssociationNodeToGraph(g)
-
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-            Assoc().loadAllProperties(g)
+            Assoc(None).load_all_properties(g)
 
         return
 

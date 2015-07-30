@@ -1,0 +1,10 @@
+rdflib
+psycopg2
+isodate
+roman
+python-docx
+pyyaml
+pysftp
+biopython
+docx
+beautifulsoup4

@@ -34,6 +34,7 @@ class Source:
     def __init__(self, name=None):
         if name is not None:
             logger.info("Processing Source \"%s\"", name)
+        self.testOnly = False
         self.name = name
         self.path = ""
         self.graph = ConjunctiveGraph()
@@ -42,6 +43,7 @@ class Source:
         self.outdir = 'out'
         self.testdir = 'tests'
         self.rawdir = 'raw'
+        self.nobnodes = False  # set to True if you want to materialze identifiers for BNodes
         if self.name is not None:
             self.rawdir = '/'.join((self.rawdir, self.name))
             self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
@@ -68,6 +70,9 @@ class Source:
         # will be set to True if the intention is to only process and write the test data
         self.testOnly = False
         self.testMode = False
+
+        for g in [self.graph, self.testgraph]:
+            self.declareAsOntology(g)
 
         return
 
@@ -123,6 +128,7 @@ class Source:
         }
 
         # make the regular graph output file
+        file = None
         if self.name is not None:
             file = '/'.join((self.outdir, self.name))
             if format in format_to_xtn:
@@ -178,6 +184,7 @@ class Source:
         byte_string = long_string.encode("utf-8")
 
         return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
+
 
     def checkIfRemoteIsNewer(self, remote, local):
         """
@@ -279,7 +286,7 @@ class Source:
         logger.info("file created: %s", time.asctime(time.localtime(st[ST_CTIME])))
         return
 
-    def fetch_from_pgdb(self, tables, cxn, limit=None):
+    def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):
         """
         Will fetch all Postgres tables from the specified database in the cxn connection parameters.
         This will save them to a local file named the same as the table, in tab-delimited format, including a header.
@@ -305,20 +312,26 @@ class Source:
 
                 outfile = '/'.join((self.rawdir,t))
 
-                # check local copy.  assume that if the # rows are the same, that the table is the same
-                # TODO may want to fix this assumption
                 filerowcount = -1
-                if os.path.exists(outfile):
-                    # get rows in the file
-                    filerowcount = self.file_len(outfile)
-                    logger.info("rows in local file: %s", filerowcount)
+                tablerowcount = -1
+                if not force:
+                    # check local copy.  assume that if the # rows are the same, that the table is the same
+                    # TODO may want to fix this assumption
+                    if os.path.exists(outfile):
+                        # get rows in the file
+                        filerowcount = self.file_len(outfile)
+                        logger.info("rows in local file: %s", filerowcount)
 
-                # get rows in the table
-                # tablerowcount=cur.rowcount
-                cur.execute(countquery)
-                tablerowcount = cur.fetchone()[0]
-                if filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
-                    logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
+                    # get rows in the table
+                    # tablerowcount=cur.rowcount
+                    cur.execute(countquery)
+                    tablerowcount = cur.fetchone()[0]
+
+                if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
+                    if force:
+                        logger.info("Forcing download of %s", t)
+                    else:
+                        logger.info("%s local (%d) different from remote (%d); fetching.", t, filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -332,7 +345,7 @@ class Source:
                 con.close()
         return
 
-    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None):
+    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None, force=False):
         """
         Supply either an already established connection, or connection parameters.
         The supplied connection will override any separate cxn parameter
@@ -358,18 +371,23 @@ class Source:
 
         # check local copy.  assume that if the # rows are the same, that the table is the same
         filerowcount = -1
-        if os.path.exists(outfile):
-            # get rows in the file
-            filerowcount = self.file_len(outfile)
-            logger.info("INFO: rows in local file: %s", filerowcount)
+        tablerowcount = -1
+        if not force:
+            if os.path.exists(outfile):
+                # get rows in the file
+                filerowcount = self.file_len(outfile)
+                logger.info("INFO: rows in local file: %s", filerowcount)
 
-        # get rows in the table
-        # tablerowcount=cur.rowcount
-        cur.execute(countquery)
-        tablerowcount = cur.fetchone()[0]
+            # get rows in the table
+            # tablerowcount=cur.rowcount
+            cur.execute(countquery)
+            tablerowcount = cur.fetchone()[0]
 
-        if filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
-            logger.info("local (%s) different from remote (%s); fetching.", filerowcount, tablerowcount)
+        if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:  # rowcount-1 because there's a header
+            if force:
+                logger.info("Forcing download of %s", qname)
+            else:
+                logger.info("%s local (%s) different from remote (%s); fetching.", qname, filerowcount, tablerowcount)
             # download the file
             logger.debug("COMMAND:%s", query)
             outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -493,3 +511,43 @@ class Source:
         :return:
         """
         return None
+
+    def setnobnodes(self, materialize_bnodes):
+        """
+        If materialze_bnodes is True, then all usages of BNodes will be materialized by putting the BNodes
+        into the BASE space, and prefixing the numeric portion (after the colon) with an underscore.
+        :param materialize_bnodes:
+        :return:
+        """
+
+        self.nobnodes = materialize_bnodes
+
+        return
+
+    def declareAsOntology(self, graph):
+        """
+        The file we output needs to be declared as an ontology, including it's version information.
+        Further information will be augmented in the dataset object.
+        :param version:
+        :return:
+        """
+        # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
+        # owl:versionInfo <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
+
+        gu = GraphUtils(curie_map.get())
+
+        ontology_file_id = 'MonarchData:'+self.name+".ttl"
+        gu.addOntologyDeclaration(graph, ontology_file_id)
+
+        # add timestamp as version info
+
+        t = datetime.now()
+        t_string = t.strftime("%Y-%m-%d-%H-%M")
+        ontology_version = self.name+'-'+t_string
+        archive_url = 'MonarchArchive:'+ontology_version+'.ttl'
+        gu.addOWLVersionIRI(graph, ontology_file_id, archive_url)
+        gu.addOWLVersionInfo(graph, ontology_file_id, ontology_version)
+
+        # TODO make sure this is synced with the Dataset class
+
+        return

@@ -15,6 +15,7 @@ class UCSCBandsTestCase(SourceTestCase):
     def setUp(self):
         self.source = UCSCBands()
         self.source.settestonly(True)
+        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

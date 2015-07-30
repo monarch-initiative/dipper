@@ -1,22 +1,20 @@
-import os
 import csv
-from stat import *
 import re
-from datetime import datetime
 import gzip
-import os.path
-import unicodedata
 import logging
-from dipper.utils import pysed
 
+from dipper.utils import pysed
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
-from dipper.models.G2PAssoc import G2PAssoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.assoc.Association import Assoc
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Reference import Reference
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +39,12 @@ class ClinVar(Source):
 
     }
 
-    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 8877, 9295, 9296, 9297,
-                   9298, 9449, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823, 17232, 17233,
+    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 7105, 8877, 9295, 9296,
+                   9297, 9298, 9449, 10072, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823,
+                   15872, 17232, 17233,
                    17234, 17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179, 18180, 18181,
-                   37123, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055,
+                   18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195,
+                   98196, 98197, 98198, 100055,
                    112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
                    146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132]
 
@@ -60,35 +60,25 @@ class ClinVar(Source):
                                'http://www.ncbi.nlm.nih.gov/clinvar/', None,
                                'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
                                'https://creativecommons.org/publicdomain/mark/1.0/')
-        # data-source specific warnings (will be removed when issues are cleared)
 
-        if self.testMode:
-            self.gene_ids = [17151, 100008564, 17005, 11834, 14169]
-            self.filter = 'geneids'
-
-        if 'test_ids' not in config.get_config() and 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
             logger.warn("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
+
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+        else:
+            self.disease_ids = config.get_config()['test_ids']['disease']
 
         self.properties = Feature.properties
 
         return
 
-    def fetch(self, is_dl_forced):
-        st = None
-        # this is fetching the standard files, not from the API/REST service
-        for f in self.files.keys():
-            file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced)
-            self.dataset.setFileAccessUrl(file['url'])
-            st = os.stat('/'.join((self.rawdir, file['file'])))
+    def fetch(self, is_dl_forced=False):
 
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        self.dataset.setVersion(filedate)
+        # note: version set from the file date
+        self.get_files(is_dl_forced)
 
         return
 
@@ -142,18 +132,29 @@ class ClinVar(Source):
 
         geno = Genotype(g)
         gu.loadAllProperties(g)
+        f = Feature(None, None, None)
+        f.loadAllProperties(g)
+
+        gu.loadAllProperties(g)
+
+        # add the taxon and the genome
+        tax_num = '9606'  # HARDCODE
+        tax_id = 'NCBITaxon:'+tax_num
+        tax_label = 'Human'
+        gu.addClassToGraph(g, tax_id, None)
+        geno.addGenome(tax_id, None)  # label gets added elsewhere
 
         # not unzipping the file
-        print("INFO: Processing Variant records")
+        logger.info("Processing Variant records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['variant_summary']['file']))
-        print("FILE:", myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
                 line = line.decode().strip()
                 if re.match('^#', line):
                     continue
+
                 # AlleleID               integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
                 # Type                   character, the type of variation
                 # Name                   character, the preferred name for the variation
@@ -187,11 +188,18 @@ class ClinVar(Source):
                 #                            e.g. http://www.ncbi.nlm.nih.gov/clinvar/variation/1756/
                 #
 
+                # a crude check that there's an expected number of cols.  if not, error out because something changed.
+                num_cols = len(line.split('\t'))
+                expected_numcols = 28
+                if num_cols != expected_numcols:
+                    logger.error("Unexpected number of columns in raw file (%d actual vs %d expected)",
+                                 num_cols, expected_numcols)
+
                 (allele_num, allele_type, allele_name, gene_num, gene_symbol, clinical_significance,
-                 dbsnp_num, dbvar_num, rcv_num, tested_in_gtr, phenotype_ids, origin,
+                 dbsnp_num, dbvar_num, rcv_nums, tested_in_gtr, phenotype_ids, origin,
                  assembly, chr, start, stop, cytogenetic_loc,
                  review_status, hgvs_c, hgvs_p, number_of_submitters, last_eval,
-                 guidelines, other_ids, variant_num) = line.split('\t')
+                 guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories) = line.split('\t')
 
                 # #### set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
@@ -200,34 +208,58 @@ class ClinVar(Source):
                 #        continue
                 # #### end filter
 
-                # print(line)
-
                 line_counter += 1
 
+                pheno_list = []
+                if phenotype_ids != '-':
+                    # trim any leading/trailing semicolons/commas
+                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
+                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
+                    pheno_list = re.split('[,;]', phenotype_ids)
+
                 if self.testMode:
-                    if int(gene_num) not in self.gene_ids or int(variant_num) not in self.variant_ids:
+                    # get intersection of test disease ids and these phenotype_ids
+                    intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
+                    if int(gene_num) not in self.gene_ids and int(variant_num) not in self.variant_ids \
+                            and len(intersect) < 1:
                         continue
 
-                seqalt_id = ':'.join(('ClinVarVariant', variant_num))
-                gene_id = ':'.join(('NCBIGene', gene_num))
-                tax_id = 'NCBITaxon:9606'   # all are human, so hardcode
+                # TODO may need to switch on assembly to create correct assembly/build identifiers
                 build_id = ':'.join(('NCBIGenome', assembly))
 
-                # make the build
-                tax_label = 'Human'
-                geno.addGenome(tax_id, tax_label)
+                # make the reference genome build
                 geno.addReferenceGenome(build_id, assembly, tax_id)
 
                 allele_type_id = self._map_type_of_allele(allele_type)
-
+                bandinbuild_id = None
                 if str(chr) == '':
-                    pass
+                    # check cytogenic location
+                    if str(cytogenetic_loc).strip() != '':
+                        # use cytogenic location to get the approximate location
+                        # strangely, they still put an assembly number even when there's no numeric location
+                        if not re.search('-',str(cytogenetic_loc)):
+                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num, 'CHR')
+                            geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
+                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly, 'MONARCH')
+                        else:
+                            # can't deal with ranges yet
+                            pass
                 else:
-                    geno.addChromosome(str(chr), tax_id, tax_label, build_id, assembly)
-                    chrinbuild_id = makeChromID(str(chr), build_id)
+                    # add the human chromosome class to the graph, and add the build-specific version of it
+                    chr_id = makeChromID(str(chr), tax_num, 'CHR')
+                    geno.addChromosomeClass(str(chr), tax_id, tax_label)
+                    geno.addChromosomeInstance(str(chr), build_id, assembly, chr_id)
+                    chrinbuild_id = makeChromID(str(chr), assembly, 'MONARCH')
 
-                # note that there are some "variants" that are actually haplotypes:
+                seqalt_id = ':'.join(('ClinVarVariant', variant_num))
+                gene_id = None
+                if str(gene_num) != '-1' and str(gene_num) != 'more than 10':  # they use -1 to indicate unknown gene
+                    gene_id = ':'.join(('NCBIGene', str(gene_num)))
+
+                # FIXME there are some "variants" that are actually haplotypes
+                # probably will get taken care of when we switch to processing the xml
                 # for example, variant_num = 38562
+                # but there's no way to tell if it's a haplotype in the csv data
                 # so the dbsnp or dbvar should probably be primary, and the variant num be the vslc,
                 # with each of the dbsnps being added to it
 
@@ -242,6 +274,12 @@ class ClinVar(Source):
 
                 f.addFeatureToGraph(g)
 
+                if bandinbuild_id is not None:
+                    f.addSubsequenceOfFeature(g, bandinbuild_id)
+
+                # CHECK - this makes the assumption that there is only one affected chromosome per variant
+                # what happens with chromosomal rearrangement variants?  shouldn't both chromosomes be here?
+
                 # add the hgvs as synonyms
                 if hgvs_c != '-' and hgvs_c.strip() != '':
                     gu.addSynonym(g, seqalt_id, hgvs_c)
@@ -249,57 +287,94 @@ class ClinVar(Source):
                     gu.addSynonym(g, seqalt_id, hgvs_p)
 
                 # add the dbsnp and dbvar ids as equivalent
-                if dbsnp_num != '-':
-                    dbsnp_id = 'dbSNP:rs'+dbsnp_num
+                if dbsnp_num != '-' and int(dbsnp_num) != -1:
+                    dbsnp_id = 'dbSNP:rs'+str(dbsnp_num)
                     gu.addIndividualToGraph(g, dbsnp_id, None)
-                    gu.addEquivalentClass(g, seqalt_id, dbsnp_id)
+                    gu.addSameIndividual(g, seqalt_id, dbsnp_id)
                 if dbvar_num != '-':
-                    dbvar_id = 'dbVAR:'+dbvar_num
+                    dbvar_id = 'dbVar:'+dbvar_num
                     gu.addIndividualToGraph(g, dbvar_id, None)
-                    gu.addEquivalentClass(g, seqalt_id, dbvar_id)
-                # TODO - not sure if this is right
+                    gu.addSameIndividual(g, seqalt_id, dbvar_id)
+
+                # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
-                # if rcv_num != '-':
-                #    rcv_id = 'ClinVar:'+rcv_num
-                #    gu.addIndividualToGraph(g,rcv_id,None)
-                #    gu.addEquivalentClass(g,seqalt_id,rcv_id)
+                if rcv_nums != '-':
+                    for rcv_num in re.split(';',rcv_nums):
+                        rcv_id = 'ClinVar:'+rcv_num
+                        gu.addIndividualToGraph(g, rcv_id, None)
+                        gu.addXref(g, seqalt_id, rcv_id)
 
-                # add the gene
-                gu.addClassToGraph(g, gene_id, gene_symbol)
-
-                gu.addTriple(g, seqalt_id, geno.object_properties['is_sequence_variant_instance_of'], gene_id)
-                # make the variant locus
-                # vl_id = ':'+gene_id+'-'+variant_num
-                # geno.addSequenceAlterationToVariantLocus(seqalt_id,vl_id)
-                # geno.addAlleleOfGene(seqalt_id,gene_id,geno.properties['has_alternate_part'])
-
-                f.loadAllProperties(g)   # FIXME inefficient
+                if gene_id is not None:
+                    # add the gene
+                    gu.addClassToGraph(g, gene_id, gene_symbol)
+                    # make a variant locus
+                    vl_id = '_'+gene_num+'-'+variant_num
+                    if self.nobnodes:
+                        vl_id = ':'+vl_id
+                    vl_label = allele_name
+                    gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
+                    geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
+                    geno.addAlleleOfGene(vl_id, gene_id)
+                else:
+                    # some basic reporting
+                    gmatch = re.search('\(\w+\)', allele_name)
+                    if gmatch is not None and len(gmatch.groups()) > 0:
+                        logger.info("Gene found in allele label, but no id provided: %s", gmatch.group(1))
+                    elif re.match('more than 10', gene_symbol):
+                        logger.info("More than 10 genes found; need to process XML to fetch (variant=%d)", int(variant_num))
+                    else:
+                        logger.info("No gene listed for variant %d", int(variant_num))
 
                 # parse the list of "phenotypes" which are diseases.  add them as an association
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
                 # the list is both semicolon delimited and comma delimited, but i don't know why!
+                # some are bad, like: Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
                 if phenotype_ids != '-':
-                    # trim any leading/trailing semicolons/commas
-                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
-                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
-                    pheno_list = re.split('[,;]', phenotype_ids)
-                    # print('list:',pheno_list)
                     for p in pheno_list:
-                        if re.match('Orphanet:ORPHA', p):
-                            p = re.sub('Orphanet:ORPHA', 'Orphanet:', p)
+                        m = re.match("(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
+                        if m is not None and len(m.groups()) > 0:
+                            p = re.sub(m.group(1), 'Orphanet:', p.strip())
                         elif re.match('SNOMED CT', p):
-                            p = re.sub('SNOMED CT', 'SNOMED', p)
-                        assoc_id = self.make_id(seqalt_id+p.strip())
-                        assoc = G2PAssoc(assoc_id, seqalt_id, p.strip(), None, None)
-                        assoc.addAssociationToGraph(g)
-                        assoc.loadAllProperties(g)
+                            p = re.sub('SNOMED CT', 'SNOMED', p.strip())
+
+                        assoc = G2PAssoc(self.name, seqalt_id, p.strip())
+                        assoc.add_association_to_graph(g)
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')
-                    # TODO make xrefs
+                    # process the "other ids"
+                    # ex: CFTR2:F508del,HGMD:CD890142,OMIM Allelic Variant:602421.0001
+                    # TODO make more xrefs
+                    for xrefid in id_list:
+                        prefix = xrefid.split(':')[0].strip()
+                        if prefix == 'OMIM Allelic Variant':
+                            xrefid = 'OMIM:'+xrefid.split(':')[1]
+                            gu.addIndividualToGraph(g, xrefid, None)
+                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                        elif prefix == 'HGMD':
+                            gu.addIndividualToGraph(g, xrefid, None)
+                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                        elif prefix == 'dbVar' and dbvar_num == xrefid.split(':')[1].strip():
+                            pass  # skip over this one
+                        elif re.search('\s', prefix):
+                            pass
+                            # logger.debug('xref prefix has a space: %s', xrefid)
+                        else:
+                            # should be a good clean prefix
+                            # note that HGMD variants are in here as Xrefs because we can't resolve URIs for them
+                            # logger.info("Adding xref: %s", xrefid)
+                            # gu.addXref(g, seqalt_id, xrefid)
+                            # logger.info("xref prefix to add: %s", xrefid)
+                            pass
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
+
+        gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
+        gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
+
+        logger.info("Finished parsing variants")
 
         return
 
@@ -340,6 +415,10 @@ class ClinVar(Source):
                     if int(variant_num) not in self.variant_ids:
                         continue
 
+                if citation_id.strip() == '':
+                    logger.info("Skipping blank citation for ClinVarVariant:%s", str(variant_num))
+                    continue
+
                 # the citation for a variant is made to some kind of combination of the ids here.
                 # but i'm not sure which we don't know what the citation is for exactly, other
                 # than the variant.  so use mentions
@@ -355,16 +434,20 @@ class ClinVar(Source):
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
+                    r = Reference(ref_id, Reference.ref_types['journal_article'])
+                    r.addRefToGraph(g)
                     gu.addTriple(g, ref_id, self.properties['is_about'], var_id)
 
                 if not self.testMode and (limit is not None and line_counter > limit):
                     break
 
+        logger.info("Finished processing citations for variants")
+
         return
 
     def _map_type_of_allele(self, alleletype):
         # TODO this will get deprecated when we parse the xml file
-        so_id = 'SO:0001060'
+        so_id = 'SO:0001059'
         type_to_so_map = {
             'NT expansion': 'SO:1000039',  # direct tandem duplication
             'copy number gain': 'SO:0001742',
@@ -379,7 +462,7 @@ class ClinVar(Source):
             'short repeat': 'SO:0000657',   # repeat region - not sure if this is what's intended.
             'single nucleotide variant': 'SO:0001483',
             'structural variant': 'SO:0001537',
-            'undetermined variant': 'SO:0001060'    # sequence variant
+            'undetermined variant': 'SO:0001059'    # sequence variant
         }
 
         if alleletype in type_to_so_map:
@@ -389,15 +472,10 @@ class ClinVar(Source):
 
         return so_id
 
-    def remove_control_characters(self, s):
-        # TODO move this into utils function
-        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
-
-
     def getTestSuite(self):
         import unittest
         from tests.test_clinvar import ClinVarTestCase
-        #TODO add G2PAssoc, Genotype tests
+        # TODO add G2PAssoc, Genotype tests
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(ClinVarTestCase)
 

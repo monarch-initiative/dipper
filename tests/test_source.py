@@ -2,10 +2,12 @@
 
 from dipper.sources.Source import Source
 from tests import test_general
+from tests import test_dataset
 
 import unittest
 import logging
 import os
+import json
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -19,7 +21,6 @@ class SourceTestCase(unittest.TestCase):
 
     def setUp(self):
         self.source = None
-
         return
 
     def tearDown(self):
@@ -27,15 +28,17 @@ class SourceTestCase(unittest.TestCase):
         return
 
     def test_parse(self):
-        # TODO figure out how to skip this if we are running this from the source itself
-        if self.source != Source():  # don't test the abstract class
+        if self.source is not None:  # don't test the abstract class
             try:
                 self.source.parse()
-                self.assertTrue(True)
+            except Exception as ParseException:
+                logger.error(ParseException)
+                self.assertFalse(True, "Parsing failed")
+            try:
                 self.source.write(format='turtle')
-                self.assertTrue(True)
-            except:
-                self.assertFalse(False, "Parsing failed")
+            except Exception as WriteException:
+                logger.error(WriteException)
+                self.assertFalse(True, "Write failed")
 
         return
 
@@ -43,11 +46,12 @@ class SourceTestCase(unittest.TestCase):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
             p = os.path.abspath(f)
-            self.assertTrue(os.path.exists(f), "path does not exist for "+f)
+            self.assertTrue(os.path.exists(f), "path does not exist for {0}".format(f))
             test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
 
         return
 
+    # @unittest.skip
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
@@ -65,6 +69,18 @@ class SourceTestCase(unittest.TestCase):
             logging.info("Resetting the rawdir to %s", p)
         return
 
+    def _get_conf(self):
+        if os.path.exists(os.path.join(os.path.dirname(__file__), 'test_ids.json')):
+            with open(os.path.join(os.path.dirname(__file__),
+                           'test_ids.json')) as json_file:
+                conf = json.load(json_file)
+        return conf
+
+    def test_source_has_license(self):
+        if self.source is not None:
+            d = self.source.dataset
+            test_dataset.DatasetTestCase(d).test_has_license()
+        return
 
 if __name__ == '__main__':
     unittest.main()
