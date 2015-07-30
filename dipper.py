@@ -79,6 +79,7 @@ def main():
                         action="store_true")
     parser.add_argument('--debug', help='turn on debug logging',
                         action="store_true")
+    parser.add_argument('--skip_tests', help='skip any testing', action="store_true")
 
     # BNodes can't be visualized in Protege, so you can materialize them for testing purposes with this flag
     parser.add_argument('-nb', '--no_bnodes', help="convert blank nodes into identified nodes", action="store_true")
@@ -124,7 +125,7 @@ def main():
         exit(0)
 
     # run initial tests
-    if args.no_verify is not True:
+    if (args.no_verify or args.skip_tests) is not True:
         unittest.TextTestRunner(verbosity=2).run(test_suite)
 
     # iterate through all the sources
@@ -144,7 +145,7 @@ def main():
         mysource.setnobnodes(args.no_bnodes)
 
         # run tests first
-        if args.no_verify is not True:
+        if (args.no_verify or args.skip_tests) is not True:
             suite = mysource.getTestSuite()
             if suite is None:
                 logger.warn("No tests configured for this source: %s", source)
