@@ -23,6 +23,7 @@ class Genotype():
         'intrinsic_genotype': 'GENO:0000000',
         'extrinsic_genotype': 'GENO:0000524',
         'effective_genotype': 'GENO:0000525',
+        'sex_qualified_genotype': 'GENO:0000645',
         'genomic_background': 'GENO:0000611',
         'genomic_variation_complement': 'GENO:0000009',
         'karyotype_variation_complement': 'GENO:0000644',
