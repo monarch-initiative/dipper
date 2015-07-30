@@ -56,7 +56,7 @@ def main():
         'animalqtldb': AnimalQTLdb,
         'ensembl': Ensembl,
         'hgnc': HGNC,
-        'orphanet': Orphanet
+        'orphanet': Orphanet,
         'mmrrc' : MMRRC
     }
 
