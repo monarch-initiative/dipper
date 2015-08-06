@@ -25,6 +25,7 @@ class Genotype():
         'effective_genotype': 'GENO:0000525',
         'sex_qualified_genotype': 'GENO:0000645',
         'genomic_background': 'GENO:0000611',
+        'unspecified_genomic_background': 'GENO:0000649',
         'genomic_variation_complement': 'GENO:0000009',
         'karyotype_variation_complement': 'GENO:0000644',
         'variant_single_locus_complement': 'GENO:0000030',
