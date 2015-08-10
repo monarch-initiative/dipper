@@ -3,12 +3,16 @@ import gzip
 import re
 import logging
 import os
+import urllib
+from urllib import request, parse
+import json
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Reference import Reference
 from dipper import curie_map
 
 
@@ -69,11 +73,12 @@ class IMPC(Source):
 
     # TODO move these into the conf.json
     # the following are gene ids for testing
-    test_ids = ["MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
-                "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
-                "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
-                "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453",
-                "MGI:1098270"]
+    # test_ids = ["MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
+    #             "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
+    #             "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
+    #             "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453",
+    #             "MGI:1098270", "MGI:1891295"]
+    test_ids = ["MGI:1891295"]
 
     def __init__(self):
         Source.__init__(self, 'impc')
@@ -112,10 +117,12 @@ class IMPC(Source):
         if self.testOnly:
             self.testMode = True
 
-        # for f in ['impc', 'euro', 'mgd', '3i']:
-        for f in ['all']:
-            file = '/'.join((self.rawdir, self.files[f]['file']))
-            self._process_data(file, limit)
+        # # for f in ['impc', 'euro', 'mgd', '3i']:
+        # for f in ['all']:
+        #     file = '/'.join((self.rawdir, self.files[f]['file']))
+        #     self._process_data(file, limit)
+
+        self._process_g2p_images()
 
         logger.info("Finished parsing")
 
@@ -357,6 +364,11 @@ class IMPC(Source):
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
 
+                # add some images as evidence
+                self._fetch_images(allele_accession_id, marker_accession_id, zygosity, sex,
+                                   procedure_stable_id, phenotyping_center, phenotype_id,
+                                   assoc_id)
+
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
@@ -365,6 +377,259 @@ class IMPC(Source):
             gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
 
         return
+
+    def _fetch_images(self, variant_id, gene_id, zygosity, sex, procedure_name,
+                      institute, phenotype_id, g2p_assoc_id):
+        """
+        This function will query the IMPC solr index to fetch the images as evidence for
+        given genotype-phenotype associations.
+        Because different information is provided between this service and the other
+        download, do it with iterative querying.
+        :param limit:
+        :return:
+        """
+
+        # http://www.ebi.ac.uk/mi/impc/solr/images/select?q=*:*&rows=10&wt=json
+        service_url = 'http://www.ebi.ac.uk'
+        fetching_path = 'mi/impc/solr/images/select'
+
+        query_items = {
+        }
+
+        params = {
+            'q': None,
+            'rows': 10,
+            'wt': 'json'
+        }
+
+        # TODO background/colony information is not supplied for us to mashup with the other data
+        # FIXME therefore we may be making the associations to the incorrect genotypes
+
+        # convert the zygosity into the genotype string here
+        if zygosity == 'heterozygote':
+            query_items['genotype'] = 'HET'
+        elif zygosity == 'homozygote':
+            query_items['genotype'] = 'HOM'
+
+        # convert the sex into the correct gender
+        if sex == 'male':
+            query_items['gender'] = 'Male'
+        elif sex == 'female':
+            query_items['gender'] = 'Female'
+
+        if variant_id is not None:
+            query_items['allele_accession'] = variant_id
+        if variant_id is None and gene_id is not None:
+            query_items['mgi_accession_id'] = gene_id
+
+        if phenotype_id is not None:
+            query_items['mp_id'] = phenotype_id
+        else:
+            query_items['-mp_id'] = '[* TO *]'
+            logger.warn("No phenotype id specified. Fetching all images for strain.")
+            # this will fetch those images that are not to phenotypes.  therefore
+            # will make the association to the anatomical term listed in the annotationTermId field
+            return
+
+        #http://www.ebi.ac.uk/mi/impc/solr/images/select?q=allele_accession:MGI\:4129255%20AND%20genotype:HET%20AND%20mp_id:MP\:0010254&rows=100&wt=json
+
+        # build the query
+        q = None
+        if query_items is not None:
+            q = ' AND '.join({':'.join((k,re.sub(':','\\:',v))) for k, v in query_items.items()})
+        params['q'] = q
+        p = urllib.parse.urlencode(params)
+        url = '/'.join((service_url, fetching_path))+'?%s' % p
+        logger.info('fetching: %s', url)
+        d = urllib.request.urlopen(url)
+        resp = d.read().decode()
+
+        myjson = json.loads(resp)
+        num_found = myjson['response']['numFound']  # report the number of images found
+        logger.info("Found %d images", num_found)
+
+        # TODO associate with the appropriate test
+        # if institute is not None:
+        #     query_items['institute'] = institute
+        # if procedure_name is not None:
+        #     query_items['sangerProcedureName'] = procedure_name
+
+        # json fields that might be useful:
+        # "fullResolutionFilePath": "images\/0\/M00110006_00003602_download_full.jpg",
+        # "genotype": "HET",
+        # "mouseId": 110006,
+        # "colony_id": 681,
+        # "sangerProcedureId": 2,
+        # "gender": "Male",
+        # "institute": "WTSI",
+        # "dcfId": "145",
+        # "dcfExpId": "48020",
+        # "sangerProcedureName": "Eye Morphology",
+        # "genotypeString": "Ube3b<Gt(RRJ142)Byg>",
+        # "id": "70220",
+        # "mgi_accession_id": [
+        #   "MGI:1891295"
+        # "mp_id": [
+        #   "MP:0010254"
+        # ],
+        # "accession": "MGI:1891295",
+        # "ageInWeeks": "13.5w (at death)",
+        # "sangerSymbol": [
+        #   "Ube3b<Gt(RRJ142)Byg>"
+        # ],
+        # "allele_accession": "MGI:4129255",
+
+        # TODO process the json blobs we get back
+        if phenotype_id is None:
+            # make the depiction of the genotype
+            # also a depiction of an instance of the anatomical part in the given mouse?
+            # the individual mouse (id) would be an instance of the genotype
+            pass
+        else:
+            # make the image as part of the evidence for the association
+            pass
+
+        return
+
+    def _process_g2p_images(self, limit=None):
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        gu = GraphUtils(curie_map.get())
+        geno = Genotype(g)
+        mus_musculus = 'NCBITaxon:10090'
+
+        service_url = 'http://www.ebi.ac.uk'
+        fetching_path = 'mi/impc/solr/images/select'
+
+        params = {
+            'q': None,
+            'rows': 0,
+            'wt': 'json',
+            'start': 0
+        }
+
+        # first query just finds out how many images there are for phenotypes (rows=0)
+        params['q'] = 'mp_id:[* TO *]'
+        p = urllib.parse.urlencode(params)
+        url = '/'.join((service_url, fetching_path))+'?%s' % p
+        logger.info('fetching: %s', url)
+        d = urllib.request.urlopen(url)
+        resp = d.read().decode()
+
+        myjson = json.loads(resp)
+        num_found = myjson['response']['numFound']  # report the number of images found
+        logger.info("Found %d images with phenotypes", num_found)
+
+        # iterate through the images in batches of 100
+        start = 0
+        batch_size = 100
+
+
+        if limit is not None:
+            num_found = min(num_found, limit)
+            params['rows'] = min(batch_size, limit)
+        else:
+            params['rows'] = batch_size
+
+        while start < num_found:
+            params['start'] = start
+            p = urllib.parse.urlencode(params)
+            url = '/'.join((service_url, fetching_path))+'?%s' % p
+            logger.info('fetching: %s', url)
+            d = urllib.request.urlopen(url)
+            resp = d.read().decode()
+            myjson = json.loads(resp)
+            docs = myjson['response']['docs']  # report the number of images found
+            for d in docs:
+                if 'allele_accession' not in d:
+                    # TODO what does it mean to not have any allele ids?
+                    continue
+                allele_id = d['allele_accession']
+
+                if not re.match('MGI', allele_id):
+                    allele_id = '_IMPC-'+re.sub(':', '', allele_id)
+                    if self.nobnodes:
+                        allele_id = ':'+allele_id
+
+                zygosity = d['genotype']
+                sex = d['gender'].lower()
+                strain = 'unknown'  # FIXME
+                mouse_num = d['mouseId']
+                mouse_id = '_impc-mouse-'+str(mouse_num)
+                genotype_label = d['genotypeString']
+                mouse_label = genotype_label+' ('+sex+') ['+str(mouse_num)+']'
+                if self.nobnodes:
+                    mouse_id = ':'+mouse_id
+
+                gu.addIndividualToGraph(g, mouse_id, mouse_label, mus_musculus)
+                # add the non-sex-qualified genotype as a part
+                nonsexgenotype_id = self._make_effective_genotype_id(allele_id, zygosity, strain, None)
+                geno.addGenotype(nonsexgenotype_id, genotype_label, geno.genoparts['intrinsic_genotype'])
+
+                if re.search('male', sex):  # either male or female
+                    genotype_id = self._make_effective_genotype_id(allele_id, zygosity, strain, sex)
+                    genotype_label = genotype_label+' ('+sex+')'
+                    geno.addGenotype(genotype_id, genotype_label, geno.genoparts['sex_qualified_genotype'])
+                    geno.addParts(nonsexgenotype_id, genotype_id, geno.object_properties['has_alternate_part'])
+                else:
+                    genotype_id = nonsexgenotype_id
+
+                gu.addTriple(self.graph, mouse_id, geno.object_properties['has_genotype'], genotype_id)
+
+                # add the allele to the genotype
+                geno.addParts(allele_id, nonsexgenotype_id, geno.object_properties['has_alternate_part'])
+
+                # add the image to the graph
+                image_rel_path = d['largeThumbnailFilePath']  # alternative: fullResolutionFilePath
+                image_prefix = 'https://www.mousephenotype.org/data/media'
+                image_url = '/'.join((image_prefix, image_rel_path))
+
+                # make a fake id that just takes the filename at the end
+                last_pos = 0
+                for m in re.finditer('\/', image_rel_path):
+                    last_pos = m.start()
+                image_name = image_rel_path[last_pos:]
+                ref_id = '_impc-image-'+re.sub('\W','-',image_name.strip())
+                if self.nobnodes:
+                    ref_id = ':'+ref_id
+                r = Reference(ref_id, Reference.ref_types['photograph'])
+                r.addRefToGraph(g)
+                gu.addDepiction(g, ref_id, image_url)
+
+                phenotype_ids = d['mp_id']
+                for p in phenotype_ids:
+                    assoc = G2PAssoc(self.name, mouse_id, p.strip())
+                    # TODO add the age as part of the association
+                    # this is a string; not sure how to map it to any kind of EDAM stage.  for now add to description.
+                    descr = None
+                    if 'ageInWeeks' in d:
+                        age = d['ageInWeeks']
+                        descr = "Assayed at "+age
+                    # visible phenotypic evidence ECO:0000176
+                    gu.addType(g, ref_id, 'ECO:0000176')
+                    assoc.add_evidence(ref_id)
+                    assoc.add_association_to_graph(g)
+                    aid = assoc.get_association_id()
+                    if descr is not None:
+                        gu.addDescription(g, aid, descr)
+            start += batch_size
+
+        return
+
+    def _make_intrinsic_genotype_id(self, colony_id, phenotyping_center, zygosity, strain_accession_id):
+
+        genotype_id = self.make_id((colony_id+phenotyping_center+zygosity+strain_accession_id))
+
+        return genotype_id
+
+    def _make_effective_genotype_id(self, allele_accession_id, zygosity, strain_accession_id, sex):
+
+        effective_genotype_id = self.make_id((allele_accession_id+zygosity+strain_accession_id+str(sex)))
+
+        return effective_genotype_id
 
     @staticmethod
     def _map_zygosity(zygosity):
