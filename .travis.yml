@@ -9,10 +9,10 @@ install:
   - "pip install ."
   
 before_script:
-  git clone https://github.com/owlcollab/owltools.git
-  cd owltools/OWLTools-Parent/
-  mvn clean package
-  cd ../..
+  - "git clone https://github.com/owlcollab/owltools.git"
+  - "cd owltools/OWLTools-Parent/"
+  - "mvn clean package"
+  - "cd ../.."
 
 # command to run tests
 script: make test
