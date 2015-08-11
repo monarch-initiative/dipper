@@ -39,6 +39,8 @@ the code to skip this, if necessary
     * pyyaml
     * pysftp
     * [biopython](https://github.com/biopython/biopython)
+    * docx
+    * beautifulsoup4
 
 * The OMIM source requires the 'compress' and 'uncompress' system commands to be available, for LZW decompression.  
 (This may be a problem for windows users.) 
