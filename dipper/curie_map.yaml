@@ -31,6 +31,7 @@
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
 'OBO': 'http://purl.obolibrary.org/obo/'
 'OIO': 'http://www.geneontology.org/formats/oboInOwl#'
+'OMIA' : 'http://purl.obolibrary.org/obo/OMIA_'
 'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
 'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_'
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'

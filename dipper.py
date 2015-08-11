@@ -26,6 +26,7 @@ from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from dipper.sources.Ensembl import Ensembl
 from dipper.sources.HGNC import HGNC
 from dipper.sources.Orphanet import Orphanet
+from dipper.sources.OMIA import OMIA
 
 from dipper.utils.TestUtils import TestUtils
 
@@ -55,7 +56,8 @@ def main():
         'animalqtldb': AnimalQTLdb,
         'ensembl': Ensembl,
         'hgnc': HGNC,
-        'orphanet': Orphanet
+        'orphanet': Orphanet,
+        'omia': OMIA
     }
 
     logger = logging.getLogger(__name__)
