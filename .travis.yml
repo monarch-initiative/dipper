@@ -11,7 +11,7 @@ install:
 before_script:
   - "git clone https://github.com/owlcollab/owltools.git"
   - "cd owltools/OWLTools-Parent/"
-  - "mvn clean package"
+  - "mvn clean package -DskipTests=true"
   - "cd ../.."
 
 # command to run tests
