@@ -25,7 +25,7 @@ loading the data into a graph database that is optimized for use with ontologies
 like [Protege](http://protege.stanford.edu/).
 
 ## Requirements
-* [Python 3](https://www.python.org/downloads/) or higher
+* [Python 3](https://www.python.org/downloads/) or higher (and therefore pip3 if using pip)
 * One of the unit tests requires
 [owltools](https://code.google.com/p/owltools/wiki/InstallOWLTools) be available on your path.  You could modify
 the code to skip this, if necessary
