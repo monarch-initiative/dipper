@@ -37,20 +37,20 @@ class FlyBase(Source):
         'genotype',  # done
         'feature_genotype',
         'pub',  # done
-        # 'feature_pub',
-        # 'pub_dbxref',
+        'feature_pub',  # done
+        'pub_dbxref',
         # 'feature_dbxref',
         # 'feature_relationship',
         # 'cvterm',
-        # 'stock_genotype',
+        'stock_genotype',
         'stock',
-        # 'organism',
+        'organism',  # may not be necessary
         'environment',   # done
-        # 'phenotype',
-        # 'phenstatement',
+        # 'phenotype',  UNFINISHED
+        'phenstatement',
         # 'dbxref',
         # 'db',
-        # 'phenotype_cvterm',
+        'phenotype_cvterm',
         'phendesc',
         # 'strain',
         # 'environment_cvterm',
@@ -77,7 +77,8 @@ class FlyBase(Source):
         # fly
         self.idhash = {'allele': {}, 'marker': {}, 'publication': {}, 'stock': {},
                        'genotype': {}, 'annot': {}, 'notes': {}, 'organism': {},
-                       'environment': {}, 'feature': {}}
+                       'environment': {}, 'feature': {}, 'phenotype': {}, 'cvterm': {}}
+        self.dbxrefs = {}
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
         self.label_hash = {}  # use this to store internally generated labels for various features
@@ -131,16 +132,25 @@ class FlyBase(Source):
             self.testMode = True
 
         self.nobnodes = True
+
         # the following will provide us the hash-lookups
+        self._process_dbxref()
+        self._process_cvterm()
         self._process_genotypes(limit)
-        self._process_stocks(limit)
+        # self._process_stocks(limit)
         self._process_pubs(limit)
         self._process_environments(limit)
-        self._process_features(limit)
+        # self._process_features(limit)
+        self._process_phenotype(limit)
+        self._process_phenotype_cvterm(limit)
 
         # These must be processed in a specific order
-        self._process_phendesc(limit)
-        self._process_feature_genotype(limit)
+        self._process_pub_dbxref(limit)
+        # self._process_phendesc(limit)
+        # self._process_feature_genotype(limit)
+        # self._process_feature_pub(limit)
+        # self._process_stock_genotype(limit)
+        self._process_phenstatement(limit)   # these are G2P associations
 
         logger.info("Finished parsing.")
 
@@ -512,6 +522,461 @@ class FlyBase(Source):
                     break
 
         return
+
+    def _process_feature_pub(self, limit):
+        """
+        The description of the resulting phenotypes with the genotype+environment
+
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'feature_pub'))
+        logger.info("processing feature_pub")
+
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (feature_pub_id, feature_id, pub_id) = line
+                # 1440    3175682 62137
+                # 2       3160606 99159
+                feature_key = feature_id
+                feature_id = self.idhash['feature'][feature_key]
+                pub_key = pub_id
+                pub_id = self.idhash['publication'][pub_key]
+
+                gu.addTriple(g, pub_id, gu.object_properties['mentions'], feature_id)
+
+                line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+
+    def _process_stock_genotype(self, limit):
+        """
+        The description of the resulting phenotypes with the genotype+environment
+
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'stock_genotype'))
+        logger.info("processing stock genotype")
+        geno = Genotype(g)
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (stock_genotype_id, stock_id, genotype_id) = line
+
+                stock_key = stock_id
+                stock_id = self.idhash['stock'][stock_key]
+                genotype_key = genotype_id
+                genotype_id = self.idhash['genotype'][genotype_key]
+
+                gu.addTriple(g, stock_id, geno.object_properties['has_genotype'], genotype_id)
+
+                line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+
+
+    def _process_pub_dbxref(self, limit):
+        """
+        The description of the resulting phenotypes with the genotype+environment
+        PRELIMINARY - MAY NOT BE NECESSARY TO IMPORT
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'pub_dbxref'))
+        logger.info("processing pub_dbxref")
+        geno = Genotype(g)
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (pub_dbxref_id, pub_id, dbxref_id, is_current) = line
+                # 49648	43222	395730	t
+
+
+                pub_key = pub_id
+                pub_id = self.idhash['publication'][pub_key]
+
+                # get any dbxrefs for pubs, including pmids and dois
+                dbxref_key = dbxref_id
+                if str(dbxref_key) in self.dbxrefs:
+                    dbxrefs = self.dbxrefs[str(dbxref_key)]
+                    # pub_dbs = [75, 51, 76, 95, 126]
+                    pmid_ids = [50, 77, 275, 286, 347]
+                    flybase_ids = [4]
+                    isbn = [75, 51]
+                    for d in dbxrefs:
+                        dbxref_id = None
+                        if int(d) in pmid_ids:
+                            dbxref_id = 'PMID:'+dbxrefs[d].strip()
+                        elif int(d) in isbn:
+                            dbxref_id = 'ISBN:'+dbxrefs[d].strip()
+                        elif int(d) == 161:
+                            dbxref_id = 'DOI:'+dbxrefs[d].strip()
+                        # elif int(d) == 4:
+                        #     dbxref_id = 'FlyBase:'+dbxrefs[d].strip()
+
+                        if dbxref_id is not None:
+                            r = Reference(dbxref_id, Reference.ref_types['publication'])
+                            r.addRefToGraph(g)
+                            gu.addSameIndividual(g, pub_id, dbxref_id)
+                            line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+
+    def _process_dbxref(self):
+        """
+        We bring in the dbxref identifiers and store them in a hashmap for lookup in other functions
+        :param limit:
+        :return:
+        """
+
+        raw = '/'.join((self.rawdir, 'dbxref'))
+        logger.info("processing dbxrefs")
+        line_counter = 0
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (dbxref_id, db_id, accession, version, description, url) = line
+                    # dbxref_id	db_id	accession	version	description	url
+                    # 1	2	SO:0000000	""
+
+                db_ids = [50,  # pubmed
+                          68,  # obo-rel
+                          71,  # FBdv
+                          74,  # FBbt
+                          28,  # genbank
+                          30,  # MIM
+                          38,  # ncbi
+                          75,  # ISBN
+                          46,  # PUBMED
+                          51,  # isbn
+                          52,  # so
+                          76,  # http
+                          77,  # PMID
+                          80,  # FBcv
+                          95,  # MEDLINE
+                          98,  # Reactome
+                          103, # Chebi
+                          102, # MeSH
+                          106, # OMIM
+                          105, # KEGG pathway
+                          107, # doi
+                          108, # CL
+                          114, # CHEBI
+                          115, # KEGG
+                          116, # PubChem
+                          120, # MA???
+                          3,   # GO
+                          4,   # FlyBase
+                          126, # URL
+                          128, # PATO
+                          131, # IMG
+                          2,   # SO
+                          136, # MESH
+                          139, # CARO
+                          140, # NCBITaxon
+                          151, # MP  ???
+                          161, # doi
+                          36,  # BDGP
+                          55,  # DGRC
+                          54,  # DRSC
+                          169, # Transgenic RNAi project???
+                          231, # RO ???
+                          180, # entrezgene
+                          192, # Bloomington stock center
+                          197, # Uberon
+                          212, # Ensembl
+                          129, # GenomeRNAi
+                          275, # PubMed
+                          286, # pmid
+                          265, # OMIM_Gene
+                          266, # OMIM_Phenotype
+                          300, # DOID
+                          302, # MSH
+                          347, # Pubmed
+                ]  # the databases to fetch
+
+                if int(db_id) not in db_ids:
+                    continue
+
+                if accession.strip() != '':
+                    self.dbxrefs[dbxref_id] = {db_id:accession}
+                elif url != '':
+                    self.dbxrefs[dbxref_id] = {db_id:url}
+                else:
+                    continue
+
+                line_counter += 1
+
+        return
+
+    def _process_phenotype(self, limit):
+        """
+        UNFINISHED - STUB ONLY
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'phenotype'))
+        logger.info("processing phenotype")
+        geno = Genotype(g)
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (phenotype_id, uniquename, observable_id, attr_id, value, cvalue_id, assay_id) = line
+
+                # 8505	unspecified
+                # 20142	mesothoracic leg disc | somatic clone	87719	60468		60468	60468
+                # 8507	sex comb | ectopic	88877	60468		60468	60468
+                # 8508	tarsal segment	83664	60468		60468	60468
+
+                # for now make these as phenotypic classes - will need to xref at some point
+
+                phenotype_key = phenotype_id
+                phenotype_id = self._makeInternalIdentifier('phenotype', phenotype_key)
+                phenotype_id = ':'+phenotype_id  # FIXME
+                self.idhash['phenotype'][phenotype_key] = phenotype_id
+                # todo store the phenotype-to-assay for use in the
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    pass
+                else:
+                    gu.addClassToGraph(g, phenotype_id, uniquename)
+                    line_counter += 1
+
+        return
+
+    def _process_phenstatement(self, limit):
+        """
+        UNFINISHED - STUB ONLY
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'phenstatement'))
+        logger.info("processing phenstatement")
+        geno = Genotype(g)
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (phenstatement_id, genotype_id, environment_id, phenotype_id, type_id, pub_id) = line
+
+                # 168549	166695	1	8507	60468	151256
+                # 168550	166695	1	8508	60468	151256
+                # 168551	166696	1	8509	60468	151256
+                # 168552	166696	1	8510	60468	151256
+                line_counter += 1
+                phenstatement_key = phenstatement_id
+                phenstatement_id = self._makeInternalIdentifier('phenstatement', phenstatement_key)
+                genotype_key = genotype_id
+                genotype_id = self.idhash['genotype'][genotype_key]
+                environment_key = environment_id
+                environment_id = self.idhash['environment'][environment_key]
+                phenotype_key = phenotype_id
+                phenotype_id = self._makeInternalIdentifier('phenotype', phenotype_key)  # TEMP
+                # phenotype_id = self.idhash['phenotype'][phenotype_key]
+                pub_key = pub_id
+                pub_id = self.idhash['publication'][pub_key]
+
+                assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
+                assoc.set_environment(environment_id)
+                assoc.add_source(pub_id)
+                assoc.add_association_to_graph(g)
+                assoc_id = assoc.get_association_id()
+                gu.addComment(g, assoc_id, phenstatement_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_phenotype_cvterm(self, limit):
+        """
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        line_counter = 0
+        geno_hash = {}
+        raw = '/'.join((self.rawdir, 'phenotype_cvterm'))
+        logger.info("processing phenotype cvterm mappings")
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+
+                (phenotype_cvterm_id, phenotype_id, cvterm_id, rank) = line
+
+                # 4532	8507	60793	0
+                # 4533	8513	60830	0
+
+                # add the internal genotype to pub mapping
+                phenotype_key = phenotype_id
+                cvterm_key = cvterm_id
+                phenotype_id = self.idhash['phenotype'][phenotype_key]
+                cvterm_id = self.idhash['cvterm'][cvterm_key]
+#                print('phenotype = cvterm %s', cvterm_id)
+                self.idhash['phenotype'][phenotype_key] = cvterm_id
+
+        return
+
+
+    def _process_cvterm(self):
+        """
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        line_counter = 0
+        raw = '/'.join((self.rawdir, 'cvterm'))
+        logger.info("processing cvterms")
+
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+
+                (cvterm_id, cv_id, definition, dbxref_id, is_obsolete, is_relationshiptype, name) = line
+
+                # 316	6		1665919	0	0	rRNA_cleavage_snoRNA_primary_transcript
+                # 28	5		1663309	0	0	synonym
+                # 455	6		1665920	0	0	tmRNA
+
+                cv_prefixes = {
+                    6 : 'SO',
+                    28: 'GO',
+                    29: 'GO',
+                    30: 'GO',
+                    31: 'FBcv',
+                    32: 'FBdv',
+                    37: 'GO',   # these are relationships
+                    73: 'DOID'
+                }
+
+                if cv_id not in cv_prefixes:
+                    continue
+                cvterm_key = cvterm_id
+                cvterm_id = self._makeInternalIdentifier('cvterm',cvterm_key)
+                self.label_hash[cvterm_id] = name
+                self.idhash['cvterm'][cvterm_key] = cvterm_id
+                # look up the dbxref_id for the cvterm - hopefully it's one-to-one
+                dbxrefs = self.dbxrefs.get(dbxref_id)
+                if dbxrefs is not None:
+                    if len(dbxrefs) > 1:
+                        logger.info(">1 dbxref for this cvterm (%s: %s)", str(cvterm_id), name)
+                    elif len(dbxrefs) == 1:
+                        self.idhash['cvterm'][cvterm_key] = dbxrefs.popitem()[1]  # get the value
+
+        return
+
+    # def _process_organism(self, limit):
+    #     """
+    #     The description of the resulting phenotypes with the genotype+environment
+    #     PRELIMINARY - MAY NOT BE NECESSARY TO IMPORT
+    #     :param limit:
+    #     :return:
+    #     """
+    #
+    #     if self.testMode:
+    #         g = self.testgraph
+    #     else:
+    #         g = self.graph
+    #
+    #     raw = '/'.join((self.rawdir, 'stock_genotype'))
+    #     logger.info("processing stock genotype")
+    #     geno = Genotype(g)
+    #     line_counter = 0
+    #     gu = GraphUtils(curie_map.get())
+    #
+    #     with open(raw, 'r') as f:
+    #         filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+    #         f.readline()  # read the header row; skip
+    #         for line in filereader:
+    #             (organism_id, abbreviation, genus, species, common_name, comment) = line
+    #             # 1	Dmel	Drosophila	melanogaster	fruit fly
+    #             # 2	Comp	Computational	result
+    #
+    #             line_counter += 1
+    #
+    #             if not self.testMode and limit is not None and line_counter > limit:
+    #                 break
+    #
+    #     return
+
 
     @staticmethod
     def _makeInternalIdentifier(prefix, key):
