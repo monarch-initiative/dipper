@@ -25,13 +25,13 @@ loading the data into a graph database that is optimized for use with ontologies
 like [Protege](http://protege.stanford.edu/).
 
 ## Requirements
-* [Python 3](https://www.python.org/downloads/) or higher
+* [Python 3](https://www.python.org/downloads/) or higher (and therefore pip3 if using pip)
 * One of the unit tests requires
 [owltools](https://code.google.com/p/owltools/wiki/InstallOWLTools) be available on your path.  You could modify
 the code to skip this, if necessary
 
 * Required external python packages:
-    * [psycopg2](http://initd.org/psycopg/)
+    * [psycopg2](http://initd.org/psycopg/) 
     * [rdflib](https://code.google.com/p/rdflib/)
     * isodate
     * roman
@@ -41,6 +41,8 @@ the code to skip this, if necessary
     * [biopython](https://github.com/biopython/biopython)
     * docx
     * beautifulsoup4
+    
+If you encounter any errors installing these packages using Homebrew, it could be due to [a curent known issue in upgrading to  pip3](https://github.com/Homebrew/homebrew/issues/25752). In this case, first force reinstall pip2 (````pip2 install --upgrade --force-reinstall pip````) and then install the package using pip3 (eg. ````pip3 install psycopg2````.)
 
 * The OMIM source requires the 'compress' and 'uncompress' system commands to be available, for LZW decompression.  
 (This may be a problem for windows users.) 
