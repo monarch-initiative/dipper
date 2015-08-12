@@ -12,11 +12,12 @@ before_script:
   - "git clone https://github.com/owlcollab/owltools.git"
   - "cd owltools/OWLTools-Parent/"
   - "mvn clean package -DskipTests=true"
-  - "export PATH=$PATH:../OWLTools-Runner/bin/"
   - "cd ../.."
 
 # command to run tests
-script: make test
+script: 
+  - "export PATH=$PATH:/home/travis/build/monarch-initiative/dipper/owltools/OWLTools-Runner/bin/"
+  - "make test"
 
 after_success:
   coveralls
