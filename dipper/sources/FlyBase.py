@@ -83,8 +83,7 @@ class FlyBase(Source):
 
         self.label_hash = {}  # use this to store internally generated labels for various features
         self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
-
-        self.wildtype_alleles = set()
+        self.phenocv = {}  # mappings between internal phenotype db key and multiple cv terms
 
         return
 
@@ -685,69 +684,66 @@ class FlyBase(Source):
                     # dbxref_id	db_id	accession	version	description	url
                     # 1	2	SO:0000000	""
 
-                db_ids = [50,  # pubmed
-                          68,  # obo-rel
-                          71,  # FBdv
-                          74,  # FBbt
-                          28,  # genbank
-                          30,  # MIM
-                          38,  # ncbi
-                          75,  # ISBN
-                          46,  # PUBMED
-                          51,  # isbn
-                          52,  # so
-                          76,  # http
-                          77,  # PMID
-                          80,  # FBcv
-                          95,  # MEDLINE
-                          98,  # Reactome
-                          103, # Chebi
-                          102, # MeSH
-                          106, # OMIM
-                          105, # KEGG pathway
-                          107, # doi
-                          108, # CL
-                          114, # CHEBI
-                          115, # KEGG
-                          116, # PubChem
-                          120, # MA???
-                          3,   # GO
-                          4,   # FlyBase
-                          126, # URL
-                          128, # PATO
-                          131, # IMG
-                          2,   # SO
-                          136, # MESH
-                          139, # CARO
-                          140, # NCBITaxon
-                          151, # MP  ???
-                          161, # doi
-                          36,  # BDGP
-                          55,  # DGRC
-                          54,  # DRSC
-                          169, # Transgenic RNAi project???
-                          231, # RO ???
-                          180, # entrezgene
-                          192, # Bloomington stock center
-                          197, # Uberon
-                          212, # Ensembl
-                          129, # GenomeRNAi
-                          275, # PubMed
-                          286, # pmid
-                          265, # OMIM_Gene
-                          266, # OMIM_Phenotype
-                          300, # DOID
-                          302, # MSH
-                          347, # Pubmed
-                ]  # the databases to fetch
+                db_ids = {50: 'PMID',  # pubmed
+                          68: 'RO',  # obo-rel
+                          71: 'FBdv',  # FBdv
+                          74: 'FBbt',  # FBbt
+                          # 28:,  # genbank
+                          30: 'OMIM',  # MIM
+                          # 38,  # ncbi
+                          75: 'ISBN',  # ISBN
+                          46: 'PMID',  # PUBMED
+                          51: 'ISBN',  # isbn
+                          52: 'SO',  # so
+                          # 76,  # http
+                          77: 'PMID',  # PMID
+                          80: 'FBcv',  # FBcv
+                          # 95,  # MEDLINE
+                          98: 'REACT',  # Reactome
+                          103: 'CHEBI', # Chebi
+                          102: 'MESH', # MeSH
+                          106: 'OMIM', # OMIM
+                          105: 'KEGG-path', # KEGG pathway
+                          107: 'DOI', # doi
+                          108: 'CL', # CL
+                          114: 'CHEBI', # CHEBI
+                          115: 'KEGG', # KEGG
+                          116: 'PubChem', # PubChem
+                          # 120, # MA???
+                          3: 'GO',   # GO
+                          4: 'FlyBase',   # FlyBase
+                          # 126, # URL
+                          128: 'PATO', # PATO
+                          # 131, # IMG
+                          2: 'SO',   # SO
+                          136: 'MESH', # MESH
+                          139: 'CARO', # CARO
+                          140: 'NCBITaxon', # NCBITaxon
+                          # 151, # MP  ???
+                          161: 'DOI', # doi
+                          36: 'BDGP',  # BDGP
+                          # 55,  # DGRC
+                          # 54,  # DRSC
+                          # 169, # Transgenic RNAi project???
+                          231: 'RO', # RO ???
+                          180: 'NCBIGene', # entrezgene
+                          # 192, # Bloomington stock center
+                          197: 'UBERON', # Uberon
+                          212: 'ENSEMBL', # Ensembl
+                          # 129, # GenomeRNAi
+                          275: 'PMID', # PubMed
+                          286: 'PMID', # pmid
+                          265: 'OMIM', # OMIM_Gene
+                          266: 'OMIM', # OMIM_Phenotype
+                          300: 'DOID', # DOID
+                          302: 'MESH', # MSH
+                          347: 'PMID', # Pubmed
+                }  # the databases to fetch
 
-                if int(db_id) not in db_ids:
-                    continue
-
-                if accession.strip() != '':
-                    self.dbxrefs[dbxref_id] = {db_id:accession}
+                if accession.strip() != '' and int(db_id) in db_ids:
+                    self.dbxrefs[dbxref_id] = {db_id:':'.join((db_ids.get(int(db_id)), accession.strip()))}
                 elif url != '':
-                    self.dbxrefs[dbxref_id] = {db_id:url}
+                    self.dbxrefs[dbxref_id] = {db_id:url.strip()}
                 else:
                     continue
 
@@ -785,18 +781,39 @@ class FlyBase(Source):
                 # 8508	tarsal segment	83664	60468		60468	60468
 
                 # for now make these as phenotypic classes - will need to xref at some point
-
                 phenotype_key = phenotype_id
-                phenotype_id = self._makeInternalIdentifier('phenotype', phenotype_key)
-                phenotype_id = ':'+phenotype_id  # FIXME
+                phenotype_id = None
+                phenotype_internal_id = self._makeInternalIdentifier('phenotype', phenotype_key)
+                self.label_hash[phenotype_internal_id] = uniquename
+
+                # here, we convert the phenotype into a uberpheno-style identifier, simply based on
+                # the anatomical part that's affected...that is listed as the observable_id,
+                # concatenated with the literal "PHENOTYPE"
+                if observable_id in self.idhash['cvterm']:
+                    phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
+
+                phenotype_label = None
+                if observable_id != '' and observable_id in self.idhash['cvterm']:
+                    cvterm_id = self.idhash['cvterm'][observable_id]
+                    if cvterm_id in self.label_hash:
+                        phenotype_label = self.label_hash[cvterm_id]
+                        phenotype_label += ' phenotype'
+                    else:
+                        logger.info('cvtermid=%s not in label_hash', cvterm_id)
+                else:
+                    logger.info("No observable id or label for %s: %s", phenotype_key, uniquename)
+
+                # TODO store this composite phenotype in some way as a proper class definition?
                 self.idhash['phenotype'][phenotype_key] = phenotype_id
-                # todo store the phenotype-to-assay for use in the
+
+                # TODO store the phenotype-to-assay for use in the
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    gu.addClassToGraph(g, phenotype_id, uniquename)
-                    line_counter += 1
+                    if phenotype_id is not None:
+                        gu.addClassToGraph(g, phenotype_id, phenotype_label)
+                        line_counter += 1
 
         return
 
@@ -836,8 +853,9 @@ class FlyBase(Source):
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
                 phenotype_key = phenotype_id
-                phenotype_id = self._makeInternalIdentifier('phenotype', phenotype_key)  # TEMP
-                # phenotype_id = self.idhash['phenotype'][phenotype_key]
+                phenotype_internal_id = self._makeInternalIdentifier('phenotype', phenotype_key)  # TEMP
+                phenotype_internal_label = self.label_hash[phenotype_internal_id]
+                phenotype_id = self.idhash['phenotype'][phenotype_key]
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
 
@@ -847,6 +865,7 @@ class FlyBase(Source):
                 assoc.add_association_to_graph(g)
                 assoc_id = assoc.get_association_id()
                 gu.addComment(g, assoc_id, phenstatement_id)
+                gu.addDescription(g, assoc_id, phenotype_internal_label)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -855,6 +874,7 @@ class FlyBase(Source):
 
     def _process_phenotype_cvterm(self, limit):
         """
+        These are the qualifiers for the phenotype location itself
         :param limit:
         :return:
         """
@@ -883,9 +903,16 @@ class FlyBase(Source):
                 phenotype_key = phenotype_id
                 cvterm_key = cvterm_id
                 phenotype_id = self.idhash['phenotype'][phenotype_key]
-                cvterm_id = self.idhash['cvterm'][cvterm_key]
-#                print('phenotype = cvterm %s', cvterm_id)
-                self.idhash['phenotype'][phenotype_key] = cvterm_id
+                if cvterm_key in self.idhash['cvterm']:
+                    cvterm_id = self.idhash['cvterm'][cvterm_key]
+
+                    self.idhash['phenotype'][phenotype_key] = cvterm_id
+                    if phenotype_key not in self.phenocv:
+                        self.phenocv[phenotype_id] = [cvterm_id]
+                    else:
+                        self.phenocv[phenotype_id] += [cvterm_id]
+                else:
+                    logger.info("Not storing the cvterm info for %s", cvterm_key)
 
         return
 
@@ -918,6 +945,7 @@ class FlyBase(Source):
 
                 cv_prefixes = {
                     6 : 'SO',
+                    20: 'FBcv',
                     28: 'GO',
                     29: 'GO',
                     30: 'GO',
@@ -927,10 +955,10 @@ class FlyBase(Source):
                     73: 'DOID'
                 }
 
-                if cv_id not in cv_prefixes:
+                if int(cv_id) not in cv_prefixes:
                     continue
                 cvterm_key = cvterm_id
-                cvterm_id = self._makeInternalIdentifier('cvterm',cvterm_key)
+                cvterm_id = self._makeInternalIdentifier('cvterm', cvterm_key)
                 self.label_hash[cvterm_id] = name
                 self.idhash['cvterm'][cvterm_key] = cvterm_id
                 # look up the dbxref_id for the cvterm - hopefully it's one-to-one
@@ -939,8 +967,11 @@ class FlyBase(Source):
                     if len(dbxrefs) > 1:
                         logger.info(">1 dbxref for this cvterm (%s: %s)", str(cvterm_id), name)
                     elif len(dbxrefs) == 1:
-                        self.idhash['cvterm'][cvterm_key] = dbxrefs.popitem()[1]  # get the value
-
+                        # replace the cvterm with the dbxref (external) identifier
+                        did = dbxrefs.popitem()[1]
+                        self.idhash['cvterm'][cvterm_key] = did  # get the value
+                        # also add the label to the dbxref
+                        self.label_hash[did] = name
         return
 
     # def _process_organism(self, limit):
@@ -977,9 +1008,7 @@ class FlyBase(Source):
     #
     #     return
 
-
-    @staticmethod
-    def _makeInternalIdentifier(prefix, key):
+    def _makeInternalIdentifier(self, prefix, key):
         """
         This is a special Flybase-to-MONARCH-ism.  Flybase tables have unique keys that we use here, but don't want
         to necessarily re-distribute those internal identifiers.  Therefore, we make them into keys in a consistent
@@ -988,15 +1017,17 @@ class FlyBase(Source):
         :param key: the number (unique key)
         :return:
         """
+        iid = '_fb'+prefix+'key'+key
+        if self.nobnodes:
+            iid = ':'+ iid
 
-        return '_fb'+prefix+'key'+key
+        return iid
 
 
     # def getTestSuite(self):
     #     import unittest
-    #     from tests.test_mgi import MGITestCase
-    #     # TODO test genotypes
+    #     from tests.test_flybase import FlyBaseTestCase
     #
-    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(MGITestCase)
+    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
     #
     #     return test_suite
