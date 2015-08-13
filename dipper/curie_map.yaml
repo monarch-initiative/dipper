@@ -22,6 +22,7 @@
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'faldo' : 'http://biohackathon.org/resource/faldo#'
 'FBcv' : 'http://purl.obolibrary.org/obo/FBcv_'
+'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'
 'GENO': 'http://purl.obolibrary.org/obo/GENO_'
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
 'HP': 'http://purl.obolibrary.org/obo/HP_'
