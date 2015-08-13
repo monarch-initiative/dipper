@@ -39,21 +39,20 @@ class FlyBase(Source):
         'pub',  # done
         'feature_pub',  # done
         'pub_dbxref',
-        # 'feature_dbxref',
+        'feature_dbxref',
         # 'feature_relationship',
-        # 'cvterm',
-        'stock_genotype',
-        'stock',
+        'cvterm',  # done
+        'stock_genotype',  # done
+        'stock',  # done
         'organism',  # may not be necessary
         'environment',   # done
-        # 'phenotype',  UNFINISHED
-        'phenstatement',
-        # 'dbxref',
-        # 'db',
-        'phenotype_cvterm',
-        'phendesc',
+        'phenotype',  # done
+        'phenstatement',  # done
+        'dbxref',  # done
+        'phenotype_cvterm',  # done
+        'phendesc',  # done
         # 'strain',
-        # 'environment_cvterm',
+        'environment_cvterm',  # done
     ]
 
     def __init__(self):
@@ -103,7 +102,7 @@ class FlyBase(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        # self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
 
         # we want to fetch the features, but just a subset to reduce the processing time
@@ -136,19 +135,21 @@ class FlyBase(Source):
         self._process_dbxref()
         self._process_cvterm()
         self._process_genotypes(limit)
-        # self._process_stocks(limit)
+        self._process_stocks(limit)
         self._process_pubs(limit)
+        self._process_environment_cvterm()  # do this before environments to get the external ids
         self._process_environments(limit)
-        # self._process_features(limit)
+        self._process_features(limit)
         self._process_phenotype(limit)
         self._process_phenotype_cvterm(limit)
+        self._process_feature_dbxref(limit)  # gets external mappings for features (genes, variants, etc)
 
-        # These must be processed in a specific order
+        # These are the associations amongst the objects above
         self._process_pub_dbxref(limit)
-        # self._process_phendesc(limit)
-        # self._process_feature_genotype(limit)
-        # self._process_feature_pub(limit)
-        # self._process_stock_genotype(limit)
+        self._process_phendesc(limit)
+        self._process_feature_genotype(limit)
+        self._process_feature_pub(limit)
+        self._process_stock_genotype(limit)
         self._process_phenstatement(limit)   # these are G2P associations
 
         logger.info("Finished parsing.")
@@ -358,12 +359,11 @@ class FlyBase(Source):
                 #22      heat sensitive | tetracycline conditional
 
                 environment_num = environment_id
-                environment_id = self._makeInternalIdentifier('environment',environment_num)
-                if self.nobnodes:
-                    environment_id = ':'+environment_id
+                environment_internal_id = self._makeInternalIdentifier('environment',environment_num)
+                if environment_num not in self.idhash['environment']:
+                    self.idhash['environment'][environment_num] = environment_internal_id
 
-                self.idhash['environment'][environment_num] = environment_id
-
+                environment_id = self.idhash['environment'][environment_num]
                 environment_label = uniquename
                 env.addEnvironment(environment_id, environment_label)
                 self.label_hash[environment_id] = environment_label
@@ -411,22 +411,40 @@ class FlyBase(Source):
 
 # 30930111		340	Dwil\GK21498-RA	FBtr0252149		339	dae8eaaa6b6c2e3033f69039e970526f	368	f	2007-11-28 12:30:57.835613	2015-02-06 13:17:28.135903	t
 
-                feature_num = feature_id
-                feature_id = 'FlyBase:'+uniquename
-                self.idhash['feature'][feature_num] = feature_id
+                feature_key = feature_id
+                if re.search('\|', uniquename):
+                    # some uniquenames have pipes in them!  totally bad.  for example: FB||||FBrf0133242|Hugh-u1
+                    feature_id = self._makeInternalIdentifier('feature', feature_key)
+                else:
+                    feature_id = 'FlyBase:'+uniquename
+                self.idhash['feature'][feature_key] = feature_id
 
                 # now do something with it!
                 # switch on type_id
                 if name.strip() == '':
                     name = None
 
+                type_key = type_id
+                type_id = self.idhash['cvterm'][type_key]
+
+                # HACK - FBgn are genes, and therefore classes, all else be individuals
+                is_gene = False
+                if re.search('FBgn', feature_id):
+                    is_gene = True
+
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if is_obsolete == 't':
-                        gu.addDeprecatedIndividual(g, feature_id)
+                    if is_gene:
+                        gu.addClassToGraph(g, feature_id, name, type_id)
                     else:
-                        gu.addIndividualToGraph(g, feature_id, name)
+                        gu.addIndividualToGraph(g, feature_id, name, type_id)
+
+                    if is_obsolete == 't':
+                        if is_gene:
+                            gu.addDeprecatedClass(g, feature_id)
+                        else:
+                            gu.addDeprecatedIndividual(g, feature_id)
 
         return
 
@@ -741,7 +759,29 @@ class FlyBase(Source):
                 }  # the databases to fetch
 
                 if accession.strip() != '' and int(db_id) in db_ids:
-                    self.dbxrefs[dbxref_id] = {db_id:':'.join((db_ids.get(int(db_id)), accession.strip()))}
+                    # scrub some identifiers here
+                    m = re.match('(doi|SO|GO|FBcv|FBbt_root|FBdv|FBgn|FBdv_root|FlyBase|FBbt):', accession)
+                    if m:
+                        accession = re.sub(m.group(1)+'\:', '', accession)
+                    elif re.match('(FlyBase miscellaneous CV|cell_lineprop|relationship type|FBgn$)', accession):
+                        continue
+                    elif re.match('\:', accession):  # starts with a colon
+                        accession = re.sub('\:', '', accession)
+                    elif re.search('\s', accession):
+                        # skip anything with a space
+                        # logger.debug('dbxref %s accession has a space: %s', dbxref_id, accession)
+                        continue
+
+                    if re.match('http', accession):
+                        did = accession.strip()
+                    else:
+                        prefix = db_ids.get(int(db_id))
+                        did = ':'.join((prefix, accession.strip()))
+                        if re.search('\:', accession) and prefix != 'DOI':
+                            logger.warn('id %s may be malformed; skipping', did)
+
+                    self.dbxrefs[dbxref_id] = {db_id: did}
+
                 elif url != '':
                     self.dbxrefs[dbxref_id] = {db_id:url.strip()}
                 else:
@@ -806,7 +846,7 @@ class FlyBase(Source):
                 # TODO store this composite phenotype in some way as a proper class definition?
                 self.idhash['phenotype'][phenotype_key] = phenotype_id
 
-                # TODO store the phenotype-to-assay for use in the
+                # assay_id is currently only "undefined" key=60468
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
@@ -819,7 +859,10 @@ class FlyBase(Source):
 
     def _process_phenstatement(self, limit):
         """
-        UNFINISHED - STUB ONLY
+        The phenstatements are the genotype-to-phenotype associations, in the context of an environment.
+        These are also curated to a publication.
+        So we make oban associations, adding the pubs as a source.  We additionally add the internal key
+        as a comment for tracking purposes.
         :param limit:
         :return:
         """
@@ -874,20 +917,15 @@ class FlyBase(Source):
 
     def _process_phenotype_cvterm(self, limit):
         """
-        These are the qualifiers for the phenotype location itself
+        These are the qualifiers for the phenotype location itself.
         :param limit:
         :return:
         """
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
 
         line_counter = 0
-        geno_hash = {}
         raw = '/'.join((self.rawdir, 'phenotype_cvterm'))
         logger.info("processing phenotype cvterm mappings")
-        gu = GraphUtils(curie_map.get())
+
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -919,13 +957,14 @@ class FlyBase(Source):
 
     def _process_cvterm(self):
         """
+        CVterms are the internal identifiers for any controlled vocab or ontology term.  Many are
+        xrefd to actual ontologies.  The actual external id is stored in the dbxref table, which we
+        place into the internal hashmap for lookup with the cvterm id.  The name of the external term
+        is stored in the "name" element of this table, and we add that to the label hashmap for lookup elsewhere
+
         :param limit:
         :return:
         """
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
 
         line_counter = 0
         raw = '/'.join((self.rawdir, 'cvterm'))
@@ -943,20 +982,21 @@ class FlyBase(Source):
                 # 28	5		1663309	0	0	synonym
                 # 455	6		1665920	0	0	tmRNA
 
-                cv_prefixes = {
-                    6 : 'SO',
-                    20: 'FBcv',
-                    28: 'GO',
-                    29: 'GO',
-                    30: 'GO',
-                    31: 'FBcv',
-                    32: 'FBdv',
-                    37: 'GO',   # these are relationships
-                    73: 'DOID'
-                }
+                # not sure the following is necessary
+                # cv_prefixes = {
+                #     6 : 'SO',
+                #     20: 'FBcv',
+                #     28: 'GO',
+                #     29: 'GO',
+                #     30: 'GO',
+                #     31: 'FBcv',  # not actually FBcv - I think FBbt.
+                #     32: 'FBdv',
+                #     37: 'GO',   # these are relationships
+                #     73: 'DOID'
+                # }
 
-                if int(cv_id) not in cv_prefixes:
-                    continue
+                # if int(cv_id) not in cv_prefixes:
+                #     continue
                 cvterm_key = cvterm_id
                 cvterm_id = self._makeInternalIdentifier('cvterm', cvterm_key)
                 self.label_hash[cvterm_id] = name
@@ -965,13 +1005,106 @@ class FlyBase(Source):
                 dbxrefs = self.dbxrefs.get(dbxref_id)
                 if dbxrefs is not None:
                     if len(dbxrefs) > 1:
-                        logger.info(">1 dbxref for this cvterm (%s: %s)", str(cvterm_id), name)
+                        logger.info(">1 dbxref for this cvterm (%s: %s): ", str(cvterm_id), name, dbxrefs.values())
                     elif len(dbxrefs) == 1:
                         # replace the cvterm with the dbxref (external) identifier
                         did = dbxrefs.popitem()[1]
                         self.idhash['cvterm'][cvterm_key] = did  # get the value
                         # also add the label to the dbxref
                         self.label_hash[did] = name
+        return
+
+
+    def _process_environment_cvterm(self):
+        """
+        This is the mapping between the internal environment id and the external ones; here we
+        map the internal environment id to the external one in the hashmap.
+        :param limit:
+        :return:
+        """
+
+        line_counter = 0
+        raw = '/'.join((self.rawdir, 'environment_cvterm'))
+        logger.info("processing environment to cvterm mappings")
+
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+
+                (environment_cvterm_id, environment_id, cvterm_id) = line
+                #1	1	60468
+
+                environment_key = environment_id
+
+                cvterm_key = cvterm_id
+                cvterm_id = self.idhash['cvterm'][cvterm_key]
+
+                # look up the dbxref_id for the cvterm - hopefully it's one-to-one
+                self.idhash['environment'][environment_key] = cvterm_id
+
+        return
+
+    def _process_feature_dbxref(self, limit):
+        """
+        This is the mapping between the flybase features and external repositories.
+        Generally we want to leave the flybase feature id as the primary identifier.
+        But we need to make the equivalences/sameAs.
+
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        line_counter = 0
+        raw = '/'.join((self.rawdir, 'feature_dbxref'))
+        logger.info("processing feature dbxref mappings")
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+
+                (feature_dbxref_id, feature_id, dbxref_id, is_current) = line
+
+                # 431890	3091292	596211	t
+                # 2	9	55044	t
+                # 3	9	55045	t
+                # 437595	4551668	277309	t
+                # 437596	4551662	277307	t
+
+                if is_current == 'f':
+                    # not sure what to do with it?
+                    continue
+
+                feature_key = feature_id
+                if feature_key not in self.idhash['feature']:
+                    # some features may not be found in the hash if they are "analysis features"
+                    logger.warn("Feature %s not found in hash", feature_key)
+                    continue
+                feature_id = self.idhash['feature'][feature_key]
+
+                dbxref_key = dbxref_id
+                dbxrefs = self.dbxrefs.get(dbxref_key)
+                if dbxrefs is not None:
+                    for d in dbxrefs:
+                        # need to filter based on db ?
+                        # TODO should we make other species' identifiers primary, instead of flybase?
+                        did = dbxrefs.get(d)
+                        if did == feature_id:  # don't make something sameAs itself
+                            continue
+                        dlabel = self.label_hash.get(did)
+                        gu.addIndividualToGraph(g, did, dlabel)
+                        gu.addSameIndividual(g, feature_id, did)
+                        line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
         return
 
     # def _process_organism(self, limit):
