@@ -412,7 +412,7 @@ class FlyBase(Source):
 # 30930111		340	Dwil\GK21498-RA	FBtr0252149		339	dae8eaaa6b6c2e3033f69039e970526f	368	f	2007-11-28 12:30:57.835613	2015-02-06 13:17:28.135903	t
 
                 feature_key = feature_id
-                if re.search('\|', uniquename):
+                if re.search('[\|\s]', uniquename):
                     # some uniquenames have pipes in them!  totally bad.  for example: FB||||FBrf0133242|Hugh-u1
                     feature_id = self._makeInternalIdentifier('feature', feature_key)
                 else:
