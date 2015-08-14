@@ -197,8 +197,13 @@ class HPOAnnotations(Source):
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w, asp, syn, date, curator) = row
                 disease_id = db + ":" + str(num)
 
-                if self.testMode and disease_id.strip() not in config.get_config()['test_ids']['disease']:
-                    continue
+                if self.testMode:
+                    try:
+                        id_list = self.test_ids
+                        if id_list is None:
+                            continue
+                    except AttributeError:
+                        continue
 
                 # logger.info('adding %s', disease_id)
 
