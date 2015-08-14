@@ -1,6 +1,5 @@
 import logging
 import re
-import psycopg2
 import csv
 
 from dipper.sources.Source import Source
@@ -13,7 +12,6 @@ from dipper.models.Environment import Environment
 from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.GenomicFeature import Feature, makeChromID
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +29,6 @@ class FlyBase(Source):
     We connect using the [Direct Chado Access](http://gmod.org/wiki/Public_Chado_Databases#Direct_Chado_Access)
 
     """
-
 
     tables = [
         'genotype',  # done
@@ -51,7 +48,7 @@ class FlyBase(Source):
         'dbxref',  # done
         'phenotype_cvterm',  # done
         'phendesc',  # done
-        # 'strain',
+        # 'strain',  # may not be necessary
         'environment_cvterm',  # done
     ]
 
@@ -104,7 +101,6 @@ class FlyBase(Source):
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
-
         # we want to fetch the features, but just a subset to reduce the processing time
         query = "select feature_id, dbxref_id, organism_id, name, uniquename, null as residues,"\
                 +"seqlen, md5checksum, type_id, is_analysis, timeaccessioned, timelastmodified, is_obsolete "\
@@ -138,10 +134,10 @@ class FlyBase(Source):
         self._process_stocks(limit)
         self._process_pubs(limit)
         self._process_environment_cvterm()  # do this before environments to get the external ids
-        self._process_environments(limit)
+        self._process_environments()
         self._process_features(limit)
         self._process_phenotype(limit)
-        self._process_phenotype_cvterm(limit)
+        self._process_phenotype_cvterm()
         self._process_feature_dbxref(limit)  # gets external mappings for features (genes, variants, etc)
 
         # These are the associations amongst the objects above
@@ -180,7 +176,7 @@ class FlyBase(Source):
             g = self.graph
 
         line_counter = 0
-        geno_hash = {}
+
         raw = '/'.join((self.rawdir, 'genotype'))
         logger.info("building labels for genotypes")
         gu = GraphUtils(curie_map.get())
@@ -217,11 +213,7 @@ class FlyBase(Source):
 
     def _process_stocks(self, limit):
         """
-        Add the genotype internal id to flybase mapping to the idhashmap.  Also, add them as individuals to the graph.
-
-        Triples created:
-        <genotype id> a GENO:intrinsic_genotype
-        <genotype id> rdfs:label "<gvc> [bkgd]"
+        Stock definitions.  Here we instantiate the Instances.
 
         :param limit:
         :return:
@@ -232,7 +224,7 @@ class FlyBase(Source):
             g = self.graph
 
         line_counter = 0
-        geno_hash = {}
+
         raw = '/'.join((self.rawdir, 'stock'))
         logger.info("building labels for stocks")
         gu = GraphUtils(curie_map.get())
@@ -273,11 +265,7 @@ class FlyBase(Source):
 
     def _process_pubs(self, limit):
         """
-        Add the genotype internal id to flybase mapping to the idhashmap.  Also, add them as individuals to the graph.
-
-        Triples created:
-        <genotype id> a GENO:intrinsic_genotype
-        <genotype id> rdfs:label "<gvc> [bkgd]"
+        Flybase publications.
 
         :param limit:
         :return:
@@ -288,11 +276,10 @@ class FlyBase(Source):
             g = self.graph
 
         line_counter = 0
-        geno_hash = {}
+
         raw = '/'.join((self.rawdir, 'pub'))
         logger.info("building labels for pubs")
         gu = GraphUtils(curie_map.get())
-        taxon = 'NCBITaxon:7227'
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -331,14 +318,13 @@ class FlyBase(Source):
 
         return
 
-    def _process_environments(self, limit):
+    def _process_environments(self):
         """
         There's only a few (~30) environments in which the phenotypes are recorded...
         There are no externally accessible identifiers for environments, so we make anonymous nodes for now.
         Some of the environments are comprised of >1 of the other environments; we do some simple parsing to
         match the strings of the environmental labels to the other atomic components.
 
-        :param limit:
         :return:
         """
         if self.testMode:
@@ -356,10 +342,10 @@ class FlyBase(Source):
             f.readline()  # read the header row; skip
             for line in filereader:
                 (environment_id, uniquename, description) = line
-                #22      heat sensitive | tetracycline conditional
+                # 22      heat sensitive | tetracycline conditional
 
                 environment_num = environment_id
-                environment_internal_id = self._makeInternalIdentifier('environment',environment_num)
+                environment_internal_id = self._makeInternalIdentifier('environment', environment_num)
                 if environment_num not in self.idhash['environment']:
                     self.idhash['environment'][environment_num] = environment_internal_id
 
@@ -376,7 +362,7 @@ class FlyBase(Source):
                 else:
                     label_map[environment_label] = environment_id
 
-            #### end loop through file
+            # ### end loop through file
 
         # build the environmental components
         for eid in env_parts:
@@ -389,6 +375,11 @@ class FlyBase(Source):
         return
 
     def _process_features(self, limit):
+        """
+        These are all of the genomic features (genes, variations, transgenes, etc.).
+        :param limit:
+        :return:
+        """
 
         if self.testMode:
             g = self.testgraph
@@ -397,7 +388,7 @@ class FlyBase(Source):
 
         raw = '/'.join((self.rawdir, 'feature'))
         logger.info("building labels for features")
-        geno = Genotype(g)
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
@@ -408,8 +399,6 @@ class FlyBase(Source):
                  is_analysis, timeaccessioned, timelastmodified, is_obsolete) = line
 
                 line_counter += 1
-
-# 30930111		340	Dwil\GK21498-RA	FBtr0252149		339	dae8eaaa6b6c2e3033f69039e970526f	368	f	2007-11-28 12:30:57.835613	2015-02-06 13:17:28.135903	t
 
                 feature_key = feature_id
                 if re.search('[\|\s\[\]\{\}\\\]', uniquename):
@@ -459,7 +448,7 @@ class FlyBase(Source):
         logger.info("processing genotype features")
         geno = Genotype(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -500,7 +489,7 @@ class FlyBase(Source):
 
         raw = '/'.join((self.rawdir, 'phendesc'))
         logger.info("processing G2P")
-        geno = Genotype(g)
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
@@ -582,10 +571,9 @@ class FlyBase(Source):
 
         return
 
-
     def _process_stock_genotype(self, limit):
         """
-        The description of the resulting phenotypes with the genotype+environment
+        The genotypes of the stocks.
 
         :param limit:
         :return:
@@ -622,12 +610,9 @@ class FlyBase(Source):
 
         return
 
-
-
     def _process_pub_dbxref(self, limit):
         """
-        The description of the resulting phenotypes with the genotype+environment
-        PRELIMINARY - MAY NOT BE NECESSARY TO IMPORT
+        Xrefs for publications (ie FBrf = PMID)
         :param limit:
         :return:
         """
@@ -639,7 +624,7 @@ class FlyBase(Source):
 
         raw = '/'.join((self.rawdir, 'pub_dbxref'))
         logger.info("processing pub_dbxref")
-        geno = Genotype(g)
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
 
@@ -649,7 +634,6 @@ class FlyBase(Source):
             for line in filereader:
                 (pub_dbxref_id, pub_id, dbxref_id, is_current) = line
                 # 49648	43222	395730	t
-
 
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
@@ -684,11 +668,10 @@ class FlyBase(Source):
 
         return
 
-
     def _process_dbxref(self):
         """
         We bring in the dbxref identifiers and store them in a hashmap for lookup in other functions
-        :param limit:
+
         :return:
         """
 
@@ -701,8 +684,8 @@ class FlyBase(Source):
             f.readline()  # read the header row; skip
             for line in filereader:
                 (dbxref_id, db_id, accession, version, description, url) = line
-                    # dbxref_id	db_id	accession	version	description	url
-                    # 1	2	SO:0000000	""
+                # dbxref_id	db_id	accession	version	description	url
+                # 1	2	SO:0000000	""
 
                 db_ids = {50: 'PMID',  # pubmed
                           68: 'RO',  # obo-rel
@@ -785,7 +768,7 @@ class FlyBase(Source):
                     self.dbxrefs[dbxref_id] = {db_id: did}
 
                 elif url != '':
-                    self.dbxrefs[dbxref_id] = {db_id:url.strip()}
+                    self.dbxrefs[dbxref_id] = {db_id: url.strip()}
                 else:
                     continue
 
@@ -795,7 +778,12 @@ class FlyBase(Source):
 
     def _process_phenotype(self, limit):
         """
-        UNFINISHED - STUB ONLY
+        Get the phenotypes, and declare the classes.
+        We convert the phenotype into a uberpheno-style identifier, simply based on
+        the anatomical part that's affected...that is listed as the observable_id,
+        concatenated with the literal "PHENOTYPE"
+
+        Note that assay_id is the same for all current items.
         :param limit:
         :return:
         """
@@ -807,7 +795,7 @@ class FlyBase(Source):
 
         raw = '/'.join((self.rawdir, 'phenotype'))
         logger.info("processing phenotype")
-        geno = Genotype(g)
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
 
@@ -828,9 +816,6 @@ class FlyBase(Source):
                 phenotype_internal_id = self._makeInternalIdentifier('phenotype', phenotype_key)
                 self.label_hash[phenotype_internal_id] = uniquename
 
-                # here, we convert the phenotype into a uberpheno-style identifier, simply based on
-                # the anatomical part that's affected...that is listed as the observable_id,
-                # concatenated with the literal "PHENOTYPE"
                 if observable_id in self.idhash['cvterm']:
                     phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
 
@@ -876,7 +861,7 @@ class FlyBase(Source):
 
         raw = '/'.join((self.rawdir, 'phenstatement'))
         logger.info("processing phenstatement")
-        geno = Genotype(g)
+
         line_counter = 0
         gu = GraphUtils(curie_map.get())
 
@@ -917,10 +902,10 @@ class FlyBase(Source):
 
         return
 
-    def _process_phenotype_cvterm(self, limit):
+    def _process_phenotype_cvterm(self):
         """
         These are the qualifiers for the phenotype location itself.
-        :param limit:
+        We don't really do anything with these yet.
         :return:
         """
 
@@ -956,7 +941,6 @@ class FlyBase(Source):
 
         return
 
-
     def _process_cvterm(self):
         """
         CVterms are the internal identifiers for any controlled vocab or ontology term.  Many are
@@ -964,7 +948,6 @@ class FlyBase(Source):
         place into the internal hashmap for lookup with the cvterm id.  The name of the external term
         is stored in the "name" element of this table, and we add that to the label hashmap for lookup elsewhere
 
-        :param limit:
         :return:
         """
 
@@ -1016,12 +999,10 @@ class FlyBase(Source):
                         self.label_hash[did] = name
         return
 
-
     def _process_environment_cvterm(self):
         """
         This is the mapping between the internal environment id and the external ones; here we
         map the internal environment id to the external one in the hashmap.
-        :param limit:
         :return:
         """
 
@@ -1036,7 +1017,7 @@ class FlyBase(Source):
                 line_counter += 1
 
                 (environment_cvterm_id, environment_id, cvterm_id) = line
-                #1	1	60468
+                # 1	1	60468
 
                 environment_key = environment_id
 
@@ -1157,7 +1138,6 @@ class FlyBase(Source):
             iid = ':'+ iid
 
         return iid
-
 
     # def getTestSuite(self):
     #     import unittest
