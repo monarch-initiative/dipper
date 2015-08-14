@@ -401,7 +401,7 @@ class FlyBase(Source):
                 line_counter += 1
 
                 feature_key = feature_id
-                if re.search('[\|\s\[\]\{\}\\\]', uniquename):
+                if re.search('[\|\s\[\]\{\}\\\\<\>]', uniquename):
                     # some uniquenames have pipes or other nasty chars!  for example: FB||||FBrf0133242|Hugh-u1
                     feature_id = self._makeInternalIdentifier('feature', feature_key)
                 else:
