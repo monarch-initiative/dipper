@@ -39,7 +39,8 @@ class MMRRC(Source):
     }
 
     test_ids = [
-        'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC', 'MMRRC:037884-UCD', 'MMRRC:000255-MU'
+        'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC', 'MMRRC:037884-UCD', 'MMRRC:000255-MU',
+        'MMRRC:037372-UCD'
     ]
 
     def __init__(self):
@@ -278,9 +279,9 @@ class MMRRC(Source):
                     genotype_label = gvc_label + ' [n.s.]'
                     genotype_id = gvc_id+'-U'
                     bkgd_id = '_'+re.sub(':', '', '-'.join((geno.genoparts['unspecified_genomic_background'], s)))
-                    geno.addTaxon(mouse_taxon, bkgd_id)
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
+                    geno.addTaxon(mouse_taxon, bkgd_id)
                     gu.addIndividualToGraph(g, bkgd_id, 'unspecified ('+s+')', geno.genoparts['unspecified_genomic_background'],
                                             "A placeholder for the unspecified genetic background for "+s)
                     geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id)
