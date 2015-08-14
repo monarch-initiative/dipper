@@ -567,6 +567,8 @@ class FlyBase(Source):
                 # 1440    3175682 62137
                 # 2       3160606 99159
                 feature_key = feature_id
+                if feature_key not in self.idhash['feature']:
+                    continue
                 feature_id = self.idhash['feature'][feature_key]
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
