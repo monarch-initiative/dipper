@@ -200,7 +200,7 @@ class HPOAnnotations(Source):
                 if self.testMode:
                     try:
                         id_list = self.test_ids
-                        if id_list is None:
+                        if id_list is None or disease_id.strip() not in id_list:
                             continue
                     except AttributeError:
                         continue
