@@ -21,7 +21,8 @@ class Reference:
     ref_types = {
         'journal_article': 'IAO:0000013',
         'publication': 'IAO:0000311',  # book
-        'document': 'IAO:0000310'  # document???
+        'document': 'IAO:0000310',  # document???
+        'photograph': 'IAO:0000185'  # photograph
     }
 
 

@@ -52,7 +52,6 @@ class IMPC(Source):
 
     """
 
-    # TODO change to ALL_genotype_phenotype.csv.gz
     files = {
         # 'impc': {'file': 'IMPC_genotype_phenotype.csv.gz',
         #          'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
@@ -73,7 +72,8 @@ class IMPC(Source):
     test_ids = ["MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
                 "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
                 "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
-                "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453"]
+                "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453",
+                "MGI:1098270"]
 
     def __init__(self):
         Source.__init__(self, 'impc')
@@ -158,8 +158,9 @@ class IMPC(Source):
                 ###### cleanup some of the identifiers ######
                 zygosity_id = self._map_zygosity(zygosity)
 
-                # colony ids sometimes have <> in them, and break our system; replace these with underscores
-                colony_id = '_'+re.sub('[<>\s]', '_', colony)
+                # colony ids sometimes have <> in them, spaces, or other non-alphanumerics
+                # and break our system; replace these with underscores
+                colony_id = '_'+re.sub('\W+', '_', colony)
                 if self.nobnodes:
                     colony_id = ':'+colony_id
 
