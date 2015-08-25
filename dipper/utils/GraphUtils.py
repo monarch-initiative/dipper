@@ -318,7 +318,7 @@ class GraphUtils:
     def addInvolvedIn(self, g, member_id, group_id):
         self.addTriple(g, member_id, self.properties['involved_in'], group_id)
 
-    def write(self, graph, format=None, file=None):
+    def write(self, graph, fileformat=None, file=None):
         """
          a basic graph writer (to stdout) for any of the sources.  this will write
          raw triples in rdfxml, unless specified.
@@ -326,15 +326,17 @@ class GraphUtils:
          an optional file can be supplied instead of stdout
         :return: None
         """
-        if format is None:
-            format = 'rdfxml'
+        filewriter = None
+        if fileformat is None:
+            fileformat = 'rdfxml'
         if file is not None:
-            filewriter = open(file, 'w')
-            logger.info("Writing triples in %s to %s", format, file)
-            print(graph.serialize(format=format).decode(), file=filewriter)
+            filewriter = open(file, 'wb')
+
+            logger.info("Writing triples in %s to %s", fileformat, file)
+            graph.serialize(filewriter, format=fileformat)
             filewriter.close()
         else:
-            print(graph.serialize(format=format).decode())
+            print(graph.serialize(format=fileformat).decode())
         return
 
     def write_raw_triples(self, graph, file=None):
