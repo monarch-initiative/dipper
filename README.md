@@ -29,6 +29,7 @@ like [Protege](http://protege.stanford.edu/).
 * One of the unit tests requires
 [owltools](https://code.google.com/p/owltools/wiki/InstallOWLTools) be available on your path.  You could modify
 the code to skip this, if necessary
+* unit tests require nosetests (if on OS X you may need to `sudo pip3 install nose`)
 
 * Required external python packages:
     * [psycopg2](http://initd.org/psycopg/) 
