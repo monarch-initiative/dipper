@@ -28,6 +28,8 @@ class FlyBase(Source):
     to the graph.
     We connect using the [Direct Chado Access](http://gmod.org/wiki/Public_Chado_Databases#Direct_Chado_Access)
 
+    When running the whole set, it performs best by dumping raw triples using the flag ```--format nt```.
+
     """
 
     tables = [
@@ -41,7 +43,8 @@ class FlyBase(Source):
         'cvterm',  # done
         'stock_genotype',  # done
         'stock',  # done
-        'organism',  # may not be necessary
+        'organism',
+        # 'organism_dbxref',  # TODO
         'environment',   # done
         'phenotype',  # done
         'phenstatement',  # done
@@ -50,6 +53,7 @@ class FlyBase(Source):
         'phendesc',  # done
         # 'strain',  # may not be necessary
         'environment_cvterm',  # done
+        # 'feature_cvterm'  # TODO to get better feature types than is in the feature table itself  (watch out for is_not)
     ]
 
     def __init__(self):
@@ -135,6 +139,7 @@ class FlyBase(Source):
         self._process_pubs(limit)
         self._process_environment_cvterm()  # do this before environments to get the external ids
         self._process_environments()
+        self._process_organisms(limit)
         self._process_features(limit)
         self._process_phenotype(limit)
         self._process_phenotype_cvterm()
@@ -194,8 +199,7 @@ class FlyBase(Source):
 
                 # add the internal genotype to pub mapping
                 genotype_id = self._makeInternalIdentifier('genotype', genotype_num)
-                if self.nobnodes:
-                    genotype_id = ':'+genotype_id
+
                 self.idhash['genotype'][genotype_num] = genotype_id
 
                 if description == '':
@@ -416,9 +420,36 @@ class FlyBase(Source):
                 type_key = type_id
                 type_id = self.idhash['cvterm'][type_key]
 
+                # skip some features by type
+                types_to_skip = [
+                    'SO:0000316',  # CDS
+                    'SO:0000696',  # oligos
+                    'SO:0000358',  # polypeptide
+                    ]
+
+                # FIXME should we skip introns/exons?
+                type_keys_to_skip = [
+                    596,  # pcr_product
+                    57096,
+                    57097,
+                    57270,
+                    58210,
+                    59643,
+                    60006,
+                    61351,
+                    61467,
+                    257,  # exon
+                    286,  # intron
+                ]
+
+                if type_id in types_to_skip or int(type_key) in type_keys_to_skip:
+                    continue
+
+                tax_id = self._makeInternalIdentifier('organism', organism_id)
+
                 # HACK - FBgn are genes, and therefore classes, all else be individuals
                 is_gene = False
-                if re.search('FBgn', feature_id):
+                if re.search('(FBgn|FBog)', feature_id):
                     is_gene = True
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -434,6 +465,8 @@ class FlyBase(Source):
                             gu.addDeprecatedClass(g, feature_id)
                         else:
                             gu.addDeprecatedIndividual(g, feature_id)
+
+                    gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
 
         return
 
@@ -779,11 +812,12 @@ class FlyBase(Source):
     def _process_phenotype(self, limit):
         """
         Get the phenotypes, and declare the classes.
-        We convert the phenotype into a uberpheno-style identifier, simply based on
+        If the "observable" is "unspecified", then we assign the phenotype to the "cvalue" id; otherwise
+        we convert the phenotype into a uberpheno-style identifier, simply based on
         the anatomical part that's affected...that is listed as the observable_id,
         concatenated with the literal "PHENOTYPE"
 
-        Note that assay_id is the same for all current items.
+        Note that assay_id is the same for all current items, so we do nothing with this.
         :param limit:
         :return:
         """
@@ -814,21 +848,26 @@ class FlyBase(Source):
                 phenotype_key = phenotype_id
                 phenotype_id = None
                 phenotype_internal_id = self._makeInternalIdentifier('phenotype', phenotype_key)
-                self.label_hash[phenotype_internal_id] = uniquename
-
-                if observable_id in self.idhash['cvterm']:
-                    phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
-
                 phenotype_label = None
-                if observable_id != '' and observable_id in self.idhash['cvterm']:
+                self.label_hash[phenotype_internal_id] = uniquename
+                cvterm_id = None
+                if observable_id != '' and int(observable_id) == 60468:  # undefined - typically these are already phenotypes
+                    if cvalue_id in self.idhash['cvterm']:
+                        cvterm_id = self.idhash['cvterm'][cvalue_id]
+                        phenotype_id = self.idhash['cvterm'][cvalue_id]
+                elif observable_id in self.idhash['cvterm']:  # observations to anatomical classes
                     cvterm_id = self.idhash['cvterm'][observable_id]
-                    if cvterm_id in self.label_hash:
+                    phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
+                    if cvterm_id is not None and cvterm_id in self.label_hash:
                         phenotype_label = self.label_hash[cvterm_id]
                         phenotype_label += ' phenotype'
+                        self.label_hash[phenotype_id] = phenotype_label
                     else:
                         logger.info('cvtermid=%s not in label_hash', cvterm_id)
+
                 else:
                     logger.info("No observable id or label for %s: %s", phenotype_key, uniquename)
+
 
                 # TODO store this composite phenotype in some way as a proper class definition?
                 self.idhash['phenotype'][phenotype_key] = phenotype_id
@@ -839,6 +878,7 @@ class FlyBase(Source):
                     pass
                 else:
                     if phenotype_id is not None:
+                        # assume that these fit into the phenotypic uberpheno elsewhere
                         gu.addClassToGraph(g, phenotype_id, phenotype_label)
                         line_counter += 1
 
@@ -1067,7 +1107,7 @@ class FlyBase(Source):
                 feature_key = feature_id
                 if feature_key not in self.idhash['feature']:
                     # some features may not be found in the hash if they are "analysis features"
-                    logger.warn("Feature %s not found in hash", feature_key)
+                    # logger.debug("Feature %s not found in hash", feature_key)
                     continue
                 feature_id = self.idhash['feature'][feature_key]
 
@@ -1090,39 +1130,50 @@ class FlyBase(Source):
 
         return
 
-    # def _process_organism(self, limit):
-    #     """
-    #     The description of the resulting phenotypes with the genotype+environment
-    #     PRELIMINARY - MAY NOT BE NECESSARY TO IMPORT
-    #     :param limit:
-    #     :return:
-    #     """
-    #
-    #     if self.testMode:
-    #         g = self.testgraph
-    #     else:
-    #         g = self.graph
-    #
-    #     raw = '/'.join((self.rawdir, 'stock_genotype'))
-    #     logger.info("processing stock genotype")
-    #     geno = Genotype(g)
-    #     line_counter = 0
-    #     gu = GraphUtils(curie_map.get())
-    #
-    #     with open(raw, 'r') as f:
-    #         filereader = csv.reader(f, delimiter='\t', quotechar='\"')
-    #         f.readline()  # read the header row; skip
-    #         for line in filereader:
-    #             (organism_id, abbreviation, genus, species, common_name, comment) = line
-    #             # 1	Dmel	Drosophila	melanogaster	fruit fly
-    #             # 2	Comp	Computational	result
-    #
-    #             line_counter += 1
-    #
-    #             if not self.testMode and limit is not None and line_counter > limit:
-    #                 break
-    #
-    #     return
+    def _process_organisms(self, limit):
+        """
+        The internal identifiers for the organisms in flybase
+
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'organism'))
+        logger.info("processing organisms")
+
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for line in filereader:
+                (organism_id, abbreviation, genus, species, common_name, comment) = line
+                # 1	Dmel	Drosophila	melanogaster	fruit fly
+                # 2	Comp	Computational	result
+
+                line_counter += 1
+
+                tax_id = self._makeInternalIdentifier('organism', organism_id)
+                tax_label = ' '.join((genus, species))
+
+                self.idhash['organism'][organism_id] = tax_id
+                self.label_hash[tax_id] = tax_label
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    pass
+                else:
+                    gu.addClassToGraph(g, tax_id, tax_label)
+                    for s in [common_name, abbreviation]:
+                        if s is not None and s.strip() != '':
+                            gu.addSynonym(g, tax_id, s)
+
+        return
 
     def _makeInternalIdentifier(self, prefix, key):
         """
