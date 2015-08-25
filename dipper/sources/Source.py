@@ -158,13 +158,21 @@ class Source:
 
         gu = GraphUtils(None)
         # loop through each of the graphs and print them out
+
         for g in graphs:
+            f = None
             if stream is None:
-                gu.write(g['g'], format, file=g['file'])
+                f = g['file']
             elif stream.lowercase().strip() == 'stdout':
-                gu.write(g['g'], format)
+                f = None
             else:
                 logger.error("I don't understand your stream.")
+                return
+            if format == 'raw':
+                gu.write_raw_triples(g['g'], file=f)
+            else:
+                gu.write(g['g'], format, file=f)
+
         return
 
     def whoami(self):
