@@ -1,3 +1,5 @@
+import rdflib
+
 __author__ = 'nlw'
 
 import re
@@ -333,6 +335,40 @@ class GraphUtils:
             filewriter.close()
         else:
             print(graph.serialize(format=format).decode())
+        return
+
+    def write_raw_triples(self, graph, file=None):
+        """
+         a basic graph writer (to stdout) for any of the sources.  this will write
+         raw triples in rdfxml, unless specified.
+         to write turtle, specify format='turtle'
+         an optional file can be supplied instead of stdout
+        :return: None
+        """
+        filewriter = None
+        if file is not None:
+            filewriter = open(file, 'w')
+            logger.info("Writing raw triples to %s", file)
+
+        for (s,p,o) in graph:
+            output = [s,p,o]
+
+            print(' '.join(output), file=filewriter)
+
+        if filewriter is not None:
+            filewriter.close()
+
+        return
+
+    def write_compact_triples(self, graph, file=None):
+        """
+        Will write out the raw triples, except it will replace the full uri with the curie prefix
+        :param graph:
+        :param file:
+        :return:
+        """
+        # TODO
+
         return
 
 
