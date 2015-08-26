@@ -1,6 +1,8 @@
 import logging
 import re
 import csv
+import gzip
+import io
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
@@ -56,17 +58,24 @@ class FlyBase(Source):
         # 'feature_cvterm'  # TODO to get better feature types than is in the feature table itself  (watch out for is_not)
     ]
 
+    files = {
+        'disease_models': {
+            'file': 'allele_human_disease_model_data.tsv.gz',
+            'url': 'ftp://ftp.flybase.net/releases/current/precomputed_files/human_disease/allele_human_disease_model_data_fb_*.tsv.gz'
+        }
+    }
+
+
     def __init__(self):
         Source.__init__(self, 'flybase')
+        self.version_num = None   # to be used to store the version number to be acquired later
+
         self.namespaces.update(curie_map.get())
 
         # update the dataset object with details about this resource
         self.dataset = Dataset('flybase', 'FlyBase', 'http://www.flybase.org/', None,
                                None, 'http://flybase.org/wiki/FlyBase:FilesOverview')
 
-        # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and 'mgi' not in config.get_config()['dbauth']:
-            logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("we are ignoring normal phenotypes for now")
@@ -103,14 +112,18 @@ class FlyBase(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+#         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
         # we want to fetch the features, but just a subset to reduce the processing time
         query = "select feature_id, dbxref_id, organism_id, name, uniquename, null as residues,"\
                 +"seqlen, md5checksum, type_id, is_analysis, timeaccessioned, timelastmodified, is_obsolete "\
                 +"from feature where is_analysis = false"
 
-        self.fetch_query_from_pgdb('feature', query, None, cxn, None, is_dl_forced)
+#        self.fetch_query_from_pgdb('feature', query, None, cxn, None, is_dl_forced)
+
+        self._get_human_models_file()
+        self.get_files(False)
+        self.dataset.set_version_by_num(self.version_num)
 
         return
 
@@ -152,6 +165,9 @@ class FlyBase(Source):
         self._process_feature_pub(limit)
         self._process_stock_genotype(limit)
         self._process_phenstatement(limit)   # these are G2P associations
+
+        self._process_disease_models(limit)
+        # TODO add version info from file somehow (in parser rather than during fetching)
 
         logger.info("Finished parsing.")
 
@@ -1174,6 +1190,86 @@ class FlyBase(Source):
                             gu.addSynonym(g, tax_id, s)
 
         return
+
+    def _process_disease_models(self, limit):
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, self.files['disease_models']['file']))
+        logger.info("processing disease models")
+
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with gzip.open(raw, 'rb') as f:
+            filereader = csv.reader(io.TextIOWrapper(f, newline=""), delimiter='\t', quotechar='\"')
+            for line in filereader:
+                if re.match('#', ''.join(line)) or ''.join(line) == '':  # skip comments
+                    continue
+                (allele_id, allele_symbol, qualifier, doid_label, doid_id, evidence_or_interacting_allele, pub_id) = line
+                line_counter += 1
+                rel = None
+                allele_id = 'FlyBase:'+allele_id
+                if qualifier == 'model of':
+                    rel = gu.object_properties['model_of']
+                else:
+                    # TODO amelorates, exacerbates, and DOES NOT *
+                    continue
+                assoc = G2PAssoc(self.name, allele_id, doid_id, rel)
+                if pub_id != '':
+                    pub_id = 'FlyBase:'+pub_id
+                    assoc.add_source(pub_id)
+                if evidence_or_interacting_allele == 'inferred from mutant phenotype':
+                    evidence_id = 'ECO:0000015'
+                    assoc.add_evidence(evidence_id)
+                else:
+                    assoc.set_description(evidence_or_interacting_allele)
+
+                assoc.add_association_to_graph(g)
+
+        return
+
+    def _get_human_models_file(self):
+        """
+        This function uses ftp to probe the FTP site to get the name of the current human_models file,
+        and sets it in the files object.
+        :return:
+        """
+
+        base_url = 'ftp.flybase.net'
+        human_disease_dir = 'releases/current/precomputed_files/human_disease'
+        from ftplib import FTP
+        ftp = FTP(base_url)     # connect to host
+        ftp.login()
+        ftp.cwd(human_disease_dir)
+        l = ftp.nlst()          # get list of files
+        ftp.quit()
+        f = None
+        f_list = [i for i, x in enumerate(l) if re.match('allele_human_disease_model', x)]
+        if len(f_list) == 0:
+            logger.error("Can't find the human_disease_model file")
+        elif len(f_list) > 1:
+            logger.error("There's >1 human disease model file, and I don't know which to choose: %s", str(l))
+        else:
+            f = l[f_list[0]]
+
+        if f is not None:
+            # cat the url together
+            file_url = '/'.join(('ftp:/', base_url, human_disease_dir, f))
+            self.files['disease_models']['url'] = file_url
+
+            # while we're at it, set the version...
+            m = re.match('allele_human_disease_model_data_fb_(\d+_\d+).tsv.gz', f)
+            # allele_human_disease_model_data_fb_2015_03.tsv.gz
+            if m:
+                ver = 'FB' + m.group(1)
+                self.version_num = ver
+
+        return
+
 
     def _makeInternalIdentifier(self, prefix, key):
         """
