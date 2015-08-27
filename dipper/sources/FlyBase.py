@@ -41,7 +41,7 @@ class FlyBase(Source):
         'feature_pub',  # done
         'pub_dbxref',
         'feature_dbxref',
-        # 'feature_relationship',
+        'feature_relationship',
         'cvterm',  # done
         'stock_genotype',  # done
         'stock',  # done
@@ -113,14 +113,14 @@ class FlyBase(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-#         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
         # we want to fetch the features, but just a subset to reduce the processing time
         query = "select feature_id, dbxref_id, organism_id, name, uniquename, null as residues,"\
                 +"seqlen, md5checksum, type_id, is_analysis, timeaccessioned, timelastmodified, is_obsolete "\
                 +"from feature where is_analysis = false"
 
-#        self.fetch_query_from_pgdb('feature', query, None, cxn, None, is_dl_forced)
+        self.fetch_query_from_pgdb('feature', query, None, cxn, None, is_dl_forced)
 
         self._get_human_models_file()
         self.get_files(False)
