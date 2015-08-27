@@ -11,9 +11,9 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Environment import Environment
-from dipper import config
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.utils.DipperUtil import DipperUtil
 
 
 logger = logging.getLogger(__name__)
@@ -46,14 +46,13 @@ class FlyBase(Source):
         'stock_genotype',  # done
         'stock',  # done
         'organism',
-        # 'organism_dbxref',  # TODO
+        'organism_dbxref',
         'environment',   # done
         'phenotype',  # done
         'phenstatement',  # done
         'dbxref',  # done
         'phenotype_cvterm',  # done
         'phendesc',  # done
-        # 'strain',  # may not be necessary
         'environment_cvterm',  # done
         # 'feature_cvterm'  # TODO to get better feature types than is in the feature table itself  (watch out for is_not)
     ]
@@ -76,7 +75,6 @@ class FlyBase(Source):
         self.dataset = Dataset('flybase', 'FlyBase', 'http://www.flybase.org/', None,
                                None, 'http://flybase.org/wiki/FlyBase:FilesOverview')
 
-
         # source-specific warnings.  will be cleared when resolved.
         logger.warn("we are ignoring normal phenotypes for now")
 
@@ -94,6 +92,8 @@ class FlyBase(Source):
         self.label_hash = {}  # use this to store internally generated labels for various features
         self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
         self.phenocv = {}  # mappings between internal phenotype db key and multiple cv terms
+
+        self.checked_organisms = set()  # when we verify a tax id in eutils
 
         return
 
@@ -117,8 +117,8 @@ class FlyBase(Source):
 
         # we want to fetch the features, but just a subset to reduce the processing time
         query = "select feature_id, dbxref_id, organism_id, name, uniquename, null as residues,"\
-                +"seqlen, md5checksum, type_id, is_analysis, timeaccessioned, timelastmodified, is_obsolete "\
-                +"from feature where is_analysis = false"
+                + "seqlen, md5checksum, type_id, is_analysis, timeaccessioned, timelastmodified, is_obsolete "\
+                + "from feature where is_analysis = false"
 
         self.fetch_query_from_pgdb('feature', query, None, cxn, None, is_dl_forced)
 
@@ -149,15 +149,16 @@ class FlyBase(Source):
         self._process_dbxref()
         self._process_cvterm()
         self._process_genotypes(limit)
-        self._process_stocks(limit)
         self._process_pubs(limit)
         self._process_environment_cvterm()  # do this before environments to get the external ids
         self._process_environments()
-        self._process_organisms(limit)
+        self._process_organisms(limit)  # must be done before features
+        self._process_organism_dbxref(limit)
         self._process_features(limit)
         self._process_phenotype(limit)
         self._process_phenotype_cvterm()
         self._process_feature_dbxref(limit)  # gets external mappings for features (genes, variants, etc)
+        self._process_stocks(limit)  # do this after organisms to get the right taxonomy
 
         # These are the associations amongst the objects above
         self._process_pub_dbxref(limit)
@@ -236,7 +237,7 @@ class FlyBase(Source):
 
     def _process_stocks(self, limit):
         """
-        Stock definitions.  Here we instantiate the Instances.
+        Stock definitions.  Here we instantiate them as instances of the given taxon.
 
         :param limit:
         :return:
@@ -251,7 +252,7 @@ class FlyBase(Source):
         raw = '/'.join((self.rawdir, 'stock'))
         logger.info("building labels for stocks")
         gu = GraphUtils(curie_map.get())
-        taxon = 'NCBITaxon:7227'
+
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -261,28 +262,25 @@ class FlyBase(Source):
                 (stock_id, dbxref_id, organism_id, name, uniquename, description,
                  type_id, is_obsolete) = line
 # 2       12153979        1       2       FBst0000002     w[*]; betaTub60D[2] Kr[If-1]/CyO        10670
-                # if self.testMode is True:
-                #     if int(object_key) not in self.test_keys.get('genotype'):
-                #         continue
 
                 stock_num = stock_id
                 stock_id = 'FlyBase:'+uniquename
                 self.idhash['stock'][stock_num] = stock_id
                 stock_label = description
 
-                # todo look up the species by organism_id in the hashmap
                 organism_key = organism_id
-                # taxon = self.idhash['organsim'][organism_key]
+                taxon = self.idhash['organism'][organism_key]
 
-                # todo do something with the dbxref_id (external ids?)
+                # from what i can tell, the dbxrefs are just more FBst, so no added information vs uniquename
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
+                    tax_label = self.label_hash[taxon]
+                    gu.addClassToGraph(g, taxon, tax_label)  # add the tax in case it hasn't been already
+                    gu.addIndividualToGraph(g, stock_id, stock_label, taxon)
                     if is_obsolete == 't':
                         gu.addDeprecatedIndividual(g, stock_id)
-                    else:
-                        gu.addIndividualToGraph(g, stock_id, stock_label, taxon)
 
         return
 
@@ -421,8 +419,6 @@ class FlyBase(Source):
                 (feature_id, dbxref_id, organism_id, name, uniquename, residues, seqlen, md5checksum, type_id,
                  is_analysis, timeaccessioned, timelastmodified, is_obsolete) = line
 
-                line_counter += 1
-
                 feature_key = feature_id
                 if re.search('[\|\s\[\]\{\}\\\\<\>]', uniquename):
                     # some uniquenames have pipes or other nasty chars!  for example: FB||||FBrf0133242|Hugh-u1
@@ -462,10 +458,25 @@ class FlyBase(Source):
                     286,  # intron
                 ]
 
-                if type_id in types_to_skip or int(type_key) in type_keys_to_skip:
+                organisms_to_skip = [
+                    2  # computational result
+                ]
+
+                if type_id in types_to_skip or int(type_key) in type_keys_to_skip\
+                        or int(organism_id) in organisms_to_skip:
                     continue
 
-                tax_id = self._makeInternalIdentifier('organism', organism_id)
+                line_counter += 1
+
+                # deal with the taxonomy - only get taxa for features that are actually used in our set
+                tax_internal_id = self._makeInternalIdentifier('organism', organism_id)
+                if organism_id not in self.checked_organisms:
+                    tax_id = self._get_organism_id(organism_id)  # will get the NCBITax if necessary
+                    self.checked_organisms.add(organism_id)
+                else:
+                    tax_id = self.idhash['organism'][organism_id]
+
+                tax_label = self.label_hash.get(tax_id)
 
                 # HACK - FBgn are genes, and therefore classes, all else be individuals
                 is_gene = False
@@ -494,6 +505,10 @@ class FlyBase(Source):
                             gu.addDeprecatedClass(g, feature_id)
                         else:
                             gu.addDeprecatedIndividual(g, feature_id)
+
+                    gu.addClassToGraph(g, tax_id, tax_label)
+                    if tax_id != tax_internal_id:
+                        gu.addSameIndividual(g, tax_id, tax_internal_id)
 
                     gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
                     # TODO for debugging only?  or keep?
@@ -767,44 +782,44 @@ class FlyBase(Source):
                           80: 'FBcv',  # FBcv
                           # 95,  # MEDLINE
                           98: 'REACT',  # Reactome
-                          103: 'CHEBI', # Chebi
-                          102: 'MESH', # MeSH
-                          106: 'OMIM', # OMIM
-                          105: 'KEGG-path', # KEGG pathway
-                          107: 'DOI', # doi
-                          108: 'CL', # CL
-                          114: 'CHEBI', # CHEBI
-                          115: 'KEGG', # KEGG
-                          116: 'PubChem', # PubChem
+                          103: 'CHEBI',  # Chebi
+                          102: 'MESH',  # MeSH
+                          106: 'OMIM',  # OMIM
+                          105: 'KEGG-path',  # KEGG pathway
+                          107: 'DOI',  # doi
+                          108: 'CL',  # CL
+                          114: 'CHEBI',  # CHEBI
+                          115: 'KEGG',  # KEGG
+                          116: 'PubChem',  # PubChem
                           # 120, # MA???
                           3: 'GO',   # GO
                           4: 'FlyBase',   # FlyBase
                           # 126, # URL
-                          128: 'PATO', # PATO
+                          128: 'PATO',  # PATO
                           # 131, # IMG
-                          2: 'SO',   # SO
-                          136: 'MESH', # MESH
-                          139: 'CARO', # CARO
-                          140: 'NCBITaxon', # NCBITaxon
+                          2: 'SO',  # SO
+                          136: 'MESH',  # MESH
+                          139: 'CARO',  # CARO
+                          140: 'NCBITaxon',  # NCBITaxon
                           # 151, # MP  ???
                           161: 'DOI', # doi
                           36: 'BDGP',  # BDGP
                           # 55,  # DGRC
                           # 54,  # DRSC
-                          # 169, # Transgenic RNAi project???
-                          231: 'RO', # RO ???
-                          180: 'NCBIGene', # entrezgene
+                          # 169,  # Transgenic RNAi project???
+                          231: 'RO',  # RO ???
+                          180: 'NCBIGene',  # entrezgene
                           # 192, # Bloomington stock center
-                          197: 'UBERON', # Uberon
-                          212: 'ENSEMBL', # Ensembl
+                          197: 'UBERON',  # Uberon
+                          212: 'ENSEMBL',  # Ensembl
                           # 129, # GenomeRNAi
-                          275: 'PMID', # PubMed
-                          286: 'PMID', # pmid
-                          265: 'OMIM', # OMIM_Gene
-                          266: 'OMIM', # OMIM_Phenotype
-                          300: 'DOID', # DOID
-                          302: 'MESH', # MSH
-                          347: 'PMID', # Pubmed
+                          275: 'PMID',  # PubMed
+                          286: 'PMID',  # pmid
+                          265: 'OMIM',  # OMIM_Gene
+                          266: 'OMIM',  # OMIM_Phenotype
+                          300: 'DOID',  # DOID
+                          302: 'MESH',  # MSH
+                          347: 'PMID',  # Pubmed
                 }  # the databases to fetch
 
                 if accession.strip() != '' and int(db_id) in db_ids:
@@ -898,7 +913,6 @@ class FlyBase(Source):
 
                 else:
                     logger.info("No observable id or label for %s: %s", phenotype_key, uniquename)
-
 
                 # TODO store this composite phenotype in some way as a proper class definition?
                 self.idhash['phenotype'][phenotype_key] = phenotype_id
@@ -1207,7 +1221,7 @@ class FlyBase(Source):
                             logger.info("this thing %s is not an allele", feature_id)
                         if gene_id is None:
                             feature_id = self.idhash['feature'][subject_id]
-                            logger.info("this thing %s is not an gene", feature_id)
+                            logger.info("this thing %s is not a gene", feature_id)
                 elif int(type_id) == 59983:  # associated_with
 
                     allele_id = gene_id = reagent_id = ti_id = None
@@ -1312,11 +1326,15 @@ class FlyBase(Source):
 
                 line_counter += 1
 
-                tax_id = self._makeInternalIdentifier('organism', organism_id)
+                tax_internal_id = self._makeInternalIdentifier('organism', organism_id)
                 tax_label = ' '.join((genus, species))
+                tax_id = tax_internal_id
 
                 self.idhash['organism'][organism_id] = tax_id
                 self.label_hash[tax_id] = tax_label
+
+                # we won't actually add the organism to the graph, unless we actually use it
+                # therefore it is added outside of this function
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
@@ -1325,8 +1343,76 @@ class FlyBase(Source):
                     for s in [common_name, abbreviation]:
                         if s is not None and s.strip() != '':
                             gu.addSynonym(g, tax_id, s)
+                            gu.addComment(g, tax_id, tax_internal_id)
 
         return
+
+    def _get_organism_id(self, organism_key):
+        organism_id = None
+        if organism_key in self.idhash['organism']:
+            organism_id = self.idhash['organism'][organism_key]
+
+            # check to see if NCBITaxon has been resolved; if not fetch it
+            if not re.match('NCBITaxon', organism_id):
+                # NCBITaxon is not available in the dbxref or cvterm tables.
+                # so we look them up using NCBI eutils services
+                tax_label = self.label_hash[organism_id]
+                tax_num = DipperUtil.get_ncbi_taxon_num_by_label(tax_label)
+                if tax_num is not None:
+                    organism_id = ':'.join(('NCBITaxon', tax_num))
+                    self.idhash['organism'][organism_key] = organism_id
+                    self.label_hash[organism_id] = tax_label
+
+        return organism_id
+
+    def _process_organism_dbxref(self, limit):
+        """
+        This is the mapping between the flybase organisms and external identifier "FBsp".
+        We will want to use the NCBITaxon as the primary, if possible, but will default to a blank node/
+        internal id if that is all that is available
+        But we need to make the equivalences/sameAs.
+
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        line_counter = 0
+        raw = '/'.join((self.rawdir, 'organism_dbxref'))
+        logger.info("processing organsim dbxref mappings")
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+
+                (organism_dbxref_id, organism_id, dbxref_id) = line
+
+                organism_key = organism_id
+                if organism_key not in self.idhash['organism']:
+                    continue
+                organism_id = self.idhash['organism'][organism_key]
+
+                dbxref_key = dbxref_id
+                dbxrefs = self.dbxrefs.get(dbxref_key)
+                if dbxrefs is not None:
+                    for d in dbxrefs:
+                        did = dbxrefs.get(d)
+                        if did == organism_id:  # don't make something sameAs itself
+                            continue
+                        dlabel = self.label_hash.get(did)
+                        gu.addIndividualToGraph(g, did, dlabel)
+                        gu.addSameIndividual(g, organism_id, did)
+                        line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
 
     def _process_disease_models(self, limit):
 
@@ -1406,7 +1492,6 @@ class FlyBase(Source):
                 self.version_num = ver
 
         return
-
 
     def _makeInternalIdentifier(self, prefix, key):
         """
