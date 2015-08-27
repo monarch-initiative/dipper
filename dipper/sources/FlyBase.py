@@ -84,9 +84,10 @@ class FlyBase(Source):
         # the hash will hold the type-specific-object-keys to FB public identifiers.  then, subsequent
         # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
         # fly
-        self.idhash = {'allele': {}, 'marker': {}, 'publication': {}, 'stock': {},
+        self.idhash = {'allele': {}, 'gene': {}, 'publication': {}, 'stock': {},
                        'genotype': {}, 'annot': {}, 'notes': {}, 'organism': {},
-                       'environment': {}, 'feature': {}, 'phenotype': {}, 'cvterm': {}}
+                       'environment': {}, 'feature': {}, 'phenotype': {}, 'cvterm': {},
+                       'reagent': {}}
         self.dbxrefs = {}
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
@@ -165,6 +166,8 @@ class FlyBase(Source):
         self._process_feature_pub(limit)
         self._process_stock_genotype(limit)
         self._process_phenstatement(limit)   # these are G2P associations
+
+        self._process_feature_relationship(limit)
 
         self._process_disease_models(limit)
         # TODO add version info from file somehow (in parser rather than during fetching)
@@ -441,6 +444,7 @@ class FlyBase(Source):
                     'SO:0000316',  # CDS
                     'SO:0000696',  # oligos
                     'SO:0000358',  # polypeptide
+                    'SO:0000234',  # transcripts
                     ]
 
                 # FIXME should we skip introns/exons?
@@ -468,6 +472,15 @@ class FlyBase(Source):
                 if re.search('(FBgn|FBog)', feature_id):
                     is_gene = True
 
+                if is_gene:
+                    self.idhash['gene'][feature_key] = feature_id
+                elif re.search('FBa[lb]', feature_id):
+                    self.idhash['allele'][feature_key] = feature_id
+
+                if type_key == 604:  # RNAi_reagent
+                    # TODO add other reagents?
+                    self.idhash['reagent'][feature_key] = feature_id
+
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
@@ -483,6 +496,8 @@ class FlyBase(Source):
                             gu.addDeprecatedIndividual(g, feature_id)
 
                     gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
+                    # TODO for debugging only?  or keep?
+                    gu.addComment(g, feature_id, self._makeInternalIdentifier('feature', feature_key))
 
         return
 
@@ -1140,6 +1155,128 @@ class FlyBase(Source):
                         gu.addIndividualToGraph(g, did, dlabel)
                         gu.addSameIndividual(g, feature_id, did)
                         line_counter += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+
+    def _process_feature_relationship(self, limit):
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        ti_allele_map = {}  # TODO to be used when building genotypes
+
+        line_counter = 0
+        geno = Genotype(g)
+        raw = '/'.join((self.rawdir, 'feature_relationship'))
+        logger.info("processing feature relationships")
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                (feature_relationship_id, subject_id, object_id, type_id, rank, value) = line
+                # 7253191 11713123        3177614 27      0
+                # 18513040        23683101        11507545        26      0
+                # 7130199 9068909 11507822        26      0
+                # 18513041        23683101        11507448        26      0
+                # 7130197 9346315 11507821        26      0
+
+                if int(type_id) in [60384, 60410, 60409, 60413, 60414, 60401, 60399,
+                                    60400, 60401, 60402, 60415, 60417, 60418, 60420]:  # allele of, etc
+                    line_counter += 1  # TODO move this out of the if later
+                    # allele of gene
+                    # in sql, we limited the subject to type_id = 219,33 object type_id  219
+                    # subject = variation
+                    # object = gene
+                    allele_id = gene_id = None
+                    if subject_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][subject_id]
+                    if object_id in self.idhash['gene']:
+                        gene_id = self.idhash['gene'][object_id]
+
+                    if allele_id is not None and gene_id is not None:
+                        geno.addAlleleOfGene(allele_id, gene_id)
+                    else:
+                        if allele_id is None:
+                            feature_id = self.idhash['feature'][subject_id]
+                            logger.info("this thing %s is not an allele", feature_id)
+                        if gene_id is None:
+                            feature_id = self.idhash['feature'][subject_id]
+                            logger.info("this thing %s is not an gene", feature_id)
+                elif int(type_id) == 59983:  # associated_with
+
+                    allele_id = gene_id = reagent_id = ti_id = None
+
+                    if object_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][object_id]
+                    elif object_id in self.idhash['reagent']:
+                        reagent_id = self.idhash['reagent'][object_id]
+                    elif object_id in self.idhash['feature']:
+                        of = self.idhash['feature'][object_id]
+                        if re.search('FBti', of):
+                            ti_id = of
+
+                    if subject_id in self.idhash['gene']:
+                        gene_id = self.idhash['gene'][subject_id]
+                    elif subject_id in self.idhash['reagent']:
+                        reagent_id = self.idhash['reagent'][subject_id]
+                    elif subject_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][subject_id]
+
+                    if allele_id is not None and gene_id is not None:
+                        geno.addAlleleOfGene(allele_id, gene_id)
+                    elif reagent_id is not None and gene_id is not None:
+                        reagent_label = self.label_hash[reagent_id]
+                        geno.addGeneTargetingReagent(reagent_id, reagent_label, None, gene_id)
+                        geno.addReagentTargetedGene(reagent_id, gene_id)
+                    elif allele_id is not None and ti_id is not None:
+                        # FIXME NOT SURE IF THIS IS RIGHT
+                        # really i think what we want to do here is to associate the allele directly with
+                        # the genotype, instead of the FBti...need to make a hashmap for looking up later
+                        geno.addParts(allele_id, ti_id, geno.object_properties['has_alternate_part'])
+
+                elif int(type_id) == 129784:  # deriv_tp_assoc_allele
+                    allele_id = tp_id = None
+
+                    if subject_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][subject_id]
+
+                    tp_id = self.idhash['feature'][object_id]
+                    if allele_id is not None and tp_id is not None:
+                        geno.addParts(allele_id, tp_id, geno.object_properties['has_alternate_part'])
+
+                elif int(type_id) == 129791:  # deriv_sf_assoc_allele
+                    # the relationship between a reagent-feature and the allele it targets
+                    allele_id = reagent_id = None
+
+                    if subject_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][subject_id]
+
+                    if object_id in self.idhash['reagent']:
+                        reagent_id = self.idhash['reagent'][object_id]
+
+                    if allele_id is not None and reagent_id is not None:
+                        gu.addTriple(self.graph, allele_id, geno.object_properties['targeted_by'], reagent_id)
+
+                elif int(type_id) == 27:  # produced by
+                    # i'm looking just for the relationships between ti and tp features... so doing a bit of a hack
+                    ti_id = tp_id = None
+                    if subject_id in self.idhash['feature']:
+                        ti_id = self.idhash['feature'][subject_id]
+                        if not re.search('FBti', ti_id):
+                            ti_id = None
+                    if object_id in self.idhash['feature']:
+                        tp_id = self.idhash['feature'][object_id]
+                        if not re.search('FBtp', tp_id):
+                            tp_id = None
+                    if ti_id is not None and tp_id is not None:
+                        geno.addParts(tp_id, ti_id, geno.object_properties['has_alternate_part'])
+                    # TODO need to write some tests for this... i don't know if this is universally correct
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
