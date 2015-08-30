@@ -32,6 +32,7 @@
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
 'MP': 'http://purl.obolibrary.org/obo/MP_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
+'OBAN': 'http://purl.org/oban/'
 'OBO': 'http://purl.obolibrary.org/obo/'
 'OIO': 'http://www.geneontology.org/formats/oboInOwl#'
 'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'
@@ -49,11 +50,11 @@
 'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
 'VT' : 'http://purl.obolibrary.org/obo/VT_'
+'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_'
 'XCO' : 'http://purl.obolibrary.org/obo/XCO_'
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'
-'OBAN': 'http://purl.org/oban/'
 
 
 # publication/reference sources
