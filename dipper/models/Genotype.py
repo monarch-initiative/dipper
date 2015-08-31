@@ -25,6 +25,7 @@ class Genotype():
         'effective_genotype': 'GENO:0000525',
         'sex_qualified_genotype': 'GENO:0000645',
         'genomic_background': 'GENO:0000611',
+        'unspecified_genomic_background': 'GENO:0000649',
         'genomic_variation_complement': 'GENO:0000009',
         'karyotype_variation_complement': 'GENO:0000644',
         'variant_single_locus_complement': 'GENO:0000030',
@@ -64,7 +65,8 @@ class Genotype():
         'regulatory_transgene_feature': 'GENO:0000638',
         'coding_transgene_feature': 'GENO:0000637',
         'protein_coding_gene': 'SO:0001217',
-        'ncRNA_gene': 'SO:0001263'
+        'ncRNA_gene': 'SO:0001263',
+        'RNAi_reagent': 'SO:0000337'
     }
 
     object_properties = {
@@ -492,7 +494,8 @@ class Genotype():
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
         self.gu.addIndividualToGraph(self.graph, chr_id, chr_label, Feature.types['chromosome'])
-        self.gu.addType(self.graph, chr_id, chr_type)
+        if chr_type is not None:
+            self.gu.addType(self.graph, chr_id, chr_type)
 
         # add the build-specific chromosome as a member of the build  (both ways)
         self.gu.addMember(self.graph, reference_id, chr_id)

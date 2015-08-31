@@ -76,6 +76,7 @@ class SourceTestCase(unittest.TestCase):
                 conf = json.load(json_file)
         return conf
 
+
     def test_source_has_license(self):
         if self.source is not None:
             d = self.source.dataset

@@ -120,7 +120,10 @@ class Source:
         """
         This convenience method will write out all of the graphs associated with the source.
         Right now these are hardcoded to be a single "graph" and a "dataset".
-        If you do not supply stream='stdout' it will default write these to files
+        If you do not supply stream='stdout' it will default write these to files.
+
+        In addition, if the version number isn't yet set in the dataset, it will be set to the
+        date on file.
         :return: None
         """
         format_to_xtn = {
@@ -141,6 +144,10 @@ class Source:
                 datasetfile = '.'.join((datasetfile, format_to_xtn.get(format)))
             else:
                 datasetfile = '.'.join((datasetfile, format))
+
+            logger.info("No version set for this datasource; setting to date issued.")
+            if self.dataset is not None and self.dataset.version is None:
+                self.dataset.set_version_by_date()
         else:
             logger.warn("No output file set. Using stdout")
             stream = 'stdout'
@@ -158,13 +165,21 @@ class Source:
 
         gu = GraphUtils(None)
         # loop through each of the graphs and print them out
+
         for g in graphs:
+            f = None
             if stream is None:
-                gu.write(g['g'], format, file=g['file'])
+                f = g['file']
             elif stream.lowercase().strip() == 'stdout':
-                gu.write(g['g'], format)
+                f = None
             else:
                 logger.error("I don't understand your stream.")
+                return
+            if format == 'raw':
+                gu.write_raw_triples(g['g'], file=f)
+            else:
+                gu.write(g['g'], format, file=f)
+
         return
 
     def whoami(self):
@@ -250,7 +265,7 @@ class Source:
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
         # FIXME change this so the date is attached only to each file, not the entire dataset
-        self.dataset.setVersion(filedate)
+        self.dataset.set_date_issued(filedate)
 
         return
 

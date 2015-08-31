@@ -21,6 +21,9 @@
 'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'faldo' : 'http://biohackathon.org/resource/faldo#'
+'FBcv' : 'http://purl.obolibrary.org/obo/FBcv_'
+'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'
+'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'
 'GENO': 'http://purl.obolibrary.org/obo/GENO_'
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
 'HP': 'http://purl.obolibrary.org/obo/HP_'
@@ -29,6 +32,7 @@
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
 'MP': 'http://purl.obolibrary.org/obo/MP_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
+'OBAN': 'http://purl.org/oban/'
 'OBO': 'http://purl.obolibrary.org/obo/'
 'OIO': 'http://www.geneontology.org/formats/oboInOwl#'
 'OMIA' : 'http://purl.obolibrary.org/obo/OMIA_'
@@ -47,11 +51,11 @@
 'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
 'VT' : 'http://purl.obolibrary.org/obo/VT_'
+'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_'
 'XCO' : 'http://purl.obolibrary.org/obo/XCO_'
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'
-'OBAN': 'http://purl.org/oban/'
 
 
 # publication/reference sources
@@ -78,6 +82,9 @@
 'CoriellFamily' : 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 'CoriellIndividual' : 'https://catalog.coriell.org/Search?q='
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
+'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
+'CGD' : 'http://ohsu.edu/cgd/'
+'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
 'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'

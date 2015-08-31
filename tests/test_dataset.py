@@ -23,6 +23,19 @@ class DatasetTestCase(unittest.TestCase):
 
         return
 
+    def test_has_version(self):
+
+        self.assertTrue(self.dataset.version is not None, "Source not configured with a version")
+
+        return
+
+    def test_has_date(self):
+
+        self.assertTrue(self.dataset.date_issued is not None, "Source not configured with a date")
+
+        return
+
+
     # TODO make a testing suite that has all musts
     # TODO make a testing suite tha has all desired
 

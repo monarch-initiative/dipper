@@ -26,8 +26,11 @@ from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from dipper.sources.Ensembl import Ensembl
 from dipper.sources.HGNC import HGNC
 from dipper.sources.Orphanet import Orphanet
+from dipper.sources.FlyBase import FlyBase
+from dipper.sources.WormBase import WormBase
 from dipper.sources.OMIA import OMIA
 
+from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
 
 from tests.test_general import GeneralGraphTestCase
@@ -58,6 +61,9 @@ def main():
         'hgnc': HGNC,
         'orphanet': Orphanet,
         'omia': OMIA
+        'flybase': FlyBase,
+        'mmrrc' : MMRRC,
+        'wormbase': WormBase
     }
 
     logger = logging.getLogger(__name__)
@@ -97,12 +103,17 @@ def main():
     parser.add_argument('-o', '--test_only', help='only process and output the pre-configured test subset',
                         action="store_true")
 
+    parser.add_argument('--format', help='serialization format: turtle (default), xml, n3, nt, raw', type=str)
+
+
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
         tax_ids = list(map(int, args.taxon.split(',')))
 
     taxa_supported = [Panther, NCBIGene, BioGrid, UCSCBands]
+
+    formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
@@ -129,6 +140,18 @@ def main():
     # run initial tests
     if (args.no_verify or args.skip_tests) is not True:
         unittest.TextTestRunner(verbosity=2).run(test_suite)
+
+    # set serializer
+    if args.format is not None:
+        if args.format in formats_supported:
+            if args.format == 'ttl':
+                args.format = 'turtle'
+        else:
+            logger.error("You have specified an invalid serializer: %s", args.format)
+
+            exit(0)
+    else:
+        args.format = 'turtle'
 
     # iterate through all the sources
     for source in args.sources.split(','):
@@ -158,7 +181,7 @@ def main():
 
         if args.test_only is False and args.fetch_only is False:
             mysource.parse(args.limit)
-            mysource.write(format='turtle')
+            mysource.write(format=args.format)
 
         # if args.no_verify is not True:
 
