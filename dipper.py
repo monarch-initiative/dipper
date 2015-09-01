@@ -60,7 +60,7 @@ def main():
         'ensembl': Ensembl,
         'hgnc': HGNC,
         'orphanet': Orphanet,
-        'omia': OMIA
+        'omia': OMIA,
         'flybase': FlyBase,
         'mmrrc' : MMRRC,
         'wormbase': WormBase
