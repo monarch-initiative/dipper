@@ -167,7 +167,7 @@ class NCBIGene(Source):
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self._map_type_of_gene(gtype)
+                gene_type_id = self.map_type_of_gene(gtype)
 
                 if symbol == 'NEWENTRY':
                     label = None
@@ -393,7 +393,8 @@ class NCBIGene(Source):
 
         return
 
-    def _map_type_of_gene(self, sotype):
+    @staticmethod
+    def map_type_of_gene(sotype):
         so_id = 'SO:0000110'
         type_to_so_map = {
             'ncRNA': 'SO:0001263',
