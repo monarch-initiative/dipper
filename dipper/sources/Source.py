@@ -417,6 +417,37 @@ class Source:
 
         return
 
+    def process_xml_table(self, elem, table_name, processing_function, limit):
+        """
+        This is a convenience function to process the elements of an xml document, when the xml is used
+        as an alternative way of distributing sql-like tables.  In this case, the "elem" is akin to an
+        sql table, with it's name of ```table_name```.  It will then process each ```row``` given the
+        ```processing_function``` supplied.
+
+        :param elem: The element data
+        :param table_name: The name of the table to process
+        :param processing_function: The row processing function
+        :param limit:
+        :return:
+        """
+        line_counter = 0
+        table_data = elem.find("[@name='"+table_name+"']")
+        if table_data is not None:
+            logger.info("Processing "+table_name)
+            row = {}
+            for r in table_data.findall('row'):
+                for f in r.findall('field'):
+                    ats = f.attrib
+                    row[ats['name']] = f.text
+                processing_function(row)
+                line_counter += 1
+                if self.testMode and limit is not None and line_counter > limit:
+                    continue
+
+            elem.clear()  # discard the element
+
+        return
+
     def _check_list_len(self, row, length):
         """
         Sanity check for csv parser
