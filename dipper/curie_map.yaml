@@ -48,6 +48,7 @@
 'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'
 'SO' : 'http://purl.obolibrary.org/obo/SO_'
 'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'
+'UPHENO' : 'http://purl.obolibrary.org/obo/UPHENO_'
 'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'
 'UO' : 'http://purl.obolibrary.org/obo/UO_'
 'VT' : 'http://purl.obolibrary.org/obo/VT_'
