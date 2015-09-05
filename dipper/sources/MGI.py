@@ -361,7 +361,7 @@ class MGI(Source):
                 if preferred == '1':
                     d = re.sub('\,', '/', short_description.strip())
                     if mgiid not in geno_hash:
-                        geno_hash[mgiid] = {'vslcs': [d], 'subtype': subtype}
+                        geno_hash[mgiid] = {'vslcs': [d], 'subtype': subtype, 'key': object_key}
                     else:
                         vslcs = geno_hash[mgiid].get('vslcs')
                         vslcs.append(d)
@@ -380,6 +380,7 @@ class MGI(Source):
             gvc = sorted(geno.get('vslcs'))
             label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
             gutil.addGenotype(gt, None)
+            gu.addComment(g, gt, self._makeInternalIdentifier('genotype', geno.get('key')))
             gu.addSynonym(g, gt, label.strip())
 
         gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
@@ -661,7 +662,7 @@ class MGI(Source):
                 # else:
                 #     geno_hash[genotype_id] += [vslc_label]
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # build the gvc and the genotype label
@@ -688,10 +689,11 @@ class MGI(Source):
                     geno.addVSLCtoParent(v, gvc_id)
                 geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
             elif len(vslcs) == 1:
-                gvc_label = vslcs[0]
+                gvc_id = vslcs[0]
+                gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
-                gu.addIndividualToGraph(g, gvc_label, None, geno.genoparts['genomic_variation_complement'])
-                geno.addVSLCtoParent(gvc_label, gt)
+                gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
+                geno.addVSLCtoParent(gvc_id, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
 
