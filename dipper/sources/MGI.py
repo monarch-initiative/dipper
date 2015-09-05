@@ -1054,9 +1054,9 @@ class MGI(Source):
 
                     # add the species to the graph as a class
                     sp = self._map_strain_species(species)
-                    gu.addClassToGraph(g, sp, None)
-
-                    geno.addTaxon(sp, strain_id)
+                    if sp is not None:
+                        gu.addClassToGraph(g, sp, None)
+                        geno.addTaxon(sp, strain_id)
 
                     # TODO what is mgi's strain type anyway?
 
@@ -1794,11 +1794,12 @@ class MGI(Source):
         }
         if species.strip() in id_map:
             tax = id_map.get(species.strip())
-
         else:
             logger.warn("Species (%s) not mapped; defaulting to Mus genus.", species)
 
-        return 'NCBITaxon:'+tax
+        if tax is not None:
+            tax = 'NCBITaxon:'+tax
+        return tax
 
     @staticmethod
     def _map_evidence_id(evidence_code):
