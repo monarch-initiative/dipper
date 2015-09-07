@@ -519,9 +519,9 @@ class OMIA(Source):
 
         gene_label = self.label_hash[gene_id]
         # some variant of gene_id has phenotype d
-        vl = ':'+re.sub('NCBIGene:', '', str(gene_id)) + 'VL'
+        vl = '_'+re.sub('NCBIGene:', '', str(gene_id)) + 'VL'
         if self.nobnodes:
-            vl = '_'+vl
+            vl = ':'+vl
         self.geno.addAllele(vl, 'some variant of ' + gene_label)
         self.geno.addAlleleOfGene(vl, gene_id)
         assoc = G2PAssoc(self.name, vl, phene_id)
