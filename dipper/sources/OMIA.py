@@ -523,6 +523,7 @@ class OMIA(Source):
         if self.nobnodes:
             vl = '_'+vl
         self.geno.addAllele(vl, 'some variant of ' + gene_label)
+        self.geno.addAlleleOfGene(vl, gene_id)
         assoc = G2PAssoc(self.name, vl, phene_id)
         assoc.add_association_to_graph(self.g)
 
