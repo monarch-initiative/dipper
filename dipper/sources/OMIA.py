@@ -39,12 +39,15 @@ class OMIA(Source):
     2.  mappings between a breed and OMIA disease are created to be a model for the mapped OMIM disease, IFF
         it is a 1:1 mapping.  there are some 1:many mappings, and these often happen if the OMIM item is a gene.
 
+    Because many of these species are not covered in the PANTHER orthology datafiles, we also pull any orthology
+    relationships from the gene_group files from NCBI.
+
     """
 
     files = {
         'data': {
             'file': 'omia.xml.gz',
-            'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'}
+            'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'},
     }
 
     def __init__(self):
@@ -67,6 +70,7 @@ class OMIA(Source):
         self.label_hash = {}
         self.gu = GraphUtils(curie_map.get())
         self.omia_omim_map = {}   # used to store the omia to omim phene mappings
+        self.annotated_genes = set()  # used to store the unique genes that have phenes (for fetching orthology)
 
         self.test_ids = {
             'disease': ['OMIA:001702', 'OMIA:001867', 'OMIA:000478', 'OMIA:000201', 'OMIA:000810'],
@@ -118,6 +122,10 @@ class OMIA(Source):
 
         # next process the association data
         self.process_associations(limit)
+
+        # process the vertebrate orthology for genes that are annotated with phenotypes
+        ncbi = NCBIGene()
+        ncbi.add_orthologs_by_gene_group(self.g, self.annotated_genes)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -445,8 +453,9 @@ class OMIA(Source):
         # get the omia id
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
-        if self.testMode and not (omia_id in self.test_ids['disease'] and int(row['breed_id']) in self.test_ids['breed'])\
-            or breed_id is None or phene_id is None:
+        if (self.testMode and not (omia_id in self.test_ids['disease']
+                                  and int(row['breed_id']) in self.test_ids['breed'])
+            or breed_id is None or phene_id is None):
             return
 
         # FIXME we want a different relationship here
@@ -527,6 +536,9 @@ class OMIA(Source):
         assoc = G2PAssoc(self.name, vl, phene_id)
         assoc.add_association_to_graph(self.g)
 
+        # add the gene id to the set of annotated genes for later lookup by orthology
+        self.annotated_genes.add(gene_id)
+
         return
 
     def _process_omia_omim_map(self, row):
@@ -569,9 +581,8 @@ class OMIA(Source):
 
         return omia_id
 
-    def _map_inheritance_term_id(self, inheritance_symbol):
-
-        inheritance_id = None
+    @staticmethod
+    def _map_inheritance_term_id(inheritance_symbol):
 
         inherit_map = {
             'A':  None,  # Autosomal
@@ -585,12 +596,12 @@ class OMIA(Source):
             'MAT': None,  # Maternal
             'PR':  'GENO:0000150',  # probably autosomal recessive  <-- using generic autosomal recessive
             'R': 'GENO:0000150',  # Autosomal Recessive
-            'REL': 'GENO:0000148',  #Recessive Embryonic Lethal   <-- using plain recessive
+            'REL': 'GENO:0000148',  # Recessive Embryonic Lethal   <-- using plain recessive
             'RL': 'GENO:0000150', # Autosomal Recessive Lethal  <-- using plain autosomal recessive
             'S': 'GENO:0000146',  # Sex-linked   <--using allosomal dominant
             'SLi': None,  # Sex-limited
-            'UD': 'GENO:0000144',  #Dominant
-            'X': None,  # x-linked    # HP:0001417
+            'UD': 'GENO:0000144',  # Dominant
+            'X': None,  # x-linked    # HP:0001417 ?
             'XLD': 'GENO:0000146',  # X-linked Dominant     <-- temp using allosomal dominant  FIXME
             'XLR': 'GENO:0000149',  # X-linked Recessive    <-- temp using allosomal recessive  FIXME
             'Y': None, # Y-linked
