@@ -1,10 +1,13 @@
 import re
 import gzip
 import logging
+import csv
+import io
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
+from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
@@ -51,6 +54,9 @@ class NCBIGene(Source):
             'file': 'gene2pubmed.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
         },
+        'gene_group': {
+            'file': 'gene_group.gz',
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz'}
     }
 
     def __init__(self, tax_ids=None, gene_ids=None):
@@ -452,3 +458,90 @@ class NCBIGene(Source):
         test_suite = unittest.TestLoader().loadTestsFromTestCase(NCBITestCase)
 
         return test_suite
+
+
+    def add_orthologs_by_gene_group(self, graph, gene_ids):
+        """
+        This will get orthologies between human and other vertebrate genomes based on the gene_group
+        annotation pipeline from NCBI.  More information can be learned here:
+        http://www.ncbi.nlm.nih.gov/news/03-13-2014-gene-provides-orthologs-regions/
+        The method for associations is described in [PMCID:3882889](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3882889/)
+        == [PMID:24063302](http://www.ncbi.nlm.nih.gov/pubmed/24063302/).
+        Because these are only between human and vertebrate genomes, they will certainly miss out on
+        very distant orthologies, and should not be considered complete.
+
+        We do not run this within the NCBI parser itself; rather it is a convenience function for others
+        parsers to call.
+
+        :param graph:
+        :param gene_ids:  Gene ids to fetch the orthology
+        :return:
+        """
+
+        logger.info("getting gene groups")
+        line_counter = 0
+        f = '/'.join((self.rawdir, self.files['gene_group']['file']))
+        found_counter = 0
+        # because many of the orthologous groups are grouped by human gene, we need to do this
+        # by generating two-way hash
+
+        # group_id => orthologs
+        # ortholog id => group
+        # this will be the fastest approach, though not memory-efficient.
+        geno = Genotype(graph)
+        gu = GraphUtils(curie_map.get())
+        group_to_orthology = {}
+        gene_to_group = {}
+        gene_to_taxon = {}
+
+        with gzip.open(f, 'rb') as csvfile:
+            filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
+
+            for row in filereader:
+                # skip comment lines
+                if re.match('\#', ''.join(row)):
+                    continue
+                line_counter += 1
+                (tax_a, gene_a, rel, tax_b, gene_b) = row
+
+                if rel != 'Ortholog':
+                    continue
+
+                if gene_a not in group_to_orthology:
+                    group_to_orthology[gene_a] = set()
+                group_to_orthology[gene_a].add(gene_b)
+
+                if gene_b not in gene_to_group:
+                    gene_to_group[gene_b] = set()
+                gene_to_group[gene_b].add(gene_a)
+
+                gene_to_taxon[gene_a] = tax_a
+                gene_to_taxon[gene_b] = tax_b
+
+                # also add the group lead as a member of the group
+                group_to_orthology[gene_a].add(gene_a)
+
+            # end loop through gene_group file
+        logger.debug("Finished hashing gene groups")
+        logger.debug("Making orthology associations")
+        for gid in gene_ids:
+            gene_num = re.sub('NCBIGene:', '', gid)
+            group_nums = gene_to_group.get(gene_num)
+            if group_nums is not None:
+                for group_num in group_nums:
+                    orthologs = group_to_orthology.get(group_num)
+                    if orthologs is not None:
+                        for o in orthologs:
+                            oid = 'NCBIGene:'+str(o)
+                            gu.addClassToGraph(graph, oid, None, Genotype.genoparts['gene'])
+                            otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
+                            geno.addTaxon(otaxid, oid)
+                            assoc = OrthologyAssoc(self.name, gid, oid)
+                            assoc.add_source('PMID:24063302')
+                            assoc.add_association_to_graph(graph)
+                            # todo get gene label for orthologs
+                            found_counter += 1
+
+            # finish loop through annotated genes
+        logger.info("Made %d orthology relationships for %d genes", found_counter, len(gene_ids))
+        return
