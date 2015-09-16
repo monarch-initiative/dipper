@@ -6,6 +6,7 @@ import re
 import unicodedata
 import urllib
 from urllib import request, parse
+from Bio import Entrez
 import json
 
 
@@ -67,3 +68,32 @@ class DipperUtil:
             pass
 
         return tax_num
+
+    @staticmethod
+    def get_homologene_by_gene_num(gene_num):
+
+        Entrez.email = "info@monarchinitiative.org"
+        Entrez.tool = "Dipper"
+        # first, get the homologene id from the gene id
+        # gene_id = '1264'  for testing
+        gid = str(gene_num)
+        handle = Entrez.esearch(db="homologene",term=gid+"[Gene ID]", retmode="json")
+        record = handle.read()
+        j = json.loads(record)
+        homologene_ids = j["esearchresult"]["idlist"]
+
+        if len(homologene_ids) != 1:
+            return
+
+        hid = homologene_ids[0]
+        # now, fetch the homologene record
+        handle = Entrez.esummary(db="homologene", id=hid, retmode="json")
+        record = handle.read()
+        j = json.loads(record)
+
+        if 'result' in j and hid in j['result']:
+            homologs = j['result'][hid]
+        else:
+            homologs = None
+
+        return homologs
