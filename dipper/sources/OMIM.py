@@ -58,10 +58,10 @@ class OMIM(Source):
     test_ids = [
         119600, 120160, 157140, 158900, 166220, 168600, 219700,
         253250, 305900, 600669, 601278, 602421, 605073, 607822,   # coriell
-        102560, 102480, 100678, 102750,                           # genes
+        102560, 102480, 100678, 102750, 600201,                   # genes
         104200, 105400, 114480, 115300, 121900,                   # phenotype/disease -- indicate that here?
         107670, 11600, 126453,                                    # gene of known sequence and has a phenotype
-        102150, 104000, 107200, 100070]                           # disease with known locus
+        102150, 104000, 107200, 100070, 611742]                   # disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 

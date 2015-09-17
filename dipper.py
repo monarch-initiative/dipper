@@ -27,6 +27,8 @@ from dipper.sources.Ensembl import Ensembl
 from dipper.sources.HGNC import HGNC
 from dipper.sources.Orphanet import Orphanet
 from dipper.sources.FlyBase import FlyBase
+from dipper.sources.WormBase import WormBase
+from dipper.sources.OMIA import OMIA
 
 from dipper.sources.MPD import MPD
 from dipper.sources.MMRRC import MMRRC
@@ -59,9 +61,11 @@ def main():
         'ensembl': Ensembl,
         'hgnc': HGNC,
         'orphanet': Orphanet,
+        'omia': OMIA,
         'flybase': FlyBase,
         'mmrrc' : MMRRC,
-        'mpd': MPD
+        'mpd': MPD,
+        'wormbase': WormBase
     }
 
     logger = logging.getLogger(__name__)

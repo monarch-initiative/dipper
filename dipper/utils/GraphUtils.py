@@ -277,12 +277,8 @@ class GraphUtils:
 
         return
 
-    def addXref(self, g, cid, xrefid):
-        n1 = self.getNode(cid)
-        n2 = self.getNode(xrefid)
-        p = URIRef(self.cu.get_uri(self.properties['has_xref']))
-        if n1 is not None and n2 is not None:
-            g.add((n1, p, n2))
+    def addXref(self, g, cid, xrefid, xref_as_literal=False):
+        self.addTriple(g, cid, self.properties['has_xref'], xrefid, xref_as_literal)
 
         return
 

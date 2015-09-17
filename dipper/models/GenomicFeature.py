@@ -287,12 +287,14 @@ class Feature():
     def addRegionPositionToGraph(self, graph, region_id, begin_position_id, end_position_id):
 
         if begin_position_id is None:
-            logger.warn("No begin position specified for region %s", region_id)
+            pass
+            # logger.warn("No begin position specified for region %s", region_id)
         else:
             self.gu.addTriple(graph, region_id, self.properties['begin'], begin_position_id)
 
         if end_position_id is None:
-            logger.warn("No end position specified for region %s", region_id)
+            pass
+            # logger.warn("No end position specified for region %s", region_id)
         else:
             self.gu.addTriple(graph, region_id, self.properties['end'], end_position_id)
 

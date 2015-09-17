@@ -229,6 +229,10 @@ class Panther(Source):
                     gu.addClassToGraph(g, gene_a, None)
                     gu.addClassToGraph(g, gene_b, None)
 
+                    # might as well add the taxon info for completeness
+                    gu.addTriple(g, gene_a, gu.object_properties['in_taxon'], taxon_a)
+                    gu.addTriple(g, gene_b, gu.object_properties['in_taxon'], taxon_b)
+
                     assoc.add_association_to_graph(g)
 
                     # note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
