@@ -28,6 +28,7 @@ from dipper.sources.HGNC import HGNC
 from dipper.sources.Orphanet import Orphanet
 from dipper.sources.FlyBase import FlyBase
 
+from dipper.sources.MPD import MPD
 from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
 
@@ -59,7 +60,8 @@ def main():
         'hgnc': HGNC,
         'orphanet': Orphanet,
         'flybase': FlyBase,
-        'mmrrc' : MMRRC
+        'mmrrc' : MMRRC,
+        'mpd': MPD
     }
 
     logger = logging.getLogger(__name__)

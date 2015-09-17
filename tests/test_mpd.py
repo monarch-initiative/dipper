@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class MGDTestCase(SourceTestCase):
+class MPDTestCase(SourceTestCase):
 
     def setUp(self):
         self.source = MPD()

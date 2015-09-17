@@ -1,453 +1,397 @@
-import re
+import csv
 import gzip
+import re
 import logging
+import os
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
-from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
+from dipper.models.Dataset import Dataset
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-from dipper import config
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
-
+from subprocess import call
 
 logger = logging.getLogger(__name__)
 
 
-class MGD(Source):
+class MPD(Source):
     """
-    This is the processing module for the National Center for Biotechnology Information.  It includes parsers
-    for the gene_info (gene names, symbols, ids, equivalent ids), gene history (alt ids), and
-    gene2pubmed publication references about a gene.
+    From the [MPD](http://phenome.jax.org/) website:
+    This resource is a collaborative standardized collection of measured data on laboratory mouse strains and
+    populations. Includes baseline phenotype data sets as well as studies of drug, diet, disease and aging effect.
+    Also includes protocols, projects and publications, and SNP, variation and gene expression studies.
 
-    This creates Genes as classes, when they are properly typed as such.  For those entries where it is an
-    'unknown significance', it is added simply as an instance of a sequence feature.  It will add equivalentClasses
-    for a subset of external identifiers, including:  ENSEMBL, HGMD, MGI, ZFIN, and gene product links for HPRD.
-    They are additionally located to their Chromosomal band (until we process actual genomic coords in
-    a separate file).
+    Here, we pull the data and model the genotypes using GENO and the genotype-to-phenotype associations
+    using the OBAN schema.
 
-    We process the genes from the filtered taxa, starting with those configured by default (human, mouse, fish).
-    This can be overridden in the calling script to include additional taxa, if desired.
-    The gene ids in the conf.json will be used to subset the data when testing.
-
-    All entries in the gene_history file are added as deprecated classes, and linked to the current gene id, with
-    "replaced_by" relationships.
-
-    Since we do not know much about the specific link in the gene2pubmed; we simply create a "mentions" relationship.
+    We use all identifiers given by MPD.
 
     """
 
     files = {
-        'gene_info': {
-            'file': 'gene_info.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz'
-        },
-        'gene_history': {
-            'file': 'gene_history.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz'
-        },
-        'gene2pubmed': {
-            'file': 'gene2pubmed.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
-        },
+
+        'ontology_mappings': {'file': 'ontology_mappings.csv',
+                              'url': 'http://phenome.jax.org/download/ontology_mappings.csv'},
+
+        'straininfo': {'file': 'straininfo.csv',
+                       'url': 'http://phenome.jax.org/download/straininfo.csv'},
+
+        'measurements': {'file': 'measurements.csv',
+                         'url': 'http://phenome.jax.org/download/measurements.csv'},
+
+        'strainmeans': {'file': 'strainmeans_cleanzipped.gz',
+                        'url': 'http://phenome.jax.org/download/strainmeans_cleanzipped.gz'},
+
+        'mpd_datasets_metadata': {'file': 'mpd_datasets_metadata.xml',
+                                  'url': 'http://phenome.jax.org/download/mpd_datasets_metadata.xml'},
+
     }
 
-    def __init__(self, tax_ids=None, gene_ids=None):
-        Source.__init__(self, 'ncbigene')
+    # # TODO move these into the conf.json
+    # # the following are strain ids for testing
+    test_ids = ["MPD:2", "MPD:3", "MPD:5", "MPD:6", "MPD:9", "MPD:11", "MPD:18", "MPD:20", "MPD:24", "MPD:28", "MPD:30",
+                "MPD:33", "MPD:34", "MPD:36", "MPD:37", "MPD:39", "MPD:40", "MPD:42", "MPD:47", "MPD:66", "MPD:68",
+                "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457", "MPD:473", "MPD:481",
+                "MPD:759", "MPD:766", "MPD:770", "MPD:849", "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
+                "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
 
-        self.tax_ids = tax_ids
-        self.gene_ids = gene_ids
-        self.filter = 'taxids'
-        self.load_bindings()
+    def __init__(self):
+        Source.__init__(self, 'mpd')
+        # @N, not sure if this step is required
+        self.namespaces.update(curie_map.get())
 
-        self.dataset = Dataset('ncbigene', 'National Center for Biotechnology Information',
-                               'http://ncbi.nih.nlm.gov/gene', None,
-                               'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
-                               'https://creativecommons.org/publicdomain/mark/1.0/')
-        # data-source specific warnings (will be removed when issues are cleared)
+        # update the dataset object with details about this resource
+        # @N: Note that there is no license as far as I can tell
+        self.dataset = Dataset('mpd', 'MPD', 'http://phenome.jax.org', None, None)
 
-        # Defaults
-        if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
-            logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
-        else:
-            logger.info("Filtering on the following taxa: %s", str(tax_ids))
+        # TODO add a citation for mpd dataset as a whole
+        # :mpd cito:citesAsAuthority PMID:15619963
 
-        self.gene_ids = []
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
-        else:
-            self.gene_ids = config.get_config()['test_ids']['gene']
-
-        self.properties = Feature.properties
-
-        return
-
-    def fetch(self, is_dl_forced=False):
-
-        self.get_files(is_dl_forced)
+        # so that we don't have to deal with BNodes, we will create hash lookups for the internal identifiers
+        # the hash will hold the type-specific-object-keys to MPD public identifiers.  then, subsequent
+        # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
+        # fly
+        self.idhash = {'strainid': {}, 'sex': {}, 'measurements': {}}
+        self.label_hash = {}  # use this to store internally generated labels for various features
 
         return
 
     def parse(self, limit=None):
+        """
+        MPD data is delivered in four separate csv files and one xml file, which we process iteratively and write out as
+        one large graph.
+
+        :param limit:
+        :return:
+        """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            logger.info("Only parsing first %s rows fo each file", str(limit))
 
         logger.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
-        self._get_gene_info(limit)
-        self._get_gene_history(limit)
-        self._get_gene2pubmed(limit)
+        # the following will provide us the hash-lookups
+        # These must be processed in a specific order
+        self._process_ontology_mappings(limit)
+        self._process_measurements(limit)
+        self._process_strainmeans(limit)
 
-        self.load_core_bindings()
+        # The following will use the hash populated above to lookup the ids when filling in the graph
+
+
+        logger.info("Finished parsing.")
+
         self.load_bindings()
 
-        logger.info("Done parsing files.")
-
+        logger.info("Found %d nodes", len(self.graph))
         return
 
-    def _get_gene_info(self, limit):
+    def _process_ontology_mappings(self, limit):
+
+        line_counter = 0
+
+        logger.info("Processing ontology mappings...")
+        raw = '/'.join((self.rawdir, 'ontology_mappings.csv'))
+
+        with open(raw, 'r') as f:
+            reader = csv.reader(f)
+            f.readline()  # read the header row; skip
+            for row in reader:
+                line_counter += 1
+                (measnum, ont_term, descrip) = row
+
+                if re.match('MP', ont_term) or re.match('VT', ont_term):
+                    # add the mapping denovo
+                    if measnum not in self.idhash['measurements']:
+                        # create space for the measurement description to go later
+                        self.idhash['measurements'][measnum] = [[ont_term],'placeholder_description']
+                    # add the new mapping to the existing list of mappings
+                    else:
+                        self.idhash['measurements'][measnum][0] += [ont_term]
+
+                    # the assays will be added to the graph later as part of provenance
+        return
+
+    def _process_measurements(self, limit):
+        line_counter = 0
+
+        logger.info("Processing measurements ...")
+        raw = '/'.join((self.rawdir, 'measurements.csv'))
+
+        with open(raw, 'r') as f:
+            reader = csv.reader(f)
+            f.readline()  # read the header row; skip
+            for row in reader:
+                line_counter += 1
+                (measnum, projsym, varname, descrip, units, cat1, cat2, cat3, intervention, intparm, appmeth, panelsym,
+                 datatype, sextested, nstrainstested, ageweeks) = row
+
+                if measnum in self.idhash['measurements']:
+                    sextested = 'female' if (sextested is 'fm') else 'male'
+                    units = (units)
+                    description = "This is an assay of " + descrip + " as a " + datatype + " measured in " + units
+                    if intervention is not None and intervention != "":
+                        description += " in response to " + intervention
+
+                    description += ". This represents the " + intparm + " arm of the overall experiment entitled " \
+                                   + projsym + " using materials and methods that included " + appmeth + "."
+                    description += "It was conducted in " + sextested + " mice at " + ageweeks + " of age in" \
+                                   + nstrainstested + " different mouse strains. "
+                    description += "Keywords: " + cat1 + \
+                                   ((", " + cat2) if cat2 is not "" else "") + \
+                                   ((", " + cat3) if cat3 is not "" else "") + "."
+
+                    self.idhash['measurements'][measnum][1] = description
+        return
+
+    def normalise_units(units):
+        # todo:
+
+        # &deg;C
+        # &micro;g/dL
+        # &micro;g/g
+        # &micro;g/mL
+        # &micro;L
+        # &micro;L/&micro;L
+        # &micro;L/cm
+        # &micro;L/g
+        # &micro;m
+        # &micro;m<sup>2</sup>
+        # &micro;m<sup>2</sup>/n
+        # &micro;mol/g
+        # &micro;mol/L
+        # &micro;mol/mg
+        # &micro;mol/min/hPa
+        # &micro;mol/min/hPa/mL
+        # &micro;mol/mL/h
+        # &micro;s
+        # &micro;V
+        # %
+        # 1/cm
+        # amplitude
+        # AUC
+        # cal
+        # cm
+        # cm/mL
+        # cm/mL/s
+        # cm/s
+        # cm/s<sup>2</sup>
+        # cm/sec
+        # cm&sdot;s
+        # cm<sup>2</sup>
+        # cm<sup>3</sup>
+        # d
+        # daPa
+        # dB
+        # deg
+        # deg/cm
+        # deg/s
+        # designation
+        # fL
+        # frequency rate
+        # g
+        # g/cm<sup>2</sup>
+        # g/cm<sup>3</sup>
+        # g/dL
+        # g/kg
+        # g/wk
+        # h
+        # Hz
+        # IU/L
+        # kcal
+        # kcal/d
+        # kcal/g/d
+        # kcal/h
+        # kg/m<sup>2</sup>
+        # kg&sdot;m
+        # km
+        # km/d
+        # L/g
+        # log(&micro;g/dL)
+        # m
+        # m/d
+        # m/min
+        # mA
+        # mEq/L
+        # mg
+        # mg/cm<sup>2</sup>
+        # mg/dL
+        # mg/g
+        # mg/kg
+        # mg/mL
+        # min
+        # min/d
+        # mL
+        # mL/kg
+        # mL/kg/h
+        # mL/kg/s
+        # mL/min
+        # mm
+        # mm/mL
+        # mm/s
+        # mm<sup>2</sup>
+        # mm<sup>2</sup>/g
+        # mm<sup>3</sup>
+        # mmHg
+        # mmol/kg
+        # mmol/L
+        # mmol/L&sdot;min
+        # mmol&sdot;h
+        # mN
+        # mol/m<sup>3</sup>
+        # ms
+        # ms*mV
+        # mV
+        # n
+        # n/&micro;L
+        # n/&micro;m<sup>2</sup>
+        # n/cm
+        # n/d
+        # n/g
+        # n/L
+        # n/min
+        # n/mL
+        # N/mm
+        # N/mm<sup>2</sup>
+        # n/mm<sup>3</sup>
+        # n/s
+        # n/wks
+        # N&sdot;mm
+        # ng/g
+        # ng/mL
+        # nm
+        # nmol/g
+        # nmol/mg
+        # nmol/mL
+        # pg
+        # pg/mL
+        # pH
+        # pmol/g
+        # pmol/L
+        # pmol/mg
+        # pmol/mL
+        # ratio
+        # s
+        # score
+        # slope
+        # U/g
+        # U/L
+        # wks
+
+        return units
+
+
+    def _process_strainmeans(self, limit):
         """
-        Currently loops through the gene_info file and creates the genes as classes, typed with SO.  It will add their
-        label, any alternate labels as synonyms, alternate ids as equivlaent classes.  HPRDs get added as
-        protein products.  The chromosome and chr band get added as blank node regions, and the gene is faldo:located
-        on the chr band.
+        Use this table to create the idmap between the internal marker id and the public mgiid.
+        Also, add the equivalence statements between strains for MGI and JAX
+        Triples:
+        <strain_id> a GENO:intrinsic_genotype
+        <other_strain_id> a GENO:intrinsic_genotype
+        <strain_id> owl:sameAs <other_strain_id>
+
         :param limit:
         :return:
         """
-        gu = GraphUtils(curie_map.get())
 
+        # make a pass through the table first, to create the mapping between the external and internal identifiers
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
         geno = Genotype(g)
-
-        # not unzipping the file
-        logger.info("Processing Gene records")
-        line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene_info']['file']))
-        logger.info("FILE: %s", myfile)
-
-        # Add taxa and genome classes for those in our filter
-        for tax_num in self.tax_ids:
-            tax_id = ':'.join(('NCBITaxon', str(tax_num)))
-            geno.addGenome(tax_id, str(tax_num))   # tax label can get added elsewhere
-            gu.addClassToGraph(g, tax_id, None)   # label added elsewhere
-        with gzip.open(myfile, 'rb') as f:
+        logger.info("mapping strains to internal identifiers")
+        raw = '/'.join((self.rawdir, 'strainmeans.csv'))
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
             for line in f:
-                # skip comments
-                line = line.decode().strip()
-                if re.match('^#', line):
-                    continue
-                (tax_num, gene_num, symbol, locustag,
-                 synonyms, xrefs, chr, map_loc, desc,
-                 gtype, authority_symbol, name,
-                 nomenclature_status, other_designations, modification_date) = line.split('\t')
-
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
-
-                if self.testMode and int(gene_num) not in self.gene_ids:
-                    continue
-
-                if int(tax_num) not in self.tax_ids:
-                    continue
-
                 line_counter += 1
+                (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
+                 zscore, logzscore, measinfo, mp_mapping, ma_mapping) = line.split('\t')
 
-                gene_id = ':'.join(('NCBIGene', gene_num))
-                tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self._map_type_of_gene(gtype)
-
-                if symbol == 'NEWENTRY':
-                    label = None
-                else:
-                    label = symbol
-
-                # TODO might have to figure out if things aren't genes, and make them individuals
-                gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
-
-                # we have to do special things here for genes, because they're classes not individuals
-                # f = Feature(gene_id,label,gene_type_id,desc)
-
-                if name != '-':
-                    gu.addSynonym(g, gene_id, name)
-                if synonyms.strip() != '-':
-                    for s in synonyms.split('|'):
-                        gu.addSynonym(g, gene_id, s.strip(), Assoc.annotation_properties['hasRelatedSynonym'])
-                if other_designations.strip() != '-':
-                    for s in other_designations.split('|'):
-                        gu.addSynonym(g, gene_id, s.strip(), Assoc.annotation_properties['hasRelatedSynonym'])
-
-                # deal with the xrefs
-                # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
-                if xrefs.strip() != '-':
-                    for r in xrefs.strip().split('|'):
-                        fixedr = self._cleanup_id(r)
-                        if fixedr is not None and fixedr.strip() != '':
-                            if re.match('HPRD', fixedr):
-                                # proteins are not == genes.
-                                gu.addTriple(g, gene_id, self.properties['has_gene_product'], fixedr)
-                            else:
-                                # skip some of these for now
-                                if fixedr.split(':')[0] not in ['Vega', 'IMGT/GENE-DB']:
-                                    gu.addEquivalentClass(g, gene_id, fixedr)
-
-                # edge cases of id | symbol | chr | map_loc:
-                # 263     AMD1P2    X|Y  with   Xq28 and Yq12
-                # 438     ASMT      X|Y  with   Xp22.3 or Yp11.3    # in PAR
-                # 419     ART3      4    with   4q21.1|4p15.1-p14   # no idea why there's two bands listed - possibly 2 assemblies
-                # 28227   PPP2R3B   X|Y  Xp22.33; Yp11.3            # in PAR
-                # 619538  OMS     10|19|3 10q26.3;19q13.42-q13.43;3p25.3   #this is of "unknown" type == susceptibility
-                # 101928066       LOC101928066    1|Un    -         # unlocated scaffold
-                # 11435   Chrna1  2       2 C3|2 43.76 cM           # mouse --> 2C3
-                # 11548   Adra1b  11      11 B1.1|11 25.81 cM       # mouse --> 11B1.1
-                # 11717   Ampd3   7       7 57.85 cM|7 E2-E3        # mouse
-                # 14421   B4galnt1        10      10 D3|10 74.5 cM  # mouse
-                # 323212  wu:fb92e12      19|20   -                 # fish
-                # 323368  ints10  6|18    -                         # fish
-                # 323666  wu:fc06e02      11|23   -                 # fish
-
-                # feel that the chr placement can't be trusted in this table when there is > 1 listed
-                # with the exception of human X|Y, i will only take those that align to one chr
-
-                # FIXME remove the chr mapping below when we pull in the genomic coords
-                if str(chr) != '-' and str(chr) != '':
-                    if re.search('\|', str(chr)) and str(chr) not in ['X|Y','X; Y']:
-                        # this means that there's uncertainty in the mapping.  skip it
-                        # TODO we'll need to figure out how to deal with >1 loc mapping
-                        logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
+                if self.testMode is True:
+                    if int(strainid) not in self.test_keys.get('strain'):
                         continue
-                        # X|Y	Xp22.33;Yp11.3
 
-                    # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
-                    #    print('odd chr=',str(chr))
-                    if str(chr) == 'X; Y':
-                        chr = 'X|Y'  # rewrite the PAR regions for processing
-                    # do this in a loop to allow PAR regions like X|Y
-                    for c in re.split('\|',str(chr)) :
-                        geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
-                        mychrom = makeChromID(c, tax_num, 'CHR')
-                        mychrom_syn = makeChromLabel(c, tax_num)  # temporarily use the taxnum for the disambiguating label
-                        gu.addSynonym(g, mychrom,  mychrom_syn)
-                        band_match = re.match('[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
-                        if band_match is not None and len(band_match.groups()) > 0:
-                            # if tax_num != '9606':
-                            #     continue
-                            # this matches the regular kind of chrs, so make that kind of band
-                            # not sure why this matches? chrX|Y or 10090chr12|Un"
-                            # TODO we probably need a different regex per organism
-                            # the maploc_id already has the numeric chromosome in it, strip it first
-                            bid = re.sub('^'+c, '', map_loc)
-                            maploc_id = makeChromID(c+bid, tax_num, 'CHR')  # the generic location (no coordinates)
-                            # print(map_loc,'-->',bid,'-->',maploc_id)
-                            band = Feature(maploc_id, None, None)  # Assume it's type will be added elsewhere
-                            band.addFeatureToGraph(g)
-                            # add the band as the containing feature
-                            gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], maploc_id)
-                        else:
-                            # TODO handle these cases
-                            # examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
-                            ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
-                            logger.debug('not regular band pattern for %s: %s', gene_id, map_loc)
-                            # add the gene as a subsequence of the chromosome
-                            gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
+                # we are only interested in values of significance; 2 is a weak cutoff but <.1% were significant at 3
+                # standard deviations above or below mean of means. Todo: calculate these properly based on the raw data
+                if zscore >= 2 or zscore < -2:
+                    continue
 
-                geno.addTaxon(tax_id, gene_id)
+                # # get the hashmap of the identifiers
+                # self.idhash['strain'][strainid] = accid
+                # gu.addIndividualToGraph(g, accid, None, geno.genoparts['intrinsic_genotype'])
 
-                if not self.testMode and limit is not None and line_counter > limit:
-                    break
+                # pass through the file again, and make the equivalence statements to a subset of the idspaces
+                logger.info("mapping strain equivalent identifiers")
+                line_counter = 0
+                with open(raw, 'r') as f:
+                    f.readline()  # read the header row; skip
+                    for line in f:
+                        line_counter += 1
+                        (accession_key, accid, prefixpart, numericpart, logicaldb_key, object_key, mgitype_key, private,
+                         preferred, createdby_key, modifiedby_key,
+                         creation_date, modification_date, logicaldb) = line.split('\t')
 
-            gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
-            gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
-            gu.loadProperties(g, Genotype.object_properties, gu.OBJPROP)
-            gu.loadAllProperties(g)
+                        if self.testMode is True:
+                            if int(object_key) not in self.test_keys.get('strain'):
+                                continue
+
+                        mgiid = self.idhash['strain'].get(object_key)
+                        if mgiid is None:
+                            # presumably we've already added the relevant MGI ids already, so skip those that we can't find
+                            # logger.info("can't find mgiid for %s",object_key)
+                            continue
+                        strain_id = None
+                        if preferred == '1':  # what does it mean if it's 0?
+                            if logicaldb_key == '22':  # JAX
+                                # scrub out the backticks from accids
+                                # TODO notify the source upstream
+                                accid = re.sub('`', '', accid)
+                                strain_id = 'JAX:' + accid
+                                # TODO get non-preferred ids==deprecated?
+
+                        if strain_id is not None:
+                            gu.addIndividualToGraph(g, strain_id, None, geno.genoparts['intrinsic_genotype'])
+                            gu.addSameIndividual(g, mgiid, strain_id)
+
+                        if not self.testMode and limit is not None and line_counter > limit:
+                            break
 
         return
 
-    def _get_gene_history(self, limit):
-        """
-        Loops through the gene_history file and adds the old gene ids as deprecated classes, where the new
-        gene id is the replacement for it.  The old gene symbol is added as a synonym to the gene.
-        :param limit:
-        :return:
-        """
-        gu = GraphUtils(curie_map.get())
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
 
-        logger.info("Processing Gene records")
-        line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
-        logger.info("FILE: %s", myfile)
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
-                # skip comments
-                line = line.decode().strip()
-                if re.match('^#', line):
-                    continue
-                (tax_num, gene_num, discontinued_num, discontinued_symbol, discontinued_date) = line.split('\t')
+def getTestSuite(self):
+    import unittest
+    from tests.test_mpd import MPDTestCase
+    # TODO test genotypes
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+    test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
 
-                if gene_num == '-' or discontinued_num == '-':
-                    continue
-
-                if self.testMode and int(gene_num) not in self.gene_ids:
-                    continue
-
-                if int(tax_num) not in self.tax_ids:
-                    continue
-
-                line_counter += 1
-                gene_id = ':'.join(('NCBIGene', gene_num))
-                discontinued_gene_id = ':'.join(('NCBIGene', discontinued_num))
-                tax_id = ':'.join(('NCBITaxon', tax_num))
-
-                # add the two genes
-                gu.addClassToGraph(g, gene_id, None)
-                gu.addClassToGraph(g, discontinued_gene_id, discontinued_symbol)
-
-                # add the new gene id to replace the old gene id
-                gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
-
-                # also add the old symbol as a synonym of the new gene
-                gu.addSynonym(g, gene_id, discontinued_symbol)
-
-                if (not self.testMode) and (limit is not None and line_counter > limit):
-                    break
-
-        return
-
-    def _get_gene2pubmed(self, limit):
-        """
-        Loops through the gene2pubmed file and adds a simple triple to say that a given publication
-        is_about a gene.  Publications are added as NamedIndividuals.
-        :param limit:
-        :return:
-        """
-
-        gu = GraphUtils(curie_map.get())
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-        is_about = gu.getNode(gu.object_properties['is_about'])
-        logger.info("Processing Gene records")
-        line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
-        logger.info("FILE: %s", myfile)
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
-                # skip comments
-                line = line.decode().strip()
-                if re.match('^#', line):
-                    continue
-                (tax_num, gene_num, pubmed_num) = line.split('\t')
-
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
-
-                if self.testMode and int(gene_num) not in self.gene_ids:
-                    continue
-
-                if int(tax_num) not in self.tax_ids:
-                    continue
-
-                if gene_num == '-' or pubmed_num == '-':
-                    continue
-
-                line_counter += 1
-                gene_id = ':'.join(('NCBIGene', gene_num))
-                pubmed_id = ':'.join(('PMID', pubmed_num))
-
-                # add the gene, in case it hasn't before
-                gu.addClassToGraph(g, gene_id, None)
-                # add the publication as a NamedIndividual
-                gu.addIndividualToGraph(g, pubmed_id, None, None)  # add type publication
-                self.graph.add((gu.getNode(pubmed_id), is_about, gu.getNode(gene_id)))
-
-                if not self.testMode and limit is not None and line_counter > limit:
-                    break
-
-        return
-
-    def _map_type_of_gene(self, sotype):
-        so_id = 'SO:0000110'
-        type_to_so_map = {
-            'ncRNA': 'SO:0001263',
-            'other': 'SO:0000110',
-            'protein-coding': 'SO:0001217',
-            'pseudo': 'SO:0000336',
-            'rRNA': 'SO:0001637',
-            'snRNA': 'SO:0001268',
-            'snoRNA': 'SO:0001267',
-            'tRNA': 'SO:0001272',
-            'unknown': 'SO:0000110',
-            'scRNA': 'SO:0000013',
-            'miscRNA': 'SO:0000233',  # mature transcript - there is no good mapping
-            'chromosome': 'SO:0000340',
-            'chromosome_arm': 'SO:0000105',
-            'chromosome_band': 'SO:0000341',
-            'chromosome_part': 'SO:0000830'
-        }
-
-        if sotype in type_to_so_map:
-            so_id = type_to_so_map.get(sotype)
-        else:
-            logger.warn("unmapped code %s. Defaulting to 'SO:0000110', sequence_feature.", sotype)
-
-        return so_id
-
-    def _cleanup_id(self, i):
-        """
-        Clean up messy id prefixes
-        :param i:
-        :return:
-        """
-        cleanid = i
-        # MIM:123456 --> #OMIM:123456
-        cleanid = re.sub('^MIM', 'OMIM', cleanid)
-
-        # HGNC:HGNC --> HGNC
-        cleanid = re.sub('^HGNC:HGNC', 'HGNC', cleanid)
-
-        # Ensembl --> ENSEMBL
-        cleanid = re.sub('^Ensembl', 'ENSEMBL', cleanid)
-
-        # MGI:MGI --> MGI
-        cleanid = re.sub('^MGI:MGI', 'MGI', cleanid)
-
-        cleanid = re.sub('FLYBASE', 'FlyBase', cleanid)
-
-        return cleanid
-
-    def getTestSuite(self):
-        import unittest
-        from tests.test_ncbi import NCBITestCase
-        # TODO test genes
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(NCBITestCase)
-
-        return test_suite
+    return test_suite
