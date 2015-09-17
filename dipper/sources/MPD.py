@@ -127,12 +127,12 @@ class MPD(Source):
                     # add the mapping denovo
                     if measnum not in self.idhash['measurements']:
                         # create space for the measurement description to go later
-                        self.idhash['measurements'][measnum] = [[ont_term],'placeholder_description']
+                        self.idhash['measurements'][measnum] = [[ont_term], 'placeholder_description', []]
                     # add the new mapping to the existing list of mappings
                     else:
                         self.idhash['measurements'][measnum][0] += [ont_term]
 
-                    # the assays will be added to the graph later as part of provenance
+                        # the assays will be added to the graph later as part of provenance
         return
 
     def _process_measurements(self, limit):
@@ -152,14 +152,17 @@ class MPD(Source):
                 if measnum in self.idhash['measurements']:
                     sextested = 'female' if (sextested is 'fm') else 'male'
                     units = (units)
-                    description = "This is an assay of " + descrip + " as a " + datatype + " measured in " + units
+                    description = "This is an assay of [" + descrip + "] shown as a [" + datatype + "] measured in [" + units+"]."
                     if intervention is not None and intervention != "":
-                        description += " in response to " + intervention
+                        description += " in response to [" + intervention+"]"
+                    if intparm is not None and intervention != "":
+                        description += ". This represents the [" + intparm + "] arm, using materials and methods that " \
+                                                                             "included [" + appmeth + "]."
 
-                    description += ". This represents the " + intparm + " arm of the overall experiment entitled " \
-                                   + projsym + " using materials and methods that included " + appmeth + "."
-                    description += "It was conducted in " + sextested + " mice at " + ageweeks + " of age in" \
-                                   + nstrainstested + " different mouse strains. "
+                    description += "  The overall experiment is entitled [" + projsym + "].  "
+
+                    description += "It was conducted in [" + sextested + "] mice at [" + ageweeks + "] of age in" \
+                                   +" ["+ nstrainstested + "] different mouse strains. "
                     description += "Keywords: " + cat1 + \
                                    ((", " + cat2) if cat2 is not "" else "") + \
                                    ((", " + cat3) if cat3 is not "" else "") + "."
@@ -303,86 +306,36 @@ class MPD(Source):
 
         return units
 
-
     def _process_strainmeans(self, limit):
-        """
-        Use this table to create the idmap between the internal marker id and the public mgiid.
-        Also, add the equivalence statements between strains for MGI and JAX
-        Triples:
-        <strain_id> a GENO:intrinsic_genotype
-        <other_strain_id> a GENO:intrinsic_genotype
-        <strain_id> owl:sameAs <other_strain_id>
 
-        :param limit:
-        :return:
-        """
-
-        # make a pass through the table first, to create the mapping between the external and internal identifiers
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
 
-        geno = Genotype(g)
-        logger.info("mapping strains to internal identifiers")
+        logger.info("Processing strain means ...")
+        # todo: process the raw .zip file using the same approach that was used with omia
         raw = '/'.join((self.rawdir, 'strainmeans.csv'))
+
         with open(raw, 'r') as f:
+            reader = csv.reader(f)
             f.readline()  # read the header row; skip
-            for line in f:
+            for row in reader:
                 line_counter += 1
+                # note that for now this is a sanity test: meas info mp mapping and ma mapping do not exist in the sourcefiles
                 (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
-                 zscore, logzscore, measinfo, mp_mapping, ma_mapping) = line.split('\t')
+                 zscore, logzscore, measinfo, mp_mapping, ma_mapping) = row
 
                 if self.testMode is True:
-                    if int(strainid) not in self.test_keys.get('strain'):
+                    if int(strainid) not in self.test_ids:
                         continue
+                # only contains measurements annotated to mp/vt
+                if measnum in self.idhash['measurements']:
+                    self.idhash['measurements'][measnum][2] += [float(mean)]
 
-                # we are only interested in values of significance; 2 is a weak cutoff but <.1% were significant at 3
-                # standard deviations above or below mean of means. Todo: calculate these properly based on the raw data
-                if zscore >= 2 or zscore < -2:
-                    continue
+        for measurement in self.idhash['measurements']:
+            meanslist = self.idhash['measurements'][measurement][2]
+            meanofmeans = sum(meanslist)/len(meanslist)
+            # todo float operation
+            self.idhash['measurements'][measnum][3]=meanofmeans
 
-                # # get the hashmap of the identifiers
-                # self.idhash['strain'][strainid] = accid
-                # gu.addIndividualToGraph(g, accid, None, geno.genoparts['intrinsic_genotype'])
-
-                # pass through the file again, and make the equivalence statements to a subset of the idspaces
-                logger.info("mapping strain equivalent identifiers")
-                line_counter = 0
-                with open(raw, 'r') as f:
-                    f.readline()  # read the header row; skip
-                    for line in f:
-                        line_counter += 1
-                        (accession_key, accid, prefixpart, numericpart, logicaldb_key, object_key, mgitype_key, private,
-                         preferred, createdby_key, modifiedby_key,
-                         creation_date, modification_date, logicaldb) = line.split('\t')
-
-                        if self.testMode is True:
-                            if int(object_key) not in self.test_keys.get('strain'):
-                                continue
-
-                        mgiid = self.idhash['strain'].get(object_key)
-                        if mgiid is None:
-                            # presumably we've already added the relevant MGI ids already, so skip those that we can't find
-                            # logger.info("can't find mgiid for %s",object_key)
-                            continue
-                        strain_id = None
-                        if preferred == '1':  # what does it mean if it's 0?
-                            if logicaldb_key == '22':  # JAX
-                                # scrub out the backticks from accids
-                                # TODO notify the source upstream
-                                accid = re.sub('`', '', accid)
-                                strain_id = 'JAX:' + accid
-                                # TODO get non-preferred ids==deprecated?
-
-                        if strain_id is not None:
-                            gu.addIndividualToGraph(g, strain_id, None, geno.genoparts['intrinsic_genotype'])
-                            gu.addSameIndividual(g, mgiid, strain_id)
-
-                        if not self.testMode and limit is not None and line_counter > limit:
-                            break
 
         return
 
