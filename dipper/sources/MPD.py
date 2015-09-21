@@ -362,61 +362,72 @@ class MPD(Source):
         # loop through the hashmap
         for assay_id in self.assayhash:
             if assay_id not in self.missing_assay_hash:
-                logger.info(assay_id)
                 assay_label = self.assayhash[assay_id]['metadata']['assay_label']
                 assay_type = self.assayhash[assay_id]['metadata']['assay_type']
                 measurement_unit = self.assayhash[assay_id]['metadata']['measurement_unit']
                 for sex in sexes:
-                    logger.info(sex)
                     index = 0
-                    for strain_id in self.assayhash[assay_id][sex]['strain_ids']:
+                    if len(self.assayhash[assay_id][sex]['strain_ids']) == 0:
+                        logger.debug("skipping assay " + str(assay_id) + sex + " as it is missing any associated data.")
+                    else:
+                        for strain_id in self.assayhash[assay_id][sex]['strain_ids']:
 
-                        if strain_id == 23201:
-                            logger.info("stop.")
+                            if assay_id == 23201:
+                                logger.info("stop.")
 
-                        ##############    ADD THE STRAIN AS GENOTYPE    #############
-                        effective_genotype_id = self.make_id("MPD:" + str(strain_id) + sex)
-                        # todo: make this a method in geno that other classes can access
-                        effective_genotype_label = str(strain_id) + ' (' + sex + ')'
-                        geno.addGenotype(effective_genotype_id, effective_genotype_label,
-                                         geno.genoparts['sex_qualified_genotype'])
-                        geno.addParts(effective_genotype_id, effective_genotype_id,
-                                      geno.object_properties['has_alternate_part'])
+                            ##############    ADD THE STRAIN AS GENOTYPE    #############
+                            effective_genotype_id = self.make_id("MPD:" + str(strain_id) + sex)
+                            # todo: make this a method in geno that other classes can access
+                            effective_genotype_label = str(strain_id) + ' (' + sex + ')'
+                            geno.addGenotype(effective_genotype_id, effective_genotype_label,
+                                             geno.genoparts['sex_qualified_genotype'])
+                            geno.addParts(effective_genotype_id, effective_genotype_id,
+                                          geno.object_properties['has_alternate_part'])
 
-                        ##############    ADD THE TAXON AS CLASS    #############
-                        taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
-                        gu.addClassToGraph(g, taxon_id, None)
+                            ##############    ADD THE TAXON AS CLASS    #############
+                            taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
+                            gu.addClassToGraph(g, taxon_id, None)
 
-                        ##############    BUILD THE G2P ASSOC    #############
-                        # Phenotypes associations are made to limits strainid+gender+overall study
+                            ##############    BUILD THE G2P ASSOC    #############
+                            # Phenotypes associations are made to limits strainid+gender+overall study
 
-                        # First check that the measurement number is in the measurement hash
-                        # and that it has a corresponding ontology mapping we are interested in
+                            # First check that the measurement number is in the measurement hash
+                            # and that it has a corresponding ontology mapping we are interested in
 
-                        zscore = self.assayhash[assay_id][sex]['assay_zscores'][index]
-                        if (zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold):
+                            zscore = self.assayhash[assay_id][sex]['assay_zscores'][index]
+                            if (zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold):
+                                logger.debug(str(assay_id) + sex + "\t" +  str(zscore) + " significant!")
 
-                            ont_term_ids = self.assayhash[int(assay_id)]['metadata']['ont_terms']
+                                ont_term_ids = self.assayhash[int(assay_id)]['metadata']['ont_terms']
 
-                            for phenotype_id in ont_term_ids:
-                                eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
+                                for phenotype_id in ont_term_ids:
+                                    eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
 
-                                # the association comes as a result of a g2p from a procedure in a pipeline at a center
-                                # and parameter tested
+                                    # the association comes as a result of a g2p from a procedure in a pipeline at a center
+                                    # and parameter tested
 
-                                assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
-                                assay_desc = self.assayhash[int(assay_id)]['metadata']['description']
+                                    assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
+                                    assay_desc = self.assayhash[int(assay_id)]['metadata']['description']
 
-                                measurement_value = self.assayhash[assay_id][sex]['assay_means'][index]
-                                significance = prov.get_zscore(zscore)
+                                    measurement_value = self.assayhash[assay_id][sex]['assay_means'][index]
+                                    significance = prov.get_zscore(zscore)
 
-                                prov.add_assay_to_graph(g, assay_id, assay_label, assay_type, assay_desc)
-                                prov.add_measurement_data(assay_id, measurement_value, measurement_unit, significance)
-                                prov.add_agent_to_graph(g, self.mgd_agent_id, self.mgd_agent_label, self.mgd_agent_type)
-                                prov.add_provenance_to_graph(g)
+                                    logger.debug(
+                                        str(assay_id) + ": " + assay_label + " " + assay_type + " " + assay_desc)
+                                    prov.add_assay_to_graph(g, 'MPD-assay:' + str(assay_id), assay_label, assay_type,
+                                                            assay_desc)
+                                    prov.add_measurement_data('MPD-assay:' + str(assay_id), str(measurement_value),
+                                                              measurement_unit,
+                                                              significance)
+                                    prov.add_agent_to_graph(g, self.mgd_agent_id, self.mgd_agent_label,
+                                                            self.mgd_agent_type)
+                                    prov.add_provenance_to_graph(g)
 
-                                assoc.add_evidence(eco_id)
-                                assoc.set_score(float(zscore))
+                                    assoc.add_evidence(eco_id)
+                                    assoc.set_score(float(zscore))
+                            else:
+                                logger.debug(str(assay_id) + sex + "\t" + str(strain_id) + "\t" + str(zscore) + " Discarding. Not significant.")
+                            index += 1
 
         return
 
