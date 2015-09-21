@@ -3,6 +3,8 @@ import gzip
 import re
 import logging
 import os
+import math
+from dipper.models.Provenance import Provenance
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
@@ -37,8 +39,8 @@ class MPD(Source):
         'straininfo': {'file': 'straininfo.csv',
                        'url': 'http://phenome.jax.org/download/straininfo.csv'},
 
-        'measurements': {'file': 'measurements.csv',
-                         'url': 'http://phenome.jax.org/download/measurements.csv'},
+        'assay_metadata': {'file': 'measurements.csv',
+                           'url': 'http://phenome.jax.org/download/measurements.csv'},
 
         'strainmeans': {'file': 'strainmeans_cleanzipped.gz',
                         'url': 'http://phenome.jax.org/download/strainmeans_cleanzipped.gz'},
@@ -56,10 +58,15 @@ class MPD(Source):
                 "MPD:759", "MPD:766", "MPD:770", "MPD:849", "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
                 "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
 
+    mgd_agent_id = "http://phenome.jax.org"
+    mgd_agent_label = "Mouse Phenotype Database"
+    mgd_agent_type = "organization"
+
     def __init__(self):
         Source.__init__(self, 'mpd')
         # @N, not sure if this step is required
         self.namespaces.update(curie_map.get())
+        self.stdevthreshold = 2
 
         # update the dataset object with details about this resource
         # @N: Note that there is no license as far as I can tell
@@ -72,8 +79,22 @@ class MPD(Source):
         # the hash will hold the type-specific-object-keys to MPD public identifiers.  then, subsequent
         # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
         # fly
-        self.idhash = {'strainid': {}, 'sex': {}, 'measurements': {}}
-        self.label_hash = {}  # use this to store internally generated labels for various features
+        self.assayhash = {}
+
+        {
+            'metadata': {'ont_terms': [], 'description': None, 'assay_label': None, 'assay_type': None,
+                         'measurement_unit': None},
+            # have to repeat this otherwise both f and m will correspond to same object in memory
+            # storing these in a less hierarchical way as it facilitates manual computation of zscores
+            'f': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []},
+            'm': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []}
+        }
+
+        self.assays_missing_phenotypes = list()
+
+        # create a hash to hold problem identifiers (eg. those missing from some tables but not others)
+        # the keys will be the assay ids and the value would be a list of files from which known to be missing
+        self.missing_assay_hash = {}
 
         return
 
@@ -95,12 +116,14 @@ class MPD(Source):
 
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
-        self._process_ontology_mappings(limit)
-        self._process_measurements(limit)
-        self._process_strainmeans(limit)
+        self._process_ontology_mappings_file(limit)
+        self._process_measurements_file(limit)
+        self._process_strainmeans_file(limit)
+        # self._calculate_stats()
 
         # The following will use the hash populated above to lookup the ids when filling in the graph
-
+        self._fill_provenance_graph(limit)
+        # self._fill_association_graph(limit)
 
         logger.info("Finished parsing.")
 
@@ -109,7 +132,7 @@ class MPD(Source):
         logger.info("Found %d nodes", len(self.graph))
         return
 
-    def _process_ontology_mappings(self, limit):
+    def _process_ontology_mappings_file(self, limit):
 
         line_counter = 0
 
@@ -121,21 +144,28 @@ class MPD(Source):
             f.readline()  # read the header row; skip
             for row in reader:
                 line_counter += 1
-                (measnum, ont_term, descrip) = row
+                (assay_id, ont_term, descrip) = row
 
                 if re.match('MP', ont_term) or re.match('VT', ont_term):
                     # add the mapping denovo
-                    if measnum not in self.idhash['measurements']:
-                        # create space for the measurement description to go later
-                        self.idhash['measurements'][measnum] = [[ont_term], 'placeholder_description', []]
-                    # add the new mapping to the existing list of mappings
-                    else:
-                        self.idhash['measurements'][measnum][0] += [ont_term]
 
-                        # the assays will be added to the graph later as part of provenance
+                    if int(assay_id) not in self.assayhash:
+                        self.assayhash[int(assay_id)] = {
+                            'metadata': {'ont_terms': [], 'description': None, 'assay_label': None, 'assay_type': None,
+                                         'measurement_unit': None},
+                            # have to repeat this otherwise both f and m will correspond to same object in memory
+                            # storing these in a less hierarchical way as it facilitates manual computation of zscores
+                            'f': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []},
+                            'm': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []}
+                        }
+                    self.assayhash[int(assay_id)]['metadata']['ont_terms'] += [ont_term]
+
+                else:
+                    self.assays_missing_phenotypes.append(assay_id)
+                    # the assays themselves will be added to the graph later as part of provenance
         return
 
-    def _process_measurements(self, limit):
+    def _process_measurements_file(self, limit):
         line_counter = 0
 
         logger.info("Processing measurements ...")
@@ -146,167 +176,56 @@ class MPD(Source):
             f.readline()  # read the header row; skip
             for row in reader:
                 line_counter += 1
-                (measnum, projsym, varname, descrip, units, cat1, cat2, cat3, intervention, intparm, appmeth, panelsym,
-                 datatype, sextested, nstrainstested, ageweeks) = row
+                # measnum,projsym,varname,descrip,units,cat1,cat2,cat3,intervention,intparm,appmeth,panelsym,datatype,sextested,nstrainstested,ageweeks
+                assay_id = int(row[0])
+                assay_label = row[3]
+                assay_units = row[4]
+                assay_type = row[10]
+                if assay_id in self.assayhash:
+                    description = self._build_measurement_description(row)
+                    self.assayhash[assay_id]['metadata']['description'] = description
+                    self.assayhash[assay_id]['metadata']['assay_label'] = assay_label
+                    self.assayhash[assay_id]['metadata']['assay_type'] = assay_type
+                    self.assayhash[assay_id]['metadata']['assay_units'] = assay_units
+                else:
+                    # else, if we haven't already discarded this assay_id (because it had an ontology mapping, but not
+                    # any we cared about ...
+                    if assay_id not in self.assays_missing_phenotypes:
+                        # we should log the fact that it didn't have a corresponding mapping at all
+                        if assay_id not in self.missing_assay_hash:
+                            self._log_missing_ids(assay_id, "ontology_mappings.csv")
 
-                if measnum in self.idhash['measurements']:
-                    sextested = 'female' if (sextested is 'fm') else 'male'
-                    units = (units)
-                    description = "This is an assay of [" + descrip + "] shown as a [" + datatype + "] measured in [" + units+"]."
-                    if intervention is not None and intervention != "":
-                        description += " in response to [" + intervention+"]"
-                    if intparm is not None and intervention != "":
-                        description += ". This represents the [" + intparm + "] arm, using materials and methods that " \
-                                                                             "included [" + appmeth + "]."
-
-                    description += "  The overall experiment is entitled [" + projsym + "].  "
-
-                    description += "It was conducted in [" + sextested + "] mice at [" + ageweeks + "] of age in" \
-                                   +" ["+ nstrainstested + "] different mouse strains. "
-                    description += "Keywords: " + cat1 + \
-                                   ((", " + cat2) if cat2 is not "" else "") + \
-                                   ((", " + cat3) if cat3 is not "" else "") + "."
-
-                    self.idhash['measurements'][measnum][1] = description
         return
 
+    @staticmethod
+    def _build_measurement_description(row):
+        (assay_id, projsym, varname, descrip, units, cat1, cat2, cat3, intervention, intparm, appmeth, panelsym,
+         datatype, sextested, nstrainstested, ageweeks) = row
+
+        sextested = 'female' if (sextested is 'fm') else 'male'
+        description = "This is an assay of [" + descrip + "] shown as a [" + datatype + "] measured in [" + units + "]."
+
+        if intervention is not None and intervention != "":
+            description += " in response to [" + intervention + "]"
+        if intparm is not None and intervention != "":
+            description += ". This represents the [" + intparm + "] arm, using materials and methods that " \
+                                                                 "included [" + appmeth + "]."
+
+        description += "  The overall experiment is entitled [" + projsym + "].  "
+
+        description += "It was conducted in [" + sextested + "] mice at [" + ageweeks + "] of age in" \
+                       + " [" + nstrainstested + "] different mouse strains. "
+        description += "Keywords: " + cat1 + \
+                       ((", " + cat2) if cat2 is not "" else "") + \
+                       ((", " + cat3) if cat3 is not "" else "") + "."
+        return description
+
+    @staticmethod
     def normalise_units(units):
         # todo:
-
-        # &deg;C
-        # &micro;g/dL
-        # &micro;g/g
-        # &micro;g/mL
-        # &micro;L
-        # &micro;L/&micro;L
-        # &micro;L/cm
-        # &micro;L/g
-        # &micro;m
-        # &micro;m<sup>2</sup>
-        # &micro;m<sup>2</sup>/n
-        # &micro;mol/g
-        # &micro;mol/L
-        # &micro;mol/mg
-        # &micro;mol/min/hPa
-        # &micro;mol/min/hPa/mL
-        # &micro;mol/mL/h
-        # &micro;s
-        # &micro;V
-        # %
-        # 1/cm
-        # amplitude
-        # AUC
-        # cal
-        # cm
-        # cm/mL
-        # cm/mL/s
-        # cm/s
-        # cm/s<sup>2</sup>
-        # cm/sec
-        # cm&sdot;s
-        # cm<sup>2</sup>
-        # cm<sup>3</sup>
-        # d
-        # daPa
-        # dB
-        # deg
-        # deg/cm
-        # deg/s
-        # designation
-        # fL
-        # frequency rate
-        # g
-        # g/cm<sup>2</sup>
-        # g/cm<sup>3</sup>
-        # g/dL
-        # g/kg
-        # g/wk
-        # h
-        # Hz
-        # IU/L
-        # kcal
-        # kcal/d
-        # kcal/g/d
-        # kcal/h
-        # kg/m<sup>2</sup>
-        # kg&sdot;m
-        # km
-        # km/d
-        # L/g
-        # log(&micro;g/dL)
-        # m
-        # m/d
-        # m/min
-        # mA
-        # mEq/L
-        # mg
-        # mg/cm<sup>2</sup>
-        # mg/dL
-        # mg/g
-        # mg/kg
-        # mg/mL
-        # min
-        # min/d
-        # mL
-        # mL/kg
-        # mL/kg/h
-        # mL/kg/s
-        # mL/min
-        # mm
-        # mm/mL
-        # mm/s
-        # mm<sup>2</sup>
-        # mm<sup>2</sup>/g
-        # mm<sup>3</sup>
-        # mmHg
-        # mmol/kg
-        # mmol/L
-        # mmol/L&sdot;min
-        # mmol&sdot;h
-        # mN
-        # mol/m<sup>3</sup>
-        # ms
-        # ms*mV
-        # mV
-        # n
-        # n/&micro;L
-        # n/&micro;m<sup>2</sup>
-        # n/cm
-        # n/d
-        # n/g
-        # n/L
-        # n/min
-        # n/mL
-        # N/mm
-        # N/mm<sup>2</sup>
-        # n/mm<sup>3</sup>
-        # n/s
-        # n/wks
-        # N&sdot;mm
-        # ng/g
-        # ng/mL
-        # nm
-        # nmol/g
-        # nmol/mg
-        # nmol/mL
-        # pg
-        # pg/mL
-        # pH
-        # pmol/g
-        # pmol/L
-        # pmol/mg
-        # pmol/mL
-        # ratio
-        # s
-        # score
-        # slope
-        # U/g
-        # U/L
-        # wks
-
         return units
 
-    def _process_strainmeans(self, limit):
+    def _process_strainmeans_file(self, limit):
 
         line_counter = 0
 
@@ -314,28 +233,190 @@ class MPD(Source):
         # todo: process the raw .zip file using the same approach that was used with omia
         raw = '/'.join((self.rawdir, 'strainmeans.csv'))
 
+        # loop through the file to record each mean for each assay_id+sex
         with open(raw, 'r') as f:
             reader = csv.reader(f)
             f.readline()  # read the header row; skip
             for row in reader:
                 line_counter += 1
-                # note that for now this is a sanity test: meas info mp mapping and ma mapping do not exist in the sourcefiles
-                (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
-                 zscore, logzscore, measinfo, mp_mapping, ma_mapping) = row
+
+                # measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,cv,minval,maxval,logmean,logsd,zscore,logzscore
+                vals = (assay_id, strain_label, strainid, sex, mean, zscore) = int(row[0]), row[2], int(row[3]), \
+                                                                               row[4], float(row[5]), float(row[14])
+
+                for val in vals:
+                    self.check_vals(val)
+
+                # (assay_id, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
+                #  zscore, logzscore) = row
 
                 if self.testMode is True:
                     if int(strainid) not in self.test_ids:
                         continue
-                # only contains measurements annotated to mp/vt
-                if measnum in self.idhash['measurements']:
-                    self.idhash['measurements'][measnum][2] += [float(mean)]
 
-        for measurement in self.idhash['measurements']:
-            meanslist = self.idhash['measurements'][measurement][2]
-            meanofmeans = sum(meanslist)/len(meanslist)
-            # todo float operation
-            self.idhash['measurements'][measnum][3]=meanofmeans
+                # if the assay_id is missing from the hash, it is because we haven't seen it yet in either
+                # ontology_mappings or measurements
+                if assay_id not in self.assayhash and assay_id not in self.assays_missing_phenotypes:
+                    self._log_missing_ids(assay_id, "ontology_mappings.csv")
+                    self._log_missing_ids(assay_id, "measurements.csv")
+                    # make a map of maps to hold strains for each (assay_id+sex)...
 
+                else:
+                    self.assayhash[assay_id][sex]['strain_ids'].append(strainid)
+                    self.assayhash[assay_id][sex]['strain_labels'].append(strain_label)
+                    self.assayhash[assay_id][sex]['assay_means'].append(mean)
+                    self.assayhash[assay_id][sex]['assay_zscores'].append(zscore)
+                    # logger.info(
+                    #     str(assay_id) + ':' + sex + ' Strain IDs: ' + str(self.assayhash[assay_id][sex]['strain_id'])
+                    #     + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
+        return
+
+    @staticmethod
+    def check_vals(value):
+
+        assert (value is not None and value is not '')
+
+        return value
+
+    # # loop over the resulting hash to calculate the z scores for each assay_id + sex
+    # def _calculate_stats(self):
+    #     logger.info("Calculating stats ...")
+    #
+    #     sexes = ['f', 'm']
+    #     for sex in sexes:
+    #         for assay_id in self.assayhash:
+    #             strains = self.assayhash[assay_id][sex]['strain_id']
+    #             # if strains is not an empty list
+    #             if (strains):
+    #                 logger.info("Present: " + str(assay_id) + ":" + sex)
+    #
+    #                 # if (assay_id == 23201):
+    #                 #     logger.info()
+    #
+    #                 meanslist = self.assayhash[assay_id][sex]['assay_means']
+    #                 zscores = self.zify(meanslist)
+    #                 self.assayhash[sex]['assay_zscores'] = dict(zip(strains, zscores))
+    #             # if strains is empty list it is because the corresponding assay_id isn't in strainmeans.csv
+    #             else:
+    #                 self._log_missing_ids(assay_id, "strainmeans.csv")
+    #                 logger.info("Missing: " + str(assay_id) + ":" + sex)
+    #
+    #     return
+
+    # # @N:
+    # # I keep getting these errors of positional arguments (must be my misunderstanding of 'self')
+    # # All stats code below is based on the statistics module in Python 3.4.
+    # def zify(self, meanslist):
+    #     pop_mean = self.mean(meanslist)
+    #     pop_stdev = self.pstdev(meanslist)
+    #
+    #     zscores = list()
+    #
+    #     for mean in meanslist:
+    #         zscore = (mean - pop_mean) / pop_stdev
+    #         zscores.append(zscore)
+    #     return zscores
+    #
+    # def mean(self, data):
+    #     """Return the sample arithmetic mean of data."""
+    #     n = len(data)
+    #     if n < 1:
+    #         raise ValueError('mean requires at least one data point')
+    #     return sum(data) / float(n)  # in Python 2 use sum(data)/float(n)
+    #
+    # def _ss(self, data):
+    #     """Return sum of square deviations of sequence data."""
+    #     c = self.mean(data)
+    #     ss = sum((x - c) ** 2 for x in data)
+    #     return ss
+    #
+    # def pstdev(self, data):
+    #     """Calculates the population standard deviation."""
+    #     n = len(data)
+    #     if n < 2:
+    #         raise ValueError('variance requires at least two data points')
+    #     ss = self._ss(data)
+    #     pvar = ss / n  # the population variance
+    #     return pvar ** 0.5
+
+    def _log_missing_ids(self, missing_id, name_of_file_from_which_missing):
+        if missing_id not in self.missing_assay_hash:
+            self.missing_assay_hash[missing_id] = set()
+        self.missing_assay_hash[missing_id].add(name_of_file_from_which_missing)
+        # todo: remove the offending ids from the hash
+        return
+
+    def _fill_provenance_graph(self, limit):
+        logger.info("Building graph ...")
+        gu = GraphUtils(curie_map.get())
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        geno = Genotype(g)
+        prov = Provenance()
+
+        sexes = ['m', 'f']
+
+        # loop through the hashmap
+        for assay_id in self.assayhash:
+            if assay_id not in self.missing_assay_hash:
+                logger.info(assay_id)
+                assay_label = self.assayhash[assay_id]['metadata']['assay_label']
+                assay_type = self.assayhash[assay_id]['metadata']['assay_type']
+                measurement_unit = self.assayhash[assay_id]['metadata']['measurement_unit']
+                for sex in sexes:
+                    logger.info(sex)
+                    index = 0
+                    for strain_id in self.assayhash[assay_id][sex]['strain_ids']:
+
+                        if strain_id == 23201:
+                            logger.info("stop.")
+
+                        ##############    ADD THE STRAIN AS GENOTYPE    #############
+                        effective_genotype_id = self.make_id("MPD:" + str(strain_id) + sex)
+                        # todo: make this a method in geno that other classes can access
+                        effective_genotype_label = str(strain_id) + ' (' + sex + ')'
+                        geno.addGenotype(effective_genotype_id, effective_genotype_label,
+                                         geno.genoparts['sex_qualified_genotype'])
+                        geno.addParts(effective_genotype_id, effective_genotype_id,
+                                      geno.object_properties['has_alternate_part'])
+
+                        ##############    ADD THE TAXON AS CLASS    #############
+                        taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
+                        gu.addClassToGraph(g, taxon_id, None)
+
+                        ##############    BUILD THE G2P ASSOC    #############
+                        # Phenotypes associations are made to limits strainid+gender+overall study
+
+                        # First check that the measurement number is in the measurement hash
+                        # and that it has a corresponding ontology mapping we are interested in
+
+                        zscore = self.assayhash[assay_id][sex]['assay_zscores'][index]
+                        if (zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold):
+
+                            ont_term_ids = self.assayhash[int(assay_id)]['metadata']['ont_terms']
+
+                            for phenotype_id in ont_term_ids:
+                                eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
+
+                                # the association comes as a result of a g2p from a procedure in a pipeline at a center
+                                # and parameter tested
+
+                                assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
+                                assay_desc = self.assayhash[int(assay_id)]['metadata']['description']
+
+                                measurement_value = self.assayhash[assay_id][sex]['assay_means'][index]
+                                significance = prov.get_zscore(zscore)
+
+                                prov.add_assay_to_graph(g, assay_id, assay_label, assay_type, assay_desc)
+                                prov.add_measurement_data(assay_id, measurement_value, measurement_unit, significance)
+                                prov.add_agent_to_graph(g, self.mgd_agent_id, self.mgd_agent_label, self.mgd_agent_type)
+                                prov.add_provenance_to_graph(g)
+
+                                assoc.add_evidence(eco_id)
+                                assoc.set_score(float(zscore))
 
         return
 
