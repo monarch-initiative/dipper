@@ -167,6 +167,8 @@ class WormBase(Source):
                 taxon_id = 'NCBITaxon:'+taxon_num
                 gene_id = 'WormBase:'+gene_num
                 if gene_symbol == '':
+                    gene_symbol = gene_synonym
+                if gene_symbol == '':
                     gene_symbol = None
                 gu.addClassToGraph(g, gene_id, gene_symbol, Genotype.genoparts['gene'])
                 if live == 'Dead':
