@@ -4,6 +4,8 @@ import re
 import logging
 import os
 import math
+import zipfile
+from zipfile import ZipFile
 from dipper.models.Provenance import Provenance
 
 from dipper.sources.Source import Source
@@ -35,16 +37,14 @@ class MPD(Source):
 
         'ontology_mappings': {'file': 'ontology_mappings.csv',
                               'url': 'http://phenome.jax.org/download/ontology_mappings.csv'},
-
         'straininfo': {'file': 'straininfo.csv',
                        'url': 'http://phenome.jax.org/download/straininfo.csv'},
-
         'assay_metadata': {'file': 'measurements.csv',
                            'url': 'http://phenome.jax.org/download/measurements.csv'},
-
-        'strainmeans': {'file': 'strainmeans_cleanzipped.gz',
-                        'url': 'http://phenome.jax.org/download/strainmeans_cleanzipped.gz'},
-
+        # 'strainmeansclean': {'file': 'strainmeans_cleanzipped.gz',
+        #                 'url': 'http://phenome.jax.org/download/strainmeans_cleanzipped.gz'},
+        'strainmeans': {'file': 'strainmeans.zip',
+                        'url': 'http://phenome.jax.org/download/strainmeans.zip'},
         'mpd_datasets_metadata': {'file': 'mpd_datasets_metadata.xml',
                                   'url': 'http://phenome.jax.org/download/mpd_datasets_metadata.xml'},
 
@@ -97,6 +97,12 @@ class MPD(Source):
         self.missing_assay_hash = {}
 
         return
+
+    def fetch(self, is_dl_forced=False):
+
+        self.get_files(is_dl_forced)
+        return
+
 
     def parse(self, limit=None):
         """
@@ -231,44 +237,46 @@ class MPD(Source):
 
         logger.info("Processing strain means ...")
         # todo: process the raw .zip file using the same approach that was used with omia
-        raw = '/'.join((self.rawdir, 'strainmeans.csv'))
+        raw = '/'.join((self.rawdir, self.files['strainmeans']['file']))
 
         # loop through the file to record each mean for each assay_id+sex
-        with open(raw, 'r') as f:
-            reader = csv.reader(f)
-            f.readline()  # read the header row; skip
-            for row in reader:
-                line_counter += 1
+        with ZipFile(raw) as myzip:
+            with myzip.open(self.files['strainmeans']['file'].replace('.zip','.csv'), 'r') as f:
+                # reader = csv.reader(f)
+                f.readline()  # read the header row; skip
+                for row in f:
+                    line_counter += 1
 
-                # measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,cv,minval,maxval,logmean,logsd,zscore,logzscore
-                vals = (assay_id, strain_label, strainid, sex, mean, zscore) = int(row[0]), row[2], int(row[3]), \
-                                                                               row[4], float(row[5]), float(row[14])
+                    # measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,cv,minval,maxval,logmean,logsd,zscore,logzscore
+                    vals = (assay_id, strain_label, strainid, sex, mean, zscore) = int(row[0]), row[2], int(row[3]), \
+                                                                                   row[4], float(row[5]), float(row[14])
 
-                for val in vals:
-                    self.check_vals(val)
+                    for val in vals:
+                        self.check_vals(val)
 
-                # (assay_id, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
-                #  zscore, logzscore) = row
+                    # (assay_id, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean, logsd,
+                    #  zscore, logzscore) = row
 
-                if self.testMode is True:
-                    if int(strainid) not in self.test_ids:
-                        continue
+                    if self.testMode is True:
+                        if int(strainid) not in self.test_ids:
+                            continue
 
-                # if the assay_id is missing from the hash, it is because we haven't seen it yet in either
-                # ontology_mappings or measurements
-                if assay_id not in self.assayhash and assay_id not in self.assays_missing_phenotypes:
-                    self._log_missing_ids(assay_id, "ontology_mappings.csv")
-                    self._log_missing_ids(assay_id, "measurements.csv")
-                    # make a map of maps to hold strains for each (assay_id+sex)...
+                    # if the assay_id is missing from the hash, it is because we haven't seen it yet in either
+                    # ontology_mappings or measurements
+                    if assay_id not in self.assayhash and assay_id not in self.assays_missing_phenotypes:
+                        self._log_missing_ids(assay_id, "ontology_mappings.csv")
+                        self._log_missing_ids(assay_id, "measurements.csv")
+                        # make a map of maps to hold strains for each (assay_id+sex)...
 
-                else:
-                    self.assayhash[assay_id][sex]['strain_ids'].append(strainid)
-                    self.assayhash[assay_id][sex]['strain_labels'].append(strain_label)
-                    self.assayhash[assay_id][sex]['assay_means'].append(mean)
-                    self.assayhash[assay_id][sex]['assay_zscores'].append(zscore)
-                    # logger.info(
-                    #     str(assay_id) + ':' + sex + ' Strain IDs: ' + str(self.assayhash[assay_id][sex]['strain_id'])
-                    #     + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
+                    else:
+                        self.assayhash[assay_id][sex]['strain_ids'].append(strainid)
+                        self.assayhash[assay_id][sex]['strain_labels'].append(strain_label)
+                        self.assayhash[assay_id][sex]['assay_means'].append(mean)
+                        self.assayhash[assay_id][sex]['assay_zscores'].append(zscore)
+                        # logger.info(
+                        #     str(assay_id) + ':' + sex + ' Strain IDs: ' + str(self.assayhash[assay_id][sex]['strain_id'])
+                        #     + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
+
         return
 
     @staticmethod
