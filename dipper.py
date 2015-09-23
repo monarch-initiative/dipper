@@ -29,6 +29,8 @@ from dipper.sources.Orphanet import Orphanet
 from dipper.sources.FlyBase import FlyBase
 from dipper.sources.WormBase import WormBase
 from dipper.sources.OMIA import OMIA
+# from dipper.sources.Monarch import Monarch
+# from dipper.sources.GeneOntology import GeneOntology
 
 from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
@@ -63,7 +65,9 @@ def main():
         'omia': OMIA,
         'flybase': FlyBase,
         'mmrrc' : MMRRC,
-        'wormbase': WormBase
+        'wormbase': WormBase,
+        # 'monarch': Monarch,
+        # 'go': GeneOntology
     }
 
     logger = logging.getLogger(__name__)
