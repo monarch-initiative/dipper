@@ -73,6 +73,7 @@
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
 'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
 'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
+'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
 
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
