@@ -31,6 +31,7 @@
 'MA': 'http://purl.obolibrary.org/obo/MA_'
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
 'MP': 'http://purl.obolibrary.org/obo/MP_'
+'MPD-assay': 'http://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='
 'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'
 'NBO': 'http://purl.obolibrary.org/obo/NBO_'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'

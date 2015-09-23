@@ -32,6 +32,7 @@ from dipper.sources.OMIA import OMIA
 # from dipper.sources.Monarch import Monarch
 # from dipper.sources.GeneOntology import GeneOntology
 
+from dipper.sources.MPD import MPD
 from dipper.sources.MMRRC import MMRRC
 from dipper.utils.TestUtils import TestUtils
 
@@ -66,6 +67,7 @@ def main():
         'flybase': FlyBase,
         'mmrrc' : MMRRC,
         'wormbase': WormBase,
+        'mpd': MPD,
         # 'monarch': Monarch,
         # 'go': GeneOntology
     }
