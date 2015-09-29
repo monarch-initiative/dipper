@@ -13,6 +13,7 @@ import hashlib
 import subprocess
 from subprocess import check_call
 from dipper import curie_map
+import re
 
 from dipper.utils.GraphUtils import GraphUtils
 
@@ -595,5 +596,24 @@ class Source:
         gu.addOWLVersionInfo(graph, ontology_file_id, ontology_version)
 
         # TODO make sure this is synced with the Dataset class
+
+        return
+
+    @staticmethod
+    def remove_backslash_r(filename, encoding):
+        """
+        A helpful utility to remove '\r' from any file.
+        This will read a file into memory, and overwrite the contents of the original file.
+        :param filename:
+        :return:
+        """
+
+        f = open(filename, 'r', encoding=encoding, newline='\n')
+        contents = f.read()
+        f.close()
+        contents = re.sub(r'\r', '', contents)
+        with open(filename, "w") as f:
+            f.truncate()
+            f.write(contents)
 
         return
