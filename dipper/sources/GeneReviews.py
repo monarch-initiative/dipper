@@ -10,9 +10,11 @@ from docx import Document
 from dipper.models.assoc.Association import Assoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.Genotype import Genotype
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-
+from dipper.sources.OMIM import OMIM, get_omim_id_from_entry
+from dipper import config
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +41,20 @@ class GeneReviews(Source):
         self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',
                                None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
 
+        self.gu = GraphUtils(curie_map.get())
+
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+            self.test_ids = list()
+        else:
+            # select ony those test ids that are omim's.
+            self.test_ids = config.get_config()['test_ids']['disease']
+
         # data-source specific warnings (will be removed when issues are cleared)
 
         return
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         """
         We fetch the general GeneReviews files from NCBI.
         Note that the doc files are not yet available remotely.
@@ -154,20 +165,70 @@ class GeneReviews(Source):
         raw = '/'.join((self.rawdir, self.files['idmap']['file']))
         gu = GraphUtils(curie_map.get())
         line_counter = 0
+
+        # we look some stuff up in OMIM, so initialize here
+        omim = OMIM()
+        id_map = {}
+        allomimids = set()
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
+                if line_counter == 1:  # skip header
+                    continue
                 (nbk_num, shortname, omim_num) = row
                 gr_id = 'GeneReviews:'+nbk_num
                 omim_id = 'OMIM:'+omim_num
-                # add the OMIM id to the graph
+                if not ((self.testMode and len(self.test_ids) > 0 and omim_id in self.test_ids) or not self.testMode):
+                    continue
+
+                #sometimes there's bad omim nums
+                if len(omim_num) > 6:
+                    logger.warn("OMIM number incorrectly formatted in row %d; skipping:\n%s", line_counter, '\t'.join(row))
+                    continue
+
+                # build up a hashmap of the mappings; then process later
+                if nbk_num not in id_map:
+                    id_map[nbk_num] = set()
+                id_map[nbk_num].add(omim_num)
+
+                # add the class along with the shortname
                 gu.addClassToGraph(self.graph, gr_id, None)
-                gu.addClassToGraph(self.graph, omim_id, None)
                 gu.addSynonym(self.graph, gr_id, shortname)
-                gu.addSubclass(self.graph, gr_id, omim_id)
+
+                allomimids.add(omim_num)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+            # end looping through file
+
+        # get the omim ids that are not genes
+        entries_that_are_phenotypes = omim.process_entries(list(allomimids), self.filter_keep_phenotype_entry_ids, None, None, limit)
+
+        logger.info("Filtered out %d entries that are genes or features", len(allomimids)-len(entries_that_are_phenotypes))
+
+        for nbk_num in id_map:
+            omim_ids = id_map.get(nbk_num)
+            for omim_num in omim_ids:
+                gr_id = 'GeneReviews:'+nbk_num
+                omim_id = 'OMIM:'+omim_num
+
+                # add the gene reviews as a superclass to the omim id, but only if the omim id is not a gene
+                if omim_id in entries_that_are_phenotypes:
+                    gu.addClassToGraph(self.graph, omim_id, None)
+                    gu.addSubclass(self.graph, gr_id, omim_id)
+
 
         return
+
+    def filter_keep_phenotype_entry_ids(self, entry, graph):
+        omim_id = get_omim_id_from_entry(entry['entry'])
+        omim_type = OMIM._get_omimtype(entry['entry'])
+        if omim_type != Genotype.genoparts['gene'] and omim_type != Genotype.genoparts['biological_region']:
+            return omim_id
+
+        return None
 
     def _get_titles(self, limit):
         """
@@ -192,6 +253,8 @@ class GeneReviews(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
+                if line_counter == 1:  # skip header
+                    continue
                 (shortname, title, nbk_num) = row
                 gr_id = 'GeneReviews:'+nbk_num
 
