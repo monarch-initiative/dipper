@@ -74,6 +74,10 @@ class ZFIN(Source):
         'gene_coordinates': {
             'file': 'E_zfin_gene_alias.gff3',
             'url': 'http://zfin.org/downloads/E_zfin_gene_alias.gff3'
+        },
+        'fish_disease_models': {
+            'file': 'fish_model_disease.txt',
+            'url': 'http://zfin.org/downloads/fish_model_disease.txt'
         }
     }
 
@@ -140,7 +144,8 @@ class ZFIN(Source):
                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
                 "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2",
-                "ZFIN:ZDB-PUB-120927-26", "ZFIN:ZDB-PUB-100504-5"]
+                "ZFIN:ZDB-PUB-120927-26", "ZFIN:ZDB-PUB-100504-5"],
+        "fish": ["ZDB-FISH-150901-17912"]
     }
 
     def __init__(self):
@@ -223,6 +228,7 @@ class ZFIN(Source):
 
         # once the genotypes and environments are processed, we can associate these with the phenotypes
         self._process_g2p(limit)
+        self.process_fish_disease_models(limit)
 
         # zfin-curated orthology calls to human genes
         self._process_human_orthos(limit)
@@ -2088,7 +2094,51 @@ class ZFIN(Source):
 
         logger.info("Done with gene coordinates")
 
+        return
 
+    def process_fish_disease_models(self, limit=None):
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        logger.info("Processing fish models")
+        line_counter = 0
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, self.files['fish_disease_models']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                if re.match(r'^(\s|#|$)', ''.join(row)):
+                    continue # skip header
+# ZDB-FISH-150901-9014	ZDB-EXP-041102-1	is_a_model	DOID:5603	acute T cell leukemia	ZDB-PUB-110523-12	21552289
+                (fish, environment, rel, disease_id, disease_label, zfin_pub_id, pubmed_id, blank) = row
+
+                if self.testMode and (fish not in self.test_ids['fish'] or disease_id not in self.test_ids['disease']):
+                    continue
+
+                # if no fish is listed, then don't add it.
+                if fish == '':
+                    continue
+
+                # make effective genotype = fish+environment
+                effective_genotype = self.make_id('-'.join((fish, environment)))
+
+                assoc = Assoc(self.name)
+
+                assoc.set_subject(effective_genotype)
+                assoc.set_object(disease_id)
+                assoc.set_relationship(gu.object_properties['model_of'])
+
+                # make the pubmed id, if it exists
+                if pubmed_id != '':
+                    pubmed_id = 'PMID:'+pubmed_id
+                    assoc.add_source(pubmed_id)
+                    assoc.add_source('ZFIN:'+zfin_pub_id)
+
+                assoc.add_association_to_graph(g)
         return
 
     def _map_sextuple_to_phenotype(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
