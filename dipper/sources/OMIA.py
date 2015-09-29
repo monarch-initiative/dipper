@@ -88,6 +88,11 @@ class OMIA(Source):
         """
         self.get_files(is_dl_forced)
 
+        ncbi = NCBIGene()
+        # ncbi.fetch()
+        gene_group = ncbi.files['gene_group']
+        self.fetch_from_url(gene_group['url'], '/'.join((ncbi.rawdir,gene_group['file'])), False)
+
         return
 
     def parse(self, limit=None):
