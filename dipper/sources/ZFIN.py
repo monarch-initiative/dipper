@@ -15,7 +15,7 @@ from dipper.models.GenomicFeature import Feature
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-
+from dipper import config
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,8 @@ class ZFIN(Source):
                        "ZDB-MRPHLNO-090505-1", "ZDB-MRPHLNO-090630-11", "ZDB-MRPHLNO-090804-1", "ZDB-MRPHLNO-100728-1",
                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
                        "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-140822-1",
-                       "ZDB-MRPHLNO-100520-4", "ZDB-MRPHLNO-100520-5", "ZDB-MRPHLNO-100920-3", "ZDB-MRPHLNO-050604-1"],
+                       "ZDB-MRPHLNO-100520-4", "ZDB-MRPHLNO-100520-5", "ZDB-MRPHLNO-100920-3", "ZDB-MRPHLNO-050604-1",
+                       "ZDB-CRISPR-131113-1"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
@@ -153,7 +154,10 @@ class ZFIN(Source):
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
                 "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2",
                 "ZFIN:ZDB-PUB-120927-26", "ZFIN:ZDB-PUB-100504-5"],
-        "fish": ["ZDB-FISH-150901-17912"]
+        "fish": ["ZDB-FISH-150901-17912", "ZDB-FISH-150901-18649", "ZDB-FISH-150901-26314", "ZDB-FISH-150901-9418",
+                 "ZDB-FISH-150901-14591", "ZDB-FISH-150901-9997", "ZDB-FISH-150901-23877", "ZDB-FISH-150901-22128",
+                 "ZDB-FISH-150901-14869", "ZDB-FISH-150901-6695", "ZDB-FISH-150901-24158", "ZDB-FISH-150901-3631",
+                 "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060"]
     }
 
     def __init__(self):
@@ -173,6 +177,11 @@ class ZFIN(Source):
         self.environment_hash = {}  # to hold the parts of an environment
         self.wildtype_genotypes = []
 
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with gene test ids.")
+            self.test_ids['disease'] = []
+        else:
+            self.test_ids['disease'] = config.get_config()['test_ids']['disease']
 
         return
 
@@ -293,14 +302,10 @@ class ZFIN(Source):
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
-                line_counter += 1
 
                 (fish_num, fish_name, gene_num, gene_symbol, affector_num,
                  affector_symbol, construct_num, construct_symbol, background_num, background_symbol,
                  genotype_num, genotype_name, other) = row
-
-                if self.testMode and genotype_num not in self.test_ids['genotype']:
-                    continue
 
                 # fish have the following components:
                 #  *  genotype, which is the intrinsic genotype; this may be a genetic background (WT)
@@ -322,7 +327,11 @@ class ZFIN(Source):
         # given the components of a fish, subtract out the intrinsic parts to just leave the extrinsic
         # to create the extrinsic genotypes.
         line_counter = 0
+
         for fish_num in self.fish_parts:
+            if self.testMode and fish_num not in self.test_ids['fish']:
+                continue
+
             line_counter += 1
             fish_id = 'ZFIN:'+fish_num
             fish = self.fish_parts[fish_num]
@@ -340,11 +349,51 @@ class ZFIN(Source):
             extrinsic_parts = fish['affectors'] - intrinsic_parts
             extrinsic_list = list(sorted(extrinsic_parts))
 
-            # build up the extrinsic genotype from it's parts
+            # build up the extrinsic genotype from it's parts.
+            # these will be reagents/morphants.
             if len(extrinsic_list) > 0:
-                # TODO create targeted variants; need to look up affected genes
-                extrinsic_id = ':'+'-'.join(extrinsic_list)
-                extrinsic_label = '; '.join(str(self.id_label_map.get(l)) for l in extrinsic_list)
+                list_of_targeted_genes = []
+                for eid in extrinsic_list:
+                    # link the morpholino to the genes that it affects
+                    eid = 'ZFIN:'+eid
+
+                    # just in case, skip over the ALTs
+                    if re.search('ALT', eid):
+                        continue
+                    ag = self.variant_loci_genes.get(eid)
+
+                    logger.debug("%s affected genes %s", eid, str(ag))
+                    if ag is None:
+                        logger.warn("No affected genes for %s", eid)
+                    else:
+                        # create variant gene(s) that have been targeted by the reagent
+                        for gid in ag:
+                            if gid not in self.id_label_map:
+                                # should not happen, except maybe in testing
+                                logger.error("%s not in id-label-hash", gid)
+                                glabel = gid
+                            else:
+                                glabel = self.id_label_map[gid]
+
+                            targeted_gene_id = '-'.join((gid, eid))
+                            # these are not zfin resolvable, so make BNodes
+                            targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
+                            targeted_gene_id = '_' + targeted_gene_id
+                            if self.nobnodes:
+                                targeted_gene_id = ':' + targeted_gene_id
+                            elabel = self.id_label_map.get(eid)
+                            if elabel is None:
+                                elabel = eid  # should not happen, but just in case
+                            targeted_gene_label = glabel + '<' + elabel + '>'
+
+                            geno.addReagentTargetedGene(eid, gid, targeted_gene_id, targeted_gene_label)
+                            self.id_label_map[targeted_gene_id] = targeted_gene_label
+                            list_of_targeted_genes += [targeted_gene_id]
+                list_of_targeted_genes = sorted(list_of_targeted_genes)
+                extrinsic_id = '_'+re.sub(':?_', '', '-'.join(list_of_targeted_genes))
+                if self.nobnodes:
+                    extrinsic_id = ':'+extrinsic_id
+                extrinsic_label = '; '.join(str(self.id_label_map.get(l)) for l in list_of_targeted_genes)
                 self.id_label_map[extrinsic_id] = extrinsic_label
             else:
                 extrinsic_id = None
@@ -371,8 +420,8 @@ class ZFIN(Source):
                 gu.addSameIndividual(g, fish_id, intrinsic_genotype_id)
                 fish_label = intrinsic_genotype_label
             else:
-                print(fish_id, extrinsic_id, extrinsic_label)
                 fish_label = '; '.join((str(intrinsic_genotype_label), extrinsic_label))
+
             geno.addGenotype(fish_id, fish_label, geno.genoparts['effective_genotype'])
             geno.addTaxon(taxon_id, fish_id)
 
@@ -385,7 +434,6 @@ class ZFIN(Source):
             # ###finish iterating over fish
 
         return
-
 
     def _process_genotype_features(self, limit=None):
         """
@@ -718,7 +766,7 @@ class ZFIN(Source):
                 if self.nobnodes:
                     background_id = ':'+background_id
                 background_label = 'n.s.'
-                background_desc = 'This genomic background is unknown.  This is a placeholder background' \
+                background_desc = 'This genomic background is unknown.  This is a placeholder background ' \
                                   'for '+gt+'.'
                 # there is no background for this genotype; need to add the taxon to this one!
                 # make an anonymous background for this genotype
@@ -877,36 +925,6 @@ class ZFIN(Source):
         logger.info("Done with wildtype genotypes")
         return
 
-    # def _process_wildtype_expression(self, limit=None):
-    #     """
-    #
-    #     :param limit:
-    #     :return:
-    #     """
-    #
-    #     logger.info("Processing wildtype expression")
-    #     line_counter = 0
-    #
-    #     raw = '/'.join((self.rawdir, self.files['wild_expression']['file']))
-    #     with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-    #         filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-    #         for row in filereader:
-    #             line_counter += 1
-    #             geno = Genotype(self.graph)
-    #             (gene_id, gene_symbol, genotype_name, super_structure_id, super_structure_name, sub_structure_id,
-    #              sub_structure_name, start_stage, end_stage, assay,
-    #              publication_id, probe_id, antibody_id, empty) = row
-    #
-    #             # TODO: Consider how to model wildtype genotypes with genes and associated expression.
-    #             gene_id = 'ZFIN:' + gene_id.strip()
-    #             geno.addGene(gene_id, gene_symbol)
-    #
-    #             if limit is not None and line_counter > limit:
-    #                 break
-    #
-    #     logger.info("Done with wildtype expression")
-    #     return
-
     def _process_stages(self, limit=None):
         """
         This table provides mappings between ZFIN stage IDs and ZFS terms,
@@ -989,10 +1007,8 @@ class ZFIN(Source):
                  pub_id, env_id, empty) = row
 
                 if self.testMode and (fish_num not in self.test_ids['fish']
-                                      or env_id not in self.test_ids['environment']
-                                      or self.fish_parts[fish_num].get('intrinsic_genotype') not in self.test_ids['genotype']):
+                                      or env_id not in self.test_ids['environment']):
                     continue
-                print(row)
                 fish_id = 'ZFIN:' + fish_num.strip()
                 env_id = 'ZFIN:' + env_id.strip()
 
@@ -1632,20 +1648,7 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-#                (environment_num, condition_group, condition, values, units, comment, empty) = row
                 (environment_num, condition_group, condition, description, blank) = row
-
-# ZDB-EXP-041102-1	temperature	stable	standard, wild-type environment for Danio rerio 28 deg C
-# ZDB-EXP-050512-1	temperature	heat shock	Shield to Bud stage 37 deg C
-# ZDB-EXP-060407-10       physical        light
-# ZDB-EXP-050927-4        chemical        all-trans retinoic acid (CAS: 302-79-4)
-# ZDB-EXP-070123-4        physiological   bacterial infection
-# ZDB-EXP-070511-5        _Generic-control        _Generic-control        This environment is used for non-standard conditions used in control treatments.
-# ZDB-EXP-070626-5        chemical        SU5416 (CAS:194413-58-6)
-# ZDB-EXP-101028-5        chemical        other   TGF-beta injected at 18 hr and incubated until 24 h 10 ng/ml
-# ZDB-EXP-101028-6        chemical        other   TGF-beta injected at 18 hr and incubated until 24 h 10 ng/ml
-# ZDB-EXP-080708-4	salinity	hypotonic	ocean salts 0.9 mM
-
 
                 environment_id = 'ZFIN:' + environment_num.strip()
                 if self.testMode and environment_num not in self.test_ids['environment']:
