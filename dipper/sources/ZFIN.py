@@ -42,6 +42,14 @@ class ZFIN(Source):
     Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.  Where necessary,
     we create anonymous nodes of the genotype partonomy (such as for variant single locus complements,
     genomic variation complements, variant loci, extrinsic genotypes, and extrinsic genotype parts).
+
+    Furthermore, we process the genotype components to build labels in a monarch-style.  This leads to genotype
+    labels that include:
+    *  all genes targeted by reagents (morphants, crisprs, etc), in addition to the
+       ones that the reagent was designed against.
+    *  all affected genes within deficiencies
+    *  complex hets being listed like gene<mutation1>/gene<mutation2> rather than gene<mutation1>/+; gene<mutation2>/+
+
     """
 
     files = {
@@ -157,7 +165,8 @@ class ZFIN(Source):
         "fish": ["ZDB-FISH-150901-17912", "ZDB-FISH-150901-18649", "ZDB-FISH-150901-26314", "ZDB-FISH-150901-9418",
                  "ZDB-FISH-150901-14591", "ZDB-FISH-150901-9997", "ZDB-FISH-150901-23877", "ZDB-FISH-150901-22128",
                  "ZDB-FISH-150901-14869", "ZDB-FISH-150901-6695", "ZDB-FISH-150901-24158", "ZDB-FISH-150901-3631",
-                 "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060"]
+                 "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060", "ZDB-FISH-150901-8451", "ZDB-FISH-150901-2423",
+                 "ZDB-FISH-150901-20257"]
     }
 
     def __init__(self):
@@ -395,6 +404,11 @@ class ZFIN(Source):
                     extrinsic_id = ':'+extrinsic_id
                 extrinsic_label = '; '.join(str(self.id_label_map.get(l)) for l in list_of_targeted_genes)
                 self.id_label_map[extrinsic_id] = extrinsic_label
+
+                # add the parts
+                for tg in list_of_targeted_genes:
+                    geno.addParts(tg, extrinsic_id, geno.object_properties['has_expression-variant_part'])
+
             else:
                 extrinsic_id = None
                 extrinsic_label = None
@@ -1146,11 +1160,13 @@ class ZFIN(Source):
                 gene_id = 'ZFIN:' + gene_id.strip()
                 ncbi_gene_id = 'NCBIGene:' + ncbi_gene_id.strip()
 
-                geno.addGene(gene_id, gene_symbol)
-                gu.addEquivalentClass(g, gene_id, ncbi_gene_id)
+                self.id_label_map[gene_id] = gene_symbol
 
                 if not self.testMode and limit is not None and line_counter > limit:
-                    break
+                    pass
+                else:
+                    geno.addGene(gene_id, gene_symbol)
+                    gu.addEquivalentClass(g, gene_id, ncbi_gene_id)
 
         logger.info("Done with genes")
         return
@@ -1344,9 +1360,9 @@ class ZFIN(Source):
                 (gene_id, gene_so_id, gene_symbol,
                  marker_id, marker_so_id, marker_symbol, relationship, empty) = row
 
-                if self.testMode and ('ZFIN:' + gene_id not in self.test_ids['gene']
-                                      and 'ZFIN:' + marker_id not in self.test_ids['allele']
-                                      and 'ZFIN:' + marker_id not in self.test_ids['morpholino']):
+                if self.testMode and not (gene_id in self.test_ids['gene']
+                                      or marker_id in self.test_ids['allele']
+                                      or marker_id in self.test_ids['morpholino']):
                     continue
 
                 # there are many relationships, but we only take a few for now
@@ -1367,13 +1383,7 @@ class ZFIN(Source):
                         # transgenic constructs with coding regions
                         # but we don't know if they are wild-type or mutant, so just has_part for now
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
-                        # add a trangene part - TODO move to Genotype.py
-                        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
-                        gu.addIndividualToGraph(g, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
-                                                geno.genoparts['coding_transgene_feature'])
-                        geno.addParts(transgene_part_id, marker_id, geno.object_properties['has_alternate_part'])
-                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
-                                     gene_id)
+                        self._add_transgene_parts(g, marker_id, gene_id, relationship, gene_symbol)
                     elif relationship == 'gene product recognized by antibody':
                         # TODO for ticket #32
                         pass
@@ -1381,14 +1391,8 @@ class ZFIN(Source):
                         # transgenic constructs with promoters regions
                         # we are making the assumption that they are wild-type promoters
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
+                        self._add_transgene_parts(g, marker_id, gene_id, relationship, gene_symbol)
 
-                        # add a trangene part
-                        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
-                        gu.addIndividualToGraph(g, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
-                                                geno.genoparts['regulatory_transgene_feature'])
-                        geno.addParts(transgene_part_id, marker_id)
-                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
-                                     gene_id)
                     elif relationship == 'transcript targets gene':  # miRNAs
                         # TODO should this be an interaction instead of this special relationship?
                         gu.addIndividualToGraph(g, marker_id, marker_symbol, marker_so_id)
@@ -1403,6 +1407,24 @@ class ZFIN(Source):
                     break
 
         logger.info("Done with gene marker relationships")
+        return
+
+    def _add_transgene_parts(self, graph, marker_id, gene_id, relationship, gene_symbol):
+        # TODO move to Genotype.py
+
+        geno = Genotype(graph)
+        gu = GraphUtils(curie_map.get())
+        # add a trangene part
+        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
+        transgene_part_id = re.sub('ZFIN:', '', transgene_part_id)
+        if self.nobnodes:
+            transgene_part_id = ':'+transgene_part_id
+        gu.addIndividualToGraph(graph, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
+                                geno.genoparts['regulatory_transgene_feature'])
+        geno.addParts(transgene_part_id, marker_id)
+        gu.addTriple(graph, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
+                     gene_id)
+
         return
 
     def _process_pubinfo(self, limit=None):
