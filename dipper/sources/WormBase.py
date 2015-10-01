@@ -41,6 +41,8 @@ class WormBase(Source):
     Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.  Where necessary,
     we create anonymous nodes of the genotype partonomy (such as for variant single locus complements,
     genomic variation complements, variant loci, extrinsic genotypes, and extrinsic genotype parts).
+
+    TODO:  get people and other phenotype data (from wormmine)
     """
 
     files = {
@@ -237,6 +239,14 @@ class WormBase(Source):
         return
 
     def process_allele_phenotype(self, limit=None):
+        """
+        This file compactly lists variant to phenotype associations, such that in a single row, there may
+        be >1 variant listed per phenotype and paper.  This indicates that each variant is individually assocated
+        with the given phenotype, as listed in 1+ papers.  (Not that the combination of variants is producing the
+        phenotype.)
+        :param limit:
+        :return:
+        """
 
         raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
 
@@ -272,64 +282,68 @@ class WormBase(Source):
                 elif eco_symbol.strip() != '':
                     logger.warn("Encountered an ECO code we don't have: %s", eco_symbol)
 
-                # something_with can be pipe delimited
-                # WB:WBVar00095133|WB:WBVar00604230
-
-                # there's some messiness in the file as of WS248.  some things in ref col are variants, others papers
-                # and reciprocally, sometimes in the with column, sometimes they are variants.
-                # here we clean them up
-
+                # according to the GOA spec, persons are not allowed to be in the reference column, therefore
+                # they the variant and persons are swapped between the reference and with column.
+                # we unswitch them here.
                 temp_var = temp_ref = None
                 if re.search('WBVar|WBRNAi', ref):
                     temp_var = ref
                     # move the paper from the with column into the ref
-                if re.match('WBPerson', with_or_from):
+                if re.search('WBPerson', with_or_from):
                     temp_ref = with_or_from
-                if temp_var is not None:
+                if temp_var is not None or temp_ref is not None:
                     with_or_from = temp_var
-                if temp_ref is not None:
                     ref = temp_ref
-                # We assume that the allele-to-gene relationships are in another file?
+
                 allele_list = re.split('\|', with_or_from)
                 if len(allele_list) == 0:
                     logger.error("Missing alleles from phenotype assoc at line %d", line_counter)
                     continue
-                elif len(allele_list) == 1:
-                    allele_id = re.sub('WB:', 'WormBase:', allele_list[0])
-
-                    if re.search('WBRNAi', allele_id):
-                        # make the reagent-targeted gene, and annotate that instead of the RNAi item directly
-                        rnai_num = re.sub('WormBase:', '', allele_id)
-                        rnai_id = allele_id
-                        gene_id = 'WormBase:'+gene_num
-                        rtg_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
-                        geno.addReagentTargetedGene(rnai_id, 'WormBase:'+gene_num, rtg_id)
-                        geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
-                        allele_id = rtg_id
-                    assoc = G2PAssoc(self.name, allele_id, phenotype_id)
                 else:
-                    # note there are never WBVars and RNAi reagents in the same row!  (how can that be?)
-                    # build out a gvc-ish thing with the variant collection
-                    allele_list = sorted(allele_list)
-                    gvc_id = '_'+'-'.join(allele_list)
-                    gvc_id = re.sub('WB:', '', gvc_id)
-                    if self.nobnodes:
-                        gvc_id = ':'+gvc_id
                     for a in allele_list:
-                        a = re.sub('WB:', 'WormBase:', a)
-                        geno.addParts(a, gvc_id, geno.object_properties['has_alternate_part'])
-                    gu.addIndividualToGraph(g, gvc_id, None, geno.genoparts['genomic_variation_complement'])
+                        allele_num = re.sub('WB:', '', a.strip())
+                        allele_id = 'WormBase:'+allele_num
+                        gene_id = 'WormBase:'+gene_num
 
-                    assoc = G2PAssoc(self.name, gvc_id, phenotype_id)
+                        if re.search('WBRNAi', allele_id):
+                            # make the reagent-targeted gene, and annotate that instead of the RNAi item directly
+                            rnai_num = re.sub('WormBase:', '', allele_id)
+                            rnai_id = allele_id
+                            rtg_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
+                            geno.addReagentTargetedGene(rnai_id, 'WormBase:'+gene_num, rtg_id)
+                            geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
+                            allele_id = rtg_id
+                        elif re.search('WBVar', allele_id):
+                            # this may become deprecated by using wormmine
+                            # make the allele to gene relationship
+                            #the WBVars are really sequence alterations
+                            geno.addSequenceAlteration(allele_id, None)  # the public name will come from elsewhere
+                            vl_id = ':'+'-'.join((gene_num, allele_num))
+                            if self.nobnodes:
+                                vl_id = '_'+vl_id
+                            geno.addSequenceAlterationToVariantLocus(allele_id, vl_id)
+                            geno.addAlleleOfGene(vl_id, gene_id)
+                        else:
+                            logger.warn("Some kind of allele I don't recognize: %s", allele_num )
+                            continue
+                        assoc = G2PAssoc(self.name, allele_id, phenotype_id)
 
-                if eco_id is not None:
-                    assoc.add_evidence(eco_id)
+                        if eco_id is not None:
+                            assoc.add_evidence(eco_id)
 
-                if ref != '':
-                    ref = re.sub('(WB:|WB_REF:)', 'WormBase:', ref)
-                    assoc.add_source(ref)
+                        if ref is not None and ref != '':
+                            ref = re.sub('(WB:|WB_REF:)', 'WormBase:', ref)
+                            r = Reference(ref)
+                            if re.search('Person', ref):
+                                r.setType(r.ref_types['person'])
+                                # also add inferred from background scientific knowledge
+                                assoc.add_evidence('ECO:0000001')
+                            r.addRefToGraph(g)
+                            assoc.add_source(ref)
 
-                assoc.add_association_to_graph(g)
+                        assoc.add_association_to_graph(g)
+
+                        # finish looping through all alleles
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -375,6 +389,8 @@ class WormBase(Source):
 
                     # get the rnai_id
                     (rnai_num, ref_num) = re.split('\|', s)
+                    if len(re.split('\|', s)) > 2:
+                        logger.warn("There's an unexpected number of items in %s", s)
                     if rnai_num not in self.rnai_gene_map:
                         self.rnai_gene_map[rnai_num] = set()
 
@@ -486,8 +502,9 @@ class WormBase(Source):
 
                 if feature_type_label not in ['gene', 'point_mutation', 'deletion', 'RNAi_reagent',
                                           'duplication', 'enhancer', 'binding_site', 'biological_region',
-                                          'complex_substitution']:
+                                          'complex_substitution', 'substitution', 'insertion', 'inverted_repeat']:
                     # note biological_regions include balancers
+                    # other options here: promoter, regulatory_region, reagent
                     continue
                 line_counter += 1
 
@@ -638,6 +655,7 @@ class WormBase(Source):
                 ref = re.sub('WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
+                eco_id = None
                 if eco_symbol == 'IEA':
                     eco_id = 'ECO:0000501'  # IEA is this now
                 if eco_id is not None:

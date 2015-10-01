@@ -13,6 +13,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.Reference import Reference
 
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,8 @@ class NCBIGene(Source):
             self.gene_ids = config.get_config()['test_ids']['gene']
 
         self.properties = Feature.properties
+
+        self.class_or_indiv = {}
 
         return
 
@@ -181,10 +184,18 @@ class NCBIGene(Source):
                     label = symbol
 
                 # TODO might have to figure out if things aren't genes, and make them individuals
-                gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                if gene_type_id == 'SO:0000110':  # sequence feature, not a gene
+                    self.class_or_indiv[gene_id] = 'I'
+                else:
+                    self.class_or_indiv[gene_id] = 'C'
 
-                # we have to do special things here for genes, because they're classes not individuals
-                # f = Feature(gene_id,label,gene_type_id,desc)
+                if not self.testMode and limit is not None and line_counter > limit:
+                    continue
+
+                if self.class_or_indiv[gene_id] == 'C':
+                    gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                else:
+                    gu.addIndividualToGraph(g, gene_id, label, gene_type_id, desc)
 
                 if name != '-':
                     gu.addSynonym(g, gene_id, name)
@@ -207,7 +218,10 @@ class NCBIGene(Source):
                             else:
                                 # skip some of these for now
                                 if fixedr.split(':')[0] not in ['Vega', 'IMGT/GENE-DB']:
-                                    gu.addEquivalentClass(g, gene_id, fixedr)
+                                    if self.class_or_indiv.get(gene_id) == 'C':
+                                        gu.addEquivalentClass(g, gene_id, fixedr)
+                                    else:
+                                        gu.addSameIndividual(g, gene_id, fixedr)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -271,9 +285,6 @@ class NCBIGene(Source):
 
                 geno.addTaxon(tax_id, gene_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
-                    break
-
             gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
             gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
             gu.loadProperties(g, Genotype.object_properties, gu.OBJPROP)
@@ -328,11 +339,16 @@ class NCBIGene(Source):
                 tax_id = ':'.join(('NCBITaxon', tax_num))
 
                 # add the two genes
-                gu.addClassToGraph(g, gene_id, None)
-                gu.addClassToGraph(g, discontinued_gene_id, discontinued_symbol)
+                if self.class_or_indiv.get(gene_id) == 'C':
+                    gu.addClassToGraph(g, gene_id, None)
+                    gu.addClassToGraph(g, discontinued_gene_id, discontinued_symbol)
 
-                # add the new gene id to replace the old gene id
-                gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
+                    # add the new gene id to replace the old gene id
+                    gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
+                else:
+                    gu.addIndividualToGraph(g, gene_id, None)
+                    gu.addIndividualToGraph(g, discontinued_gene_id, discontinued_symbol)
+                    gu.addDeprecatedIndividual(g, discontinued_gene_id, [gene_id])
 
                 # also add the old symbol as a synonym of the new gene
                 gu.addSynonym(g, gene_id, discontinued_symbol)
@@ -388,11 +404,15 @@ class NCBIGene(Source):
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 pubmed_id = ':'.join(('PMID', pubmed_num))
 
-                # add the gene, in case it hasn't before
-                gu.addClassToGraph(g, gene_id, None)
+                if self.class_or_indiv.get(gene_id) == 'C':
+                    gu.addClassToGraph(g, gene_id, None)
+                else:
+                    gu.addIndividualToGraph(g, gene_id, None)
                 # add the publication as a NamedIndividual
                 gu.addIndividualToGraph(g, pubmed_id, None, None)  # add type publication
-                self.graph.add((gu.getNode(pubmed_id), is_about, gu.getNode(gene_id)))
+                r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                r.addRefToGraph(g)
+                gu.addTriple(g, pubmed_id, gu.object_properties['is_about'], gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -412,7 +432,7 @@ class NCBIGene(Source):
             'snoRNA': 'SO:0001267',
             'tRNA': 'SO:0001272',
             'unknown': 'SO:0000110',
-            'scRNA': 'SO:0000013',
+            'scRNA': 'SO:0001266',
             'miscRNA': 'SO:0000233',  # mature transcript - there is no good mapping
             'chromosome': 'SO:0000340',
             'chromosome_arm': 'SO:0000105',
