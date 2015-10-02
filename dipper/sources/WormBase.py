@@ -366,9 +366,9 @@ class WormBase(Source):
                             # make the allele to gene relationship
                             #the WBVars are really sequence alterations
                             geno.addSequenceAlteration(allele_id, None)  # the public name will come from elsewhere
-                            vl_id = ':'+'-'.join((gene_num, allele_num))
+                            vl_id = '_'+'-'.join((gene_num, allele_num))
                             if self.nobnodes:
-                                vl_id = '_'+vl_id
+                                vl_id = ':'+vl_id
                             geno.addSequenceAlterationToVariantLocus(allele_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
                         else:
