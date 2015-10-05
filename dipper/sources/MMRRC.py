@@ -21,7 +21,7 @@ class MMRRC(Source):
     Here we process the Mutant Mouse Resource and Research Center (https://www.mmrrc.org) strain data,
     which includes:
     *  strains, their mutant alleles
-    *  phenotypes of the strains
+    *  phenotypes of the alleles
     *  descriptions of the research uses of the strains
 
     Note that some gene identifiers are not included (for many of the transgenics with human genes) in the raw data.
@@ -87,6 +87,12 @@ class MMRRC(Source):
         # NOTE: If a Strain carries more than one mutation, each Mutation description,
         i.e., the set: (Mutation Type - Chromosome - Gene Symbol - Gene Name - Allele Symbol - Allele Name)
         will require a separate line.
+
+        Note that MMRRC curates phenotypes to alleles, even though they distribute only one file with the
+        phenotypes appearing to be associated with a strain.
+
+        So, here we process the allele-to-phenotype relationships separately from the strain-to-allele
+        relationships.
 
         :param limit:
         :return:
@@ -204,12 +210,17 @@ class MMRRC(Source):
                     strain_type = stem_cell_class
                 gu.addIndividualToGraph(g, strain_id, strain_label, strain_type, research_areas)  # an inst of mouse??
 
+
+                # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
                     gu.addClassToGraph(g, pid, None)   # assume the phenotype label is in the ontology
-                    assoc = G2PAssoc(self.name, strain_id, pid, gu.object_properties['has_phenotype'])
-                    for p in pubmed_ids:
-                        assoc.add_source(p)
-                    assoc.add_association_to_graph(g)
+                    if mgi_allele_id is not None and mgi_allele_id != '':
+                        assoc = G2PAssoc(self.name, mgi_allele_id, pid, gu.object_properties['has_phenotype'])
+                        for p in pubmed_ids:
+                            assoc.add_source(p)
+                        assoc.add_association_to_graph(g)
+                    else:
+                        logger.info("Phenotypes and no allele for %s", strain_id)
 
                 if not self.testMode and (limit is not None and line_counter > limit):
                     break
