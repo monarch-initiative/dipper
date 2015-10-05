@@ -190,7 +190,7 @@ class ClinVar(Source):
 
                 # a crude check that there's an expected number of cols.  if not, error out because something changed.
                 num_cols = len(line.split('\t'))
-                expected_numcols = 28
+                expected_numcols = 29
                 if num_cols != expected_numcols:
                     logger.error("Unexpected number of columns in raw file (%d actual vs %d expected)",
                                  num_cols, expected_numcols)
@@ -199,7 +199,8 @@ class ClinVar(Source):
                  dbsnp_num, dbvar_num, rcv_nums, tested_in_gtr, phenotype_ids, origin,
                  assembly, chr, start, stop, cytogenetic_loc,
                  review_status, hgvs_c, hgvs_p, number_of_submitters, last_eval,
-                 guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories) = line.split('\t')
+                 guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories,
+                 ChromosomeAccession) = line.split('\t')
 
                 # #### set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
@@ -273,6 +274,7 @@ class ClinVar(Source):
                     f.addFeatureEndLocation(stop, chrinbuild_id)
 
                 f.addFeatureToGraph(g)
+                gu.makeLeader(g, seqalt_id)  # make the ClinVarVariant the clique leader
 
                 if bandinbuild_id is not None:
                     f.addSubsequenceOfFeature(g, bandinbuild_id)
@@ -431,6 +433,7 @@ class ClinVar(Source):
                 ref_id = None
                 if citation_source == 'PubMed':
                     ref_id = 'PMID:'+str(citation_id)
+                    gu.makeLeader(g, ref_id)
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
