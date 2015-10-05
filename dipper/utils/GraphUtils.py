@@ -35,6 +35,7 @@ class GraphUtils:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
+        'clique_leader': 'MONARCH:cliqueLeader'
     }
 
     object_properties = {
@@ -468,4 +469,15 @@ class GraphUtils:
     def addOWLVersionInfo(self, graph, ontology_id, version_info):
         graph.add((self.getNode(ontology_id), OWL['versionInfo'], Literal(version_info)))
 
+        return
+
+    def makeLeader(self, graph, node_id):
+        """
+        Add an annotation property to the given ```node_id``` to be the clique_leader.
+        This is a monarchism.
+        :param graph:
+        :param node_id:
+        :return:
+        """
+        self.addTriple(graph, node_id, self.annotation_properties['clique_leader'], Literal(True, datatype=XSD[bool]), True)
         return
