@@ -488,6 +488,10 @@ class FlyBase(Source):
                 elif re.search('FBa[lb]', feature_id):
                     self.idhash['allele'][feature_key] = feature_id
 
+                if not re.search('FBog', feature_id):
+                    # make the fly things leaders
+                    gu.makeLeader(g, feature_id)
+
                 if type_key == 604:  # RNAi_reagent
                     # TODO add other reagents?
                     self.idhash['reagent'][feature_key] = feature_id
@@ -508,7 +512,7 @@ class FlyBase(Source):
 
                     gu.addClassToGraph(g, tax_id, tax_label)
                     if tax_id != tax_internal_id:
-                        gu.addSameIndividual(g, tax_id, tax_internal_id)
+                        gu.addEquivalentClass(g, tax_id, tax_internal_id)
 
                     gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
                     # TODO for debugging only?  or keep?
@@ -729,6 +733,7 @@ class FlyBase(Source):
                         dbxref_id = None
                         if int(d) in pmid_ids:
                             dbxref_id = 'PMID:'+dbxrefs[d].strip()
+                            gu.makeLeader(g, dbxref_id)
                         elif int(d) in isbn:
                             dbxref_id = 'ISBN:'+dbxrefs[d].strip()
                         elif int(d) == 161:
@@ -1166,12 +1171,19 @@ class FlyBase(Source):
                         if did == feature_id:  # don't make something sameAs itself
                             continue
                         dlabel = self.label_hash.get(did)
-                        gu.addIndividualToGraph(g, did, dlabel)
-                        gu.addSameIndividual(g, feature_id, did)
+                        if re.search('FB(gn|og)', feature_id):
+                            gu.addClassToGraph(g, did, dlabel)
+                            gu.addEquivalentClass(g, feature_id, did)
+                        else:
+                            gu.addIndividualToGraph(g, did, dlabel)
+                            gu.addSameIndividual(g, feature_id, did)
                         line_counter += 1
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
+
+                # FIXME - some flybase genes are xrefed to OMIM diseases!!!!!!
+                # for example, FBog0000375495 xref to omim 601181 (gene) and 608033 (phenotype)
 
         return
 

@@ -3,6 +3,7 @@ import re
 import logging
 import gzip
 import io
+from ftplib import FTP
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -41,23 +42,25 @@ class WormBase(Source):
     Genotypes leverage the GENO genotype model and includes both intrinsic and extrinsic genotypes.  Where necessary,
     we create anonymous nodes of the genotype partonomy (such as for variant single locus complements,
     genomic variation complements, variant loci, extrinsic genotypes, and extrinsic genotype parts).
+
+    TODO:  get people and other phenotype data (from wormmine)
     """
 
     files = {
         'gene_ids': {'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.geneIDs.txt.gz'},
+                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         'gene_desc': {'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-                      'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.functional_descriptions.txt.gz'},
+                      'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {'file': 'phenotype_association.wb',
-                         'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/phenotype_association.WS249.wb'},
+                         'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
         'rnai_pheno': {'file': 'rnai_phenotypes.wb',
-                       'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/rnai_phenotypes.WS249.wb'},
+                       'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {'file': 'pub_xrefs.txt',
                       'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-                        'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS249.annotations.gff3.gz'},
+                        'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {'file': 'disease_association.wb',
-                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WS249/ONTOLOGY/disease_association.WS249.wb'},
+                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WS250/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {'file': 'development_association.wb',
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {'file': 'anatomy_association.wb',
@@ -67,12 +70,14 @@ class WormBase(Source):
         # 'orthologs': {'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS249.xrefs.txt.gz'},
+                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+        'letter': {'file': 'letter.WSNUMBER',
+                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/letter.WSNUMBER'},
     }
 
     test_ids = {
-        'gene': ['WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397'],
-        'allele': ['WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869'],
+        'gene': ['WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397', 'WBGene00001531'],
+        'allele': ['WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869', 'WBVar00250630'],
         'strain': ['BA794', 'RK1', 'HE1006'],
         'pub': []  # FIXME
     }
@@ -86,20 +91,65 @@ class WormBase(Source):
         self.dataset = Dataset('wormbase', 'WormBase', 'http://www.wormbase.org', None, None,
                                'http://www.wormbase.org/about/policies#012')
 
+        self.version_num = None
         return
 
     def fetch(self, is_dl_forced=False):
 
-        # fetch all the files
-        # TODO figure out the version number by probing the "current_release", then edit the file dict accordingly
-        self.version_num = 'WS249'
+        # figure out the version number by probing the "current_release", then edit the file dict accordingly
+        # connect to wormbase ftp
+        current_dev_release_dir = 'pub/wormbase/releases/current-development-release'
+        ftp = FTP('ftp.wormbase.org')
+        ftp.login()
+        ftp.cwd(current_dev_release_dir)
+        # the current release dir is a redirect to a versioned release.  pull that from the pwd.
+        pwd = ftp.pwd()
+        ftp.quit()
+        wsver = re.search('releases\/(WS\d+)', pwd)
+        if wsver is None or len(wsver.groups()) < 1:
+            logger.error("Couldn't figure out version number from FTP site.  Exiting.")
+            exit(1)
+        else:
+
+            self.update_wsnum_in_files(wsver.group(1))
+
         self.dataset.set_version_by_num(self.version_num)
+        # fetch all the files
         self.get_files(is_dl_forced)
+        return
+
+    def update_wsnum_in_files(self, vernum):
+        """
+        With the given version number ```vernum```, update the source's version number, and replace in the
+        file hashmap.  We also save the "letter" for the version to maintain the version number.
+        :param vernum:
+        :return:
+        """
+        self.version_num = vernum
+        # replace the WSNUMBER in the url paths with the real WS###
+        for f in self.files:
+            url = self.files[f].get('url')
+            url = re.sub('WSNUMBER', self.version_num, url)
+            self.files[f]['url'] = url
+            logger.debug("Replacing WSNUMBER in %s with %s", f, self.version_num)
+        # also the letter file - keep this so we know the version number
+        self.files['letter']['file'] = re.sub('WSNUMBER', self.version_num, self.files['letter']['file'])
         return
 
     def parse(self, limit=None):
         if limit is not None:
             logger.info("Only parsing first %s rows of each file", limit)
+
+        if self.version_num is None:
+            import os
+            logger.info("Figuring out version num for files")
+            # probe the raw directory for the WSnumber on the "letter.WS###" file.  this is the only
+            # one that we keep the version number on
+            files = os.listdir(self.rawdir)
+            letter_file = next(f for f in files if re.match('letter',f))
+            vernum = re.search('(WS\d+)', letter_file)
+            self.update_wsnum_in_files(vernum.group(1))
+
         logger.info("Parsing files...")
 
         if self.testOnly:
@@ -237,6 +287,14 @@ class WormBase(Source):
         return
 
     def process_allele_phenotype(self, limit=None):
+        """
+        This file compactly lists variant to phenotype associations, such that in a single row, there may
+        be >1 variant listed per phenotype and paper.  This indicates that each variant is individually assocated
+        with the given phenotype, as listed in 1+ papers.  (Not that the combination of variants is producing the
+        phenotype.)
+        :param limit:
+        :return:
+        """
 
         raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
 
@@ -272,64 +330,68 @@ class WormBase(Source):
                 elif eco_symbol.strip() != '':
                     logger.warn("Encountered an ECO code we don't have: %s", eco_symbol)
 
-                # something_with can be pipe delimited
-                # WB:WBVar00095133|WB:WBVar00604230
-
-                # there's some messiness in the file as of WS248.  some things in ref col are variants, others papers
-                # and reciprocally, sometimes in the with column, sometimes they are variants.
-                # here we clean them up
-
+                # according to the GOA spec, persons are not allowed to be in the reference column, therefore
+                # they the variant and persons are swapped between the reference and with column.
+                # we unswitch them here.
                 temp_var = temp_ref = None
                 if re.search('WBVar|WBRNAi', ref):
                     temp_var = ref
                     # move the paper from the with column into the ref
-                if re.match('WBPerson', with_or_from):
+                if re.search('WBPerson', with_or_from):
                     temp_ref = with_or_from
-                if temp_var is not None:
+                if temp_var is not None or temp_ref is not None:
                     with_or_from = temp_var
-                if temp_ref is not None:
                     ref = temp_ref
-                # We assume that the allele-to-gene relationships are in another file?
+
                 allele_list = re.split('\|', with_or_from)
                 if len(allele_list) == 0:
                     logger.error("Missing alleles from phenotype assoc at line %d", line_counter)
                     continue
-                elif len(allele_list) == 1:
-                    allele_id = re.sub('WB:', 'WormBase:', allele_list[0])
-
-                    if re.search('WBRNAi', allele_id):
-                        # make the reagent-targeted gene, and annotate that instead of the RNAi item directly
-                        rnai_num = re.sub('WormBase:', '', allele_id)
-                        rnai_id = allele_id
-                        gene_id = 'WormBase:'+gene_num
-                        rtg_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
-                        geno.addReagentTargetedGene(rnai_id, 'WormBase:'+gene_num, rtg_id)
-                        geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
-                        allele_id = rtg_id
-                    assoc = G2PAssoc(self.name, allele_id, phenotype_id)
                 else:
-                    # note there are never WBVars and RNAi reagents in the same row!  (how can that be?)
-                    # build out a gvc-ish thing with the variant collection
-                    allele_list = sorted(allele_list)
-                    gvc_id = '_'+'-'.join(allele_list)
-                    gvc_id = re.sub('WB:', '', gvc_id)
-                    if self.nobnodes:
-                        gvc_id = ':'+gvc_id
                     for a in allele_list:
-                        a = re.sub('WB:', 'WormBase:', a)
-                        geno.addParts(a, gvc_id, geno.object_properties['has_alternate_part'])
-                    gu.addIndividualToGraph(g, gvc_id, None, geno.genoparts['genomic_variation_complement'])
+                        allele_num = re.sub('WB:', '', a.strip())
+                        allele_id = 'WormBase:'+allele_num
+                        gene_id = 'WormBase:'+gene_num
 
-                    assoc = G2PAssoc(self.name, gvc_id, phenotype_id)
+                        if re.search('WBRNAi', allele_id):
+                            # make the reagent-targeted gene, and annotate that instead of the RNAi item directly
+                            rnai_num = re.sub('WormBase:', '', allele_id)
+                            rnai_id = allele_id
+                            rtg_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
+                            geno.addReagentTargetedGene(rnai_id, 'WormBase:'+gene_num, rtg_id)
+                            geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
+                            allele_id = rtg_id
+                        elif re.search('WBVar', allele_id):
+                            # this may become deprecated by using wormmine
+                            # make the allele to gene relationship
+                            #the WBVars are really sequence alterations
+                            geno.addSequenceAlteration(allele_id, None)  # the public name will come from elsewhere
+                            vl_id = '_'+'-'.join((gene_num, allele_num))
+                            if self.nobnodes:
+                                vl_id = ':'+vl_id
+                            geno.addSequenceAlterationToVariantLocus(allele_id, vl_id)
+                            geno.addAlleleOfGene(vl_id, gene_id)
+                        else:
+                            logger.warn("Some kind of allele I don't recognize: %s", allele_num )
+                            continue
+                        assoc = G2PAssoc(self.name, allele_id, phenotype_id)
 
-                if eco_id is not None:
-                    assoc.add_evidence(eco_id)
+                        if eco_id is not None:
+                            assoc.add_evidence(eco_id)
 
-                if ref != '':
-                    ref = re.sub('(WB:|WB_REF:)', 'WormBase:', ref)
-                    assoc.add_source(ref)
+                        if ref is not None and ref != '':
+                            ref = re.sub('(WB:|WB_REF:)', 'WormBase:', ref)
+                            r = Reference(ref)
+                            if re.search('Person', ref):
+                                r.setType(r.ref_types['person'])
+                                # also add inferred from background scientific knowledge
+                                assoc.add_evidence('ECO:0000001')
+                            r.addRefToGraph(g)
+                            assoc.add_source(ref)
 
-                assoc.add_association_to_graph(g)
+                        assoc.add_association_to_graph(g)
+
+                        # finish looping through all alleles
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -375,6 +437,8 @@ class WormBase(Source):
 
                     # get the rnai_id
                     (rnai_num, ref_num) = re.split('\|', s)
+                    if len(re.split('\|', s)) > 2:
+                        logger.warn("There's an unexpected number of items in %s", s)
                     if rnai_num not in self.rnai_gene_map:
                         self.rnai_gene_map[rnai_num] = set()
 
@@ -486,8 +550,9 @@ class WormBase(Source):
 
                 if feature_type_label not in ['gene', 'point_mutation', 'deletion', 'RNAi_reagent',
                                           'duplication', 'enhancer', 'binding_site', 'biological_region',
-                                          'complex_substitution']:
+                                          'complex_substitution', 'substitution', 'insertion', 'inverted_repeat']:
                     # note biological_regions include balancers
+                    # other options here: promoter, regulatory_region, reagent
                     continue
                 line_counter += 1
 
@@ -638,6 +703,7 @@ class WormBase(Source):
                 ref = re.sub('WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
+                eco_id = None
                 if eco_symbol == 'IEA':
                     eco_id = 'ECO:0000501'  # IEA is this now
                 if eco_id is not None:
