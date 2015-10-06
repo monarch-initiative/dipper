@@ -62,7 +62,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, g):
+    def add_association_to_graph(self, g, nobnodes=False):
         """
         The reified relationship between a genotype (or any genotype part) and a phenotype
         is decorated with some provenance information.
@@ -79,7 +79,8 @@ class G2PAssoc(Assoc):
         if self.start_stage_id or self.end_stage_id is not None:
             stage_process_id = '-'.join((str(self.start_stage_id), str(self.end_stage_id)))
             stage_process_id = '_'+re.sub(':', '', stage_process_id)
-            # TODO deal with nobnodes
+            if nobnodes:
+                stage_process_id = ':'+stage_process_id
             self.gu.addIndividualToGraph(g, stage_process_id, None,
                                          self.g2p_types['developmental_process'])
             self.gu.addTriple(g, stage_process_id,
