@@ -111,7 +111,7 @@ class ZFIN(Source):
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
                      "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
                      "ZDB-GENO-070118-1", "ZDB-GENO-140529-1", "ZDB-GENO-070820-1", "ZDB-GENO-071127-3",
-                     "ZDB-GENO-000209-20"],
+                     "ZDB-GENO-000209-20", "ZDB-GENO-980202-1565", "ZDB-GENO-010924-10"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -123,7 +123,8 @@ class ZFIN(Source):
                  "ZDB-GENE-050320-62", "ZDB-GENE-061013-403", "ZDB-GENE-041114-104", "ZDB-GENE-030131-9700",
                  "ZDB-GENE-031114-1", "ZDB-GENE-990415-72", "ZDB-GENE-030131-2211", "ZDB-GENE-030131-3063",
                  "ZDB-GENE-030131-9460", "ZDB-GENE-980526-26", "ZDB-GENE-980526-27", "ZDB-GENE-980526-29",
-                 "ZDB-GENE-071218-6", "ZDB-GENE-070912-423"],
+                 "ZDB-GENE-071218-6", "ZDB-GENE-070912-423", "ZDB-GENE-011207-1", "ZDB-GENE-980526-284",
+                 "ZDB-GENE-980526-72"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
@@ -131,7 +132,7 @@ class ZFIN(Source):
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
                    "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2", "ZDB-ALT-991005-33",
-                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6"],
+                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6", "ZDB-ALT-980203-1827"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -141,7 +142,7 @@ class ZFIN(Source):
                        "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-101105-3", "ZDB-MRPHLNO-110323-3", "ZDB-MRPHLNO-111104-5",
                        "ZDB-MRPHLNO-130222-4", "ZDB-MRPHLNO-080430", "ZDB-MRPHLNO-100823-6", "ZDB-MRPHLNO-140822-1",
                        "ZDB-MRPHLNO-100520-4", "ZDB-MRPHLNO-100520-5", "ZDB-MRPHLNO-100920-3", "ZDB-MRPHLNO-050604-1",
-                       "ZDB-CRISPR-131113-1"],
+                       "ZDB-CRISPR-131113-1", "ZDB-MRPHLNO-140430-12", "ZDB-MRPHLNO-140430-13"],
         "environment": ["ZDB-EXP-050202-1", "ZDB-EXP-071005-3", "ZDB-EXP-071227-14", "ZDB-EXP-080428-1",
                         "ZDB-EXP-080428-2", "ZDB-EXP-080501-1", "ZDB-EXP-080805-7", "ZDB-EXP-080806-5",
                         "ZDB-EXP-080806-8", "ZDB-EXP-080806-9", "ZDB-EXP-081110-3", "ZDB-EXP-090505-2",
@@ -166,7 +167,7 @@ class ZFIN(Source):
                  "ZDB-FISH-150901-14591", "ZDB-FISH-150901-9997", "ZDB-FISH-150901-23877", "ZDB-FISH-150901-22128",
                  "ZDB-FISH-150901-14869", "ZDB-FISH-150901-6695", "ZDB-FISH-150901-24158", "ZDB-FISH-150901-3631",
                  "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060", "ZDB-FISH-150901-8451", "ZDB-FISH-150901-2423",
-                 "ZDB-FISH-150901-20257"]
+                 "ZDB-FISH-150901-20257", "ZDB-FISH-150901-10002"]
     }
 
     def __init__(self):
@@ -362,6 +363,7 @@ class ZFIN(Source):
             # these will be reagents/morphants.
             if len(extrinsic_list) > 0:
                 list_of_targeted_genes = []
+                gene_to_reagent_hash = {}
                 for eid in extrinsic_list:
                     # link the morpholino to the genes that it affects
                     eid = 'ZFIN:'+eid
@@ -375,29 +377,46 @@ class ZFIN(Source):
                     if ag is None:
                         logger.warn("No affected genes for %s", eid)
                     else:
-                        # create variant gene(s) that have been targeted by the reagent
+                        # turn the gene-targeting-reagents inside out, such that
+                        # instead of morph -> set(genes)
+                        # we make a gene -> set(morphs)
+
                         for gid in ag:
-                            if gid not in self.id_label_map:
-                                # should not happen, except maybe in testing
-                                logger.error("%s not in id-label-hash", gid)
-                                glabel = gid
-                            else:
-                                glabel = self.id_label_map[gid]
+                            if gid not in gene_to_reagent_hash:
+                                gene_to_reagent_hash[gid] = set()
+                            gene_to_reagent_hash[gid].add(eid)
+                    # end loop through each extrinsic component
 
-                            targeted_gene_id = '-'.join((gid, eid))
-                            # these are not zfin resolvable, so make BNodes
-                            targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
-                            targeted_gene_id = '_' + targeted_gene_id
-                            if self.nobnodes:
-                                targeted_gene_id = ':' + targeted_gene_id
-                            elabel = self.id_label_map.get(eid)
-                            if elabel is None:
-                                elabel = eid  # should not happen, but just in case
-                            targeted_gene_label = glabel + '<' + elabel + '>'
+                for gid in gene_to_reagent_hash:
+                    reagent_list = sorted(list(gene_to_reagent_hash.get(gid)))
+                    # create variant gene(s) that have been targeted by the reagent
 
-                            geno.addReagentTargetedGene(eid, gid, targeted_gene_id, targeted_gene_label)
-                            self.id_label_map[targeted_gene_id] = targeted_gene_label
-                            list_of_targeted_genes += [targeted_gene_id]
+                    if gid not in self.id_label_map:
+                        # should not happen, except maybe in testing
+                        logger.error("%s not in id-label-hash", gid)
+                        glabel = gid
+                    else:
+                        glabel = self.id_label_map[gid]
+
+                    eid = '-'.join(reagent_list)
+
+                    targeted_gene_id = '-'.join((gid, eid))
+                    # these are not zfin resolvable, so make BNodes
+                    targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
+                    targeted_gene_id = '_' + targeted_gene_id
+                    if self.nobnodes:
+                        targeted_gene_id = ':' + targeted_gene_id
+                    # get the reagent labels
+                    elabel = ', '.join(self.id_label_map.get(l) for l in reagent_list)
+                    if elabel is None:
+                        elabel = eid  # should not happen, but just in case
+                    targeted_gene_label = glabel + '<' + elabel + '>'
+
+                    for r in reagent_list:
+                        geno.addReagentTargetedGene(r, gid, targeted_gene_id, targeted_gene_label)
+                    self.id_label_map[targeted_gene_id] = targeted_gene_label
+                    list_of_targeted_genes += [targeted_gene_id]
+                    # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
                 extrinsic_id = '_'+re.sub(':?_', '', '-'.join(list_of_targeted_genes))
                 if self.nobnodes:
@@ -407,7 +426,8 @@ class ZFIN(Source):
 
                 # add the parts
                 for tg in list_of_targeted_genes:
-                    geno.addParts(tg, extrinsic_id, geno.object_properties['has_expression-variant_part'])
+                    if tg != extrinsic_id:
+                        geno.addParts(tg, extrinsic_id, geno.object_properties['has_expression-variant_part'])
 
             else:
                 extrinsic_id = None
@@ -417,7 +437,7 @@ class ZFIN(Source):
                 geno.addParts(extrinsic_id, fish_id, geno.object_properties['has_alternate_part'])
 
             # check if the intrinsic is in the wildtype genotypes, then it's a genomic background
-            if intrinsic_genotype_num in self.wildtype_genotypes:
+            if intrinsic_genotype_id in self.wildtype_genotypes:
                 intrinsic_rel = geno.object_properties['has_reference_part']
                 intrinsic_type = geno.genoparts['genomic_background']
             else:
@@ -433,10 +453,12 @@ class ZFIN(Source):
                 # fish == intrinsic
                 gu.addSameIndividual(g, fish_id, intrinsic_genotype_id)
                 fish_label = intrinsic_genotype_label
+                fish_type = intrinsic_type
             else:
                 fish_label = '; '.join((str(intrinsic_genotype_label), extrinsic_label))
+                fish_type = geno.genoparts['effective_genotype']
 
-            geno.addGenotype(fish_id, fish_label, geno.genoparts['effective_genotype'])
+            geno.addGenotype(fish_id, fish_label, fish_type)
             geno.addTaxon(taxon_id, fish_id)
 
             # since we re-create a label, add the zfin fish label as the synonym
@@ -776,16 +798,18 @@ class ZFIN(Source):
                     logger.error("We don't have the label for %s stored", background_id)
 
             else:
-                background_id = '_bkgd-'+re.sub('ZFIN:', '', gt)
+                background_num = re.sub('ZFIN:', '', gt)
+                background_id = '_bkgd-'+background_num
                 if self.nobnodes:
                     background_id = ':'+background_id
-                background_label = 'n.s.'
+                background_label = 'n.s. ('+ background_num+')'
                 background_desc = 'This genomic background is unknown.  This is a placeholder background ' \
                                   'for '+gt+'.'
                 # there is no background for this genotype; need to add the taxon to this one!
                 # make an anonymous background for this genotype
                 geno.addGenomicBackground(background_id, background_label, None, background_desc)
                 geno.addGenomicBackgroundToGenotype(background_id, gt)
+                background_label = 'n.s.'
 
             geno.addTaxon(taxon_id, background_id)
 
@@ -1065,12 +1089,17 @@ class ZFIN(Source):
 
                     # add association
                     assoc = G2PAssoc(self.name, fish_id, phenotype_id)
-                    assoc.set_environment(env_id)
+
+                    # only add the environment if there's components to it
+                    if env_id in self.environment_hash and len(self.environment_hash.get(env_id)) > 0:
+                        assoc.set_environment(env_id)
                     assoc.set_stage(start_stage_id, end_stage_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
-                    assoc.add_association_to_graph(g)
-
+                    assoc.add_association_to_graph(g, self.nobnodes)
+                    assoc_id = assoc.get_association_id()
+                    if env_id not in self.environment_hash or len(self.environment_hash.get(env_id)) > 0:
+                        gu.addComment(g, assoc_id, 'Legacy environment id '+env_id)
                 else:
                     # TODO add normal phenotypes as associations #134
                     # when https://github.com/sba1/bio-ontology-zp/issues/9 is finished, we can use these
@@ -1482,6 +1511,7 @@ class ZFIN(Source):
                     rpm.addRefToGraph(g)
 
                     gu.addSameIndividual(g, pub_id, pubmed_id)
+                    # gu.makeLeader(g, pubmed_id)  # TODO
 
                 r.addRefToGraph(g)
 
@@ -1660,7 +1690,6 @@ class ZFIN(Source):
         extrgeno_hash_by_env_id = {}
         env_hash = {}
         enviro_label_hash = {}
-        geno = Genotype(g)
         envo = Environment(g)
         # pp = pprint.PrettyPrinter(indent=4)
 
@@ -2026,13 +2055,19 @@ class ZFIN(Source):
                 assoc.set_object(disease_id)
                 assoc.set_relationship(gu.object_properties['model_of'])
 
+                if zfin_pub_id != '':
+                    assoc.add_source('ZFIN:'+zfin_pub_id)
+
                 # make the pubmed id, if it exists
                 if pubmed_id != '':
                     pubmed_id = 'PMID:'+pubmed_id
-                    assoc.add_source(pubmed_id)
-                    assoc.add_source('ZFIN:'+zfin_pub_id)
-
+                    gu.addSameIndividual(g,'ZFIN:'+zfin_pub_id, pubmed_id)
+                    # gu.makeLeader(g, pubmed_id)  # TODO
                 assoc.add_association_to_graph(g)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
         return
 
     def _map_sextuple_to_phenotype(self, superterm1_id, subterm1_id, quality_id, superterm2_id, subterm2_id, modifier):
