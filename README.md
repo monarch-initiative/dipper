@@ -9,7 +9,7 @@ Dipper includes subpackages and modules to create graphical models of this data,
 * Graph utilities to create common relationships using a variety of ontologies
 * Fetchers and Parsers that interface with remote databases and web services
 
-## Beware: This code and resulting TTL is still in active development, and is subject to change.
+## Beware: This code and resulting TTL is still actively being developed, and is subject to change.
 The code in this repository is still under active development while we are refining the models for variant, 
 genotype, and genotype-to-phenotype association.  This means that the graph patterns we are employing 
 between the different entities is in flux.  **We will indicate here when the modeling has generally stabilized.**
@@ -109,5 +109,9 @@ Furthermore, we wanted to provide the bioinformatics community with a set of scr
 get started transforming these standard data sources. 
 
 A manuscript is in preparation.  In the mean time, if you use any of our code or derived data, please cite 
-this repository and the [Monarch Initiative](http://www.monarchinitiative.org).  
+this repository and the [Monarch Initiative](http://www.monarchinitiative.org).
+
+## Identifiers
+Our identifier documentation is a work in progress, available here: https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit
+Please feel free to pose any questions or concerns to info@monarchinitiative.org
 
