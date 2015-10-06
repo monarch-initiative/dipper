@@ -801,10 +801,10 @@ class ZFIN(Source):
                 background_num = re.sub('ZFIN:', '', gt)
                 background_id = '_bkgd-'+background_num
                 if self.nobnodes:
-                    background_id = ':'+background_id
-                background_label = 'n.s. ('+ background_num+')'
+                    background_id = ':' + background_id
+                background_label = 'n.s. (' + background_num + ')'
                 background_desc = 'This genomic background is unknown.  This is a placeholder background ' \
-                                  'for '+gt+'.'
+                                  'for ' + gt + '.'
                 # there is no background for this genotype; need to add the taxon to this one!
                 # make an anonymous background for this genotype
                 geno.addGenomicBackground(background_id, background_label, None, background_desc)
@@ -833,7 +833,8 @@ class ZFIN(Source):
 
         return
 
-    def _map_allele_type_to_geno(self, allele_type):
+    @staticmethod
+    def _map_allele_type_to_geno(allele_type):
         t = 'SO:0001059'  # default: sequence_alteration
         type_map = {
             'complex_substitution': 'SO:1000005',  # complex substitution
@@ -973,7 +974,6 @@ class ZFIN(Source):
         :return:
         """
 
-        # FIXME are these equivalences already in the ZFS?  if so remove this
         if self.testMode:
             g = self.testgraph
         else:
@@ -1369,7 +1369,7 @@ class ZFIN(Source):
         :param limit:
         :return:
         """
-        # TODO need to review relationships with @mbrush
+
         if self.testMode:
             g = self.testgraph
         else:
@@ -1552,14 +1552,15 @@ class ZFIN(Source):
                     continue
 
                 pub_id = 'ZFIN:' + pub_id.strip()
-                r = Reference(pub_id)
-
+                rtype = None
                 if pubmed_id != '' and pubmed_id is not None:
                     pubmed_id = 'PMID:' + pubmed_id.strip()
-                    r = Reference(pubmed_id, Reference.ref_types['journal_article'])
-                    r.addRefToGraph(g)
+                    rtype = Reference.ref_types['journal_article']
+                    rpm = Reference(pubmed_id, rtype)
+                    rpm.addRefToGraph(g)
                     gu.addSameIndividual(g, pub_id, pubmed_id)
-
+                r = Reference(pub_id, rtype)
+                r.addRefToGraph(g)
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
