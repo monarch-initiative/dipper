@@ -1099,10 +1099,10 @@ class MGI(Source):
             for line in f:
                 line_counter += 1
 
-                (marker_key, organism_key, marker_status_key, marker_type_key, curationstate_key,
+                (marker_key, organism_key, marker_status_key, marker_type_key,
                  symbol, name, chromosome, cytogenetic_offset, createdby_key, modifiedby_key,
                  creation_date, modification_date, organism, common_name,
-                 latin_name, status, marker_type, curation_state, created_by, modified_by) = line.split('\t')
+                 latin_name, status, marker_type, created_by, modified_by) = line.split('\t')
 
                 if self.testMode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
