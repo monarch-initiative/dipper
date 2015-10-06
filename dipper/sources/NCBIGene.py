@@ -194,8 +194,10 @@ class NCBIGene(Source):
 
                 if self.class_or_indiv[gene_id] == 'C':
                     gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                    # NCBI will be the default leader, so i will not add the leader designation here.
                 else:
                     gu.addIndividualToGraph(g, gene_id, label, gene_type_id, desc)
+                    # in this case, they aren't genes.  so i want someone else to be the leader.
 
                 if name != '-':
                     gu.addSynonym(g, gene_id, name)
@@ -559,7 +561,7 @@ class NCBIGene(Source):
                             assoc = OrthologyAssoc(self.name, gid, oid)
                             assoc.add_source('PMID:24063302')
                             assoc.add_association_to_graph(graph)
-                            # todo get gene label for orthologs
+                            # todo get gene label for orthologs - this could get expensive
                             found_counter += 1
 
             # finish loop through annotated genes
