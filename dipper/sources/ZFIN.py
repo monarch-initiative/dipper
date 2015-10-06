@@ -1511,7 +1511,7 @@ class ZFIN(Source):
                     rpm.addRefToGraph(g)
 
                     gu.addSameIndividual(g, pub_id, pubmed_id)
-                    # gu.makeLeader(g, pubmed_id)  # TODO
+                    gu.makeLeader(g, pubmed_id)
 
                 r.addRefToGraph(g)
 
@@ -1820,7 +1820,7 @@ class ZFIN(Source):
                 else:
                     continue
                     # skip any of the others
-
+                gu.makeLeader(g, zfin_id)  #ZFIN don't catalog non-fish things, thankfully
                 # make the chromosome class
                 chr_id = makeChromID(chromosome, taxon_id, 'CHR')
                 # chr_label = makeChromLabel(chromosome, taxon_label)
