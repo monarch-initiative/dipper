@@ -169,14 +169,14 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self.map_type_of_gene(gtype)
+                gene_type_id = self.map_type_of_gene(gtype.strip())
 
                 if symbol == 'NEWENTRY':
                     label = None
