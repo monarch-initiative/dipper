@@ -3,6 +3,7 @@ import re
 import logging
 import gzip
 import io
+from ftplib import FTP
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -47,19 +48,19 @@ class WormBase(Source):
 
     files = {
         'gene_ids': {'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.geneIDs.txt.gz'},
+                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         'gene_desc': {'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-                      'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.functional_descriptions.txt.gz'},
+                      'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {'file': 'phenotype_association.wb',
-                         'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/phenotype_association.WS249.wb'},
+                         'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
         'rnai_pheno': {'file': 'rnai_phenotypes.wb',
-                       'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/rnai_phenotypes.WS249.wb'},
+                       'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {'file': 'pub_xrefs.txt',
                       'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-                        'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS249.annotations.gff3.gz'},
+                        'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {'file': 'disease_association.wb',
-                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WS249/ONTOLOGY/disease_association.WS249.wb'},
+                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WS250/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {'file': 'development_association.wb',
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {'file': 'anatomy_association.wb',
@@ -69,12 +70,14 @@ class WormBase(Source):
         # 'orthologs': {'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS249.xrefs.txt.gz'},
+                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+        'letter': {'file': 'letter.WSNUMBER',
+                  'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/letter.WSNUMBER'},
     }
 
     test_ids = {
-        'gene': ['WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397'],
-        'allele': ['WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869'],
+        'gene': ['WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397', 'WBGene00001531'],
+        'allele': ['WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869', 'WBVar00250630'],
         'strain': ['BA794', 'RK1', 'HE1006'],
         'pub': []  # FIXME
     }
@@ -88,20 +91,65 @@ class WormBase(Source):
         self.dataset = Dataset('wormbase', 'WormBase', 'http://www.wormbase.org', None, None,
                                'http://www.wormbase.org/about/policies#012')
 
+        self.version_num = None
         return
 
     def fetch(self, is_dl_forced=False):
 
-        # fetch all the files
-        # TODO figure out the version number by probing the "current_release", then edit the file dict accordingly
-        self.version_num = 'WS249'
+        # figure out the version number by probing the "current_release", then edit the file dict accordingly
+        # connect to wormbase ftp
+        current_dev_release_dir = 'pub/wormbase/releases/current-development-release'
+        ftp = FTP('ftp.wormbase.org')
+        ftp.login()
+        ftp.cwd(current_dev_release_dir)
+        # the current release dir is a redirect to a versioned release.  pull that from the pwd.
+        pwd = ftp.pwd()
+        ftp.quit()
+        wsver = re.search('releases\/(WS\d+)', pwd)
+        if wsver is None or len(wsver.groups()) < 1:
+            logger.error("Couldn't figure out version number from FTP site.  Exiting.")
+            exit(1)
+        else:
+
+            self.update_wsnum_in_files(wsver.group(1))
+
         self.dataset.set_version_by_num(self.version_num)
+        # fetch all the files
         self.get_files(is_dl_forced)
+        return
+
+    def update_wsnum_in_files(self, vernum):
+        """
+        With the given version number ```vernum```, update the source's version number, and replace in the
+        file hashmap.  We also save the "letter" for the version to maintain the version number.
+        :param vernum:
+        :return:
+        """
+        self.version_num = vernum
+        # replace the WSNUMBER in the url paths with the real WS###
+        for f in self.files:
+            url = self.files[f].get('url')
+            url = re.sub('WSNUMBER', self.version_num, url)
+            self.files[f]['url'] = url
+            logger.debug("Replacing WSNUMBER in %s with %s", f, self.version_num)
+        # also the letter file - keep this so we know the version number
+        self.files['letter']['file'] = re.sub('WSNUMBER', self.version_num, self.files['letter']['file'])
         return
 
     def parse(self, limit=None):
         if limit is not None:
             logger.info("Only parsing first %s rows of each file", limit)
+
+        if self.version_num is None:
+            import os
+            logger.info("Figuring out version num for files")
+            # probe the raw directory for the WSnumber on the "letter.WS###" file.  this is the only
+            # one that we keep the version number on
+            files = os.listdir(self.rawdir)
+            letter_file = next(f for f in files if re.match('letter',f))
+            vernum = re.search('(WS\d+)', letter_file)
+            self.update_wsnum_in_files(vernum.group(1))
+
         logger.info("Parsing files...")
 
         if self.testOnly:
@@ -318,9 +366,9 @@ class WormBase(Source):
                             # make the allele to gene relationship
                             #the WBVars are really sequence alterations
                             geno.addSequenceAlteration(allele_id, None)  # the public name will come from elsewhere
-                            vl_id = ':'+'-'.join((gene_num, allele_num))
+                            vl_id = '_'+'-'.join((gene_num, allele_num))
                             if self.nobnodes:
-                                vl_id = '_'+vl_id
+                                vl_id = ':'+vl_id
                             geno.addSequenceAlterationToVariantLocus(allele_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
                         else:

@@ -211,7 +211,8 @@ class Source:
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
         """
-        logger.info("Checking if remote file is newer...")
+        logger.info("Checking if remote file (%s) is newer than local (%s)...", remote, local)
+
         # check if local file exists
         # if no local file, then remote is newer
         if not os.path.exists(local):

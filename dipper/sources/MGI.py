@@ -524,6 +524,7 @@ class MGI(Source):
                     locus_type = None
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
+                gu.makeLeader(g, allele_id)
                 self.label_hash[allele_id] = symbol
 
                 # HACK - if the label of the allele == marker, then make the thing a seq alt
@@ -997,6 +998,7 @@ class MGI(Source):
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match('PMID', pub_id):
                         r.setType(Reference.ref_types['journal_article'])
+                        gu.makeLeader(g, pub_id)
                     r.addRefToGraph(g)
 
                     gu.addSameIndividual(g, jid, pub_id)
@@ -1097,10 +1099,10 @@ class MGI(Source):
             for line in f:
                 line_counter += 1
 
-                (marker_key, organism_key, marker_status_key, marker_type_key, curationstate_key,
+                (marker_key, organism_key, marker_status_key, marker_type_key,
                  symbol, name, chromosome, cytogenetic_offset, createdby_key, modifiedby_key,
                  creation_date, modification_date, organism, common_name,
-                 latin_name, status, marker_type, curation_state, created_by, modified_by) = line.split('\t')
+                 latin_name, status, marker_type, created_by, modified_by) = line.split('\t')
 
                 if self.testMode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
@@ -1135,6 +1137,10 @@ class MGI(Source):
                     # add the taxon
                     taxon_id = self._map_taxon(latin_name)
                     geno.addTaxon(taxon_id, marker_id)
+
+                    # make MGI the leader for mouse genes.
+                    if taxon_id == 'NCBITaxon:10090':
+                        gu.makeLeader(g, marker_id)
 
                     if not self.testMode and limit is not None and line_counter > limit:
                         break

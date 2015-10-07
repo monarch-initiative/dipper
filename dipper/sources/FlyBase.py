@@ -488,6 +488,10 @@ class FlyBase(Source):
                 elif re.search('FBa[lb]', feature_id):
                     self.idhash['allele'][feature_key] = feature_id
 
+                if not re.search('FBog', feature_id):
+                    # make the fly things leaders
+                    gu.makeLeader(g, feature_id)
+
                 if type_key == 604:  # RNAi_reagent
                     # TODO add other reagents?
                     self.idhash['reagent'][feature_key] = feature_id
@@ -729,6 +733,7 @@ class FlyBase(Source):
                         dbxref_id = None
                         if int(d) in pmid_ids:
                             dbxref_id = 'PMID:'+dbxrefs[d].strip()
+                            gu.makeLeader(g, dbxref_id)
                         elif int(d) in isbn:
                             dbxref_id = 'ISBN:'+dbxrefs[d].strip()
                         elif int(d) == 161:
