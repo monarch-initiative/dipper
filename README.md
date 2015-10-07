@@ -112,6 +112,17 @@ A manuscript is in preparation.  In the mean time, if you use any of our code or
 this repository and the [Monarch Initiative](http://www.monarchinitiative.org).
 
 ## Identifiers
-Our identifier documentation is a work in progress, available here: https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit
-Please feel free to pose any questions or concerns to info@monarchinitiative.org
+Throughout the Monarch web application, we display external entities using their human-friendly labels
+(eg. ontology term label 'polydactyly' or gene symbol 'KNG1') as issued by the original data sources;
+however, while such labels aid human understanding, they often overlap between sources.
+Therefore, in Monarch, we never rely on the labels to integrate data and never display labels alone without a
+corresponding prefixed identifier (wherein the local part is exactly as issued by the original data sources and the
+prefix is as established by convention or as registered. eg. NCBIGene:3827).
+
+For each prefix we display in Monarch, we have [documented a 1-to-1 relationship with a resolving namespace](https://github.com/monarch-initiative/dipper/blob/master/dipper/curie_map.yaml),
+and the prefixed notation (aka CURIE) is usually hyperlinked to its HTTP URI.
+For more information regarding identifiers terminology and notation, see McMurry et al. https://zenodo.org/record/31765.
+
+More detailed identifier documentation for Monarch is a work in progress, available [here:](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit)
+Please feel free to pose any questions or concerns to info@monarchinitiative.org.
 
