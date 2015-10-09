@@ -531,9 +531,13 @@ class MGI(Source):
 
                 (allele_key, marker_key, strain_key, mode_key, allele_type_key, allele_status_key,
                  transmission_key, collection_key, symbol, name, nomensymbol, iswildtype, isextinct, ismixed,
+                 refs_key, markerallele_status_key,
                  createdby_key, modifiedby_key, approvedby_key, approval_date, creation_date,
                  modification_date, markersymbol, term, statusnum, strain, collection,
-                 createdby, modifiedby, approvedby) = line.split('\t')
+                 createdby, modifiedby, approvedby,
+                 markerallele_status, jnum, jnumid, citation, short_citation) = line.split('\t')
+
+                # TODO update processing to use this view better - including jnums!
 
                 if self.testMode is True:
                     if int(allele_key) not in self.test_keys.get('allele'):
