@@ -131,7 +131,7 @@ class Coriell(Source):
             # sort each array in hash, and get the name and time of the most-recent file for each catalog
             for r in self.files:
                 fname = self.files[r]['file']
-                remotef = remote_files.get(r)
+                remotef = files_by_repo[r]
                 target_name = '/'.join((self.rawdir, fname))
                 # check if the local file is out of date, if so, download.  otherwise, skip.
                 # we rename (for simplicity) the original file
