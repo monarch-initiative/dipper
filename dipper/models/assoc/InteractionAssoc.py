@@ -10,7 +10,10 @@ class InteractionAssoc(Assoc):
         'interacts_with': 'RO:0002434',  # using for directly interacts with.  better choice? psi-mi:"MI:0407"
         'molecularly_interacts_with': 'RO:0002436',  # should we use this instead for direct interaction?
         'colocalizes_with': 'RO:0002325',  # psi-mi:"MI:0403"(colocalization)
-        'ubiquitinates': 'RO:0002480'
+        'ubiquitinates': 'RO:0002480',
+        'regulates': 'RO:0002211',
+        'positively_regulates': 'RO:0002213',
+        'negatively_regulates': 'RO:0002212',
     }
 
     def __init__(self, definedby, subj, obj, rel=None):
