@@ -138,19 +138,22 @@ class Coriell(Source):
                 st = None
                 if os.path.exists(target_name):
                     st = os.stat(target_name)
+                    logger.info("Local file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
                 if st is None or remotef.st_mtime > st[stat.ST_CTIME]:
                     if st is None:
                         logger.info("File does not exist locally; downloading...")
                     else:
                         logger.info("There's a new version of %s catalog available; downloading...", r)
-                    sftp.get(fname)
+                    sftp.get(remotef.filename)
                     logger.info("Fetched remote %s", remotef.filename)
+                    st = os.stat(target_name)
+                    filedate = datetime.utcfromtimestamp(remotef.st_mtime).strftime("%Y-%m-%d")
+                    logger.info("New file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
                 else:
                     logger.info("File %s exists; using local copy", fname)
+                    filedate = datetime.utcfromtimestamp(st[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
-                logger.info("Local file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
                 self.dataset.setFileAccessUrl(remotef.filename)
-                filedate = datetime.utcfromtimestamp(remotef.st_mtime).strftime("%Y-%m-%d")
                 self.dataset.setVersion(filedate)
         return
 
