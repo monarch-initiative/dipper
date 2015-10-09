@@ -57,19 +57,19 @@ class Coriell(Source):
     }
 
     files = {
-        'ninds': {'file': 'NINDS_latest.csv',
+        'NINDS': {'file': 'NINDS.csv',
                   'id': 'NINDS',
                   'label': 'NINDS Human Genetics DNA and Cell line Repository',
                   'page': 'https://catalog.coriell.org/1/NINDS'},
-        'nigms': {'file': 'NIGMS_latest.csv',
+        'NIGMS': {'file': 'NIGMS.csv',
                   'id': 'NIGMS',
                   'label': 'NIGMS Human Genetic Cell Repository',
                   'page': 'https://catalog.coriell.org/1/NIGMS'},
-        'nia': {'file': 'NIA_latest.csv',
+        'NIA': {'file': 'NIA.csv',
                 'id': 'NIA',
                 'label': 'NIA Aging Cell Repository',
                 'page': 'https://catalog.coriell.org/1/NIA'},
-        'nhgri': {'file': 'NHGRI_latest.csv',
+        'NHGRI': {'file': 'NHGRI.csv',
                   'id': 'NHGRI',
                   'label': 'NHGRI Sample Repository for Human Genetic Research',
                   'page': 'https://catalog.coriell.org/1/NHGRI'}
@@ -79,7 +79,7 @@ class Coriell(Source):
     test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
                   'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
                   'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505',
-                  'GM01602', 'GM02455', 'AG00364']
+                  'GM01602', 'GM02455', 'AG00364', 'GM13707']
 
     def __init__(self):
         Source.__init__(self, 'coriell')
@@ -119,46 +119,38 @@ class Coriell(Source):
         key = config.get_config()['dbauth']['coriell']['private_key']
 
         with pysftp.Connection(host, username=user, password=passwd, private_key=key) as sftp:
-            files_by_repo = {'NIGMS': [], 'NIA': [], 'NHGRI': [], 'NINDS': []}
-            most_recent_files = {}
-            for attr in sftp.listdir_attr():
+            # check to make sure each file is in there
+            # get the remote files
+            remote_files = sftp.listdir_attr()
+            files_by_repo = {}
+            for attr in remote_files:
                 # for each catalog, get the most-recent filename
                 m = re.match('(NIGMS|NIA|NHGRI|NINDS)', attr.filename)
                 if m is not None and len(m.groups()) > 0:
-                    files_by_repo[m.group(1)] += [attr]
+                    files_by_repo[m.group(1)] = attr  # there should just be one now
             # sort each array in hash, and get the name and time of the most-recent file for each catalog
-            for r in files_by_repo:
-                files_by_repo[r].sort(key=lambda x: x.st_mtime, reverse=True)
-                if len(files_by_repo[r]) < 1:
-                    # pass
-                    logger.error("There were no files to download for the %s catalog", r)
-                most_recent_file = files_by_repo[r][0]
-                most_recent_files[r] = most_recent_file
-            for r in most_recent_files:
-                f = most_recent_files[r]
-                target_name = r+"_latest.csv"
-                target_name = '/'.join((self.rawdir, target_name))
+            for r in self.files:
+                fname = self.files[r]['file']
+                remotef = remote_files.get(r)
+                target_name = '/'.join((self.rawdir, fname))
                 # check if the local file is out of date, if so, download.  otherwise, skip.
                 # we rename (for simplicity) the original file
                 st = None
                 if os.path.exists(target_name):
                     st = os.stat(target_name)
-                if st is None or f.st_mtime > st[stat.ST_CTIME]:
+                if st is None or remotef.st_mtime > st[stat.ST_CTIME]:
                     if st is None:
                         logger.info("File does not exist locally; downloading...")
                     else:
                         logger.info("There's a new version of %s catalog available; downloading...", r)
-                    sftp.get(f.filename)
-                    logger.info("Fetched %s", f.filename)
-                    # move to the "latest" name
-                    os.rename(f.filename, target_name)
-                    # in our file hash, set the filename
+                    sftp.get(fname)
+                    logger.info("Fetched remote %s", remotef.filename)
                 else:
-                    logger.info("File %s exists; using local copy", f.filename)
+                    logger.info("File %s exists; using local copy", fname)
 
                 logger.info("Local file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
-                self.dataset.setFileAccessUrl(f.filename)
-                filedate = datetime.utcfromtimestamp(f.st_mtime).strftime("%Y-%m-%d")
+                self.dataset.setFileAccessUrl(remotef.filename)
+                filedate = datetime.utcfromtimestamp(remotef.st_mtime).strftime("%Y-%m-%d")
                 self.dataset.setVersion(filedate)
         return
 
