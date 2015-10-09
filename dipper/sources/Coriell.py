@@ -168,7 +168,7 @@ class Coriell(Source):
         if self.testOnly:
             self.testMode = True
 
-        for f in ['ninds', 'nigms', 'nia', 'nhgri']:
+        for f in self.files:
             file = '/'.join((self.rawdir, self.files[f]['file']))
             self._process_collection(self.files[f]['id'], self.files[f]['label'], self.files[f]['page'])
             self._process_data(file, limit)
