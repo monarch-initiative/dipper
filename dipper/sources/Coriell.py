@@ -144,11 +144,12 @@ class Coriell(Source):
                         logger.info("File does not exist locally; downloading...")
                     else:
                         logger.info("There's a new version of %s catalog available; downloading...", r)
-                    sftp.get(remotef.filename)
+                    sftp.get(remotef.filename, target_name)
                     logger.info("Fetched remote %s", remotef.filename)
                     st = os.stat(target_name)
                     filedate = datetime.utcfromtimestamp(remotef.st_mtime).strftime("%Y-%m-%d")
                     logger.info("New file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
+
                 else:
                     logger.info("File %s exists; using local copy", fname)
                     filedate = datetime.utcfromtimestamp(st[stat.ST_CTIME]).strftime("%Y-%m-%d")
