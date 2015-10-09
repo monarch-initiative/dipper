@@ -130,6 +130,7 @@ class Coriell(Source):
                     files_by_repo[m.group(1)] = attr  # there should just be one now
             # sort each array in hash, and get the name and time of the most-recent file for each catalog
             for r in self.files:
+                logger.info("Checking on %s catalog file", r)
                 fname = self.files[r]['file']
                 remotef = files_by_repo[r]
                 target_name = '/'.join((self.rawdir, fname))
@@ -145,7 +146,7 @@ class Coriell(Source):
                     else:
                         logger.info("There's a new version of %s catalog available; downloading...", r)
                     sftp.get(remotef.filename, target_name)
-                    logger.info("Fetched remote %s", remotef.filename)
+                    logger.info("Fetched remote %s -> %s", remotef.filename, target_name)
                     st = os.stat(target_name)
                     filedate = datetime.utcfromtimestamp(remotef.st_mtime).strftime("%Y-%m-%d")
                     logger.info("New file date: %s", datetime.utcfromtimestamp(st[stat.ST_CTIME]))
