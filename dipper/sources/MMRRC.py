@@ -293,9 +293,9 @@ class MMRRC(Source):
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
-                    gu.addIndividualToGraph(g, bkgd_id, 'unspecified ('+s+')', geno.genoparts['unspecified_genomic_background'],
+                    geno.addGenomicBackground(bkgd_id, 'unspecified ('+s+')', geno.genoparts['unspecified_genomic_background'],
                                             "A placeholder for the unspecified genetic background for "+s)
-                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id)
+                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id, geno.genoparts['unspecified_genomic_background'])
                     geno.addParts(gvc_id, genotype_id, geno.object_properties['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
                     gu.addTriple(g, s, geno.object_properties['has_genotype'], genotype_id)
