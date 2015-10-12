@@ -262,7 +262,7 @@ class MMRRC(Source):
                 vl_list = sorted(vl_set)
                 vslc_list = []
                 for vl in vl_list:
-                    vslc_id = '_'+vl+'U'  # for unknown zygosity
+                    vslc_id = '_'+re.sub('^_','',vl)+'U'  # for unknown zygosity
                     vslc_id = re.sub(':', '', vslc_id)
                     if self.nobnodes:
                         vslc_id = ':' + vslc_id
@@ -288,8 +288,8 @@ class MMRRC(Source):
                         gvc_label = self.id_label_hash[gvc_id]
 
                     genotype_label = gvc_label + ' [n.s.]'
-                    genotype_id = gvc_id+'-U'
                     bkgd_id = '_'+re.sub(':', '', '-'.join((geno.genoparts['unspecified_genomic_background'], s)))
+                    genotype_id = '-'.join((gvc_id, bkgd_id))
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
