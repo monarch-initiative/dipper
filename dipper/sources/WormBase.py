@@ -5,19 +5,15 @@ import gzip
 import io
 from ftplib import FTP
 
-from dipper.utils import pysed
 from dipper.sources.Source import Source
-from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
-from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.Environment import Environment
 from dipper.models.GenomicFeature import makeChromID
-from dipper.models.GenomicFeature import Feature
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.GenomicFeature import Feature
+from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 from dipper import curie_map
 
 
@@ -65,8 +61,8 @@ class WormBase(Source):
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {'file': 'anatomy_association.wb',
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/anatomy_association.WS249.wb'},
-        # 'gene_interaction': {'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
-        #                      'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.gene_interactions.txt.gz'},
+        'gene_interaction': {'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
+                             'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.gene_interactions.txt.gz'},
         # 'orthologs': {'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
@@ -178,6 +174,8 @@ class WormBase(Source):
         self.process_pub_xrefs(limit)
         self.process_feature_loc(limit)
         self.process_disease_association(limit)
+
+        # self.process_gene_interaction(limit)
 
         logger.info("Finished parsing.")
 
@@ -710,6 +708,90 @@ class WormBase(Source):
                     assoc.add_evidence(eco_id)
 
                 assoc.add_association_to_graph(g)
+
+        return
+
+    def process_gene_interaction(self, limit):
+        """
+        The gene interaction file includes identified interactions, that are between two or more
+        gene (products).
+        In the case of interactions with >2 genes, this requires creating groups of genes
+        that are involved in the interaction.  From the wormbase help list:
+        In the example WBInteraction000007779 it would likely be
+        misleading to suggest that lin-12 interacts with (suppresses in this case)
+        smo-1 ALONE or that lin-12 suppresses let-60 ALONE; the observation (in
+        the paper; see Table V in paper PMID:15990876) was that a lin-12 allele
+        (heterozygous lin-12(n941/+)) could suppress the "multivulva" phenotype
+        induced synthetically by simultaneous perturbation of BOTH smo-1 (by RNAi)
+        AND let-60 (by the n2021 allele). So this is necessarily a three-gene
+        interaction.
+
+        Therefore, we can create groups of genes based on their "status" of Effector | Effected.
+
+        Status:  IN PROGRESS
+
+        :param limit:
+        :return:
+        """
+
+        raw = '/'.join((self.rawdir, self.files['gene_interaction']['file']))
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        gu = GraphUtils(curie_map.get())
+
+        logger.info("Processing gene interaction associations")
+        line_counter = 0
+
+        with gzip.open(raw, 'rb') as csvfile:
+            filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar="'")
+
+            for row in filereader:
+                line_counter += 1
+                if re.match('#', ''.join(row)):
+                    continue
+
+                (interaction_num, interaction_type, interaction_subtype, summary, citation) = row[0:5]
+                print(row)
+                interaction_id = 'WormBase:'+interaction_num
+
+                # TODO deal with subtypes
+                interaction_type_id = None
+                if interaction_type == 'Genetic':
+                    interaction_type_id = InteractionAssoc.interaction_object_properties['genetically_interacts_with']
+                elif interaction_type == 'Physical':
+                    interaction_type_id = InteractionAssoc.interaction_object_properties['molecularly_interacts_with']
+                elif interaction_type == 'Regulatory':
+                    interaction_type_id = InteractionAssoc.interaction_object_properties['regulates']
+                else:
+                    logger.info("An interaction type I don't understand %s", interaction_type)
+
+                num_interactors = (len(row) - 5) / 3
+                if num_interactors != 2:
+                    logger.info("Skipping interactions with !=2 participants:\n %s", str(row))
+                    continue
+
+
+                gene_a_id = 'WormBase:'+row[5]
+                gene_b_id = 'WormBase:'+row[8]
+
+                if self.testMode and gene_a_id not in self.test_ids['gene'] and \
+                                gene_b_id not in self.test_ids['gene']:
+                    continue
+
+
+                assoc = InteractionAssoc(self.name, gene_a_id, gene_b_id, interaction_type_id)
+                assoc.set_association_id(interaction_id)
+                assoc.add_association_to_graph(g)
+                assoc_id = assoc.get_association_id()
+                # citation is not a pmid or WBref - get this some other way
+                gu.addDescription(g, assoc_id, summary)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
 
         return
 
