@@ -323,8 +323,10 @@ class Genotype():
 
         return
 
-    def addGenomicBackgroundToGenotype(self, background_id, genotype_id):
-        self.gu.addType(self.graph, background_id, self.genoparts['genomic_background'])
+    def addGenomicBackgroundToGenotype(self, background_id, genotype_id, background_type=None):
+        if background_type is None:
+            background_type = self.genoparts['genomic_background']
+        self.gu.addType(self.graph, background_id, background_type)
         self.addParts(background_id, genotype_id, self.object_properties['has_reference_part'])
 
         return
