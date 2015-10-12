@@ -120,7 +120,10 @@ class Source:
         """
         This convenience method will write out all of the graphs associated with the source.
         Right now these are hardcoded to be a single "graph" and a "dataset".
-        If you do not supply stream='stdout' it will default write these to files
+        If you do not supply stream='stdout' it will default write these to files.
+
+        In addition, if the version number isn't yet set in the dataset, it will be set to the
+        date on file.
         :return: None
         """
         format_to_xtn = {
@@ -141,6 +144,10 @@ class Source:
                 datasetfile = '.'.join((datasetfile, format_to_xtn.get(format)))
             else:
                 datasetfile = '.'.join((datasetfile, format))
+
+            logger.info("No version set for this datasource; setting to date issued.")
+            if self.dataset is not None and self.dataset.version is None:
+                self.dataset.set_version_by_date()
         else:
             logger.warn("No output file set. Using stdout")
             stream = 'stdout'
@@ -158,13 +165,21 @@ class Source:
 
         gu = GraphUtils(None)
         # loop through each of the graphs and print them out
+
         for g in graphs:
+            f = None
             if stream is None:
-                gu.write(g['g'], format, file=g['file'])
+                f = g['file']
             elif stream.lowercase().strip() == 'stdout':
-                gu.write(g['g'], format)
+                f = None
             else:
                 logger.error("I don't understand your stream.")
+                return
+            if format == 'raw':
+                gu.write_raw_triples(g['g'], file=f)
+            else:
+                gu.write(g['g'], format, file=f)
+
         return
 
     def whoami(self):
@@ -196,7 +211,8 @@ class Source:
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
         """
-        logger.info("Checking if remote file is newer...")
+        logger.info("Checking if remote file (%s) is newer than local (%s)...", remote, local)
+
         # check if local file exists
         # if no local file, then remote is newer
         if not os.path.exists(local):
@@ -250,7 +266,7 @@ class Source:
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
         # FIXME change this so the date is attached only to each file, not the entire dataset
-        self.dataset.setVersion(filedate)
+        self.dataset.set_date_issued(filedate)
 
         return
 
@@ -399,6 +415,37 @@ class Source:
                 raise Exception("Download from MGI failed, %s != %s", (filerowcount-1), tablerowcount)
         else:
             logger.info("local data same as remote; reusing.")
+
+        return
+
+    def process_xml_table(self, elem, table_name, processing_function, limit):
+        """
+        This is a convenience function to process the elements of an xml document, when the xml is used
+        as an alternative way of distributing sql-like tables.  In this case, the "elem" is akin to an
+        sql table, with it's name of ```table_name```.  It will then process each ```row``` given the
+        ```processing_function``` supplied.
+
+        :param elem: The element data
+        :param table_name: The name of the table to process
+        :param processing_function: The row processing function
+        :param limit:
+        :return:
+        """
+        line_counter = 0
+        table_data = elem.find("[@name='"+table_name+"']")
+        if table_data is not None:
+            logger.info("Processing "+table_name)
+            row = {}
+            for r in table_data.findall('row'):
+                for f in r.findall('field'):
+                    ats = f.attrib
+                    row[ats['name']] = f.text
+                processing_function(row)
+                line_counter += 1
+                if self.testMode and limit is not None and line_counter > limit:
+                    continue
+
+            elem.clear()  # discard the element
 
         return
 

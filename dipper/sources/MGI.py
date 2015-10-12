@@ -60,6 +60,7 @@ class MGI(Source):
         'mrk_acc_view',
         'prb_strain_acc_view',
         'mgi_note_vocevidence_view',
+        'mgi_note_allele_view',
         'mrk_location_cache',  # gene locations
     ]
 
@@ -147,6 +148,11 @@ class MGI(Source):
 
         self.wildtype_alleles = set()
 
+        # also add the gene ids from the config in order to capture transgenes of the test set
+        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+            logger.warn("not configured with gene test ids.")
+        else:
+            self.test_ids = config.get_config()['test_ids']['gene']
         return
 
     def fetch(self, is_dl_forced=False):
@@ -165,8 +171,9 @@ class MGI(Source):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
-        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
+        # self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        # self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
+        self.fetch_transgene_genes_from_db(cxn)
 
         datestamp = ver = None
         # get the resource version information from table mgi_dbinfo, already fetched above
@@ -225,6 +232,7 @@ class MGI(Source):
         self._process_voc_evidence_view(limit)
         self._process_mgi_note_vocevidence_view(limit)
         self._process_mrk_location_cache(limit)
+        self.process_mgi_relationship_transgene_genes(limit)
 
         logger.info("Finished parsing.")
 
@@ -235,6 +243,46 @@ class MGI(Source):
             gu.loadAllProperties(g)
 
         logger.info("Loaded %d nodes", len(self.graph))
+        return
+
+    def fetch_transgene_genes_from_db(self, cxn):
+        """
+        This is a custom query to fetch the non-mouse genes that are part of transgene alleles.
+
+        :param cxn:
+        :return:
+        """
+
+        query = "" + \
+                "select r._relationship_key as rel_key, " + \
+                "r._object_key_1 as object_1, " + \
+                "a.accid as allele_id, " + \
+                "alabel.label as allele_label, " + \
+                "rc._category_key as category_key, " + \
+                "rc.name as category_name, " +\
+                "t._term_key as property_key, " +\
+                "t.term as property_name, " +\
+                "rp.value as property_value " +\
+                "from mgi_relationship r " +\
+                "join mgi_relationship_category rc " +\
+                "on r._category_key = rc._category_key " +\
+                "join acc_accession a " +\
+                "on r._object_key_1 = a._object_key " +\
+                "and rc._mgitype_key_1 = a._mgitype_key " +\
+                "and a._logicaldb_key = 1 " +\
+                "join all_label alabel " +\
+                "on a._object_key = alabel._allele_key " +\
+                "and alabel._label_status_key = 1 " +\
+                "and alabel.priority = 1 " +\
+                "join mgi_relationship_property rp " +\
+                "on r._relationship_key = rp._relationship_key " +\
+                "and rp._propertyname_key = 12948292  " +\
+                "join voc_term t " +\
+                "on rp._propertyname_key = t._term_key " +\
+                "where r._category_key = 1004  "
+
+        self.fetch_query_from_pgdb('mgi_relationship_transgene_genes', query, None, cxn)
+
         return
 
     def _process_gxd_genotype_view(self, limit=None):
@@ -361,7 +409,7 @@ class MGI(Source):
                 if preferred == '1':
                     d = re.sub('\,', '/', short_description.strip())
                     if mgiid not in geno_hash:
-                        geno_hash[mgiid] = {'vslcs': [d], 'subtype': subtype}
+                        geno_hash[mgiid] = {'vslcs': [d], 'subtype': subtype, 'key': object_key}
                     else:
                         vslcs = geno_hash[mgiid].get('vslcs')
                         vslcs.append(d)
@@ -380,6 +428,7 @@ class MGI(Source):
             gvc = sorted(geno.get('vslcs'))
             label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
             gutil.addGenotype(gt, None)
+            gu.addComment(g, gt, self._makeInternalIdentifier('genotype', geno.get('key')))
             gu.addSynonym(g, gt, label.strip())
 
         gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
@@ -482,9 +531,13 @@ class MGI(Source):
 
                 (allele_key, marker_key, strain_key, mode_key, allele_type_key, allele_status_key,
                  transmission_key, collection_key, symbol, name, nomensymbol, iswildtype, isextinct, ismixed,
+                 refs_key, markerallele_status_key,
                  createdby_key, modifiedby_key, approvedby_key, approval_date, creation_date,
                  modification_date, markersymbol, term, statusnum, strain, collection,
-                 createdby, modifiedby, approvedby) = line.split('\t')
+                 createdby, modifiedby, approvedby,
+                 markerallele_status, jnum, jnumid, citation, short_citation) = line.split('\t')
+
+                # TODO update processing to use this view better - including jnums!
 
                 if self.testMode is True:
                     if int(allele_key) not in self.test_keys.get('allele'):
@@ -523,6 +576,7 @@ class MGI(Source):
                     locus_type = None
 
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
+                gu.makeLeader(g, allele_id)
                 self.label_hash[allele_id] = symbol
 
                 # HACK - if the label of the allele == marker, then make the thing a seq alt
@@ -661,7 +715,7 @@ class MGI(Source):
                 # else:
                 #     geno_hash[genotype_id] += [vslc_label]
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # build the gvc and the genotype label
@@ -688,10 +742,11 @@ class MGI(Source):
                     geno.addVSLCtoParent(v, gvc_id)
                 geno.addParts(gvc_id, gt, geno.object_properties['has_alternate_part'])
             elif len(vslcs) == 1:
-                gvc_label = vslcs[0]
+                gvc_id = vslcs[0]
+                gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
-                gu.addIndividualToGraph(g, gvc_label, None, geno.genoparts['genomic_variation_complement'])
-                geno.addVSLCtoParent(gvc_label, gt)
+                gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
+                geno.addVSLCtoParent(gvc_id, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
 
@@ -995,6 +1050,7 @@ class MGI(Source):
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match('PMID', pub_id):
                         r.setType(Reference.ref_types['journal_article'])
+                        gu.makeLeader(g, pub_id)
                     r.addRefToGraph(g)
 
                     gu.addSameIndividual(g, jid, pub_id)
@@ -1052,9 +1108,9 @@ class MGI(Source):
 
                     # add the species to the graph as a class
                     sp = self._map_strain_species(species)
-                    gu.addClassToGraph(g, sp, None)
-
-                    geno.addTaxon(sp, strain_id)
+                    if sp is not None:
+                        gu.addClassToGraph(g, sp, None)
+                        geno.addTaxon(sp, strain_id)
 
                     # TODO what is mgi's strain type anyway?
 
@@ -1095,10 +1151,10 @@ class MGI(Source):
             for line in f:
                 line_counter += 1
 
-                (marker_key, organism_key, marker_status_key, marker_type_key, curationstate_key,
+                (marker_key, organism_key, marker_status_key, marker_type_key,
                  symbol, name, chromosome, cytogenetic_offset, createdby_key, modifiedby_key,
                  creation_date, modification_date, organism, common_name,
-                 latin_name, status, marker_type, curation_state, created_by, modified_by) = line.split('\t')
+                 latin_name, status, marker_type, created_by, modified_by) = line.split('\t')
 
                 if self.testMode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
@@ -1133,6 +1189,10 @@ class MGI(Source):
                     # add the taxon
                     taxon_id = self._map_taxon(latin_name)
                     geno.addTaxon(taxon_id, marker_id)
+
+                    # make MGI the leader for mouse genes.
+                    if taxon_id == 'NCBITaxon:10090':
+                        gu.makeLeader(g, marker_id)
 
                     if not self.testMode and limit is not None and line_counter > limit:
                         break
@@ -1495,6 +1555,52 @@ class MGI(Source):
 
         return
 
+    def process_mgi_relationship_transgene_genes(self, limit=None):
+        """
+        Here, we have the relationship between MGI transgene alleles, and the
+        non-mouse gene ids that are part of them.
+        We augment the allele with the transgene parts.
+
+        :param limit:
+        :return:
+        """
+        line_counter = 0
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        logger.info("getting transgene genes")
+        raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
+        geno = Genotype(g)
+
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if line_counter == 1:
+                    continue
+
+                (rel_key, allele_key, allele_id, allele_label, category_key, category_name,
+                 property_key, property_name, gene_num) = line
+
+                if self.testMode is True:
+                    if int(allele_key) not in self.test_keys.get('allele')\
+                            and int(gene_num) not in self.test_ids:
+                        continue
+                print(line)
+
+                gene_id = 'NCBIGene:'+gene_num
+
+                geno.addParts(gene_id, allele_id, geno.object_properties['has_alternate_part'])
+                geno.addSequenceDerivesFrom(allele_id, gene_id)
+
+        return
+
+    def process_mgi_note_allele_view(self, limit=None):
+
+        return
+
     # TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
     @staticmethod
     def _map_seq_alt_type(sequence_alteration_type):
@@ -1792,11 +1898,12 @@ class MGI(Source):
         }
         if species.strip() in id_map:
             tax = id_map.get(species.strip())
-
         else:
             logger.warn("Species (%s) not mapped; defaulting to Mus genus.", species)
 
-        return 'NCBITaxon:'+tax
+        if tax is not None:
+            tax = 'NCBITaxon:'+tax
+        return tax
 
     @staticmethod
     def _map_evidence_id(evidence_code):

@@ -19,6 +19,7 @@ class Reference:
 
     """
     ref_types = {
+        'person': 'foaf:Person',
         'journal_article': 'IAO:0000013',
         'publication': 'IAO:0000311',  # book
         'document': 'IAO:0000310',  # document???

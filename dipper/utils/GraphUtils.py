@@ -1,3 +1,5 @@
+import rdflib
+
 __author__ = 'nlw'
 
 import re
@@ -33,6 +35,7 @@ class GraphUtils:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
+        'clique_leader': 'MONARCH:cliqueLeader'
     }
 
     object_properties = {
@@ -275,12 +278,8 @@ class GraphUtils:
 
         return
 
-    def addXref(self, g, cid, xrefid):
-        n1 = self.getNode(cid)
-        n2 = self.getNode(xrefid)
-        p = URIRef(self.cu.get_uri(self.properties['has_xref']))
-        if n1 is not None and n2 is not None:
-            g.add((n1, p, n2))
+    def addXref(self, g, cid, xrefid, xref_as_literal=False):
+        self.addTriple(g, cid, self.properties['has_xref'], xrefid, xref_as_literal)
 
         return
 
@@ -316,7 +315,7 @@ class GraphUtils:
     def addInvolvedIn(self, g, member_id, group_id):
         self.addTriple(g, member_id, self.properties['involved_in'], group_id)
 
-    def write(self, graph, format=None, file=None):
+    def write(self, graph, fileformat=None, file=None):
         """
          a basic graph writer (to stdout) for any of the sources.  this will write
          raw triples in rdfxml, unless specified.
@@ -324,15 +323,51 @@ class GraphUtils:
          an optional file can be supplied instead of stdout
         :return: None
         """
-        if format is None:
-            format = 'rdfxml'
+        filewriter = None
+        if fileformat is None:
+            fileformat = 'rdfxml'
         if file is not None:
-            filewriter = open(file, 'w')
-            logger.info("Writing triples in %s to %s", format, file)
-            print(graph.serialize(format=format).decode(), file=filewriter)
+            filewriter = open(file, 'wb')
+
+            logger.info("Writing triples in %s to %s", fileformat, file)
+            graph.serialize(filewriter, format=fileformat)
             filewriter.close()
         else:
-            print(graph.serialize(format=format).decode())
+            print(graph.serialize(format=fileformat).decode())
+        return
+
+    def write_raw_triples(self, graph, file=None):
+        """
+         a basic graph writer (to stdout) for any of the sources.  this will write
+         raw triples in rdfxml, unless specified.
+         to write turtle, specify format='turtle'
+         an optional file can be supplied instead of stdout
+        :return: None
+        """
+        filewriter = None
+        if file is not None:
+            filewriter = open(file, 'w')
+            logger.info("Writing raw triples to %s", file)
+
+        for (s,p,o) in graph:
+            output = [s,p,o]
+
+            print(' '.join(output), file=filewriter)
+
+        if filewriter is not None:
+            filewriter.close()
+
+        return
+
+    def write_compact_triples(self, graph, file=None):
+        """
+        Will write out the raw triples, except it will replace the full uri with the curie prefix
+        :param graph:
+        :param file:
+        :return:
+        """
+        # TODO
+
         return
 
 
@@ -434,4 +469,15 @@ class GraphUtils:
     def addOWLVersionInfo(self, graph, ontology_id, version_info):
         graph.add((self.getNode(ontology_id), OWL['versionInfo'], Literal(version_info)))
 
+        return
+
+    def makeLeader(self, graph, node_id):
+        """
+        Add an annotation property to the given ```node_id``` to be the clique_leader.
+        This is a monarchism.
+        :param graph:
+        :param node_id:
+        :return:
+        """
+        self.addTriple(graph, node_id, self.annotation_properties['clique_leader'], Literal(True, datatype=XSD[bool]), True)
         return

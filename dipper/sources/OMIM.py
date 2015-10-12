@@ -1,6 +1,6 @@
 import logging
 import urllib
-from urllib import request
+from urllib import request, parse
 import re
 import time
 from datetime import datetime
@@ -58,10 +58,10 @@ class OMIM(Source):
     test_ids = [
         119600, 120160, 157140, 158900, 166220, 168600, 219700,
         253250, 305900, 600669, 601278, 602421, 605073, 607822,   # coriell
-        102560, 102480, 100678, 102750,                           # genes
+        102560, 102480, 100678, 102750, 600201,                   # genes
         104200, 105400, 114480, 115300, 121900,                   # phenotype/disease -- indicate that here?
         107670, 11600, 126453,                                    # gene of known sequence and has a phenotype
-        102150, 104000, 107200, 100070]                           # disease with known locus
+        102150, 104000, 107200, 100070, 611742]                   # disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -72,6 +72,8 @@ class OMIM(Source):
 
         self.dataset = Dataset('omim', 'Online Mendelian Inheritance in Man', 'http://www.omim.org',
                                None, 'http://omim.org/help/agreement')
+
+        self.gu = GraphUtils(curie_map.get())
 
         # data-source specific warnings (will be removed when issues are cleared)
 
@@ -147,6 +149,100 @@ class OMIM(Source):
         logger.info("Done.  I found %d omim ids", omimids.__len__())
         return omimids
 
+    def process_entries(self, omimids, transform, included_fields=None, graph=None, limit=None):
+        """
+        Given a list of omim ids, this will use the omim API to fetch the entries, according to
+        the ```included_fields``` passed as a parameter.  If a transformation function is supplied,
+        this will iterate over each entry, and either add the results to the supplied ```graph```
+        or will return a set of processed entries that the calling function can further iterate.
+
+        If no ```included_fields``` are provided, this will simply fetch the basic entry from omim,
+        which includes an entry's:  prefix, mimNumber, status, and titles.
+
+        :param omimids: the set of omim entry ids to fetch using their API
+        :param transform: Function to transform each omim entry when looping
+        :param included_fields: A set of what fields are required to retrieve from the API
+        :param graph: the graph to add the transformed data into
+        :return:
+        """
+
+        omimparams = {
+            'format': 'json'
+        }
+
+        # add the included_fields as parameters
+        if included_fields is not None and len(included_fields) > 0:
+            omimparams['include'] = ','.join(included_fields)
+
+        # you will need to add the API key into the conf.json file, like:
+        # keys : { 'omim' : '<your api key here>' }
+        omimparams.update({'apiKey': config.get_config()['keys']['omim']})
+
+        gu = GraphUtils(curie_map.get())
+        processed_entries = list()
+
+        it = 0  # for counting
+
+        # note that you can only do request batches of 20
+        # see info about "Limits" at http://omim.org/help/api
+        groupsize = 20
+        if not self.testMode and limit is not None:
+            # just in case the limit is larger than the number of records, max it out
+            maxit = min((limit, omimids.__len__()))
+        else:
+            maxit = omimids.__len__()
+
+        while it < maxit:
+            end = min((maxit, it+groupsize))
+            # iterate through the omim ids list, and fetch from the OMIM api in batches of 20
+
+            if self.testMode:
+                intersect = list(set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
+                if len(intersect) > 0:  # some of the test ids are in the omimids
+                    logger.info("found test ids: %s", intersect)
+                    omimparams.update({'mimNumber': ','.join(intersect)})
+                else:
+                    it += groupsize
+                    continue
+            else:
+                omimparams.update({'mimNumber': ','.join(omimids[it:end])})
+
+            p = urllib.parse.urlencode(omimparams)
+            url = '/'.join((self.OMIM_API, 'entry'))+'?%s' % p
+            logger.info('fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
+
+            # print ('fetching:',(',').join(omimids[it:end]))
+            # print('url:',url)
+
+            # TODO try/catch
+            d = urllib.request.urlopen(url)
+            resp = d.read().decode()
+            request_time = datetime.now()
+            it += groupsize
+
+            myjson = json.loads(resp)
+            entries = myjson['omim']['entryList']
+
+            for e in entries:
+                processed_entry = transform(e, graph)  # apply the data transformation, and save it to the graph
+                if processed_entry is not None:
+                    processed_entries.append(processed_entry)
+
+                # ### end iterating over batch of entries
+
+            # can't have more than 4 req per sec,
+            # so wait the remaining time, if necessary
+            dt = datetime.now() - request_time
+            rem = 0.25 - dt.total_seconds()
+            if rem > 0:
+                logger.info("waiting %d sec", rem)
+                time.sleep(rem/1000)
+
+        if graph is not None:
+            gu.loadAllProperties(graph)
+
+        return processed_entries
+
     def _process_all(self, limit):
         """
         This takes the list of omim identifiers from the omim.txt.Z file,
@@ -166,195 +262,134 @@ class OMIM(Source):
         """
         omimids = self._get_omim_ids()  # store the set of omim identifiers
 
-        omimparams = {
-            'format': 'json',
-            'include': 'all',
-        }
-        # you will need to add the API key into the conf.json file, like:
-        # keys : { 'omim' : '<your api key here>' }
-        omimparams.update({'apiKey': config.get_config()['keys']['omim']})
-
-        # http://api.omim.org/api/entry?mimNumber=100100&include=all
-
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        geno = Genotype(g)
+        tax_num = '9606'
+        tax_id = 'NCBITaxon:9606'
+        tax_label = 'Human'
 
-        gu = GraphUtils(curie_map.get())
+        # add genome and taxon
+        geno.addGenome(tax_id, tax_label)   # tax label can get added elsewhere
+        self.gu.addClassToGraph(g, tax_id, None)   # label added elsewhere
 
-        it = 0  # for counting
+        includes = set()
+        includes.add('all')
 
-        # note that you can only do request batches of 20
-        # see info about "Limits" at http://omim.org/help/api
-        groupsize = 20
-        if not self.testMode and limit is not None:
-            # just in case the limit is larger than the number of records, max it out
-            max = min((limit, omimids.__len__()))
-        else:
-            max = omimids.__len__()
-        # max = 10 #for testing
+        self.process_entries(omimids, self._transform_entry, includes, g, limit)
 
-        # TODO write the json to local files - make the assumption that downloads within 24 hrs are the same
-        # now, loop through the omim numbers and pull the records as json docs
-        while it < max:
-            end = min((max, it+groupsize))
-            # iterate through the omim ids list, and fetch from the OMIM api in batches of 20
-
-            if self.testMode:
-                intersect = list(set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
-                if len(intersect) > 0:  # some of the test ids are in the omimids
-                    logger.info("found test ids: %s", intersect)
-                    omimparams.update({'mimNumber': ','.join(intersect)})
-                else:
-                    it += groupsize
-                    continue
-            else:
-                omimparams.update({'mimNumber': ','.join(omimids[it:end])})
-
-            p = urllib.parse.urlencode(omimparams)
-            url = '/'.join((self.OMIM_API, 'entry'))+'?%s' % p
-            logger.info('fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
-
-            # ### if you want to test a specific entry number, uncomment the following code block
-            # if ('101600' in omimids[it:end]):  #104000
-            #     print("FOUND IT in",omimids[it:end])
-            # else:
-            #    #testing very specific record
-            #     it+=groupsize
-            #     continue
-            # ### end code block for testing
-
-            # print ('fetching:',(',').join(omimids[it:end]))
-            # print('url:',url)
-            d = urllib.request.urlopen(url)
-            resp = d.read().decode()
-            request_time = datetime.now()
-            it += groupsize
-
-            myjson = json.loads(resp)
-            entries = myjson['omim']['entryList']
-
-            geno = Genotype(g)
-
-            # add genome and taxon
-            tax_num = '9606'
-            tax_id = 'NCBITaxon:9606'
-            tax_label = 'Human'
-
-            geno.addGenome(tax_id, str(tax_num))   # tax label can get added elsewhere
-            gu.addClassToGraph(g, tax_id, None)   # label added elsewhere
-
-            for e in entries:
-
-                # get the numbers, labels, and descriptions
-                omimnum = e['entry']['mimNumber']
-                titles = e['entry']['titles']
-                label = titles['preferredTitle']
-
-                other_labels = []
-                if 'alternativeTitles' in titles:
-                    other_labels += self._get_alt_labels(titles['alternativeTitles'])
-                if 'includedTitles' in titles:
-                    other_labels += self._get_alt_labels(titles['includedTitles'])
-
-                # add synonyms of alternate labels
-                # preferredTitle": "PFEIFFER SYNDROME",
-                # "alternativeTitles": "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
-                # "includedTitles": "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
-
-                # remove the abbreviation (comes after the ;) from the preferredTitle, and add it as a synonym
-                abbrev = None
-                if len(re.split(';', label)) > 1:
-                    abbrev = (re.split(';', label)[1].strip())
-                newlabel = self._cleanup_label(label)
-
-                description = self._get_description(e['entry'])
-                omimid = 'OMIM:'+str(omimnum)
-
-                if e['entry']['status'] == 'removed':
-                    gu.addDeprecatedClass(g, omimid)
-                else:
-                    omimtype = self._get_omimtype(e['entry'])
-                    # this uses our cleaned-up label
-                    gu.addClassToGraph(g, omimid, newlabel, omimtype)
-
-                    # add the original OMIM label as a synonym
-                    gu.addSynonym(g, omimid, label)
-
-                    # add the alternate labels and includes as synonyms
-                    for l in other_labels:
-                        gu.addSynonym(g, omimid, l)
-
-                    # for OMIM, we're adding the description as a definition
-                    gu.addDefinition(g, omimid, description)
-                    if abbrev is not None:
-                        gu.addSynonym(g, omimid, abbrev)
-
-                    # if this is a genetic locus (but not sequenced) then add the chrom loc info
-                    if omimtype == Genotype.genoparts['biological_region']:
-                        if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
-                            genemap = e['entry']['geneMap']
-                            if 'cytoLocation' in genemap:
-                                cytoloc = genemap['cytoLocation']
-                                # parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
-                                # 18p11.3-p11.2
-                                # for now, just take the first one
-                                # FIXME add the other end of the range, but not sure how to do that
-                                # not sure if saying subsequence of feature is the right relationship
-                                cytoloc = cytoloc.split('-')[0]
-                                f = Feature(omimid, None, None)
-                                if 'chromosome' in genemap:
-                                    chrom = makeChromID(str(genemap['chromosome']), tax_num, 'CHR')
-                                    geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
-                                    loc = makeChromID(cytoloc, tax_num, 'CHR')
-                                    gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
-                                    f.addSubsequenceOfFeature(g, loc)
-                                    f.addFeatureToGraph(g)
-                                pass
-
-                    # check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
-                    # some entries have been moved to multiple other entries and use the joining raw word "and"
-                    # 612479 is movedto:  "603075 and 603029"  OR
-                    # others use a comma-delimited list, like:
-                    # 610402 is movedto: "609122,300870"
-                    if e['entry']['status'] == 'moved':
-                        if re.search('and', str(e['entry']['movedTo'])):
-                            # split the movedTo entry on 'and'
-                            newids = re.split('and', str(e['entry']['movedTo']))
-                        elif len(str(e['entry']['movedTo']).split(',')) > 0:
-                            # split on the comma
-                            newids = str(e['entry']['movedTo']).split(',')
-                        else:
-                            # make a list of one
-                            newids = [str(e['entry']['movedTo'])]
-                        # cleanup whitespace and add OMIM prefix to numeric portion
-                        fixedids = []
-                        for i in newids:
-                            fixedids.append('OMIM:'+i.strip())
-
-                        gu.addDeprecatedClass(g, omimid, fixedids)
-
-                    self._get_phenotypicseries_parents(e['entry'], g)
-                    self._get_mappedids(e['entry'], g)
-
-                    self._get_pubs(e['entry'], g)
-
-                    self._get_process_allelic_variants(e['entry'], g)
-
-                ### end iterating over batch of entries
-
-            # can't have more than 4 req per sec,
-            # so wait the remaining time, if necessary
-            dt = datetime.now() - request_time
-            rem = 0.25 - dt.total_seconds()
-            if rem > 0:
-                logger.info("waiting %d sec", rem)
-                time.sleep(rem/1000)
-
-            gu.loadAllProperties(g)
+        self.gu.loadAllProperties(g)
 
         return
+
+    def _transform_entry(self, e, graph):
+        gu=self.gu
+        g=graph
+        geno=Genotype(graph)
+
+        tax_num = '9606'
+        tax_id = 'NCBITaxon:9606'
+        tax_label = 'Human'
+
+        # get the numbers, labels, and descriptions
+        omimnum = e['entry']['mimNumber']
+        titles = e['entry']['titles']
+        label = titles['preferredTitle']
+
+        other_labels = []
+        if 'alternativeTitles' in titles:
+            other_labels += self._get_alt_labels(titles['alternativeTitles'])
+        if 'includedTitles' in titles:
+            other_labels += self._get_alt_labels(titles['includedTitles'])
+
+        # add synonyms of alternate labels
+        # preferredTitle": "PFEIFFER SYNDROME",
+        # "alternativeTitles": "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
+        # "includedTitles": "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
+
+        # remove the abbreviation (comes after the ;) from the preferredTitle, and add it as a synonym
+        abbrev = None
+        if len(re.split(';', label)) > 1:
+            abbrev = (re.split(';', label)[1].strip())
+        newlabel = self._cleanup_label(label)
+
+        description = self._get_description(e['entry'])
+        omimid = 'OMIM:'+str(omimnum)
+
+        if e['entry']['status'] == 'removed':
+            gu.addDeprecatedClass(g, omimid)
+        else:
+            omimtype = self._get_omimtype(e['entry'])
+            # this uses our cleaned-up label
+            gu.addClassToGraph(g, omimid, newlabel, omimtype)
+
+            # add the original OMIM label as a synonym
+            gu.addSynonym(g, omimid, label)
+
+            # add the alternate labels and includes as synonyms
+            for l in other_labels:
+                gu.addSynonym(g, omimid, l)
+
+            # for OMIM, we're adding the description as a definition
+            gu.addDefinition(g, omimid, description)
+            if abbrev is not None:
+                gu.addSynonym(g, omimid, abbrev)
+
+            # if this is a genetic locus (but not sequenced) then add the chrom loc info
+            if omimtype == Genotype.genoparts['biological_region']:
+                if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
+                    genemap = e['entry']['geneMap']
+                    if 'cytoLocation' in genemap:
+                        cytoloc = genemap['cytoLocation']
+                        # parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
+                        # 18p11.3-p11.2
+                        # for now, just take the first one
+                        # FIXME add the other end of the range, but not sure how to do that
+                        # not sure if saying subsequence of feature is the right relationship
+                        cytoloc = cytoloc.split('-')[0]
+                        f = Feature(omimid, None, None)
+                        if 'chromosome' in genemap:
+                            chrom = makeChromID(str(genemap['chromosome']), tax_num, 'CHR')
+                            geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
+                            loc = makeChromID(cytoloc, tax_num, 'CHR')
+                            gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
+                            f.addSubsequenceOfFeature(g, loc)
+                            f.addFeatureToGraph(g)
+                        pass
+
+            # check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
+            # some entries have been moved to multiple other entries and use the joining raw word "and"
+            # 612479 is movedto:  "603075 and 603029"  OR
+            # others use a comma-delimited list, like:
+            # 610402 is movedto: "609122,300870"
+            if e['entry']['status'] == 'moved':
+                if re.search('and', str(e['entry']['movedTo'])):
+                    # split the movedTo entry on 'and'
+                    newids = re.split('and', str(e['entry']['movedTo']))
+                elif len(str(e['entry']['movedTo']).split(',')) > 0:
+                    # split on the comma
+                    newids = str(e['entry']['movedTo']).split(',')
+                else:
+                    # make a list of one
+                    newids = [str(e['entry']['movedTo'])]
+                # cleanup whitespace and add OMIM prefix to numeric portion
+                fixedids = []
+                for i in newids:
+                    fixedids.append('OMIM:'+i.strip())
+
+                gu.addDeprecatedClass(g, omimid, fixedids)
+
+            self._get_phenotypicseries_parents(e['entry'], g)
+            self._get_mappedids(e['entry'], g)
+
+            self._get_pubs(e['entry'], g)
+
+            self._get_process_allelic_variants(e['entry'], g)
+
+        return
+
 
     def _process_morbidmap(self, limit):
         """
@@ -440,7 +475,8 @@ class OMIM(Source):
 
         return
 
-    def _get_description(self, entry):
+    @staticmethod
+    def _get_description(entry):
         """
         Get the description of the omim entity from the textSection called 'description'.
         Note that some of these descriptions have linebreaks.  If printed in turtle syntax,
@@ -502,7 +538,7 @@ class OMIM(Source):
                             for dnum in dbsnp_ids:
                                 did = 'dbSNP:'+dnum.strip()
                                 gu.addIndividualToGraph(g, did, None)
-                                gu.addEquivalentClass(g, al_id, did)
+                                gu.addSameIndividual(g, al_id, did)
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited, each lik eRCV000020059;;1
                             rcv_ids = re.split(';;;', al['allelicVariant']['clinvarAccessions'])
@@ -624,6 +660,9 @@ class OMIM(Source):
                 (ps_label, ps_num) = line.split('\t')
                 omim_id = 'OMIM:'+ps_num
                 gu.addClassToGraph(g, omim_id, ps_label)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
 
         return
 
@@ -822,3 +861,11 @@ class OMIM(Source):
         test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIMTestCase)
 
         return test_suite
+
+
+def get_omim_id_from_entry(entry):
+    if entry is not None and 'mimNumber' in entry:
+        omimid = 'OMIM:'+str(entry['mimNumber'])
+    else:
+        omimid = None
+    return omimid

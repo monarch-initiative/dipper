@@ -1,5 +1,9 @@
+
 __author__ = 'nlw'
 
+from datetime import datetime
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import curie_map
 from rdflib import Graph, Literal, URIRef, Namespace
 from rdflib.namespace import RDF, DCTERMS, XSD, FOAF
 import logging
@@ -23,7 +27,12 @@ class Dataset:
 
     def __init__(self, identifier, title, url, description=None, license_url=None, data_rights=None):
         DCTYPES = Namespace(self.namespaces['dctypes'])
+        self.gu = GraphUtils(curie_map.get())
         self.identifier = URIRef(':'+identifier)
+        self.version = None
+        self.date_issued = None
+        self.date_accessed = None
+        self.set_access_date()
         self.license = license_url
         self.graph = Graph()
         self.load_bindings()
@@ -46,7 +55,7 @@ class Dataset:
             logger.debug('No rights provided.')
 
         if description is not None:
-            self.graph.add((':'+identifier, DCTERMS['description'], description))
+            self.gu.addDescription(self.graph, self.identifier, description )
         return
 
     def load_bindings(self):
@@ -61,20 +70,88 @@ class Dataset:
         return
 
     def setVersion(self, date_issued, version_id=None):
+        """
+        Legacy function...  should use the other set_* for version and date
+
+        # TODO set as deprecated
+        :param date_issued:
+        :param version_id:
+        :return:
+        """
+        if date_issued is not None:
+            self.set_date_issued(date_issued)
+        elif version_id is not None:
+            # this shouldn't happen
+            self.set_version_by_num(version_id)
+        else:
+            logger.error("No date or version set!")
+            # TODO throw error
+            return
+
+        if version_id is not None:
+            self.set_version_by_num(version_id)
+        else:
+            self.set_version_by_date(date_issued)
+
+        logger.info("set version to %s", self.version)
+
+        return
+
+    def set_date_issued(self, date_issued):
+
+        self.date_issued = date_issued
+        self.graph.add((self.identifier, DCTERMS['issued'], Literal(date_issued)))
+        logger.info("setting date to %s", date_issued)
+
+        return
+
+    def set_version_by_date(self, date_issued=None):
+        """
+        This will set the version by the date supplied, the date already stored in the dataset description,
+        or by the download date (today)
+        :param date_issued:
+        :return:
+        """
+
+        if date_issued is not None:
+            d = date_issued
+        elif self.date_issued is not None:
+            d = self.date_issued
+        else:
+            d = self.date_accessed
+            logger.info("No date supplied for setting version; using download timestamp for date_issued")
+
+        logger.info("setting version by date")
+        self.set_version_by_num(d)
+
+        return
+
+    def set_version_by_num(self, version_num):
         PAV = Namespace(self.namespaces['pav'])
 
-        # default to setting the version to the date, if no version specified
-        if version_id is None:
-            version_id = date_issued
-        self.version = URIRef(self.identifier+version_id)
-        # TODO verify date
-        # date in YYYY-MM-DD format
-
-        self.graph.add((self.identifier, DCTERMS['issued'], Literal(date_issued)))
+        self.version = URIRef(self.identifier+version_num)
         self.graph.add((self.version, DCTERMS['isVersionOf'], self.identifier))
-        self.graph.add((self.version, PAV['version'], Literal(version_id)))
+        self.graph.add((self.version, PAV['version'], Literal(version_num)))
 
-        logger.info("setting version to %s",version_id)
+        logger.info("setting version to %s", self.version)
+
+        # set the monarch-generated-version of the resource-version
+        # TODO sync this up with the ontology version
+        if version_num != self.date_accessed:
+            self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
+            self.graph.add((self.dipperized_version, DCTERMS['isVersionOf'], self.version))
+            self.graph.add((self.dipperized_version, PAV['version'], Literal(self.date_accessed)))
+            self.graph.add((self.dipperized_version, DCTERMS['issued'], Literal(self.date_accessed, datatype=XSD.dateTime)))
+
+        return
+
+    def set_access_date(self):
+
+        t = datetime.now()
+        t_string = t.strftime("%Y-%m-%d-%H-%M")
+        d = t_string
+        self.date_accessed = d
+        logger.info("Setting date of access to %s", self.date_accessed)
 
         return
 

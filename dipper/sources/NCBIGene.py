@@ -1,15 +1,19 @@
 import re
 import gzip
 import logging
+import csv
+import io
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
+from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.Reference import Reference
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +55,9 @@ class NCBIGene(Source):
             'file': 'gene2pubmed.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
         },
+        'gene_group': {
+            'file': 'gene_group.gz',
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz'}
     }
 
     def __init__(self, tax_ids=None, gene_ids=None):
@@ -81,6 +88,8 @@ class NCBIGene(Source):
             self.gene_ids = config.get_config()['test_ids']['gene']
 
         self.properties = Feature.properties
+
+        self.class_or_indiv = {}
 
         return
 
@@ -146,39 +155,48 @@ class NCBIGene(Source):
                 if re.match('^#', line):
                     continue
                 (tax_num, gene_num, symbol, locustag,
-                 synonyms, xrefs, chr, map_loc, desc,
+                 synonyms, xrefs, chrom, map_loc, desc,
                  gtype, authority_symbol, name,
                  nomenclature_status, other_designations, modification_date) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #             or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self._map_type_of_gene(gtype)
+                gene_type_id = self.map_type_of_gene(gtype.strip())
 
                 if symbol == 'NEWENTRY':
                     label = None
                 else:
                     label = symbol
 
-                # TODO might have to figure out if things aren't genes, and make them individuals
-                gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                if gene_type_id == 'SO:0000110':  # sequence feature, not a gene
+                    self.class_or_indiv[gene_id] = 'I'
+                else:
+                    self.class_or_indiv[gene_id] = 'C'
 
-                # we have to do special things here for genes, because they're classes not individuals
-                # f = Feature(gene_id,label,gene_type_id,desc)
+                if not self.testMode and limit is not None and line_counter > limit:
+                    continue
+
+                if self.class_or_indiv[gene_id] == 'C':
+                    gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                    # NCBI will be the default leader, so i will not add the leader designation here.
+                else:
+                    gu.addIndividualToGraph(g, gene_id, label, gene_type_id, desc)
+                    # in this case, they aren't genes.  so i want someone else to be the leader.
 
                 if name != '-':
                     gu.addSynonym(g, gene_id, name)
@@ -201,7 +219,10 @@ class NCBIGene(Source):
                             else:
                                 # skip some of these for now
                                 if fixedr.split(':')[0] not in ['Vega', 'IMGT/GENE-DB']:
-                                    gu.addEquivalentClass(g, gene_id, fixedr)
+                                    if self.class_or_indiv.get(gene_id) == 'C':
+                                        gu.addEquivalentClass(g, gene_id, fixedr)
+                                    else:
+                                        gu.addSameIndividual(g, gene_id, fixedr)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -222,8 +243,8 @@ class NCBIGene(Source):
                 # with the exception of human X|Y, i will only take those that align to one chr
 
                 # FIXME remove the chr mapping below when we pull in the genomic coords
-                if str(chr) != '-' and str(chr) != '':
-                    if re.search('\|', str(chr)) and str(chr) not in ['X|Y','X; Y']:
+                if str(chrom) != '-' and str(chrom) != '':
+                    if re.search('\|', str(chrom)) and str(chrom) not in ['X|Y', 'X; Y']:
                         # this means that there's uncertainty in the mapping.  skip it
                         # TODO we'll need to figure out how to deal with >1 loc mapping
                         logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
@@ -232,10 +253,10 @@ class NCBIGene(Source):
 
                     # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-                    if str(chr) == 'X; Y':
-                        chr = 'X|Y'  # rewrite the PAR regions for processing
+                    if str(chrom) == 'X; Y':
+                        chrom = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
-                    for c in re.split('\|',str(chr)) :
+                    for c in re.split('\|', str(chrom)):
                         geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
                         mychrom = makeChromID(c, tax_num, 'CHR')
                         mychrom_syn = makeChromLabel(c, tax_num)  # temporarily use the taxnum for the disambiguating label
@@ -258,15 +279,12 @@ class NCBIGene(Source):
                         else:
                             # TODO handle these cases
                             # examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
-                            ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
+                            # 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
                             logger.debug('not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
-
-                if not self.testMode and limit is not None and line_counter > limit:
-                    break
 
             gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
             gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
@@ -300,12 +318,12 @@ class NCBIGene(Source):
                     continue
                 (tax_num, gene_num, discontinued_num, discontinued_symbol, discontinued_date) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #             or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if gene_num == '-' or discontinued_num == '-':
                     continue
@@ -313,20 +331,24 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 discontinued_gene_id = ':'.join(('NCBIGene', discontinued_num))
-                tax_id = ':'.join(('NCBITaxon', tax_num))
 
                 # add the two genes
-                gu.addClassToGraph(g, gene_id, None)
-                gu.addClassToGraph(g, discontinued_gene_id, discontinued_symbol)
+                if self.class_or_indiv.get(gene_id) == 'C':
+                    gu.addClassToGraph(g, gene_id, None)
+                    gu.addClassToGraph(g, discontinued_gene_id, discontinued_symbol)
 
-                # add the new gene id to replace the old gene id
-                gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
+                    # add the new gene id to replace the old gene id
+                    gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
+                else:
+                    gu.addIndividualToGraph(g, gene_id, None)
+                    gu.addIndividualToGraph(g, discontinued_gene_id, discontinued_symbol)
+                    gu.addDeprecatedIndividual(g, discontinued_gene_id, [gene_id])
 
                 # also add the old symbol as a synonym of the new gene
                 gu.addSynonym(g, gene_id, discontinued_symbol)
@@ -349,7 +371,7 @@ class NCBIGene(Source):
             g = self.testgraph
         else:
             g = self.graph
-        is_about = gu.getNode(gu.object_properties['is_about'])
+
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
@@ -362,17 +384,17 @@ class NCBIGene(Source):
                     continue
                 (tax_num, gene_num, pubmed_num) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #        or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 if gene_num == '-' or pubmed_num == '-':
@@ -382,18 +404,23 @@ class NCBIGene(Source):
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 pubmed_id = ':'.join(('PMID', pubmed_num))
 
-                # add the gene, in case it hasn't before
-                gu.addClassToGraph(g, gene_id, None)
+                if self.class_or_indiv.get(gene_id) == 'C':
+                    gu.addClassToGraph(g, gene_id, None)
+                else:
+                    gu.addIndividualToGraph(g, gene_id, None)
                 # add the publication as a NamedIndividual
                 gu.addIndividualToGraph(g, pubmed_id, None, None)  # add type publication
-                self.graph.add((gu.getNode(pubmed_id), is_about, gu.getNode(gene_id)))
+                r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                r.addRefToGraph(g)
+                gu.addTriple(g, pubmed_id, gu.object_properties['is_about'], gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
 
-    def _map_type_of_gene(self, sotype):
+    @staticmethod
+    def map_type_of_gene(sotype):
         so_id = 'SO:0000110'
         type_to_so_map = {
             'ncRNA': 'SO:0001263',
@@ -405,7 +432,7 @@ class NCBIGene(Source):
             'snoRNA': 'SO:0001267',
             'tRNA': 'SO:0001272',
             'unknown': 'SO:0000110',
-            'scRNA': 'SO:0000013',
+            'scRNA': 'SO:0001266',
             'miscRNA': 'SO:0000233',  # mature transcript - there is no good mapping
             'chromosome': 'SO:0000340',
             'chromosome_arm': 'SO:0000105',
@@ -420,7 +447,8 @@ class NCBIGene(Source):
 
         return so_id
 
-    def _cleanup_id(self, i):
+    @staticmethod
+    def _cleanup_id(i):
         """
         Clean up messy id prefixes
         :param i:
@@ -446,8 +474,93 @@ class NCBIGene(Source):
     def getTestSuite(self):
         import unittest
         from tests.test_ncbi import NCBITestCase
-        # TODO test genes
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(NCBITestCase)
 
         return test_suite
+
+    def add_orthologs_by_gene_group(self, graph, gene_ids):
+        """
+        This will get orthologies between human and other vertebrate genomes based on the gene_group
+        annotation pipeline from NCBI.  More information can be learned here:
+        http://www.ncbi.nlm.nih.gov/news/03-13-2014-gene-provides-orthologs-regions/
+        The method for associations is described in [PMCID:3882889](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3882889/)
+        == [PMID:24063302](http://www.ncbi.nlm.nih.gov/pubmed/24063302/).
+        Because these are only between human and vertebrate genomes, they will certainly miss out on
+        very distant orthologies, and should not be considered complete.
+
+        We do not run this within the NCBI parser itself; rather it is a convenience function for others
+        parsers to call.
+
+        :param graph:
+        :param gene_ids:  Gene ids to fetch the orthology
+        :return:
+        """
+
+        logger.info("getting gene groups")
+        line_counter = 0
+        f = '/'.join((self.rawdir, self.files['gene_group']['file']))
+        found_counter = 0
+        # because many of the orthologous groups are grouped by human gene, we need to do this
+        # by generating two-way hash
+
+        # group_id => orthologs
+        # ortholog id => group
+        # this will be the fastest approach, though not memory-efficient.
+        geno = Genotype(graph)
+        gu = GraphUtils(curie_map.get())
+        group_to_orthology = {}
+        gene_to_group = {}
+        gene_to_taxon = {}
+
+        with gzip.open(f, 'rb') as csvfile:
+            filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
+
+            for row in filereader:
+                # skip comment lines
+                if re.match('\#', ''.join(row)):
+                    continue
+                line_counter += 1
+                (tax_a, gene_a, rel, tax_b, gene_b) = row
+
+                if rel != 'Ortholog':
+                    continue
+
+                if gene_a not in group_to_orthology:
+                    group_to_orthology[gene_a] = set()
+                group_to_orthology[gene_a].add(gene_b)
+
+                if gene_b not in gene_to_group:
+                    gene_to_group[gene_b] = set()
+                gene_to_group[gene_b].add(gene_a)
+
+                gene_to_taxon[gene_a] = tax_a
+                gene_to_taxon[gene_b] = tax_b
+
+                # also add the group lead as a member of the group
+                group_to_orthology[gene_a].add(gene_a)
+
+            # end loop through gene_group file
+        logger.debug("Finished hashing gene groups")
+        logger.debug("Making orthology associations")
+        for gid in gene_ids:
+            gene_num = re.sub('NCBIGene:', '', gid)
+            group_nums = gene_to_group.get(gene_num)
+            if group_nums is not None:
+                for group_num in group_nums:
+                    orthologs = group_to_orthology.get(group_num)
+                    if orthologs is not None:
+                        for o in orthologs:
+                            oid = 'NCBIGene:'+str(o)
+                            gu.addClassToGraph(graph, oid, None, Genotype.genoparts['gene'])
+                            otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
+                            geno.addTaxon(otaxid, oid)
+                            assoc = OrthologyAssoc(self.name, gid, oid)
+                            assoc.add_source('PMID:24063302')
+                            assoc.add_association_to_graph(graph)
+                            # todo get gene label for orthologs - this could get expensive
+                            found_counter += 1
+
+            # finish loop through annotated genes
+        logger.info("Made %d orthology relationships for %d genes", found_counter, len(gene_ids))
+        return
