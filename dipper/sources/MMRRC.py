@@ -40,7 +40,7 @@ class MMRRC(Source):
 
     test_ids = [
         'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC', 'MMRRC:037884-UCD', 'MMRRC:000255-MU',
-        'MMRRC:037372-UCD'
+        'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
     ]
 
     def __init__(self):
@@ -128,6 +128,10 @@ class MMRRC(Source):
                 if self.testMode and (strain_id not in self.test_ids):
                     continue
 
+                # strip off stuff after the dash - is the holding center important?
+                # MMRRC:00001-UNC --> MMRRC:00001
+                strain_id = re.sub('-\w+$', '', strain_id)
+
                 self.id_label_hash[strain_id] = strain_label
 
                 # get the variant or gene to save for later building of the genotype
@@ -195,9 +199,6 @@ class MMRRC(Source):
                         r = Reference(pmid, Reference.ref_types['journal_article'])
                         r.addRefToGraph(g)
 
-                # TODO the contents of the strain_num after the dash are the "holding center".  strip this out.
-                # should map to https://www.mmrrc.org/catalog/sds.php?mmrrc_id=36643
-
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001 is a good example of 4 genotype parts
 
                 gu.addClassToGraph(g, mouse_taxon, None)
@@ -209,7 +210,6 @@ class MMRRC(Source):
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
                 gu.addIndividualToGraph(g, strain_id, strain_label, strain_type, research_areas)  # an inst of mouse??
-
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
@@ -262,7 +262,7 @@ class MMRRC(Source):
                 vl_list = sorted(vl_set)
                 vslc_list = []
                 for vl in vl_list:
-                    vslc_id = '_'+re.sub('^_','',vl)+'U'  # for unknown zygosity
+                    vslc_id = '_'+re.sub('^_', '', vl)+'U'  # for unknown zygosity
                     vslc_id = re.sub(':', '', vslc_id)
                     if self.nobnodes:
                         vslc_id = ':' + vslc_id
@@ -293,9 +293,11 @@ class MMRRC(Source):
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
-                    geno.addGenomicBackground(bkgd_id, 'unspecified ('+s+')', geno.genoparts['unspecified_genomic_background'],
-                                            "A placeholder for the unspecified genetic background for "+s)
-                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id, geno.genoparts['unspecified_genomic_background'])
+                    geno.addGenomicBackground(bkgd_id, 'unspecified ('+s+')',
+                                              geno.genoparts['unspecified_genomic_background'],
+                                              "A placeholder for the unspecified genetic background for "+s)
+                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id,
+                                                        geno.genoparts['unspecified_genomic_background'])
                     geno.addParts(gvc_id, genotype_id, geno.object_properties['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
                     gu.addTriple(g, s, geno.object_properties['has_genotype'], genotype_id)
