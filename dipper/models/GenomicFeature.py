@@ -35,7 +35,10 @@ class Feature():
         'is_about': 'IAO:00000136',
         'has_subsequence': 'RO:0002524',
         'is_subsequence_of': 'RO:0002525',
-        'has_staining_intensity': 'GENO:0000626'
+        'has_staining_intensity': 'GENO:0000626',
+        'upstream_of_sequence_of': 'RO:0002528',
+        'downstream_of_sequence_of': 'RO:0002529'
+
     }
 
     data_properties = {
@@ -68,6 +71,7 @@ class Feature():
         'reference_genome': 'SO:0001505',
         'genome': 'SO:0001026',
         'assembly_component': 'SO:0000143',
+        'SNP': 'SO:0000694',
 
         # the following are sequence attributes:
         'band_intensity':  'GENO:0000618',
