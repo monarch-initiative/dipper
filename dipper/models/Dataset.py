@@ -1,7 +1,9 @@
-from datetime import datetime
 
 __author__ = 'nlw'
 
+from datetime import datetime
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import curie_map
 from rdflib import Graph, Literal, URIRef, Namespace
 from rdflib.namespace import RDF, DCTERMS, XSD, FOAF
 import logging
@@ -25,6 +27,7 @@ class Dataset:
 
     def __init__(self, identifier, title, url, description=None, license_url=None, data_rights=None):
         DCTYPES = Namespace(self.namespaces['dctypes'])
+        self.gu = GraphUtils(curie_map.get())
         self.identifier = URIRef(':'+identifier)
         self.version = None
         self.date_issued = None
@@ -52,7 +55,7 @@ class Dataset:
             logger.debug('No rights provided.')
 
         if description is not None:
-            self.graph.add((':'+identifier, DCTERMS['description'], description))
+            self.gu.addDescription(self.graph, self.identifier, description )
         return
 
     def load_bindings(self):

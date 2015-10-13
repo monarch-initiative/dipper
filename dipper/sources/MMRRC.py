@@ -21,7 +21,7 @@ class MMRRC(Source):
     Here we process the Mutant Mouse Resource and Research Center (https://www.mmrrc.org) strain data,
     which includes:
     *  strains, their mutant alleles
-    *  phenotypes of the strains
+    *  phenotypes of the alleles
     *  descriptions of the research uses of the strains
 
     Note that some gene identifiers are not included (for many of the transgenics with human genes) in the raw data.
@@ -40,7 +40,7 @@ class MMRRC(Source):
 
     test_ids = [
         'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC', 'MMRRC:037884-UCD', 'MMRRC:000255-MU',
-        'MMRRC:037372-UCD'
+        'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
     ]
 
     def __init__(self):
@@ -88,6 +88,12 @@ class MMRRC(Source):
         i.e., the set: (Mutation Type - Chromosome - Gene Symbol - Gene Name - Allele Symbol - Allele Name)
         will require a separate line.
 
+        Note that MMRRC curates phenotypes to alleles, even though they distribute only one file with the
+        phenotypes appearing to be associated with a strain.
+
+        So, here we process the allele-to-phenotype relationships separately from the strain-to-allele
+        relationships.
+
         :param limit:
         :return:
         """
@@ -121,6 +127,10 @@ class MMRRC(Source):
 
                 if self.testMode and (strain_id not in self.test_ids):
                     continue
+
+                # strip off stuff after the dash - is the holding center important?
+                # MMRRC:00001-UNC --> MMRRC:00001
+                strain_id = re.sub('-\w+$', '', strain_id)
 
                 self.id_label_hash[strain_id] = strain_label
 
@@ -189,9 +199,6 @@ class MMRRC(Source):
                         r = Reference(pmid, Reference.ref_types['journal_article'])
                         r.addRefToGraph(g)
 
-                # TODO the contents of the strain_num after the dash are the "holding center".  strip this out.
-                # should map to https://www.mmrrc.org/catalog/sds.php?mmrrc_id=36643
-
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001 is a good example of 4 genotype parts
 
                 gu.addClassToGraph(g, mouse_taxon, None)
@@ -204,12 +211,16 @@ class MMRRC(Source):
                     strain_type = stem_cell_class
                 gu.addIndividualToGraph(g, strain_id, strain_label, strain_type, research_areas)  # an inst of mouse??
 
+                # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
                     gu.addClassToGraph(g, pid, None)   # assume the phenotype label is in the ontology
-                    assoc = G2PAssoc(self.name, strain_id, pid, gu.object_properties['has_phenotype'])
-                    for p in pubmed_ids:
-                        assoc.add_source(p)
-                    assoc.add_association_to_graph(g)
+                    if mgi_allele_id is not None and mgi_allele_id != '':
+                        assoc = G2PAssoc(self.name, mgi_allele_id, pid, gu.object_properties['has_phenotype'])
+                        for p in pubmed_ids:
+                            assoc.add_source(p)
+                        assoc.add_association_to_graph(g)
+                    else:
+                        logger.info("Phenotypes and no allele for %s", strain_id)
 
                 if not self.testMode and (limit is not None and line_counter > limit):
                     break
@@ -251,7 +262,7 @@ class MMRRC(Source):
                 vl_list = sorted(vl_set)
                 vslc_list = []
                 for vl in vl_list:
-                    vslc_id = '_'+vl+'U'  # for unknown zygosity
+                    vslc_id = '_'+re.sub('^_', '', vl)+'U'  # for unknown zygosity
                     vslc_id = re.sub(':', '', vslc_id)
                     if self.nobnodes:
                         vslc_id = ':' + vslc_id
@@ -277,14 +288,16 @@ class MMRRC(Source):
                         gvc_label = self.id_label_hash[gvc_id]
 
                     genotype_label = gvc_label + ' [n.s.]'
-                    genotype_id = gvc_id+'-U'
                     bkgd_id = '_'+re.sub(':', '', '-'.join((geno.genoparts['unspecified_genomic_background'], s)))
+                    genotype_id = '-'.join((gvc_id, bkgd_id))
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
-                    gu.addIndividualToGraph(g, bkgd_id, 'unspecified ('+s+')', geno.genoparts['unspecified_genomic_background'],
-                                            "A placeholder for the unspecified genetic background for "+s)
-                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id)
+                    geno.addGenomicBackground(bkgd_id, 'unspecified ('+s+')',
+                                              geno.genoparts['unspecified_genomic_background'],
+                                              "A placeholder for the unspecified genetic background for "+s)
+                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id,
+                                                        geno.genoparts['unspecified_genomic_background'])
                     geno.addParts(gvc_id, genotype_id, geno.object_properties['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
                     gu.addTriple(g, s, geno.object_properties['has_genotype'], genotype_id)

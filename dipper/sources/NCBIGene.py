@@ -155,35 +155,34 @@ class NCBIGene(Source):
                 if re.match('^#', line):
                     continue
                 (tax_num, gene_num, symbol, locustag,
-                 synonyms, xrefs, chr, map_loc, desc,
+                 synonyms, xrefs, chrom, map_loc, desc,
                  gtype, authority_symbol, name,
                  nomenclature_status, other_designations, modification_date) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #             or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self.map_type_of_gene(gtype)
+                gene_type_id = self.map_type_of_gene(gtype.strip())
 
                 if symbol == 'NEWENTRY':
                     label = None
                 else:
                     label = symbol
 
-                # TODO might have to figure out if things aren't genes, and make them individuals
                 if gene_type_id == 'SO:0000110':  # sequence feature, not a gene
                     self.class_or_indiv[gene_id] = 'I'
                 else:
@@ -244,8 +243,8 @@ class NCBIGene(Source):
                 # with the exception of human X|Y, i will only take those that align to one chr
 
                 # FIXME remove the chr mapping below when we pull in the genomic coords
-                if str(chr) != '-' and str(chr) != '':
-                    if re.search('\|', str(chr)) and str(chr) not in ['X|Y','X; Y']:
+                if str(chrom) != '-' and str(chrom) != '':
+                    if re.search('\|', str(chrom)) and str(chrom) not in ['X|Y', 'X; Y']:
                         # this means that there's uncertainty in the mapping.  skip it
                         # TODO we'll need to figure out how to deal with >1 loc mapping
                         logger.info('%s is non-uniquely mapped to %s.  Skipping for now.', gene_id, str(chr))
@@ -254,10 +253,10 @@ class NCBIGene(Source):
 
                     # if (not re.match('(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-                    if str(chr) == 'X; Y':
-                        chr = 'X|Y'  # rewrite the PAR regions for processing
+                    if str(chrom) == 'X; Y':
+                        chrom = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
-                    for c in re.split('\|',str(chr)) :
+                    for c in re.split('\|', str(chrom)):
                         geno.addChromosomeClass(c, tax_id, None)  # assume that the chromosome label will get added elsewhere
                         mychrom = makeChromID(c, tax_num, 'CHR')
                         mychrom_syn = makeChromLabel(c, tax_num)  # temporarily use the taxnum for the disambiguating label
@@ -280,7 +279,7 @@ class NCBIGene(Source):
                         else:
                             # TODO handle these cases
                             # examples are: 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
-                            ## 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
+                            # 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,  12cen-q21, 22q13.3|22q13.3
                             logger.debug('not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             gu.addTriple(g, gene_id, Feature.object_properties['is_subsequence_of'], mychrom)
@@ -319,12 +318,12 @@ class NCBIGene(Source):
                     continue
                 (tax_num, gene_num, discontinued_num, discontinued_symbol, discontinued_date) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #             or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if gene_num == '-' or discontinued_num == '-':
                     continue
@@ -332,13 +331,12 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 line_counter += 1
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 discontinued_gene_id = ':'.join(('NCBIGene', discontinued_num))
-                tax_id = ':'.join(('NCBITaxon', tax_num))
 
                 # add the two genes
                 if self.class_or_indiv.get(gene_id) == 'C':
@@ -373,7 +371,7 @@ class NCBIGene(Source):
             g = self.testgraph
         else:
             g = self.graph
-        is_about = gu.getNode(gu.object_properties['is_about'])
+
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
@@ -386,17 +384,17 @@ class NCBIGene(Source):
                     continue
                 (tax_num, gene_num, pubmed_num) = line.split('\t')
 
-                ##### set filter=None in init if you don't want to have a filter
-                #if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #       or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
-                #        continue
-                ##### end filter
+                # #### set filter=None in init if you don't want to have a filter
+                # if self.filter is not None:
+                #     if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
+                #        or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #         continue
+                # #### end filter
 
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if int(tax_num) not in self.tax_ids:
+                if not self.testMode and int(tax_num) not in self.tax_ids:
                     continue
 
                 if gene_num == '-' or pubmed_num == '-':
@@ -449,7 +447,8 @@ class NCBIGene(Source):
 
         return so_id
 
-    def _cleanup_id(self, i):
+    @staticmethod
+    def _cleanup_id(i):
         """
         Clean up messy id prefixes
         :param i:
@@ -475,12 +474,10 @@ class NCBIGene(Source):
     def getTestSuite(self):
         import unittest
         from tests.test_ncbi import NCBITestCase
-        # TODO test genes
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(NCBITestCase)
 
         return test_suite
-
 
     def add_orthologs_by_gene_group(self, graph, gene_ids):
         """
