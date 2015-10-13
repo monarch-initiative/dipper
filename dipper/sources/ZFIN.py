@@ -124,7 +124,7 @@ class ZFIN(Source):
                  "ZDB-GENE-031114-1", "ZDB-GENE-990415-72", "ZDB-GENE-030131-2211", "ZDB-GENE-030131-3063",
                  "ZDB-GENE-030131-9460", "ZDB-GENE-980526-26", "ZDB-GENE-980526-27", "ZDB-GENE-980526-29",
                  "ZDB-GENE-071218-6", "ZDB-GENE-070912-423", "ZDB-GENE-011207-1", "ZDB-GENE-980526-284",
-                 "ZDB-GENE-980526-72"],
+                 "ZDB-GENE-980526-72", "ZDB-GENE-991129-7", "ZDB-GENE-000607-83"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
@@ -183,6 +183,7 @@ class ZFIN(Source):
         self.id_label_map = {}  # to hold any label for a given id
         self.genotype_backgrounds = {}  # to hold the mappings between genotype and background
         self.extrinsic_id_to_enviro_id_hash = {}
+        self.transgenic_parts = {}  # to hold the parts that are introduced from a construct
         self.variant_loci_genes = {}  # to hold the genes variant due to a seq alt
         self.environment_hash = {}  # to hold the parts of an environment
         self.wildtype_genotypes = []
@@ -309,6 +310,9 @@ class ZFIN(Source):
 
         line_counter = 0
         geno = Genotype(g)
+
+        allele_to_construct_hash = {}
+
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -332,6 +336,13 @@ class ZFIN(Source):
                         'fish_label': fish_name
                     }
                 self.fish_parts[fish_num]['affectors'].add(affector_num)
+
+                # add the constructs that the allele comes from
+                if construct_num != '':
+                    if affector_num not in allele_to_construct_hash:
+                        allele_to_construct_hash[affector_num] = set()
+                    allele_to_construct_hash[affector_num].add(construct_num)
+
             # ### finish looping through fish file
 
         # given the components of a fish, subtract out the intrinsic parts to just leave the extrinsic
@@ -468,6 +479,27 @@ class ZFIN(Source):
                 break
 
             # ###finish iterating over fish
+
+        # iterate of the alleles and attache the constructs to them
+        logger.info("Adding Allele/Construct relationships")
+        for a in allele_to_construct_hash:
+            if self.testMode and a not in self.test_ids['allele']:
+                continue
+            allele_id = 'ZFIN:'+a
+            constructs = allele_to_construct_hash.get(a)
+            if len(constructs) > 0:
+                for c in constructs:
+                    cid = 'ZFIN:'+c
+                    geno.addDerivesFrom(allele_id, cid)
+                    logger.info("constructs for %s: %s", allele_id, str(constructs))
+                    # migrate the transgenic features to be alternate parts of the transgene insertion/alteration
+                    if cid in self.transgenic_parts:
+                        tg_parts = self.transgenic_parts.get(cid)
+                        print(tg_parts)
+                        if tg_parts is not None:
+                            for p in tg_parts:
+                                geno.addParts(p, allele_id, geno.object_properties['has_alternate_part'])
+                                geno.addParts(p, cid)
 
         return
 
@@ -944,13 +976,16 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (genotype_id, genotype_name, genotype_abbreviation, empty) = row
+                (genotype_num, genotype_name, genotype_abbreviation, empty) = row
 
-                genotype_id = 'ZFIN:' + genotype_id.strip()
+                genotype_id = 'ZFIN:' + genotype_num.strip()
+                background_type = geno.genoparts['genomic_background']
 
                 # Add genotype to graph with label and description, as a genomic_background genotype
-                geno.addGenotype(genotype_id, genotype_abbreviation,
-                                 geno.genoparts['genomic_background'], genotype_name)
+                unspecified_background = 'ZDB-GENO-030619-2'
+                if re.match(genotype_num.strip(), unspecified_background):
+                    background_type = geno.genoparts['unspecified_genomic_background']
+                geno.addGenomicBackground(genotype_id, genotype_abbreviation, background_type, genotype_name)
 
                 # Build the hash for the wild type genotypes.
                 self.id_label_map[genotype_id] = genotype_abbreviation
@@ -1407,20 +1442,39 @@ class ZFIN(Source):
                         # waiting to add the reagent_targeted_gene until processing environments
 
                     elif relationship == 'coding sequence of':
-                        # TODO we know that these need to be modeled as expression variants!
-                        # see https://github.com/monarch-initiative/GENO-ontology/issues/20
-                        # transgenic constructs with coding regions
-                        # but we don't know if they are wild-type or mutant, so just has_part for now
+                        # we at the partonomy directly to the allele in the process_fish method
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
-                        self._add_transgene_parts(g, marker_id, gene_id, relationship, gene_symbol)
+                        transgene_part_id = self._make_transgene_part_id(marker_id, gene_id, relationship)
+                        transgene_part_label = 'Tg(' + relationship + ' ' + gene_symbol + ')'
+                        gu.addIndividualToGraph(g, transgene_part_id, transgene_part_label,
+                                                geno.genoparts['coding_transgene_feature'])
+                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
+                                     gene_id)
+
+                        # save the transgenic parts in a hashmap for later
+                        if marker_id not in self.transgenic_parts:
+                            self.transgenic_parts[marker_id] = set()
+                        self.transgenic_parts[marker_id].add(transgene_part_id)
+                        self.id_label_map[transgene_part_id] = transgene_part_label
+
                     elif relationship == 'gene product recognized by antibody':
                         # TODO for ticket #32
                         pass
                     elif relationship == 'promoter of':
                         # transgenic constructs with promoters regions
-                        # we are making the assumption that they are wild-type promoters
+                        # we at the partonomy directly to the allele in the process_fish method
                         geno.addConstruct(marker_id, marker_symbol, marker_so_id)
-                        self._add_transgene_parts(g, marker_id, gene_id, relationship, gene_symbol)
+                        transgene_part_id = self._make_transgene_part_id(marker_id, gene_id, relationship)
+                        transgene_part_label = 'Tg(' + relationship + ' ' + gene_symbol + ')'
+                        gu.addIndividualToGraph(g, transgene_part_id, transgene_part_label,
+                                                geno.genoparts['regulatory_transgene_feature'])
+                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
+                                     gene_id)
+
+                        # save the transgenic parts in a hashmap for later
+                        if marker_id not in self.transgenic_parts:
+                            self.transgenic_parts[marker_id] = set()
+                        self.transgenic_parts[marker_id].add(transgene_part_id)
 
                     elif relationship == 'transcript targets gene':  # miRNAs
                         # TODO should this be an interaction instead of this special relationship?
@@ -1438,23 +1492,13 @@ class ZFIN(Source):
         logger.info("Done with gene marker relationships")
         return
 
-    def _add_transgene_parts(self, graph, marker_id, gene_id, relationship, gene_symbol):
-        # TODO move to Genotype.py
-
-        geno = Genotype(graph)
-        gu = GraphUtils(curie_map.get())
-        # add a trangene part
-        transgene_part_id = '_' + '-'.join((marker_id, gene_id, re.sub('\W+', '-', relationship)))
-        transgene_part_id = re.sub('ZFIN:', '', transgene_part_id)
+    def _make_transgene_part_id(self, construct_id, part_id, relationship):
+        transgene_part_id = '_' + '-'.join((construct_id, part_id, re.sub('\W+', '-', relationship)))
+        transgene_part_id = re.sub('^.*:', '', transgene_part_id)
         if self.nobnodes:
             transgene_part_id = ':'+transgene_part_id
-        gu.addIndividualToGraph(graph, transgene_part_id, 'Tg(' + relationship + ' ' + gene_symbol + ')',
-                                geno.genoparts['regulatory_transgene_feature'])
-        geno.addParts(transgene_part_id, marker_id)
-        gu.addTriple(graph, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
-                     gene_id)
 
-        return
+        return transgene_part_id
 
     def _process_pubinfo(self, limit=None):
         """
