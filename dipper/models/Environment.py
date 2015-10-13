@@ -20,7 +20,10 @@ class Environment():
     # special genotype parts mapped to their GENO and SO classes that we explicitly reference here
     environment_parts = {
         'environment' : 'GENO:0000099',
-        'environmental_condition' : 'XCO:0000000'
+        'environmental_condition' : 'XCO:0000000',
+        'morpholio_reagent': 'REO:0000042',
+        'talen_reagent': 'REO:0001022',
+        'crispr_reagent': 'REO:crispr_TBD'
     }
 
     object_properties = {
