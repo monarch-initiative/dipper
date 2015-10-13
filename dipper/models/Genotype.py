@@ -62,8 +62,8 @@ class Genotype():
         'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125',
         'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120',
         'sequence_variant_affecting_polypeptide_function': 'SO:1000117',
-        'regulatory_transgene_feature': 'GENO:0000638',
-        'coding_transgene_feature': 'GENO:0000637',
+        'regulatory_transgene_feature': 'GENO:0000637',
+        'coding_transgene_feature': 'GENO:0000638',
         'protein_coding_gene': 'SO:0001217',
         'ncRNA_gene': 'SO:0001263',
         'RNAi_reagent': 'SO:0000337'
