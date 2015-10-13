@@ -31,6 +31,7 @@ from dipper.sources.WormBase import WormBase
 from dipper.sources.OMIA import OMIA
 # from dipper.sources.Monarch import Monarch
 # from dipper.sources.GeneOntology import GeneOntology
+from dipper.sources.GWASCatalog import GWASCatalog
 
 from dipper.sources.MPD import MPD
 from dipper.sources.MMRRC import MMRRC
@@ -68,6 +69,7 @@ def main():
         'mmrrc' : MMRRC,
         'wormbase': WormBase,
         'mpd': MPD,
+        'gwascatalog': GWASCatalog
         # 'monarch': Monarch,
         # 'go': GeneOntology
     }
