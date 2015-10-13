@@ -79,7 +79,7 @@ class Coriell(Source):
     test_lines = ['ND02380', 'ND02381', 'ND02383', 'ND02384', 'GM17897', 'GM17898', 'GM17896', 'GM17944', 'GM17945',
                   'ND00055', 'ND00094', 'ND00136', 'GM17940', 'GM17939', 'GM20567', 'AG02506', 'AG04407', 'AG07602'
                   'AG07601', 'GM19700', 'GM19701', 'GM19702', 'GM00324', 'GM00325', 'GM00142', 'NA17944', 'AG02505',
-                  'GM01602', 'GM02455', 'AG00364', 'GM13707']
+                  'GM01602', 'GM02455', 'AG00364', 'GM13707', 'AG00780']
 
     def __init__(self):
         Source.__init__(self, 'coriell')
@@ -421,7 +421,7 @@ class Coriell(Source):
                             chr_id = makeChromID(c, taxon, 'CHR')
                             # add an anonymous sequence feature, each located on chr
                             karyotype_feature_id = '-'.join((karyotype_id, c))
-                            karyotype_feature_label = 'some sequence alteration on chr'+str(c)
+                            karyotype_feature_label = 'some karyotype alteration on chr'+str(c)
                             f = Feature(karyotype_feature_id, karyotype_feature_label,
                                         geno.genoparts['sequence_alteration'])
                             f.addFeatureStartLocation(None, chr_id)
