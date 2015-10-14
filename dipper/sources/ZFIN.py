@@ -71,7 +71,8 @@ class ZFIN(Source):
         'genbank': {'file': 'genbank.txt', 'url': 'http://zfin.org/downloads/genbank.txt'},
         'uniprot': {'file': 'uniprot.txt', 'url': 'http://zfin.org/downloads/uniprot.txt'},
         'gene': {'file': 'gene.txt', 'url': 'http://zfin.org/downloads/gene.txt'},
-        'wild': {'file': 'wildtypes.txt', 'url': 'http://zfin.org/downloads/wildtypes.txt'},
+        # 'wild': {'file': 'wildtypes.txt', 'url': 'http://zfin.org/downloads/wildtypes.txt'},
+        'wild': {'file': 'wildtypes.txt', 'url': 'http://zfin.org/downloads/wildtypes_fish.txt'},
         'human_orthos': {'file': 'human_orthos.txt', 'url': 'http://zfin.org/downloads/human_orthos.txt'},
         'features': {'file': 'features.txt', 'url': 'http://zfin.org/downloads/features.txt'},
         'feature_affected_gene': {'file': 'features-affected-genes.txt',
@@ -970,12 +971,15 @@ class ZFIN(Source):
         line_counter = 0
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['wild']['file']))
+        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (genotype_num, genotype_name, genotype_abbreviation, empty) = row
-
+                # (genotype_num, genotype_name, genotype_abbreviation, empty) = row
+                (fish_num, fish_name, fish_abbreviation, genotype_num, empty) = row
+                # ZDB-FISH-150901-10750	INDO	INDO	ZDB-GENO-980210-32
+                fish_id = 'ZFIN:'+fish_num
                 genotype_id = 'ZFIN:' + genotype_num.strip()
                 background_type = geno.genoparts['genomic_background']
 
@@ -983,10 +987,12 @@ class ZFIN(Source):
                 unspecified_background = 'ZDB-GENO-030619-2'
                 if re.match(genotype_num.strip(), unspecified_background):
                     background_type = geno.genoparts['unspecified_genomic_background']
-                geno.addGenomicBackground(genotype_id, genotype_abbreviation, background_type, genotype_name)
+                geno.addGenomicBackground(genotype_id, fish_abbreviation, background_type, fish_name)
+
+                gu.addTriple(g, fish_id, geno.object_properties['has_genotype'], genotype_id)
 
                 # Build the hash for the wild type genotypes.
-                self.id_label_map[genotype_id] = genotype_abbreviation
+                self.id_label_map[genotype_id] = fish_abbreviation
 
                 # store these in a special hash to look up later
                 self.wildtype_genotypes += [genotype_id]
@@ -1492,7 +1498,7 @@ class ZFIN(Source):
 
     def _make_transgene_part_id(self, construct_id, part_id, relationship):
         transgene_part_id = '_' + '-'.join((construct_id, part_id, re.sub('\W+', '-', relationship)))
-        transgene_part_id = re.sub('^.*:', '', transgene_part_id)
+        transgene_part_id = re.sub('ZFIN:', '', transgene_part_id)
         if self.nobnodes:
             transgene_part_id = ':'+transgene_part_id
 
