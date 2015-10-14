@@ -308,7 +308,6 @@ class ZFIN(Source):
         gu = GraphUtils(curie_map.get())
         taxon_id = 'NCBITaxon:7955'  # hardcode to zebrafish
 
-        line_counter = 0
         geno = Genotype(g)
 
         allele_to_construct_hash = {}
@@ -495,7 +494,6 @@ class ZFIN(Source):
                     # migrate the transgenic features to be alternate parts of the transgene insertion/alteration
                     if cid in self.transgenic_parts:
                         tg_parts = self.transgenic_parts.get(cid)
-                        print(tg_parts)
                         if tg_parts is not None:
                             for p in tg_parts:
                                 geno.addParts(p, allele_id, geno.object_properties['has_alternate_part'])
@@ -1425,8 +1423,8 @@ class ZFIN(Source):
                  marker_id, marker_so_id, marker_symbol, relationship, empty) = row
 
                 if self.testMode and not (gene_id in self.test_ids['gene']
-                                      or marker_id in self.test_ids['allele']
-                                      or marker_id in self.test_ids['morpholino']):
+                                          or marker_id in self.test_ids['allele']
+                                          or marker_id in self.test_ids['morpholino']):
                     continue
 
                 # there are many relationships, but we only take a few for now
@@ -1620,7 +1618,8 @@ class ZFIN(Source):
         TALENs are artificial restriction enzymes that can be used for genome editing in situ.
         CRISPRs are knockdown reagents, working similar to RNAi but at the transcriptional level instead of mRNA level.
 
-        You can read more about TALEN and CRISPR techniques in review [Gaj et al](http://www.cell.com/trends/biotechnology/abstract/S0167-7799%2813%2900087-5)
+        You can read more about TALEN and CRISPR techniques in review
+        [Gaj et al](http://www.cell.com/trends/biotechnology/abstract/S0167-7799%2813%2900087-5)
 
         TODO add sequences
 
@@ -1731,8 +1730,6 @@ class ZFIN(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        extrgeno_hash_by_env_id = {}
         env_hash = {}
         enviro_label_hash = {}
         envo = Environment(g)
@@ -1864,7 +1861,7 @@ class ZFIN(Source):
                 else:
                     continue
                     # skip any of the others
-                gu.makeLeader(g, zfin_id)  #ZFIN don't catalog non-fish things, thankfully
+                gu.makeLeader(g, zfin_id)  # ZFIN don't catalog non-fish things, thankfully
                 # make the chromosome class
                 chr_id = makeChromID(chromosome, taxon_id, 'CHR')
                 # chr_label = makeChromLabel(chromosome, taxon_label)
@@ -2030,7 +2027,7 @@ class ZFIN(Source):
                 line_counter += 1
                 if re.match(r'^(\s|#|$)', ''.join(row)):
                     continue  # skip header
-                (chrom, source, type, start, end, score, strand, phase, attributes) = row
+                (chrom, source, ftype, start, end, score, strand, phase, attributes) = row
 
                 gene_id = None
                 if attributes == '':
@@ -2106,8 +2103,8 @@ class ZFIN(Source):
                 # make the pubmed id, if it exists
                 if pubmed_id != '':
                     pubmed_id = 'PMID:'+pubmed_id
-                    gu.addSameIndividual(g,'ZFIN:'+zfin_pub_id, pubmed_id)
-                    # gu.makeLeader(g, pubmed_id)  # TODO
+                    gu.addSameIndividual(g, 'ZFIN:'+zfin_pub_id, pubmed_id)
+                    gu.makeLeader(g, pubmed_id)
                 assoc.add_association_to_graph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -2217,7 +2214,8 @@ class ZFIN(Source):
 
         return other_allele
 
-    def _get_mapping_panel_info(self, panel):
+    @staticmethod
+    def _get_mapping_panel_info(panel):
         panel_hash = {
             'HS': {'id': 'ZDB-REFCROSS-000320-1', 'name': 'Heat Shock', 'type': 'meiotic', 'num_meioses': 42},
             'GAT': {'id': 'ZDB-REFCROSS-990308-7', 'name': 'Gates et al', 'type': 'meiotic', 'num_meioses': 96},
