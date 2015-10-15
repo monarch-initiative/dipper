@@ -170,9 +170,9 @@ class MGI(Source):
                                                str(cxn['port']), '/', cxn['database'])))
 
         # process the tables
-        # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
-        # self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
-        # self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
+        self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
+        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
         self.fetch_transgene_genes_from_db(cxn)
 
         datestamp = ver = None
