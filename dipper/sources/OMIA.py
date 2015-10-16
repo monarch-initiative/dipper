@@ -6,8 +6,10 @@ import io
 import shutil
 
 from dipper.sources.Source import Source
+from dipper.sources.OMIM import OMIM, get_omim_id_from_entry, filter_keep_phenotype_entry_ids
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
@@ -73,7 +75,7 @@ class OMIA(Source):
         self.annotated_genes = set()  # used to store the unique genes that have phenes (for fetching orthology)
 
         self.test_ids = {
-            'disease': ['OMIA:001702', 'OMIA:001867', 'OMIA:000478', 'OMIA:000201', 'OMIA:000810'],
+            'disease': ['OMIA:001702', 'OMIA:001867', 'OMIA:000478', 'OMIA:000201', 'OMIA:000810', 'OMIA:001400'],
             'gene': [492297, 434, 492296, 3430235, 200685834, 394659996, 200685845, 28713538, 291822383],
             'taxon': [9691, 9685, 9606, 9615, 9913, 93934, 37029, 9627, 9825],
             'breed': []  # to be filled in during parsing of breed table for lookup by breed-associations
@@ -219,6 +221,9 @@ class OMIA(Source):
             self.process_xml_table(elem, 'Omim_Xref', self._process_omia_omim_map, limit)
         f.close()
 
+        # post-process the omia-omim associations to filter out the genes (keep only phenotypes/diseases)
+        self.clean_up_omim_genes()
+
         return
 
     def process_associations(self, limit):
@@ -245,6 +250,7 @@ class OMIA(Source):
             self.process_xml_table(elem, 'Breed_Phene', self._process_breed_phene_row, limit)
             self.process_xml_table(elem, 'Lida_Links', self._process_lida_links_row, limit)
             self.process_xml_table(elem, 'Phene_Gene', self._process_phene_gene_row, limit)
+            self.process_xml_table(elem, 'Group_MPO', self._process_group_mpo_row, limit)
 
         f.close()
 
@@ -364,7 +370,7 @@ class OMIA(Source):
         r = Reference(iarticle_id, rtype)
 
         if row['title'] is not None:
-            r.setTitle(row['title'])
+            r.setTitle(row['title'].strip())
         if row['year'] is not None:
             r.setYear(row['year'])
         r.addRefToGraph(self.g)
@@ -386,14 +392,27 @@ class OMIA(Source):
         group_name = row['group_name']
         group_summary = row['group_summary']
 
-        # TODO something to group category
-        # group_category = row['group_category']
+        disease_id = None
+        group_category = row.get('group_category')
+        disease_id = self.map_omia_group_category_to_ontology_id(group_category)
+        if disease_id is not None:
+            self.gu.addClassToGraph(self.g, disease_id, None)
+            if disease_id == 'MP:0008762':  # embryonic lethal
+                # add this as a phenotype association
+                assoc = D2PAssoc(self.name, omia_id, disease_id)  # add embryonic onset
+                assoc.add_association_to_graph(self.g)
+                disease_id = None
+        else:
+            logger.info("No disease superclass defined for %s:  %s", omia_id, group_name)
+            disease_id = 'DOID:4'  # default to general disease  FIXME this may not be desired
 
         if group_summary == '':
             group_summary = None
         if group_name == '':
             group_name = None
-        self.gu.addClassToGraph(self.g, omia_id, group_name, None, group_summary)
+
+        self.gu.addClassToGraph(self.g, omia_id, group_name, disease_id, group_summary)
+
         self.label_hash[omia_id] = group_name
 
         return
@@ -469,13 +488,14 @@ class OMIA(Source):
 
         # add that the breed is a model of the human disease
         # use the omia-omim mappings for this
+        # we assume that we have already scrubbed out the genes from the omim list, so we can make the
+        # model associations here
 
         omim_ids = self.omia_omim_map.get(omia_id)
         eco_id = "ECO:0000214"   # biological aspect of descendant evidence
-        if omim_ids is not None and len(omim_ids) == 1:
-            # we make an assumption here that if there's only one omim id, then it is a disease;
-            # if >1 we assume it might be a gene; but we should verify this
-            # perhaps use the omim services rest api to figure it out.
+        if omim_ids is not None and len(omim_ids) > 0:
+            if len(omim_ids) > 1:
+                logger.info("There's 1:many omia:omim mapping: %s, %s", omia_id, str(omim_ids))
             for i in omim_ids:
                 assoc = G2PAssoc(self.name, breed_id, i, self.gu.object_properties['model_of'])
                 assoc.add_evidence(eco_id)
@@ -557,14 +577,98 @@ class OMIA(Source):
         omia_id = 'OMIA:'+row['omia_id']
         omim_id = 'OMIM:'+row['omim_id']
 
-        if self.testMode and omia_id not in self.test_ids['disease']:
-            return
-
-        self.gu.addXref(self.g, omia_id, omim_id)
         # also store this for use when we say that a given animal is a model of a disease
         if omia_id not in self.omia_omim_map:
             self.omia_omim_map[omia_id] = set()
         self.omia_omim_map[omia_id].add(omim_id)
+
+        if self.testMode and omia_id not in self.test_ids['disease']:
+            return
+
+        self.gu.addXref(self.g, omia_id, omim_id)
+
+        return
+
+    def map_omia_group_category_to_ontology_id(self, category_num):
+        """
+        Using the category number in the OMIA_groups table, map them to a disease id.  This may be
+        superceeded by other MONDO methods.
+
+        Platelet disorders will be more specific once https://github.com/obophenotype/human-disease-ontology/issues/46
+        is fulfilled.
+
+        :param category_num:
+        :return:
+        """
+
+        category_map = {
+            1: 'DOID:0014667',  # Inborn error of metabolism
+            2: 'MESH:D004392',  # Dwarfism
+            3: 'DOID:1682',  # congenital heart disease
+            4: 'DOID:74',  # blood system disease
+            5: 'DOID:3211',  # lysosomal storage disease
+            6: 'DOID:16',  # integumentary system disease
+            7: 'DOID:8466',  # progressive retinal atrophy --> retinal degeneration  ==> OMIA:000830
+            8: 'DOID:0050572',  # Cone–rod dystrophy
+            9: 'MESH:C536122',  # stationary night blindness
+            10: 'Orphanet:98553',  # developmental retinal disorder
+            11: 'DOID:5679',  # retinal disorder
+            12: 'Orphanet:90771',  # Disorder of Sex Development
+            13: 'MP:0008762', # embryonic lethal - what to do about this one?
+            14: None,  # blood group - not sure what to do with this
+            15: 'DOID:2218', # intrinsic platelet disorder  # FIXME make me more specific
+            16: 'DOID:2218',  # extrinsic platelet disorder  # FIXME make me more specific
+            17: None  # transgenic ???
+        }
+
+        disease_id = None
+        if category_num is not None and int(category_num) in category_map:
+            disease_id = category_map.get(int(category_num))
+            logger.info("Found %s for category %s", str(disease_id), str(category_num))
+        else:
+            logger.info("There's a group category I don't know anything about: %s", str(category_num))
+
+        return disease_id
+
+    def _process_group_mpo_row(self, row):
+        """
+        Make OMIA to MP associations
+        :param row:
+        :return:
+        """
+        omia_id = 'OMIA:'+row['omia_id']
+        mpo_num = int(row['MPO_no'])
+        mpo_id = 'MP:'+str(mpo_num).zfill(7)
+
+        assoc = D2PAssoc(self.name, omia_id, mpo_id)
+        assoc.add_association_to_graph(self.g)
+
+        return
+
+    def clean_up_omim_genes(self):
+        omim = OMIM()
+        # get all the omim ids
+        allomimids = set()
+        for omia in self.omia_omim_map:
+            allomimids.update(self.omia_omim_map[omia])
+
+        entries_that_are_phenotypes = omim.process_entries(list(allomimids),
+                                                           filter_keep_phenotype_entry_ids, None, None)
+        logger.info("Filtered out %d/%d entries that are genes or features", len(allomimids)-len(entries_that_are_phenotypes),len(allomimids))
+
+        # now iterate again and remove those non-phenotype ids
+        removed_count = 0
+        for omia in self.omia_omim_map:
+            ids = self.omia_omim_map[omia]
+            cleanids = set()
+            for i in ids:
+                if i in entries_that_are_phenotypes:
+                    cleanids.add(i)
+                else:
+                    removed_count += 1  # keep track of how many we've removed
+            self.omia_omim_map[omia] = cleanids
+
+        logger.info("Removed %d omim ids from the omia-to-omim map", removed_count)
 
         return
 
