@@ -1444,6 +1444,7 @@ class MGI(Source):
                     continue
                 strain_id = None
                 deprecated = False
+                comment = None
                 if preferred == '1':  # what does it mean if it's 0?
                     if logicaldb_key == '22':  # JAX
                         # scrub out the backticks from accids
@@ -1457,8 +1458,12 @@ class MGI(Source):
                     elif logicaldb_key == '90':  # APB
                         strain_id = 'APB:'+accid  # Check
                     elif logicaldb_key == '40':  # ORNL
-                        strain_id = 'ORNL:'+accid  # ORNL is no longer in existence; these are deprecated
+                        # ORNL is not in existence any more.  these are deprecated, and we will prefix with JAX
+                        strain_id = 'JAX:'+accid  # ORNL is no longer in existence; these are deprecated
+                        comment = "Originally from ORNL."
                         deprecated = True
+                        gu.addSynonym(g, mgiid, accid)  # add these as synonyms of the MGI mouse
+
                     elif logicaldb_key == '54':  # NCIMR
                         strain_id = 'NCIMR:'+accid
                     # elif logicaldb_key == '71':  # CMMR  not great - doesn't resolve well
@@ -1481,10 +1486,13 @@ class MGI(Source):
                     gu.addIndividualToGraph(g, strain_id, None, tax_id)
                     if deprecated:
                         gu.addDeprecatedIndividual(g, strain_id, mgiid)
+                        gu.addSynonym(g, mgiid, accid)
                     else:
                         gu.addSameIndividual(g, mgiid, strain_id)
                     if re.match('MMRRC', strain_id):
                         gu.makeLeader(g, strain_id)
+                    if comment is not None:
+                        gu.addComment(g, strain_id, comment)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
