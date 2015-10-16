@@ -1436,7 +1436,6 @@ class MGI(Source):
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
-
                 mgiid = self.idhash['strain'].get(object_key)
                 if mgiid is None:
                     # presumably we've already added the relevant MGI ids already, so skip those that we can't find
@@ -1453,6 +1452,8 @@ class MGI(Source):
                         strain_id = 'JAX:'+accid
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
+                        if not re.match('MMRRC:', strain_id):
+                            strain_id = 'MMRRC:'+strain_id
                     elif logicaldb_key == '37':  # EMMA
                         strain_id = re.sub('EM:', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
@@ -1485,7 +1486,7 @@ class MGI(Source):
                 if strain_id is not None:
                     gu.addIndividualToGraph(g, strain_id, None, tax_id)
                     if deprecated:
-                        gu.addDeprecatedIndividual(g, strain_id, mgiid)
+                        gu.addDeprecatedIndividual(g, strain_id, [mgiid])
                         gu.addSynonym(g, mgiid, accid)
                     else:
                         gu.addSameIndividual(g, mgiid, strain_id)
