@@ -1453,7 +1453,7 @@ class MGI(Source):
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
                     elif logicaldb_key == '37':  # EMMA
-                        strain_id = accid
+                        strain_id = re.sub('EM:', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
                         strain_id = 'APB:'+accid  # Check
                     elif logicaldb_key == '40':  # ORNL
