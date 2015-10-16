@@ -181,6 +181,14 @@ class OMIM(Source):
         gu = GraphUtils(curie_map.get())
         processed_entries = list()
 
+        # scrub any omim prefixes from the omimids before processing
+        cleanomimids = set()
+        for o in omimids:
+            scrubbed = re.sub('O?MIM:', '', str(o))
+            if re.match('\d+',str(scrubbed)):
+                cleanomimids.add(scrubbed)
+        omimids = list(cleanomimids)
+
         it = 0  # for counting
 
         # note that you can only do request batches of 20
@@ -869,3 +877,12 @@ def get_omim_id_from_entry(entry):
     else:
         omimid = None
     return omimid
+
+def filter_keep_phenotype_entry_ids(entry, graph=None):
+    omim_id = get_omim_id_from_entry(entry['entry'])
+    omim_type = OMIM._get_omimtype(entry['entry'])
+    if omim_type != Genotype.genoparts['gene'] and omim_type != Genotype.genoparts['biological_region']:
+        return omim_id
+
+    return None
+
