@@ -13,7 +13,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.sources.OMIM import OMIM, get_omim_id_from_entry
+from dipper.sources.OMIM import OMIM, get_omim_id_from_entry, filter_keep_phenotype_entry_ids
 from dipper import config
 
 logger = logging.getLogger(__name__)
@@ -204,9 +204,9 @@ class GeneReviews(Source):
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes = omim.process_entries(list(allomimids), self.filter_keep_phenotype_entry_ids, None, None, limit)
+        entries_that_are_phenotypes = omim.process_entries(list(allomimids), filter_keep_phenotype_entry_ids, None, None, limit)
 
-        logger.info("Filtered out %d entries that are genes or features", len(allomimids)-len(entries_that_are_phenotypes))
+        logger.info("Filtered out %d/%d entries that are genes or features", len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
 
         for nbk_num in id_map:
             omim_ids = id_map.get(nbk_num)
@@ -219,16 +219,7 @@ class GeneReviews(Source):
                     gu.addClassToGraph(self.graph, omim_id, None)
                     gu.addSubclass(self.graph, gr_id, omim_id)
 
-
         return
-
-    def filter_keep_phenotype_entry_ids(self, entry, graph):
-        omim_id = get_omim_id_from_entry(entry['entry'])
-        omim_type = OMIM._get_omimtype(entry['entry'])
-        if omim_type != Genotype.genoparts['gene'] and omim_type != Genotype.genoparts['biological_region']:
-            return omim_id
-
-        return None
 
     def _get_titles(self, limit):
         """
