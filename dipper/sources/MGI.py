@@ -59,6 +59,7 @@ class MGI(Source):
         'mrk_summary_view',
         'mrk_acc_view',
         'prb_strain_acc_view',
+        'prb_strain_genotype_view',
         'mgi_note_vocevidence_view',
         'mgi_note_allele_view',
         'mrk_location_cache',  # gene locations
@@ -214,7 +215,7 @@ class MGI(Source):
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
         self._process_prb_strain_acc_view(limit)
-        self._process_mrk_acc_view(limit)
+        self._process_mrk_acc_view()
         self._process_all_summary_view(limit)
         self._process_bib_acc_view(limit)
         self._process_gxd_genotype_summary_view(limit)
@@ -233,6 +234,7 @@ class MGI(Source):
         self._process_mgi_note_vocevidence_view(limit)
         self._process_mrk_location_cache(limit)
         self.process_mgi_relationship_transgene_genes(limit)
+        self.process_mgi_note_allele_view(limit)
 
         logger.info("Finished parsing.")
 
@@ -334,6 +336,7 @@ class MGI(Source):
 
                 # if it's in the hash, assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
+                background_type = geno.genoparts['genomic_background']
                 if strain_id is None or int(strain_key) < 0:
                     if strain_id is None:
                         # some of the strains don't have public identifiers!
@@ -351,12 +354,14 @@ class MGI(Source):
                             strain_id = ':' + strain_id
                         gu.addDescription(g, strain_id, "This genomic background is unknown.  " +
                                                         "This is a placeholder background for " + mgiid + ".")
+                        background_type = geno.genoparts['unspecified_genomic_background']
+
                     # add it back to the idhash
                     logger.warn("adding background as internal id: %s %s: %s", strain_key, strain, strain_id)
-                geno.addGenomicBackground(strain_id, strain)
+
                 self.label_hash[strain_id] = strain
 
-                geno.addGenomicBackgroundToGenotype(strain_id, mgiid)
+                geno.addGenomicBackgroundToGenotype(strain_id, mgiid, background_type)
 
                 # add this to a hash lookup so we can build the genotype label later
                 self.geno_bkgd[mgiid] = strain_id
@@ -1103,7 +1108,6 @@ class MGI(Source):
                 strain_id = self.idhash['strain'].get(strain_key)
 
                 if strain_id is not None:
-                    geno.addGenotype(strain_id, strain)  # FIXME?
                     self.label_hash[strain_id] = strain
 
                     # add the species to the graph as a class
@@ -1111,8 +1115,7 @@ class MGI(Source):
                     if sp is not None:
                         gu.addClassToGraph(g, sp, None)
                         geno.addTaxon(sp, strain_id)
-
-                    # TODO what is mgi's strain type anyway?
+                    gu.addIndividualToGraph(g, strain_id, strain, sp)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1256,8 +1259,6 @@ class MGI(Source):
                             gu.addIndividualToGraph(g, mapped_id, None)
                             gu.addSameIndividual(g, mgiid, mapped_id)
 
-                    # TODO add links to other ensembl things: logical_db #134 = protein, #133 = transcript, #60 is gene
-
                     # could parse the "subtype" string to get the kind of thing the marker is
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -1265,11 +1266,10 @@ class MGI(Source):
 
         return
 
-    def _process_mrk_acc_view(self, limit):
+    def _process_mrk_acc_view(self):
         """
         Use this table to create the idmap between the internal marker id and the public mgiid.
         No triples are produced in this process
-        :param limit:
         :return:
         """
 
@@ -1344,10 +1344,10 @@ class MGI(Source):
                     # TODO get non-preferred ids==deprecated?
 
                 if marker_id is not None:
-                    if(mgiid in self.markers['classes']):
+                    if mgiid in self.markers['classes']:
                         gu.addClassToGraph(g, marker_id, None)
                         gu.addEquivalentClass(g, mgiid, marker_id)
-                    elif (mgiid in self.markers['indiv']):
+                    elif mgiid in self.markers['indiv']:
                         gu.addIndividualToGraph(g, marker_id, None)
                         gu.addSameIndividual(g, mgiid, marker_id)
                     else:
@@ -1379,9 +1379,11 @@ class MGI(Source):
         else:
             g = self.graph
 
-        geno = Genotype(g)
         logger.info("mapping strains to internal identifiers")
         raw = '/'.join((self.rawdir, 'prb_strain_acc_view'))
+
+        tax_id = 'NCBITaxon:10090'  # hardcode mouse
+
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -1397,7 +1399,28 @@ class MGI(Source):
                 # get the hashmap of the identifiers
                 if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
-                    gu.addIndividualToGraph(g, accid, None, geno.genoparts['intrinsic_genotype'])
+                    gu.addIndividualToGraph(g, accid, None, tax_id)
+
+        # The following are the stock centers for the strains (asterisk indicates complete)
+        # *1	MGI	Mouse Genome Informatics
+        # *22	JAX Registry	(null)
+        # *37	EMMA	European Mutant Mouse Archive
+        # *38	MMRRC	Mutant Mouse Regional Resource Center
+        # 39	Harwell	Mammalian Genome Unit Stock List
+        # *40	ORNL	Oak Ridge National Lab mutant resource
+        # *54	NCIMR	NCI Mouse Repository
+        # * 56	NMICE	Neuromice.org, a consortium of three NIH-sponsored  mutagenesis projects designed to search for neurological mutations
+        # 57	CARD	Center for Animal Resources and Development at Kumamoto University.
+        # *70	RIKEN BRC	RIKEN BioResource Center
+        # *71	CMMR	Canadian Mouse Mutant Resource
+        # 84	JPGA	The Center for New Mouse Models of Heart, Lung, BLood and Sleep Disorders, JAX-PGA at The Jackson Laboratory
+        # *87	MUGEN	Network of Excellence in Integrated Functional Genomics in Mutant Mouse Models as Tools to Investigate the Complexity of Human Immunological Disease
+        # *90	APB	Australian Phenomics Bank
+        # ? 91	EMS	Elizabeth M. Simpson
+        # ? 93	NIG	National Institute of Genetics, Mammalian Genetics Laboratory, Japan
+        # 94	TAC	Taconic
+        # 154	OBS	Oriental BioService , Inc.
+        # 161	RMRC-NLAC	National Applied Research Laboratories,Taiwan, R.O.C.
 
         # pass through the file again, and make the equivalence statements to a subset of the idspaces
         logger.info("mapping strain equivalent identifiers")
@@ -1420,17 +1443,48 @@ class MGI(Source):
                     # logger.info("can't find mgiid for %s",object_key)
                     continue
                 strain_id = None
+                deprecated = False
                 if preferred == '1':  # what does it mean if it's 0?
                     if logicaldb_key == '22':  # JAX
                         # scrub out the backticks from accids
                         # TODO notify the source upstream
                         accid = re.sub('`', '', accid)
                         strain_id = 'JAX:'+accid
+                    elif logicaldb_key == '38':  # MMRRC
+                        strain_id = accid
+                    elif logicaldb_key == '37':  # EMMA
+                        strain_id = accid
+                    elif logicaldb_key == '90':  # APB
+                        strain_id = 'APB:'+accid  # Check
+                    elif logicaldb_key == '40':  # ORNL
+                        strain_id = 'ORNL:'+accid  # ORNL is no longer in existence; these are deprecated
+                        deprecated = True
+                    elif logicaldb_key == '54':  # NCIMR
+                        strain_id = 'NCIMR:'+accid
+                    # elif logicaldb_key == '71':  # CMMR  not great - doesn't resolve well
+                    #     strain_id = 'CMMR:'+accid
+                    elif logicaldb_key == '56':  # neuromice
+                        # neuromice.org doesn't exist any more.
+                        # but all these are actually MGI ids
+                        strain_id = accid
+                    elif logicaldb_key == '70':  # RIKEN
+                        # like 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160'
+                        strain_id = 'RBRC:'+accid
+                    elif logicaldb_key == '87':
+                        strain_id = 'MUGEN:'+accid
+                        # I can't figure out how to get to some of the strains
+
                     # TODO get non-preferred ids==deprecated?
 
+                # TODO make these strains, rather than instance of taxon?
                 if strain_id is not None:
-                    gu.addIndividualToGraph(g, strain_id, None, geno.genoparts['intrinsic_genotype'])
-                    gu.addSameIndividual(g, mgiid, strain_id)
+                    gu.addIndividualToGraph(g, strain_id, None, tax_id)
+                    if deprecated:
+                        gu.addDeprecatedIndividual(g, strain_id, mgiid)
+                    else:
+                        gu.addSameIndividual(g, mgiid, strain_id)
+                    if re.match('MMRRC', strain_id):
+                        gu.makeLeader(g, strain_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1588,16 +1642,115 @@ class MGI(Source):
                     if int(allele_key) not in self.test_keys.get('allele')\
                             and int(gene_num) not in self.test_ids:
                         continue
-                print(line)
 
                 gene_id = 'NCBIGene:'+gene_num
 
                 geno.addParts(gene_id, allele_id, geno.object_properties['has_alternate_part'])
                 geno.addSequenceDerivesFrom(allele_id, gene_id)
 
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
         return
 
     def process_mgi_note_allele_view(self, limit=None):
+
+        line_counter = 0
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        logger.info("Assembling notes on alleles")
+        raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
+        geno = Genotype(g)
+
+        gu = GraphUtils(curie_map.get())
+        notehash = {}
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if line_counter == 1:
+                    continue
+
+                (note_key, object_key, mgitype_key, notetype_key, createdby_key, modifiedby_key,
+                 creation_date, modification_date, notetype, note, sequencenum) = line
+
+                # read all the notes into a hash to concatenate
+                if object_key not in notehash:
+                    notehash[object_key] = {}
+                if notetype not in notehash[object_key]:
+                    notehash[object_key][notetype] = []
+                if len(notehash[object_key][notetype]) < int(sequencenum):
+                    for i in range(len(notehash[object_key][notetype]), int(sequencenum)):
+                        notehash[object_key][notetype].append('')
+                notehash[object_key][notetype][int(sequencenum)-1] = note
+
+            # finish iteration over notes
+
+        line_counter = 0
+        for allele_key in notehash:
+            if self.testMode is True:
+                if int(allele_key) not in self.test_keys.get('allele'):
+                    continue
+            line_counter += 1
+            allele_id = self.idhash['allele'].get(allele_key)
+            if allele_id is None:
+                continue
+            for n in notehash[allele_key]:
+                logger.info("found %d %s notes for %s", len(notehash[allele_key]), n, allele_id)
+                notes = ''.join(notehash[allele_key][n])
+                notes += ' ['+n+']'
+                gu.addDescription(g, allele_id, notes)
+
+            if not self.testMode and limit is not None and line_counter > limit:
+                break
+
+        return
+
+    def _process_prb_strain_genotype_view(self, limit=None):
+        """
+        Here we fetch the free text descriptions of the phenotype associations.
+        Triples:
+        <annot_id> dc:description "description text"
+        :param limit:
+        :return:
+        """
+
+        line_counter = 0
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        logger.info("Getting genotypes for strains")
+        raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
+        gu = GraphUtils(curie_map.get())
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                line_counter += 1
+                if line_counter == 1:
+                    continue
+
+                (straingenotype_key, strain_key, genotype_key, qualifier_key, createdby_key, modifiedby_key,
+                 creation_date, modification_date, strain, description, mgiid, qualifier, modifiedby) = line
+
+                if self.testMode is True:
+                    if int(genotype_key) not in self.test_keys.get('genotype'):
+                        continue
+
+                strain_id = self.idhash['strain'][strain_key]
+                genotype_id = self.idhash['genotype'][genotype_key]
+
+                gu.addTriple(g, strain_id, Genotype.object_properties['has_genotype'], genotype_id)
+                # TODO verify if this should be contingent on the exactness or not
+                # if qualifier == 'Exact':
+                #     gu.addTriple(g, strain_id, Genotype.object_properties['has_genotype'], genotype_id)
+                # else:
+                #     gu.addXref(g, strain_id, genotype_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
 
         return
 
@@ -1745,7 +1898,7 @@ class MGI(Source):
             'M. m. domesticus (Canada)': '10092',
             'M. m. domesticus and M. m. domesticus poschiavinus': '10092',  # FIXME
             'M. m. musculus and M. spretus or M. m. domesticus': '186842',
-            'M. chypre': '862507',  #unclassified mus
+            'M. chypre': '862507',  # unclassified mus
             'M. cookii (Southeast Asia)': '10098',
             'M. cervicolor': '10097',
             'M. m. gentilulus': '80274',

@@ -82,6 +82,7 @@
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
 'AQTL' : 'http://identifiers.org/animalqtl/'  # FIXME temporary
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # temporary
+'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
@@ -93,6 +94,8 @@
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
+'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='
+'EMMA' : 'https://www.infrafrontier.eu/search?keyword=EM:'
 'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
@@ -107,9 +110,12 @@
 'KEGG-hsa' : 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
 'KEGG-ko' : 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
+'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
+'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
+'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'
 'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
 'HGMD' : 'http://identifiers.org/hgmd/'
