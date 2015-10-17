@@ -112,7 +112,8 @@ class ZFIN(Source):
                      "ZDB-GENO-080307-1", "ZDB-GENO-960809-7", "ZDB-GENO-990623-3", "ZDB-GENO-130603-1",
                      "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
                      "ZDB-GENO-070118-1", "ZDB-GENO-140529-1", "ZDB-GENO-070820-1", "ZDB-GENO-071127-3",
-                     "ZDB-GENO-000209-20", "ZDB-GENO-980202-1565", "ZDB-GENO-010924-10"],
+                     "ZDB-GENO-000209-20", "ZDB-GENO-980202-1565", "ZDB-GENO-010924-10", "ZDB-GENO-010531-2",
+                     "ZDB-GENO-090504-5"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -125,7 +126,7 @@ class ZFIN(Source):
                  "ZDB-GENE-031114-1", "ZDB-GENE-990415-72", "ZDB-GENE-030131-2211", "ZDB-GENE-030131-3063",
                  "ZDB-GENE-030131-9460", "ZDB-GENE-980526-26", "ZDB-GENE-980526-27", "ZDB-GENE-980526-29",
                  "ZDB-GENE-071218-6", "ZDB-GENE-070912-423", "ZDB-GENE-011207-1", "ZDB-GENE-980526-284",
-                 "ZDB-GENE-980526-72", "ZDB-GENE-991129-7", "ZDB-GENE-000607-83"],
+                 "ZDB-GENE-980526-72", "ZDB-GENE-991129-7", "ZDB-GENE-000607-83", "ZDB-GENE-090504-2"],
         "allele": ["ZDB-ALT-010426-4", "ZDB-ALT-010427-8", "ZDB-ALT-011017-8", "ZDB-ALT-051005-2", "ZDB-ALT-051227-8",
                    "ZDB-ALT-060221-2", "ZDB-ALT-070314-1", "ZDB-ALT-070409-1", "ZDB-ALT-070420-6", "ZDB-ALT-080528-1",
                    "ZDB-ALT-080528-6", "ZDB-ALT-080827-15", "ZDB-ALT-080908-7", "ZDB-ALT-090316-1", "ZDB-ALT-100519-1",
@@ -133,7 +134,7 @@ class ZFIN(Source):
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
                    "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2", "ZDB-ALT-991005-33",
-                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6", "ZDB-ALT-980203-1827"],
+                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6", "ZDB-ALT-980203-1827", "ZDB-ALT-090504-6"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -168,7 +169,7 @@ class ZFIN(Source):
                  "ZDB-FISH-150901-14591", "ZDB-FISH-150901-9997", "ZDB-FISH-150901-23877", "ZDB-FISH-150901-22128",
                  "ZDB-FISH-150901-14869", "ZDB-FISH-150901-6695", "ZDB-FISH-150901-24158", "ZDB-FISH-150901-3631",
                  "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060", "ZDB-FISH-150901-8451", "ZDB-FISH-150901-2423",
-                 "ZDB-FISH-150901-20257", "ZDB-FISH-150901-10002"]
+                 "ZDB-FISH-150901-20257", "ZDB-FISH-150901-10002", "ZDB-FISH-150901-12520"]
     }
 
     def __init__(self):
@@ -335,6 +336,11 @@ class ZFIN(Source):
                         'affectors': set(),
                         'fish_label': fish_name
                     }
+
+                # HACK - bad allele id - replace it with the new one  FIXME
+                if affector_num == 'ZDB-ALT-090504-1':
+                    affector_num = 'ZDB-ALT-040723-4'
+
                 self.fish_parts[fish_num]['affectors'].add(affector_num)
 
                 # add the constructs that the allele comes from
@@ -357,6 +363,9 @@ class ZFIN(Source):
             fish_id = 'ZFIN:'+fish_num
             fish = self.fish_parts[fish_num]
 
+            if fish_num == 'ZDB-FISH-150901-12520':
+                logger.info("found fish %s with parts: %s", fish_num, fish)
+
             # get the intrinsic parts
             intrinsic_genotype_num = fish['intrinsic_genotype']
             intrinsic_genotype_id = 'ZFIN:'+intrinsic_genotype_num
@@ -365,10 +374,16 @@ class ZFIN(Source):
                 intrinsic_parts = set()
             else:
                 intrinsic_parts = self.geno_alleles[intrinsic_genotype_num]
+            if fish_num == 'ZDB-FISH-150901-12520':
+                logger.info("found fish %s with intrinsic parts: %s", fish_num, intrinsic_parts)
+
 
             # subtract out the intrinsic parts, to get the extrinsic parts
             extrinsic_parts = fish['affectors'] - intrinsic_parts
             extrinsic_list = list(sorted(extrinsic_parts))
+
+            if fish_num == 'ZDB-FISH-150901-12520':
+                logger.info("found fish %s extrinsic parts: %s", fish_num, extrinsic_list)
 
             # build up the extrinsic genotype from it's parts.
             # these will be reagents/morphants.
@@ -786,7 +801,7 @@ class ZFIN(Source):
 
                 gvc_id = '-'.join(gvc_parts)
                 gvc_id = re.sub('(ZFIN)?:', '', gvc_id)
-                gvc_id = '_' + gvc_id
+                gvc_id = '_' + re.sub('^_*', '', gvc_id)
                 if self.nobnodes:
                     gvc_id = ':' + gvc_id
 
