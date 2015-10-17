@@ -64,6 +64,17 @@ class FlyBase(Source):
         }
     }
 
+    test_keys = {
+        'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915],
+        'gene': [23220066, 10344219, 58107328, 3132660, 23193483],
+        'annot': [],
+        'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696],
+        'pub': [],
+        'strain': [],
+        'notes': []
+
+    }
+
 
     def __init__(self):
         Source.__init__(self, 'flybase')
@@ -92,7 +103,7 @@ class FlyBase(Source):
         self.label_hash = {}  # use this to store internally generated labels for various features
         self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
         self.phenocv = {}  # mappings between internal phenotype db key and multiple cv terms
-
+        self.feature_to_organism_hash = {}   # keep this mapping so we can track fly things to be leaders
         self.checked_organisms = set()  # when we verify a tax id in eutils
 
         return
@@ -228,6 +239,9 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
+                    if self.testMode and not genotype_num in self.test_keys['genotype']:
+                        continue
+
                     gu.addIndividualToGraph(g, genotype_id, uniquename, Genotype.genoparts['intrinsic_genotype'],
                                             description)
                     if name.strip() != '':
@@ -276,6 +290,9 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
+                    if self.testMode and not stock_num in self.test_keys['strain']:
+                        continue
+
                     tax_label = self.label_hash[taxon]
                     gu.addClassToGraph(g, taxon, tax_label)  # add the tax in case it hasn't been already
                     gu.addIndividualToGraph(g, stock_id, stock_label, taxon)
@@ -332,6 +349,9 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
+                    if self.testMode and not pub_num in self.test_keys['pub']:
+                        continue
+
                     if is_obsolete == 't':
                         gu.addDeprecatedIndividual(g, pub_id)
                     else:
@@ -427,6 +447,13 @@ class FlyBase(Source):
                     feature_id = 'FlyBase:'+uniquename
                 self.idhash['feature'][feature_key] = feature_id
 
+                if feature_key not in self.feature_to_organism_hash:
+                    self.feature_to_organism_hash[feature_key] = set()
+                self.feature_to_organism_hash[feature_key].add(organism_id)
+
+                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                    continue
+
                 # now do something with it!
                 # switch on type_id
                 if name.strip() == '':
@@ -488,8 +515,8 @@ class FlyBase(Source):
                 elif re.search('FBa[lb]', feature_id):
                     self.idhash['allele'][feature_key] = feature_id
 
-                if not re.search('FBog', feature_id):
-                    # make the fly things leaders
+                if not re.search('FBog', feature_id) and re.search('Drosophila', tax_label):
+                    # make only fly things leaders
                     gu.makeLeader(g, feature_id)
 
                 if type_key == 604:  # RNAi_reagent
@@ -539,10 +566,15 @@ class FlyBase(Source):
                 line_counter += 1
                 (feature_genotype_id, feature_id, genotype_id, chromosome_id, rank, cgroup, cvterm_id) = line
                 # 1	23273518	2	23159230	0	0	60468
+
+
                 feature_key = feature_id
                 feature_id = self.idhash['feature'][feature_key]
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
+
+                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                    continue
 
                 # what is cvterm_id for in this context???
                 # cgroup is the order of composition of things in the genotype label.
@@ -595,6 +627,10 @@ class FlyBase(Source):
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
 
+                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                    continue
+
+
                 # TODO type id ==> ECO???
 
                 # just make associations with abnormal phenotype
@@ -638,7 +674,10 @@ class FlyBase(Source):
                 (feature_pub_id, feature_id, pub_id) = line
                 # 1440    3175682 62137
                 # 2       3160606 99159
+
                 feature_key = feature_id
+                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                    continue
                 if feature_key not in self.idhash['feature']:
                     continue
                 feature_id = self.idhash['feature'][feature_key]
@@ -684,6 +723,9 @@ class FlyBase(Source):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
+                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                    continue
+
                 gu.addTriple(g, stock_id, geno.object_properties['has_genotype'], genotype_id)
 
                 line_counter += 1
@@ -720,6 +762,9 @@ class FlyBase(Source):
 
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
+
+                if self.testMode and not pub_key in self.test_keys['pub']:
+                    continue
 
                 # get any dbxrefs for pubs, including pmids and dois
                 dbxref_key = dbxref_id
@@ -820,7 +865,8 @@ class FlyBase(Source):
                           # 129, # GenomeRNAi
                           275: 'PMID',  # PubMed
                           286: 'PMID',  # pmid
-                          265: 'OMIM',  # OMIM_Gene
+                          264: 'HGNC',
+#                          265: 'OMIM',  # OMIM_Gene
                           266: 'OMIM',  # OMIM_Phenotype
                           300: 'DOID',  # DOID
                           302: 'MESH',  # MSH
@@ -969,6 +1015,10 @@ class FlyBase(Source):
                 phenstatement_key = phenstatement_id
                 phenstatement_id = self._makeInternalIdentifier('phenstatement', phenstatement_key)
                 genotype_key = genotype_id
+
+                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                    continue
+
                 genotype_id = self.idhash['genotype'][genotype_key]
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
@@ -1155,6 +1205,10 @@ class FlyBase(Source):
                     continue
 
                 feature_key = feature_id
+
+                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                    continue
+
                 if feature_key not in self.idhash['feature']:
                     # some features may not be found in the hash if they are "analysis features"
                     # logger.debug("Feature %s not found in hash", feature_key)
@@ -1171,9 +1225,13 @@ class FlyBase(Source):
                         if did == feature_id:  # don't make something sameAs itself
                             continue
                         dlabel = self.label_hash.get(did)
+                        # TODO only add equivalences for fly features; test for species
                         if re.search('FB(gn|og)', feature_id):
-                            gu.addClassToGraph(g, did, dlabel)
-                            gu.addEquivalentClass(g, feature_id, did)
+                            # and really we only want to add equivalences for fly things
+                            if not re.match('OMIM', did):
+                                # these are only omim diseases, not genes; we shouldn't be adding these here anyway
+                                gu.addClassToGraph(g, did, dlabel)
+                                gu.addEquivalentClass(g, feature_id, did)
                         else:
                             gu.addIndividualToGraph(g, did, dlabel)
                             gu.addSameIndividual(g, feature_id, did)
@@ -1211,6 +1269,10 @@ class FlyBase(Source):
                 # 7130199 9068909 11507822        26      0
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
+
+                if self.testMode and not subject_id in self.test_keys['gene']+self.test_keys['allele']\
+                        and not object_id in self.test_keys['gene']+self.test_keys['allele']:
+                    continue
 
                 if int(type_id) in [60384, 60410, 60409, 60413, 60414, 60401, 60399,
                                     60400, 60401, 60402, 60415, 60417, 60418, 60420]:  # allele of, etc
@@ -1446,6 +1508,10 @@ class FlyBase(Source):
                     continue
                 (allele_id, allele_symbol, qualifier, doid_label, doid_id, evidence_or_interacting_allele, pub_id) = line
                 line_counter += 1
+
+                if self.testMode and allele_id not in self.test_keys['allele']:
+                    continue
+
                 rel = None
                 allele_id = 'FlyBase:'+allele_id
                 if qualifier == 'model of':
@@ -1520,10 +1586,10 @@ class FlyBase(Source):
 
         return iid
 
-    # def getTestSuite(self):
-    #     import unittest
-    #     from tests.test_flybase import FlyBaseTestCase
-    #
-    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
-    #
-    #     return test_suite
+    def getTestSuite(self):
+        import unittest
+        from tests.test_flybase import FlyBaseTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
+
+        return test_suite
