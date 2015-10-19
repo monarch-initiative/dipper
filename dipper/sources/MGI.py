@@ -68,9 +68,11 @@ class MGI(Source):
     # for testing purposes, this is a list of internal db keys to match and select only portions of the source
     test_keys = {
         'allele': [1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
-                   476, 42885, 3658, 1193, 6978, 6598, 16698, 626329],
+                   476, 42885, 3658, 1193, 6978, 6598, 16698, 626329, 33649,
+                   835532, 7861, 33649, 6308, 1285, 827608],
         'marker': [357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
-                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833, 35408],
+                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833, 35408, 118781,
+                   37270, 31169, 25040, 81079],
         'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
                   189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
                   928426, 5647502, 6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
@@ -88,15 +90,18 @@ class MGI(Source):
                   93510299, 93510300, 93548463, 93551440, 93552054, 93576058, 93579091, 93579870,
                   93581813, 93581832, 93581841, 93581890, 93583073, 93583786, 93584586, 93587213,
                   93604448, 93607816, 93613038, 93614265, 93618579, 93620355, 93621390, 93624755,
-                  93626409, 93626918, 93636629, 93642680, 93643814, 93643825, 93647695, 93648755, 93652704],
+                  93626409, 93626918, 93636629, 93642680, 93643814, 93643825, 93647695, 93648755, 93652704,
+                  5123647, 71668107, 71668108, 71668109, 71668110, 71668111, 71668112, 71668113,
+                  71668114, 74136778, 107386012, 58485691],
         'genotype': [81, 87, 142, 206, 281, 283, 286, 287, 341, 350, 384, 406, 407, 411, 425, 457, 458, 461, 476, 485,
                      537, 546, 551,
-                     553, 11702, 12910, 13407, 13453, 14815, 26655, 28610, 37313, 38345, 59766, 60082],
+                     553, 11702, 12910, 13407, 13453, 14815, 26655, 28610, 37313, 38345, 59766, 60082,
+                     65406, 64235],
         'pub': [73197, 165659, 134151, 76922, 181903, 26681, 128938, 80054, 156949, 159965, 53672, 170462,
                 206876, 87798, 100777, 176693, 139205, 73199, 74017, 102010, 152095, 18062, 216614, 61933,
                 13385, 32366, 114625, 182408, 140802],
         'strain': [30639, 33832, 33875, 33940, 36012, 59504, 34338, 34382, 47670, 59802, 33946, 31421,
-                   64, 40, 14, -2, 30639, 15975, 35077, 12610, -1, 28319, 27026, 141],
+                   64, 40, 14, -2, 30639, 15975, 35077, 12610, -1, 28319, 27026, 141, 62299],
         'notes': [5114, 53310, 53311, 53312, 53313, 53314, 53315, 53316, 53317, 53318, 53319, 53320,
                   71099, 501751, 501752, 501753, 501754, 501755, 501756, 501757, 744108, 1055341,
                   6049949, 6621213, 6621216, 6621218, 6621219, 7108498, 14590363, 14590364, 14590365,
@@ -171,7 +176,7 @@ class MGI(Source):
                                                str(cxn['port']), '/', cxn['database'])))
 
         # process the tables
-        self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
+        # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
         self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
         self.fetch_transgene_genes_from_db(cxn)
@@ -887,6 +892,26 @@ class MGI(Source):
                         # add the association
                         assoc = Assoc(self.name)
                         assoc.set_subject(genotype_id)
+                        assoc.set_object(omim_id)
+                        assoc.set_relationship(gu.object_properties['model_of'])
+                        assoc.add_association_to_graph(g)
+                        assoc_id = assoc.get_association_id()
+                elif annot_type_key == '1011':
+                    # marker category == type
+                    marker_id = self.idhash['marker'].get(object_key)
+                    term_id = self._map_marker_category(str(term_key))
+                    # note that the accid here is an internal mouse cv term, and we don't use it.
+                    if term_id is not None and marker_id is not None:
+                        gu.addType(g, marker_id, term_id)
+                elif annot_type_key == '1012':  # allele/Disease
+                    allele_id = self.idhash['allele'].get(object_key)
+                    omim_id = 'OMIM:'+str(accid)
+                    if allele_id is None:
+                        logger.error("can't find genotype id for %s", object_key)
+                    else:
+                        # add the association
+                        assoc = Assoc(self.name)
+                        assoc.set_subject(allele_id)
                         assoc.set_object(omim_id)
                         assoc.set_relationship(gu.object_properties['model_of'])
                         assoc.add_association_to_graph(g)
@@ -1663,6 +1688,12 @@ class MGI(Source):
         return
 
     def process_mgi_note_allele_view(self, limit=None):
+        """
+        These are the descriptive notes about the alleles.
+        Note that these notes have embedded HTML - should we do anything about that?
+        :param limit:
+        :return:
+        """
 
         line_counter = 0
         if self.testMode:
@@ -1693,7 +1724,7 @@ class MGI(Source):
                 if len(notehash[object_key][notetype]) < int(sequencenum):
                     for i in range(len(notehash[object_key][notetype]), int(sequencenum)):
                         notehash[object_key][notetype].append('')
-                notehash[object_key][notetype][int(sequencenum)-1] = note
+                notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
 
             # finish iteration over notes
 
@@ -1795,6 +1826,69 @@ class MGI(Source):
                          sequence_alteration_type)
 
         return seqalttype
+
+    @staticmethod
+    def _map_marker_category(marker_type_key):
+        """
+        These map the internal "mouse CV" terms for marker categories to SO classes.
+        There remains one open ticket to satisfy the lncRNA terms that don't have a specific type:
+        https://sourceforge.net/p/song/term-tracker/436/
+        :param marker_type_key:
+        :return:
+        """
+
+        so_id = None
+        marker_category_to_so_map = {
+            '6238160': 'SO:0000704',  # gene
+            '15406202': 'SO:0001263',  # lncRNA gene --> ncRNA gene  FIXME
+            '6238161': 'SO:0001217',  # protein coding gene
+            '6238162': 'SO:0001263',  # non-coding RNA gene
+            '15406203': 'SO:0001263',  # antisense lncRNA gene --> ncRNA gene FIXME
+            '6238163': 'SO:0001637',  # rRNA gene
+            '6238164': 'SO:0001272',  # tRNA gene
+            '6238165': 'SO:0001268',  # snRNA gene
+            '6238166': 'SO:0001267',  # snoRNA gene
+            '6238167': 'SO:0001265',  # miRNA gene
+            '6238168': 'SO:0001266',  # scRNA gene
+            '6238169': 'SO:0001641',  # lincRNA gene
+            '6238170': 'SO:0001500',  # heritable phenotypic marker
+            '6238171': 'SO:3000000',  # gene segment
+            '7313348': 'SO:0000336',  # pseudogene
+            '6238180': 'SO:0001269',  # SRP RNA gene
+            '6238181': 'SO:0001639',  # RNase P RNA gene
+            '6238182': 'SO:0001640',  # RNase MRP RNA gene
+            '6238183': 'SO:0001643',  # telomerase RNA gene
+            '6238184': 'SO:0000704',  # unclassified gene  --> gene
+            '6238186': 'SO:0001263',  # unclassified non-coding RNA gene
+            '6967235': 'SO:0001741',  # pseudogenic gene segment
+            '7196768': 'SO:1000029',  # chromosomal deletion
+            '7196769': 'SO:0000667',  # insertion
+            '7196770': 'SO:0000667',  # chromosomal inversion
+            '7196771': 'SO:1000030',  # Robertsonian fusion
+            '7196772': 'SO:1000048',  # reciprocal chromosomal translocation
+            '7196773': 'SO:1000044',  # chromosomal translocation
+            '7196774': 'SO:1000037',  # chromosomal duplication
+            '7196775': 'SO:0000453',  # chromosomal transposition
+            '7222413': 'SO:0000830',  # unclassified cytogenetic marker  --> chromosome_part
+            '7288448': 'SO:0000341',  # pseudogenic region
+            '7288449': 'SO:0001841',  # polymorphic pseudogene
+            '7648966': 'SO:0000180',  # retrotransposon
+            '7648967': 'SO:0000624',  # telomere
+            '7648968': 'SO:0000643',  # minisatellite
+            '7648969': 'SO:0000110',  # unclassified other genome feature --> sequence feature
+            '9272146': 'SO:0000903',  # endogenous retroviral region --> endogenous retroviral sequence
+            '11928467': 'SO:0001060',  # mutation defined region --> sequence variant
+            '15406204': 'SO:0001263',  # intronic lncRNA gene  --> ncRNA gene   #FIXME
+            '15406205': 'SO:0000307',  # CpG island
+            '15406206': 'SO:0000374',  # ribozyme gene  --> ribozyme
+            '15406207': 'SO:0000167',  # promoter
+        }
+        if marker_type_key.strip() in marker_category_to_so_map:
+            so_id = marker_category_to_so_map.get(marker_type_key)
+        else:
+            logger.error("Marker Category (%s) not mapped", marker_type_key)
+
+        return so_id
 
     @staticmethod
     def _map_zygosity(zygosity):
