@@ -27,7 +27,16 @@ class MPD(Source):
     Here, we pull the data and model the genotypes using GENO and the genotype-to-phenotype associations
     using the OBAN schema.
 
-    We use all identifiers given by MPD.
+    MPD provide measurements for particular assays for several strains.  Each of these measurements is itself
+    mapped to a MP or VT term as a phenotype.  Therefore, we can create a strain-to-phenotype association
+    based on those strains that lie outside of the "normal" range for the given measurements.  We can compute
+    the average of the measurements for all strains tested, and then threshold any extreme measurements
+    being beyond some threshold beyond the average.
+
+    Our default threshold here, is +/-2 standard deviations beyond the mean.
+
+    Because the measurements are made and recorded at the level of a specific sex of each strain, we associate
+    the MP/VT phenotype with the sex-qualified genotype/strain.
 
     """
 
@@ -259,7 +268,6 @@ class MPD(Source):
         (assay_id, projsym, varname, descrip, units, cat1, cat2, cat3, intervention, intparm, appmeth, panelsym,
          datatype, sextested, nstrainstested, ageweeks) = row
 
-        sextested = 'female' if (sextested is 'fm') else 'male'
         if sextested == 'f':
             sextested = 'female'
         elif re.match('(m|male)', sextested.strip()):
@@ -420,7 +428,7 @@ class MPD(Source):
 
         sexes = ['m', 'f']
 
-        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
+        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
 
         ##############    ADD THE TAXON AS CLASS    #############
         taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
