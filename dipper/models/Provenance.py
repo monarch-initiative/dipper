@@ -115,19 +115,7 @@ class Provenance:
     def get_score_id(self, score_type, score_value, score_unit=None):
         s = '-'.join((re.sub(':','',score_type), str(score_value), str(score_unit)))
 
-        """
-        a method to create unique identifiers based on very long strings
-        currently implemented with md5
-        :param long_string:
-        :return:
-        @N, not sure what this should actually be?
-        """
-        # FIXME for now, this will do md5.  probably not the best long-term solution
-        # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
-
-        byte_string = s.encode("utf-8")
-
-        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
+        return s
 
     def get_score(self, score_type, score_value, score_unit=None):
 
