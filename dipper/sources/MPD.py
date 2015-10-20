@@ -255,7 +255,7 @@ class MPD(Source):
                     self.assayhash[assay_id]['metadata']['assay_type'] = assay_type
                     self.assayhash[assay_id]['metadata']['assay_units'] = assay_units
                 else:
-                    # else, if we haven't already discarded this assay_id due to the lack of an MP/VT ontology mapping...
+                    # if we haven't already discarded this assay_id due to the lack of an MP/VT ontology mapping...
                     if assay_id not in self.assays_missing_phenotypes:
                         # we should log the fact that it didn't have a corresponding mapping at all
                         if assay_id not in self.missing_assay_hash:
@@ -430,7 +430,6 @@ class MPD(Source):
 
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
 
-        ##############    ADD THE TAXON AS CLASS    #############
         taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
         gu.addClassToGraph(g, taxon_id, None)
 
@@ -493,7 +492,7 @@ class MPD(Source):
                             # Phenotypes associations are made to limits strainid+gender+overall study
 
                             zscore = self.assayhash[assay_num][sex]['assay_zscores'][index]
-                            if (zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold):
+                            if zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold:
                                 logger.debug('significant zscore: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
 
                                 prov = Provenance()
@@ -528,7 +527,6 @@ class MPD(Source):
 def getTestSuite(self):
     import unittest
     from tests.test_mpd import MPDTestCase
-    # TODO test genotypes
 
     test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
 
