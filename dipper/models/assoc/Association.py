@@ -44,7 +44,8 @@ class Assoc:
         'has_predicate': 'OBAN:association_has_object_property',
         'is_about': 'IAO:00000136',
         'has_evidence': 'RO:0002558',
-        'has_source': 'dc:source'
+        'has_source': 'dc:source',
+        'has_provenance': 'OBAN:has_provenance'
     }
 
     datatype_properties = {
@@ -77,6 +78,7 @@ class Assoc:
         self.description = None
         self.source = []
         self.evidence = []
+        self.provenance = []   # this is going to be used for the refactored evidence/provenance
 
         self.score = None
         self.score_type = None
@@ -136,6 +138,10 @@ class Assoc:
                     self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s, True)
                 else:
                     self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s)
+
+        if self.provenance is not None and len(self.provenance) > 0:
+            for p in self.provenance:
+                self.gu.addTriple(g, self.assoc_id, self.object_properties['has_provenance'], p)
 
         if self.score is not None:
             self.gu.addTriple(g, self.assoc_id, self.properties['has_measurement'],
@@ -215,6 +221,13 @@ class Assoc:
         """
         if identifier is not None and identifier.strip() != '':
             self.source += [identifier]
+
+        return
+
+    def add_provenance(self, identifier):
+
+        if identifier is not None and identifier.strip() != '':
+            self.provenance += [identifier]
 
         return
 
