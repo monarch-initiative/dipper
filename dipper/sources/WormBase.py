@@ -62,7 +62,7 @@ class WormBase(Source):
         # 'genes_in_anatomy': {'file': 'anatomy_association.wb',
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/anatomy_association.WS249.wb'},
         'gene_interaction': {'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
-                             'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.gene_interactions.txt.gz'},
+                             'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
         # 'orthologs': {'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #                     'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
@@ -530,6 +530,8 @@ class WormBase(Source):
         line_counter = 0
         geno = Genotype(g)
         strain_to_variant_map = {}
+        build_num = self.version_num
+        build_id = 'WormBase:'+build_num
         with gzip.open(raw, 'rb') as csvfile:
             filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -633,9 +635,7 @@ class WormBase(Source):
 
                 ftype = self.get_feature_type_by_class_and_biotype(feature_type_label, biotype)
 
-                build_num = 'WS249'
-                build_id = 'WormBase:'+build_num
-                chr_id = makeChromID(chrom, build_id, 'CHR')   # HARDCODE - FIXME
+                chr_id = makeChromID(chrom, build_id, 'CHR')
                 geno.addChromosomeInstance(chrom, build_id, build_num)
 
                 f  = Feature(fid, flabel, ftype)
