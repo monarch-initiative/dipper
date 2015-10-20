@@ -24,6 +24,8 @@ class Genotype():
         'extrinsic_genotype': 'GENO:0000524',
         'effective_genotype': 'GENO:0000525',
         'sex_qualified_genotype': 'GENO:0000645',
+        'male_genotype': 'GENO:0000646',
+        'female_genotype': 'GENO:0000647',
         'genomic_background': 'GENO:0000611',
         'unspecified_genomic_background': 'GENO:0000649',
         'genomic_variation_complement': 'GENO:0000009',
