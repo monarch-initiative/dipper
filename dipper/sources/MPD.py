@@ -48,8 +48,7 @@ class MPD(Source):
 
     }
 
-    # # TODO move these into the conf.json
-    # # the following are strain ids for testing
+    # the following are strain ids for testing
     test_ids = ["MPD:2", "MPD:3", "MPD:5", "MPD:6", "MPD:9", "MPD:11", "MPD:18", "MPD:20", "MPD:24", "MPD:28", "MPD:30",
                 "MPD:33", "MPD:34", "MPD:36", "MPD:37", "MPD:39", "MPD:40", "MPD:42", "MPD:47", "MPD:66", "MPD:68",
                 "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457", "MPD:473", "MPD:481",
@@ -71,7 +70,7 @@ class MPD(Source):
         self.dataset = Dataset('mpd', 'MPD', 'http://phenome.jax.org', None, None)
 
         # TODO add a citation for mpd dataset as a whole
-        # :mpd cito:citesAsAuthority PMID:15619963
+        self.dataset.set_citation('PMID:15619963')
 
         # so that we don't have to deal with BNodes, we will create hash lookups for the internal identifiers
         # the hash will hold the type-specific-object-keys to MPD public identifiers.  then, subsequent
@@ -118,6 +117,8 @@ class MPD(Source):
         if self.testOnly:
             self.testMode = True
 
+        self._process_straininfo(limit)
+
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
         self._process_ontology_mappings_file(limit)
@@ -151,7 +152,7 @@ class MPD(Source):
                 (assay_id, ont_term, descrip) = row
                 assay_id = int(assay_id)
 
-                if re.match('MP', ont_term) or re.match('VT', ont_term):
+                if re.match('(MP|VT)', ont_term):
                     # add the mapping denovo
                     if assay_id not in self.assayhash:
                         self.assayhash[assay_id] = {
@@ -167,6 +168,55 @@ class MPD(Source):
                 else:
                     self.assays_missing_phenotypes.append(assay_id)
                     # the assays themselves will be added to the graph later as part of provenance
+        return
+
+    def _process_straininfo(self, limit):
+        line_counter = 0
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        logger.info("Processing measurements ...")
+        raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
+
+        tax_id = 'NCBITaxon:10090'
+
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            reader = csv.reader(f, delimiter=',', quotechar='\"')
+            f.readline()  # read the header row; skip
+            for row in reader:
+                (strain_name, vendor, stocknum, panel, mpd_strainid, straintype,
+                 n_proj, n_snp_datasets, mpdshortname, url) = row
+                # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
+                # create the strain as an instance of the taxon
+                strain_id = 'MPD-strain:'+str(mpd_strainid)
+                gu.addIndividualToGraph(g, strain_id, strain_name, tax_id)
+                gu.addSynonym(g, strain_id, mpdshortname)
+
+                # make it equivalent to the vendor+stock
+                if vendor == 'J':
+                    jax_id = 'JAX:'+stocknum
+                    gu.addSameIndividual(g, strain_id, jax_id)
+                elif vendor == 'Rbrc':
+                    # reiken
+                    reiken_id = 'RBRC:'+re.sub('RBRC', '', stocknum)
+                    gu.addSameIndividual(g, strain_id, reiken_id)
+                else:
+                    if url != '':
+                        gu.addXref(g, strain_id, url, True)
+                    if vendor != '' and stocknum != '':
+                        gu.addXref(g, strain_id, ':'.join((vendor, stocknum)), True)
+
+                # add the panel information
+                if panel != '':
+                    desc = panel+' [panel]'
+                    gu.addDescription(g, strain_id, desc)
+
+                # TODO make the panels as a resource collection
+
         return
 
     def _process_measurements_file(self, limit):
@@ -206,21 +256,29 @@ class MPD(Source):
          datatype, sextested, nstrainstested, ageweeks) = row
 
         sextested = 'female' if (sextested is 'fm') else 'male'
-        description = "This is an assay of [" + descrip + "] shown as a [" + datatype + "] measured in [" + units + "]."
+        if sextested == 'f':
+            sextested = 'female'
+        elif sextested == 'm':
+            sextested = 'male'
+        elif sextested == 'fm':
+            sextested = 'male and female'
+        else:
+            logger.warn("Unknown sex tested key: %s", sextested)
+        description = "This is an assay of [" + descrip + "] shown as a [" + datatype + "] measured in [" + units + "]"
 
         if intervention is not None and intervention != "":
             description += " in response to [" + intervention + "]"
         if intparm is not None and intervention != "":
             description += ". This represents the [" + intparm + "] arm, using materials and methods that " \
-                                                                 "included [" + appmeth + "]."
+                                                                 "included [" + appmeth + "]"
 
-        description += "  The overall experiment is entitled [" + projsym + "].  "
+        description += ".  The overall experiment is entitled [" + projsym + "].  "
 
         description += "It was conducted in [" + sextested + "] mice at [" + ageweeks + "] of age in" \
                        + " [" + nstrainstested + "] different mouse strains. "
         description += "Keywords: " + cat1 + \
-                       ((", " + cat2) if cat2 is not "" else "") + \
-                       ((", " + cat3) if cat3 is not "" else "") + "."
+                       ((", " + cat2) if cat2.strip() is not "" else "") + \
+                       ((", " + cat3) if cat3.strip() is not "" else "") + "."
         return description
 
     @staticmethod
