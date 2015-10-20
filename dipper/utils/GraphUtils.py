@@ -128,7 +128,7 @@ class GraphUtils:
         if label is not None:
             g.add((n, RDFS['label'], Literal(label)))
         if type is not None:
-            t = URIRef(self.cu.get_uri(type))
+            t = self.getNode(type)
             g.add((n, RDF['type'], t))
         else:
             g.add((n, RDF['type'], self.OWLIND))
