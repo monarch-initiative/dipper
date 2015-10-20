@@ -32,6 +32,7 @@ class Dataset:
         self.version = None
         self.date_issued = None
         self.date_accessed = None
+        self.citation = set()
         self.set_access_date()
         self.license = license_url
         self.graph = Graph()
@@ -170,3 +171,10 @@ class Dataset:
     def get_license(self):
 
         return self.license
+
+    def set_citation(self, citation_id):
+
+        self.citation.add(citation_id)
+        # gu.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)   TODO
+
+        return
