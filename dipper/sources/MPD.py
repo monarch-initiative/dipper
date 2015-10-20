@@ -1,5 +1,4 @@
 import csv
-import gzip
 import re
 import logging
 import io
@@ -14,7 +13,6 @@ from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-from subprocess import call
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +63,8 @@ class MPD(Source):
         self.namespaces.update(curie_map.get())
         self.stdevthreshold = 2
 
+        self.nobnodes = True  # FIXME
+
         # update the dataset object with details about this resource
         # @N: Note that there is no license as far as I can tell
         self.dataset = Dataset('mpd', 'MPD', 'http://phenome.jax.org', None, None)
@@ -93,6 +93,8 @@ class MPD(Source):
         # create a hash to hold problem identifiers (eg. those missing from some tables but not others)
         # the keys will be the assay ids and the value would be a list of files from which known to be missing
         self.missing_assay_hash = {}
+
+        self.idlabel_hash = {}
 
         return
 
@@ -194,21 +196,23 @@ class MPD(Source):
                 # create the strain as an instance of the taxon
                 strain_id = 'MPD-strain:'+str(mpd_strainid)
                 gu.addIndividualToGraph(g, strain_id, strain_name, tax_id)
-                gu.addSynonym(g, strain_id, mpdshortname)
-
+                if mpdshortname.strip() != '':
+                    gu.addSynonym(g, strain_id, mpdshortname.strip())
+                self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
-                if vendor == 'J':
-                    jax_id = 'JAX:'+stocknum
-                    gu.addSameIndividual(g, strain_id, jax_id)
-                elif vendor == 'Rbrc':
-                    # reiken
-                    reiken_id = 'RBRC:'+re.sub('RBRC', '', stocknum)
-                    gu.addSameIndividual(g, strain_id, reiken_id)
-                else:
-                    if url != '':
-                        gu.addXref(g, strain_id, url, True)
-                    if vendor != '' and stocknum != '':
-                        gu.addXref(g, strain_id, ':'.join((vendor, stocknum)), True)
+                if stocknum != '':
+                    if vendor == 'J':
+                        jax_id = 'JAX:'+stocknum
+                        gu.addSameIndividual(g, strain_id, jax_id)
+                    elif vendor == 'Rbrc':
+                        # reiken
+                        reiken_id = 'RBRC:'+re.sub('RBRC', '', stocknum)
+                        gu.addSameIndividual(g, strain_id, reiken_id)
+                    else:
+                        if url != '':
+                            gu.addXref(g, strain_id, url, True)
+                        if vendor != '':
+                            gu.addXref(g, strain_id, ':'.join((vendor, stocknum)), True)
 
                 # add the panel information
                 if panel != '':
@@ -258,7 +262,7 @@ class MPD(Source):
         sextested = 'female' if (sextested is 'fm') else 'male'
         if sextested == 'f':
             sextested = 'female'
-        elif sextested == 'm':
+        elif re.match('(m|male)', sextested.strip()):
             sextested = 'male'
         elif sextested == 'fm':
             sextested = 'male and female'
@@ -323,10 +327,10 @@ class MPD(Source):
                         self.assayhash[assay_id][sex]['strain_labels'].append(strain_label)
                         self.assayhash[assay_id][sex]['assay_means'].append(mean)
                         self.assayhash[assay_id][sex]['assay_zscores'].append(zscore)
-                        logger.debug(
-                            str(assay_id) + ':' + sex + ' Strain IDs: '
-                            + str(self.assayhash[assay_id][sex]['strain_ids'])
-                            + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
+                        # logger.debug(
+                        #     str(assay_id) + ':' + sex + ' Strain IDs: '
+                        #     + str(self.assayhash[assay_id][sex]['strain_ids'])
+                        #     + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
         return
 
     @staticmethod
@@ -413,91 +417,102 @@ class MPD(Source):
             g = self.graph
 
         geno = Genotype(g)
-        prov = Provenance()
 
         sexes = ['m', 'f']
 
-        # loop through the hashmap
-        for assay_id in self.assayhash:
-            if assay_id not in self.missing_assay_hash:
-                assay_label = self.assayhash[assay_id]['metadata']['assay_label']
-                assay_type = self.assayhash[assay_id]['metadata']['assay_type']
+        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
 
-                measurement_unit = self.assayhash[assay_id]['metadata']['measurement_unit']
+        ##############    ADD THE TAXON AS CLASS    #############
+        taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
+        gu.addClassToGraph(g, taxon_id, None)
+
+        # loop through the hashmap
+        for assay_num in self.assayhash:
+            if assay_num not in self.missing_assay_hash:
+                # print(str(self.assayhash[assay_num]))
+                assay_label = self.assayhash[assay_num]['metadata']['assay_label']
+                assay_type = self.assayhash[assay_num]['metadata']['assay_type']
+                if assay_type is None or assay_type == '':
+                    assay_type_id = Provenance.prov_types['assay']
+                else:
+                    assay_type_id = '_MPDAssayType-'+re.sub('\s+','-',assay_type.strip())
+                    if self.nobnodes:
+                        assay_type_id = ':'+assay_type_id
+                    gu.addClassToGraph(g, assay_type_id, assay_type, Provenance.prov_types['assay'])
+
+                # TODO map these assays to real types in the future
+                assay_id = 'MPD-assay:'+str(assay_num)
+                assay_desc = self.assayhash[assay_num]['metadata']['description']
+                ont_term_ids = self.assayhash[assay_num]['metadata']['ont_terms']
+
+                measurement_unit = self.assayhash[assay_num]['metadata']['measurement_unit']
                 for sex in sexes:
                     index = 0
 
                     # First check that the assay_id is in the measurement hash
                     # and that it has a corresponding ontology mapping we are interested in
-                    if len(self.assayhash[assay_id][sex]['strain_ids']) != 0:
+                    if len(self.assayhash[assay_num][sex]['strain_ids']) != 0:
 
-                        for strain_id in self.assayhash[assay_id][sex]['strain_ids']:
+                        for strain_num in self.assayhash[assay_num][sex]['strain_ids']:
+                            # each strain has already been added; here we create an effective genotype
+                            # to represent each sex of each strain
 
                             ##############    ADD THE STRAIN AS GENOTYPE    #############
-                            effective_genotype_id = self.make_id('-'.join((str(strain_id), sex)))
-                            # todo: make this a method in geno that other classes can access
-                            effective_genotype_label = str(strain_id) + ' (' + sex + ')'
-                            geno.addGenotype(effective_genotype_id, effective_genotype_label,
-                                             geno.genoparts['sex_qualified_genotype'])
-                            geno.addParts(effective_genotype_id, effective_genotype_id,
-                                          geno.object_properties['has_alternate_part'])
+                            strain_id = 'MPD-strain:'+str(strain_num)
+                            strain_label = self.idlabel_hash.get(strain_id)  # FIXME
+                            genotype_id = '_'+'-'.join((re.sub(':', '', strain_id), sex))  #FIXME
+                            if strain_label is not None:
+                                genotype_label = strain_label + ' (' + sex + ')'
+                            else:
+                                genotype_label = strain_id + '(' + sex + ')'
 
-                            ##############    ADD THE TAXON AS CLASS    #############
-                            taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
-                            gu.addClassToGraph(g, taxon_id, None)
+                            if self.nobnodes:
+                                genotype_id = ':'+genotype_id
+
+                            genotype_type = geno.genoparts['sex_qualified_genotype']
+                            if sex == 'm':
+                                genotype_type = geno.genoparts['male_genotype']
+                            elif sex =='f':
+                                genotype_type = geno.genoparts['female_genotype']
+                            geno.addGenotype(genotype_id, genotype_label,
+                                             genotype_type)
+
+                            # add the strain as the background for the genotype
+                            geno.addGenomicBackground(strain_id, strain_label)
+                            geno.addGenomicBackgroundToGenotype(strain_id, genotype_id)
 
                             ##############    BUILD THE G2P ASSOC    #############
                             # Phenotypes associations are made to limits strainid+gender+overall study
 
-                            zscore = self.assayhash[assay_id][sex]['assay_zscores'][index]
+                            zscore = self.assayhash[assay_num][sex]['assay_zscores'][index]
                             if (zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold):
-                                logger.debug(str(assay_id) + sex + "\t" + str(zscore) + " significant!")
+                                logger.debug('significant zscore: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
 
-                                ont_term_ids = self.assayhash[assay_id]['metadata']['ont_terms']
+                                prov = Provenance()
+                                prov.add_assay_to_graph(g, assay_id, assay_label,
+                                                        assay_type_id, assay_desc)
+                                # TODO add more provenance info when that model is completed
 
                                 for phenotype_id in ont_term_ids:
-                                    eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
+                                    assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
+                                    assoc.add_evidence(assay_id)
+                                    assoc.add_evidence(eco_id)
+                                    assoc.add_association_to_graph(g)
+                                    assoc_id = assoc.get_association_id()
+                                    comment = ' '.join((assay_label, '(zscore='+str(zscore)+')'))
+                                    gu.addComment(g, assoc_id, comment)
+                            else:
+                                pass
+                                # logger.debug('NOT significant: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
 
-                                    # the association comes as a result of a g2p from a procedure in a pipeline at a center
-                                    # and parameter tested
+                            # TODO make the association at the level of the strain, rather than the sex-qualified indiv
 
-                                    assoc = G2PAssoc(self.name, effective_genotype_id, phenotype_id)
-                                    assay_desc = self.assayhash[assay_id]['metadata']['description']
+                            index += 1
+                        # finish iterating over each strain
 
-                                    measurement_value = self.assayhash[assay_id][sex]['assay_means'][index]
-                                    significance = prov.get_zscore(zscore)
+                # finish iterating over sexes
 
-                                    logger.debug(
-                                        "ASSAY: " + str(assay_id) +
-                                        "\tLABEL:" + assay_label +
-                                        "\tTYPE:" + assay_type +
-                                        "\tDESC:" + assay_desc
-                                    )
-
-                                    effective_assay_type = \
-                                        (self.make_id(str(assay_type.strip().replace(' ', '-')))) \
-                                            if (assay_type is not None) \
-                                            else None
-
-                                prov.add_assay_to_graph(g, 'MPD-assay:' + str(assay_id), assay_label,
-                                                        effective_assay_type, assay_desc)
-                                prov.add_measurement_data(assay_id, measurement_unit, significance)
-                                logger.debug(
-                                    "AGENT ID: " + str(self.mgd_agent_id) + "\tAGENT LABEL: " + self.mgd_agent_label
-                                    + "\tAGENT TYPE: " + self.mgd_agent_type
-                                )
-                                prov.add_agent_to_graph(g, self.mgd_agent_id, self.mgd_agent_label, self.mgd_agent_type)
-                                prov.add_provenance_to_graph(g)
-
-                                assoc.add_evidence(eco_id)
-                                assoc.set_score(float(zscore))
-                        else:
-                            logger.debug(str(assay_id) + sex + "\t" + str(strain_id) + "\t" + str(
-                                zscore) + " Not significant; skipping phenotype association.")
-                    index += 1
-
-                    # else:
-                    #     logger.debug("skipping assay " + str(assay_id) + sex + " as it is missing any associated data.")
+            # finish iterating over assay hash
 
         return
 
