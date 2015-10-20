@@ -362,6 +362,9 @@ class NCBIGene(Source):
         """
         Loops through the gene2pubmed file and adds a simple triple to say that a given publication
         is_about a gene.  Publications are added as NamedIndividuals.
+
+        These are filtered on the taxon.
+
         :param limit:
         :return:
         """
@@ -376,6 +379,7 @@ class NCBIGene(Source):
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
         logger.info("FILE: %s", myfile)
+        assoc_counter = 0
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
@@ -413,9 +417,12 @@ class NCBIGene(Source):
                 r = Reference(pubmed_id, Reference.ref_types['journal_article'])
                 r.addRefToGraph(g)
                 gu.addTriple(g, pubmed_id, gu.object_properties['is_about'], gene_id)
-
+                assoc_counter += 1
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
+
+
+        logger.info("Processed %d pub-gene associations", assoc_counter)
 
         return
 
