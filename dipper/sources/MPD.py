@@ -56,11 +56,12 @@ class MPD(Source):
     }
 
     # the following are strain ids for testing
-    test_ids = ["MPD:2", "MPD:3", "MPD:5", "MPD:6", "MPD:9", "MPD:11", "MPD:18", "MPD:20", "MPD:24", "MPD:28", "MPD:30",
-                "MPD:33", "MPD:34", "MPD:36", "MPD:37", "MPD:39", "MPD:40", "MPD:42", "MPD:47", "MPD:66", "MPD:68",
-                "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457", "MPD:473", "MPD:481",
-                "MPD:759", "MPD:766", "MPD:770", "MPD:849", "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
-                "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
+    # test_ids = ["MPD:2", "MPD:3", "MPD:5", "MPD:6", "MPD:9", "MPD:11", "MPD:18", "MPD:20", "MPD:24", "MPD:28", "MPD:30",
+    #             "MPD:33", "MPD:34", "MPD:36", "MPD:37", "MPD:39", "MPD:40", "MPD:42", "MPD:47", "MPD:66", "MPD:68",
+    #             "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457", "MPD:473", "MPD:481",
+    #             "MPD:759", "MPD:766", "MPD:770", "MPD:849", "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
+    #             "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
+    test_ids = ['MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002", "MPD:39"]
 
     mgd_agent_id = "MPD:db/q?rtn=people/allinv"
     mgd_agent_label = "Mouse Phenotype Database"
@@ -203,6 +204,8 @@ class MPD(Source):
                  n_proj, n_snp_datasets, mpdshortname, url) = row
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
                 # create the strain as an instance of the taxon
+                if self.testMode and 'MPD:'+str(mpd_strainid) not in self.test_ids:
+                    continue
                 strain_id = 'MPD-strain:'+str(mpd_strainid)
                 gu.addIndividualToGraph(g, strain_id, strain_name, tax_id)
                 if mpdshortname.strip() != '':
@@ -317,10 +320,6 @@ class MPD(Source):
                                                                                row[4], float(row[5]), float(row[14])
                 for val in vals:
                     self.check_vals(val)
-
-                if self.testMode is True:
-                    if int(strainid) not in self.test_ids:
-                        continue
 
                 # if the assay_id is missing from the hash, it is because it corresponds to data that was leaked
                 # and retracted ontology_mappings or measurements
@@ -438,6 +437,8 @@ class MPD(Source):
             if assay_num not in self.missing_assay_hash:
                 # print(str(self.assayhash[assay_num]))
                 assay_label = self.assayhash[assay_num]['metadata']['assay_label']
+                if assay_label is not None:
+                    assay_label += ' ('+str(assay_num)+')'
                 assay_type = self.assayhash[assay_num]['metadata']['assay_type']
                 if assay_type is None or assay_type == '':
                     assay_type_id = Provenance.prov_types['assay']
@@ -445,7 +446,7 @@ class MPD(Source):
                     assay_type_id = '_MPDAssayType-'+re.sub('\s+','-',assay_type.strip())
                     if self.nobnodes:
                         assay_type_id = ':'+assay_type_id
-                    gu.addClassToGraph(g, assay_type_id, assay_type, Provenance.prov_types['assay'])
+                    gu.addClassToGraph(g, assay_type_id, assay_type+' assay', Provenance.prov_types['assay'])
 
                 # TODO map these assays to real types in the future
                 assay_id = 'MPD-assay:'+str(assay_num)
@@ -463,6 +464,9 @@ class MPD(Source):
                         for strain_num in self.assayhash[assay_num][sex]['strain_ids']:
                             # each strain has already been added; here we create an effective genotype
                             # to represent each sex of each strain
+
+                            if self.testMode and 'MPD:'+str(strain_num) not in self.test_ids:
+                                continue
 
                             ##############    ADD THE STRAIN AS GENOTYPE    #############
                             strain_id = 'MPD-strain:'+str(strain_num)
@@ -509,6 +513,7 @@ class MPD(Source):
                                     comment = ' '.join((assay_label, '(zscore='+str(zscore)+')'))
                                     gu.addComment(g, assoc_id, comment)
                             else:
+                                # TODO add not abnormal?
                                 pass
                                 # logger.debug('NOT significant: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
 
@@ -524,10 +529,10 @@ class MPD(Source):
         return
 
 
-def getTestSuite(self):
-    import unittest
-    from tests.test_mpd import MPDTestCase
+    def getTestSuite(self):
+        import unittest
+        from tests.test_mpd import MPDTestCase
 
-    test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
 
-    return test_suite
+        return test_suite
