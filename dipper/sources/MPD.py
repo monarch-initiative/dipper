@@ -61,7 +61,7 @@ class MPD(Source):
     #             "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457", "MPD:473", "MPD:481",
     #             "MPD:759", "MPD:766", "MPD:770", "MPD:849", "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
     #             "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
-    test_ids = ['MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002", "MPD:39"]
+    test_ids = ['MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002", "MPD:39", "MPD:2319"]
 
     mgd_agent_id = "MPD:db/q?rtn=people/allinv"
     mgd_agent_label = "Mouse Phenotype Database"
@@ -82,29 +82,13 @@ class MPD(Source):
         # TODO add a citation for mpd dataset as a whole
         self.dataset.set_citation('PMID:15619963')
 
-        # so that we don't have to deal with BNodes, we will create hash lookups for the internal identifiers
-        # the hash will hold the type-specific-object-keys to MPD public identifiers.  then, subsequent
-        # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
-        # fly
         self.assayhash = {}
-        # self.selectedAssayHash = {}
-        # produces objects that look like:
-        # {
-        #     'metadata': {'ont_terms': [], 'description': None, 'assay_label': None, 'assay_type': None,
-        #                  'measurement_unit': None},
-        #     # have to repeat this otherwise both f and m will correspond to same object in memory
-        #     # storing these in a less hierarchical way as it facilitates manual computation of zscores
-        #     'f': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []},
-        #     'm': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []}
-        # }
-
-        self.assays_missing_phenotypes = list()
-
-        # create a hash to hold problem identifiers (eg. those missing from some tables but not others)
-        # the keys will be the assay ids and the value would be a list of files from which known to be missing
-        self.missing_assay_hash = {}
-
         self.idlabel_hash = {}
+        self.score_means_by_measure = {}  # to store the mean/zscore of each measure by strain+sex
+        self.strain_scores_by_measure = {}  # to store the mean value for each measure by strain+sex
+
+        self.geno = Genotype(self.graph)
+        self.gu = GraphUtils(curie_map.get())
 
         return
 
@@ -128,23 +112,30 @@ class MPD(Source):
 
         if self.testOnly:
             self.testMode = True
+            g = self.testgraph
+            self.geno = Genotype(self.testgraph)
+        else:
+            g = self.graph
 
         self._process_straininfo(limit)
-
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
-        self._process_ontology_mappings_file(limit)
-        self._process_measurements_file(limit)
-        self._process_strainmeans_file(limit)
-        # self._calculate_stats()
+        self._process_ontology_mappings_file(limit)  # mapping between assays and ontology terms
+        self._process_measurements_file(limit)  # this is the metadata about the measurements
+        self._process_strainmeans_file(limit)  # get all the measurements per strain
 
         # The following will use the hash populated above to lookup the ids when filling in the graph
         self._fill_provenance_graph(limit)
-        # self._fill_association_graph(limit)
 
         logger.info("Finished parsing.")
 
         self.load_bindings()
+
+        gu = GraphUtils(curie_map.get())
+        gu.loadAllProperties(g)
+        gu.loadProperties(g, G2PAssoc.object_properties, GraphUtils.OBJPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, GraphUtils.OBJPROP)
+        gu.loadProperties(g, G2PAssoc.annotation_properties, GraphUtils.ANNOTPROP)
 
         logger.info("Found %d nodes", len(self.graph))
         return
@@ -167,19 +158,10 @@ class MPD(Source):
                 if re.match('(MP|VT)', ont_term):
                     # add the mapping denovo
                     if assay_id not in self.assayhash:
-                        self.assayhash[assay_id] = {
-                            'metadata': {'ont_terms': [], 'description': None, 'assay_label': None, 'assay_type': None,
-                                         'measurement_unit': None},
-                            # have to repeat this otherwise both f and m will correspond to same object in memory
-                            # storing these in a less hierarchical way as it facilitates manual computation of zscores
-                            'f': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []},
-                            'm': {'strain_ids': [], 'strain_labels': [], 'assay_means': [], 'assay_zscores': []}
-                        }
-                    self.assayhash[assay_id]['metadata']['ont_terms'] += [ont_term]
+                        self.assayhash[assay_id] = {}
+                        self.assayhash[assay_id]['ont_terms'] = set()
+                    self.assayhash[assay_id]['ont_terms'].add(ont_term)
 
-                else:
-                    self.assays_missing_phenotypes.append(assay_id)
-                    # the assays themselves will be added to the graph later as part of provenance
         return
 
     def _process_straininfo(self, limit):
@@ -251,29 +233,211 @@ class MPD(Source):
                 assay_label = row[3]
                 assay_units = row[4]
                 assay_type = row[10] if row[10] is not '' else None
-                if assay_id in self.assayhash and len(self.assayhash[assay_id]['metadata']['ont_terms']) != 0:
-                    description = self._build_measurement_description(row)
-                    self.assayhash[assay_id]['metadata']['description'] = description
-                    self.assayhash[assay_id]['metadata']['assay_label'] = assay_label
-                    self.assayhash[assay_id]['metadata']['assay_type'] = assay_type
-                    self.assayhash[assay_id]['metadata']['assay_units'] = assay_units
-                else:
-                    # if we haven't already discarded this assay_id due to the lack of an MP/VT ontology mapping...
-                    if assay_id not in self.assays_missing_phenotypes:
-                        # we should log the fact that it didn't have a corresponding mapping at all
-                        if assay_id not in self.missing_assay_hash:
-                            self._log_missing_ids(assay_id, "ontology_mappings.csv")
+
+                if assay_id not in self.assayhash:
+                    self.assayhash[assay_id] = {}
+                description = self.build_measurement_description(row)
+                self.assayhash[assay_id]['description'] = description
+                self.assayhash[assay_id]['assay_label'] = assay_label
+                self.assayhash[assay_id]['assay_type'] = assay_type
+                self.assayhash[assay_id]['assay_units'] = assay_units
+
+                # TODO add project property?
+                # TODO add intervention?  ageweeks might be useful for adding to phenotype assoc
+
+                # TODO add the assay to the graph here?
+
+            # end loop on measurement metadata
 
         return
 
+    def _process_strainmeans_file(self, limit):
+        """
+        This will store the entire set of strain means in a hash.  Not the most efficient representation,
+        but easy access.
+        We will loop through this later to then apply cutoffs and add associations
+        :param limit:
+        :return:
+        """
+        logger.info("Processing strain means ...")
+        line_counter = 0
+        f = '/'.join((self.rawdir, self.files['strainmeans']['file']))
+        myzip = ZipFile(f, 'r')
+        # assume that the first entry is the item
+        # fname = myzip.namelist()[0]
+
+        with myzip.open(self.files['strainmeans']['file'].replace('.zip', '.csv'), 'r') as f:
+            f = io.TextIOWrapper(f)
+            reader = csv.reader(f)
+            f.readline()  # read the header row; skip
+            score_means_by_measure = {}
+            strain_scores_by_measure = {}
+            for row in reader:
+                line_counter += 1
+                # measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,cv,minval,maxval,logmean,logsd,zscore,logzscore
+                (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem, cv, minval, maxval, logmean,
+                logsd, zscore, logzscore) = row
+
+                strain_num = int(strainid)
+                assay_num = int(measnum)
+                # assuming the zscore is across all the items in the same measure+var+strain+sex
+                # note that it seems that there is only ever 1 varname per measnum.
+                # note that some assays only tested one sex!  we split this here by sex
+                if assay_num not in score_means_by_measure:
+                    score_means_by_measure[assay_num] = {}
+                if sex not in score_means_by_measure[assay_num]:
+                    score_means_by_measure[assay_num][sex] = list()
+                score_means_by_measure[assay_num][sex].append(float(mean))
+
+                if strain_num not in strain_scores_by_measure:
+                    strain_scores_by_measure[strain_num] = {}
+                if sex not in strain_scores_by_measure[strain_num]:
+                    strain_scores_by_measure[strain_num][sex] = {}
+                strain_scores_by_measure[strain_num][sex][assay_num] = { 'mean':float(mean), 'zscore':float(zscore)}
+
+            # end loop over strainmeans
+        self.score_means_by_measure = score_means_by_measure
+        self.strain_scores_by_measure = strain_scores_by_measure
+
+        return
+
+    def _fill_provenance_graph(self, limit):
+        logger.info("Building graph ...")
+        gu = GraphUtils(curie_map.get())
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
+        gu.addClassToGraph(g, taxon_id, None)
+
+        scores_passing_threshold_count = 0
+        scores_passing_threshold_with_ontologies_count = 0
+        scores_not_passing_threshold_count = 0
+
+        # loop through all the strains, and make G2P assoc for those with scores beyond threshold
+        for strain_num in self.strain_scores_by_measure:
+            if self.testMode and 'MPD:'+str(strain_num) not in self.test_ids:
+                continue
+            strain_id = 'MPD-strain:'+str(strain_num)
+            for sex in self.strain_scores_by_measure[strain_num]:
+                measures = self.strain_scores_by_measure[strain_num][sex]
+                for m in measures:
+                    assay_id = 'MPD-assay:'+str(m)
+                    # TODO consider using the means instead of precomputed zscores
+                    if 'zscore' in measures[m]:
+                        zscore = measures[m]['zscore']
+                        if abs(zscore) >= self.stdevthreshold:
+                            scores_passing_threshold_count += 1
+                            # logger.info("Score passing threshold: %s | %s | %s", strain_id, assay_id, zscore)
+                            # add the G2P assoc
+                            prov = Provenance()
+                            assay_label = self.assayhash[m]['assay_label']
+                            if assay_label is not None:
+                                assay_label += ' ('+str(m)+')'
+                            assay_type = self.assayhash[m]['assay_type']
+                            assay_description = self.assayhash[m]['description']
+                            assay_type_id = Provenance.prov_types['assay']
+                            comment = ' '.join((assay_label, '(zscore='+str(zscore)+')'))
+                            ont_term_ids = self.assayhash[m].get('ont_terms')
+                            if ont_term_ids is not None:
+                                scores_passing_threshold_with_ontologies_count += 1
+                                prov.add_assay_to_graph(g, assay_id, assay_label, assay_type_id, assay_description)
+                                self._add_g2p_assoc(g, strain_id, sex, assay_id, ont_term_ids, comment)
+                        else:
+                            scores_not_passing_threshold_count += 1
+
+        logger.info("Scores passing threshold: %d", scores_passing_threshold_count)
+        logger.info("Scores passing threshold with ontologies: %d", scores_passing_threshold_with_ontologies_count)
+        logger.info("Scores not passing threshold: %d", scores_not_passing_threshold_count)
+
+        return
+
+    def _add_g2p_assoc(self, g, strain_id, sex, assay_id, phenotypes, comment):
+        """
+        Create an association between a sex-specific strain id and each of the phenotypes.
+        Here, we create a genotype from the strain, and a sex-specific genotype.  Each of those genotypes
+        are created as anonymous nodes.
+
+        The evidence code is hardcoded to be ECO:experimental_phenotypic_evidence.
+
+        :param g:
+        :param strain_id:
+        :param sex:
+        :param assay_id:
+        :param phenotypes: a list of phenotypes to association with the strain
+        :param comment:
+        :return:
+        """
+
+        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
+        strain_label = self.idlabel_hash.get(strain_id)
+        genotype_id = '_'+'-'.join((re.sub(':', '', strain_id), 'genotype'))  # strain genotype
+        genotype_label = '['+strain_label+']'
+
+        sex_specific_genotype_id = '_'+'-'.join((re.sub(':', '', strain_id), sex, 'genotype'))
+        if strain_label is not None:
+            sex_specific_genotype_label = strain_label + ' (' + sex + ')'
+        else:
+            sex_specific_genotype_label = strain_id + '(' + sex + ')'
+
+        if self.nobnodes:
+            genotype_id = ':'+genotype_id
+            sex_specific_genotype_id = ':'+sex_specific_genotype_id
+
+        genotype_type =Genotype.genoparts['sex_qualified_genotype']
+        if sex == 'm':
+            genotype_type = Genotype.genoparts['male_genotype']
+        elif sex =='f':
+            genotype_type = Genotype.genoparts['female_genotype']
+
+        # add the genotype to strain connection
+        self.geno.addGenotype(genotype_id, genotype_label, Genotype.genoparts['genomic_background'])
+        self.gu.addTriple(g, strain_id, Genotype.object_properties['has_genotype'], genotype_id)
+
+        self.geno.addGenotype(sex_specific_genotype_id, sex_specific_genotype_label,
+                         genotype_type)
+
+        # add the strain as the background for the genotype
+        self.gu.addTriple(g, sex_specific_genotype_id,
+                     Genotype.object_properties['has_sex_agnostic_genotype_part'], genotype_id)
+
+        ##############    BUILD THE G2P ASSOC    #############
+        # TODO add more provenance info when that model is completed
+
+        if phenotypes is not None:
+            for phenotype_id in phenotypes:
+                assoc = G2PAssoc(self.name, sex_specific_genotype_id, phenotype_id)
+                assoc.add_evidence(assay_id)
+                assoc.add_evidence(eco_id)
+                assoc.add_association_to_graph(g)
+                assoc_id = assoc.get_association_id()
+                self.gu.addComment(g, assoc_id, comment)
+
+        return
+
+    def getTestSuite(self):
+        import unittest
+        from tests.test_mpd import MPDTestCase
+
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
+
+        return test_suite
+
     @staticmethod
-    def _build_measurement_description(row):
+    def normalise_units(units):
+        # todo:
+        return units
+
+    @staticmethod
+    def build_measurement_description(row):
         (assay_id, projsym, varname, descrip, units, cat1, cat2, cat3, intervention, intparm, appmeth, panelsym,
          datatype, sextested, nstrainstested, ageweeks) = row
 
         if sextested == 'f':
             sextested = 'female'
-        elif re.match('(m|male)', sextested.strip()):
+        elif sextested =='m':
             sextested = 'male'
         elif sextested == 'fm':
             sextested = 'male and female'
@@ -296,243 +460,9 @@ class MPD(Source):
                        ((", " + cat3) if cat3.strip() is not "" else "") + "."
         return description
 
-    @staticmethod
-    def normalise_units(units):
-        # todo:
-        return units
-
-    def _process_strainmeans_file(self, limit):
-        logger.info("Processing strain means ...")
-        line_counter = 0
-        f = '/'.join((self.rawdir, self.files['strainmeans']['file']))
-        myzip = ZipFile(f, 'r')
-        # assume that the first entry is the item
-        # fname = myzip.namelist()[0]
-
-        with myzip.open(self.files['strainmeans']['file'].replace('.zip', '.csv'), 'r') as f:
-            f = io.TextIOWrapper(f)
-            reader = csv.reader(f)
-            f.readline()  # read the header row; skip
-            for row in reader:
-                line_counter += 1
-                # measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,cv,minval,maxval,logmean,logsd,zscore,logzscore
-                vals = (assay_id, strain_label, strainid, sex, mean, zscore) = int(row[0]), row[2], int(row[3]), \
-                                                                               row[4], float(row[5]), float(row[14])
-                for val in vals:
-                    self.check_vals(val)
-
-                # if the assay_id is missing from the hash, it is because it corresponds to data that was leaked
-                # and retracted ontology_mappings or measurements
-                if assay_id not in self.assayhash:
-                    self._log_missing_ids(assay_id, "ontology_mappings.csv")
-                    self._log_missing_ids(assay_id, "measurements.csv")
-                    # make a map of maps to hold strains for each (assay_id+sex)...
-
-                else:
-                    if assay_id not in self.assays_missing_phenotypes:
-                        self.assayhash[assay_id][sex]['strain_ids'].append(strainid)
-                        self.assayhash[assay_id][sex]['strain_labels'].append(strain_label)
-                        self.assayhash[assay_id][sex]['assay_means'].append(mean)
-                        self.assayhash[assay_id][sex]['assay_zscores'].append(zscore)
-                        # logger.debug(
-                        #     str(assay_id) + ':' + sex + ' Strain IDs: '
-                        #     + str(self.assayhash[assay_id][sex]['strain_ids'])
-                        #     + ' Assay means: ' + str(self.assayhash[assay_id][sex]['assay_means']))
-        return
-
-    @staticmethod
-    def check_vals(value):
-
-        assert (value is not None and value is not '')
-
-        return value
-
-    # # loop over the resulting hash to calculate the z scores for each assay_id + sex
-    # def _calculate_stats(self):
-    #     logger.info("Calculating stats ...")
-    #
-    #     sexes = ['f', 'm']
-    #     for sex in sexes:
-    #         for assay_id in self.assayhash:
-    #             strains = self.assayhash[assay_id][sex]['strain_id']
-    #             # if strains is not an empty list
-    #             if (strains):
-    #                 logger.info("Present: " + str(assay_id) + ":" + sex)
-    #
-    #                 # if (assay_id == 23201):
-    #                 #     logger.info()
-    #
-    #                 meanslist = self.assayhash[assay_id][sex]['assay_means']
-    #                 zscores = self.zify(meanslist)
-    #                 self.assayhash[sex]['assay_zscores'] = dict(zip(strains, zscores))
-    #             # if strains is empty list it is because the corresponding assay_id isn't in strainmeans.csv
-    #             else:
-    #                 self._log_missing_ids(assay_id, "strainmeans.csv")
-    #                 logger.info("Missing: " + str(assay_id) + ":" + sex)
-    #
+    # def _log_missing_ids(self, missing_id, name_of_file_from_which_missing):
+    #     if missing_id not in self.missing_assay_hash:
+    #         self.missing_assay_hash[missing_id] = set()
+    #     self.missing_assay_hash[missing_id].add(name_of_file_from_which_missing)
+    #     # todo: remove the offending ids from the hash
     #     return
-
-    # # @N:
-    # # I keep getting these errors of positional arguments (must be my misunderstanding of 'self')
-    # # All stats code below is based on the statistics module in Python 3.4.
-    # def zify(self, meanslist):
-    #     pop_mean = self.mean(meanslist)
-    #     pop_stdev = self.pstdev(meanslist)
-    #
-    #     zscores = list()
-    #
-    #     for mean in meanslist:
-    #         zscore = (mean - pop_mean) / pop_stdev
-    #         zscores.append(zscore)
-    #     return zscores
-    #
-    # def mean(self, data):
-    #     """Return the sample arithmetic mean of data."""
-    #     n = len(data)
-    #     if n < 1:
-    #         raise ValueError('mean requires at least one data point')
-    #     return sum(data) / float(n)  # in Python 2 use sum(data)/float(n)
-    #
-    # def _ss(self, data):
-    #     """Return sum of square deviations of sequence data."""
-    #     c = self.mean(data)
-    #     ss = sum((x - c) ** 2 for x in data)
-    #     return ss
-    #
-    # def pstdev(self, data):
-    #     """Calculates the population standard deviation."""
-    #     n = len(data)
-    #     if n < 2:
-    #         raise ValueError('variance requires at least two data points')
-    #     ss = self._ss(data)
-    #     pvar = ss / n  # the population variance
-    #     return pvar ** 0.5
-
-    def _log_missing_ids(self, missing_id, name_of_file_from_which_missing):
-        if missing_id not in self.missing_assay_hash:
-            self.missing_assay_hash[missing_id] = set()
-        self.missing_assay_hash[missing_id].add(name_of_file_from_which_missing)
-        # todo: remove the offending ids from the hash
-        return
-
-    def _fill_provenance_graph(self, limit):
-        logger.info("Building graph ...")
-        gu = GraphUtils(curie_map.get())
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-
-        geno = Genotype(g)
-
-        sexes = ['m', 'f']
-
-        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
-
-        taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
-        gu.addClassToGraph(g, taxon_id, None)
-
-        # loop through the hashmap
-        for assay_num in self.assayhash:
-            if assay_num not in self.missing_assay_hash:
-                # print(str(self.assayhash[assay_num]))
-                assay_label = self.assayhash[assay_num]['metadata']['assay_label']
-                if assay_label is not None:
-                    assay_label += ' ('+str(assay_num)+')'
-                assay_type = self.assayhash[assay_num]['metadata']['assay_type']
-                if assay_type is None or assay_type == '':
-                    assay_type_id = Provenance.prov_types['assay']
-                else:
-                    assay_type_id = '_MPDAssayType-'+re.sub('\s+','-',assay_type.strip())
-                    if self.nobnodes:
-                        assay_type_id = ':'+assay_type_id
-                    gu.addClassToGraph(g, assay_type_id, assay_type+' assay', Provenance.prov_types['assay'])
-
-                # TODO map these assays to real types in the future
-                assay_id = 'MPD-assay:'+str(assay_num)
-                assay_desc = self.assayhash[assay_num]['metadata']['description']
-                ont_term_ids = self.assayhash[assay_num]['metadata']['ont_terms']
-
-                measurement_unit = self.assayhash[assay_num]['metadata']['measurement_unit']
-                for sex in sexes:
-                    index = 0
-
-                    # First check that the assay_id is in the measurement hash
-                    # and that it has a corresponding ontology mapping we are interested in
-                    if len(self.assayhash[assay_num][sex]['strain_ids']) != 0:
-
-                        for strain_num in self.assayhash[assay_num][sex]['strain_ids']:
-                            # each strain has already been added; here we create an effective genotype
-                            # to represent each sex of each strain
-
-                            if self.testMode and 'MPD:'+str(strain_num) not in self.test_ids:
-                                continue
-
-                            ##############    ADD THE STRAIN AS GENOTYPE    #############
-                            strain_id = 'MPD-strain:'+str(strain_num)
-                            strain_label = self.idlabel_hash.get(strain_id)  # FIXME
-                            genotype_id = '_'+'-'.join((re.sub(':', '', strain_id), sex))  #FIXME
-                            if strain_label is not None:
-                                genotype_label = strain_label + ' (' + sex + ')'
-                            else:
-                                genotype_label = strain_id + '(' + sex + ')'
-
-                            if self.nobnodes:
-                                genotype_id = ':'+genotype_id
-
-                            genotype_type = geno.genoparts['sex_qualified_genotype']
-                            if sex == 'm':
-                                genotype_type = geno.genoparts['male_genotype']
-                            elif sex =='f':
-                                genotype_type = geno.genoparts['female_genotype']
-                            geno.addGenotype(genotype_id, genotype_label,
-                                             genotype_type)
-
-                            # add the strain as the background for the genotype
-                            geno.addGenomicBackground(strain_id, strain_label)
-                            geno.addGenomicBackgroundToGenotype(strain_id, genotype_id)
-
-                            ##############    BUILD THE G2P ASSOC    #############
-                            # Phenotypes associations are made to limits strainid+gender+overall study
-
-                            zscore = self.assayhash[assay_num][sex]['assay_zscores'][index]
-                            if zscore <= -self.stdevthreshold or zscore >= self.stdevthreshold:
-                                logger.debug('significant zscore: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
-
-                                prov = Provenance()
-                                prov.add_assay_to_graph(g, assay_id, assay_label,
-                                                        assay_type_id, assay_desc)
-                                # TODO add more provenance info when that model is completed
-
-                                for phenotype_id in ont_term_ids:
-                                    assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
-                                    assoc.add_evidence(assay_id)
-                                    assoc.add_evidence(eco_id)
-                                    assoc.add_association_to_graph(g)
-                                    assoc_id = assoc.get_association_id()
-                                    comment = ' '.join((assay_label, '(zscore='+str(zscore)+')'))
-                                    gu.addComment(g, assoc_id, comment)
-                            else:
-                                # TODO add not abnormal?
-                                pass
-                                # logger.debug('NOT significant: '+' | '.join((assay_id, strain_id, sex, str(zscore))))
-
-                            # TODO make the association at the level of the strain, rather than the sex-qualified indiv
-
-                            index += 1
-                        # finish iterating over each strain
-
-                # finish iterating over sexes
-
-            # finish iterating over assay hash
-
-        return
-
-
-    def getTestSuite(self):
-        import unittest
-        from tests.test_mpd import MPDTestCase
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(MPDTestCase)
-
-        return test_suite
