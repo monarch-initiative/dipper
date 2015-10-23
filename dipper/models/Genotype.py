@@ -76,7 +76,7 @@ class Genotype():
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
         'has_reference_part': 'GENO:0000385',
-        'has_sex_agnostic_genotype_part': 'GENO:0000xxx',
+        'has_sex_agnostic_genotype_part': 'GENO:0000650',
         'in_taxon': 'RO:0002162',
         'has_zygosity': 'GENO:0000608',
         'is_sequence_variant_instance_of': 'GENO:0000408',  # links a alternate locus (instance) to a gene (class)
