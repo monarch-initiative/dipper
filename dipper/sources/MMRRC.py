@@ -210,6 +210,7 @@ class MMRRC(Source):
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
                 gu.addIndividualToGraph(g, strain_id, strain_label, strain_type, research_areas)  # an inst of mouse??
+                gu.makeLeader(g, strain_id)
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
