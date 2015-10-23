@@ -33,7 +33,7 @@ class Provenance:
         'assay': 'OBI:0000070',
         'agent': 'IAO:xxxxxxx',
         'organization': 'foaf:organization',
-        'person': 'foaf:person',
+        'person': GraphUtils.PERSON,
         'statistical_hypothesis_test': 'OBI:0000673'
     }
 
