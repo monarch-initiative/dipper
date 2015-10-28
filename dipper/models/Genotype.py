@@ -68,7 +68,8 @@ class Genotype():
         'coding_transgene_feature': 'GENO:0000638',
         'protein_coding_gene': 'SO:0001217',
         'ncRNA_gene': 'SO:0001263',
-        'RNAi_reagent': 'SO:0000337'
+        'RNAi_reagent': 'SO:0000337',
+        'heritable_phenotypic_marker': 'SO:0001500'
     }
 
     object_properties = {
