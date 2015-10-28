@@ -2,7 +2,7 @@ import psycopg2
 
 __author__ = 'nicole'
 
-from rdflib import ConjunctiveGraph, Graph, Namespace
+from rdflib import ConjunctiveGraph, Namespace
 from rdflib.namespace import FOAF, DC, RDFS, OWL
 
 import urllib, os, time, logging
@@ -10,8 +10,6 @@ from urllib import request
 from datetime import datetime
 from stat import *
 import hashlib
-import subprocess
-from subprocess import check_call
 from dipper import curie_map
 import re
 
@@ -202,7 +200,7 @@ class Source:
         return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
 
 
-    def checkIfRemoteIsNewer(self, remote, local):
+    def checkIfRemoteIsNewer(self, remote, local, headers):
         """
         Given a remote file location, and the corresponding local file
         this will check the datetime stamp on the files to see if the remote one
@@ -220,13 +218,26 @@ class Source:
             logger.info("File does not exist locally")
             return True
         # get remote file details
-        d = urllib.request.urlopen(remote)
-        size = d.info()['Content-Length']
+        if headers is not None:
+            req = urllib.request.Request(remote, headers=headers)
+        else:
+            req = urllib.request.Request(remote)
+
+        logger.info("Request header: %s", str(req.header_items()))
+        response = urllib.request.urlopen(req)
+
+        try:
+            resp_header = response.getheaders()
+            size = resp_header.get('Content-length')
+            last_modified = resp_header.get('last-modified')  # check me
+        except :
+            resp_header = None
+            size = 0
+            last_modified = None
 
         st = os.stat(local)
         logger.info("Local file date: %s", datetime.utcfromtimestamp(st[ST_CTIME]))
 
-        last_modified = d.info()['Last-Modified']
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
             dt_obj = datetime.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
@@ -256,10 +267,11 @@ class Source:
 
         st = None
         for f in self.files.keys():
+            logger.info("Getting %s", f)
             file = self.files.get(f)
             self.fetch_from_url(file['url'],
                                 '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced)
+                                is_dl_forced, file.get('headers'))
             self.dataset.setFileAccessUrl(file['url'])
 
             st = os.stat('/'.join((self.rawdir, file['file'])))
@@ -271,7 +283,7 @@ class Source:
 
         return
 
-    def fetch_from_url(self, remotefile, localfile, is_dl_forced):
+    def fetch_from_url(self, remotefile, localfile, is_dl_forced, headers=None):
         """
         Given a remote url and a local filename, this will first verify
         if the remote file is newer; if it is, this will pull the remote file
@@ -281,19 +293,30 @@ class Source:
         :param localfile: pathname of file to save locally
         :return: None
         """
+        CHUNK = 16 * 1024
         if ((is_dl_forced is True) or
-           (self.checkIfRemoteIsNewer(remotefile, localfile))):
+           (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
             # TODO url verification, etc
-            annotation_file = urllib.request
-            annotation_file.urlretrieve(remotefile, localfile)
+            if headers is not None:
+                r = urllib.request.Request(remotefile, headers=headers)
+            else:
+                r = urllib.request.Request(remotefile)
+
+            response = urllib.request.urlopen(r)
+
+            with open(localfile, 'wb') as fd:
+               while True:
+                  chunk = response.read(CHUNK)
+                  if not chunk: break
+                  fd.write(chunk)
+
             logger.info("Finished.  Wrote file to %s", localfile)
             if self.compare_local_remote_bytes(remotefile, localfile):
-                logger.debug("local file is same size as remote"
-                             " after download")
+                logger.debug("local file is same size as remote after download")
             else:
-                raise Exception("Error when downloading files: "
-                                "local file size does not match"
+                raise Exception("Error when downloading files: "+\
+                                "local file size does not match"+\
                                 " remote file size")
         else:
             logger.info("Using existing file %s", localfile)
@@ -477,13 +500,25 @@ class Source:
 
         return md5.hexdigest()
 
-    def get_remote_content_len(self, remote):
+    def get_remote_content_len(self, remote, headers=None):
         """
         :param remote:
         :return: size of remote file
         """
-        remote_file = urllib.request.urlopen(remote)
-        byte_size = remote_file.info()['Content-Length']
+
+        if headers is not None:
+            req = urllib.request.Request(remote, headers=headers)
+        else:
+            req = urllib.request.Request(remote)
+
+        try:
+            response = urllib.request.urlopen(req)
+
+            resp_header = response.getheaders()
+            byte_size = resp_header.get('Content-length')
+        except :
+            byte_size = None
+
         return byte_size
 
     def get_local_file_size(self, localfile):
