@@ -70,7 +70,7 @@ class GraphUtils:
         'has_environment_qualifier': 'GENO:0000580',
         'has_begin_stage_qualifier': 'GENO:0000630',
         'has_end_stage_qualifier': 'GENO:0000631',
-        'correlates_with': 'MONARCH:correlates_with',
+        'correlates_with': 'RO:0002610',
         'substance_that_treats': 'RO:0002606',
         'is_marker_for': 'RO:0002607',
         'contributes_to': 'RO:0002326',
