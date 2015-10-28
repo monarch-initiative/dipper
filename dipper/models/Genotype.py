@@ -100,10 +100,10 @@ class Genotype():
 
     annotation_properties = {
         # TODO change properties with https://github.com/monarch-initiative/GENO-ontology/issues/21
-        'reference_nucleotide': 'GENO:reference_nucleotide',  # Made up term
-        'reference_amino_acid': 'GENO:reference_amino_acid',  # Made up term
-        'altered_nucleotide': 'GENO:altered_nucleotide',  # Made up term
-        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change'  # Made up term
+        'reference_nucleotide': 'GENO:reference_nucleotide',  # FIXME Made up term
+        'reference_amino_acid': 'GENO:reference_amino_acid',  # FIXME Made up term
+        'altered_nucleotide': 'GENO:altered_nucleotide',  # FIXME Made up term
+        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change'  # FIXME Made up term
     }
 
     zygosity = {
