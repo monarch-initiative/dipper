@@ -61,7 +61,8 @@ class OMIM(Source):
         102560, 102480, 100678, 102750, 600201,                   # genes
         104200, 105400, 114480, 115300, 121900,                   # phenotype/disease -- indicate that here?
         107670, 11600, 126453,                                    # gene of known sequence and has a phenotype
-        102150, 104000, 107200, 100070, 611742, 611100]           # disease with known locus
+        102150, 104000, 107200, 100070, 611742, 611100,
+        102480]           # disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -334,14 +335,21 @@ class OMIM(Source):
             gu.addDeprecatedClass(g, omimid)
         else:
             omimtype = self._get_omimtype(e['entry'])
+            nodelabel = newlabel
             # this uses our cleaned-up label
             if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+                if abbrev is not None:
+                    nodelabel = abbrev
                 # in this special case, make it a disease by not declaring it as a gene/marker
-                gu.addClassToGraph(g, omimid, newlabel, None)
+                gu.addClassToGraph(g, omimid, nodelabel, None, newlabel)
+            elif omimtype == Genotype.genoparts['gene']:
+                if abbrev is not None:
+                    nodelabel = abbrev
+                gu.addClassToGraph(g, omimid, nodelabel, omimtype, newlabel)
             else:
                 gu.addClassToGraph(g, omimid, newlabel, omimtype)
 
-            # add the original OMIM label as a synonym
+            # add the original screaming-caps OMIM label as a synonym
             gu.addSynonym(g, omimid, label)
 
             # add the alternate labels and includes as synonyms
@@ -356,21 +364,41 @@ class OMIM(Source):
             # if this is a genetic locus (but not sequenced) then add the chrom loc info
             # but add it to the ncbi gene identifier, not to the omim id (we reserve the omim id to be the phenotype)
             feature_id = None
+            feature_label = None
             if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
                 genemap = e['entry']['geneMap']
                 is_gene = False
+
                 if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
                     # get the ncbigene ids
                     ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
                     if len(ncbifeature) == 1:
                         feature_id = 'NCBIGene:'+str(ncbifeature[0])
+                        # add this feature as a cause for the omim disease  TODO SHOULD I EVEN DO THIS HERE?
+                        assoc = G2PAssoc(self.name, feature_id, omimid)
+                        assoc.add_association_to_graph(g)
+
                     elif len(ncbifeature) > 1:
                         logger.info("We don't know what to do when %s maps to >1 gene id:", omimid, str(ncbifeature))
+                    else:  # no ncbi feature, make an anonymous one
+                        feature_id = self._make_anonymous_feature(str(omimnum))
+                        feature_label = abbrev
+
                 elif omimtype == Genotype.genoparts['gene']:
                     feature_id = omimid
                     is_gene = True
+                else:
+                    feature_id = self._make_anonymous_feature(str(omimnum))  # 158900 falls into this category
+                    if abbrev is not None:
+                        feature_label = abbrev
+                    omimtype = Genotype.genoparts['heritable_phenotypic_marker']
 
                 if feature_id is not None:
+                    if 'comments' in genemap:
+                        # add a comment to this feature
+                        comment = genemap['comments']
+                        if comment.strip() != '':
+                            gu.addDescription(g, feature_id, comment)
                     if 'cytoLocation' in genemap:
                         cytoloc = genemap['cytoLocation']
                         # parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
@@ -378,7 +406,7 @@ class OMIM(Source):
                         # FIXME add the other end of the range, but not sure how to do that
                         # not sure if saying subsequence of feature is the right relationship
 
-                        f = Feature(feature_id, None, omimtype)
+                        f = Feature(feature_id, feature_label, omimtype)
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
@@ -411,10 +439,6 @@ class OMIM(Source):
                             gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
                             f.addSubsequenceOfFeature(g, loc)
                             f.addFeatureToGraph(g, True, None, is_gene)
-
-                    # add this feature as a cause for the omim disease
-                    assoc = G2PAssoc(self.name, feature_id, omimid)
-                    assoc.add_association_to_graph(g)
 
                 # end adding causative genes/features
 
@@ -495,78 +519,38 @@ class OMIM(Source):
                         continue
                     assoc_count += 1
                     gene_symbols = gene_symbols.split(', ')
-                    gene_id = ':'.join(('OMIM', gene_num))
-                    disorder_id = ':'.join(('OMIM', disorder_num))
-                    rel_id = gu.object_properties['has_phenotype']  # default
-                    rel_label = 'causes'
-                    if re.match('\[', disorder_label):
-                        rel_id = gu.object_properties['is_marker_for']
-                        rel_label = 'is a marker for'
-                    elif re.match('\{', disorder_label):
-                        rel_id = gu.object_properties['contributes_to']
-                        rel_label = 'contributes to'
-
-                    evidence = self._map_phene_mapping_code_to_eco(phene_key)
-
-                    # we actually want the association between the gene and the disease to be via an alternate locus
-                    # not the "wildtype" gene itself.
-                    # so we make an anonymous alternate locus, and put that in the association.
-                    alt_locus = '_'+gene_num+'-'+disorder_num+'VL'
-                    alt_label = gene_symbols[0].strip()
-                    if alt_label is not None and alt_label != '':
-                        alt_label = ' '.join(('some variant of', alt_label.strip(),
-                                              'that', rel_label, disorder_label))
-                    else:
-                        alt_label = None
-                    gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus, gene_id)
-
-                    assoc = G2PAssoc(self.name, alt_locus, disorder_id, rel_id)
-                    assoc.add_evidence(evidence)
-                    assoc.add_association_to_graph(g, self.nobnodes)
+                    gene_id = 'OMIM:'+str(gene_num)
+                    self._make_pheno_assoc(g, gene_id, gene_symbols[0], disorder_num, disorder_label, phene_key)
                 elif nogene_match is not None:
                     # this is a case where the disorder a blended gene/phenotype
                     # we lookup the NCBIGene feature and make the association
                     (disorder_label, phene_key) = nogene_match.groups()
                     disorder_num = gene_num
                     disorder_id = 'OMIM:'+str(disorder_num)   # make what's in the gene column the disease
+                    if self.testMode and int(disorder_num) not in self.test_ids:
+                        continue
                     if disorder_id in self.omim_ncbigene_idmap:
                         gene_ids = self.omim_ncbigene_idmap[disorder_id]  # get the gene ids
-                        evidence = self._map_phene_mapping_code_to_eco(phene_key)
-                        if gene_ids is not None:
-                            for gene_num in gene_ids:
-                                gene_id = 'NCBIGene:'+str(gene_num)
-                                rel_id = gu.object_properties['has_phenotype']  # default
-                                rel_label = 'causes'
-                                if re.match('\[', disorder_label):
-                                    rel_id = gu.object_properties['is_marker_for']
-                                    rel_label = 'is a marker for'
-                                elif re.match('\{', disorder_label):
-                                    rel_id = gu.object_properties['contributes_to']
-                                    rel_label = 'contributes to'
-                                alt_locus = '_'+gene_num+'-'+disorder_num+'VL'
-                                alt_label = gene_symbols[0].strip()
-                                if alt_label is not None and alt_label != '':
-                                    alt_label = ' '.join(('some variant of', alt_label.strip(),
-                                                          'that', rel_label, disorder_label))
-                                else:
-                                    alt_label = None
-                                gu.addIndividualToGraph(g, alt_locus, alt_label, geno.genoparts['variant_locus'])
-                                geno.addAlleleOfGene(alt_locus, gene_id)
-                                assoc_count += 1
-                                assoc = G2PAssoc(self.name, alt_locus, disorder_id, rel_id)
-                                assoc.add_evidence(evidence)
-                                assoc.add_association_to_graph(g, self.nobnodes)
+                        if gene_ids is None:
+                            continue
+                        for gene_num in gene_ids:
+                            # TODO add gene filter for testMode and NCBIGenes
+                            gene_id = 'NCBIGene:'+str(gene_num).strip()
+                            assoc_count += 1
+                            self._make_pheno_assoc(g, gene_id, gene_symbols[0], disorder_num, disorder_label, phene_key)
+                    else:
+                        # we can create an anonymous feature to house this thing.  for example, 158900
+                        feature_id = self._make_anonymous_feature(gene_num)
+                        assoc_count += 1
+                        self._make_pheno_assoc(g, feature_id, gene_symbols[0], disorder_num, disorder_label, phene_key)
+
+                        logger.info("We don't have an NCBIGene feature id to link with %s, %s", disorder_id, disorder_label)
 
                     if self.testMode and int(gene_num) not in self.test_ids:
                         continue
 
-
                 else:
                     logger.warn("There are misformatted row %d:%s", line_counter, str(line))
-                    # these are often if the disorder == gene, as a "%" type of object
-                    # TODO need to find the NCBIGene equivalent, and link that sequence feature to the disease
-                    # as they are being filtered out now
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -576,6 +560,62 @@ class OMIM(Source):
             gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
             gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
             logger.info("Added %d G2P associations", assoc_count)
+
+        return
+
+    def _make_anonymous_feature(self, omim_num):
+
+        feature_id = '_feature'+omim_num
+        if self.nobnodes:
+            feature_id = ':'+feature_id
+
+        return feature_id
+
+    def _make_pheno_assoc(self, g, gene_id, gene_symbol, disorder_num, disorder_label, phene_key):
+
+        geno = Genotype(g)
+        disorder_id = ':'.join(('OMIM', disorder_num))
+        rel_id = self.gu.object_properties['has_phenotype']  # default
+        rel_label = 'causes'
+        if re.match('\[', disorder_label):
+            rel_id = self.gu.object_properties['is_marker_for']
+            rel_label = 'is a marker for'
+        elif re.match('\{', disorder_label):
+            rel_id = self.gu.object_properties['contributes_to']
+            rel_label = 'contributes to'
+        elif re.match('\?', disorder_label):
+            # this is a questionable mapping!  skip?
+            rel_id = self.gu.object_properties['contributes_to']
+            rel_label = 'contributes to'
+            pass
+
+        evidence = self._map_phene_mapping_code_to_eco(phene_key)
+
+        # we actually want the association between the gene and the disease to be via an alternate locus
+        # not the "wildtype" gene itself.
+        # so we make an anonymous alternate locus, and put that in the association.
+        # but we only need to do that in the cases when it's not an NCBIGene (as that is a sequence feature itself)
+        if re.match('OMIM:', gene_id):
+            alt_locus = '_'+re.sub(':', '', gene_id)+'-'+disorder_num+'VL'
+            alt_label = gene_symbol.strip()
+            if alt_label is not None and alt_label != '':
+                alt_label = ' '.join(('some variant of', alt_label,
+                                      'that', rel_label, disorder_label))
+            else:
+                alt_label = None
+
+            if self.nobnodes:
+                alt_locus = ':'+alt_locus
+
+            self.gu.addIndividualToGraph(g, alt_locus, alt_label, Genotype.genoparts['variant_locus'])
+            geno.addAlleleOfGene(alt_locus, gene_id)
+        else:
+            # assume it's already been added
+            alt_locus = gene_id
+
+        assoc = G2PAssoc(self.name, alt_locus, disorder_id, rel_id)
+        assoc.add_evidence(evidence)
+        assoc.add_association_to_graph(g, self.nobnodes)
 
         return
 
@@ -948,6 +988,7 @@ class OMIM(Source):
 
         if prefix == '*':
             # gene, may not have a known sequence or a phenotype
+            # note that some genes are also phenotypes, even in this class, like 102480
             # examples: 102560,102480,100678,102750
             type_id = Genotype.genoparts['gene']  # doublecheck this
         elif prefix == '#':
