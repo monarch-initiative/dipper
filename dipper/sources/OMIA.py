@@ -285,7 +285,8 @@ class OMIA(Source):
         # save the breed keys in the test_ids for later processing
         self.test_ids['breed'] += [int(row['breed_id'])]
 
-        breed_id = self._make_internal_id('breed', row['breed_id'])
+        breed_id = self.make_breed_id(row['breed_id'])
+
         self.id_hash['breed'][row['breed_id']] = breed_id
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
         breed_label = row['breed_name']
@@ -438,7 +439,8 @@ class OMIA(Source):
             return
 
         article_id = self.id_hash['article'].get(row['article_id'])
-        breed_id = self._make_internal_id('breed', row['breed_id'])
+        breed_id = self.id_hash['breed'].get(row['breed_id'])
+
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
             self.gu.addTriple(self.g, article_id, self.gu.object_properties['is_about'], breed_id)
@@ -679,6 +681,11 @@ class OMIA(Source):
             iid = ':'+iid
 
         return iid
+
+    def make_breed_id(self, key):
+        breed_id = 'OMIA-breed:'+str(key)
+
+        return breed_id
 
     @staticmethod
     def _get_omia_id_from_phene_id(phene_id):
