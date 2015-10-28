@@ -114,6 +114,8 @@
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
 'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='
+'OMIA-breed': 'http://monarchinitiative.org/model/OMIA-breed:'
+
 'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
 'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'
 'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
