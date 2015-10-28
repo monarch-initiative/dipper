@@ -50,8 +50,8 @@ class OMIM(Source):
             'url': 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/morbidmap'},
         'phenotypicSeries': {
             'file': 'phenotypicSeriesTitles.txt',
-            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab'}
-
+            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab',
+            'headers': {'User-Agent': 'Mozilla/5.0'} }
     }
 
     # the following test ids are in the config.json
@@ -61,7 +61,7 @@ class OMIM(Source):
         102560, 102480, 100678, 102750, 600201,                   # genes
         104200, 105400, 114480, 115300, 121900,                   # phenotype/disease -- indicate that here?
         107670, 11600, 126453,                                    # gene of known sequence and has a phenotype
-        102150, 104000, 107200, 100070, 611742]                   # disease with known locus
+        102150, 104000, 107200, 100070, 611742, 611100]           # disease with known locus
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -331,7 +331,11 @@ class OMIM(Source):
         else:
             omimtype = self._get_omimtype(e['entry'])
             # this uses our cleaned-up label
-            gu.addClassToGraph(g, omimid, newlabel, omimtype)
+            if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+                # in this special case, make it a disease by not declaring it as a gene/marker
+                gu.addClassToGraph(g, omimid, newlabel, None)
+            else:
+                gu.addClassToGraph(g, omimid, newlabel, omimtype)
 
             # add the original OMIM label as a synonym
             gu.addSynonym(g, omimid, label)
@@ -346,26 +350,34 @@ class OMIM(Source):
                 gu.addSynonym(g, omimid, abbrev)
 
             # if this is a genetic locus (but not sequenced) then add the chrom loc info
-            if omimtype == Genotype.genoparts['biological_region']:
+            # but add it to the ncbi gene identifier, not to the omim id (we reserve the omim id to be the phenotype)
+            if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
                 if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
                     genemap = e['entry']['geneMap']
-                    if 'cytoLocation' in genemap:
-                        cytoloc = genemap['cytoLocation']
-                        # parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
-                        # 18p11.3-p11.2
-                        # for now, just take the first one
-                        # FIXME add the other end of the range, but not sure how to do that
-                        # not sure if saying subsequence of feature is the right relationship
-                        cytoloc = cytoloc.split('-')[0]
-                        f = Feature(omimid, None, None)
-                        if 'chromosome' in genemap:
-                            chrom = makeChromID(str(genemap['chromosome']), tax_num, 'CHR')
-                            geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
-                            loc = makeChromID(cytoloc, tax_num, 'CHR')
-                            gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
-                            f.addSubsequenceOfFeature(g, loc)
-                            f.addFeatureToGraph(g)
-                        pass
+                    # get the ncbigene ids
+                    ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
+                    for feat in ncbifeature:
+                        feature_id = 'NCBIGene:'+str(feat)
+                        if 'cytoLocation' in genemap:
+                            cytoloc = genemap['cytoLocation']
+                            # parse the cytoloc.  add this omim thing as a subsequence of the cytofeature
+                            # 18p11.3-p11.2
+                            # for now, just take the first one
+                            # FIXME add the other end of the range, but not sure how to do that
+                            # not sure if saying subsequence of feature is the right relationship
+                            cytoloc = cytoloc.split('-')[0]
+                            f = Feature(feature_id, None, Genotype.genoparts['heritable_phenotypic_marker'])
+                            if 'chromosome' in genemap:
+                                chrom = makeChromID(str(genemap['chromosome']), tax_num, 'CHR')
+                                geno.addChromosomeClass(str(genemap['chromosome']), tax_id, tax_label)
+                                loc = makeChromID(cytoloc, tax_num, 'CHR')
+                                gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
+                                f.addSubsequenceOfFeature(g, loc)
+                                f.addFeatureToGraph(g)
+                        # add this ncbi feature as a cause for the omim disease
+                        gu.addIndividualToGraph(g, feature_id, None, omimtype)
+                        assoc = G2PAssoc(self.name, feature_id, omimid)
+                        assoc.add_association_to_graph(g)
 
             # check if moved, if so, make it deprecated and replaced/consider class to the other thing(s)
             # some entries have been moved to multiple other entries and use the joining raw word "and"
@@ -391,6 +403,7 @@ class OMIM(Source):
 
             self._get_phenotypicseries_parents(e['entry'], g)
             self._get_mappedids(e['entry'], g)
+            self._get_mapped_gene_ids(e['entry'], g)
 
             self._get_pubs(e['entry'], g)
 
@@ -420,19 +433,19 @@ class OMIM(Source):
         line_counter = 0
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
+        assoc_count = 0
         with open('/'.join((self.rawdir, self.files['morbidmap']['file']))) as f:
             for line in f:
                 line = line.strip()
                 line_counter += 1
                 (disorder, gene_symbols, gene_num, loc) = line.split('|')
-
                 # disorder = disorder label , number (mapping key)
                 # 3-M syndrome 1, 273750 (3)|CUL7, 3M1|609577|6p21.1
 
                 # but note that for those diseases where they are genomic loci (not genes though),
                 # the omim id is only listed as the gene
                 # Alopecia areata 1 (2)|AA1|104000|18p11.3-p11.2
-                disorder_match = re.match('(.*), (\d+) \((\d+)\)', disorder)
+                disorder_match = re.match('(.*), (\d{6})\s*\((\d+)\)', disorder)
 
                 if disorder_match is not None:
                     disorder_parts = disorder_match.groups()
@@ -444,6 +457,7 @@ class OMIM(Source):
 
                     if self.testMode and (int(disorder_num) not in self.test_ids or int(gene_num) not in self.test_ids):
                         continue
+                    assoc_count += 1
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = ':'.join(('OMIM', gene_num))
                     disorder_id = ':'.join(('OMIM', disorder_num))
@@ -475,11 +489,17 @@ class OMIM(Source):
                     assoc.add_evidence(evidence)
                     assoc.load_all_properties(g)
                     assoc.add_association_to_graph(g)
+                else:
+                    logger.warn("There are misformatted row %d:%s", line_counter, str(line))
+                    # these are often if the disorder == gene, as a "%" type of object
+                    # TODO need to find the NCBIGene equivalent, and link that sequence feature to the disease
+                    # as they are being filtered out now
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
+            logger.info("Added %d G2P associations", assoc_count)
 
         return
 
@@ -710,7 +730,6 @@ class OMIM(Source):
         :param entry:
         :return:
         """
-        # umlsIDs
         gu = GraphUtils(curie_map.get())
         omimid = 'OMIM:'+str(entry['mimNumber'])
         orpha_mappings = []
@@ -734,12 +753,24 @@ class OMIM(Source):
                     gu.addClassToGraph(g, umls_id, None)
                     gu.addXref(g, omimid, umls_id)
 
-            if self._get_omimtype(entry) == Genotype.genoparts['gene'] and 'geneIDs' in links:
-                entrez_mappings = links['geneIDs']
-                for i in entrez_mappings.split(','):
-                    gu.addEquivalentClass(g, omimid, 'NCBIGene:'+str(i))
-
         return
+
+    def _get_mapped_gene_ids(self, entry, g):
+
+        gene_ids = []
+        gu = GraphUtils(curie_map.get())
+        omimid = 'OMIM:'+str(entry['mimNumber'])
+        if 'externalLinks' in entry:
+            links = entry['externalLinks']
+            omimtype = self._get_omimtype(entry)
+            if 'geneIDs' in links:
+                entrez_mappings = links['geneIDs']
+                gene_ids = entrez_mappings.split(',')
+                if omimtype == Genotype.genoparts['gene']:
+                    for i in gene_ids:
+                        gu.addEquivalentClass(g, omimid, 'NCBIGene:'+str(i))
+
+        return gene_ids
 
     def _get_alt_labels(self, titles):
         """
@@ -854,7 +885,7 @@ class OMIM(Source):
         elif prefix == '%':
             # this is a disease (with a known locus).
             # examples include:  102150,104000,107200,100070
-            type_id = Genotype.genoparts['biological_region']
+            type_id = Genotype.genoparts['heritable_phenotypic_marker']
             pass
         elif prefix == '':
             # this is probably just a phenotype
