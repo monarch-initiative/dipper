@@ -77,7 +77,7 @@ class AnimalQTLdb(Source):
 
     # QTL ids
     test_ids = {
-        28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798
+        28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
     }
 
     def __init__(self):
@@ -185,8 +185,8 @@ class AnimalQTLdb(Source):
                 if self.testMode and int(qtl_id) not in self.test_ids:
                     continue
 
-                qtl_id = 'AQTL:'+qtl_id
-                trait_id = 'AQTLTrait:'+trait_id
+                qtl_id = 'AQTL:'+qtl_id.strip()
+                trait_id = 'AQTLTrait:'+trait_id.strip()
 
                 # Add QTL to graph
                 f = Feature(qtl_id, qtl_symbol, geno.genoparts['QTL'])
@@ -272,7 +272,9 @@ class AnimalQTLdb(Source):
                 #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                 if p_values != '':
-                    score = float(re.sub('<', '', p_values))
+                    s = re.sub('<', '', p_values)
+                    s = re.sub(',', '.', s)  # international notation
+                    score = float(s)
                     assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
                 assoc.add_association_to_graph(g)
@@ -294,7 +296,9 @@ class AnimalQTLdb(Source):
                     #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                     if p_values != '':
-                        score = float(re.sub('<', '', p_values))
+                        s = re.sub('<', '', p_values)
+                        s = re.sub(',', '.', s)
+                        score = float(s)
                         assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
 
@@ -325,9 +329,10 @@ class AnimalQTLdb(Source):
         genome_id = geno.makeGenomeID(taxon_id)  # assume that chrs get added to the genome elsewhere
 
         eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
-
+        logger.info("Processing QTL locations for %s", taxon_id)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
+            bad_attr_flag = False
             for row in reader:
                 line_counter += 1
                 if re.match('^#', ' '.join(row)):
@@ -353,16 +358,17 @@ class AnimalQTLdb(Source):
 
                 # deal with poorly formed attributes
                 if re.search('"FlankMarkers";', attr):
-                    attr = re.sub('"FlankMarkers";', '', attr)
+                    attr = re.sub('FlankMarkers;', '', attr)
                 attr_items = re.sub('"', '', attr).split(";")
-                bad_attr_flag = False
+                bad_attrs = set()
                 for a in attr_items:
                     if not re.search('=', a):
                         bad_attr_flag = True
-                if bad_attr_flag:
-                    logger.error("Poorly formed data on line %d:\n %s", line_counter, '\t'.join(row))
-                    continue
-                attribute_dict = dict(item.split("=") for item in re.sub('"', '', attr).split(";"))
+                        # remove this attribute from the list
+                        bad_attrs.add(a)
+
+                attr_set = set(attr_items) - bad_attrs
+                attribute_dict = dict(item.split("=") for item in attr_set)
 
                 qtl_num = attribute_dict.get('QTL_ID')
                 if self.testMode and int(qtl_num) not in self.test_ids:
@@ -392,7 +398,10 @@ class AnimalQTLdb(Source):
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():
-                    score = float(re.sub('<', '', attribute_dict.get('P-value')))
+                    s = re.sub('<', '', attribute_dict.get('P-value'))
+                    if ',' in s:
+                        s = re.sub(',', '.', s)
+                    score = float(s)
                     assoc.set_score(score)
 
                 assoc.add_association_to_graph(g)
@@ -419,6 +428,7 @@ class AnimalQTLdb(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
+        logger.warn("Bad attribute flags in this file")
         logger.info("Done with QTL genomic mappings for %s", taxon_id)
         return
 
@@ -456,6 +466,7 @@ class AnimalQTLdb(Source):
                 (vto_id, pto_id, cmo_id, ato_column, species, trait_class, trait_type, qtl_count) = row
 
                 ato_id = re.sub('ATO #', 'AQTLTrait:', re.sub('\].*', '', re.sub('\[', '', ato_column)))
+                ato_id = ato_id.strip()
 
                 ato_label = re.sub('.*\]\s*', '', ato_column)
                 # if species == 'Cattle':
@@ -471,7 +482,7 @@ class AnimalQTLdb(Source):
                 # elif species == 'Rainbow trout':
                 #     ato_id = re.sub('ATO:', 'AQTLTraitRainbowTrout:', ato_id)
                 # else:
-                #     logger.warn(' Unknown species %s found in trait mapping file.', species)
+                #     logger.warn(' Unknown species %s foufnd in trait mapping file.', species)
                 #     continue
                 #print(ato_label)
 
@@ -480,7 +491,7 @@ class AnimalQTLdb(Source):
                 if re.match('VT:.*', vto_id):
                     gu.addClassToGraph(g, vto_id, None)
                     gu.addEquivalentClass(g, ato_id, vto_id)
-                if re.match('PT:.*', pto_id):
+                if re.match('LPT:.*', pto_id):
                     gu.addClassToGraph(g, pto_id, None)
                     gu.addEquivalentClass(g, ato_id, pto_id)
                 if re.match('CMO:.*', cmo_id):
