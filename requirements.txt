@@ -8,3 +8,4 @@ pysftp
 biopython
 docx
 beautifulsoup4
+GitPython
