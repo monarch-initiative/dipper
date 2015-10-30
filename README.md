@@ -42,6 +42,7 @@ the code to skip this, if necessary
     * [biopython](https://github.com/biopython/biopython)
     * docx
     * beautifulsoup4
+    * GitPython
     
 If you encounter any errors installing these packages using Homebrew, it could be due to [a curent known issue in upgrading to  pip3](https://github.com/Homebrew/homebrew/issues/25752). In this case, first force reinstall pip2 (````pip2 install --upgrade --force-reinstall pip````) and then install the package using pip3 (eg. ````pip3 install psycopg2````.)
 
@@ -92,6 +93,16 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * ClinVar (Human Disease and Variant associations)
     * Coriell (Cell lines, many as models of human disease)
     * EOM - Elements of Morphology (links to images of human phenotypes)
+    * MMRRC (Strains and curated phenotypes)
+    * ENSEMBL (genes)
+    * AnimalQTLdb (QTLs, genomic locations, and phenotypic traits)
+    * GWASCatalog (SNPs and associated phenotypes/factors tested)
+    * HGNC (genes)
+    * KEGG (genes, diseases, drugs)
+    * MPD (strains and phenotypes derived from outlier measurements (>2s.d.))
+    * OMIA (non-laboratory animal phenotypes)
+    * Wormbase (genes, alleles, phenotypes)
+    * FlyBase (genotype, phenotype)
     
 * Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
 Please see our [best-practies documentation](sources/README.md) for details on writing new Source parsers 
