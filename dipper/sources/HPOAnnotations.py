@@ -259,21 +259,19 @@ class HPOAnnotations(Source):
 
     def get_common_files(self):
         """
-        Fetch the raw hpo-annotation-data by cloning the
+        Fetch the raw hpo-annotation-data by cloning/pulling the
         [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
         These files get added to the files object, and iterated over separately.
         :return:
         """
-
-        # TODO fetch and cat the common files from github.  save locally, and add to self.files
-
         repo_dir = '/'.join((self.rawdir, 'git'))
         REMOTE_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
+
+        # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
             shutil.rmtree(repo_dir)
 
-        # os.mkdir(repo_dir)
         logger.info("Cloning common disease files from %s", REMOTE_URL)
         Repo.clone_from(REMOTE_URL, repo_dir)
 
@@ -306,17 +304,21 @@ class HPOAnnotations(Source):
         :return:
         """
 
+        self.replaced_id_count = 0
         unpadded_doids = self.get_doid_ids_for_unpadding()
         total_processed = 0
         logger.info("Iterating over all common disease files")
+        common_file_count = 0
         for f in self.files:
             if not re.match('common', f):
                 continue
+            common_file_count += 1
             raw = self.files[f]['file']
             total_processed += self.process_common_disease_file(raw, unpadded_doids, limit)
             if not self.testMode and limit is not None and total_processed > limit:
                 break
         logger.info("Finished iterating over all common disease files.")
+        logger.info("Fixed %d/%d incorrectly zero-padded ids", self.replaced_id_count, common_file_count)
         return
 
     def get_doid_ids_for_unpadding(self):
@@ -430,6 +432,7 @@ class HPOAnnotations(Source):
 
             if replace_id_flag:
                 logger.info("replaced DOID with unpadded version")
+                self.replaced_id_count += 1
             logger.info("Added %d associations for %s.", assoc_count, disease_id)
 
         return assoc_count
