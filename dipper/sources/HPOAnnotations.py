@@ -4,6 +4,8 @@ from datetime import datetime
 from stat import *
 import logging
 import re
+import shutil
+from git import Repo
 
 from dipper.utils import pysed
 from dipper.utils.GraphUtils import GraphUtils
@@ -16,26 +18,6 @@ from dipper.models.Reference import Reference
 from dipper import curie_map
 from dipper import config
 
-
-'''
-#see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
-#file schema:
-#1 	DB 	required 	MIM
-#2 	DB_Object_ID 	required 	154700
-#3 	DB_Name 	required 	Achondrogenesis, type IB
-#4 	Qualifier 	optional 	NOT
-#5 	HPO ID 	required 	HP:0002487
-#6 	DB:Reference 	required 	OMIM:154700 or PMID:15517394
-#7 	Evidence code 	required 	IEA
-#8 	Onset modifier  optional	HP:0003577
-#9	Frequency modifier	optional	"70%" or "12 of 30" or from the vocabulary show in table 2
-#10 With 	optional
-#11 Aspect 	required 	O
-#12 	Synonym 	optional 	ACG1B|Achondrogenesis, Fraccaro type
-#13 	Date 	required 	YYYY.MM.DD
-#14 	Assigned by 	required 	HPO
-'''
-
 logger = logging.getLogger(__name__)
 
 
@@ -47,6 +29,11 @@ class HPOAnnotations(Source):
     evidence, and age of onset and frequency (if known).
     The parser currently only processes the "abnormal" annotations.  Association to "remarkable normality"
     will be added in the near future.
+
+    We create additional associations from text mining.  See info at
+    http://pubmed-browser.human-phenotype-ontology.org/.
+
+    Also, you can read about these annotations in [PMID:26119816](http://www.ncbi.nlm.nih.gov/pubmed/26119816).
 
     In order to properly test this class, you should have a conf.json file configured with some test ids, in
     the structure of:
@@ -65,6 +52,10 @@ class HPOAnnotations(Source):
 #       'neg_annot': {'file' : 'phenotype_annotation.tab',
 #                     'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab'
 #        },
+        'doid': {
+            'file': 'doid-edit.owl',
+            'url': 'https://raw.githubusercontent.com/monarch-initiative/human-disease-ontology/master/src/ontology/doid-edit.owl'
+        }
     }
 
     # note, two of these codes are awaiting term requests.  see #114 and
@@ -73,7 +64,8 @@ class HPOAnnotations(Source):
         "ICE": "ECO:0000305",  # FIXME currently using "curator inference used in manual assertion"
         "IEA": "ECO:0000501",  # Inferred from Electronic Annotation
         "PCS": "ECO:0000269",  # FIXME currently using "experimental evidence used in manual assertion"
-        "TAS": "ECO:0000304"   # Traceable Author Statement
+        "TAS": "ECO:0000304",   # Traceable Author Statement
+        "ITM": "ECO:0000246",  # FIXME currently using computational combinatorial evidence in automatic assertion
     }
 
     def __init__(self):
@@ -87,11 +79,12 @@ class HPOAnnotations(Source):
 
         if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
             logger.warn("not configured with disease test ids.")
+            self.test_ids = []
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
         # data-source specific warnings (will be removed when issues are cleared)
-        logger.warn("note that some ECO classes are missing for ICE and PCS; using temporary mappings.")
+        logger.warn("note that some ECO classes are missing for ICE, PCS, and ITM; using temporary mappings.")
 
         return
 
@@ -102,9 +95,6 @@ class HPOAnnotations(Source):
         self.scrub()
 
         # get the latest build from jenkins
-        # NOT DOING THIS ANY MORE - but leaving it in for reference
-        # jenkins_info = eval(urllib.request.urlopen('http://compbio.charite.de/hudson/job/hpo.annotations/lastSuccessfulBuild/api/python').read())
-        # version = jenkins_info['number']
 
         # use the files['version'] file as the version
         fname = '/'.join((self.rawdir, self.files['version']['file']))
@@ -121,6 +111,8 @@ class HPOAnnotations(Source):
         # this will cause two dates to be attached to the dataset (one from the filedate, and the other from here)
         # TODO when #112 is implemented, this will result in only the whole dataset being versioned
         self.dataset.setVersion(filedate, d)
+
+        self.get_common_files()
 
         return
 
@@ -152,22 +144,25 @@ class HPOAnnotations(Source):
         pysed.replace("ORPHANET", "Orphanet", f)
         return
 
-    # here we're reading and building a full named graph of this resource, then dumping it all at the end
-    # we can investigate doing this line-by-line later
-    # supply a limit if you want to test out parsing the head X lines of the file
     def parse(self, limit=None):
         if limit is not None:
             logger.info("Only parsing first %s rows", limit)
+
+        self.add_common_files_to_file_list()
 
         logger.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
+        # rare disease-phenotype associations
         self._process_phenotype_tab('/'.join((self.rawdir, self.files['annot']['file'])), limit)
 
         # TODO add negative phenotype statements #113
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
+
+        # common disease-phenotype associations from text mining work
+        self.process_all_common_disease_files(limit)
 
         logger.info("Finished parsing.")
 
@@ -183,6 +178,13 @@ class HPOAnnotations(Source):
         return self.eco_dict.get(code_string)
 
     def _process_phenotype_tab(self, raw, limit):
+        """
+        see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
+
+        :param raw:
+        :param limit:
+        :return:
+        """
         if self.testMode:
             g = self.testgraph
         else:
@@ -255,10 +257,186 @@ class HPOAnnotations(Source):
 
         return
 
+    def get_common_files(self):
+        """
+        Fetch the raw hpo-annotation-data by cloning the
+        [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
+        These files get added to the files object, and iterated over separately.
+        :return:
+        """
+
+        # TODO fetch and cat the common files from github.  save locally, and add to self.files
+
+        repo_dir = '/'.join((self.rawdir, 'git'))
+        REMOTE_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
+
+        if os.path.isdir(repo_dir):
+            shutil.rmtree(repo_dir)
+
+        # os.mkdir(repo_dir)
+        logger.info("Cloning common disease files from %s", REMOTE_URL)
+        Repo.clone_from(REMOTE_URL, repo_dir)
+
+        return
+
+    def add_common_files_to_file_list(self):
+        repo_dir = '/'.join((self.rawdir, 'git'))
+        common_disease_dir = '/'.join((repo_dir, 'common-diseases'))
+
+        # add the files to the self.files object
+        filelist = os.listdir(common_disease_dir)
+        fcount = 0
+        for f in filelist:
+            if not re.search('\.tab', f):
+                continue
+            fcount += 1
+            self.files['common'+str(fcount).zfill(7)] = {
+                'file': '/'.join((common_disease_dir, f)),
+                # TODO add url to reference the file?  need to get git version somehow?
+            }
+            # TODO add this to the dataset
+        logger.info("Found %d common disease files", fcount)
+
+        return
+
+    def process_all_common_disease_files(self, limit=None):
+        """
+        Loop through all of the files that we previously fetched from git, creating the disease-phenotype assoc.
+        :param limit:
+        :return:
+        """
+
+        unpadded_doids = self.get_doid_ids_for_unpadding()
+        total_processed = 0
+        logger.info("Iterating over all common disease files")
+        for f in self.files:
+            if not re.match('common', f):
+                continue
+            raw = self.files[f]['file']
+            total_processed += self.process_common_disease_file(raw, unpadded_doids, limit)
+            if not self.testMode and limit is not None and total_processed > limit:
+                break
+        logger.info("Finished iterating over all common disease files.")
+        return
+
+    def get_doid_ids_for_unpadding(self):
+        """
+        Here, we fetch the doid owl file, and get all the doids out of the file.  We figure out which are
+        not zero-padded, so we can map the DOID to the correct identifier when processing the common annotation
+        files.
+
+        This may become obsolete when https://github.com/monarch-initiative/hpo-annotation-data/issues/84
+        is addressed.
+
+        :return:
+        """
+
+        logger.info("Building list of non-zero-padded DOIDs")
+        raw_file = '/'.join((self.rawdir, self.files['doid']['file']))
+        doids = set()
+        # scan the file and get all doids
+        with open(raw_file, 'r', encoding="utf8") as f:
+            for line in f:
+                matches = re.search('(DOID_\d+)', line)
+                if matches is not None:
+                    for m in matches.groups():
+                        doids.add(re.sub('_', ':', m))
+
+        nopad_doids = set()
+        for d in doids:
+            num = re.sub('DOID[:_]', '', d)
+            if not re.match('0', str(num)):  # look for things not starting with zero
+                 nopad_doids.add(num)
+
+        logger.info("Found %d/%d DOIDs are not zero-padded", len(nopad_doids), len(doids))
+
+        return nopad_doids
+
+    def process_common_disease_file(self, raw, unpadded_doids, limit=None):
+        """
+        Make disaese-phenotype associations.
+        Some identifiers need clean up:
+          * DOIDs are listed as DOID-DOID: --> DOID:
+          * DOIDs may be unnecessarily zero-padded.  these are remapped to their non-padded equivalent.
+
+        :param raw:
+        :param unpadded_doids:
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        line_counter = 0
+        assoc_count = 0
+        replace_id_flag = False
+
+        with open(raw, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            csvfile.readline()  # skip the header row
+            disease_id = None
+            for row in filereader:
+                (did, dname, gid, gene_name, genotype, gene_symbols, phenotype_id, phenotype_name,
+                 age_of_onset_id, age_of_onseet_name,
+                 eid, evidence_name, frequency, sex_id, sex_name, negation_id, negation_name, description,
+                 pub_ids, assigned_by, date_created) = row
+
+                disease_id = re.sub('DOID-(DOID:)?', 'DOID:', did)
+                disease_id = re.sub('MESH-', 'MESH:', disease_id)
+
+                # figure out if the doid should be unpadded, then use the unpadded version instead
+                if re.match('DOID', disease_id):
+                    unpadded_num = re.sub('DOID:', '', disease_id)
+                    unpadded_num = unpadded_num.lstrip('0')
+                    if unpadded_num in unpadded_doids:
+                        fixed_id = 'DOID:'+unpadded_num
+                        replace_id_flag = True
+                        disease_id = fixed_id.strip()
+
+                if self.testMode and disease_id not in self.test_ids:
+                    # since these are broken up into disease-by-disease, just skip the whole file
+                    return 0
+                else:
+                    line_counter += 1
+
+                if negation_id != '':
+                    continue  # TODO add negative associations
+
+                if disease_id != '' and phenotype_id != '':
+                    assoc = D2PAssoc(self.name, disease_id, phenotype_id)
+                    if age_of_onset_id != '':
+                        assoc.onset = age_of_onset_id
+                    if frequency != '':
+                        assoc.frequency = frequency
+                    eco_id = self._map_evidence_to_codes(eid)
+                    if eco_id is None:
+                        eco_id = self._map_evidence_to_codes('ITM')
+                    assoc.add_evidence(eco_id)
+                    # TODO add sex? - not in dataset yet
+                    if description != '':
+                        assoc.set_description(description)
+                    if pub_ids != '':
+                        for p in pub_ids.split(';'):
+                            assoc.add_source(p.strip())
+                    # TODO assigned by?
+
+                    assoc.add_association_to_graph(g)
+                    assoc_count += 1
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+            if replace_id_flag:
+                logger.info("replaced DOID with unpadded version")
+            logger.info("Added %d associations for %s.", assoc_count, disease_id)
+
+        return assoc_count
+
     def getTestSuite(self):
         import unittest
         from tests.test_hpoa import HPOATestCase
-        # TODO add D2PAssoc tests
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(HPOATestCase)
 
