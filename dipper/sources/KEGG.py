@@ -7,6 +7,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Pathway import Pathway
 from dipper import curie_map
@@ -47,11 +48,16 @@ class KEGG(Source):
         'dre_orthologs': {'file': 'dre_orthologs',
                           'url': 'http://rest.kegg.jp/link/orthology/dre'},
         'cel_orthologs': {'file': 'cel_orthologs',
-                          'url': 'http://rest.kegg.jp/link/orthology/cel'}
+                          'url': 'http://rest.kegg.jp/link/orthology/cel'},
+        'pathway_pubmed': {'file': 'pathway_pubmed',
+                           'url': 'http://rest.kegg.jp/link/pathway/pubmed'},
+        'pathway_disease': {'file': 'pathway_disease',
+                            'url': 'http://rest.kegg.jp/link/pathway/ds'},
+        'pathway_pathway': {'file': 'pathway_eq',
+                            'url': 'http://rest.kegg.jp/link/pathway/pathway'},
+        'pathway_ko': {'file': 'pathway_ko',
+                       'url': 'http://rest.kegg.jp/link/pathway/ko'},
     }
-
-    # TODO http://rest.kegg.jp/link/pathway/pubmed
-    # TODO http://rest.kegg.jp/link/pathway/ds  # disease pathway assoc
 
     test_ids = {
         "pathway": ["path:map00010", "path:map00195", "path:map00100", "path:map00340", "path:hsa05223"],
@@ -77,7 +83,6 @@ class KEGG(Source):
         self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/', None, None,
                                'http://www.kegg.jp/kegg/legal.html')
 
-        # source-specific warnings.  will be cleared when resolved.
         # check to see if there's any ids configured in the config; otherwise, warn
         if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
             logger.warn("not configured with disease test ids.")
@@ -99,7 +104,6 @@ class KEGG(Source):
 
     def parse(self, limit=None):
         """
-
         :param limit:
         :return:
         """
@@ -119,8 +123,13 @@ class KEGG(Source):
         self._process_kegg_disease2gene(limit)
 
         self._process_pathways(limit)
+        self._process_pathway_pubmed(limit)
+        self._process_pathway_pathway(limit)
+        self._process_pathway_disease(limit)
+        self._process_pathway_ko(limit)
 
-        # self._process_ortholog_classes(limit)  #add in when refactoring for #141
+        self._process_ortholog_classes(limit)
+        # TODO add in when refactoring for #141
         # for f in ['hsa_orthologs', 'mmu_orthologs', 'rno_orthologs','dme_orthologs','dre_orthologs','cel_orthologs']:
         #     file = '/'.join((self.rawdir, self.files[f]['file']))
         #     self._process_orthologs(file, limit)  # DONE #
@@ -164,7 +173,6 @@ class KEGG(Source):
                     continue
 
                 pathway_id = 'KEGG-'+pathway_id.strip()
-
                 path.addPathway(pathway_id, pathway_name)
 
                 # we know that the pathway images from kegg map 1:1 here.  so add those
@@ -283,9 +291,14 @@ class KEGG(Source):
                 for i in enumerate(symbollist, start=1):
                     gu.addSynonym(g, gene_id, i[1].strip())
 
-                # TODO add the KO here?
+                if len(gene_stuff) > 2:
+                    ko_part = gene_stuff[2]
+                    ko_match = re.search('K\d+', ko_part)
+                    if ko_match is not None and len(ko_match.groups()) == 1:
+                        ko = 'KEGG-ko:'+ko_match.group(1)
+                        gu.addMemberOf(g, gene_id, ko)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with genes")
@@ -294,6 +307,8 @@ class KEGG(Source):
     def _process_ortholog_classes(self, limit=None):
         """
         This method add the KEGG orthology classes to the graph.
+
+        If there's an embedded enzyme commission number, that is added as an xref.
 
         Triples created:
         <orthology_class_id> is a class
@@ -317,14 +332,13 @@ class KEGG(Source):
                 line_counter += 1
                 (orthology_class_id, orthology_class_name) = row
 
-                if self.testMode and orthology_class_id not in self.test_ids['ortholog_classes']:
+                if self.testMode and orthology_class_id not in self.test_ids['orthology_classes']:
                     continue
 
-                # FIXME: What's the proper route for this?
                 # The orthology class is essentially a KEGG gene ID that is species agnostic.
-                # Add the ID and label as a class. Would it be considered a gene as well?
+                # Add the ID and label as a gene family class
 
-                other_labels = re.split(';', orthology_class_name)
+                other_labels = re.split('[;,]', orthology_class_name)
                 orthology_label = other_labels[0]  # the first one is the label we'll use
 
                 orthology_class_id = 'KEGG-'+orthology_class_id.strip()
@@ -335,12 +349,21 @@ class KEGG(Source):
                     # add the rest as synonyms
                     # todo skip the first
                     for s in other_labels:
-                        gu.addSynonym(g, orthology_class_id, s)
+                        gu.addSynonym(g, orthology_class_id, s.strip())
 
                     # add the last one as the description
-                    gu.addDescription(g, orthology_class_id, other_labels[len(other_labels)-1])
+                    d = other_labels[len(other_labels)-1]
+                    gu.addDescription(g, orthology_class_id, d)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                    # add the enzyme commission number (EC:1.2.99.5)as an xref
+                    # sometimes there's two, like [EC:1.3.5.1 1.3.5.4]
+                    # can also have a dash, like EC:1.10.3.-
+                    ec_matches = re.findall('((?:\d+|\.|-){5,7})', d)
+                    if ec_matches is not None:
+                        for ecm in ec_matches:
+                            gu.addXref(g, orthology_class_id, 'EC:'+ecm)
+
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with ortholog classes")
@@ -593,7 +616,9 @@ class KEGG(Source):
                     gu.addClassToGraph(g, kegg_disease_id, None)
                     gu.addClassToGraph(g, omim_disease_id, None)
                     gu.addEquivalentClass(g, kegg_disease_id, omim_disease_id)  # safe?
-                    # gu.addXref(g, kegg_disease_id, omim_disease_id)
+            else:
+                pass
+                # gu.addXref(g, omim_disease_id, kegg_disease_id)  # TODO add xrefs if >1:1 mapping?
 
         logger.info("Done with KEGG disease to OMIM disease mappings.")
         return
@@ -644,6 +669,149 @@ class KEGG(Source):
         logger.info("Done with KEGG gene IDs to NCBI gene IDs")
         return
 
+    def _process_pathway_pubmed(self, limit):
+        """
+        Indicate that a pathway is annotated directly to a paper (is about) via it's pubmed id.
+        :param limit:
+        :return:
+        """
+        logger.info("Processing KEGG pathways to pubmed ids")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, self.files['pathway_pubmed']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (pubmed_id, kegg_pathway_num) = row
+
+                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                    continue
+
+                pubmed_id = pubmed_id.upper()
+                kegg_id = 'KEGG-'+kegg_pathway_num  # will look like KEGG-path:map04130
+
+                r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                r.addRefToGraph(g)
+                gu.addTriple(g, pubmed_id, GraphUtils.object_properties['is_about'], kegg_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_pathway_disease(self, limit):
+        """
+        We make a link between the pathway identifiers, and any diseases associated with them.
+        Since we model diseases as processes, we make a triple saying that
+        the pathway may be causally upstream of or within the disease process.
+
+        :param limit:
+        :return:
+        """
+        logger.info("Processing KEGG pathways to disease ids")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, self.files['pathway_disease']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (disease_id, kegg_pathway_num) = row
+
+                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                    continue
+
+                disease_id = 'KEGG-'+disease_id
+                pathway_id = 'KEGG-'+kegg_pathway_num  # will look like KEGG-path:map04130 or KEGG-path:hsa04130
+
+                gu.addTriple(g, pathway_id, GraphUtils.object_properties['causally_upstream_of_or_within'], disease_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_pathway_pathway(self, limit):
+        """
+        There are "map" and "ko" identifiers for pathways.  This makes equivalence mapping between them,
+        where they exist.
+        :param limit:
+        :return:
+        """
+        logger.info("Processing KEGG pathways to other ids")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, self.files['pathway_pathway']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (pathway_id_1, pathway_id_2) = row
+
+                if self.testMode and pathway_id_1 not in self.test_ids['pathway']:
+                    continue
+
+                pathway_id_1 = 'KEGG-'+pathway_id_1
+                pathway_id_2 = 'KEGG-'+pathway_id_2  # will look like KEGG-path:map04130 or KEGG-path:ko04130
+
+                if pathway_id_1 != pathway_id_2:
+                    gu.addEquivalentClass(g, pathway_id_1, pathway_id_2)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_pathway_ko(self, limit):
+        """
+        This adds the kegg orthologous group (gene) to the canonical pathway.
+        :param limit:
+        :return:
+        """
+        logger.info("Processing KEGG pathways to kegg ortholog classes")
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+
+        raw = '/'.join((self.rawdir, self.files['pathway_ko']['file']))
+        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                line_counter += 1
+                (ko_id, pathway_id) = row
+
+                if self.testMode and pathway_id not in self.test_ids['pathway']:
+                    continue
+
+                pathway_id = 'KEGG-'+pathway_id
+                ko_id = 'KEGG-'+ko_id
+
+                p = Pathway(g, self.nobnodes)
+                p.addGeneToPathway(pathway_id, ko_id)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
     def _make_variant_locus_id(self, gene_id, disease_id):
         """
         we actually want the association between the gene and the disease to be via an alternate locus
@@ -656,6 +824,7 @@ class KEGG(Source):
         :return:
         """
         alt_locus_id = '_'+gene_id+'-'+disease_id+'VL'
+        alt_locus_id = re.sub(':', '', alt_locus_id)
         if self.nobnodes:
             alt_locus_id = ':'+alt_locus_id
         alt_label = self.label_hash.get(gene_id)
