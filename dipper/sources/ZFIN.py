@@ -1,6 +1,7 @@
 import csv
 import re
 import logging
+from intermine.webservice import Service
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -2273,12 +2274,16 @@ class ZFIN(Source):
         return effective_genotype_id
 
     def get_orthology_sources_from_zebrafishmine(self):
+        """
+        Fetch the zfin gene to other species orthology annotations, together with the evidence for the assertion.
+        Write the file locally to be read in a separate function.
+        :return:
+        """
 
         # For further documentation you can visit:
         #     http://www.intermine.org/wiki/PythonClient
 
         # The following two lines will be needed in every python script:
-        from intermine.webservice import Service
         service = Service("http://zebrafishmine.org/service")
 
         # Get a new query on the class (table) you will be querying:
@@ -2307,6 +2312,7 @@ class ZFIN(Source):
         # Uncomment and edit the code below to specify your own custom logic:
         # query.set_logic("C and A and B and D and D")
 
+        self.files['zmine_ortho_evidence'] = {}
         self.files['zmine_ortho_evidence']['file'] = 'zmine_ortho_evidence.txt'
         file = '/'.join((self.rawdir, self.files['zmine_ortho_evidence']['file']))
         with open(file, 'w', encoding="utf-8", newline='\n') as csvfile:
