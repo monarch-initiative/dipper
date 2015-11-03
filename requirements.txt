@@ -9,3 +9,4 @@ biopython
 docx
 beautifulsoup4
 GitPython
+intermine
