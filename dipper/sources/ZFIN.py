@@ -205,6 +205,8 @@ class ZFIN(Source):
         self.get_files(is_dl_forced)
         self.scrub()
 
+        self.get_orthology_sources_from_zebrafishmine()
+
         return
 
     def scrub(self):
@@ -267,6 +269,7 @@ class ZFIN(Source):
 
         # zfin-curated orthology calls to human genes
         self._process_human_orthos(limit)
+        self.process_orthology_evidence(limit)
 
         # coordinates of all genes - from ensembl
         self._process_gene_coordinates(limit)
@@ -363,9 +366,6 @@ class ZFIN(Source):
             fish_id = 'ZFIN:'+fish_num
             fish = self.fish_parts[fish_num]
 
-            if fish_num == 'ZDB-FISH-150901-12520':
-                logger.info("found fish %s with parts: %s", fish_num, fish)
-
             # get the intrinsic parts
             intrinsic_genotype_num = fish['intrinsic_genotype']
             intrinsic_genotype_id = 'ZFIN:'+intrinsic_genotype_num
@@ -374,16 +374,10 @@ class ZFIN(Source):
                 intrinsic_parts = set()
             else:
                 intrinsic_parts = self.geno_alleles[intrinsic_genotype_num]
-            if fish_num == 'ZDB-FISH-150901-12520':
-                logger.info("found fish %s with intrinsic parts: %s", fish_num, intrinsic_parts)
-
 
             # subtract out the intrinsic parts, to get the extrinsic parts
             extrinsic_parts = fish['affectors'] - intrinsic_parts
             extrinsic_list = list(sorted(extrinsic_parts))
-
-            if fish_num == 'ZDB-FISH-150901-12520':
-                logger.info("found fish %s extrinsic parts: %s", fish_num, extrinsic_list)
 
             # build up the extrinsic genotype from it's parts.
             # these will be reagents/morphants.
@@ -399,9 +393,10 @@ class ZFIN(Source):
                         continue
                     ag = self.variant_loci_genes.get(eid)
 
-                    logger.debug("%s affected genes %s", eid, str(ag))
+                    # logger.debug("%s affected genes %s", eid, str(ag))
                     if ag is None:
-                        logger.warn("No affected genes for %s", eid)
+                        pass
+                        # logger.warn("No affected genes for %s", eid)
                     else:
                         # turn the gene-targeting-reagents inside out, such that
                         # instead of morph -> set(genes)
@@ -506,7 +501,7 @@ class ZFIN(Source):
                 for c in constructs:
                     cid = 'ZFIN:'+c
                     geno.addDerivesFrom(allele_id, cid)
-                    logger.info("constructs for %s: %s", allele_id, str(constructs))
+                    # logger.info("constructs for %s: %s", allele_id, str(constructs))
                     # migrate the transgenic features to be alternate parts of the transgene insertion/alteration
                     if cid in self.transgenic_parts:
                         tg_parts = self.transgenic_parts.get(cid)
@@ -648,7 +643,8 @@ class ZFIN(Source):
                 if allele_id in self.variant_loci_genes:
                     genes_from_hash = self.variant_loci_genes[allele_id]
                 else:
-                    logger.info('no gene found for %s', allele_id)
+                    pass
+                    # logger.info('no gene found for %s', allele_id)
 
                 if genes_from_hash is not None and genes_from_hash != [gene_id] and gene_id not in genes_from_hash:
                     logger.info("***Found other genes not in genotype_features for %s: %s", allele_id, genes_from_hash)
@@ -2276,6 +2272,147 @@ class ZFIN(Source):
 
         return effective_genotype_id
 
+    def get_orthology_sources_from_zebrafishmine(self):
+
+        # For further documentation you can visit:
+        #     http://www.intermine.org/wiki/PythonClient
+
+        # The following two lines will be needed in every python script:
+        from intermine.webservice import Service
+        service = Service("http://zebrafishmine.org/service")
+
+        # Get a new query on the class (table) you will be querying:
+        query = service.new_query("Gene")
+
+        # The view specifies the output columns
+        query.add_view(
+            "primaryIdentifier", "symbol", "homologues.homologue.symbol",
+            "homologues.evidence.evidenceCode.abbreviation",
+            "homologues.evidence.publications.primaryIdentifier",
+            "homologues.evidence.publications.pubMedId",
+            "homologues.crossReferences.identifier",
+            # "homologues.crossReferences.linkType",  # <-- only "orthologue" is used
+            # "homologues.crossReferences.source.name"  # <-  only needed if >1 source
+        )
+
+        # This query's custom sort order is specified below:
+        query.add_sort_order("Gene.name", "ASC")
+
+        # You can edit the constraint values below
+        query.add_constraint("homologues.dataSets.name", "=", "ZFIN Curated Human, Mouse, Fly, Yeast Orthologue Data Set", code = "A")
+        query.add_constraint("homologues.homologue.organism.name", "=", "Homo sapiens", code = "B")
+        query.add_constraint("homologues.crossReferences.source.name", "=", "Gene", code = "D")  # NCBIGene
+        query.add_constraint("symbol", "=", "*", code = "C")
+
+        # Uncomment and edit the code below to specify your own custom logic:
+        # query.set_logic("C and A and B and D and D")
+
+        self.files['zmine_ortho_evidence']['file'] = 'zmine_ortho_evidence.txt'
+        file = '/'.join((self.rawdir, self.files['zmine_ortho_evidence']['file']))
+        with open(file, 'w', encoding="utf-8", newline='\n') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter='\t', quotechar='\"')
+            for row in query.rows():
+                stuff = [row["primaryIdentifier"],
+                         row["symbol"],
+                         row["homologues.homologue.symbol"],
+                         row["homologues.crossReferences.identifier"],
+                         row["homologues.evidence.evidenceCode.abbreviation"],
+                         row["homologues.evidence.publications.primaryIdentifier"],
+                         row["homologues.evidence.publications.pubMedId"],
+                         # row["homologues.crossReferences.linkType"],
+                         # row["homologues.crossReferences.source.name"]
+                ]
+                filewriter.writerow(stuff)
+
+        return
+
+    def process_orthology_evidence(self, limit):
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        logger.info("Processing orthology evidence")
+        line_counter = 0
+
+        raw = '/'.join((self.rawdir, 'zmine_ortho_evidence.txt'))
+
+        with open(raw, 'r', encoding="utf-8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                # no header on this file
+                line_counter += 1
+                (zfin_gene_num, zfin_gene_symbol, ortholog_gene_symbol, ortholog_ncbigene_num,
+                 evidence_code, zfin_pub_num, pubmed_num) = row
+
+                if self.testMode and (zfin_gene_num not in self.test_ids['gene']):
+                    continue
+
+                zfin_gene_id = 'ZFIN:'+str(zfin_gene_num)
+                ortho_gene_id = 'NCBIGene:'+str(ortholog_ncbigene_num)
+                zfin_pub_id = 'ZFIN:'+zfin_pub_num
+                pubmed_id = 'PMID:'+str(pubmed_num)
+                if zfin_gene_num != '' and ortholog_ncbigene_num != '':
+                    assoc = OrthologyAssoc(self.name, zfin_gene_id, ortho_gene_id)
+                    if zfin_pub_num != '':
+                        r = Reference(zfin_pub_id)
+                        r.addRefToGraph(g)
+                        assoc.add_source(zfin_pub_id)
+                    if pubmed_num != '':
+                        r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                        r.addRefToGraph(g)
+                        assoc.add_source(pubmed_id)
+                    if evidence_code != '':
+                        eco_id = self.get_orthology_evidence_code(evidence_code)
+                        assoc.add_evidence(eco_id)
+
+                    assoc.add_association_to_graph(g)
+                # FIXME need to update with proper provenance model
+                # so the papers get attached with the relevant eco code
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+
+        return
+
+    def get_orthology_evidence_code(self, abbrev):
+        # AA	Amino acid sequence comparison.
+        # CE	Coincident expression.
+        # CL	Conserved genome location (synteny).
+        # FC	Functional complementation.
+        # FH	Formation of functional heteropolymers.
+        # IX	Immunological cross-reaction.
+        # NS	Not specified.
+        # NT	Nucleotide sequence comparison.
+        # SI	Similar response to inhibitors.
+        # SL	Similar subcellular location.
+        # SS	Similar substrate specificity.
+        # SU	Similar subunit structure.
+        # XH	Cross-hybridization to same molecular probe.
+        # PT	Phylogenetic Tree.
+
+        eco_abbrev_map = {
+            'AA': 'ECO:0000031',  # BLAST protein sequence similarity evidence
+            'CE': 'ECO:0000008',  # expression evidence
+            'CL': 'ECO:0000044',  # sequence similarity FIXME
+            'FC': 'ECO:0000012',  # functional complementation
+            'FH': 'ECO:0000064',  # functional complementation in a heterologous system
+            'IX': 'ECO:0000040',  # immunological assay evidence
+            'NS': None,
+            'NT': 'ECO:0000032',  # nucleotide blast
+            'SI': 'ECO:0000094',  # biological assay evidence FIXME
+            'SL': 'ECO:0000122',  # protein localization evidence FIXME
+            'SS': 'ECO:0000024',  # protein binding evidence  FIXME
+            'SU': 'ECO:0000027',  # structural similarity evidence
+            'XH': 'ECO:0000002',  # direct assay evidence  FIXME
+            'PT': 'ECO:0000080',  # phylogenetic evidence
+        }
+
+        if abbrev not in eco_abbrev_map:
+            logger.warn("Evidence code for orthology (%s) not mapped", str(abbrev))
+
+        return eco_abbrev_map.get(abbrev)
 
     def getTestSuite(self):
         import unittest
