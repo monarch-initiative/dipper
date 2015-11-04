@@ -18,7 +18,7 @@
 'CLO' : 'http://purl.obolibrary.org/obo/CLO_'  # cell lines
 'CMO' : 'http://purl.obolibrary.org/obo/CMO_'  # clinical measurements
 'DATA' : 'http://edamontology.org/data_'  # data artifacts
-'DC' : 'http://purl.obolibrary.org/obo/DC_'  # TODO
+'DC' : 'http://purl.obolibrary.org/obo/DC_'  # disease clusters (grouping categories for diseases)
 'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'  # disease
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'  # disease
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'  # evidence code
@@ -34,7 +34,7 @@
 'HP': 'http://purl.obolibrary.org/obo/HP_'  # human phenotype ontology
 'IAO': 'http://purl.obolibrary.org/obo/IAO_'  # information artifact ontology
 'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'  # kegg diseases
-'LPT': 'http://purl.obolibrary.org/obo/LPT_'  # TODO
+'LPT': 'http://purl.obolibrary.org/obo/LPT_'  # livestock product traits
 'MA': 'http://purl.obolibrary.org/obo/MA_'  # mouse anatomy
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'  # a vocabulary - should this be in purl?
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'  # medical diseases, phenotypes, and drugs
