@@ -7,6 +7,7 @@
 'foaf': 'http://xmlns.com/foaf/0.1/'
 
 # ontologies
+'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # FIXME - should get integrated into Upheno
 'BFO': 'http://purl.obolibrary.org/obo/BFO_'
 'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
 'CHR' : 'http://purl.obolibrary.org/obo/CHR_'
@@ -19,6 +20,7 @@
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'
 'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'
+'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
 'faldo' : 'http://biohackathon.org/resource/faldo#'
 'FBcv' : 'http://purl.obolibrary.org/obo/FBcv_'
@@ -28,6 +30,7 @@
 'GO' : 'http://purl.obolibrary.org/obo/GO_'
 'HP': 'http://purl.obolibrary.org/obo/HP_'
 'IAO': 'http://purl.obolibrary.org/obo/IAO_'
+'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'
 'LPT': 'http://purl.obolibrary.org/obo/LPT_'
 'MA': 'http://purl.obolibrary.org/obo/MA_'
 'MESH': 'http://purl.obolibrary.org/obo/MESH_'
@@ -66,6 +69,7 @@
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
+'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
 'ISBN': 'http://www.monarchinitiative.org/ISBN_'
 'ISBN-10': 'http://www.monarchinitiative.org/ISBN10_'
 'ISBN-13': 'http://www.monarchinitiative.org/ISBN13_'
@@ -78,53 +82,56 @@
 'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
 'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
+'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
 
 # other
 'Annotation': 'http://www.w3.org/ns/oa#Annotation'
-'AQTL' : 'http://identifiers.org/animalqtl/'  # FIXME temporary
-'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # temporary
-'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
 'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
 'CGD' : 'http://ohsu.edu/cgd/'
-'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
-'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
+'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'  # a vocabulary - should this be in purl?
+
+# strains, lines, or organismal reagents
+'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
+'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='
 'Coriell' : 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
 'CoriellCollection' : 'https://catalog.coriell.org/1/'
 'CoriellFamily' : 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 'CoriellIndividual' : 'https://catalog.coriell.org/Search?q='
-'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
-'CCDS' : 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='
-'CGD' : 'http://ohsu.edu/cgd/'
-'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='
-'EMMA' : 'https://www.infrafrontier.eu/search?keyword=EM:'
-'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
-'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  #FIXME
-'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
-'EOM' : 'http://purl.obolibrary.org/obo/EOM_'
-'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'
-'HOMOLOGENE' : 'http://www.ncbi.nlm.nih.gov/homologene/'
-'HPO' : 'http://human-phenotype-ontology.org/'  #to be used for persons, though they don't resolve with this
+'EMMA' : 'https://www.infrafrontier.eu/search?keyword=EM:'
 'JAX' : 'http://jaxmice.jax.org/strain/'
-'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'
-'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
-'KEGG-hsa' : 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
-'KEGG-ko' : 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
-'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'
+'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
 'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='
+'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='
+'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'
+
+# genomes and organisms  (also NCBITaxon)
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
-'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='
 'OMIA-breed': 'http://monarchinitiative.org/model/OMIA-breed:'
-
-'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
-'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'
-'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
+
+
+# homology
+'HOMOLOGENE' : 'http://www.ncbi.nlm.nih.gov/homologene/'
+'KEGG-ko' : 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
+'PANTHER' : 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
+
+# variants
+'AQTL' : 'http://identifiers.org/animalqtl/'  # FIXME temporary  # traits
+'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'
+'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
+'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'HGMD' : 'http://identifiers.org/hgmd/'
+'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
+'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
+
+# pathways
+'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
+'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
 
 # genes
-'BIOGRID' : 'http://thebiogrid.org/'
+'BIOGRID' : 'http://thebiogrid.org/'  # also interactions
 'dictyBase' : 'http://dictybase.org/gene/'
 'EcoGene' : 'http://ecogene.org/gene/'
 'ENSEMBL' : 'http://identifiers.org/ensembl/'
@@ -132,8 +139,9 @@
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
 'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
 'HPRD' : 'http://www.hprd.org/protein/'
-'IMPC' : 'http://www.mousephenotype.org/data/genes/'  #FIXME
-'MGI': 'http://www.informatics.jax.org/accession/MGI:'
+'IMPC' : 'http://www.mousephenotype.org/data/genes/'  # FIXME
+'KEGG-hsa' : 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
+'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # also variants, pubs, genotypes
 'miRBase' : 'http://identifiers.org/mirbase/'
 'NCBIGene' : 'http://www.ncbi.nlm.nih.gov/gene/'
 'PomBase' : 'http://identifiers.org/PomBase:'
@@ -141,9 +149,9 @@
 'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'SGD' : 'http://identifiers.org/SGD:'
 'TAIR' : 'http://identifiers.org/TAIR:'
-'WormBase' : 'http://identifiers.org/wormbase/'
+'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
 'Xenbase' : 'http://identifiers.org/xenbase/'
-'ZFIN' : 'http://zfin.org/'
+'ZFIN' : 'http://zfin.org/'  # also variants, pubs, genotypes
 
 # proteins
 'EC' : 'http://identifiers.org/ec-code/'
