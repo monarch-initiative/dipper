@@ -122,7 +122,7 @@ class CTD(Source):
         logger.info("Parsing files...")
         # pub_map = dict()
         # file_path = '/'.join((self.rawdir,
-        #                       self.static_files['publications']['file']))
+        # self.static_files['publications']['file']))
         # if os.path.exists(file_path) is True:
         #     pub_map = self._parse_publication_file(
         #         self.static_files['publications']['file']
@@ -143,7 +143,11 @@ class CTD(Source):
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self._parse_curated_chem_disease(limit)
         self.gu.loadAllProperties(self.g)
-        # self.gu.loadProperties(self.g, self.REL_MAP, self.gu.OBJPROP)
+
+        self.gu.loadProperties(self.g, G2PAssoc.object_properties, self.gu.OBJPROP)
+        self.gu.loadProperties(self.g, G2PAssoc.datatype_properties, self.gu.DATAPROP)
+        self.gu.loadProperties(self.g, G2PAssoc.annotation_properties, self.gu.ANNOTPROP)
+        self.gu.loadProperties(self.g, Pathway.object_properties, self.gu.OBJPROP)
 
         self.load_bindings()
         logger.info("Done parsing files.")
@@ -207,10 +211,16 @@ class CTD(Source):
         if self.testMode and (int(gene_id) not in self.test_geneids):
             return
 
-        entrez_id = 'NCBIGene:'+gene_id
+        entrez_id = 'NCBIGene:' + gene_id
 
-        if re.match('REACT:116125', pathway_id):
-            # skipping this one, as it is generic "Disease"
+        pathways_to_scrub = ['REACT:116125',  # disease
+                             "REACT:111045",  # developmental biology
+                             "REACT:200794",  # Mus musculus biological processes
+                             "REACT:13685",  # neuronal system ?
+                             ]
+
+        if pathway_id in pathways_to_scrub:
+            # these are lame "pathways" like generic "disease" and "developmental biology"
             return
 
         # convert KEGG pathway ids... KEGG:12345 --> KEGG-path:map12345
@@ -289,7 +299,7 @@ class CTD(Source):
                 resp = urllib.request.urlopen(req)
                 f.write(resp.read())
                 start = end
-                end = min((start+batch_size, len(sorted_pubs)))
+                end = min((start + batch_size, len(sorted_pubs)))
 
         return
 
@@ -317,10 +327,11 @@ class CTD(Source):
         # dual_evidence = re.compile('^marker\/mechanism\|therapeutic$')
 
         # filter on those diseases that are mapped to omim ids in the test set
-        intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
+        intersect = list(
+            set(['OMIM:' + str(i) for i in omim_ids.split('|')] + [disease_id]) & set(self.test_diseaseids))
         if self.testMode and len(intersect) < 1:
             return
-        chem_id = 'MESH:'+chem_id
+        chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
         if re.match(evidence_pattern, direct_evidence):
             rel_id = self._get_relationship_id(direct_evidence)
@@ -355,7 +366,7 @@ class CTD(Source):
         """
 
         # if self.testMode:
-        #     g = self.testgraph
+        # g = self.testgraph
         # else:
         #     g = self.graph
         # self._check_list_len(row, 9)
@@ -374,14 +385,15 @@ class CTD(Source):
             'MESH:D004195',  # disease models, animal
             'MESH:D030342',  # genetic diseases, inborn
             'MESH:D040181',  # genetic dieases, x-linked
-            'MESH:D020022'   # genetic predisposition to a disease
+            'MESH:D020022'  # genetic predisposition to a disease
         ]
 
         if disease_id in diseases_to_scrub:
             logger.info("Skipping association between NCBIGene:%s and %s", str(gene_id), disease_id)
             return
 
-        intersect = list(set(['OMIM:'+str(i) for i in omim_ids.split('|')]+[disease_id]) & set(self.test_diseaseids))
+        intersect = list(
+            set(['OMIM:' + str(i) for i in omim_ids.split('|')] + [disease_id]) & set(self.test_diseaseids))
         if self.testMode and (int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
 
@@ -389,7 +401,7 @@ class CTD(Source):
         # we are only using the "marker/mechanism" for now
         # TODO what does it mean for a gene to be therapeutic for disease?  a therapeutic target?
 
-        gene_id = 'NCBIGene:'+gene_id
+        gene_id = 'NCBIGene:' + gene_id
 
         preferred_disease_id = disease_id
         if omim_ids is not None and omim_ids != '':
@@ -401,7 +413,7 @@ class CTD(Source):
                     # the disease ID is an OMIM ID and there is more than one OMIM entry in omim_ids.
                     # Currently no entries satisfy this condition
                     pass
-                elif disease_id != ('OMIM:'+omim_ids):
+                elif disease_id != ('OMIM:' + omim_ids):
                     # the disease ID is an OMIM ID and there is only one non-equiv OMIM entry in omim_ids
                     # we preferentially use the disease_id here
                     logger.warn("There may be alternate identifier for %s: %s", disease_id, omim_ids)
@@ -409,7 +421,7 @@ class CTD(Source):
             else:
                 if len(omim_id_list) == 1:
                     # the disease ID is not an OMIM ID and there is only one OMIM entry in omim_ids.
-                    preferred_disease_id = 'OMIM:'+omim_ids
+                    preferred_disease_id = 'OMIM:' + omim_ids
                 elif len(omim_id_list) > 1:
                     # This is when the disease ID is not an OMIM ID and there is more than one OMIM entry in omim_ids.
                     pass
@@ -417,11 +429,11 @@ class CTD(Source):
         # we actually want the association between the gene and the disease to be via an alternate locus
         # not the "wildtype" gene itself.
         # so we make an anonymous alternate locus, and put that in the association.
-        alt_locus = '_'+gene_id+'-'+preferred_disease_id+'VL'
+        alt_locus = '_' + gene_id + '-' + preferred_disease_id + 'VL'
         alt_locus = re.sub(':', '', alt_locus)  # can't have colons in the bnodes
         if self.nobnodes:
-            alt_locus = ':'+alt_locus
-        alt_label = 'some variant of '+gene_symbol+' that is '+direct_evidence+' for '+disease_name
+            alt_locus = ':' + alt_locus
+        alt_label = 'some variant of ' + gene_symbol + ' that is ' + direct_evidence + ' for ' + disease_name
         self.gu.addIndividualToGraph(self.g, alt_locus, alt_label, self.geno.genoparts['variant_locus'])
         self.gu.addClassToGraph(self.g, gene_id, None)  # assume that the label gets added elsewhere
         self.geno.addAlleleOfGene(alt_locus, gene_id)
@@ -464,7 +476,6 @@ class CTD(Source):
                 assoc.add_evidence(eco)
 
         assoc.add_association_to_graph(self.g)
-        assoc.load_all_properties(self.g)
         return
 
     @staticmethod
@@ -482,7 +493,7 @@ class CTD(Source):
         else:
             id_list = pubmed_ids.split('|')
         for (i, val) in enumerate(id_list):
-            id_list[i] = 'PMID:'+val
+            id_list[i] = 'PMID:' + val
         return id_list
 
     @staticmethod
@@ -546,17 +557,21 @@ class CTD(Source):
                 (pub_id, disease_label, disease_id, disease_cat, evidence,
                  chem_label, chem_id, cas_rn, gene_symbol, gene_acc) = row
 
+                if disease_id.strip() == '' or chem_id.strip() == '':
+                    continue
+
                 rel_id = self._get_relationship_id(evidence)
-                chem_id = 'MESH:'+chem_id
+                chem_id = 'MESH:' + chem_id
                 gu.addClassToGraph(self.g, chem_id, chem_label)
                 gu.addClassToGraph(self.g, disease_id, None)
                 if pub_id != '':
-                    pub_id = 'PMID:'+pub_id
+                    pub_id = 'PMID:' + pub_id
                     r = Reference(pub_id, Reference.ref_types['journal_article'])
                     r.addRefToGraph(self.g)
+                    pubids = [pub_id]
                 else:
-                    pub_id = None
-                self._make_association('MESH:'+chem_id, disease_id, rel_id, ['PMID:'+pub_id])
+                    pubids = None
+                self._make_association(chem_id, disease_id, rel_id, pubids)
 
                 if not self.testMode and limit is not None and line_counter >= limit:
                     break
