@@ -274,6 +274,7 @@ class ClinVar(Source):
                     f.addFeatureEndLocation(stop, chrinbuild_id)
 
                 f.addFeatureToGraph(g)
+                f.addTaxonToFeature(g, tax_id)
                 gu.makeLeader(g, seqalt_id)  # make the ClinVarVariant the clique leader
 
                 if bandinbuild_id is not None:
