@@ -11,63 +11,63 @@
 
 # ontologies
 'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # FIXME - should get integrated into Upheno
-'BFO': 'http://purl.obolibrary.org/obo/BFO_'
-'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_'
-'CHR' : 'http://purl.obolibrary.org/obo/CHR_'  # chromosomes
-'CL' : 'http://purl.obolibrary.org/obo/CL_'  # cell types
-'CLO' : 'http://purl.obolibrary.org/obo/CLO_'  # cell lines
-'CMO' : 'http://purl.obolibrary.org/obo/CMO_'  # clinical measurements
-'DATA' : 'http://edamontology.org/data_'  # data artifacts
-'DC' : 'http://purl.obolibrary.org/obo/DC_'  # disease clusters (grouping categories for diseases)
-'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'  # disease
-'DOID': 'http://purl.obolibrary.org/obo/DOID_'  # disease
-'ECO': 'http://purl.obolibrary.org/obo/ECO_'  # evidence code
-'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'  # experimental factors - all kinds of stuff
+'BFO': 'http://purl.obolibrary.org/obo/BFO_' # BFO: Basic Formal Ontology
+'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_' # ChEBI: Chemicals of Biological Interest
+'CHR' : 'http://purl.obolibrary.org/obo/CHR_'  # CHR: Chromosome Ontology
+'CL' : 'http://purl.obolibrary.org/obo/CL_'  # CL: Cell Ontology (cell types)
+'CLO' : 'http://purl.obolibrary.org/obo/CLO_'  # CLO: Cell Line Ontology
+'CMO' : 'http://purl.obolibrary.org/obo/CMO_'  # CMO: Clinical Measurements Ontology
+'DATA' : 'http://edamontology.org/data_'  # EDAM: Data and Methods Ontology (data artifacts)
+'DC' : 'http://purl.obolibrary.org/obo/DC_'  # TODO
+'DECIPHER' : 'http://purl.obolibrary.org/obo/DECIPHER_'  # DECIPHER: Deciphering Developmental Disease
+'DOID': 'http://purl.obolibrary.org/obo/DOID_'  # DOID: Human Disease Ontology
+'ECO': 'http://purl.obolibrary.org/obo/ECO_'  # ECO: Evidence Code Ontology
+'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'  # EFO: Experimental Factor Ontology (all kinds of stuff)
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'  # elements of morphology phentoypes
-'ERO' : 'http://purl.obolibrary.org/obo/ERO_'
-'faldo' : 'http://biohackathon.org/resource/faldo#'  # genomic feature properties
-'FBcv' : 'http://purl.obolibrary.org/obo/FBcv_'  # flybase CV (includes phenotypes)
-'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'  # flybase anatomy
-'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'  # flybase developmental stages
-'GENO': 'http://purl.obolibrary.org/obo/GENO_'  # genotype partonomy
-'GO' : 'http://purl.obolibrary.org/obo/GO_'  # gene ontology
-'HP': 'http://purl.obolibrary.org/obo/HP_'  # human phenotype ontology
-'IAO': 'http://purl.obolibrary.org/obo/IAO_'  # information artifact ontology
-'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'  # kegg diseases
-'LPT': 'http://purl.obolibrary.org/obo/LPT_'  # livestock product traits
-'MA': 'http://purl.obolibrary.org/obo/MA_'  # mouse anatomy
+'ERO' : 'http://purl.obolibrary.org/obo/ERO_' # ERO: eagle-i resource ontology
+'faldo' : 'http://biohackathon.org/resource/faldo#'  # FALDO: Feature Annotation Location Description Ontology (genomic feature properties)
+'FBcv' : 'http://purl.obolibrary.org/obo/FBcv_'  # FBcv: flybase CV (includes phenotypes)
+'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'  # FBbt: flybase anatomy
+'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'  # FBdv: flybase developmental stages
+'GENO': 'http://purl.obolibrary.org/obo/GENO_'  # GENO: Genotype Partonomy Ontology
+'GO' : 'http://purl.obolibrary.org/obo/GO_'  # GO: Gene Ontology
+'HP': 'http://purl.obolibrary.org/obo/HP_'  # HP: Human Phenotype Ontology
+'IAO': 'http://purl.obolibrary.org/obo/IAO_'  # IAO: Information Artifact Ontology
+'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'  # KEGG-ds: KEGG Disease Ontology
+'LPT': 'http://purl.obolibrary.org/obo/LPT_'  # LPT: Livestock Phenotypic Trait Ontology
+'MA': 'http://purl.obolibrary.org/obo/MA_'  # MA: Mouse Anatomy Ontology
 'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/'  # a vocabulary - should this be in purl?
-'MESH': 'http://purl.obolibrary.org/obo/MESH_'  # medical diseases, phenotypes, and drugs
-'MP': 'http://purl.obolibrary.org/obo/MP_'  # mammalian phenotype
-'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'  # mammalian pathology
-'NBO': 'http://purl.obolibrary.org/obo/NBO_'  # neurobehavior ontology
-'OBA': 'http://purl.obolibrary.org/obo/OBA_'  # biological attributes / traits
-'OBAN': 'http://purl.org/oban/'  # annotation model
-'OBI': 'http://purl.obolibrary.org/obo/OBI_'  # biomedical investigations
-'OBO': 'http://purl.obolibrary.org/obo/'  # all things in the OBO namespace
-'OIO': 'http://www.geneontology.org/formats/oboInOwl#'  # obo-specific annotation properties, like synonym types
-'OMIA' : 'http://purl.obolibrary.org/obo/OMIA_'  # animal diseases
-'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'  # human disease and variants
-'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_'  # human diseases
-'PATO': 'http://purl.obolibrary.org/obo/PATO_'  # phenotypic qualities
-'PCO': 'http://purl.obolibrary.org/obo/PCO_'  # TODO
-'PR': 'http://purl.obolibrary.org/obo/PR_'  # protein ontology
-'PW' : 'http://purl.obolibrary.org/obo/PW_'  # pathway ontology
-'RO': 'http://purl.obolibrary.org/obo/RO_'  # relationships
-'SIO' : 'http://semanticscience.org/resource/SIO_'  # information artifacts
-'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'  # diseases and phenotypes
-'SO' : 'http://purl.obolibrary.org/obo/SO_'  # sequence ontology
-'STATO': 'http://purl.obolibrary.org/obo/STATO_'  # statistics ontology
-'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'  # integrated anatomy ontology (metazoans, mostly)
-'UPHENO' : 'http://purl.obolibrary.org/obo/UPHENO_'  # integrated phenotype ontology, and normal traits
-'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'  # unified medical language system
-'UO' : 'http://purl.obolibrary.org/obo/UO_'  # units of measurements
-'VT' : 'http://purl.obolibrary.org/obo/VT_'  # vertebrate traits
-'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_'  # worm (nematode) phenotypes
-'XCO' : 'http://purl.obolibrary.org/obo/XCO_'  # TODO
-'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'  # zebrafish anatomy
-'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'  # zebrafish staging
-'ZP': 'http://purl.obolibrary.org/obo/ZP_'  # zebrafish phenotype
+'MESH': 'http://purl.obolibrary.org/obo/MESH_'  # MeSH: Medical Subject Headings (medical diseases, phenotypes, and drugs)
+'MP': 'http://purl.obolibrary.org/obo/MP_'  # MP: Mammalian Phenotype Ontology
+'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'  # MPATH: Mammalian Pathology Ontology
+'NBO': 'http://purl.obolibrary.org/obo/NBO_'  # NBO: NeuroBehavior Ontology
+'OBA': 'http://purl.obolibrary.org/obo/OBA_'  # OBA: Ontology of Biological Attributes (traits)
+'OBAN': 'http://purl.org/oban/'  # OBAN: Open Biomedical Annotation Model
+'OBI': 'http://purl.obolibrary.org/obo/OBI_'  # OBI: Ontology of Biomedical Investigations
+'OBO': 'http://purl.obolibrary.org/obo/'  # all ontologies in the OBO namespace (this is not itself an ontology)
+'OIO': 'http://www.geneontology.org/formats/oboInOwl#'  # oboInOwl: obo-specific annotation properties, like synonym types
+'OMIA' : 'http://purl.obolibrary.org/obo/OMIA_'  # OMIA: Online Mendelian Inheritance in Animals (animal diseases)
+'OMIM' : 'http://purl.obolibrary.org/obo/OMIM_'  # OMIM: Online Mendelian Inheritance in Man (human disease and variants)
+'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_'  # Orphanet: rare diseases and orphan drugs
+'PATO': 'http://purl.obolibrary.org/obo/PATO_'  # PATO: phenotypic qualities
+'PCO': 'http://purl.obolibrary.org/obo/PCO_'  # PCO: Population and Community Ontology
+'PR': 'http://purl.obolibrary.org/obo/PR_'  # PRO: protein ontology
+'PW' : 'http://purl.obolibrary.org/obo/PW_'  # PW: pathway ontology
+'RO': 'http://purl.obolibrary.org/obo/RO_'  # RO: Relationship Ontology
+'SIO' : 'http://semanticscience.org/resource/SIO_'  # SIO: SemanticScience Integrated Ontology (information artifacts)
+'SNOMED' : 'http://purl.obolibrary.org/obo/SNOMED_'  # SNOMED:diseases and phenotypes
+'SO' : 'http://purl.obolibrary.org/obo/SO_'  # SO: Sequence Ontology
+'STATO': 'http://purl.obolibrary.org/obo/STATO_'  # Statistics Ontology
+'UBERON' : 'http://purl.obolibrary.org/obo/UBERON_'  # UBERON: integrated anatomy ontology (metazoans, mostly)
+'UPHENO' : 'http://purl.obolibrary.org/obo/UPHENO_'  # UPHENO: integrated phenotype ontology, and normal traits
+'UMLS' : 'http://purl.obolibrary.org/obo/UMLS_'  # UMLS: unified medical language system
+'UO' : 'http://purl.obolibrary.org/obo/UO_'  # UO: units of measurements
+'VT' : 'http://purl.obolibrary.org/obo/VT_'  # VT: Vertebrate Trait Ontology
+'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_' # WBPhenotype: WormBase phenotypes (nematode)
+'XCO' : 'http://purl.obolibrary.org/obo/XCO_'  # XCO: Experimental Conditions Ontology
+'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'  # ZFA: Zebrafish Anatomy Ontology
+'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'  # ZFS: Zebrafish Staging
+'ZP': 'http://purl.obolibrary.org/obo/ZP_'  # ZP: Zebrafish Phenotype Ontology
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
