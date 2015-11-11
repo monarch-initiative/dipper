@@ -20,9 +20,16 @@ class CurieUtil:
 
     # Get a CURIE from a uri
     def get_curie(self, uri):
+        prefix = self.get_curie_prefix(uri)
+        if prefix is not None:
+            key = self.curie_map[prefix]
+            return '%s:%s' % (prefix, uri[len(key):len(uri)])
+        return None
+
+    def get_curie_prefix(self, uri):
         for key, value in self.uri_map.items():
             if uri.startswith(key):
-                return '%s:%s' % (value, uri[len(key):len(uri)])
+                return value
         return None
 
     # Get a URI from a CURIE
