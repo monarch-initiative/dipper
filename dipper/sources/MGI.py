@@ -806,7 +806,7 @@ class MGI(Source):
                 iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
                 if self.nobnodes is True:
-                    if int(allele_key) not in self.test_keys.get('allele'):
+                    if self.testMode and int(allele_key) not in self.test_keys.get('allele'):
                         continue
                     iseqalt_id = ':'+iseqalt_id
 
@@ -1916,7 +1916,7 @@ class MGI(Source):
         marktype = None
         type_map = {
             'Complex/Cluster/Region': 'SO:0000110',  # sequence feature
-            'Transgene': 'SO:0000902',  # transgene
+            'Transgene': 'SO:0001218',  # transgene  WE redefine these as transgenic insertion features instead
             'Gene': 'SO:0000704',  # gene
             'QTL': 'SO:0000771',  # QTL
             'DNA Segment': 'SO:0000110',  # sequence_feature. sequence_motif=SO:0001683? region=SO:0000001
