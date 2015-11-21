@@ -179,9 +179,8 @@ class GeneReviews(Source):
                     if omim_id in entries_that_are_phenotypes:
                         gu.addClassToGraph(self.graph, omim_id, None)
                         gu.addSubclass(self.graph, gr_id, omim_id)
-            else:
-                # add this as a generic subclass of DOID:4
-                gu.addSubclass(self.graph, 'DOID:4', gr_id)
+            # add this as a generic subclass of DOID:4
+            gu.addSubclass(self.graph, 'DOID:4', gr_id)
 
         return
 
