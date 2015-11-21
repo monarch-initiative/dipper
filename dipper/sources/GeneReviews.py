@@ -53,7 +53,7 @@ class GeneReviews(Source):
 
         self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',
                                None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
-        self.dataset.set_citation('http://www.ncbi.nlm.nih.gov/books/NBK1116/')
+        self.dataset.set_citation('GeneReviews:NBK1116')
 
         self.gu = GraphUtils(curie_map.get())
 
@@ -300,6 +300,10 @@ class GeneReviews(Source):
                             r.addRefToGraph(self.graph)
 
             # TODO add author history, copyright, license to dataset
+
+            # TODO get PMID-NBKID equivalence (near foot of page), and make it "is about" link
+            # self.gu.addTriple(self.graph, pmid, self.gu.object_properties['is_about'], nbk_id)
+            # for example: NBK1191 PMID:20301370
 
             # add the book to the dataset
             self.dataset.setFileAccessUrl(book_item['url'])
