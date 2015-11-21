@@ -1,29 +1,42 @@
 __author__ = 'nicole'
 
 import re
-import glob
+import os
 import csv
 import logging
+from bs4 import BeautifulSoup
 
-from docx import Document
-
-from dipper.models.assoc.Association import Assoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper.models.Genotype import Genotype
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.sources.OMIM import OMIM, get_omim_id_from_entry, filter_keep_phenotype_entry_ids
+from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
+from dipper.models.Reference import Reference
 
 logger = logging.getLogger(__name__)
 
 
 class GeneReviews(Source):
     """
-    WARNING: THIS DATA SOURCE IS IN DEVELOPMENT AND IS SUBJECT TO CHANGE
-    A stub for processing GeneReviews Word documents.  This is testing on some local versions
-    of word documents as a test, to produce disease ids (NBKids), together with labels and descriptions.
+    Here we process the GeneReviews mappings to OMIM, plus inspect the GeneReviews (html) books to pull the
+    clinical descriptions in order to populate the definitions of the terms in the ontology.  We define
+    the GeneReviews items as classes that are either grouping classes over OMIM disease ids (gene ids are
+    filtered out), or are made as subclasses of DOID:4 (generic disease).
+
+    Note that GeneReviews [copyright policy](http://www.ncbi.nlm.nih.gov/books/NBK138602/) (as of 2015.11.20) says:
+
+    GeneReviews® chapters are owned by the University of Washington, Seattle, © 1993-2015. Permission is hereby
+    granted to reproduce, distribute, and translate copies of content materials provided that (i) credit
+    for source (www.ncbi.nlm.nih.gov/books/NBK1116/) and copyright (University of Washington, Seattle)
+    are included with each copy; (ii) a link to the original material is provided whenever the material
+    is published elsewhere on the Web; and (iii) reproducers, distributors, and/or translators comply with
+    this copyright notice and the GeneReviews Usage Disclaimer.
+
+    Furthermore, this script does not pull the GeneReviews books from the NCBI Bookshelf directly; scripting this
+    task is expressly prohibited by [NCBIBookshelf policy](http://www.ncbi.nlm.nih.gov/books/NBK45311/).
+    However, assuming you have acquired the books (in html format) via permissible means, a parser
+    for those books is provided here to extract the clinical descriptions to define the NBK identified classes.
     """
 
     files = {
@@ -40,8 +53,12 @@ class GeneReviews(Source):
 
         self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',
                                None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
+        self.dataset.set_citation('http://www.ncbi.nlm.nih.gov/books/NBK1116/')
 
         self.gu = GraphUtils(curie_map.get())
+
+        self.book_ids = set()
+        self.all_books = {}
 
         if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
             logger.warn("not configured with disease test ids.")
@@ -56,8 +73,7 @@ class GeneReviews(Source):
 
     def fetch(self, is_dl_forced=False):
         """
-        We fetch the general GeneReviews files from NCBI.
-        Note that the doc files are not yet available remotely.
+        We fetch the GeneReviews id-label map and id-omim mapping files from NCBI.
         :return: None
         """
 
@@ -70,26 +86,14 @@ class GeneReviews(Source):
         :return: None
         """
 
-        # loop through and parse each file in the raw dir
-        i = 0
-        for k in glob.glob(self.rawdir+'/*.docx'):
-            i += 1
-            if limit is not None and i >= limit:
-                break
-
-            logger.debug('gonna parse %s!', k)
-            self._get_data(k)
-            # TODO add each file, and the version information on a file-level basis
-
-        # in development
-        # k = ('/').join((self.rawdir,'Incontinentia_Pigmenti_GeneReview.docx'))
-        # self._get_data(k)
-
         if self.testOnly:
             self.testMode = True
 
-        self._get_equivids(limit)
         self._get_titles(limit)
+        self._get_equivids(limit)
+
+        self.create_books()
+        self.process_nbk_html(limit)
 
         self.load_bindings()
 
@@ -97,52 +101,6 @@ class GeneReviews(Source):
         self.testgraph = self.graph
 
         logger.info("Found %d nodes", len(self.graph))
-
-        return
-
-    def _get_data(self, file):
-        """
-        This will add a disease node to the graph from one GeneReviews file.
-        If the genereviews disease id (NBK*) can't be found in the document, it will write an error
-        and no triples will be added
-        :param file:  the file to parse
-        :return:
-        """
-
-        line_counter = 0
-        document = Document(file)
-        par = document.paragraphs
-        tables = document.tables
-        logger.info('num paragraphs %d', len(par))
-        pnum = 0
-        disease_name = None
-        description = None
-        disease_num = None
-        synonyms = None
-        gu = GraphUtils(curie_map.get())
-
-        for p in par:
-            pnum += 1
-
-            if p.style == 'Heading1':
-                disease_name = p.text.strip()
-            elif re.match('Synonym', p.text):
-                # TODO are these a list?
-                synonyms = re.sub('Synonym\:?', '', p.text).strip()
-            elif re.match('Disease characteristics',p.text):
-                description = re.sub('Disease characteristics\w*\.?', '', p.text).strip()
-            elif re.search('NBK\d+',p.text):
-                m = re.search('(NBK\d+)',p.text).group(0)
-                disease_num = m
-
-        if disease_num is None:
-            logger.error("could not find id for %s", file)
-        else:
-            disease_id = 'GeneReviews:'+disease_num
-            # TODO add equivalences or types
-            gu.addClassToGraph(self.graph, disease_id, disease_name, None, description)
-            if synonyms is not None:
-                gu.addSynonym(self.graph, disease_id, synonyms, Assoc(None).properties['hasExactSynonym'])
 
         return
 
@@ -182,9 +140,10 @@ class GeneReviews(Source):
                 if not ((self.testMode and len(self.test_ids) > 0 and omim_id in self.test_ids) or not self.testMode):
                     continue
 
-                #sometimes there's bad omim nums
+                # sometimes there's bad omim nums
                 if len(omim_num) > 6:
-                    logger.warn("OMIM number incorrectly formatted in row %d; skipping:\n%s", line_counter, '\t'.join(row))
+                    logger.warn("OMIM number incorrectly formatted in row %d; skipping:\n%s",
+                                line_counter, '\t'.join(row))
                     continue
 
                 # build up a hashmap of the mappings; then process later
@@ -204,20 +163,25 @@ class GeneReviews(Source):
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes = omim.process_entries(list(allomimids), filter_keep_phenotype_entry_ids, None, None, limit)
+        entries_that_are_phenotypes = omim.process_entries(list(allomimids), filter_keep_phenotype_entry_ids,
+                                                           None, None, limit)
 
-        logger.info("Filtered out %d/%d entries that are genes or features", len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
+        logger.info("Filtered out %d/%d entries that are genes or features",
+                    len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
 
-        for nbk_num in id_map:
-            omim_ids = id_map.get(nbk_num)
-            for omim_num in omim_ids:
-                gr_id = 'GeneReviews:'+nbk_num
-                omim_id = 'OMIM:'+omim_num
-
-                # add the gene reviews as a superclass to the omim id, but only if the omim id is not a gene
-                if omim_id in entries_that_are_phenotypes:
-                    gu.addClassToGraph(self.graph, omim_id, None)
-                    gu.addSubclass(self.graph, gr_id, omim_id)
+        for nbk_num in self.book_ids:
+            gr_id = 'GeneReviews:'+nbk_num
+            if nbk_num in id_map:
+                omim_ids = id_map.get(nbk_num)
+                for omim_num in omim_ids:
+                    omim_id = 'OMIM:'+omim_num
+                    # add the gene reviews as a superclass to the omim id, but only if the omim id is not a gene
+                    if omim_id in entries_that_are_phenotypes:
+                        gu.addClassToGraph(self.graph, omim_id, None)
+                        gu.addSubclass(self.graph, gr_id, omim_id)
+            else:
+                # add this as a generic subclass of DOID:4
+                gu.addSubclass(self.graph, 'DOID:4', gr_id)
 
         return
 
@@ -249,8 +213,109 @@ class GeneReviews(Source):
                 (shortname, title, nbk_num) = row
                 gr_id = 'GeneReviews:'+nbk_num
 
-                gu.addClassToGraph(self.graph, gr_id, title)
-                gu.addSynonym(self.graph, gr_id, shortname)
+                self.book_ids.add(nbk_num)  # a global set of the book nums
+
+                if limit is None or line_counter < limit:
+                    gu.addClassToGraph(self.graph, gr_id, title)
+                    gu.addSynonym(self.graph, gr_id, shortname)
+
+        return
+
+    def create_books(self):
+
+        # note that although we put in the url to the book, NCBI Bookshelf does not allow robots to download content
+        book_item = {'file': 'books/',
+                     'url': ''}
+
+        for nbk in self.book_ids:
+            b = book_item.copy()
+            b['file'] = '/'.join(('books', nbk+'.html'))
+            b['url'] = 'http://www.ncbi.nlm.nih.gov/books/'+nbk
+            self.all_books[nbk] = b
+
+        return
+
+    def process_nbk_html(self, limit):
+        """
+        Here we process the gene reviews books to fetch the clinical descriptions to include in the ontology.
+        We only use books that have been acquired manually, as NCBI Bookshelf does not permit automated downloads.
+        This parser will only process the books that are found in the ```raw/genereviews/books``` directory,
+        permitting partial completion.
+
+        :param limit:
+        :return:
+        """
+        c = 0
+        books_not_found = set()
+        for nbk in self.book_ids:
+            c += 1
+            nbk_id = 'GeneReviews:'+nbk
+            book_item = self.all_books.get(nbk)
+            url = '/'.join((self.rawdir, book_item['file']))
+
+            # figure out if the book is there; if so, process, otherwise skip
+            book_dir = '/'.join((self.rawdir, 'books'))
+            book_files = os.listdir(book_dir)
+            if ''.join((nbk, '.html')) not in book_files:
+                # logger.warn("No book found locally for %s; skipping", nbk)
+                books_not_found.add(nbk)
+                continue
+            logger.info("Processing %s", nbk)
+
+            page = open(url)
+            soup = BeautifulSoup(page.read())
+
+            clin_summary = soup.find('div', id=re.compile(".*Summary.sec0"))  # sec0 == clinical description
+            if clin_summary is not None:
+                p = clin_summary.find('p')
+                ptext = p.text
+                ptext = re.sub('\s+', ' ', ptext)
+
+                ul = clin_summary.find('ul')
+                if ul is not None:
+                    item_text = list()
+                    for li in ul.find_all('li'):
+                        item_text.append(re.sub('\s+', ' ', li.text))
+                    ptext += ' '.join(item_text)
+                ' '.join((ptext, '[GeneReviews:NBK138602]'))
+
+                self.gu.addDefinition(self.graph, nbk_id, ptext.strip())
+
+            # get the pubs
+            pmid_set = set()
+            pub_div = soup.find('div', id=re.compile(".*Literature_Cited"))
+            if pub_div is not None:
+                ref_list = pub_div.find_all('div', attrs={'class': "bk_ref"})
+                for r in ref_list:
+                    for a in r.find_all('a', attrs={'href': re.compile("pubmed")}):
+                        if re.match('PubMed:', a.text):
+                            pmnum = re.sub('PubMed:\s*', '', a.text)
+                        else:
+                            pmnum = re.search('\/pubmed\/(\d+)$', a['href']).group(1)
+                        if pmnum is not None:
+                            pmid = 'PMID:'+str(pmnum)
+                            self.gu.addTriple(self.graph, pmid, self.gu.object_properties['is_about'], nbk_id)
+                            pmid_set.add(pmnum)
+                            r = Reference(pmid, Reference.ref_types['journal_article'])
+                            r.addRefToGraph(self.graph)
+
+            # TODO add author history, copyright, license to dataset
+
+            # add the book to the dataset
+            self.dataset.setFileAccessUrl(book_item['url'])
+
+            if limit is not None and c > limit:
+                break
+
+            # finish looping through books
+
+        l = len(books_not_found)
+        if len(books_not_found) > 0:
+            if l > 100:
+                logger.warn("There were %d books not found.", l)
+            else:
+                logger.warn("The following %d books were not found locally: %s", l, str(books_not_found))
+        logger.info("Finished processing %d books for clinical descriptions", c-l)
 
         return
 
