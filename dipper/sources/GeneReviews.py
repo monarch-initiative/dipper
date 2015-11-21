@@ -276,7 +276,9 @@ class GeneReviews(Source):
                     for li in ul.find_all('li'):
                         item_text.append(re.sub('\s+', ' ', li.text))
                     ptext += ' '.join(item_text)
-                ' '.join((ptext, '[GeneReviews:NBK138602]'))
+
+                # add in the copyright and citation info to description
+                ptext = ' '.join((ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, '+nbk_id+']'))
 
                 self.gu.addDefinition(self.graph, nbk_id, ptext.strip())
 
