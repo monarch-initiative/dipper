@@ -228,10 +228,11 @@ class HPOAnnotations(Source):
 
                 assoc.add_evidence(eco_id)
 
-                publist = publist.split(';')
+                publist = re.split('[,;]', publist)
                 # blow these apart if there is a list of pubs
                 for pub in publist:
                     pub = pub.strip()
+                    pubtype = None
                     if pub != '':
                         # if re.match('http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
                         #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
@@ -240,13 +241,43 @@ class HPOAnnotations(Source):
                         # elif re.search('http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
                         #     m = re.search('Expert=(\d+)', pub)
                         #     pub_id = 'Orphanet:'+m.group(1)
-                        if not re.match('http', pub):
-                            r = Reference(pub)
+
+                        if re.match('(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match('PMID', pub):
-                                r.setType(Reference.ref_types['journal_article'])
+                                pubtype = Reference.ref_types['journal_article']
+                            elif re.match('HPO', pub):
+                                pubtype = Reference.ref_types['person']
+                            else:
+                                pubtype = Reference.ref_types['publication']
+                            r = Reference(pub, pubtype)
                             r.addRefToGraph(g)
+                        elif re.match('(OMIM|Orphanet|DECIPHER)', pub):
+                            # make the pubs a reference to the website, instead of the curie
+                            if re.match('OMIM', pub):
+                                omimnum = re.sub('OMIM:','', pub)
+                                omimurl = '/'.join(('http://omim.org/entry', str(omimnum)))
+                                pub = omimurl
+                            elif re.match('Orphanet:', pub):
+                                orphanetnum = re.sub('Orphanet:','', pub)
+                                orphaneturl = ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                                       str(orphanetnum)))
+                                pub = orphaneturl
+                            elif re.match('DECIPHER:', pub):
+                                deciphernum = re.sub('DECIPHER:', '', pub)
+                                decipherurl = '/'.join(('https://decipher.sanger.ac.uk/syndrome', deciphernum))
+                                pub = decipherurl
+                            pubtype = Reference.ref_types['webpage']
+                        elif re.match('http', pub):
+                            pass
+                        else:
+                            logger.error('Unknown pub type for %s: %s', disease_id, pub)
+                            print(disease_id, 'pubs:', str(publist))
+                            continue
+
+                        if pub is not None:
+                            assoc.add_source(pub)
+
                         # TODO add curator
-                        assoc.add_source(pub)
 
                 assoc.add_association_to_graph(g)
 
