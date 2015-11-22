@@ -1,7 +1,8 @@
 __author__ = 'nlw'
 
-from rdflib.namespace import DCTERMS
-from rdflib import Literal
+import re
+from rdflib.namespace import DCTERMS, DC, RDF, RDFS
+from rdflib import Literal, URIRef
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 import logging
@@ -23,21 +24,28 @@ class Reference:
         'journal_article': 'IAO:0000013',
         'publication': 'IAO:0000311',  # book
         'document': 'IAO:0000310',  # document???
-        'photograph': 'IAO:0000185'  # photograph
+        'photograph': 'IAO:0000185',  # photograph
+        'webpage': 'SIO:000302'
     }
 
 
     def __init__(self, ref_id, ref_type=None):
+        self.ref_id = None
+        self.ref_url = None
+        self.title = None
+        self.year = None
+        self.author_list = None
+        self.short_citation = None
 
         if ref_type is None:
             self.ref_type = self.ref_types['document']
         else:
             self.ref_type = ref_type
-        self.ref_id = ref_id
-        self.title = None
-        self.year = None
-        self.author_list = None
-        self.short_citation = None
+
+        if re.match('http', ref_id):
+            self.ref_url = ref_id
+        else:
+            self.ref_id = ref_id
         return
 
     def setTitle(self, title):
@@ -83,10 +91,18 @@ class Reference:
         if n is None:
             n = self.title
 
-        gu.addIndividualToGraph(g, self.ref_id, n, self.ref_type)
-
-        if self.title is not None:
-            gu.addTitle(g, self.ref_id, self.title)
+        if self.ref_url is not None:
+            ref_uri = URIRef(self.ref_url)
+            g.add((ref_uri, DC['title'], Literal(self.title)))
+            g.add((ref_uri, RDF['type'], gu.getNode(self.ref_type)))
+            g.add((ref_uri, RDFS['label'], Literal(n)))
+        elif self.ref_id is not None:
+            gu.addIndividualToGraph(g, self.ref_id, n, self.ref_type)
+            if self.title is not None:
+                gu.addTitle(g, self.ref_id, self.title)
+        else:
+            # should never be true
+            logger.error("You are missing an identifier for a reference.")
 
         # todo what is the property here to add the date?
         #if self.year is not None:
