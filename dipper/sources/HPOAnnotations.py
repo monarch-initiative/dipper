@@ -385,8 +385,10 @@ class HPOAnnotations(Source):
                  eid, evidence_name, frequency, sex_id, sex_name, negation_id, negation_name, description,
                  pub_ids, assigned_by, date_created) = row
 
-                disease_id = re.sub('DOID-(DOID:)?', 'DOID:', did)
+                disease_id = re.sub('DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub('MESH-', 'MESH:', disease_id)
+                if not re.search('(DOID\:|MESH\:\w)\d+', disease_id):
+                    logger.warn("Invalid id format: %s", disease_id)
 
                 # figure out if the doid should be unpadded, then use the unpadded version instead
                 if re.match('DOID', disease_id):
@@ -421,6 +423,9 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for p in pub_ids.split(';'):
+                            if re.search('(DOID|MESH)', p) or re.search('Disease name contained', description):
+                                # skip "pubs" that are derived from the classes themselves
+                                continue
                             assoc.add_source(p.strip())
                     # TODO assigned by?
 
