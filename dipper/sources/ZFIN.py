@@ -1996,8 +1996,8 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name, omim_id, gene_id, empty) = row
-
+                (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name, omim_id, gene_id, hgnc_id,
+                 evidence_code, pub_id, empty) = row
                 if self.testMode and zfin_id not in self.test_ids['gene']:
                     continue
 
@@ -2013,11 +2013,14 @@ class ZFIN(Source):
                 assoc = OrthologyAssoc(self.name, zfin_id, gene_id)
                 # we don't know anything about the orthology type, so we just use the default
 
-                assoc.add_association_to_graph(g)
+                if re.match('ZDB', pub_id):
+                    assoc.add_source('ZFIN:'+pub_id)
 
-                # FIXME we have requested that ZFIN add evidence codes and papers to the orthology calls
-                # TODO we can get this from zfin mine  #164
-                # (This data is in their web front-end, but not in the downloads)
+                eco_id = self.get_orthology_evidence_code(evidence_code)
+                if eco_id is not None:
+                    assoc.add_evidence(eco_id)
+
+                assoc.add_association_to_graph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -2397,6 +2400,7 @@ class ZFIN(Source):
         # SU	Similar subunit structure.
         # XH	Cross-hybridization to same molecular probe.
         # PT	Phylogenetic Tree.
+        # OT    Other
 
         eco_abbrev_map = {
             'AA': 'ECO:0000031',  # BLAST protein sequence similarity evidence
@@ -2413,6 +2417,7 @@ class ZFIN(Source):
             'SU': 'ECO:0000027',  # structural similarity evidence
             'XH': 'ECO:0000002',  # direct assay evidence  FIXME
             'PT': 'ECO:0000080',  # phylogenetic evidence
+            'OT': None,
         }
 
         if abbrev not in eco_abbrev_map:
