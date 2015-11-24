@@ -165,6 +165,30 @@ class HGNC(Source):
 
         return
 
+    def get_symbol_id_map(self):
+        """
+        A convenience method to create a mapping between the HGNC symbols and their identifiers.
+        :return:
+        """
+
+        symbol_id_map = {}
+        f = '/'.join((self.rawdir, self.files['genes']['file']))
+        with open(f, 'r', encoding="utf8") as csvfile:
+            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in filereader:
+                (hgnc_id, symbol, name, locus_group, locus_type, status, location, location_sortable,
+                 alias_symbol, alias_name, prev_symbol, prev_name, gene_family, gene_family_id,
+                 date_approved_reserved, date_symbol_changed, date_name_changed, date_modified,
+                 entrez_id, ensembl_gene_id, vega_id, ucsc_id, ena, refseq_accession, ccds_id,
+                 uniprot_ids, pubmed_id, mgd_id, rgd_id, lsdb, cosmic, omim_id, mirbase, homeodb,
+                 snornabase, bioparadigms_slc, orphanet, pseudogene_org, horde_id, merops, imgt,
+                 iuphar, kznf_gene_catalog, mamit_trnadb, cd, lncrnadb, enzyme_id,
+                 intermediate_filament_db) = row
+
+                symbol_id_map[symbol.strip()] = hgnc_id
+
+        return symbol_id_map
+
     @staticmethod
     def _get_gene_type(locus_type):
         """
