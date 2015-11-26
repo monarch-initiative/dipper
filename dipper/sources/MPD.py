@@ -242,10 +242,8 @@ class MPD(Source):
                 self.assayhash[assay_id]['assay_type'] = assay_type
                 self.assayhash[assay_id]['assay_units'] = assay_units
 
-                # TODO add project property?
+                # TODO add projectsym property?
                 # TODO add intervention?  ageweeks might be useful for adding to phenotype assoc
-
-                # TODO add the assay to the graph here?
 
             # end loop on measurement metadata
 
