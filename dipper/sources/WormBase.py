@@ -39,7 +39,7 @@ class WormBase(Source):
     we create anonymous nodes of the genotype partonomy (such as for variant single locus complements,
     genomic variation complements, variant loci, extrinsic genotypes, and extrinsic genotype parts).
 
-    TODO:  get people and other phenotype data (from wormmine)
+    TODO:  get people and gene expression
     """
 
     files = {
@@ -175,7 +175,7 @@ class WormBase(Source):
         self.process_feature_loc(limit)
         self.process_disease_association(limit)
 
-        # self.process_gene_interaction(limit)
+        # self.process_gene_interaction(limit)  # TODO add this when when complete
 
         logger.info("Finished parsing.")
 
