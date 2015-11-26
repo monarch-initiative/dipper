@@ -1225,7 +1225,6 @@ class FlyBase(Source):
                         if did == feature_id:  # don't make something sameAs itself
                             continue
                         dlabel = self.label_hash.get(did)
-                        # TODO only add equivalences for fly features; test for species
                         if re.search('FB(gn|og)', feature_id):
                             # and really we only want to add equivalences for fly things
                             if not re.match('OMIM', did):
@@ -1480,6 +1479,8 @@ class FlyBase(Source):
                         dlabel = self.label_hash.get(did)
                         gu.addIndividualToGraph(g, did, dlabel)
                         gu.addSameIndividual(g, organism_id, did)
+                        if (re.match('NCBITaxon', did)):
+                            gu.makeLeader(g, did)
                         line_counter += 1
 
                 if not self.testMode and limit is not None and line_counter > limit:
