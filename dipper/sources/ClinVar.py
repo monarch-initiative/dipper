@@ -2,6 +2,7 @@ import csv
 import re
 import gzip
 import logging
+import xml.etree.ElementTree as ET
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -106,8 +107,9 @@ class ClinVar(Source):
         if self.testOnly:
             self.testMode = True
 
-        self._get_variants(limit)
-        self._get_var_citations(limit)
+        # self._get_variants(limit)
+        # self._get_var_citations(limit)
+        self._process_xml(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -475,6 +477,217 @@ class ClinVar(Source):
             logger.warn("unmapped code %s. Defaulting to 'SO:sequence_variant'.", alleletype)
 
         return so_id
+
+    def _process_xml(self, limit):
+        """
+        :param limit:
+        :return:
+        """
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        line_counter = 0
+        geno = Genotype(g)
+        gu = GraphUtils(curie_map.get())
+
+        # myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
+
+        # for testing
+
+        myfile = '/'.join((self.rawdir, "ClinVarBrca.xml"))
+
+        for event, elem in ET.iterparse(myfile):
+            # iterate on groups of ClinVarSets
+            if elem.tag == 'ClinVarSet':  # ReleaseSet/ClinVarSet
+                # The ClinVarSet is a grouping of a reference (reviewed) assertion, and some submitter-specific
+                # versions of the variants.
+                # I don't think the set id is leveraged outside of this context.
+                # so commented out for now
+                clinvar_set_id = elem.get('ID')
+                logger.info("set=%s", clinvar_set_id)
+                print(clinvar_set_id)
+                # the set title is usually a combo variant + disease/phenotype
+                # clinvar_set_title = elem.find('Title').text
+
+                # ReleaseSet/ClinVarSet/RecordStatus  - TODO current or ??? - may be useful for deprecated records
+
+                # ref assertion counter
+                rcounter = 0
+                for refassertion in elem.findall('./ReferenceClinVarAssertion'):
+                    rcounter += 1
+                    # hopefully there's just one!
+                    if rcounter > 1:
+                        logger.warn(">1 reference assertion in set %s", clinvar_set_id)
+
+                    self._process_assertion(refassertion)
+
+                logger.info("Finished %d reference assertion(s)", rcounter)
+                # TODO some things are missing about the regular assertions
+                acounter = 0
+                for clinvarassertion in elem.findall('./ClinVarAssertion'):
+                    acounter += 1
+                    self._process_assertion(clinvarassertion)
+
+        gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
+        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+        gu.loadAllProperties(g)
+
+        return
+
+
+    def _process_assertion(self, ass):
+        """
+        Very preliminary parsing of clinvar xml.  Nothing yet added to the graph.
+        :param ass:
+        :return:
+        """
+
+        acc = ass.find('ClinVarAccession').get('Acc')  # RCV id
+        sig = ass.find('ClinicalSignificance/Description').text # Pathogenic, etc.
+
+        assoc_type = ass.find('Assertion').get('Type')
+
+        # get sample origin/taxon
+        obs = ass.find('ObservedIn')
+        origin = obs.find('Sample/Origin').text  # somatic/germline/etc
+
+        taxon_num = obs.find('Sample/Species').get('TaxononmyId')  # 9606
+        taxon_id = None
+        if taxon_num is not None and taxon_num != '':
+            taxon_id = 'NCBITaxon:'+str(taxon_num)
+
+        # TODO method
+
+        # get the evidence for the assertion
+        for d in obs.findall('ObservedData'):
+            for a in d.findall('Attribute'):
+                if a.get('Type') == 'Description':
+                    # TODO add this description to association
+                    # maybe save in description array for now?
+                    pass
+            for c in d.findall('Citation'):
+                # what is citation type?  "general"
+                cidelem = c.find('ID')
+                if cidelem is not None:
+                    csource = cidelem.get('Source')
+                    cid = cidelem.text
+                    if csource == 'PubMed':
+                        cid = 'PMID:'+cid.strip()
+                    else:
+                        cid = None
+                        logger.warn("Not sure what to do with citation from source '%s'", csource)
+                curl = c.find('URL')
+                if curl is not None:
+                    # create URI to citation
+                    pass
+
+        measure_set = ass.find('MeasureSet')
+
+        for m in measure_set.findall('./Measure'):
+            fname = None
+            # TODO check if preferred
+            # each measure - get the variants
+            ev = m.find('./Name/ElementValue')
+            if ev is not None:
+                fname = ev.text
+                print(fname)
+
+            cloc = m.find('./CytogeneticLocation')
+            if cloc is not None:
+                chrband = cloc.text
+
+            # get the sequence info
+            seqinfo = m.find('SequenceLocation')
+            if seqinfo is not None:
+                assembly = seqinfo.get('Assembly')  # hg19?
+                chrom = seqinfo.get('Chr')
+                chr_id = 'CHR:'+assembly+chrom  # TODO make the chr
+                start = seqinfo.get('display_start')
+                stop = seqinfo.get('display_stop')
+                # TODO deal with inner start/stop?
+
+                # TODO add a seqfeature with this info
+                # seqfeature = Feature(fid, fname, ftype)  # TODO
+                # seqfeature.addFeatureStartLocation(start, chr_id)
+                # seqfeature.addFeatureEndLocation(stop, chr_id)
+                # seqfeature.addTaxonToFeature(self.graph, taxon_id)
+                # seqfeature.addFeatureToGraph(self.graph)
+
+            rel = m.find('MeasureRelationship')
+            if rel is not None and rel.get('Type') == 'variant in gene':
+                # create a variant feature
+                gene_symbol = rel.find('Symbol/ElementValue').text
+                gene_id = None
+                for xref in rel.findall('./XRef'):
+                    print(ET.tostring(xref, 'utf-8'))
+                    # TODO move the xref into it's own method
+                    if xref.get('DB') == 'Gene':
+                        gene_num = xref.get('ID')
+                        gene_id = 'NCBIGene:'+gene_num
+                if gene_id is None:
+                    logger.warn("No NCBIGene identifier found for %s", fname)
+                    # FIXME have a fallback method
+                else:
+                    print(gene_id)
+
+                com = rel.find('./Comment')
+                if com is not None:
+                    comment = com.text
+                    # TODO datasource for comment rel.find('Comment').get('DataSource')
+
+            # TODO move the traitset into it's own method? <----- you are here
+
+            traitset = ass.find('./TraitSet')
+            traitset_type = traitset.get('Type')  # Finding, etc.  might indicate the kind of association
+            tid = None
+            dbset = set()
+            for trait in traitset.findall('./Trait'):
+                for xref in trait.findall('./XRef'):
+                    if xref.get('DB') == 'HP':
+                        tid = xref.get('ID')  # in the form HP:xxxxxxx
+                        logger.warn("found %s", tid)
+                    else:
+                        dbset.add(xref.get('DB'))
+            if tid is None:
+                logger.error("No HP id found. Found some other dbs (%s) instead.", ', '.join(dbset))
+
+        # get the attributes of the Measure, ex MolecularConsequence
+        # MeasureSet Type==Variant
+
+        #          <AttributeSet>
+        #     <Attribute Type="MolecularConsequence">frameshift variant</Attribute>
+        #     <XRef DB="Sequence Ontology" ID="SO:0001589"/>
+        #     <XRef DB="RefSeq" ID="NM_000059.3:c.5454delA"/>
+        #   </AttributeSet>
+
+        # also need to deal with Haploinsufficiency, and Triplosensitivity
+
+
+        return
+
+    def _get_release_date_from_xml(self, myfile):
+        """
+        Simply pass through the xml once to get the date of the release.  Use this for versioning the data.
+        Status: UNTESTED
+        :param myfile:
+        :return:
+        """
+
+        # ReleaseSet @Dated
+        for event, elem in ET.iterparse(myfile):
+            if elem.tag == 'ReleaseSet':
+
+                # this is in the format like YYYY-MM-DD.
+                release_set_date = elem.get('Dated')
+
+                # TODO set version by date
+                # self.dataset.set_version_by_date(release_set_date)
+
+                elem.clear()  # discard the element
+
+        return
 
     def getTestSuite(self):
         import unittest
