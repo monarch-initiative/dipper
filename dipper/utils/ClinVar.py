@@ -132,6 +132,7 @@ class clinVarAssertion:
         self.id = element.get("ID")
         if debug:
             print("Parsing ClinVarAssertion", self.id)
+        self.dateSubmitted = element.get("submitterDate")
         cvsd = element.find("ClinVarSubmissionID")
         if cvsd == None:
             self.submitter = None
@@ -154,8 +155,10 @@ class clinVarAssertion:
                 self.method = textIfPresent(method, "MethodType")
         self.clinicalSignificance = None
         self.reviewStatus = None
+        self.dateLastUpdated = None
         cs = element.find("ClinicalSignificance")
         if cs != None:
+            self.dateLastUpdated = cs.get("DateLastEvaluated")
             self.clinicalSignificance = textIfPresent(cs, "Description")
             self.reviewStatus = textIfPresent(cs, "ReviewStatus")
                  
