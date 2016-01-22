@@ -137,7 +137,7 @@ class clinVarAssertion:
             self.submitter = None
             self.dateSubmitted = None
         else:
-            self.submitter = cvsd.get("submitter", default=None).encode('utf-8')
+            self.submitter = cvsd.get("submitter", default=None)
             self.dateSubmitted = cvsd.get("submitterDate")
         cva = element.find("ClinVarAccession")
         if cva == None:
