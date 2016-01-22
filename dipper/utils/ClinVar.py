@@ -132,12 +132,13 @@ class clinVarAssertion:
         self.id = element.get("ID")
         if debug:
             print("Parsing ClinVarAssertion", self.id)
-        self.dateSubmitted = element.get("submitterDate")
         cvsd = element.find("ClinVarSubmissionID")
         if cvsd == None:
             self.submitter = None
+            self.dateSubmitted = None
         else:
             self.submitter = cvsd.get("submitter", default=None).encode('utf-8')
+            self.dateSubmitted = cvsd.get("submitterDate")
         cva = element.find("ClinVarAccession")
         if cva == None:
             self.accession = None
