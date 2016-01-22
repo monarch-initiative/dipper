@@ -24,17 +24,26 @@ def textIfPresent(element, field):
 
 class genomicCoordinates:
     """Contains the genomic information on the variant"""
-    
+
     def __init__(self, element, useNone=False, debug=False):
         if debug:
             print("Parsing genomic coordinates")
-        self.element = element
-        self.chrom = element.get("Chr")
-        self.start = element.get("start")
-        self.stop = element.get("stop")
-        self.length = element.get("variantLength")
-        self.referenceAllele = element.get("referenceAllele")
-        self.alternateAllele = element.get("alternateAllele")
+        if useNone:
+            self.element = None
+            self.chrom = None
+            self.start = None
+            self.stop = None
+            self.length = None
+            self.referenceAllele = None
+            self.alternateAllele = None
+        else:
+            self.element = element
+            self.chrom = element.get("Chr")
+            self.start = element.get("start")
+            self.stop = element.get("stop")
+            self.length = element.get("variantLength")
+            self.referenceAllele = element.get("referenceAllele")
+            self.alternateAllele = element.get("alternateAllele")
 
 
 
