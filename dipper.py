@@ -113,8 +113,8 @@ def main():
 
             # import source lib
             module = "dipper.sources.{0}".format(mysource)
-            cls = importlib.import_module(module)
-            source_class = getattr(cls, mysource)
+            imported_module = importlib.import_module(module)
+            source_class = getattr(imported_module, mysource)
 
             test_query.check_query_syntax(args.query, source_class)
             test_query.load_graph_from_turtle(source_class)
@@ -146,8 +146,8 @@ def main():
 
         # import source lib
         module = "dipper.sources.{0}".format(src)
-        cls = importlib.import_module(module)
-        source_class = getattr(cls, src)
+        imported_module = importlib.import_module(module)
+        source_class = getattr(imported_module, src)
         mysource = None
         if source_class in taxa_supported:
             mysource = source_class(tax_ids)
