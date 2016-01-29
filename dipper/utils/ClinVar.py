@@ -113,6 +113,9 @@ class referenceAssertion:
         self.variant = None
         measureSet = element.find("MeasureSet")
         #if measureSet.get("Type") == "Variant":
+        if debug:
+            if len(measureSet.findall("Measure")) > 1:
+                print(self.id, "has multiple measures")
         if len(measureSet.findall("Measure")) == 1:
             name = measureSet.find("Name")
             if name == None:
