@@ -1,4 +1,3 @@
-#import psycopg2
 
 __author__ = 'nicole'
 

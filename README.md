@@ -50,8 +50,13 @@ Note, Dipper imports source modules dynamically at runtime.  As a result it is p
 of requirements and add source specific dependencies as needed.  Presently this only implemented with pip requirements
 files. For example to build dependencies for MGI:
 
-        pip3 install -r requirements/core.txt
+        pip3 install -r requirements.txt
         pip3 install -r requirements/mgi.txt
+
+To install dependencies for all sources:
+
+        pip3 install -r requirements.txt
+        pip3 install -r requirements/all-sources.txt
     
 If you encounter any errors installing these packages using Homebrew, it could be due to [a curent known issue in upgrading to  pip3](https://github.com/Homebrew/homebrew/issues/25752). In this case, first force reinstall pip2 (````pip2 install --upgrade --force-reinstall pip````) and then install the package using pip3 (eg. ````pip3 install psycopg2````.)
 

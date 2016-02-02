@@ -1,6 +1,0 @@
-rdflib
-isodate
-roman
-python-docx
-pyyaml
-biopython
