@@ -2,8 +2,6 @@ import csv
 import re
 import logging
 import io
-import math
-import zipfile
 from zipfile import ZipFile
 from dipper.models.Provenance import Provenance
 

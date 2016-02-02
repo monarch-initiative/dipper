@@ -6,7 +6,7 @@ setup(name='Dipper',
       version='0.0.1',
       description='Data Ingest Pipeline',
       packages=find_packages(),
-      install_requires=['psycopg2', 'rdflib', 'isodate', 'roman', 'python-docx', 'pyyaml', 'pysftp', 'biopython',
-                        'docx', 'beautifulsoup4', 'GitPython', 'intermine'],
+      install_requires=['psycopg2', 'rdflib', 'isodate', 'roman', 'python-docx', 'pyyaml', 'pysftp',
+                        'beautifulsoup4', 'GitPython', 'intermine'],
       include_package_data=True
       )

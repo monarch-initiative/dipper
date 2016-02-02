@@ -5,8 +5,6 @@ roman
 python-docx
 pyyaml
 pysftp
-biopython
-docx
 beautifulsoup4
 GitPython
 intermine
