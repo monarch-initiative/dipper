@@ -14,6 +14,7 @@ from dipper.models.Environment import Environment
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.DipperUtil import DipperUtil
+from dipper import config
 
 
 logger = logging.getLogger(__name__)
@@ -65,19 +66,21 @@ class FlyBase(Source):
     }
 
     test_keys = {
-        'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915],
-        'gene': [23220066, 10344219, 58107328, 3132660, 23193483],
-        'annot': [],
-        'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696],
-        'pub': [],
-        'strain': [],
-        'notes': []
-
+        'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915,
+                   11397966, 53333044, 23189969, 3206803, 29677937, 29677934],
+        'gene': [23220066, 10344219, 58107328, 3132660, 23193483, 3118401],
+        'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885],
+        'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696, 328131, 328132, 328134, 328136,
+                     381024, 267411],
+        'pub': [359867, 327373, 153054, 153620, 370777],
+        'strain': [8117, ],
+        'notes': [],
+        'organism': [1, 226, 456]
     }
-
 
     def __init__(self):
         Source.__init__(self, 'flybase')
+        logger.setLevel(logging.INFO)
         self.version_num = None   # to be used to store the version number to be acquired later
 
         self.namespaces.update(curie_map.get())
@@ -105,6 +108,15 @@ class FlyBase(Source):
         self.phenocv = {}  # mappings between internal phenotype db key and multiple cv terms
         self.feature_to_organism_hash = {}   # keep this mapping so we can track fly things to be leaders
         self.checked_organisms = set()  # when we verify a tax id in eutils
+        self.deprecated_features = set()
+
+        # check to see if there's any ids configured in the config; otherwise, warn
+        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+            logger.warn("not configured with disease test ids.")
+            self.test_ids = None
+        else:
+            # select ony those test ids that are omim's.
+            self.test_ids = config.get_config()['test_ids']
 
         return
 
@@ -239,7 +251,7 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and not genotype_num in self.test_keys['genotype']:
+                    if self.testMode and int(genotype_num) not in self.test_keys['genotype']:
                         continue
 
                     gu.addIndividualToGraph(g, genotype_id, uniquename, Genotype.genoparts['intrinsic_genotype'],
@@ -290,7 +302,7 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and not stock_num in self.test_keys['strain']:
+                    if self.testMode and int(stock_num) not in self.test_keys['strain']:
                         continue
 
                     tax_label = self.label_hash[taxon]
@@ -349,7 +361,7 @@ class FlyBase(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and not pub_num in self.test_keys['pub']:
+                    if self.testMode and int(pub_num) not in self.test_keys['pub']:
                         continue
 
                     if is_obsolete == 't':
@@ -451,7 +463,17 @@ class FlyBase(Source):
                     self.feature_to_organism_hash[feature_key] = set()
                 self.feature_to_organism_hash[feature_key].add(organism_id)
 
-                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                # HACK - FBgn are genes, and therefore classes, all else be individuals
+                is_gene = False
+                if re.search('(FBgn|FBog)', feature_id):
+                    is_gene = True
+
+                if is_gene:
+                    self.idhash['gene'][feature_key] = feature_id
+                elif re.search('FBa[lb]', feature_id):
+                    self.idhash['allele'][feature_key] = feature_id
+
+                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
                     continue
 
                 # now do something with it!
@@ -470,17 +492,16 @@ class FlyBase(Source):
                     'SO:0000234',  # transcripts
                     ]
 
-                # FIXME should we skip introns/exons?
                 type_keys_to_skip = [
                     596,  # pcr_product
-                    57096,
-                    57097,
-                    57270,
-                    58210,
-                    59643,
-                    60006,
-                    61351,
-                    61467,
+                    57096,  # mature peptide
+                    57097,  # signal_peptide
+                    57270,  # repeat masker
+                    58210,  # alignment
+                    59643,  # cDNA_clone
+                    60006,  # uncharacterized_change_in_nucleotide_sequence
+                    61351,  # oligo
+                    61467,  # polypeptide_domain
                     257,  # exon
                     286,  # intron
                 ]
@@ -495,6 +516,10 @@ class FlyBase(Source):
 
                 line_counter += 1
 
+                if type_key == 604:  # RNAi_reagent
+                    # TODO add other reagents?
+                    self.idhash['reagent'][feature_key] = feature_id
+
                 # deal with the taxonomy - only get taxa for features that are actually used in our set
                 tax_internal_id = self._makeInternalIdentifier('organism', organism_id)
                 if organism_id not in self.checked_organisms:
@@ -504,24 +529,10 @@ class FlyBase(Source):
                     tax_id = self.idhash['organism'][organism_id]
 
                 tax_label = self.label_hash.get(tax_id)
-
-                # HACK - FBgn are genes, and therefore classes, all else be individuals
-                is_gene = False
-                if re.search('(FBgn|FBog)', feature_id):
-                    is_gene = True
-
-                if is_gene:
-                    self.idhash['gene'][feature_key] = feature_id
-                elif re.search('FBa[lb]', feature_id):
-                    self.idhash['allele'][feature_key] = feature_id
-
                 if not re.search('FBog', feature_id) and re.search('Drosophila', tax_label):
                     # make only fly things leaders
                     gu.makeLeader(g, feature_id)
 
-                if type_key == 604:  # RNAi_reagent
-                    # TODO add other reagents?
-                    self.idhash['reagent'][feature_key] = feature_id
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
@@ -529,6 +540,8 @@ class FlyBase(Source):
                     if is_gene:
                         gu.addClassToGraph(g, feature_id, name, type_id)
                     else:
+                        if re.search('FBa[lb]', feature_id):
+                            type_id = Genotype.genoparts['allele']
                         gu.addIndividualToGraph(g, feature_id, name, type_id)
 
                     if is_obsolete == 't':
@@ -536,6 +549,7 @@ class FlyBase(Source):
                             gu.addDeprecatedClass(g, feature_id)
                         else:
                             gu.addDeprecatedIndividual(g, feature_id)
+                        self.deprecated_features.add(feature_key)
 
                     gu.addClassToGraph(g, tax_id, tax_label)
                     if tax_id != tax_internal_id:
@@ -544,6 +558,8 @@ class FlyBase(Source):
                     gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
                     # TODO for debugging only?  or keep?
                     gu.addComment(g, feature_id, self._makeInternalIdentifier('feature', feature_key))
+
+            # TODO save checked_organisms fbid to ncbitax mapping to a local file to speed up subsequent searches
 
         return
 
@@ -567,13 +583,12 @@ class FlyBase(Source):
                 (feature_genotype_id, feature_id, genotype_id, chromosome_id, rank, cgroup, cvterm_id) = line
                 # 1	23273518	2	23159230	0	0	60468
 
-
                 feature_key = feature_id
                 feature_id = self.idhash['feature'][feature_key]
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
                     continue
 
                 # what is cvterm_id for in this context???
@@ -627,9 +642,8 @@ class FlyBase(Source):
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
 
-                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                if self.testMode and int(genotype_key) not in self.test_keys['genotype']:
                     continue
-
 
                 # TODO type id ==> ECO???
 
@@ -676,7 +690,7 @@ class FlyBase(Source):
                 # 2       3160606 99159
 
                 feature_key = feature_id
-                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
                     continue
                 if feature_key not in self.idhash['feature']:
                     continue
@@ -723,7 +737,7 @@ class FlyBase(Source):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                if self.testMode and int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
                 gu.addTriple(g, stock_id, geno.object_properties['has_genotype'], genotype_id)
@@ -763,7 +777,7 @@ class FlyBase(Source):
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
 
-                if self.testMode and not pub_key in self.test_keys['pub']:
+                if self.testMode and int(pub_key) not in self.test_keys['pub']:
                     continue
 
                 # get any dbxrefs for pubs, including pmids and dois
@@ -799,7 +813,11 @@ class FlyBase(Source):
 
     def _process_dbxref(self):
         """
-        We bring in the dbxref identifiers and store them in a hashmap for lookup in other functions
+        We bring in the dbxref identifiers and store them in a hashmap for lookup in other functions.
+        Note that some dbxrefs aren't mapped to identifiers.  For example,
+        5004018 is mapped to a string, "endosome & imaginal disc epithelial cell | somatic clone..."
+        In those cases, there just isn't a dbxref that's used when referencing with a cvterm; it'll just
+        use the internal key.
 
         :return:
         """
@@ -816,61 +834,62 @@ class FlyBase(Source):
                 # dbxref_id	db_id	accession	version	description	url
                 # 1	2	SO:0000000	""
 
-                db_ids = {50: 'PMID',  # pubmed
-                          68: 'RO',  # obo-rel
-                          71: 'FBdv',  # FBdv
-                          74: 'FBbt',  # FBbt
-                          # 28:,  # genbank
-                          30: 'OMIM',  # MIM
-                          # 38,  # ncbi
-                          75: 'ISBN',  # ISBN
-                          46: 'PMID',  # PUBMED
-                          51: 'ISBN',  # isbn
-                          52: 'SO',  # so
-                          # 76,  # http
-                          77: 'PMID',  # PMID
-                          80: 'FBcv',  # FBcv
-                          # 95,  # MEDLINE
-                          98: 'REACT',  # Reactome
-                          103: 'CHEBI',  # Chebi
-                          102: 'MESH',  # MeSH
-                          106: 'OMIM',  # OMIM
-                          105: 'KEGG-path',  # KEGG pathway
-                          107: 'DOI',  # doi
-                          108: 'CL',  # CL
-                          114: 'CHEBI',  # CHEBI
-                          115: 'KEGG',  # KEGG
-                          116: 'PubChem',  # PubChem
-                          # 120, # MA???
-                          3: 'GO',   # GO
-                          4: 'FlyBase',   # FlyBase
-                          # 126, # URL
-                          128: 'PATO',  # PATO
-                          # 131, # IMG
-                          2: 'SO',  # SO
-                          136: 'MESH',  # MESH
-                          139: 'CARO',  # CARO
-                          140: 'NCBITaxon',  # NCBITaxon
-                          # 151, # MP  ???
-                          161: 'DOI', # doi
-                          36: 'BDGP',  # BDGP
-                          # 55,  # DGRC
-                          # 54,  # DRSC
-                          # 169,  # Transgenic RNAi project???
-                          231: 'RO',  # RO ???
-                          180: 'NCBIGene',  # entrezgene
-                          # 192, # Bloomington stock center
-                          197: 'UBERON',  # Uberon
-                          212: 'ENSEMBL',  # Ensembl
-                          # 129, # GenomeRNAi
-                          275: 'PMID',  # PubMed
-                          286: 'PMID',  # pmid
-                          264: 'HGNC',
-#                          265: 'OMIM',  # OMIM_Gene
-                          266: 'OMIM',  # OMIM_Phenotype
-                          300: 'DOID',  # DOID
-                          302: 'MESH',  # MSH
-                          347: 'PMID',  # Pubmed
+                db_ids = {
+                    50: 'PMID',  # pubmed
+                    68: 'RO',  # obo-rel
+                    71: 'FBdv',  # FBdv
+                    74: 'FBbt',  # FBbt
+                    # 28:,  # genbank
+                    30: 'OMIM',  # MIM
+                    # 38,  # ncbi
+                    75: 'ISBN',  # ISBN
+                    46: 'PMID',  # PUBMED
+                    51: 'ISBN',  # isbn
+                    52: 'SO',  # so
+                    # 76,  # http
+                    77: 'PMID',  # PMID
+                    80: 'FBcv',  # FBcv
+                    # 95,  # MEDLINE
+                    98: 'REACT',  # Reactome
+                    103: 'CHEBI',  # Chebi
+                    102: 'MESH',  # MeSH
+                    106: 'OMIM',  # OMIM
+                    105: 'KEGG-path',  # KEGG pathway
+                    107: 'DOI',  # doi
+                    108: 'CL',  # CL
+                    114: 'CHEBI',  # CHEBI
+                    115: 'KEGG',  # KEGG
+                    116: 'PubChem',  # PubChem
+                    # 120, # MA???
+                    3: 'GO',  # GO
+                    4: 'FlyBase',  # FlyBase
+                    # 126, # URL
+                    128: 'PATO',  # PATO
+                    # 131, # IMG
+                    2: 'SO',  # SO
+                    136: 'MESH',  # MESH
+                    139: 'CARO',  # CARO
+                    140: 'NCBITaxon',  # NCBITaxon
+                    # 151, # MP  ???
+                    161: 'DOI',  # doi
+                    36: 'BDGP',  # BDGP
+                    # 55,  # DGRC
+                    # 54,  # DRSC
+                    # 169,  # Transgenic RNAi project???
+                    231: 'RO',  # RO ???
+                    180: 'NCBIGene',  # entrezgene
+                    # 192, # Bloomington stock center
+                    197: 'UBERON',  # Uberon
+                    212: 'ENSEMBL',  # Ensembl
+                    # 129, # GenomeRNAi
+                    275: 'PMID',  # PubMed
+                    286: 'PMID',  # pmid
+                    264: 'HGNC',
+                    # 265: 'OMIM',  # OMIM_Gene
+                    266: 'OMIM',  # OMIM_Phenotype
+                    300: 'DOID',  # DOID
+                    302: 'MESH',  # MSH
+                    347: 'PMID',  # Pubmed
                 }  # the databases to fetch
 
                 if accession.strip() != '' and int(db_id) in db_ids:
@@ -913,6 +932,11 @@ class FlyBase(Source):
         we convert the phenotype into a uberpheno-style identifier, simply based on
         the anatomical part that's affected...that is listed as the observable_id,
         concatenated with the literal "PHENOTYPE"
+
+        Note that some of the phenotypes no not have a dbxref to a FBcv; for these cases it will make
+        a node with an anonymous node with an internal id like,  "_fbcvtermkey100920PHENOTYPE".  This is
+        awkward, but not sure how else to construct identifiers. Maybe they should be fed back into
+        Upheno and then leveraged by FB?
 
         Note that assay_id is the same for all current items, so we do nothing with this.
         :param limit:
@@ -1016,7 +1040,7 @@ class FlyBase(Source):
                 phenstatement_id = self._makeInternalIdentifier('phenstatement', phenstatement_key)
                 genotype_key = genotype_id
 
-                if self.testMode and not genotype_key in self.test_keys['genotype']:
+                if self.testMode and int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
                 genotype_id = self.idhash['genotype'][genotype_key]
@@ -1206,7 +1230,7 @@ class FlyBase(Source):
 
                 feature_key = feature_id
 
-                if self.testMode and not feature_key in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
                     continue
 
                 if feature_key not in self.idhash['feature']:
@@ -1244,7 +1268,6 @@ class FlyBase(Source):
 
         return
 
-
     def _process_feature_relationship(self, limit):
         if self.testMode:
             g = self.testgraph
@@ -1269,8 +1292,8 @@ class FlyBase(Source):
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
 
-                if self.testMode and not subject_id in self.test_keys['gene']+self.test_keys['allele']\
-                        and not object_id in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(subject_id) not in self.test_keys['gene']+self.test_keys['allele']\
+                        and int(object_id) not in self.test_keys['gene']+self.test_keys['allele']:
                     continue
 
                 if int(type_id) in [60384, 60410, 60409, 60413, 60414, 60401, 60399,
@@ -1315,16 +1338,14 @@ class FlyBase(Source):
                     elif subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
-                    if allele_id is not None and gene_id is not None:
+                    if allele_id is not None and gene_id is not None and gene_id not in self.deprecated_features:
                         geno.addAlleleOfGene(allele_id, gene_id)
                     elif reagent_id is not None and gene_id is not None:
                         reagent_label = self.label_hash[reagent_id]
                         geno.addGeneTargetingReagent(reagent_id, reagent_label, None, gene_id)
                         geno.addReagentTargetedGene(reagent_id, gene_id)
                     elif allele_id is not None and ti_id is not None:
-                        # FIXME NOT SURE IF THIS IS RIGHT
-                        # really i think what we want to do here is to associate the allele directly with
-                        # the genotype, instead of the FBti...need to make a hashmap for looking up later
+                        # the FBti == transgenic insertion, which is basically the sequence alteration
                         geno.addParts(allele_id, ti_id, geno.object_properties['has_alternate_part'])
 
                 elif int(type_id) == 129784:  # deriv_tp_assoc_allele
@@ -1422,6 +1443,7 @@ class FlyBase(Source):
 
     def _get_organism_id(self, organism_key):
         organism_id = None
+        tax_num = None
         if organism_key in self.idhash['organism']:
             organism_id = self.idhash['organism'][organism_key]
 
@@ -1430,7 +1452,7 @@ class FlyBase(Source):
                 # NCBITaxon is not available in the dbxref or cvterm tables.
                 # so we look them up using NCBI eutils services
                 tax_label = self.label_hash[organism_id]
-                tax_num = DipperUtil.get_ncbi_taxon_num_by_label(tax_label)
+                tax_num = DipperUtil.get_ncbi_taxon_num_by_label(tax_label)  # FIXME comment this out to speed things up
                 if tax_num is not None:
                     organism_id = ':'.join(('NCBITaxon', tax_num))
                     self.idhash['organism'][organism_key] = organism_id
@@ -1464,6 +1486,9 @@ class FlyBase(Source):
 
                 (organism_dbxref_id, organism_id, dbxref_id) = line
 
+                if self.testMode and int(organism_id) not in self.test_keys['organism']:
+                    continue
+
                 organism_key = organism_id
                 if organism_key not in self.idhash['organism']:
                     continue
@@ -1479,7 +1504,7 @@ class FlyBase(Source):
                         dlabel = self.label_hash.get(did)
                         gu.addIndividualToGraph(g, did, dlabel)
                         gu.addSameIndividual(g, organism_id, did)
-                        if (re.match('NCBITaxon', did)):
+                        if re.match('NCBITaxon', did):
                             gu.makeLeader(g, did)
                         line_counter += 1
 
@@ -1487,7 +1512,6 @@ class FlyBase(Source):
                     break
 
         return
-
 
     def _process_disease_models(self, limit):
 
@@ -1510,7 +1534,7 @@ class FlyBase(Source):
                 (allele_id, allele_symbol, qualifier, doid_label, doid_id, evidence_or_interacting_allele, pub_id) = line
                 line_counter += 1
 
-                if self.testMode and allele_id not in self.test_keys['allele']:
+                if self.testMode and self.test_ids['disease'] is not None and doid_id not in self.test_ids['disease']:
                     continue
 
                 rel = None
@@ -1583,7 +1607,7 @@ class FlyBase(Source):
         """
         iid = '_fb'+prefix+'key'+key
         if self.nobnodes:
-            iid = ':'+ iid
+            iid = ':' + iid
 
         return iid
 
