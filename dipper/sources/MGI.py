@@ -146,11 +146,12 @@ class MGI(Source):
         # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
         # fly
         self.idhash = {'allele': {}, 'marker': {}, 'publication': {}, 'strain': {},
-                       'genotype': {}, 'annot': {}, 'notes': {}}
+                       'genotype': {}, 'annot': {}, 'notes': {}, 'seqalt': {}}
         self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
 
         self.label_hash = {}  # use this to store internally generated labels for various features
         self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
+        self.strain_to_genotype_map = {}
 
         self.wildtype_alleles = set()
 
@@ -227,6 +228,7 @@ class MGI(Source):
 
         # The following will use the hash populated above to lookup the ids when filling in the graph
         self._process_prb_strain_view(limit)
+        # self._process_prb_strain_genotype_view(limit)
         self._process_gxd_genotype_view(limit)
         self._process_mrk_marker_view(limit)
         self._process_mrk_acc_view_for_equiv(limit)
@@ -346,9 +348,7 @@ class MGI(Source):
                     if strain_id is None:
                         # some of the strains don't have public identifiers!
                         # so we make one up, and add it to the hash
-                        strain_id = self._makeInternalIdentifier('strain', strain_key)
-                        if self.nobnodes:
-                            strain_id = ':' + strain_id
+                        strain_id = self._makeInternalIdentifier('strain', strain_key, self.nobnodes)
                         self.idhash['strain'].update({strain_key: strain_id})
                         gu.addComment(g, strain_id, "strain_key:"+strain_key)
                     elif int(strain_key) < 0:
@@ -362,11 +362,12 @@ class MGI(Source):
                         background_type = geno.genoparts['unspecified_genomic_background']
 
                     # add it back to the idhash
-                    logger.warn("adding background as internal id: %s %s: %s", strain_key, strain, strain_id)
+                    logger.info("adding background as internal id: %s %s: %s", strain_key, strain, strain_id)
 
-                self.label_hash[strain_id] = strain
 
                 geno.addGenomicBackgroundToGenotype(strain_id, mgiid, background_type)
+
+                self.label_hash[strain_id] = strain
 
                 # add this to a hash lookup so we can build the genotype label later
                 self.geno_bkgd[mgiid] = strain_id
@@ -565,11 +566,7 @@ class MGI(Source):
                         logger.error("what to do! can't find marker_id. skipping %s %s", marker_key, symbol)
                         continue
 
-                strain_id = self.idhash['strain'].get(strain_key)
-                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
-                if self.nobnodes:
-                    # in test mode, we want to make these identified nodes
-                    iseqalt_id = ':'+iseqalt_id
+                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key, self.nobnodes)
 
                 # for non-wild type alleles:
                 if iswildtype == '0':
@@ -588,12 +585,15 @@ class MGI(Source):
                 gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
                 gu.makeLeader(g, allele_id)
                 self.label_hash[allele_id] = symbol
+                self.idhash['seqalt'][allele_key] = iseqalt_id
 
                 # HACK - if the label of the allele == marker, then make the thing a seq alt
                 allele_label = self.label_hash.get(allele_id)
                 marker_label = self.label_hash.get(marker_id)
                 if allele_label is not None and allele_label == marker_label:
                     gu.addSameIndividual(g, allele_id, marker_id)
+                    self.idhash['seqalt'][allele_key] = allele_id
+                    gu.addComment(g, allele_id, self._makeInternalIdentifier('allele', allele_key))
                 elif marker_id is not None:
                     # marker_id will be none if the allele is not linked to a marker (as in, it's not mapped to a locus)
                     geno.addAlleleOfGene(allele_id, marker_id, locus_rel)
@@ -604,7 +604,7 @@ class MGI(Source):
                     sa_label = symbol
                     sa_id = iseqalt_id
 
-                    if marker_key is not None and marker_key != '':
+                    if marker_key is not None and allele_label != marker_label and marker_key != '':
                         # sequence alteration has label reformatted(symbol)
                         if re.match(".*<.*>.*", symbol):
                             sa_label = re.sub(".*<", "<", symbol)
@@ -624,7 +624,10 @@ class MGI(Source):
                     # gu.addIndividualToGraph(g,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id, sa_label, None, name)
                     self.label_hash[sa_id] = sa_label
-                    if strain_id is not None:
+
+                    strain_id = self.idhash['strain'].get(strain_key)
+                    # scrub out if the strain is "not specified"
+                    if strain_id is not None and strain_id not in ['MGI:4867032','MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -686,10 +689,7 @@ class MGI(Source):
 
                 # Need to map the allelestate to a zygosity term
                 zygosity_id = self._map_zygosity(allelestate)
-                ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key)
-                if self.nobnodes:
-                    # make this a real id in test mode
-                    ivslc_id = ':'+ivslc_id
+                ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key, self.nobnodes)
 
                 geno_hash[genotype_id].add(ivslc_id)
                 # TODO: VSLC label likely needs processing similar to the processing in the all_allele_view
@@ -781,7 +781,7 @@ class MGI(Source):
     def _process_all_allele_mutation_view(self, limit):
         """
         This fetches the mutation type for the alleles, and maps them to the sequence alteration.
-        Note that we create a BNode for the sequence alteration because it isn't publically identified.
+        Note that we create a BNode for the sequence alteration because it isn't publicly identified.
         <sequence alteration id> a <SO:mutation_type>
 
         :param limit:
@@ -803,16 +803,24 @@ class MGI(Source):
                 line_counter += 1
 
                 (allele_key, mutation_key, creation_date, modification_date, mutation) = line.split('\t')
-                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
+                iseqalt_id = self.idhash['seqalt'].get(allele_key)
+                if iseqalt_id is None:
+                    iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key, self.nobnodes)
 
                 if self.nobnodes is True:
                     if self.testMode and int(allele_key) not in self.test_keys.get('allele'):
                         continue
-                    iseqalt_id = ':'+iseqalt_id
 
                 # TODO we might need to map the seq alteration to the MGI id for unlocated things; need to use hashmap
                 # map the sequence_alteration_type
                 seq_alt_type_id = self._map_seq_alt_type(mutation)
+                # HACK - if the seq alteration is a transgene, then make sure it is a transgenic insertion
+                allele_id = self.idhash['allele'].get(allele_key)
+                if allele_id is not None:
+                    allele_label = self.label_hash.get(allele_id)
+                    if allele_label is not None and re.search('Tg\(', allele_label):
+                        logger.info("Found a transgenic insertion for %s", allele_label)
+                        seq_alt_type_id = 'SO:0001218'  # transgenic_insertion, instead of plain old insertion
 
                 gu.addIndividualToGraph(g, iseqalt_id, None, seq_alt_type_id)
 
@@ -902,6 +910,7 @@ class MGI(Source):
                     term_id = self._map_marker_category(str(term_key))
                     # note that the accid here is an internal mouse cv term, and we don't use it.
                     if term_id is not None and marker_id is not None:
+                        # do something special for transgenics - make sure these are transgenic insertions
                         gu.addType(g, marker_id, term_id)
                 elif annot_type_key == '1012':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
@@ -1095,7 +1104,7 @@ class MGI(Source):
     def _process_prb_strain_view(self, limit):
         """
         Process a table to get strains (with internal ids), and their labels.
-        These strains are created as instances of intrinsic_genotype.
+        These strains are created as instances of the species that they are.
         Triples:
             <strain id> a GENO:intrinsic_genotype
                 rdf:label "strain label"
@@ -1679,8 +1688,11 @@ class MGI(Source):
 
                 gene_id = 'NCBIGene:'+gene_num
 
-                geno.addParts(gene_id, allele_id, geno.object_properties['has_alternate_part'])
-                geno.addSequenceDerivesFrom(allele_id, gene_id)
+                # geno.addParts(gene_id, allele_id, geno.object_properties['has_alternate_part'])
+                seqalt_id = self.idhash['seqalt'].get(allele_key)
+                if seqalt_id is None:
+                    seqalt_id = allele_id
+                geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1776,11 +1788,19 @@ class MGI(Source):
                  creation_date, modification_date, strain, description, mgiid, qualifier, modifiedby) = line
 
                 if self.testMode is True:
-                    if int(genotype_key) not in self.test_keys.get('genotype'):
+                    if int(genotype_key) not in self.test_keys.get('genotype')\
+                            and int(strain_key) not in self.test_keys.get('strain'):
                         continue
 
-                strain_id = self.idhash['strain'][strain_key]
-                genotype_id = self.idhash['genotype'][genotype_key]
+                strain_id = self.idhash['strain'].get(strain_key)
+                if strain_id is None:
+                    strain_id = self._makeInternalIdentifier('strain',strain_key, self.nobnodes)
+                genotype_id = self.idhash['genotype'].get(genotype_key)
+                if genotype_id is None:
+                    genotype_id = self._makeInternalIdentifier('genotype', genotype_key, self.nobnodes)
+
+                if strain_id is not None and genotype_id is not None:
+                    self.strain_to_genotype_map[strain_id] = genotype_id
 
                 gu.addTriple(g, strain_id, Genotype.object_properties['has_genotype'], genotype_id)
                 # TODO verify if this should be contingent on the exactness or not
@@ -1863,8 +1883,8 @@ class MGI(Source):
             '6967235': 'SO:0001741',  # pseudogenic gene segment
             '7196768': 'SO:1000029',  # chromosomal deletion
             '7196769': 'SO:0000667',  # insertion
-            '7196770': 'SO:0000667',  # chromosomal inversion
-            '7196771': 'SO:1000030',  # Robertsonian fusion
+            '7196770': 'SO:1000030',  # chromosomal inversion
+            '7196771': 'SO:1000043',  # Robertsonian fusion
             '7196772': 'SO:1000048',  # reciprocal chromosomal translocation
             '7196773': 'SO:1000044',  # chromosomal translocation
             '7196774': 'SO:1000037',  # chromosomal duplication
@@ -2193,7 +2213,7 @@ class MGI(Source):
         return ecotype
 
     @staticmethod
-    def _makeInternalIdentifier(prefix, key):
+    def _makeInternalIdentifier(prefix, key, nobnodes=False):
         """
         This is a special MGI-to-MONARCH-ism.  MGI tables have unique keys that we use here, but don't want
         to necessarily re-distribute those internal identifiers.  Therefore, we make them into keys in a consistent
@@ -2202,8 +2222,11 @@ class MGI(Source):
         :param key: the number
         :return:
         """
+        iid = '_mgi'+prefix+'key'+key
+        if nobnodes is True:
+            iid = ':'+iid
 
-        return '_mgi'+prefix+'key'+key
+        return iid
 
     # def _querysparql(self):
     #
