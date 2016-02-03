@@ -7,6 +7,7 @@ python:
 # command to install dependencies
 install:
   - "pip install -r requirements.txt"
+  - "pip install -r requirements/all-sources.txt"
   - "pip install python-coveralls"
   - "pip install ."
   
@@ -28,3 +29,4 @@ after_success:
 branches:
   only:
     - master
+    - variable_imports

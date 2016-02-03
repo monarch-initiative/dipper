@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 import re
 
-from dipper.sources.Source import Source
+from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -19,7 +19,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 logger = logging.getLogger(__name__)
 
 
-class MGI(Source):
+class MGI(PostgreSQLSource):
     """
     This is the [Mouse Genome Informatics](http://www.informatics.jax.org/) resource,
     from which we process genotype and phenotype data about laboratory mice.
@@ -127,7 +127,7 @@ class MGI(Source):
     }
 
     def __init__(self):
-        Source.__init__(self, 'mgi')
+        super().__init__('mgi')
         self.namespaces.update(curie_map.get())
 
         # update the dataset object with details about this resource
