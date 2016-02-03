@@ -176,7 +176,6 @@ class ZFIN(Source):
 
     def __init__(self):
         Source.__init__(self, 'zfin')
-
         # update the dataset object with details about this resource
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org', None,
                                'http://zfin.org/warranty.html')
@@ -502,15 +501,19 @@ class ZFIN(Source):
             if len(constructs) > 0:
                 for c in constructs:
                     cid = 'ZFIN:'+c
-                    geno.addDerivesFrom(allele_id, cid)
+                    geno.addSequenceDerivesFrom(allele_id, cid)
                     # logger.info("constructs for %s: %s", allele_id, str(constructs))
                     # migrate the transgenic features to be alternate parts of the transgene insertion/alteration
                     if cid in self.transgenic_parts:
                         tg_parts = self.transgenic_parts.get(cid)
                         if tg_parts is not None:
                             for p in tg_parts:
-                                geno.addParts(p, allele_id, geno.object_properties['has_alternate_part'])
-                                geno.addParts(p, cid)
+                                # HACK - if it's a promoter part, then make it a simple has_part
+                                if re.search('promoter',p):
+                                    r = geno.object_properties['has_part']
+                                else:
+                                    r = geno.object_properties['has_alternate_part']
+                                geno.addParts(p, allele_id, r)
 
         return
 
@@ -610,7 +613,7 @@ class ZFIN(Source):
                     # if it's a transgenic construct, then we'll have to get the other bits
                     if construct_num is not None and construct_num.strip() != '':
                         construct_id = 'ZFIN:' + construct_num.strip()
-                        geno.addDerivesFrom(allele_id, construct_id)
+                        geno.addSequenceDerivesFrom(allele_id, construct_id)
                         self.id_label_map[construct_id] = construct_name
 
                     # allele to gene
@@ -1280,7 +1283,8 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
                 (genomic_feature_id, feature_so_id, genomic_feature_abbreviation, genomic_feature_name,
-                 genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id, empty) = row
+                 genomic_feature_type, mutagen, mutagee, construct_id, construct_name, construct_so_id,
+                 talen_crispr_id, talen_crispr_nam, empty) = row
 
                 if self.testMode and (genomic_feature_id not in self.test_ids['allele']):
                     continue
@@ -1292,7 +1296,7 @@ class ZFIN(Source):
                 if construct_id is not None and construct_id != '':
                     construct_id = 'ZFIN:' + construct_id.strip()
                     geno.addConstruct(construct_id, construct_name, construct_so_id)
-                    geno.addDerivesFrom(genomic_feature_id, construct_id)
+                    geno.addSequenceDerivesFrom(genomic_feature_id, construct_id)
 
                 # Note, we don't really care about how the variant was derived.  so we skip that.
 
@@ -1465,8 +1469,7 @@ class ZFIN(Source):
                         transgene_part_label = 'Tg(' + relationship + ' ' + gene_symbol + ')'
                         gu.addIndividualToGraph(g, transgene_part_id, transgene_part_label,
                                                 geno.genoparts['coding_transgene_feature'])
-                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
-                                     gene_id)
+                        geno.addSequenceDerivesFrom(transgene_part_id, gene_id)
 
                         # save the transgenic parts in a hashmap for later
                         if marker_id not in self.transgenic_parts:
@@ -1485,8 +1488,7 @@ class ZFIN(Source):
                         transgene_part_label = 'Tg(' + relationship + ' ' + gene_symbol + ')'
                         gu.addIndividualToGraph(g, transgene_part_id, transgene_part_label,
                                                 geno.genoparts['regulatory_transgene_feature'])
-                        gu.addTriple(g, transgene_part_id, geno.object_properties['derives_sequence_from_gene'],
-                                     gene_id)
+                        geno.addSequenceDerivesFrom(transgene_part_id, gene_id)
 
                         # save the transgenic parts in a hashmap for later
                         if marker_id not in self.transgenic_parts:
