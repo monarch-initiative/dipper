@@ -9,9 +9,8 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: BioGrid-fetch BioGrid-test ClinVar-fetch ClinVar-test GeneReviews-fetch GeneReviews-test \
-hpoa-fetch hpoa-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test \
-zfin-fetch zfin-test
+test: BioGrid-fetch BioGrid-test ClinVar-fetch ClinVar-test  \
+ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test
 
 BioGrid-fetch:
 	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only

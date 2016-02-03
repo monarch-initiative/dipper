@@ -5,71 +5,42 @@ __author__ = 'nlw'
 import argparse
 import logging
 import unittest
-
-from dipper.sources.HPOAnnotations import HPOAnnotations
-from dipper.sources.ZFIN import ZFIN
-from dipper.sources.OMIM import OMIM
-from dipper.sources.BioGrid import BioGrid
-from dipper.sources.MGI import MGI
-from dipper.sources.IMPC import IMPC
-from dipper.sources.Panther import Panther
-from dipper.sources.NCBIGene import NCBIGene
-from dipper.sources.UCSCBands import UCSCBands
-from dipper.sources.CTD import CTD
-from dipper.sources.GeneReviews import GeneReviews
-from dipper.sources.EOM import EOM
-from dipper.sources.KEGG import KEGG
-from dipper.sources.ClinVar import ClinVar
-from dipper.sources.Coriell import Coriell
-from dipper.sources.Monochrom import Monochrom
-from dipper.sources.AnimalQTLdb import AnimalQTLdb
-from dipper.sources.Ensembl import Ensembl
-from dipper.sources.HGNC import HGNC
-from dipper.sources.Orphanet import Orphanet
-from dipper.sources.FlyBase import FlyBase
-from dipper.sources.WormBase import WormBase
-from dipper.sources.OMIA import OMIA
-# from dipper.sources.Monarch import Monarch
-# from dipper.sources.GeneOntology import GeneOntology
-from dipper.sources.GWASCatalog import GWASCatalog
-
-from dipper.sources.MPD import MPD
-from dipper.sources.MMRRC import MMRRC
-from dipper.utils.TestUtils import TestUtils
+import importlib
 
 from tests.test_general import GeneralGraphTestCase
+from dipper.utils.TestUtils import TestUtils
 
 test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 
 
 def main():
     source_to_class_map = {
-        'hpoa': HPOAnnotations,  # ~3 min
-        'zfin': ZFIN,
-        'omim': OMIM,  # full file takes ~15 min, due to required throttling
-        'biogrid': BioGrid,  # interactions file takes <10 minutes
-        'mgi': MGI,
-        'impc': IMPC,
-        'panther': Panther,  # this takes a very long time, ~1hr to map 7 species-worth of associations
-        'ncbigene': NCBIGene,  # takes about 4 minutes to process 2 species
-        'ucscbands': UCSCBands,
-        'ctd': CTD,
-        'genereviews': GeneReviews,
-        'eom': EOM,  # Takes about 5 seconds.
-        'coriell': Coriell,
-        'clinvar': ClinVar,
-        'monochrom': Monochrom,
-        'kegg': KEGG,
-        'animalqtldb': AnimalQTLdb,
-        'ensembl': Ensembl,
-        'hgnc': HGNC,
-        'orphanet': Orphanet,
-        'omia': OMIA,
-        'flybase': FlyBase,
-        'mmrrc' : MMRRC,
-        'wormbase': WormBase,
-        'mpd': MPD,
-        'gwascatalog': GWASCatalog
+        'hpoa': 'HPOAnnotations',  # ~3 min
+        'zfin': 'ZFIN',
+        'omim': 'OMIM',  # full file takes ~15 min, due to required throttling
+        'biogrid': 'BioGrid',  # interactions file takes <10 minutes
+        'mgi': 'MGI',
+        'impc': 'IMPC',
+        'panther': 'Panther',  # this takes a very long time, ~1hr to map 7 species-worth of associations
+        'ncbigene': 'NCBIGene',  # takes about 4 minutes to process 2 species
+        'ucscbands': 'UCSCBands',
+        'ctd': 'CTD',
+        'genereviews': 'GeneReviews',
+        'eom': 'EOM',  # Takes about 5 seconds.
+        'coriell': 'Coriell',
+        'clinvar': 'ClinVar',
+        'monochrom': 'Monochrom',
+        'kegg': 'KEGG',
+        'animalqtldb': 'AnimalQTLdb',
+        'ensembl': 'Ensembl',
+        'hgnc': 'HGNC',
+        'orphanet': 'Orphanet',
+        'omia': 'OMIA',
+        'flybase': 'FlyBase',
+        'mmrrc' : 'MMRRC',
+        'wormbase': 'WormBase',
+        'mpd': 'MPD',
+        'gwascatalog': 'GWASCatalog'
         # 'monarch': Monarch,
         # 'go': GeneOntology
     }
@@ -119,7 +90,7 @@ def main():
     if args.taxon is not None:
         tax_ids = list(map(int, args.taxon.split(',')))
 
-    taxa_supported = [Panther, NCBIGene, BioGrid, UCSCBands]
+    taxa_supported = ['Panther', 'NCBIGene', 'BioGrid', 'UCSCBands']
 
     formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 
@@ -139,8 +110,14 @@ def main():
         for source in args.sources.split(','):
             source = source.lower()
             mysource = source_to_class_map[source]()
-            test_query.check_query_syntax(args.query, mysource)
-            test_query.load_graph_from_turtle(mysource)
+
+            # import source lib
+            module = "dipper.sources.{0}".format(mysource)
+            imported_module = importlib.import_module(module)
+            source_class = getattr(imported_module, mysource)
+
+            test_query.check_query_syntax(args.query, source_class)
+            test_query.load_graph_from_turtle(source_class)
 
         print(test_query.query_graph(args.query, True))
         exit(0)
@@ -166,11 +143,16 @@ def main():
         logger.info("\n******* %s *******", source)
         source = source.lower()
         src = source_to_class_map[source]
+
+        # import source lib
+        module = "dipper.sources.{0}".format(src)
+        imported_module = importlib.import_module(module)
+        source_class = getattr(imported_module, src)
         mysource = None
-        if src in taxa_supported:
-            mysource = src(tax_ids)
+        if source_class in taxa_supported:
+            mysource = source_class(tax_ids)
         else:
-            mysource = src()
+            mysource = source_class()
         if args.parse_only is False:
             mysource.fetch(args.force)
 
@@ -204,6 +186,7 @@ def main():
     # for example, keys
 
     logger.info("All done.")
+
 
 if __name__ == "__main__":
     main()
