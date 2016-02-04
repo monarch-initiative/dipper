@@ -33,7 +33,7 @@ class Genotype():
         'variant_single_locus_complement': 'GENO:0000030',
         'variant_locus': 'GENO:0000002',
         'reference_locus': 'GENO:0000036',
-        'allele': 'GENO:0000008',
+        'allele': 'GENO:0000512',
         'gene': 'SO:0000704',
         'QTL': 'SO:0000771',
         'transgene': 'SO:0000902',
