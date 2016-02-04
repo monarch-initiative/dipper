@@ -69,15 +69,16 @@ class FlyBase(Source):
     test_keys = {
         'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915,
                    11397966, 53333044, 23189969, 3206803, 29677937, 29677934, 23256689, 23213050, 23230614,
-                   23274987],
+                   23274987, 53323093, 40362726, 11380755, 11380754],
         'gene': [23220066, 10344219, 58107328, 3132660, 23193483, 3118401, 3128715,
                  3128888, 23232298, 23294450, 3128626, 23255338, 8350351, 41994592, 3128715, 3128432,
-                 3128840, 3128650, 3128654, 3128602, 3165464, 23235262],
-        'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885, 436779, 436780],
+                 3128840, 3128650, 3128654, 3128602, 3165464, 23235262, 3165510, 3153563, 23225695,
+                 54564652, 3111381],
+        'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885, 436779, 436780, 479826],
         'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696, 328131, 328132, 328134, 328136,
-                     381024, 267411, 327436, 197293, 373125],
-        'feature': [11411407],
-        'pub': [359867, 327373, 153054, 153620, 370777, 154315, 345909, 365672],
+                     381024, 267411, 327436, 197293, 373125, 361163],
+        'feature': [11411407, 53361578, 53323094, 40377849, 40362727, 11379415, 61115970, 11380753],
+        'pub': [359867, 327373, 153054, 153620, 370777, 154315, 345909, 365672, 366057, 11380753],
         'strain': [8117, 3649, 64034, 213],
         'notes': [],
         'organism': [1, 226, 456]
@@ -112,6 +113,7 @@ class FlyBase(Source):
         self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
         self.phenocv = {}  # mappings between internal phenotype db key and multiple cv terms
         self.feature_to_organism_hash = {}   # keep this mapping so we can track fly things to be leaders
+        self.feature_types = {} # store the feature types, they are needed for making some triples
         self.checked_organisms = set()  # when we verify a tax id in eutils
         self.deprecated_features = set()
 
@@ -471,6 +473,8 @@ class FlyBase(Source):
                 else:
                     feature_id = 'FlyBase:'+uniquename
                 self.idhash['feature'][feature_key] = feature_id
+                self.feature_types[feature_key] = type_id
+                self.label_hash[feature_id] = name
 
                 if feature_key not in self.feature_to_organism_hash:
                     self.feature_to_organism_hash[feature_key] = set()
@@ -530,7 +534,7 @@ class FlyBase(Source):
 
                 line_counter += 1
 
-                if type_key == 604:  # RNAi_reagent
+                if int(type_key) == 604:  # RNAi_reagent
                     # TODO add other reagents?
                     self.idhash['reagent'][feature_key] = feature_id
 
@@ -1349,10 +1353,10 @@ class FlyBase(Source):
                     else:
                         if allele_id is None:
                             feature_id = self.idhash['feature'][subject_id]
-                            logger.info("this thing %s is not an allele", feature_id)
+                            logger.debug("this thing %s is not an allele", feature_id)
                         if gene_id is None:
                             feature_id = self.idhash['feature'][subject_id]
-                            logger.info("this thing %s is not a gene", feature_id)
+                            logger.debug("this thing %s is not a gene", feature_id)
                 elif int(type_id) == 59983:  # associated_with
 
                     allele_id = gene_id = reagent_id = ti_id = None
@@ -1363,8 +1367,11 @@ class FlyBase(Source):
                         reagent_id = self.idhash['reagent'][object_id]
                     elif object_id in self.idhash['feature']:
                         of = self.idhash['feature'][object_id]
-                        if re.search('FBti', of):
+                        if re.search('FBt[ip]', of):
                             ti_id = of
+
+                    if object_id in self.idhash['gene']:
+                        gene_id = self.idhash['gene'][object_id]
 
                     if subject_id in self.idhash['gene']:
                         gene_id = self.idhash['gene'][subject_id]
@@ -1373,15 +1380,19 @@ class FlyBase(Source):
                     elif subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
-                    if allele_id is not None and gene_id is not None and gene_id:
+                    if allele_id is not None and gene_id is not None:
                         geno.addAlleleOfGene(allele_id, gene_id)
                     elif reagent_id is not None and gene_id is not None:
-                        reagent_label = self.label_hash[reagent_id]
+                        reagent_label = self.label_hash.get(reagent_id)
                         geno.addGeneTargetingReagent(reagent_id, reagent_label, None, gene_id)
                         geno.addReagentTargetedGene(reagent_id, gene_id)
+                    elif reagent_id is not None and allele_id is not None:
+                        geno.addReagentTargetedGene(reagent_id, None, allele_id)
                     elif allele_id is not None and ti_id is not None:
                         # the FBti == transgenic insertion, which is basically the sequence alteration
-                        geno.addParts(allele_id, ti_id, geno.object_properties['has_alternate_part'])
+                        geno.addParts(ti_id, allele_id, geno.object_properties['has_alternate_part'])
+                    elif reagent_id is not None and ti_id is not None:
+                        gu.addTriple(g, ti_id, geno.object_properties['targeted_by'], reagent_id)
 
                 elif int(type_id) == 131495 or int(type_id) == 129784:  # derived_tp_assoc_alleles
                     # note that the internal type id changed from 129784 --> 131495 around 02.2016
@@ -1392,7 +1403,7 @@ class FlyBase(Source):
 
                     tp_id = self.idhash['feature'][object_id]
                     if allele_id is not None and tp_id is not None:
-                        geno.addParts(allele_id, tp_id, geno.object_properties['has_alternate_part'])
+                        geno.addParts(tp_id, allele_id, geno.object_properties['has_alternate_part'])
 
                 elif int(type_id) == 131502 or int(type_id) == 129791:  # derived_sf_assoc_alleles
                     # note the internal type_id changed  129791 --> 131502 around 02.2016
@@ -1407,7 +1418,7 @@ class FlyBase(Source):
                         reagent_id = self.idhash['reagent'][object_id]
 
                     if allele_id is not None and reagent_id is not None:
-                        gu.addTriple(self.graph, allele_id, geno.object_properties['targeted_by'], reagent_id)
+                        gu.addTriple(g, allele_id, geno.object_properties['targeted_by'], reagent_id)
 
                 elif int(type_id) == 27:  # produced by
                     # i'm looking just for the relationships between ti and tp features... so doing a bit of a hack
@@ -1421,7 +1432,7 @@ class FlyBase(Source):
                         if not re.search('FBtp', tp_id):
                             tp_id = None
                     if ti_id is not None and tp_id is not None:
-                        geno.addSequenceDerivesFrom(tp_id, ti_id)
+                        geno.addSequenceDerivesFrom(ti_id, tp_id, )
                 elif int(type_id) == 60095:  # gets_expression_data_from
                     # FIXME i don't know if this is correct
                     if subject_id in self.idhash['allele']:
