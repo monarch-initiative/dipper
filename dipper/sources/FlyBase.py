@@ -55,6 +55,7 @@ class FlyBase(Source):
         'phenotype_cvterm',  # done
         'phendesc',  # done
         'environment_cvterm',  # done
+        'stockprop'
         # 'feature_cvterm'  # TODO to get better feature types than is in the feature table itself  (watch out for is_not)
     ]
 
@@ -67,13 +68,17 @@ class FlyBase(Source):
 
     test_keys = {
         'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915,
-                   11397966, 53333044, 23189969, 3206803, 29677937, 29677934],
-        'gene': [23220066, 10344219, 58107328, 3132660, 23193483, 3118401],
-        'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885],
+                   11397966, 53333044, 23189969, 3206803, 29677937, 29677934, 23256689, 23213050, 23230614,
+                   23274987],
+        'gene': [23220066, 10344219, 58107328, 3132660, 23193483, 3118401, 3128715,
+                 3128888, 23232298, 23294450, 3128626, 23255338, 8350351, 41994592, 3128715, 3128432,
+                 3128840, 3128650, 3128654, 3128602, 3165464, 23235262],
+        'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885, 436779, 436780],
         'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696, 328131, 328132, 328134, 328136,
-                     381024, 267411],
-        'pub': [359867, 327373, 153054, 153620, 370777],
-        'strain': [8117, ],
+                     381024, 267411, 327436, 197293, 373125],
+        'feature': [11411407],
+        'pub': [359867, 327373, 153054, 153620, 370777, 154315, 345909, 365672],
+        'strain': [8117, 3649, 64034, 213],
         'notes': [],
         'organism': [1, 226, 456]
     }
@@ -184,6 +189,7 @@ class FlyBase(Source):
         self._process_stocks(limit)  # do this after organisms to get the right taxonomy
 
         # These are the associations amongst the objects above
+        self._process_stockprop(limit)
         self._process_pub_dbxref(limit)
         self._process_phendesc(limit)
         self._process_feature_genotype(limit)
@@ -228,6 +234,8 @@ class FlyBase(Source):
         raw = '/'.join((self.rawdir, 'genotype'))
         logger.info("building labels for genotypes")
         gu = GraphUtils(curie_map.get())
+        geno = Genotype(g)
+        fly_tax = 'NCBITaxon:7227'
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -256,6 +264,11 @@ class FlyBase(Source):
 
                     gu.addIndividualToGraph(g, genotype_id, uniquename, Genotype.genoparts['intrinsic_genotype'],
                                             description)
+                    # we know all genotypes are in flies
+                    # FIXME we assume here they are in melanogaster, but that isn't necessarily true!!!
+                    # TODO should the taxon be == genomic background?
+                    geno.addTaxon(fly_tax, genotype_id)
+
                     if name.strip() != '':
                         gu.addSynonym(g, genotype_id, name)
 
@@ -466,14 +479,15 @@ class FlyBase(Source):
                 # HACK - FBgn are genes, and therefore classes, all else be individuals
                 is_gene = False
                 if re.search('(FBgn|FBog)', feature_id):
-                    is_gene = True
-
-                if is_gene:
                     self.idhash['gene'][feature_key] = feature_id
+                    is_gene = True
                 elif re.search('FBa[lb]', feature_id):
                     self.idhash['allele'][feature_key] = feature_id
+                elif re.search('FBt[ip]', feature_id):
+                    self.idhash['feature'][feature_key] = feature_id
 
-                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(feature_key) not in self.test_keys['gene'] + \
+                        self.test_keys['allele'] + self.test_keys['feature']:
                     continue
 
                 # now do something with it!
@@ -533,7 +547,6 @@ class FlyBase(Source):
                     # make only fly things leaders
                     gu.makeLeader(g, feature_id)
 
-
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
@@ -556,7 +569,6 @@ class FlyBase(Source):
                         gu.addEquivalentClass(g, tax_id, tax_internal_id)
 
                     gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
-                    # TODO for debugging only?  or keep?
                     gu.addComment(g, feature_id, self._makeInternalIdentifier('feature', feature_key))
 
             # TODO save checked_organisms fbid to ncbitax mapping to a local file to speed up subsequent searches
@@ -592,7 +604,8 @@ class FlyBase(Source):
                     continue
 
                 # what is cvterm_id for in this context???
-                # cgroup is the order of composition of things in the genotype label.
+                # cgroup is the order of composition of things in the genotype label (complementation group?).
+                # rank is the order that they appear in the label
                 # sometimes the same feature is listed twice; not sure if this is a mistake, or zygosity, or?
 
                 geno.addParts(feature_id, genotype_id, geno.object_properties['has_alternate_part'])
@@ -921,6 +934,10 @@ class FlyBase(Source):
                 else:
                     continue
 
+                # the following are some special cases that we scrub
+                if int(db_id) == 2 and dbxref_id == 'transgenic_transposon':
+                    self.dbxrefs[dbxref_id] = {db_id: 'SO:0000796'}  # transgenic_transposable_element
+
                 line_counter += 1
 
         return
@@ -964,7 +981,7 @@ class FlyBase(Source):
                 # 20142	mesothoracic leg disc | somatic clone	87719	60468		60468	60468
                 # 8507	sex comb | ectopic	88877	60468		60468	60468
                 # 8508	tarsal segment	83664	60468		60468	60468
-
+                # 18404	oocyte | oogenesis stage S9	86769	60468		60468	60468
                 # for now make these as phenotypic classes - will need to xref at some point
                 phenotype_key = phenotype_id
                 phenotype_id = None
@@ -1053,8 +1070,21 @@ class FlyBase(Source):
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
 
+                # figure out if there is a relevant stage
+
                 assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
+                if phenotype_id in self.phenocv:
+                    stages = set(s for s in self.phenocv[phenotype_id] if re.match('FBdv', s))
+                    if len(stages) == 1:
+                        s = stages.pop()
+                        assoc.set_stage(s, s)
+                    elif len(stages) > 1:
+                        logger.warn("There's more than one stage specified for a phenotype.  I don't know what to do. %s", str(stages))
+                    non_stage_ids = self.phenocv[phenotype_id] - stages
+                    logger.debug('Other non-stage bits: %s', str(non_stage_ids))
+                    # TODO do something with the other parts of a pheno-cv relationship
                 assoc.set_environment(environment_id)
+                # TODO check remove unspecified environments?
                 assoc.add_source(pub_id)
                 assoc.add_association_to_graph(g)
                 assoc_id = assoc.get_association_id()
@@ -1069,7 +1099,9 @@ class FlyBase(Source):
     def _process_phenotype_cvterm(self):
         """
         These are the qualifiers for the phenotype location itself.
-        We don't really do anything with these yet.
+        But are just the qualifiers.  The actual "observable" part of the phenotype is only in the
+        phenotype table.
+        These get added to a lookup variable used to augment a phenotype association statement.
         :return:
         """
 
@@ -1094,12 +1126,9 @@ class FlyBase(Source):
                 phenotype_id = self.idhash['phenotype'][phenotype_key]
                 if cvterm_key in self.idhash['cvterm']:
                     cvterm_id = self.idhash['cvterm'][cvterm_key]
-
-                    self.idhash['phenotype'][phenotype_key] = cvterm_id
                     if phenotype_key not in self.phenocv:
-                        self.phenocv[phenotype_id] = [cvterm_id]
-                    else:
-                        self.phenocv[phenotype_id] += [cvterm_id]
+                        self.phenocv[phenotype_id] = set()
+                    self.phenocv[phenotype_id].add(cvterm_id)
                 else:
                     logger.info("Not storing the cvterm info for %s", cvterm_key)
 
@@ -1292,8 +1321,14 @@ class FlyBase(Source):
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
 
-                if self.testMode and int(subject_id) not in self.test_keys['gene']+self.test_keys['allele']\
-                        and int(object_id) not in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and int(subject_id) not in self.test_keys['gene'] + \
+                        self.test_keys['allele']+self.test_keys['feature'] \
+                        and int(object_id) not in self.test_keys['gene'] +\
+                                self.test_keys['allele'] + self.test_keys['feature']:
+                    continue
+
+                if subject_id in self.deprecated_features or object_id in self.deprecated_features:
+                    logger.debug("Skipping deprecated feature_relationship %s %s", str(subject_id), str(object_id))
                     continue
 
                 if int(type_id) in [60384, 60410, 60409, 60413, 60414, 60401, 60399,
@@ -1338,7 +1373,7 @@ class FlyBase(Source):
                     elif subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
-                    if allele_id is not None and gene_id is not None and gene_id not in self.deprecated_features:
+                    if allele_id is not None and gene_id is not None and gene_id:
                         geno.addAlleleOfGene(allele_id, gene_id)
                     elif reagent_id is not None and gene_id is not None:
                         reagent_label = self.label_hash[reagent_id]
@@ -1348,7 +1383,8 @@ class FlyBase(Source):
                         # the FBti == transgenic insertion, which is basically the sequence alteration
                         geno.addParts(allele_id, ti_id, geno.object_properties['has_alternate_part'])
 
-                elif int(type_id) == 129784:  # deriv_tp_assoc_allele
+                elif int(type_id) == 131495 or int(type_id) == 129784:  # derived_tp_assoc_alleles
+                    # note that the internal type id changed from 129784 --> 131495 around 02.2016
                     allele_id = tp_id = None
 
                     if subject_id in self.idhash['allele']:
@@ -1358,8 +1394,10 @@ class FlyBase(Source):
                     if allele_id is not None and tp_id is not None:
                         geno.addParts(allele_id, tp_id, geno.object_properties['has_alternate_part'])
 
-                elif int(type_id) == 129791:  # deriv_sf_assoc_allele
+                elif int(type_id) == 131502 or int(type_id) == 129791:  # derived_sf_assoc_alleles
+                    # note the internal type_id changed  129791 --> 131502 around 02.2016
                     # the relationship between a reagent-feature and the allele it targets
+
                     allele_id = reagent_id = None
 
                     if subject_id in self.idhash['allele']:
@@ -1383,8 +1421,18 @@ class FlyBase(Source):
                         if not re.search('FBtp', tp_id):
                             tp_id = None
                     if ti_id is not None and tp_id is not None:
-                        geno.addParts(tp_id, ti_id, geno.object_properties['has_alternate_part'])
-                    # TODO need to write some tests for this... i don't know if this is universally correct
+                        geno.addSequenceDerivesFrom(tp_id, ti_id)
+                elif int(type_id) == 60095:  # gets_expression_data_from
+                    # FIXME i don't know if this is correct
+                    if subject_id in self.idhash['allele']:
+                        allele_id = self.idhash['allele'][subject_id]
+                    if object_id in self.idhash['feature']:
+                        tp_id = self.idhash['feature'][object_id]
+                    if not re.search('FBtp', tp_id):
+                        tp_id = None
+                        # TODO there are FBmc features here; need to incorporate if necessary - these are markers i think
+                    if tp_id is not None and allele_id is not None:
+                        geno.addSequenceDerivesFrom(allele_id, tp_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1514,6 +1562,13 @@ class FlyBase(Source):
         return
 
     def _process_disease_models(self, limit):
+        """
+        Here we make associations between a disease and the supplied "model".  In this case it's an allele.
+        FIXME consider changing this... are alleles really models?  Perhaps map these alleles into actual
+        animals/strains or genotypes?
+        :param limit:
+        :return:
+        """
 
         if self.testMode:
             g = self.testgraph
@@ -1555,6 +1610,55 @@ class FlyBase(Source):
                     assoc.set_description(evidence_or_interacting_allele)
 
                 assoc.add_association_to_graph(g)
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
+
+        return
+
+    def _process_stockprop(self, limit):
+        """
+        This will add depiction association between a strain and images hosted at flybase.
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        raw = '/'.join((self.rawdir, 'stockprop'))
+        logger.info("processing stock-image depictions")
+
+        line_counter = 0
+        gu = GraphUtils(curie_map.get())
+
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                if re.match('#', ''.join(line)) or ''.join(line) == '':  # skip comments
+                    continue
+                (stockprop_id, stock_id, type_id, value, rank) = line
+
+                line_counter += 1
+
+                if self.testMode and self.test_keys['strain'] is not None and \
+                                int(stock_id) not in self.test_keys['strain']:
+                    continue
+
+                sid = self.idhash['stock'].get(stock_id)
+                if int(type_id) == 131520 and re.match('FBim', value):  # linked_image
+                    image_url = 'http://flybase.org/tmp-shared/reports/'+value+'.png'  # FIXME make sure this is perm
+                    if sid is not None:
+                        gu.addDepiction(g, sid, image_url)
+                    # TODO should this be a Reference object?
+
+                # TODO add the stockprop_pub table when there is data to pull
+
+                if not self.testMode and limit is not None and line_counter > limit:
+                    break
 
         return
 
