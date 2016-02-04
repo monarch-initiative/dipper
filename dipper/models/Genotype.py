@@ -396,8 +396,9 @@ class Genotype():
         self.gu.addIndividualToGraph(self.graph, targeted_gene_id, targeted_gene_label,
                                      self.genoparts['reagent_targeted_gene'], description)
 
-        self.gu.addTriple(self.graph, targeted_gene_id,
-                          self.object_properties['is_targeted_expression_variant_of'], gene_id)
+        if gene_id is not None:
+            self.gu.addTriple(self.graph, targeted_gene_id,
+                              self.object_properties['is_targeted_expression_variant_of'], gene_id)
 
         self.gu.addTriple(self.graph, targeted_gene_id, self.object_properties['targeted_by'], reagent_id)
 
