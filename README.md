@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
+[![Build Status](http://ci.monarchinitiative.org//buildStatus/icon?job=test-dipper)](http://ci.monarchinitiative.org/view/dipper/job/test-dipper/)
 [![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
 
 # DIPPER
