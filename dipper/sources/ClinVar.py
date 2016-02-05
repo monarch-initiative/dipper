@@ -8,7 +8,6 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.assoc.Association import Assoc
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Reference import Reference
 from dipper import curie_map
@@ -46,7 +45,8 @@ class ClinVar(Source):
                    18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195,
                    98196, 98197, 98198, 100055,
                    112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
-                   146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132]
+                   146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132,
+                   89055, 9325, 38001, 91645, 38242, 38124, 17681, 52333]
 
     def __init__(self, tax_ids=None, gene_ids=None):
         Source.__init__(self, 'clinvar')
@@ -96,6 +96,7 @@ class ClinVar(Source):
         return
 
     def parse(self, limit=None):
+        logger.setLevel(logging.INFO)
         if limit is not None:
             print("Only parsing first", limit, "rows")
 
@@ -143,6 +144,8 @@ class ClinVar(Source):
         tax_label = 'Human'
         gu.addClassToGraph(g, tax_id, None)
         geno.addGenome(tax_id, None)  # label gets added elsewhere
+
+        conflicting_evidence_variants = set()
 
         # not unzipping the file
         logger.info("Processing Variant records")
@@ -225,6 +228,9 @@ class ClinVar(Source):
                             and len(intersect) < 1:
                         continue
 
+                if self.testMode and int(variant_num) not in self.variant_ids:
+                    continue
+
                 # TODO may need to switch on assembly to create correct assembly/build identifiers
                 build_id = ':'.join(('NCBIGenome', assembly))
 
@@ -239,9 +245,9 @@ class ClinVar(Source):
                         # use cytogenic location to get the approximate location
                         # strangely, they still put an assembly number even when there's no numeric location
                         if not re.search('-',str(cytogenetic_loc)):
-                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num, 'CHR')
+                            band_id = makeChromID(re.split('-', str(cytogenetic_loc)), tax_num, 'CHR')
                             geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
-                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly, 'MONARCH')
+                            bandinbuild_id = makeChromID(re.split('-', str(cytogenetic_loc)), assembly, 'MONARCH')
                         else:
                             # can't deal with ranges yet
                             pass
@@ -257,14 +263,46 @@ class ClinVar(Source):
                 if str(gene_num) != '-1' and str(gene_num) != 'more than 10':  # they use -1 to indicate unknown gene
                     gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
-                # FIXME there are some "variants" that are actually haplotypes
+                # FIXME there are some "variants" that are actually haplotypes, ~70
                 # probably will get taken care of when we switch to processing the xml
                 # for example, variant_num = 38562
+                # or http://www.ncbi.nlm.nih.gov/clinvar/variation/10392
                 # but there's no way to tell if it's a haplotype in the csv data
+                # without doing a single pass first to acquire all of them
                 # so the dbsnp or dbvar should probably be primary, and the variant num be the vslc,
                 # with each of the dbsnps being added to it
 
-                # todo clinical significance needs to be mapped to a list of terms
+                # base the relationship between the phenotype and variation based on it's clinical significance
+                significances = re.split(';', clinical_significance)
+                good = ['Benign', 'Likely benign', 'protective']
+                # FIXME protective should be in it's own category
+                bad = ['Pathogenic','Likely pathogenic']
+                little_bad = ['risk factor', 'confers sensitivity']
+                unknown = ['association', 'uncertain significance', 'not provided', 'Uncertain significance',
+                           'conflicting data from submitters', 'other']
+                good_count = len(set(significances).intersection(set(good)))
+                bad_count = len(set(significances).intersection(set(bad)))
+                little_bad_count = len(set(significances).intersection(set(little_bad)))
+                unknown_count = len(set(significances).intersection(set(unknown)))
+                if bad_count > 0 and good_count+little_bad_count+unknown_count == 0:
+                    rel = GraphUtils.object_properties['causes_condition']
+                elif good_count > 0 and bad_count+little_bad_count+unknown_count == 0:
+                    rel = GraphUtils.object_properties['is_noncausitive_for_condition']
+                elif unknown_count > 0 and good_count+bad_count+little_bad_count == 0:
+                    rel = GraphUtils.object_properties['is_marker_for']
+                elif little_bad_count > 0 and good_count+bad_count+unknown_count == 0:
+                    rel = GraphUtils.object_properties['contributes_to']
+                elif bool(good_count) + bool(bad_count) + bool(little_bad_count) + bool(unknown_count) > 1:
+                    conflicting_evidence_variants.add(variant_num)
+                    rel = None
+                else:
+                    logger.info("Need to consider other clinical significances: %s", clinical_significance)
+                    rel = None
+
+                if rel is None:
+                    # skip all those associations with conflicting evidence
+                    continue
+
                 # first, make the variant:
                 f = Feature(seqalt_id, allele_name, allele_type_id)
 
@@ -299,10 +337,9 @@ class ClinVar(Source):
                     gu.addIndividualToGraph(g, dbvar_id, None)
                     gu.addSameIndividual(g, seqalt_id, dbvar_id)
 
-                # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
                 if rcv_nums != '-':
-                    for rcv_num in re.split(';',rcv_nums):
+                    for rcv_num in re.split(';', rcv_nums):
                         rcv_id = 'ClinVar:'+rcv_num
                         gu.addIndividualToGraph(g, rcv_id, None)
                         gu.addXref(g, seqalt_id, rcv_id)
@@ -311,13 +348,16 @@ class ClinVar(Source):
                     # add the gene
                     gu.addClassToGraph(g, gene_id, gene_symbol)
                     # make a variant locus
-                    vl_id = '_'+gene_num+'-'+variant_num
-                    if self.nobnodes:
-                        vl_id = ':'+vl_id
-                    vl_label = allele_name
-                    gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
-                    geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
-                    geno.addAlleleOfGene(vl_id, gene_id)
+                    # vl_id = '_'+gene_num+'-'+variant_num
+                    # if self.nobnodes:
+                    #     vl_id = ':'+vl_id
+                    # vl_label = allele_name
+                    # gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
+                    # geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
+                    # geno.addAlleleOfGene(vl_id, gene_id)
+
+                    gu.addTriple(g, seqalt_id, geno.object_properties['has_affected_locus'], gene_id)
+
                 else:
                     # some basic reporting
                     gmatch = re.search('\(\w+\)', allele_name)
@@ -340,7 +380,7 @@ class ClinVar(Source):
                         elif re.match('SNOMED CT', p):
                             p = re.sub('SNOMED CT', 'SNOMED', p.strip())
 
-                        assoc = G2PAssoc(self.name, seqalt_id, p.strip())
+                        assoc = G2PAssoc(self.name, seqalt_id, p.strip(), rel)
                         assoc.add_association_to_graph(g)
 
                 if other_ids != '-':
@@ -378,6 +418,7 @@ class ClinVar(Source):
         gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
 
         logger.info("Finished parsing variants")
+        logger.info("Skipped %d variants of conflicting significance", len(conflicting_evidence_variants))
 
         return
 
