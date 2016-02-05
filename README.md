@@ -43,6 +43,7 @@ the code to skip this, if necessary
     * [python-docx](https://github.com/python-openxml/python-docx)
     * beautifulsoup4
     * GitPython
+    * [biopython](https://github.com/biopython/biopython)
     * intermine
     * pysftp
     
