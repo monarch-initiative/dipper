@@ -251,8 +251,7 @@ class FlyBase(Source):
                 #         continue
 
                 # add the internal genotype to pub mapping
-                genotype_id = self._makeInternalIdentifier('genotype', genotype_num)
-
+                genotype_id = 'FBgeno:'+str(genotype_num)
                 self.idhash['genotype'][genotype_num] = genotype_id
 
                 if description == '':
@@ -270,7 +269,8 @@ class FlyBase(Source):
                     # FIXME we assume here they are in melanogaster, but that isn't necessarily true!!!
                     # TODO should the taxon be == genomic background?
                     geno.addTaxon(fly_tax, genotype_id)
-
+                    genotype_iid = self._makeInternalIdentifier('genotype', genotype_num)
+                    gu.addComment(g, genotype_id, genotype_iid)
                     if name.strip() != '':
                         gu.addSynonym(g, genotype_id, name)
 
@@ -604,7 +604,8 @@ class FlyBase(Source):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and not (int(feature_key) in self.test_keys['gene']+self.test_keys['allele']
+                                          and int(genotype_key) in self.test_keys['genotype']):
                     continue
 
                 # what is cvterm_id for in this context???
@@ -707,7 +708,8 @@ class FlyBase(Source):
                 # 2       3160606 99159
 
                 feature_key = feature_id
-                if self.testMode and int(feature_key) not in self.test_keys['gene']+self.test_keys['allele']:
+                if self.testMode and not (int(feature_key) in self.test_keys['gene']+self.test_keys['allele']
+                                          and int(pub_id) in self.test_keys['pub']):
                     continue
                 if feature_key not in self.idhash['feature']:
                     continue
@@ -1325,10 +1327,10 @@ class FlyBase(Source):
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
 
-                if self.testMode and int(subject_id) not in self.test_keys['gene'] + \
-                        self.test_keys['allele']+self.test_keys['feature'] \
-                        and int(object_id) not in self.test_keys['gene'] +\
-                                self.test_keys['allele'] + self.test_keys['feature']:
+                if self.testMode and not (int(subject_id) in self.test_keys['gene'] +
+                        self.test_keys['allele']+self.test_keys['feature']
+                        and int(object_id) in self.test_keys['gene'] +
+                                self.test_keys['allele'] + self.test_keys['feature']):
                     continue
 
                 if subject_id in self.deprecated_features or object_id in self.deprecated_features:
@@ -1488,6 +1490,9 @@ class FlyBase(Source):
 
                 # we won't actually add the organism to the graph, unless we actually use it
                 # therefore it is added outside of this function
+
+                if self.testMode and int(organism_id) not in self.test_keys['organism']:
+                    continue
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     pass
