@@ -1,1 +1,2 @@
-service_name: travis-ci
+service_name: jenkins-ci
+repo_token: NsLNTLm2Ok92LtrlLTEGHX1GjTSFi6vJT
