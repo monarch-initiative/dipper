@@ -153,43 +153,10 @@ class ClinVar(Source):
         myfile = '/'.join((self.rawdir, self.files['variant_summary']['file']))
         with gzip.open(myfile, 'rb') as f:
             for line in f:
-                # skip comments
                 line = line.decode().strip()
+                # skip comments
                 if re.match('^#', line):
                     continue
-
-                # AlleleID               integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
-                # Type                   character, the type of variation
-                # Name                   character, the preferred name for the variation
-                # GeneID                 integer, GeneID in NCBI's Gene database
-                # GeneSymbol             character, comma-separated list of GeneIDs overlapping the variation
-                # ClinicalSignificance   character, comma-separated list of values of clinical significance reported for this variation
-                #                          for the mapping between the terms listed here and the integers in the .VCF files, see
-                #                          http://www.ncbi.nlm.nih.gov/clinvar/docs/clinsig/
-                # RS# (dbSNP)            integer, rs# in dbSNP
-                # nsv (dbVar)            character, the NSV identifier for the region in dbVar
-                # RCVaccession           character, list of RCV accessions that report this variant
-                # TestedInGTR            character, Y/N for Yes/No if there is a test registered as specific to this variation in the NIH Genetic Testing Registry (GTR)
-                # PhenotypeIDs           character, list of db names and identifiers for phenotype(s) reported for this variant
-                # Origin                 character, list of all allelic origins for this variation
-                # Assembly               character, name of the assembly on which locations are based
-                # Chromosome             character, chromosomal location
-                # Start                  integer, starting location, in pter->qter orientation
-                # Stop                   integer, end location, in pter->qter orientation
-                # Cytogenetic            character, ISCN band
-                # ReviewStatus           character, highest review status for reporting this measure. For the key to the terms,
-                #                            and their relationship to the star graphics ClinVar displays on its web pages,
-                #                            see http://www.ncbi.nlm.nih.gov/clinvar/docs/variation_report/#interpretation
-                # HGVS(c.)               character, RefSeq cDNA-based HGVS expression
-                # HGVS(p.)               character, RefSeq protein-based HGVS expression
-                # NumberSubmitters       integer, number of submissions with this variant
-                # LastEvaluated          datetime, the latest time any submitter reported clinical significance
-                # Guidelines             character, ACMG only right now, for the reporting of incidental variation in a Gene
-                #                                (NOTE: if ACMG, not a specific to the allele but to the Gene)
-                # OtherIDs               character, list of other identifiers or sources of information about this variant
-                # VariantID              integer, the value used to build the URL for the current default report,
-                #                            e.g. http://www.ncbi.nlm.nih.gov/clinvar/variation/1756/
-                #
 
                 # a crude check that there's an expected number of cols.  if not, error out because something changed.
                 num_cols = len(line.split('\t'))
@@ -214,26 +181,10 @@ class ClinVar(Source):
 
                 line_counter += 1
 
-                pheno_list = []
-                if phenotype_ids != '-':
-                    # trim any leading/trailing semicolons/commas
-                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
-                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
-                    pheno_list = re.split('[,;]', phenotype_ids)
-
-                if self.testMode:
-                    # get intersection of test disease ids and these phenotype_ids
-                    intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
-                    if int(gene_num) not in self.gene_ids and int(variant_num) not in self.variant_ids \
-                            and len(intersect) < 1:
-                        continue
-
                 if self.testMode and int(variant_num) not in self.variant_ids:
                     continue
 
-                # TODO may need to switch on assembly to create correct assembly/build identifiers
                 build_id = ':'.join(('NCBIGenome', assembly))
-
                 # make the reference genome build
                 geno.addReferenceGenome(build_id, assembly, tax_id)
 
@@ -244,7 +195,7 @@ class ClinVar(Source):
                     if str(cytogenetic_loc).strip() != '':
                         # use cytogenic location to get the approximate location
                         # strangely, they still put an assembly number even when there's no numeric location
-                        if not re.search('-',str(cytogenetic_loc)):
+                        if not re.search('-', str(cytogenetic_loc)):
                             band_id = makeChromID(re.split('-', str(cytogenetic_loc)), tax_num, 'CHR')
                             geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
                             bandinbuild_id = makeChromID(re.split('-', str(cytogenetic_loc)), assembly, 'MONARCH')
@@ -347,15 +298,6 @@ class ClinVar(Source):
                 if gene_id is not None:
                     # add the gene
                     gu.addClassToGraph(g, gene_id, gene_symbol)
-                    # make a variant locus
-                    # vl_id = '_'+gene_num+'-'+variant_num
-                    # if self.nobnodes:
-                    #     vl_id = ':'+vl_id
-                    # vl_label = allele_name
-                    # gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
-                    # geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
-                    # geno.addAlleleOfGene(vl_id, gene_id)
-
                     gu.addTriple(g, seqalt_id, geno.object_properties['has_affected_locus'], gene_id)
 
                 else:
@@ -364,7 +306,8 @@ class ClinVar(Source):
                     if gmatch is not None and len(gmatch.groups()) > 0:
                         logger.info("Gene found in allele label, but no id provided: %s", gmatch.group(1))
                     elif re.match('more than 10', gene_symbol):
-                        logger.info("More than 10 genes found; need to process XML to fetch (variant=%d)", int(variant_num))
+                        logger.info("More than 10 genes found; need to process XML to fetch (variant=%d)",
+                                    int(variant_num))
                     else:
                         logger.info("No gene listed for variant %d", int(variant_num))
 
@@ -372,7 +315,12 @@ class ClinVar(Source):
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
                 # the list is both semicolon delimited and comma delimited, but i don't know why!
                 # some are bad, like: Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
+                pheno_list = []
                 if phenotype_ids != '-':
+                    # trim any leading/trailing semicolons/commas
+                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
+                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
+                    pheno_list = re.split('[,;]', phenotype_ids)
                     for p in pheno_list:
                         m = re.match("(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
                         if m is not None and len(m.groups()) > 0:
