@@ -94,6 +94,7 @@
 'CoriellIndividual' : 'https://catalog.coriell.org/Search?q='
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  # FIXME
 'EMMA' : 'https://www.infrafrontier.eu/search?keyword=EM:'
+'FBgeno' : 'http://monarchinitiative.org/genotype/FBgeno:'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
 'MPD-strain':  'http://phenome.jax.org/db/q?rtn=strains/details&strainid='
