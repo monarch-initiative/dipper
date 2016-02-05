@@ -73,13 +73,16 @@ class GraphUtils:
         'correlates_with': 'RO:0002610',
         'substance_that_treats': 'RO:0002606',
         'is_marker_for': 'RO:0002607',
-        'contributes_to': 'RO:0002326',
+        'contributes_to': 'RO:0002326',  # replace with contributes_to_condition below
         'has_origin': 'GENO:0000643',
         'has_author': 'ERO:0000232',
         'dc:source': 'dc:source',
         'dc:evidence': 'dc:evidence',
         'has_evidence': 'RO:0002558',
-        'causally_upstream_of_or_within': 'RO:0002418'
+        'causally_upstream_of_or_within': 'RO:0002418',
+        'is_noncausitive_for_condition': 'MONARCH:is_noncausitive_for_condition',
+        'causes_condition': 'RO:0003303',
+        'contributes_to_condition': 'RO:0003304'
     }
 
     datatype_properties = {
