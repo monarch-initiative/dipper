@@ -4,3 +4,4 @@ pysftp
 beautifulsoup4
 GitPython
 intermine
+biopython
