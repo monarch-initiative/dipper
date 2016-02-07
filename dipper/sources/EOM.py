@@ -5,7 +5,7 @@ import re
 import logging
 import csv
 
-from dipper.sources.Source import Source
+from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper import curie_map
@@ -15,7 +15,7 @@ from dipper.utils.GraphUtils import GraphUtils
 logger = logging.getLogger(__name__)
 
 
-class EOM(Source):
+class EOM(PostgreSQLSource):
     """
     Elements of Morphology is a resource from NHGRI that has definitions of morphological abnormalities,
     together with image depictions.  We pull those relationships, as well as our local mapping of equivalences
@@ -46,7 +46,7 @@ class EOM(Source):
     }
 
     def __init__(self):
-        Source.__init__(self, 'eom')
+        super().__init__('eom')
         self.namespaces.update(curie_map.get())
 
         # update the dataset object with details about this resource
