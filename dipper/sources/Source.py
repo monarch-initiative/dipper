@@ -229,7 +229,9 @@ class Source:
             resp_header = response.getheaders()
             size = resp_header.get('Content-length')
             last_modified = resp_header.get('last-modified')  # check me
-        except:
+        except AttributeError:
+            logger.warn('Cannot parse remote file headers, unable to check'
+                        ' if remote file is newer than remote, forcing redownload')
             resp_header = None
             size = 0
             last_modified = None
@@ -423,9 +425,12 @@ class Source:
         local_size = self.get_local_file_size(localfile)
         if remote_size is not None and local_size != int(remote_size):
             is_equal = False
-            logger.error('local file and remote file different sizes\n'
-                         '%s has size %s, %s has size %s', localfile,
-                          local_size, remotefile, remote_size)
+            raise ValueError('local file and remote file different sizes\n'
+                             '%s has size %s, %s has size %s', localfile,
+                             local_size, remotefile, remote_size)
+        elif remote_size is None:
+            logger.warn('Remote file does not contain headers, unable to confirm\n'
+                        'if remote and local files match')
         return is_equal
 
     def file_len(self, fname):
