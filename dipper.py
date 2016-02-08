@@ -6,6 +6,7 @@ import argparse
 import logging
 import unittest
 import importlib
+import time
 
 from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
@@ -154,7 +155,10 @@ def main():
         else:
             mysource = source_class()
         if args.parse_only is False:
+            start_fetch = time.clock()
             mysource.fetch(args.force)
+            end_fetch = time.clock()
+            logger.info("Fetching time: %d sec", end_fetch-start_fetch)
 
         mysource.settestonly(args.test_only)
         mysource.setnobnodes(args.no_bnodes)
@@ -170,9 +174,14 @@ def main():
             logger.info("Skipping Tests for source: %s", source)
 
         if args.test_only is False and args.fetch_only is False:
+            start_parse = time.clock()
             mysource.parse(args.limit)
+            end_parse = time.clock()
+            logger.info("Parsing time: %d sec", end_parse-start_parse)
+            start_write = time.clock()
             mysource.write(format=args.format)
-
+            end_write = time.clock()
+            logger.info("Writing time: %d sec", end_write-start_write)
         # if args.no_verify is not True:
 
         #    status = mysource.verify()
