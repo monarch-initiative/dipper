@@ -251,7 +251,7 @@ class FlyBase(Source):
                 #         continue
 
                 # add the internal genotype to pub mapping
-                genotype_id = 'FBgeno:'+str(genotype_num)
+                genotype_id = 'MONARCH:FBgeno'+str(genotype_num)
                 self.idhash['genotype'][genotype_num] = genotype_id
 
                 if description == '':
@@ -419,6 +419,8 @@ class FlyBase(Source):
 
                 environment_id = self.idhash['environment'][environment_num]
                 environment_label = uniquename
+                if environment_label == 'unspecified':
+                    environment_label += ' environment'
                 env.addEnvironment(environment_id, environment_label)
                 self.label_hash[environment_id] = environment_label
 
