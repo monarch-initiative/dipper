@@ -19,7 +19,7 @@ class Environment():
 
     # special genotype parts mapped to their GENO and SO classes that we explicitly reference here
     environment_parts = {
-        'environment' : 'GENO:0000099',
+        'environmental_system': 'ENVO:01000254',
         'environmental_condition' : 'XCO:0000000',
         'morpholio_reagent': 'REO:0000042',
         'talen_reagent': 'REO:0001022',
@@ -48,7 +48,7 @@ class Environment():
 
     def addEnvironment(self, env_id, env_label, env_type=None, env_description=None):
         if env_type is None:
-            env_type = self.environment_parts['environment']
+            env_type = self.environment_parts['environmental_system']
 
         self.gu.addIndividualToGraph(self.graph, env_id, env_label, env_type, env_description)
 
