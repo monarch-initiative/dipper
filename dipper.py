@@ -41,9 +41,9 @@ def main():
         'mmrrc' : 'MMRRC',
         'wormbase': 'WormBase',
         'mpd': 'MPD',
-        'gwascatalog': 'GWASCatalog'
+        'gwascatalog': 'GWASCatalog',
         # 'monarch': Monarch,
-        # 'go': GeneOntology
+        'go': 'GeneOntology'
     }
 
     logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ def main():
     if args.taxon is not None:
         tax_ids = list(map(int, args.taxon.split(',')))
 
-    taxa_supported = ['Panther', 'NCBIGene', 'BioGrid', 'UCSCBands']
+    taxa_supported = ['Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology']
 
     formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 
