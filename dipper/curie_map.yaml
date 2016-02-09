@@ -24,6 +24,7 @@
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'  # DOID: Human Disease Ontology  [y] 
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'  # ECO: Evidence Code Ontology [y] 
 'EFO' : 'http://www.ebi.ac.uk/efo/EFO_'  # EFO: Experimental Factor Ontology (all kinds of stuff) [y] 
+'ENVO' : 'http://purl.obolibrary.org/obo/ENVO_'  # ENVO: Environment Ontology
 'EOM' : 'http://purl.obolibrary.org/obo/EOM_'  # elements of morphology phentoypes
 'ERO' : 'http://purl.obolibrary.org/obo/ERO_' # ERO: eagle-i resource ontology  [y] 
 'faldo' : 'http://biohackathon.org/resource/faldo#'  # FALDO: Feature Annotation Location Description Ontology (genomic feature properties)  [y] 
@@ -95,7 +96,6 @@
 'CoriellIndividual' : 'https://catalog.coriell.org/Search?q='
 'dbSNPIndividual' : 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  # FIXME
 'EMMA' : 'https://www.infrafrontier.eu/search?keyword=EM:'
-'FBgeno' : 'http://monarchinitiative.org/genotype/FBgeno:'
 'JAX' : 'http://jaxmice.jax.org/strain/'
 'MMRRC' : 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
 'MPD-strain':  'http://phenome.jax.org/db/q?rtn=strains/details&strainid='
