@@ -52,6 +52,7 @@ class GraphUtils:
         'has_member': 'RO:0002351',
         'member_of': 'RO:0002350',
         'involved_in': 'RO:0002331',
+        'enables': 'RO:0002327',
         'derives_from': 'RO:0001000',
         'part_of': 'BFO:0000050',
         'has_part': 'BFO:0000051',
