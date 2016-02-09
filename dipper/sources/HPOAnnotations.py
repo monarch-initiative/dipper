@@ -6,6 +6,7 @@ import logging
 import re
 import shutil
 from git import Repo
+from git import GitCommandError
 
 from dipper.utils import pysed
 from dipper.utils.GraphUtils import GraphUtils
@@ -296,7 +297,8 @@ class HPOAnnotations(Source):
         :return:
         """
         repo_dir = '/'.join((self.rawdir, 'git'))
-        REMOTE_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
+        REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
+        HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
 
         # TODO if repo doesn't exist, then clone otherwise pull
@@ -304,7 +306,11 @@ class HPOAnnotations(Source):
             shutil.rmtree(repo_dir)
 
         logger.info("Cloning common disease files from %s", REMOTE_URL)
-        Repo.clone_from(REMOTE_URL, repo_dir)
+        try:
+            Repo.clone_from(REMOTE_URL, repo_dir)
+        except GitCommandError:
+            # Try with https and if this doesn't work fail
+            Repo.clone_from(HTTPS_URL, repo_dir)
 
         return
 

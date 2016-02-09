@@ -150,7 +150,7 @@ def main():
         imported_module = importlib.import_module(module)
         source_class = getattr(imported_module, src)
         mysource = None
-        if source_class in taxa_supported:
+        if src in taxa_supported:
             mysource = source_class(tax_ids)
         else:
             mysource = source_class()
