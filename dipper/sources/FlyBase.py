@@ -4,7 +4,7 @@ import csv
 import gzip
 import io
 
-from dipper.sources.Source import Source
+from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -20,7 +20,7 @@ from dipper import config
 logger = logging.getLogger(__name__)
 
 
-class FlyBase(Source):
+class FlyBase(PostgreSQLSource):
     """
     This is the [Drosophila Genetics](http://www.flybase.org/) resource,
     from which we process genotype and phenotype data about fruitfly.
@@ -85,7 +85,7 @@ class FlyBase(Source):
     }
 
     def __init__(self):
-        Source.__init__(self, 'flybase')
+        super().__init__('flybase')
         logger.setLevel(logging.INFO)
         self.version_num = None   # to be used to store the version number to be acquired later
 
