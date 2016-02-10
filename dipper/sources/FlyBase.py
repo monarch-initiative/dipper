@@ -85,7 +85,7 @@ class FlyBase(PostgreSQLSource):
     }
 
     def __init__(self):
-        super().__init__(self, 'flybase')
+        super().__init__('flybase')
         logger.setLevel(logging.INFO)
         self.version_num = None   # to be used to store the version number to be acquired later
 
