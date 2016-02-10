@@ -3,9 +3,12 @@ import re
 import logging
 import gzip
 import io
+from dipper.sources.ZFIN import ZFIN
+from dipper.sources.WormBase import WormBase
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
+from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Dataset import Dataset
@@ -148,6 +151,12 @@ class GeneOntology(Source):
         logger.info("Processing Gene Associations from %s", file)
         line_counter = 0
 
+        zfin = wbase = None
+        if 7955 in self.tax_ids:
+            zfin = ZFIN()
+        elif 6239 in self.tax_ids:
+            wbase = WormBase()
+
         with gzip.open(file, 'rb') as csvfile:
             filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -217,7 +226,8 @@ class GeneOntology(Source):
                 if eco_id is not None:
                     assoc.add_evidence(eco_id)
 
-                for r in re.split('\|', ref):
+                refs = re.split('\|', ref)
+                for r in refs:
                     r = r.strip()
                     if r != '':
                         prefix = re.split(':', r)[0]
@@ -250,21 +260,44 @@ class GeneOntology(Source):
                 # object_type should be one of:
                 # protein_complex; protein; transcript; ncRNA; rRNA; tRNA; snRNA; snoRNA; any subtype of ncRNA in the Sequence Ontology. If the precise product type is unknown, gene_product should be used
 
-                # deal with with_or_from
-
-                # DB:gene_symbol
-                # DB:gene_symbol[allele_symbol]
-                # DB:gene_id
-                # DB:protein_name
-                # DB:sequence_id
-                # GO:GO_id
-                # CHEBI:CHEBI_id
-                # it can identify another gene product to which the annotated gene product is similar (ISS) or interacts with (IPI)
-
-                # worms say: WB:WBRNAi00078536|WBPhenotype:0000061  (why aren't these IMP?)
-                # or InterPro:IPR001245|InterPro:IPR015015|InterPro:IPR020635
-
                 assoc.add_association_to_graph(g)
+
+                # Derive G2P Associations from IMP annotations
+                # in version 2.1 Pipe will indicate 'OR' and Comma will indicate 'AND'.
+                # in version 2.0, multiple values are separated by pipes where the pipe has been used to mean 'AND'
+                if eco_symbol == 'IMP' and with_or_from != '':
+                    withitems = re.split('\|', with_or_from)
+                    phenotypeid = go_id+'PHENOTYPE'
+                    # create phenotype associations
+                    for i in withitems:
+                        if i == '' or re.match('(UniProtKB|WBPhenotype|InterPro|HGNC)', i):
+                            logger.warn("Don't know what having a uniprot id in the 'with' column means of %s", uniprotid)
+                            continue
+                        i = re.sub('MGI\:MGI\:','MGI:', i)
+                        i = re.sub('WB:','WormBase:', i)
+
+                        # for worms and fish, they might give a RNAi or MORPH
+                        # in these cases make a reagent-targeted gene
+                        if re.search('MRPHLNO|CRISPR|TALEN', i):
+                            targeted_gene_id = zfin.make_targeted_gene_id(gene_id, i, self.nobnodes)
+                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
+                            assoc = G2PAssoc(self.name, targeted_gene_id, phenotypeid)
+                        elif re.search('WBRNAi', i):
+                            targeted_gene_id = wbase.make_reagent_targeted_gene_id(gene_id, i, self.nobnodes)
+                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
+                            assoc = G2PAssoc(self.name, targeted_gene_id, phenotypeid)
+                        else:
+                            assoc = G2PAssoc(self.name, i, phenotypeid)
+                        for r in refs:
+                            r = r.strip()
+                            if r != '':
+                                prefix = re.split(':', r)[0]
+                                r = re.sub(prefix, self.clean_db_prefix(prefix), r)
+                                r = re.sub('MGI\:MGI\:', 'MGI:', r)
+                                assoc.add_source(r)
+                                assoc.add_evidence("ECO:0000059")  # experimental phenotypic evidence
+                        assoc.add_association_to_graph(g, self.nobnodes)
+                        # TODO should the G2PAssoc be the evidence for the GO assoc?
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
