@@ -422,12 +422,7 @@ class ZFIN(Source):
 
                     eid = '-'.join(reagent_list)
 
-                    targeted_gene_id = '-'.join((gid, eid))
-                    # these are not zfin resolvable, so make BNodes
-                    targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
-                    targeted_gene_id = '_' + targeted_gene_id
-                    if self.nobnodes:
-                        targeted_gene_id = ':' + targeted_gene_id
+                    targeted_gene_id = self.make_targeted_gene_id(gid, eid, self.nobnodes)
                     # get the reagent labels
                     elabel = ', '.join(self.id_label_map.get(l) for l in reagent_list)
                     if elabel is None:
@@ -2428,6 +2423,19 @@ class ZFIN(Source):
 
         return eco_abbrev_map.get(abbrev)
 
+    @staticmethod
+    def make_targeted_gene_id(geneid, reagentid, nobnodes=False):
+
+        targeted_gene_id = None
+        targeted_gene_id = '-'.join((geneid, reagentid))
+        # these are not zfin resolvable, so make BNodes
+        targeted_gene_id = re.sub('(ZFIN)?:', '', targeted_gene_id)
+        targeted_gene_id = '_' + targeted_gene_id
+        if nobnodes:
+            targeted_gene_id = ':' + targeted_gene_id
+
+        return targeted_gene_id
+
     def getTestSuite(self):
         import unittest
         from tests.test_zfin import ZFINTestCase
@@ -2462,6 +2470,6 @@ class ZFIN(Source):
                     #             targeted_gene_id = ':' + targeted_gene_id
                     #         targeted_gene_label = glabel + '<' + applied_morph_label + '>'
                     #
-                    #         geno.addReagentTargetedGene(morph_id, gid, targeted_gene_id, targeted_gene_label)
+                    #         geno.add(morph_id, gid, targeted_gene_id, targeted_gene_label)
                     #         self.id_label_map[targeted_gene_id] = targeted_gene_label
                     #         list_of_targeted_genes += [targeted_gene_id]

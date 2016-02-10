@@ -355,7 +355,7 @@ class WormBase(Source):
                             # make the reagent-targeted gene, and annotate that instead of the RNAi item directly
                             rnai_num = re.sub('WormBase:', '', allele_id)
                             rnai_id = allele_id
-                            rtg_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
+                            rtg_id = self.make_reagent_targeted_gene_id(gene_num, rnai_num, self.nobnodes)
                             geno.addReagentTargetedGene(rnai_id, 'WormBase:'+gene_num, rtg_id)
                             geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
                             allele_id = rtg_id
@@ -446,7 +446,7 @@ class WormBase(Source):
                     geno.addGeneTargetingReagent(rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
 
                     #make the "allele" of the gene that is targeted by the reagent
-                    allele_id = self._make_reagent_targeted_gene_id(gene_num, rnai_num)
+                    allele_id = self.make_reagent_targeted_gene_id(gene_num, rnai_num, self.nobnodes)
                     allele_label = gene_alt_symbol+'<'+rnai_num+'>'
                     geno.addReagentTargetedGene(rnai_id, gene_id, allele_id, allele_label)
 
@@ -832,10 +832,12 @@ class WormBase(Source):
 
         return ftype_id
 
-    def _make_reagent_targeted_gene_id(self, gene_id, reagent_id):
+    def make_reagent_targeted_gene_id(self, gene_id, reagent_id, nobnodes=False):
 
         rtg_id = '_'+'-'.join((gene_id, reagent_id))
-        if self.nobnodes:
+        targeted_gene_id = re.sub('W(orm)?B(ase)?:', '', rtg_id)
+
+        if nobnodes:
             rtg_id = ':'+rtg_id
 
         return rtg_id
