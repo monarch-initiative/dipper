@@ -79,7 +79,8 @@ def main():
                              'NCBIGene: 9606,10090,7955\n'
                              'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
                              'BioGrid: 9606,10090,10116,7227,7955,6239,8355\n'
-                             'UCSCBands: 9606')
+                             'UCSCBands: 9606\n'
+                             'GO: 9606,10090,10116,7227,7955,6239,9615,9823,9031,9913')
     parser.add_argument('-o', '--test_only', help='only process and output the pre-configured test subset',
                         action="store_true")
 
