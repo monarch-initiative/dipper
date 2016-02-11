@@ -36,7 +36,8 @@ class Genotype():
         'allele': 'GENO:0000512',
         'gene': 'SO:0000704',
         'QTL': 'SO:0000771',
-        'transgene': 'SO:0000902',
+        'transgene': 'SO:0000902',  # not really used any more
+        'transgenic_insertion': 'SO:0001218',
         'pseudogene': 'SO:0000336',
         'cytogenetic marker': 'SO:0000341',
         'sequence_feature': 'SO:0000110',
