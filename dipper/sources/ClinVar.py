@@ -142,7 +142,7 @@ class ClinVar(Source):
         tax_id = 'NCBITaxon:'+tax_num
         tax_label = 'Human'
         gu.addClassToGraph(g, tax_id, None)
-        geno.addGenome(tax_id, None)  # label gets added elsewhere
+        geno.addGenome(tax_id, tax_label)  # label gets added elsewhere
 
         # not unzipping the file
         logger.info("Processing Variant records")
