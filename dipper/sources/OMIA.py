@@ -81,6 +81,8 @@ class OMIA(Source):
             'breed': []  # to be filled in during parsing of breed table for lookup by breed-associations
         }
 
+        self.stored_omia_mol_gen = {}  # to store a map of omia ids and any molecular info to write a report for curation
+
         return
 
     def fetch(self, is_dl_forced=False):
@@ -138,6 +140,8 @@ class OMIA(Source):
         self.load_bindings()
 
         logger.info("Done parsing.")
+
+        self.write_molgen_report()
 
         return
 
@@ -219,6 +223,7 @@ class OMIA(Source):
             self.process_xml_table(elem, 'OMIA_Group', self._process_omia_group_row, limit)
             self.process_xml_table(elem, 'Phene', self._process_phene_row, limit)
             self.process_xml_table(elem, 'Omim_Xref', self._process_omia_omim_map, limit)
+
         f.close()
 
         # post-process the omia-omim associations to filter out the genes (keep only phenotypes/diseases)
@@ -255,6 +260,7 @@ class OMIA(Source):
         f.close()
 
         return
+
 
     # ############### INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ###################
 
@@ -341,7 +347,7 @@ class OMIA(Source):
         self.id_hash['phene'][row['phene_id']] = sp_phene_id  # add to internal hash store for later lookup
         self.label_hash[sp_phene_id] = sp_phene_label
         # add each of the following descriptions, if they are populated, with a tag at the end.
-        for item in ['clin_feat', 'history', 'pathology', 'mol_gen']:
+        for item in ['clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
             if row[item] is not None and row[item] != '':
                 self.gu.addDescription(self.g, sp_phene_id, row[item] + ' ['+item+']')
         # if row['symbol'] is not None:  # species-specific
@@ -354,6 +360,31 @@ class OMIA(Source):
         if inheritance_id is not None:
             assoc = DispositionAssoc(self.name, sp_phene_id, inheritance_id)
             assoc.add_association_to_graph(self.g)
+
+        if row['characterised'] == 'Yes':
+            self.stored_omia_mol_gen[omia_id] = {
+                'mol_gen': row['mol_gen'],
+                'map_info': row['map_info'],
+                'species': row['gb_species_id']}
+
+        return
+
+    def write_molgen_report(self):
+        import csv
+        logger.info("Writing G2P report for OMIA")
+        f = '/'.join((self.outdir, 'omia_molgen_report.txt'))
+
+        with open(f, 'w', newline='\n') as csvfile:
+            writer = csv.writer(csvfile, delimiter='\t')
+            # write header
+            h = ['omia_id', 'molecular_description', 'mapping_info', 'species']
+            writer.writerow(h)
+            for phene in self.stored_omia_mol_gen:
+                writer.writerow((str(phene), self.stored_omia_mol_gen[phene]['mol_gen'],
+                                 self.stored_omia_mol_gen[phene]['map_info'],
+                                 self.stored_omia_mol_gen[phene]['species']))
+
+        logger.info("Wrote %d potential G2P descriptions for curation to %s", len(self.stored_omia_mol_gen), f)
 
         return
 
