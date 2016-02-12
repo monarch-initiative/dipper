@@ -700,12 +700,14 @@ class WormBase(Source):
                 gene_id = 'WormBase:'+gene_num
 
                 # make a variant of the gene
-                vl = '-'.join((gene_num, 'unspecified'))
+                vl = '_'+'-'.join((gene_num, 'unspecified'))
+                if self.nobnodes:
+                    vl = ':'+vl
                 vl_label = 'some variant of '+gene_symbol
                 geno.addAlleleOfGene(vl, gene_id)
-                geno.make_experimental_model_with_genotype(g, vl, vl_label, worm_taxon, 'worm')
+                animal_id = geno.make_experimental_model_with_genotype(g, vl, vl_label, worm_taxon, 'worm')
 
-                assoc = G2PAssoc(self.name, gene_id, disease_id, gu.object_properties['model_of'])
+                assoc = G2PAssoc(self.name, animal_id, disease_id, gu.object_properties['model_of'])
                 ref = re.sub('WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
