@@ -544,7 +544,8 @@ class Genotype():
 
     def make_experimental_model_with_genotype(self, g, genotype_id, genotype_label, taxon_id, taxon_label):
 
-        animal_id = '-'.join((taxon_label, 'with', genotype_id))
+        animal_id = '-'.join((taxon_id, 'with', genotype_id))
+        animal_id = re.sub(':', '', animal_id)
         animal_id = '_'+animal_id
         if self.nobnodes:
              animal_id = ':'+animal_id
@@ -553,4 +554,4 @@ class Genotype():
         self.gu.addIndividualToGraph(g, animal_id, animal_label, taxon_id)
         self.gu.addTriple(g, animal_id, Genotype.object_properties['has_genotype'], genotype_id)
 
-        return
+        return animal_id
