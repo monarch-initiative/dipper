@@ -15,6 +15,7 @@ from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
+from dipper.models.GenomicFeature import Feature
 
 
 logger = logging.getLogger(__name__)
@@ -69,17 +70,18 @@ class FlyBase(PostgreSQLSource):
     test_keys = {
         'allele': [29677937, 23174110, 23230960, 23123654, 23124718, 23146222, 29677936, 23174703, 11384915,
                    11397966, 53333044, 23189969, 3206803, 29677937, 29677934, 23256689, 23213050, 23230614,
-                   23274987, 53323093, 40362726, 11380755, 11380754],
+                   23274987, 53323093, 40362726, 11380755, 11380754, 23121027, 44425218, 28298666],
         'gene': [23220066, 10344219, 58107328, 3132660, 23193483, 3118401, 3128715,
                  3128888, 23232298, 23294450, 3128626, 23255338, 8350351, 41994592, 3128715, 3128432,
                  3128840, 3128650, 3128654, 3128602, 3165464, 23235262, 3165510, 3153563, 23225695,
-                 54564652, 3111381],
+                 54564652, 3111381, 3111324],
         'annot': [437783, 437784, 437785, 437786, 437789, 437796, 459885, 436779, 436780, 479826],
         'genotype': [267393, 267400, 130147, 168516, 111147, 200899, 46696, 328131, 328132, 328134, 328136,
-                     381024, 267411, 327436, 197293, 373125, 361163],
-        'feature': [11411407, 53361578, 53323094, 40377849, 40362727, 11379415, 61115970, 11380753],
+                     381024, 267411, 327436, 197293, 373125, 361163, 403038],
+        'feature': [11411407, 53361578, 53323094, 40377849, 40362727, 11379415, 61115970, 11380753, 44425219, 44426878,
+                    44425220],
         'pub': [359867, 327373, 153054, 153620, 370777, 154315, 345909, 365672, 366057, 11380753],
-        'strain': [8117, 3649, 64034, 213],
+        'strain': [8117, 3649, 64034, 213, 30131],
         'notes': [],
         'organism': [1, 226, 456]
     }
@@ -129,12 +131,10 @@ class FlyBase(PostgreSQLSource):
 
     def fetch(self, is_dl_forced=False):
         """
-        For the MGI resource, we connect to the remote database, and pull the tables into local files.
-        We'll check the local table versions against the remote version
         :return:
         """
 
-        # create the connection details for MGI
+        # create the connection details for Flybase
         cxn = {'host': 'flybase.org', 'database': 'flybase', 'port': 5432, 'user': 'flybase',
                'password': 'no password'}
 
@@ -189,6 +189,7 @@ class FlyBase(PostgreSQLSource):
         self._process_phenotype_cvterm()
         self._process_feature_dbxref(limit)  # gets external mappings for features (genes, variants, etc)
         self._process_stocks(limit)  # do this after organisms to get the right taxonomy
+        self._get_derived_feature_types(limit)  # figures out types of some of the features
 
         # These are the associations amongst the objects above
         self._process_stockprop(limit)
@@ -558,6 +559,7 @@ class FlyBase(PostgreSQLSource):
                 else:
                     if is_gene:
                         gu.addClassToGraph(g, feature_id, name, type_id)
+                        gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
                             type_id = Genotype.genoparts['allele']
@@ -574,7 +576,6 @@ class FlyBase(PostgreSQLSource):
                     if tax_id != tax_internal_id:
                         gu.addEquivalentClass(g, tax_id, tax_internal_id)
 
-                    gu.addTriple(g, feature_id, gu.object_properties['in_taxon'], tax_id)
                     gu.addComment(g, feature_id, self._makeInternalIdentifier('feature', feature_key))
 
             # TODO save checked_organisms fbid to ncbitax mapping to a local file to speed up subsequent searches
@@ -943,7 +944,7 @@ class FlyBase(PostgreSQLSource):
                     continue
 
                 # the following are some special cases that we scrub
-                if int(db_id) == 2 and dbxref_id == 'transgenic_transposon':
+                if int(db_id) == 2 and accession.strip() == 'transgenic_transposon':
                     self.dbxrefs[dbxref_id] = {db_id: 'SO:0000796'}  # transgenic_transposable_element
 
                 line_counter += 1
@@ -1305,6 +1306,50 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    def _get_derived_feature_types(self, limit):
+        """
+        Make a pass through the feature table in order to properly type the FBal (allele) features, which
+        are derived from either other sequence features (which can be things like RNAi products) or transgenic-
+        transposons.  We'll save the allele type into a hasmap.
+
+
+        :param limit:
+        :return:
+        """
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+
+        gu = GraphUtils(curie_map.get())
+        raw = '/'.join((self.rawdir, 'feature_relationship'))
+        logger.info("determining some feature types based on relationships")
+        with open(raw, 'r') as f:
+            f.readline()  # read the header row; skip
+            filereader = csv.reader(f, delimiter='\t', quotechar='\"')
+            for line in filereader:
+                (feature_relationship_id, subject_id, object_id, type_id, rank, value) = line
+
+                if int(type_id) in [131495, 129784]:
+                    # derived_tp_assoc_alleles
+                    self.feature_types[subject_id] = Genotype.genoparts['transgenic_insertion']
+                    sid = self.idhash['allele'].get(subject_id)
+                    gu.addType(g, sid, self.feature_types[subject_id])
+                elif int(type_id) in [131502, 129791]:
+                    # only take the derived_sf_assoc_alleles
+                    # my subject is a reagent_targeted_gene
+                    # my object is the dsRNA
+                    self.feature_types[subject_id] = Genotype.genoparts['reagent_targeted_gene']
+                    sid = self.idhash['allele'].get(subject_id)
+                    gu.addType(g, sid, self.feature_types[subject_id])
+
+                else:
+                    continue
+
+        return
+
+
     def _process_feature_relationship(self, limit):
         if self.testMode:
             g = self.testgraph
@@ -1352,8 +1397,20 @@ class FlyBase(PostgreSQLSource):
                     if object_id in self.idhash['gene']:
                         gene_id = self.idhash['gene'][object_id]
 
+                    gene_label = self.label_hash[gene_id]
                     if allele_id is not None and gene_id is not None:
-                        geno.addAlleleOfGene(allele_id, gene_id)
+                        if self.feature_types[subject_id] == Genotype.genoparts['reagent_targeted_gene']:
+                            gu.addTriple(g, allele_id, Genotype.object_properties['is_targeted_expression_variant_of'],
+                                         gene_id)
+                        elif self.feature_types[subject_id] == Genotype.genoparts['transgenic_insertion']:
+                            geno.addSequenceDerivesFrom(allele_id, gene_id)
+                        elif re.match('\w+\\\\', gene_label):
+                            # the thing that this is the allele of is in some other species
+                            # so we don't want to create the is_allele_of between then.
+                            geno.addSequenceDerivesFrom(allele_id, gene_id)
+                        else:
+                            # assume that the gene is in the same species
+                            geno.addAlleleOfGene(allele_id, gene_id)
                     else:
                         if allele_id is None:
                             feature_id = self.idhash['feature'][subject_id]
@@ -1392,26 +1449,30 @@ class FlyBase(PostgreSQLSource):
                         geno.addReagentTargetedGene(reagent_id, gene_id)
                     elif reagent_id is not None and allele_id is not None:
                         geno.addReagentTargetedGene(reagent_id, None, allele_id)
-                    elif allele_id is not None and ti_id is not None:
-                        # the FBti == transgenic insertion, which is basically the sequence alteration
-                        geno.addParts(ti_id, allele_id, geno.object_properties['has_alternate_part'])
+                    # elif allele_id is not None and ti_id is not None:
+                    #     # the FBti == transgenic insertion, which is basically the sequence alteration
+                    #     geno.addParts(ti_id, allele_id, geno.object_properties['has_alternate_part'])
                     elif reagent_id is not None and ti_id is not None:
                         gu.addTriple(g, ti_id, geno.object_properties['targeted_by'], reagent_id)
 
                 elif int(type_id) == 131495 or int(type_id) == 129784:  # derived_tp_assoc_alleles
                     # note that the internal type id changed from 129784 --> 131495 around 02.2016
+                    # note that this relationship is only specified between an allele and a tp.
+                    # therefore we know the FBal should be a transgenic_insertion
                     allele_id = tp_id = None
 
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
                     tp_id = self.idhash['feature'][object_id]
-                    if allele_id is not None and tp_id is not None:
-                        geno.addParts(tp_id, allele_id, geno.object_properties['has_alternate_part'])
+                    # if allele_id is not None and tp_id is not None:
+                    #     geno.addParts(tp_id, allele_id, geno.object_properties['has_alternate_part'])
+                    gu.addComment(g, allele_id, tp_id)
 
                 elif int(type_id) == 131502 or int(type_id) == 129791:  # derived_sf_assoc_alleles
                     # note the internal type_id changed  129791 --> 131502 around 02.2016
                     # the relationship between a reagent-feature and the allele it targets
+                    # the relationship between a reagent-targeted-gene (FBal) and the reagent that targetes it (FBsf)
 
                     allele_id = reagent_id = None
 
@@ -1598,6 +1659,8 @@ class FlyBase(PostgreSQLSource):
 
         line_counter = 0
         gu = GraphUtils(curie_map.get())
+        geno = Genotype(g, self.nobnodes)
+        fly_taxon = 'NCBITaxon:7227'
 
         with gzip.open(raw, 'rb') as f:
             filereader = csv.reader(io.TextIOWrapper(f, newline=""), delimiter='\t', quotechar='\"')
@@ -1617,7 +1680,10 @@ class FlyBase(PostgreSQLSource):
                 else:
                     # TODO amelorates, exacerbates, and DOES NOT *
                     continue
-                assoc = G2PAssoc(self.name, allele_id, doid_id, rel)
+
+                animal_id = geno.make_experimental_model_with_genotype(g, allele_id, allele_symbol, fly_taxon, 'fly')
+
+                assoc = G2PAssoc(self.name, animal_id, doid_id, rel)
                 if pub_id != '':
                     pub_id = 'FlyBase:'+pub_id
                     assoc.add_source(pub_id)
