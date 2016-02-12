@@ -114,7 +114,7 @@ class ZFIN(Source):
                      "ZDB-GENO-001127-3", "ZDB-GENO-001129-1", "ZDB-GENO-090203-8", "ZDB-GENO-070209-1",
                      "ZDB-GENO-070118-1", "ZDB-GENO-140529-1", "ZDB-GENO-070820-1", "ZDB-GENO-071127-3",
                      "ZDB-GENO-000209-20", "ZDB-GENO-980202-1565", "ZDB-GENO-010924-10", "ZDB-GENO-010531-2",
-                     "ZDB-GENO-090504-5"],
+                     "ZDB-GENO-090504-5", "ZDB-GENO-070215-11", "ZDB-GENO-121221-1"],
         "gene": ["ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773", "ZDB-GENE-030131-8769",
                  "ZDB-GENE-030219-146", "ZDB-GENE-030404-2", "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
                  "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534", "ZDB-GENE-060503-719",
@@ -135,7 +135,8 @@ class ZFIN(Source):
                    "ZDB-ALT-980203-470", "ZDB-ALT-980203-605", "ZDB-ALT-980413-636", "ZDB-ALT-021021-2",
                    "ZDB-ALT-080728-1", "ZDB-ALT-100729-1", "ZDB-ALT-980203-1560", "ZDB-ALT-001127-6",
                    "ZDB-ALT-001129-2", "ZDB-ALT-980203-1091", "ZDB-ALT-070118-2", "ZDB-ALT-991005-33",
-                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6", "ZDB-ALT-980203-1827", "ZDB-ALT-090504-6"],
+                   "ZDB-ALT-020918-2", "ZDB-ALT-040913-6", "ZDB-ALT-980203-1827", "ZDB-ALT-090504-6",
+                   "ZDB-ALT-121218-1"],
         "morpholino": ["ZDB-MRPHLNO-041129-1", "ZDB-MRPHLNO-041129-2", "ZDB-MRPHLNO-041129-3", "ZDB-MRPHLNO-050308-1",
                        "ZDB-MRPHLNO-050308-3", "ZDB-MRPHLNO-060508-2", "ZDB-MRPHLNO-070118-1", "ZDB-MRPHLNO-070522-3",
                        "ZDB-MRPHLNO-070706-1", "ZDB-MRPHLNO-070725-1", "ZDB-MRPHLNO-070725-2", "ZDB-MRPHLNO-071005-1",
@@ -155,7 +156,7 @@ class ZFIN(Source):
                         "ZDB-EXP-120913-5", "ZDB-EXP-130222-13", "ZDB-EXP-130222-7", "ZDB-EXP-130904-2",
                         "ZDB-EXP-041102-1", "ZDB-EXP-140822-13", "ZDB-EXP-041102-1", "ZDB-EXP-070129-3",
                         "ZDB-EXP-110929-7", "ZDB-EXP-100520-2", "ZDB-EXP-100920-3", "ZDB-EXP-100920-5",
-                        "ZDB-EXP-090601-2"
+                        "ZDB-EXP-090601-2", "ZDB-EXP-151116-3"
                         ],
         "pub": ["PMID:11566854", "PMID:12588855", "PMID:12867027", "PMID:14667409", "PMID:15456722",
                 "PMID:16914492", "PMID:17374715", "PMID:17545503", "PMID:17618647", "PMID:17785424",
@@ -165,13 +166,14 @@ class ZFIN(Source):
                 "PMID:21925157", "PMID:22718903", "PMID:22814753", "PMID:22960038", "PMID:22996643",
                 "PMID:23086717", "PMID:23203810", "PMID:23760954", "ZFIN:ZDB-PUB-140303-33",
                 "ZFIN:ZDB-PUB-140404-9", "ZFIN:ZDB-PUB-080902-16", "ZFIN:ZDB-PUB-101222-7", "ZFIN:ZDB-PUB-140614-2",
-                "ZFIN:ZDB-PUB-120927-26", "ZFIN:ZDB-PUB-100504-5"],
+                "ZFIN:ZDB-PUB-120927-26", "ZFIN:ZDB-PUB-100504-5", "ZFIN:ZDB-PUB-140513-341"],
         "fish": ["ZDB-FISH-150901-17912", "ZDB-FISH-150901-18649", "ZDB-FISH-150901-26314", "ZDB-FISH-150901-9418",
                  "ZDB-FISH-150901-14591", "ZDB-FISH-150901-9997", "ZDB-FISH-150901-23877", "ZDB-FISH-150901-22128",
                  "ZDB-FISH-150901-14869", "ZDB-FISH-150901-6695", "ZDB-FISH-150901-24158", "ZDB-FISH-150901-3631",
                  "ZDB-FISH-150901-20836", "ZDB-FISH-150901-1060", "ZDB-FISH-150901-8451", "ZDB-FISH-150901-2423",
                  "ZDB-FISH-150901-20257", "ZDB-FISH-150901-10002", "ZDB-FISH-150901-12520",
-                 "ZDB-FISH-150901-14833", "ZDB-FISH-150901-2104"]
+                 "ZDB-FISH-150901-14833", "ZDB-FISH-150901-2104", "ZDB-FISH-150901-6607",
+                 "ZDB-FISH-150901-1409"]
     }
 
     def __init__(self):
@@ -480,6 +482,7 @@ class ZFIN(Source):
 
             # since we re-create a label, add the zfin fish label as the synonym
             gu.addSynonym(g, fish_id, fish['fish_label'])
+            self.id_label_map[fish_id] = fish_label
 
             if not self.testMode and limit is not None and line_counter > limit:
                 break
@@ -2088,7 +2091,8 @@ class ZFIN(Source):
 
         logger.info("Processing fish models")
         line_counter = 0
-
+        fish_taxon = 'NCBITaxon:7955'
+        geno = Genotype(g, self.nobnodes)
         gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['fish_disease_models']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -2100,7 +2104,7 @@ class ZFIN(Source):
 # ZDB-FISH-150901-9014	ZDB-EXP-041102-1	is_a_model	DOID:5603	acute T cell leukemia	ZDB-PUB-110523-12	21552289
                 (fish, environment, rel, disease_id, disease_label, zfin_pub_id, pubmed_id, blank) = row
 
-                if self.testMode and (fish not in self.test_ids['fish'] or disease_id not in self.test_ids['disease']):
+                if self.testMode and (fish not in self.test_ids['fish'] and disease_id not in self.test_ids['disease']):
                     continue
 
                 # if no fish is listed, then don't add it.
@@ -2108,13 +2112,24 @@ class ZFIN(Source):
                     continue
 
                 # make effective genotype = fish+environment
-                effective_genotype = self.make_id('-'.join((fish, environment)))
+                fish_id = 'ZFIN:'+fish
+                fish_label = self.id_label_map.get(fish_id)
+                if fish_label is None:
+                    fish_label = fish_id
+                environment_id = 'ZFIN:'+environment
+                environment_label = self.id_label_map.get(environment_id)
+                if environment_label is None:
+                    environment_label = environment_id
+                geno.make_experimental_model_with_genotype(g, fish_id, fish_label, fish_taxon, 'zebrafish')
 
                 assoc = Assoc(self.name)
 
-                assoc.set_subject(effective_genotype)
+                assoc.set_subject(fish_id)
                 assoc.set_object(disease_id)
                 assoc.set_relationship(gu.object_properties['model_of'])
+                desc = ' '.join(('A fish with genotype', fish_label, 'is a model for disease', disease_label,
+                                 'under the condition of', environment_label))
+                assoc.set_description(desc)
 
                 if zfin_pub_id != '':
                     assoc.add_source('ZFIN:'+zfin_pub_id)
