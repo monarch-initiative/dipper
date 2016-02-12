@@ -667,7 +667,6 @@ class WormBase(Source):
 
     def process_disease_association(self, limit):
 
-
         raw = '/'.join((self.rawdir, self.files['disease_assoc']['file']))
 
         if self.testMode:
@@ -678,7 +677,9 @@ class WormBase(Source):
         gu = GraphUtils(curie_map.get())
 
         logger.info("Processing disease models")
+        geno = Genotype(g, self.nobnodes)
         line_counter = 0
+        worm_taxon = 'NCBITaxon:6239'
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -697,6 +698,13 @@ class WormBase(Source):
 
                 # WB	WBGene00000001	aap-1		DOID:2583	PMID:19029536	IEA	ENSEMBL:ENSG00000145675|OMIM:615214	D		Y110A7A.10	gene	taxon:6239	20150612	WB
                 gene_id = 'WormBase:'+gene_num
+
+                # make a variant of the gene
+                vl = '-'.join((gene_num, 'unspecified'))
+                vl_label = 'some variant of '+gene_symbol
+                geno.addAlleleOfGene(vl, gene_id)
+                geno.make_experimental_model_with_genotype(g, vl, vl_label, worm_taxon, 'worm')
+
                 assoc = G2PAssoc(self.name, gene_id, disease_id, gu.object_properties['model_of'])
                 ref = re.sub('WB_REF:', 'WormBase:', ref)
                 if ref != '':
