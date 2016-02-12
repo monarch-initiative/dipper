@@ -123,13 +123,15 @@ class Genotype():
     properties = object_properties.copy()
     properties.update(annotation_properties)
 
-    def __init__(self, graph):
+    def __init__(self, graph, nobnodes=False):
 
         self.gu = GraphUtils(curie_map.get())
 
         self.graph = graph
 
         self.gu.loadProperties(self.graph, self.object_properties, self.gu.OBJPROP)
+
+        self.nobnodes = nobnodes
 
         return
 
@@ -160,7 +162,7 @@ class Genotype():
         """
         # TODO should we accept a list of allele types?
         if (allele_type is None):
-            allele_type = self.genoparts['allele']  #TODO is this a good idea?
+            allele_type = self.genoparts['allele']  # TODO is this a good idea?
         self.gu.addIndividualToGraph(self.graph, allele_id, allele_label, allele_type, allele_description)
 
         return
@@ -245,7 +247,6 @@ class Genotype():
             self.gu.addTriple(self.graph, transcript_id, self.properties['translates_to'], polypeptide_id)
 
         return
-
 
     def addPartsToVSLC(self, vslc_id, allele1_id, allele2_id, zygosity_id=None, allele1_rel=None, allele2_rel=None):
         """
@@ -491,7 +492,7 @@ class Genotype():
     def addChromosomeInstance(self, chr_num, reference_id, reference_label, chr_type=None):
         """
         Add the supplied chromosome as an instance within the given reference
-        :param chr:
+        :param chr_num:
         :param reference_id: for example, a build id like UCSC:hg19
         :param reference_label:
         :param chr_type: this is the class that this is an instance of.  typically a genome-specific chr
@@ -528,7 +529,7 @@ class Genotype():
         """
         vslc_label = ''
 
-        if (gene_label is None and allele1_label is None and allele2_label is None):
+        if gene_label is None and allele1_label is None and allele2_label is None:
             logger.error("Not enough info to make vslc label")
             return None
 
@@ -540,3 +541,16 @@ class Genotype():
         vslc_label = '/'.join((top, bottom))
 
         return vslc_label
+
+    def make_experimental_model_with_genotype(self, g, genotype_id, genotype_label, taxon_id, taxon_label):
+
+        animal_id = '-'.join((taxon_label, 'with', genotype_id))
+        animal_id = '_'+animal_id
+        if self.nobnodes:
+             animal_id = ':'+animal_id
+
+        animal_label = ' '.join((genotype_label, taxon_label))
+        self.gu.addIndividualToGraph(g, animal_id, animal_label, taxon_id)
+        self.gu.addTriple(g, animal_id, Genotype.object_properties['has_genotype'], genotype_id)
+
+        return
