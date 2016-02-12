@@ -466,13 +466,13 @@ class ClinVar(Source):
             'short repeat': 'SO:0000657',   # repeat region - not sure if this is what's intended.
             'single nucleotide variant': 'SO:0001483',
             'structural variant': 'SO:0001537',
-            'undetermined variant': 'SO:0001059'    # sequence variant
+            'undetermined variant': 'SO:0001059'    # sequence alteration
         }
 
         if alleletype in type_to_so_map:
             so_id = type_to_so_map.get(alleletype)
         else:
-            logger.warn("unmapped code %s. Defaulting to 'SO:sequence_variant'.", alleletype)
+            logger.warn("unmapped code %s. Defaulting to 'SO:sequence_alteration'.", alleletype)
 
         return so_id
 
