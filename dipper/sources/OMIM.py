@@ -354,12 +354,12 @@ class OMIM(Source):
 
             # add the alternate labels and includes as synonyms
             for l in other_labels:
-                gu.addSynonym(g, omimid, l)
+                gu.addSynonym(g, omimid, l, 'OIO:hasRelatedSynonym')
 
             # for OMIM, we're adding the description as a definition
             gu.addDefinition(g, omimid, description)
             if abbrev is not None:
-                gu.addSynonym(g, omimid, abbrev)
+                gu.addSynonym(g, omimid, abbrev, 'OIO:hasRelatedSynonym')
 
             # if this is a genetic locus (but not sequenced) then add the chrom loc info
             # but add it to the ncbi gene identifier, not to the omim id (we reserve the omim id to be the phenotype)
