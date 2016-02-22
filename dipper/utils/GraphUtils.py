@@ -290,7 +290,7 @@ class GraphUtils:
         return
 
     def addComment(self, g, subject_id, comment):
-        g.add((self.getNode(subject_id), DC['comment'], Literal(comment.strip())))
+        g.add((self.getNode(subject_id), RDFS['comment'], Literal(comment.strip())))
 
         return
 
@@ -483,3 +483,4 @@ class GraphUtils:
         """
         self.addTriple(graph, node_id, self.annotation_properties['clique_leader'], Literal(True, datatype=XSD[bool]), True)
         return
+        
