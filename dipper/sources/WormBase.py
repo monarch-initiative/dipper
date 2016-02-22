@@ -56,7 +56,7 @@ class WormBase(Source):
         'feature_loc': {'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
                         'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {'file': 'disease_association.wb',
-                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/current-development-release/ONTOLOGY/disease_association.WSNUMBER.wb'},
+                          'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {'file': 'development_association.wb',
         #           'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {'file': 'anatomy_association.wb',
