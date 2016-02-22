@@ -1,6 +1,7 @@
-__author__ = 'condit@sdsc.edu'
 
 import logging
+
+__author__ = 'condit@sdsc.edu'
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class CurieUtil(object):
         if curie is None:
             return None
         parts = curie.split(':')
-        if 1 == len(parts):
+        if len(parts) == 1:
             if curie != '':
                 logger.error("Not a properly formed curie: \"%s\"", curie)
             return None
