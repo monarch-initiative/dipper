@@ -121,7 +121,7 @@ class EOM(PostgreSQLSource):
                 IAO:definition Literal(objective_def. subjective def)
                 foaf:depiction Literal(small_image_url),Literal(large_image_url)
                 foaf:page Literal(page_url)
-                dc:comment Literal(long commented text)
+                rdfs:comment Literal(long commented text)
 
 
         :param raw:
