@@ -402,7 +402,7 @@ class GraphUtils:
                 n = base[id]
             else: # replace the leading underscore to make it cleaner
                 n = BNode(re.sub('_', '', id, 1))
-        elif re.match('^\:', id): # do we need to remove embedded ID colons?
+        elif re.match(r'^\:', id):  # do we need to remove embedded ID colons?
             n = base[re.sub(':', '', id, 1)]
         else:
             u = self.cu.get_uri(id)
@@ -417,7 +417,8 @@ class GraphUtils:
         return self._getNode(id, materialize_bnode)
 
     def addTriple(
-            self, graph, subject_id, predicate_id, object, object_is_literal=False):
+            self, graph, subject_id, predicate_id, object,
+            object_is_literal=False):
         if object_is_literal is True:
             graph.add(
                 (self.getNode(subject_id), self.getNode(predicate_id),
@@ -484,7 +485,7 @@ class GraphUtils:
         return
 
     def addOWLVersionInfo(self, graph, ontology_id, version_info):
-        graph.add(s
+        graph.add(
             (self.getNode(ontology_id), OWL['versionInfo'],
              Literal(version_info)))
         return
