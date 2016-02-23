@@ -1,22 +1,23 @@
-import rdflib
-
-__author__ = 'nlw'
-
 import re
 import logging
 
 from rdflib import Literal, URIRef, BNode, Namespace
-from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF, DCTERMS
+from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 
 from dipper.utils.CurieUtil import CurieUtil
+
+__author__ = 'nlw'
+
 
 logger = logging.getLogger(__name__)
 
 
 class GraphUtils:
 
-    # FIXME - i've duplicated relationships in Assoc and here - pick one or the other and refactor
-    # TODO refactor using the getNode() method to clear out the URIRef(cu.get_uri(<id>)) nonsense
+    # FIXME - i've duplicated relationships in Assoc and here -
+    #         pick one or the other and refactor
+    # TODO -  refactor using the getNode() method to clear out the
+    #         URIRef(cu.get_uri(<id>)) nonsense
 
     OWLCLASS = OWL['Class']
     OWLIND = OWL['NamedIndividual']
@@ -94,17 +95,19 @@ class GraphUtils:
 
     def __init__(self, curie_map, materialize_bnodes=False):
         self.curie_map = curie_map
-        self.cu = CurieUtil(curie_map)
+        self.cu = CurieUtil(curie_map)         # TEC: what is cu really?
         self.nobnodes = materialize_bnodes
         return
 
     def addClassToGraph(self, g, id, label, type=None, description=None):
         """
         Any node added to the graph will get at least 3 triples:
-        *(node,type,owl:Class) and
-        *(node,label,literal(label))
-        *if a type is added, then the node will be an OWL:subclassOf that the type
-        *if a description is provided, it will also get added as a dc:description
+        *(node, type, owl:Class) and
+        *(node, label, literal(label))
+        *if a type is added,
+            then the node will be an OWL:subclassOf that the type
+        *if a description is provided,
+            it will also get added as a dc:description
         :param id:
         :param label:
         :param type:
@@ -142,7 +145,7 @@ class GraphUtils:
 
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
-        nid = '_'+re.sub(':','',property_id)+re.sub(':', '', property_value)
+        nid = '_'+re.sub(':', '', property_id)+re.sub(':', '', property_value)
         n = self.getNode(nid)
 
         g.add((n, RDF['type'], self.OWLRESTRICTION))
@@ -175,7 +178,8 @@ class GraphUtils:
     def addPerson(self, graph, person_id, person_label):
         graph.add((self.getNode(person_id), RDF['type'], self.PERSON))
         if person_label is not None:
-            graph.add((self.getNode(person_id), RDFS['label'], Literal(person_label)))
+            graph.add(
+                (self.getNode(person_id), RDFS['label'], Literal(person_label)))
         return
 
 
@@ -186,7 +190,8 @@ class GraphUtils:
         if >1 newid is supplied, it will mark it with consider properties
         :param g:
         :param oldid: the class id to deprecate
-        :param newids: the class idlist that is the replacement(s) of the old class.  Not required.
+        :param newids: the class idlist that is
+                       the replacement(s) of the old class.  Not required.
         :return:
         """
 
@@ -204,7 +209,8 @@ class GraphUtils:
         if >1 newid is supplied, it will mark it with consider properties
         :param g:
         :param oldid: the individual id to deprecate
-        :param newids: the individual idlist that is the replacement(s) of the old individual.  Not required.
+        :param newids: the individual idlist that is the replacement(s) of
+                       the old individual.  Not required.
         :return:
         """
 
@@ -246,7 +252,8 @@ class GraphUtils:
         if type_is_literal is True:
             graph.add((self.getNode(subject_id), RDF['type'], Literal(type)))
         else:
-            graph.add((self.getNode(subject_id), RDF['type'], self.getNode(type)))
+            graph.add(
+                (self.getNode(subject_id), RDF['type'], self.getNode(type)))
         return
 
     def addLabel(self, graph, subject_id, label):
@@ -255,8 +262,8 @@ class GraphUtils:
 
     def addSynonym(self, g, cid, synonym, synonym_type=None):
         """
-        Add the synonym as a property of the class cid.  Assume it is an exact synonym, unless
-        otherwise specified
+        Add the synonym as a property of the class cid.
+        Assume it is an exact synonym, unless otherwise specified
         :param g:
         :param cid: class id
         :param synonym: the literal synonym label
@@ -265,7 +272,9 @@ class GraphUtils:
         """
         n = self.getNode(cid)
         if synonym_type is None:
-            synonym_type = URIRef(self.cu.get_uri(self.properties['hasExactSynonym']))  # default
+            # default
+            synonym_type = URIRef(
+                self.cu.get_uri(self.properties['hasExactSynonym']))
         else:
             synonym_type = URIRef(self.cu.get_uri(synonym_type))
 
@@ -281,8 +290,8 @@ class GraphUtils:
         return
 
     def addXref(self, g, cid, xrefid, xref_as_literal=False):
-        self.addTriple(g, cid, self.properties['has_xref'], xrefid, xref_as_literal)
-
+        self.addTriple(
+            g, cid, self.properties['has_xref'], xrefid, xref_as_literal)
         return
 
     def addDepiction(self, g, subject_id, image_url):
@@ -290,12 +299,14 @@ class GraphUtils:
         return
 
     def addComment(self, g, subject_id, comment):
-        g.add((self.getNode(subject_id), RDFS['comment'], Literal(comment.strip())))
-
+        g.add(
+            (self.getNode(subject_id), DC['comment'], Literal(comment.strip())))
         return
 
     def addDescription(self, g, subject_id, description):
-        g.add((self.getNode(subject_id), DC['description'], Literal(description.strip())))
+        g.add(
+            (self.getNode(subject_id), DC['description'],
+             Literal(description.strip())))
         return
 
     def addPage(self, g, subject_id, page_url):
@@ -304,7 +315,6 @@ class GraphUtils:
 
     def addTitle(self, g, subject_id, title):
         g.add((self.getNode(subject_id), DC['title'], Literal(title)))
-
         return
 
     def addMember(self, g, group_id, member_id):
@@ -319,8 +329,8 @@ class GraphUtils:
 
     def write(self, graph, fileformat=None, file=None):
         """
-         a basic graph writer (to stdout) for any of the sources.  this will write
-         raw triples in rdfxml, unless specified.
+         a basic graph writer (to stdout) for any of the sources.
+         this will write raw triples in rdfxml, unless specified.
          to write turtle, specify format='turtle'
          an optional file can be supplied instead of stdout
         :return: None
@@ -329,7 +339,7 @@ class GraphUtils:
         if fileformat is None:
             fileformat = 'rdfxml'
         if file is not None:
-            filewriter = open(file, 'wb')
+            fileswriter = open(file, 'wb')
 
             logger.info("Writing triples in %s to %s", fileformat, file)
             graph.serialize(filewriter, format=fileformat)
@@ -340,8 +350,8 @@ class GraphUtils:
 
     def write_raw_triples(self, graph, file=None):
         """
-         a basic graph writer (to stdout) for any of the sources.  this will write
-         raw triples in rdfxml, unless specified.
+         a basic graph writer (to stdout) for any of the sources.
+         this will write raw triples in rdfxml, unless specified.
          to write turtle, specify format='turtle'
          an optional file can be supplied instead of stdout
         :return: None
@@ -351,8 +361,8 @@ class GraphUtils:
             filewriter = open(file, 'w')
             logger.info("Writing raw triples to %s", file)
 
-        for (s,p,o) in graph:
-            output = [s,p,o]
+        for (s, p, o) in graph:
+            output = [s, p, o]
 
             print(' '.join(output), file=filewriter)
 
@@ -363,7 +373,8 @@ class GraphUtils:
 
     def write_compact_triples(self, graph, file=None):
         """
-        Will write out the raw triples, except it will replace the full uri with the curie prefix
+        Will write out the raw triples,
+        except it will replace the full uri with the curie prefix
         :param graph:
         :param file:
         :return:
@@ -375,9 +386,10 @@ class GraphUtils:
 
     def _getNode(self, id, materialize_bnode):
         """
-        This is a wrapper for creating a node with a given identifier.  If an id starts with an
-        underscore, it assigns it to a BNode, otherwise it creates it with a standard URIRef.
-        Alternatively, if materialize_bnode is True, it will add any nodes that would have been
+        This is a wrapper for creating a node with a given identifier.
+        If an id starts with an underscore, it assigns it to a BNode, otherwise
+        it creates it with a standard URIRef. Alternatively,
+        if materialize_bnode is True, it will add any nodes that would have been
         blank into the BASE space.
         This will return None if it can't map the node properly.
         :param id:
@@ -388,10 +400,10 @@ class GraphUtils:
         if id is not None and re.match('^_', id):
             if materialize_bnode is True:
                 n = base[id]
-            else:
-                n = BNode(re.sub('_', '', id, 1))  # replace the leading underscore to make it cleaner
-        elif re.match('^\:', id):
-            n = base[re.sub(':', '', id, 1)]   # do we need to remove embedded colons in the ids?
+            else: # replace the leading underscore to make it cleaner
+                n = BNode(re.sub('_', '', id, 1))
+        elif re.match('^\:', id): # do we need to remove embedded ID colons?
+            n = base[re.sub(':', '', id, 1)]
         else:
             u = self.cu.get_uri(id)
             if u is not None:
@@ -404,12 +416,16 @@ class GraphUtils:
 
         return self._getNode(id, materialize_bnode)
 
-    def addTriple(self, graph, subject_id, predicate_id, object, object_is_literal=False):
+    def addTriple(
+            self, graph, subject_id, predicate_id, object, object_is_literal=False):
         if object_is_literal is True:
-            graph.add((self.getNode(subject_id), self.getNode(predicate_id), Literal(object)))
+            graph.add(
+                (self.getNode(subject_id), self.getNode(predicate_id),
+                 Literal(object)))
         else:
-            graph.add((self.getNode(subject_id), self.getNode(predicate_id), self.getNode(object)))
-
+            graph.add(
+                (self.getNode(subject_id), self.getNode(predicate_id),
+                 self.getNode(object)))
         return
 
     def loadObjectProperties(self, graph, op):
@@ -423,7 +439,6 @@ class GraphUtils:
         :return: None
         """
         self.loadProperties(graph, op, self.OBJPROP)
-
         return
 
     def loadProperties(self, graph, op, property_type):
@@ -441,12 +456,12 @@ class GraphUtils:
         else:
             for k in op:
                 graph.add((self.getNode(op[k]), RDF['type'], property_type))
-
         return
 
     def loadAllProperties(self, graph):
         """
-        A convenience to load all stored properties (object, data, and annotation) into the supplied graph.
+        A convenience to load all stored properties
+        (object, data, and annotation) into the supplied graph.
         :param graph:
         :return:
         """
@@ -454,33 +469,36 @@ class GraphUtils:
         self.loadProperties(graph, self.object_properties, self.OBJPROP)
         self.loadProperties(graph, self.annotation_properties, self.ANNOTPROP)
         self.loadProperties(graph, self.datatype_properties, self.DATAPROP)
-
         return
 
     def addOntologyDeclaration(self, graph, ontology_id):
 
         graph.add((self.getNode(ontology_id), RDF['type'], OWL['Ontology']))
-
         return
 
     def addOWLVersionIRI(self, graph, ontology_id, version_iri):
-        graph.add((self.getNode(ontology_id), OWL['versionIRI'], self.getNode(version_iri)))
+        graph.add(
+            (self.getNode(ontology_id), OWL['versionIRI'],
+             self.getNode(version_iri)))
 
         return
 
     def addOWLVersionInfo(self, graph, ontology_id, version_info):
-        graph.add((self.getNode(ontology_id), OWL['versionInfo'], Literal(version_info)))
-
+        graph.add(s
+            (self.getNode(ontology_id), OWL['versionInfo'],
+             Literal(version_info)))
         return
 
     def makeLeader(self, graph, node_id):
         """
-        Add an annotation property to the given ```node_id``` to be the clique_leader.
+        Add an annotation property to the given ```node_id```
+        to be the clique_leader.
         This is a monarchism.
         :param graph:
         :param node_id:
         :return:
         """
-        self.addTriple(graph, node_id, self.annotation_properties['clique_leader'], Literal(True, datatype=XSD[bool]), True)
+        self.addTriple(
+            graph, node_id, self.annotation_properties['clique_leader'],
+            Literal(True, datatype=XSD[bool]), True)
         return
-        

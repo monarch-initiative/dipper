@@ -1,17 +1,12 @@
-__author__ = 'nlw'
-
-
 import logging
-import re
 import unicodedata
 import urllib
-from urllib import request, parse
 from Bio import Entrez
 import json
 
+__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
-
 
 class DipperUtil:
     """
@@ -77,7 +72,7 @@ class DipperUtil:
         # first, get the homologene id from the gene id
         # gene_id = '1264'  for testing
         gid = str(gene_num)
-        handle = Entrez.esearch(db="homologene",term=gid+"[Gene ID]", retmode="json")
+        handle = Entrez.esearch(db="homologene", term=gid+"[Gene ID]", retmode="json")
         record = handle.read()
         j = json.loads(record)
         homologene_ids = j["esearchresult"]["idlist"]
