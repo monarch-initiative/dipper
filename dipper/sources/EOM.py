@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from stat import *
+from stat import ST_CTIME
 import re
 import logging
 import csv
@@ -17,17 +17,21 @@ logger = logging.getLogger(__name__)
 
 class EOM(PostgreSQLSource):
     """
-    Elements of Morphology is a resource from NHGRI that has definitions of morphological abnormalities,
-    together with image depictions.  We pull those relationships, as well as our local mapping of equivalences
+    Elements of Morphology is a resource from NHGRI that has definitions of
+    morphological abnormalities, together with image depictions.
+    We pull those relationships, as well as our local mapping of equivalences
     between EOM and HP terminologies.
 
-    The website is crawled monthly by NIF's DISCO crawler system, which we utilize here.
-    Be sure to have pg user/password connection details in your conf.json file, like:
+    The website is crawled monthly by NIF's DISCO crawler system,
+        which we utilize here.
+    Be sure to have pg user/password connection details in your conf.json file,
+    like:
       dbauth : {
         'disco' : {'user' : '<username>', 'password' : '<password>'}
       }
 
-    Monarch-curated data for the HP to EOM mapping is stored at https://phenotype-ontologies.googlecode.com
+    Monarch-curated data for the HP to EOM mapping is stored at
+        https://phenotype-ontologies.googlecode.com
 
     Since this resource is so small, the entirety of it is the "test" set.
 
@@ -51,7 +55,8 @@ class EOM(PostgreSQLSource):
 
         # update the dataset object with details about this resource
         # TODO put this into a conf file?
-        self.dataset = Dataset('eom', 'EOM', 'http://elementsofmorphology.nih.gov', None, 
+        self.dataset = Dataset('eom', 'EOM',
+                               'http://elementsofmorphology.nih.gov', None,
                                'http://www.genome.gov/copyright.cfm',
                                'https://creativecommons.org/publicdomain/mark/1.0/')
 
@@ -64,13 +69,16 @@ class EOM(PostgreSQLSource):
         return
 
     def fetch(self, is_dl_forced=False):
+        '''create the connection details for DISCO'''
 
-        # create the connection details for DISCO
         cxn = config.get_config()['dbauth']['disco']
-        cxn.update({'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler', 'port': 5432})
+        cxn.update({'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
+                    'port': 5432})
 
-        self.dataset.setFileAccessUrl(''.join(('jdbc:postgresql://', cxn['host'], ':',
-                                               str(cxn['port']), '/', cxn['database'])))
+        self.dataset.setFileAccessUrl(''.join(('jdbc:postgresql://',
+                                               cxn['host'], ':',
+                                               str(cxn['port']), '/',
+                                               cxn['database'])))
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -86,6 +94,10 @@ class EOM(PostgreSQLSource):
         return
 
     def parse(self, limit=None):
+        '''
+            Over ride Source.parse inherited via PostgreSQLSource
+        '''
+
         if limit is not None:
             logger.info("Only parsing first %s rows of each file", limit)
 
@@ -94,14 +106,18 @@ class EOM(PostgreSQLSource):
 
         logger.info("Parsing files...")
 
-        self._process_nlx_157874_1_view('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')), limit)
-        self._map_eom_terms('/'.join((self.rawdir, self.files['map']['file'])), limit)
+        self._process_nlx_157874_1_view('/'.join((self.rawdir,
+                                                  'dvp.pr_nlx_157874_1')),
+                                        limit)
+        self._map_eom_terms('/'.join((self.rawdir, self.files['map']['file'])),
+                            limit)
 
         logger.info("Finished parsing.")
 
         self.load_bindings()
 
-        # since it's so small, we default to copying the entire graph to the test set
+        # since it's so small,
+        # we default to copying the entire graph to the test set
         self.testgraph = self.graph
 
         logger.info("Found %s nodes", len(self.graph))
@@ -109,10 +125,12 @@ class EOM(PostgreSQLSource):
 
     def _process_nlx_157874_1_view(self, raw, limit=None):
         """
-        This table contains the Elements of Morphology data that has been screen-scraped into DISCO.
+        This table contains the Elements of Morphology data that has been
+        screen-scraped into DISCO.
         Note that foaf:depiction is inverse of foaf:depicts relationship.
 
-        Since it is bad form to have two definitions, we concatenate the two into one string.
+        Since it is bad form to have two definitions,
+        we concatenate the two into one string.
 
         Triples:
             <eom id> a owl:Class
@@ -136,24 +154,37 @@ class EOM(PostgreSQLSource):
             filereader = csv.reader(f1, delimiter='\t', quotechar='\"')
             for line in filereader:
                 line_counter += 1
-                (morphology_term_id, morphology_term_num, morphology_term_label, morphology_term_url,
-                 terminology_category_label, terminology_category_url, subcategory, objective_definition,
-                 subjective_definition, comments, synonyms, replaces, small_figure_url, large_figure_url,
-                 e_uid, v_uid, v_uuid, v_last_modified) = line
+                (morphology_term_id, morphology_term_num, morphology_term_label,
+                 morphology_term_url, terminology_category_label,
+                 terminology_category_url, subcategory, objective_definition,
+                 subjective_definition, comments, synonyms, replaces,
+                 small_figure_url, large_figure_url, e_uid, v_uid, v_uuid,
+                 v_last_modified) = line
 
-                # Add morphology term to graph as a class with label, type, and description.
-                gu.addClassToGraph(self.graph, morphology_term_id, morphology_term_label)
+                # note:
+                # e_uid v_uuid v_last_modified terminology_category_url
+                # subcategory v_uid morphology_term_num
+                # terminology_category_label hp_label notes
+                # are currently unused.
+
+                # Add morphology term to graph as a class
+                # with label, type, and description.
+                gu.addClassToGraph(self.graph, morphology_term_id,
+                                   morphology_term_label)
 
                 # Assemble the description text
 
-                if subjective_definition != '' and not (re.match('.+\.$', subjective_definition)):
+                if subjective_definition != '' and not (re.match(r'.+\.$',
+                                                                 subjective_definition)):
                     # add a trailing period.
                     subjective_definition = subjective_definition.strip() + '.'
-                if objective_definition != '' and not (re.match('.+\.$', objective_definition)):
+                if objective_definition != '' and not (re.match(r'.+\.$',
+                                                                objective_definition)):
                     # add a trailing period.
                     objective_definition = objective_definition.strip() + '.'
 
-                definition = '  '.join((objective_definition, subjective_definition)).strip()
+                definition = '  '.join((objective_definition,
+                                        subjective_definition)).strip()
 
                 gu.addDefinition(self.graph, morphology_term_id, definition)
 
@@ -163,24 +194,29 @@ class EOM(PostgreSQLSource):
                 # do we want both images?
                 # morphology_term_id has depiction small_figure_url
                 if small_figure_url != '':
-                    gu.addDepiction(self.graph, morphology_term_id, small_figure_url)
+                    gu.addDepiction(self.graph, morphology_term_id,
+                                    small_figure_url)
 
                 # morphology_term_id has depiction large_figure_url
                 if large_figure_url != '':
-                    gu.addDepiction(self.graph, morphology_term_id, large_figure_url)
+                    gu.addDepiction(self.graph, morphology_term_id,
+                                    large_figure_url)
 
                 # morphology_term_id has comment comments
                 if comments != '':
-                    gu.addComment(self.graph, morphology_term_id, comments.strip())
+                    gu.addComment(self.graph, morphology_term_id,
+                                  comments.strip())
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        gu.addSynonym(self.graph, morphology_term_id, s.strip(), gu.properties['hasExactSynonym'])
+                        gu.addSynonym(self.graph, morphology_term_id, s.strip(),
+                                      gu.properties['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
-                        gu.addSynonym(self.graph, morphology_term_id, s.strip(), gu.properties['hasRelatedSynonym'])
+                        gu.addSynonym(self.graph, morphology_term_id, s.strip(),
+                                      gu.properties['hasRelatedSynonym'])
 
                 # morphology_term_id has page morphology_term_url
                 gu.addPage(self.graph, morphology_term_id, morphology_term_url)
@@ -217,7 +253,8 @@ class EOM(PostgreSQLSource):
                     # Add the HP ID as an equivalent class
                     gu.addEquivalentClass(self.graph, morphology_term_id, hp_id)
                 else:
-                    logger.warning('No matching HP term for %s', morphology_term_label)
+                    logger.warning('No matching HP term for %s',
+                                   morphology_term_label)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -226,6 +263,7 @@ class EOM(PostgreSQLSource):
 
     def getTestSuite(self):
         import unittest
+        # TODO PYLINT: Unable to import 'tests.test_eom'
         from tests.test_eom import EOMTestCase
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(EOMTestCase)
