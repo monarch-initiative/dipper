@@ -1,13 +1,10 @@
-__author__ = 'nlw'
-
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
 import logging
 import re
 from datetime import datetime
-import hashlib
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import curie_map
 
-
+__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +13,11 @@ class Provenance:
     """
     To model provenance as the basis for an association.
     This encompases:
-        * measurements taken from the lab, and their significance.  these can be derived from papers or other agents.
+        * measurements taken from the lab, and their significance.
+            these can be derived from papers or other agents.
         * papers
-    >1 measurement may result from an assay, each of which may have it's own significance
+    >1 measurement may result from an assay,
+        each of which may have it's own significance
 
 
     Status:  IN PROGRESS  (as observed from the incomplete identifiers
@@ -38,13 +37,15 @@ class Provenance:
     }
 
     rel_properties = {
-        'has_significance': 'STATO:has_significance',  # FIXME using has_specified_output
+        # FIXME using has_specified_output
+        'has_significance': 'STATO:has_significance',
         'has_agent': 'RO:has_agent'  # FIXME
 
     }
 
     data_property = {
-        'has_value': 'STATO:0000129',  # FIXME should this be in RO?
+        # FIXME should this be in RO?
+        'has_value': 'STATO:0000129',
         'has_measurement': 'IAO:0000004'
     }
 
@@ -68,7 +69,8 @@ class Provenance:
 
         return self.prov_id
 
-    def add_measurement_data(self, assay_id, measurement_unit, significance=None):
+    def add_measurement_data(self, assay_id, measurement_unit,
+                             significance=None):
         """
         Adds an object to measurement_datums like:
         assay_id : {
@@ -91,10 +93,12 @@ class Provenance:
         """
 
         if assay_id not in self.measurement_datums:
-            # @N @M This needs to be a list, not a set, because multiple values may be possible for a given assay?
+            # @N @M This needs to be a list, not a set,
+            # because multiple values may be possible for a given assay?
             self.measurement_datums[assay_id] = list()
 
-        ms = self.get_score(self.prov_types['measurement datum'], measurement_unit)
+        ms = self.get_score(self.prov_types['measurement datum'],
+                            measurement_unit)
         if significance is not None:
             ms['significance'] = significance
 
@@ -109,11 +113,13 @@ class Provenance:
         :param zscore_value:
         :return:
         """
+
         s = self.get_score(self.prov_types['zscore'], zscore_value)
         return s
 
     def get_score_id(self, score_type, score_value, score_unit=None):
-        s = '-'.join((re.sub(':','',score_type), str(score_value), str(score_unit)))
+        s = '-'.join((re.sub(r':', '', score_type), str(score_value),
+                      str(score_unit)))
 
         return s
 
@@ -133,16 +139,19 @@ class Provenance:
 
     def add_provenance_to_graph(self, graph):
 
-        # we make the assumption that the agent has already been added to the graph, ok?
+        # we make the assumption that the agent
+        # has already been added to the graph, ok?
         self.add_measurement_data_to_graph(graph, self.measurement_datums)
 
         return
 
-    def add_agent_to_graph(self, graph, agent_id, agent_label, agent_type=None, agent_description=None):
+    def add_agent_to_graph(self, graph, agent_id, agent_label, agent_type=None,
+                           agent_description=None):
 
         if agent_type is None:
             agent_type = self.prov_types['agent']
-        self.gu.addIndividualToGraph(graph, agent_id, agent_label, agent_type, agent_description)
+        self.gu.addIndividualToGraph(graph, agent_id, agent_label, agent_type,
+                                     agent_description)
         self.agent = agent_id
 
         return
@@ -169,30 +178,49 @@ class Provenance:
         # # TODO deal with units
         # for m in measurement_data:
         #     s = measurement_data[m]
-        #     # we assume that the assay has already been added as an Individual with properties elsewhere
+        #     # we assume that the assay has already been added as an Individual
+        #       with properties elsewhere
         #
         #     for i in s:
         #
-        #         logger.debug("\tTYPE: "+str(i.get('type'))+"\tVALUE: "+str(i.get('value'))+"\tUNIT: "+str(i.get('unit'))+" TYPE: None\tDESCRIPTION:"+str(i.get('description')))
-        #         mid = self.get_score_id(i.get('type'), i.get('value'), i.get('unit'))
+        #         logger.debug("\tTYPE: "+str(i.get('type'))+"\tVALUE: "+
+        #                      str(i.get('value'))+"\tUNIT: "+
+        #                      str(i.get('unit'))+" TYPE: None\tDESCRIPTION:"+
+        #                      str(i.get('description')))
+        #         mid = self.get_score_id(i.get('type'), i.get('value'),
+        #                                 i.get('unit'))
         #
-        #         self.gu.addIndividualToGraph(graph, mid, None, i.get('description'))
-        #         self.gu.addTriple(graph, mid, self.data_property['has_value'], i.get('value'))
+        #         self.gu.addIndividualToGraph(graph, mid, None,
+        #                                       i.get('description'))
+        #         self.gu.addTriple(graph, mid, self.data_property['has_value'],
+        #                           i.get('value'))
         #         sig = i.get('significance')
         #         if sig is not None:
-        #             sid = self.get_score_id(i.get('type'), i.get('value'), i.get('unit'))
-        #             self.gu.addIndividualToGraph(graph, sid, None, s.get('type'))
-        #             self.gu.addTriple(graph, mid, self.rel_properties['has_significance'], sid)
-        #             self.gu.addTriple(graph, sid, self.data_property['has_value'], sig.get('value'))
+        #             sid = self.get_score_id(i.get('type'), i.get('value'),
+        #                                     i.get('unit'))
+        #             self.gu.addIndividualToGraph(graph, sid, None,
+        #                                          s.get('type'))
+        #             self.gu.addTriple(graph, mid,
+        #                               self.rel_properties['has_significance'],
+        #                               sid)
+        #             self.gu.addTriple(graph, sid,
+        #                               self.data_property['has_value'],
+        #                               sig.get('value'))
         #         # add the measurement as part of this provenance
-        #         self.gu.addTriple(graph, self.prov_id, self.gu.object_properties['has_part'], mid)  # TODO should this be "has_measurement"?
-        #         self.gu.addTriple(graph, self.prov_id, self.gu.object_properties['has_agent'], self.agent)
+        #         self.gu.addTriple(graph, self.prov_id,
+        #                           # TODO should this be "has_measurement"?
+        #                           self.gu.object_properties['has_part'], mid)
+        #         self.gu.addTriple(graph, self.prov_id,
+        #                           self.gu.object_properties['has_agent'],
+        #                           self.agent)
 
         return
 
-    def add_assay_to_graph(self, graph, assay_id, assay_label, assay_type=None, assay_description=None):
+    def add_assay_to_graph(self, graph, assay_id, assay_label, assay_type=None,
+                           assay_description=None):
         if assay_type is None:
             assay_type = self.prov_types['assay']
-        self.gu.addIndividualToGraph(graph, assay_id, assay_label, assay_type, assay_description)
+        self.gu.addIndividualToGraph(graph, assay_id, assay_label, assay_type,
+                                     assay_description)
 
         return

@@ -1,30 +1,34 @@
-__author__ = 'nlw'
-
 import re
-from rdflib.namespace import DCTERMS, DC, RDF, RDFS
+import logging
+from rdflib.namespace import DC, RDF, RDFS
 from rdflib import Literal, URIRef
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-import logging
+
+__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
 
 class Reference:
     """
-    To model references for associations (such as journal articles, books, etc.).
+    To model references for associations
+        (such as journal articles, books, etc.).
 
-    By default, references will be typed as "documents", unless if the type is set otherwise.
+    By default, references will be typed as "documents",
+        unless if the type is set otherwise.
 
-    If a short_citation is set, this will be used for the individual's label.  We may wish to subclass this later.
+    If a short_citation is set, this will be used for the individual's label.
+        We may wish to subclass this later.
 
     """
+
     ref_types = {
         'person': 'foaf:Person',
         'journal_article': 'IAO:0000013',
         'publication': 'IAO:0000311',  # book
         'document': 'IAO:0000310',  # document???
-        'photograph': 'IAO:0000185',  # photograph
+        'photograph': 'IAO:0000185',
         'webpage': 'SIO:000302'
     }
 
@@ -70,6 +74,7 @@ class Reference:
         :param author_list: Array of authors
         :return:
         """
+
         self.author_list = author_list
         return
 
@@ -104,7 +109,7 @@ class Reference:
             # should never be true
             logger.error("You are missing an identifier for a reference.")
 
-        # todo what is the property here to add the date?
+        # TODO what is the property here to add the date?
         #if self.year is not None:
         #    gu.addTriple()
 
@@ -112,4 +117,3 @@ class Reference:
         #    for a in self.author_list:
         #        gu.addTriple(g, self.ref_id, self.props['has_author'], a, True)
         return
-

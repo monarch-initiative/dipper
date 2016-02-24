@@ -1,17 +1,17 @@
-__author__ = 'nlw'
-
 import logging
 import re
-
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+
+__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
 
 class Pathway():
     """
-    This provides convenience methods to deal with gene and protein collections in the context of pathways.
+    This provides convenience methods to deal with gene and protein collections
+    in the context of pathways.
     """
 
     pathway_parts = {
@@ -37,11 +37,13 @@ class Pathway():
 
         self.nobnodes = nobnodes
 
-        self.gu.loadProperties(self.graph, self.object_properties, self.gu.OBJPROP)
+        self.gu.loadProperties(self.graph, self.object_properties,
+                               self.gu.OBJPROP)
 
         return
 
-    def addPathway(self, pathway_id, pathway_label, pathway_type=None, pathway_description=None):
+    def addPathway(self, pathway_id, pathway_label, pathway_type=None,
+                   pathway_description=None):
         """
         Adds a pathway as a class.  If no specific type is specified, it will
         default to a subclass of "GO:cellular_process" and "PW:pathway".
@@ -51,16 +53,20 @@ class Pathway():
         :param pathway_description:
         :return:
         """
+
         if pathway_type is None:
             pathway_type = self.pathway_parts['cellular_process']
-        self.gu.addClassToGraph(self.graph, pathway_id, pathway_label, pathway_type, pathway_description)
-        self.gu.addSubclass(self.graph, self.pathway_parts['pathway'], pathway_id)
+        self.gu.addClassToGraph(self.graph, pathway_id, pathway_label,
+                                pathway_type, pathway_description)
+        self.gu.addSubclass(self.graph, self.pathway_parts['pathway'],
+                            pathway_id)
 
         return
 
     def addGeneToPathway(self, pathway_id, gene_id):
         """
-        When adding a gene to a pathway, we create an intermediate 'gene product' that is involved in
+        When adding a gene to a pathway, we create an intermediate
+        'gene product' that is involved in
         the pathway, through a blank node.
 
         gene_id RO:has_gene_product _gene_product
@@ -70,24 +76,31 @@ class Pathway():
         :param gene_id:
         :return:
         """
-        gene_product = '_'+re.sub(':', '', gene_id)+'product'
+
+        gene_product = '_'+re.sub(r':', '', gene_id)+'product'
         if self.nobnodes:
             gene_product = ':'+gene_product
-        self.gu.addIndividualToGraph(self.graph, gene_product, None, self.pathway_parts['gene_product'])
-        self.gu.addTriple(self.graph, gene_id, self.object_properties['has_gene_product'], gene_product)
+        self.gu.addIndividualToGraph(self.graph, gene_product, None,
+                                     self.pathway_parts['gene_product'])
+        self.gu.addTriple(self.graph, gene_id,
+                          self.object_properties['has_gene_product'],
+                          gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
 
         return
 
     def addComponentToPathway(self, pathway_id, component_id):
         """
-        This can be used directly when the component is directly involved in the pathway.  If a transforming
-        event is performed on the component first, then the addGeneToPathway should be used instead.
+        This can be used directly when the component is directly involved in
+        the pathway.  If a transforming event is performed on the component
+        first, then the addGeneToPathway should be used instead.
 
         :param pathway_id:
         :param component_id:
         :return:
         """
-        self.gu.addTriple(self.graph, component_id, self.object_properties['involved_in'], pathway_id)
+
+        self.gu.addTriple(self.graph, component_id,
+                          self.object_properties['involved_in'], pathway_id)
 
         return
