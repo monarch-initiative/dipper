@@ -1,14 +1,14 @@
-__author__ = 'nlw'
-
 from dipper.models.assoc.Association import Assoc
 
+__author__ = 'nlw'
 
 class D2PAssoc(Assoc):
     """
     A specific association class for defining Disease-to-Phenotype relationships
-    This assumes that a graph is created outside of this class, and nodes get added.
-    By default, an association will assume the "has_phenotype" relationship, unless
-    otherwise specified.
+    This assumes that a graph is created outside of this class,
+    and nodes get added.
+    By default, an association will assume the "has_phenotype" relationship,
+    unless otherwise specified.
     """
 
     d2p_object_properties = {
@@ -16,7 +16,8 @@ class D2PAssoc(Assoc):
         'frequency': ':frequencyOfPhenotype'
     }
 
-    def __init__(self, definedby, disease_id, phenotype_id, onset=None, frequency=None, rel=None):
+    def __init__(self, definedby, disease_id, phenotype_id, onset=None,
+                 frequency=None, rel=None):
         super().__init__(definedby)
         self.disease_id = disease_id
         self.phenotype_id = phenotype_id
@@ -42,8 +43,10 @@ class D2PAssoc(Assoc):
 
     def add_association_to_graph(self, g):
         """
-        The reified relationship between a disease and a phenotype is decorated with some provenance information.
-        This makes the assumption that both the disease and phenotype are classes.
+        The reified relationship between a disease and a phenotype is decorated
+            with some provenance information.
+        This makes the assumption that both the disease and phenotype
+            are classes.
 
         :param g:
         :return:
@@ -54,23 +57,30 @@ class D2PAssoc(Assoc):
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id, self.d2p_object_properties['frequency'], self.frequency, True)
+            self.gu.addTriple(g, self.assoc_id,
+                              self.d2p_object_properties['frequency'],
+                              self.frequency, True)
         if self.onset is not None and self.onset != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id, self.d2p_object_properties['onset'], self.onset)
+            self.gu.addTriple(g, self.assoc_id,
+                              self.d2p_object_properties['onset'], self.onset)
 
         return g
 
     def make_d2p_id(self):
         """
-        Make an association id for phenotypic associations with disease that is defined by:
+        Make an association id for phenotypic associations with disease
+            that is defined by:
             source of association + disease + relationship + phenotype
                 + onset + frequency
         :return:
         """
 
         attributes = [self.onset, self.frequency]
-        assoc_id = self.make_association_id(self.definedby, self.disease_id, self.rel, self.phenotype_id, attributes)
+        assoc_id = self.make_association_id(self.definedby,
+                                            self.disease_id,
+                                            self.rel,
+                                            self.phenotype_id, attributes)
 
         return assoc_id
 

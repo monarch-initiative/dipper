@@ -1,15 +1,17 @@
-__author__ = 'nlw'
-
 from dipper.models.assoc.Association import Assoc
 
+__author__ = 'nlw'
 
 class InteractionAssoc(Assoc):
 
     interaction_object_properties = {
         'genetically_interacts_with': 'RO:0002435',
-        'interacts_with': 'RO:0002434',  # using for directly interacts with.  better choice? psi-mi:"MI:0407"
-        'molecularly_interacts_with': 'RO:0002436',  # should we use this instead for direct interaction?
-        'colocalizes_with': 'RO:0002325',  # psi-mi:"MI:0403"(colocalization)
+        # using for directly interacts with.  better choice? psi-mi:"MI:0407"
+        'interacts_with': 'RO:0002434',
+        # should we use this instead for direct interaction?
+        'molecularly_interacts_with': 'RO:0002436',
+        # psi-mi:"MI:0403"(colocalization)
+        'colocalizes_with': 'RO:0002325',
         'ubiquitinates': 'RO:0002480',
         'regulates': 'RO:0002448',
         'positively_regulates': 'RO:0003003',

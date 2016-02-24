@@ -1,15 +1,14 @@
-__author__ = 'nlw'
-
 from dipper.models.assoc.Association import Assoc
 
+__author__ = 'nlw'
 
 class OrthologyAssoc(Assoc):
 
     ortho_rel = {
         'orthologous': 'RO:HOM0000017',  # in orthology relationship with
-        'least_diverged_orthologous': 'RO:HOM0000020',  # in 1 to 1 orthology relationship with
+        'least_diverged_orthologous': 'RO:HOM0000020',# in 1:1 orthology rel/wth
         'homologous': 'RO:HOM0000019',  # in 1 to 1 homology relationship with
-        'paralogous': 'RO:HOM0000011',  # in paralogy relationship with (generic)
+        'paralogous': 'RO:HOM0000011',  # in generic paralogy relationship with
         'in_paralogous': 'RO:HOM0000023',  # in in-paralogy relationship with
         'ohnologous': 'RO:HOM0000022',  # in ohnology relationship with
         'xenologous': 'RO:HOM0000018',  # in xenology relationship with
@@ -34,8 +33,9 @@ class OrthologyAssoc(Assoc):
     def add_gene_family_to_graph(self, g, family_id):
         """
         Make an association between a group of genes and some grouping class.
-        We make the assumption that the genes in the association are part of the supplied
-        family_id, and that the genes have already been declared as classes elsewhere.
+        We make the assumption that the genes in the association
+        are part of the supplied family_id, and that the genes have
+        already been declared as classes elsewhere.
         The family_id is added as an individual of type DATA:gene_family.
 
         Triples:
@@ -47,9 +47,12 @@ class OrthologyAssoc(Assoc):
         :param g: the graph to modify
         :return:
         """
-        gene_family = self.terms['gene_family']  # http://edamontology.org/data_3148
 
-        # make the assumption that the genes have already been added as classes previously
+        # http://edamontology.org/data_3148
+        gene_family = self.terms['gene_family']
+
+        # make the assumption that the genes
+        # have already been added as classes previously
         self.gu.addIndividualToGraph(g, family_id, None, gene_family)
 
         # add each gene to the family
