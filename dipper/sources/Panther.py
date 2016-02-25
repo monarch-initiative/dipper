@@ -1,5 +1,3 @@
-__author__ = 'nicole'
-
 import tarfile
 import re
 import logging
@@ -10,6 +8,7 @@ from dipper.models.Dataset import Dataset
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config, curie_map
 
+__author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class Panther(Source):
         self.tax_ids = tax_ids
         self.load_bindings()
 
-        self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships', 
+        self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships',
                                'http://pantherdb.org/', None,
                                'http://www.pantherdb.org/terms/disclaimer.jsp')
 
@@ -57,7 +56,7 @@ class Panther(Source):
         #     self.tax_ids = [9606, 10090, 7955]
 
         if 'test_ids' not in config.get_config() or 'protein' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
+            logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['protein']
 
@@ -113,9 +112,11 @@ class Panther(Source):
         there are two entries for the same gene (base on equivalent Uniprot id), and so we are not
         actually losing any information.
 
-        We presently have a hard-coded filter to select only orthology relationships where one of the pair
-        is in our species of interest (Mouse and Human, for the moment).  This will be added as a
-        configurable parameter in the future.
+        We presently have a hard-coded filter to
+        select only orthology relationships
+        where one of the pair is in our species of interest
+        (Mouse and Human, for the moment).
+        This will be added as a configurable parameter in the future.
 
         Genes are also added to a grouping class defined with a PANTHER id.
 
@@ -157,7 +158,7 @@ class Panther(Source):
             with mytar.extractfile(fname) as csvfile:
                 for line in csvfile:
                     # skip comment lines
-                    if re.match('^#', line.decode()):
+                    if re.match(r'^#', line.decode()):
                         logger.info("Skipping header line")
                         continue
                     line_counter += 1
@@ -168,41 +169,48 @@ class Panther(Source):
 
                     line = line.decode().strip()
 
-                    # parse each row
+                    # parse each row. ancestor_taxon is unused
                     # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6	LDO	Euarchontoglires	PTHR15964
                     (a, b, orthology_class, ancestor_taxon, panther_id) = line.split('\t')
                     (species_a, gene_a, protein_a) = a.split('|')
                     (species_b, gene_b, protein_b) = b.split('|')
 
-                    # skip the entries that don't have homolog relationships with the test ids
-                    if self.testMode and not (re.sub('UniProtKB=', '', protein_a) in self.test_ids or
-                                              re.sub('UniProtKB=', '', protein_b) in self.test_ids):
+                    # skip the entries that don't have homolog relationships
+                    # with the test ids
+                    if self.testMode and not (re.sub(r'UniProtKB=', '',
+                                                     protein_a) in self.test_ids or
+                                              re.sub(r'UniProtKB=', '',
+                                                     protein_b) in self.test_ids):
                         continue
 
                     # map the taxon abbreviations to ncbi taxon ids
                     taxon_a = self._map_taxon_abbr_to_id(species_a)
                     taxon_b = self._map_taxon_abbr_to_id(species_b)
 
-                    # ###uncomment the following code block if you want to filter based on taxid
-                    # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
+                    # ###uncomment the following code block
+                    # if you want to filter based on taxid of favorite animals
+                    # taxids = [9606,10090,10116,7227,7955,6239,8355]
                     # taxids = [9606] #human only
-                    # retain only those orthologous relationships to genes in the specified taxids
-                    # using AND will get you only those associations where gene1 AND gene2 are in the taxid list (most-filter)
-                    # using OR will get you any associations where gene1 OR gene2 are in the taxid list (some-filter)
+                    # retain only those orthologous relationships to genes
+                    # in the specified taxids
+                    # using AND will get you only those associations where
+                    # gene1 AND gene2 are in the taxid list (most-filter)
+                    # using OR will get you any associations where
+                    # gene1 OR gene2 are in the taxid list (some-filter)
                     if (self.tax_ids is not None and
-                        (int(re.sub('NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
-                            (int(re.sub('NCBITaxon:', '', taxon_b.rstrip())) not in self.tax_ids)):
+                            (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
+                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip())) not in self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
                         if limit is not None and matchcounter > limit:
                             break
 
-                    # ###end code block for filtering on taxon
+                    #### end code block for filtering on taxon
 
                     # fix the gene identifiers
-                    gene_a = re.sub('=', ':', gene_a)
-                    gene_b = re.sub('=', ':', gene_b)
+                    gene_a = re.sub(r'=', ':', gene_a)
+                    gene_b = re.sub(r'=', ':', gene_b)
 
                     clean_gene = self._clean_up_gene_id(gene_a, species_a)
                     if clean_gene is None:
@@ -242,7 +250,7 @@ class Panther(Source):
                         break
 
             logger.info("finished processing %s", f)
-            logger.warn("The following gene ids were unable to be processed: %s", str(unprocessed_gene_ids))
+            logger.warning("The following gene ids were unable to be processed: %s", str(unprocessed_gene_ids))
 
         gu.loadProperties(g, OrthologyAssoc.object_properties, gu.OBJPROP)
         gu.loadProperties(g, OrthologyAssoc.annotation_properties, gu.ANNOTPROP)
@@ -311,7 +319,7 @@ class Panther(Source):
         if ortho in ortho_to_ro_map:
             ro_id = ortho_to_ro_map.get(ortho)
         else:
-            logger.warn("unmapped orthology code %s. Defaulting to 'orthology'", ortho)
+            logger.warning("unmapped orthology code %s. Defaulting to 'orthology'", ortho)
 
         return ro_id
 
@@ -324,40 +332,40 @@ class Panther(Source):
         :return:
         """
         # special case for MGI
-        geneid = re.sub('MGI:MGI:', 'MGI:', geneid)
+        geneid = re.sub(r'MGI:MGI:', 'MGI:', geneid)
 
         # rewrite Ensembl --> ENSEMBL
-        geneid = re.sub('Ensembl', 'ENSEMBL', geneid)
+        geneid = re.sub(r'Ensembl', 'ENSEMBL', geneid)
 
         # rewrite Gene:CELE --> WormBase  these are old-school cosmid identifier
-        geneid = re.sub('Gene:CELE', 'WormBase:', geneid)
+        geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
         if sp == 'CAEEL':
-            if re.match('(Gene|ENSEMBLGenome):\w+\\.\d+', geneid):
-                geneid = re.sub('(?:Gene|ENSEMBLGenome):(\w+\\.\d+)', 'WormBase:\\1', geneid)
+            if re.match(r'(Gene|ENSEMBLGenome):\w+\\.\d+', geneid):
+                geneid = re.sub(r'(?:Gene|ENSEMBLGenome):(\w+\\.\d+)', 'WormBase:\\1', geneid)
 
         if sp == 'DROME':
-            if re.match('(ENSEMBLGenome):\w+\\.\d+', geneid):
-                geneid = re.sub('(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
+            if re.match(r'(ENSEMBLGenome):\w+\\.\d+', geneid):
+                geneid = re.sub(r'(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
 
         # rewrite GeneID --> NCBIGene
-        geneid = re.sub('GeneID', 'NCBIGene', geneid)
+        geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
 
         # rewrite Gene:Dmel --> FlyBase
-        geneid = re.sub('Gene:Dmel_', 'FlyBase:', geneid)
+        geneid = re.sub(r'Gene:Dmel_', 'FlyBase:', geneid)
         # rewrite Gene:CG --> FlyBase:CG
-        geneid = re.sub('Gene:CG', 'FlyBase:CG', geneid)
+        geneid = re.sub(r'Gene:CG', 'FlyBase:CG', geneid)
 
         # rewrite ENSEMBLGenome:FBgn --> FlyBase:FBgn
-        geneid = re.sub('ENSEMBLGenome:FBgn', 'FlyBase:FBgn', geneid)
+        geneid = re.sub(r'ENSEMBLGenome:FBgn', 'FlyBase:FBgn', geneid)
 
         # rewrite Gene:<ensembl ids> --> ENSEMBL:<id>
-        geneid = re.sub('Gene:ENS', 'ENSEMBL:ENS', geneid)
+        geneid = re.sub(r'Gene:ENS', 'ENSEMBL:ENS', geneid)
 
         # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
-        geneid = re.sub('Gene:Xenbase:', 'Xenbase:', geneid)
+        geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
-        if re.match('(Gene|ENSEMBLGenome):', geneid):
-            # logger.warn("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
+        if re.match(r'(Gene|ENSEMBLGenome):', geneid):
+            # logger.warning("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
             geneid = None
 
         return geneid
