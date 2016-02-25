@@ -40,7 +40,7 @@ class Orphanet(Source):
 
         # check to see if there's any ids configured in the config; otherwise, warn
         if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with disease test ids.")
+            logger.warning("not configured with disease test ids.")
 
         return
 
@@ -86,9 +86,11 @@ class Orphanet(Source):
 
         myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
 
+        # PYLINT complains iterparse deprecated,
+        # but as of py 3.4 only the optional & unsupplied parse arg is.
         for event, elem in ET.iterparse(myfile):
             if elem.tag == 'Disorder':
-                # get the element name and id
+                # get the element name and id, ignoreS element name
                 # id = elem.get('id') # some internal identifier
                 disorder_num = elem.find('OrphaNumber').text
 
@@ -117,7 +119,8 @@ class Orphanet(Source):
                     gene_num = a.find('./Gene/OrphaNumber').text
                     gene_id = 'Orphanet:'+str(gene_num)
                     gene_type_id = self._map_gene_type_id(gene_iid_to_type[gene_iid])
-                    gu.addClassToGraph(g, gene_id, gene_symbol, gene_type_id, gene_name)
+                    gu.addClassToGraph(g, gene_id, gene_symbol, gene_type_id,
+                                       gene_name)
                     syn_list = a.find('./Gene/SynonymList')
                     if int(syn_list.get('count')) > 0:
                         for s in syn_list.findall('./Synonym'):
@@ -127,16 +130,19 @@ class Orphanet(Source):
                     rel_id = self._map_rel_id(dgtype)
                     dg_label = a.find('./DisorderGeneAssociationType/Name').text
                     if rel_id is None:
-                        logger.warn("Cannot map association type (%s) to RO for association (%s | %s).  Skipping.",
-                                    dg_label, disorder_label, gene_symbol)
+                        logger.warning("Cannot map association type (%s) to RO for association (%s | %s).  Skipping.",
+                                       dg_label, disorder_label, gene_symbol)
                         continue
 
                     alt_locus_id = '_'+gene_num+'-'+disorder_num+'VL'
-                    alt_label = ' '.join(('some variant of', gene_symbol.strip(),
-                                          'that is a', dg_label.lower(), disorder_label))
+                    alt_label = ' '.join(('some variant of',
+                                          gene_symbol.strip(),
+                                          'that is a', dg_label.lower(),
+                                          disorder_label))
                     if self.nobnodes:
                         alt_locus_id = ':'+alt_locus_id
-                    gu.addIndividualToGraph(g, alt_locus_id, alt_label, geno.genoparts['variant_locus'])
+                    gu.addIndividualToGraph(g, alt_locus_id, alt_label,
+                                            geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
 
                     # consider typing the gain/loss-of-function variants like:
@@ -146,13 +152,20 @@ class Orphanet(Source):
                     # use "assessed" status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
                     status_code = a.find('DisorderGeneAssociationStatus').get('id')
-                    eco_id = 'ECO:0000323'  # imported automatically asserted information used in automatic assertion
-                    if status_code == '17991':  # Assessed  # TODO are these internal ids stable between releases?
-                        eco_id = 'ECO:0000322'  # imported manually asserted information used in automatic assertion
+                    # imported automatically asserted information
+                    # used in automatic assertion
+                    eco_id = 'ECO:0000323'
+                    # Assessed
+                    # TODO are these internal ids stable between releases?
+                    if status_code == '17991':
+                        # imported manually asserted information
+                        # used in automatic assertion
+                        eco_id = 'ECO:0000322'
                     # Non-traceable author statement ECO_0000034
                     # imported information in automatic assertion ECO_0000313
 
-                    assoc = G2PAssoc(self.name, alt_locus_id, disorder_id, rel_id)
+                    assoc = G2PAssoc(self.name, alt_locus_id,
+                                     disorder_id, rel_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_association_to_graph(g)
 
@@ -171,7 +184,6 @@ class Orphanet(Source):
                         if eqid is not None:
                             gu.addClassToGraph(g, eqid, None)
                             gu.addEquivalentClass(g, gene_id, eqid)
-                            pass
                 elem.clear()  # discard the element
 
             if self.testMode and limit is not None and line_counter > limit:
@@ -205,30 +217,35 @@ class Orphanet(Source):
         if orphanet_rel_id in id_map:
             rel_id = id_map[orphanet_rel_id]
         else:
-            logger.error('Disease-gene association type (%s) not mapped.', orphanet_rel_id)
+            logger.error('Disease-gene association type (%s) not mapped.',
+                         orphanet_rel_id)
 
         return rel_id
 
     @staticmethod
     def _map_gene_type_id(orphanet_type_id):
         # TODO check if these ids are stable for mapping
-
         type_id = Genotype.genoparts['sequence_feature']
         id_map = {
-            '25986': Genotype.genoparts['sequence_feature'],  # locus
-            '25993': Genotype.genoparts['protein_coding_gene'],  # gene with protein product
-            '26046': Genotype.genoparts['ncRNA_gene']  # Non-coding RNA
+            # locus
+            '25986': Genotype.genoparts['sequence_feature'],
+            # gene with protein product
+            '25993': Genotype.genoparts['protein_coding_gene'],
+            # Non-coding RNA
+            '26046': Genotype.genoparts['ncRNA_gene']
         }
 
         if orphanet_type_id in id_map:
             type_id = id_map[orphanet_type_id]
         else:
-            logger.error('Gene type (%s) not mapped.  Defaulting to SO:sequence_feature', orphanet_type_id)
+            logger.error('Gene type (%s) not mapped. Defaulting to SO:sequence_feature',
+                         orphanet_type_id)
 
         return type_id
 
     def getTestSuite(self):
         import unittest
+        # TODO PYLINT Unable to import 'tests.test_orphanet
         from tests.test_orphanet import OrphanetTestCase
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
