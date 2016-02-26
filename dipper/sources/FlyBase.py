@@ -813,7 +813,10 @@ class FlyBase(PostgreSQLSource):
                     for d in dbxrefs:
                         dbxref_id = None
                         if int(d) in pmid_ids:
-                            dbxref_id = 'PMID:'+dbxrefs[d].strip()
+                            if re.match(r'^PMID', dbxrefs[d]):
+                                dbxref_id = dbxrefs[d].strip()
+                            else:
+                                dbxref_id = 'PMID:'+dbxrefs[d].strip()
                             gu.makeLeader(g, dbxref_id)
                         elif int(d) in isbn:
                             dbxref_id = 'ISBN:'+dbxrefs[d].strip()
