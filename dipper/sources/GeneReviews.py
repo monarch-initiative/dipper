@@ -1,5 +1,3 @@
-__author__ = 'nicole'
-
 import re
 import os
 import csv
@@ -13,6 +11,8 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
 from dipper.models.Reference import Reference
+
+__author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class GeneReviews(Source):
         self.all_books = {}
 
         if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with disease test ids.")
+            logger.warning("not configured with disease test ids.")
             self.test_ids = list()
         else:
             # select ony those test ids that are omim's.
@@ -142,8 +142,8 @@ class GeneReviews(Source):
 
                 # sometimes there's bad omim nums
                 if len(omim_num) > 6:
-                    logger.warn("OMIM number incorrectly formatted in row %d; skipping:\n%s",
-                                line_counter, '\t'.join(row))
+                    logger.warning("OMIM number incorrectly formatted in row %d; skipping:\n%s",
+                                   line_counter, '\t'.join(row))
                     continue
 
                 # build up a hashmap of the mappings; then process later
@@ -256,7 +256,7 @@ class GeneReviews(Source):
             book_dir = '/'.join((self.rawdir, 'books'))
             book_files = os.listdir(book_dir)
             if ''.join((nbk, '.html')) not in book_files:
-                # logger.warn("No book found locally for %s; skipping", nbk)
+                # logger.warning("No book found locally for %s; skipping", nbk)
                 books_not_found.add(nbk)
                 continue
             logger.info("Processing %s", nbk)
@@ -268,13 +268,13 @@ class GeneReviews(Source):
             if clin_summary is not None:
                 p = clin_summary.find('p')
                 ptext = p.text
-                ptext = re.sub('\s+', ' ', ptext)
+                ptext = re.sub(r'\s+', ' ', ptext)
 
                 ul = clin_summary.find('ul')
                 if ul is not None:
                     item_text = list()
                     for li in ul.find_all('li'):
-                        item_text.append(re.sub('\s+', ' ', li.text))
+                        item_text.append(re.sub(r'\s+', ' ', li.text))
                     ptext += ' '.join(item_text)
 
                 # add in the copyright and citation info to description
@@ -284,15 +284,15 @@ class GeneReviews(Source):
 
             # get the pubs
             pmid_set = set()
-            pub_div = soup.find('div', id=re.compile(".*Literature_Cited"))
+            pub_div = soup.find('div', id=re.compile(r".*Literature_Cited"))
             if pub_div is not None:
                 ref_list = pub_div.find_all('div', attrs={'class': "bk_ref"})
                 for r in ref_list:
-                    for a in r.find_all('a', attrs={'href': re.compile("pubmed")}):
-                        if re.match('PubMed:', a.text):
-                            pmnum = re.sub('PubMed:\s*', '', a.text)
+                    for a in r.find_all('a', attrs={'href': re.compile(r"pubmed")}):
+                        if re.match(r'PubMed:', a.text):
+                            pmnum = re.sub(r'PubMed:\s*', '', a.text)
                         else:
-                            pmnum = re.search('\/pubmed\/(\d+)$', a['href']).group(1)
+                            pmnum = re.search(r'\/pubmed\/(\d+)$', a['href']).group(1)
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
                             self.gu.addTriple(self.graph, pmid, self.gu.object_properties['is_about'], nbk_id)
@@ -317,9 +317,10 @@ class GeneReviews(Source):
         l = len(books_not_found)
         if len(books_not_found) > 0:
             if l > 100:
-                logger.warn("There were %d books not found.", l)
+                logger.warning("There were %d books not found.", l)
             else:
-                logger.warn("The following %d books were not found locally: %s", l, str(books_not_found))
+                logger.warning("The following %d books were not found locally: %s",
+                               l, str(books_not_found))
         logger.info("Finished processing %d books for clinical descriptions", c-l)
 
         return
