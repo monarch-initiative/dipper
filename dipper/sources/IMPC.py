@@ -31,8 +31,10 @@ class IMPC(Source):
 
     We use all identifiers given by the IMPC with a few exceptions:
 
-    *  For identifiers that IMPC provides, but does not resolve, we instantiate them as BNodes.  Examples include
-       things with the pattern of:  EUROALL, EUROCURATE, NULL-*,
+    *  For identifiers that IMPC provides, but does not resolve,
+        we instantiate them as BNodes.
+        Examples include things with the pattern of:
+            EUROALL, EUROCURATE, NULL-*,
 
     *  We mint three identifiers:
        1.  Intrinsic genotypes not including sex, based on:
@@ -48,38 +50,47 @@ class IMPC(Source):
            effective_genotype_id + phenotype_id + phenotyping_center +
            pipeline_stable_id + procedure_stable_id + parameter_stable_id
 
-    We DO NOT yet add the assays as evidence for the G2P associations here.  (To be added in the future.)
+    We DO NOT yet add the assays as evidence for the G2P associations here.
+    To be added in the future.
 
     """
 
     files = {
-        # 'impc': {'file': 'IMPC_genotype_phenotype.csv.gz',
-        #          'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
-        # 'euro': {'file': 'EuroPhenome_genotype_phenotype.csv.gz',
-        #          'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
-        # 'mgd': {'file': 'MGP_genotype_phenotype.csv.gz',
-        #         'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'},
-        # '3i': {'file': '3I_genotype_phenotype.csv.gz',
-        #         'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/3I_genotype_phenotype.csv.gz'},
-        'all': {'file': 'ALL_genotype_phenotype.csv.gz',
-                'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/ALL_genotype_phenotype.csv.gz'},
-        'checksum': {'file': 'checksum.md5',
-                     'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/checksum.md5'},
+        # 'impc': {
+        #   'file': 'IMPC_genotype_phenotype.csv.gz',
+        #   'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/IMPC_genotype_phenotype.csv.gz'},
+        # 'euro': {
+        #   'file': 'EuroPhenome_genotype_phenotype.csv.gz',
+        #   'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/EuroPhenome_genotype_phenotype.csv.gz'},
+        # 'mgd': {
+        #   'file': 'MGP_genotype_phenotype.csv.gz',
+        #   'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/MGP_genotype_phenotype.csv.gz'},
+        # '3i': {
+        #   'file': '3I_genotype_phenotype.csv.gz',
+        #   'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/3I_genotype_phenotype.csv.gz'},
+        'all': {
+            'file': 'ALL_genotype_phenotype.csv.gz',
+            'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/ALL_genotype_phenotype.csv.gz'},
+        'checksum': {
+            'file': 'checksum.md5',
+            'url': 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/checksum.md5'},
     }
 
     # TODO move these into the conf.json
     # the following are gene ids for testing
-    test_ids = ["MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
-                "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
-                "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
-                "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453",
-                "MGI:1098270"]
+    test_ids = [
+        "MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840", "MGI:2144157",
+        "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649", "MGI:95639", "MGI:1341847",
+        "MGI:104848", "MGI:2442444", "MGI:2444584", "MGI:1916948", "MGI:107403", "MGI:1860086",
+        "MGI:1919305", "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571", "MGI:2152453",
+        "MGI:1098270"]
 
     def __init__(self):
         Source.__init__(self, 'impc')
 
         # update the dataset object with details about this resource
-        self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org', None,
+        self.dataset = Dataset('impc', 'IMPC', 'http://www.mousephenotype.org',
+                               None,
                                'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
 
         # TODO add a citation for impc dataset as a whole
@@ -98,11 +109,12 @@ class IMPC(Source):
 
     def parse(self, limit=None):
         """
-        IMPC data is delivered in three separate csv files or in one integrated file, each with the
-        same file format.
+        IMPC data is delivered in three separate csv files OR
+        in one integrated file, each with the same file format.
 
         :param limit:
         :return:
+
         """
         if limit is not None:
             logger.info("Only parsing first %s rows fo each file", str(limit))
@@ -149,12 +161,14 @@ class IMPC(Source):
             for row in filereader:
                 line_counter += 1
 
-                (marker_accession_id, marker_symbol, phenotyping_center, colony, sex, zygosity, allele_accession_id,
-                 allele_symbol, allele_name, strain_accession_id, strain_name, project_name, project_fullname,
-                 pipeline_name, pipeline_stable_id, procedure_stable_id, procedure_name,
-                 parameter_stable_id, parameter_name,
-                 top_level_mp_term_id, top_level_mp_term_name, mp_term_id, mp_term_name,
-                 p_value, percentage_change, effect_size, statistical_method, resource_name) = row
+                (marker_accession_id, marker_symbol, phenotyping_center, colony,
+                 sex, zygosity, allele_accession_id, allele_symbol, allele_name,
+                 strain_accession_id, strain_name, project_name,
+                 project_fullname, pipeline_name, pipeline_stable_id,
+                 procedure_stable_id, procedure_name, parameter_stable_id,
+                 parameter_name, top_level_mp_term_id, top_level_mp_term_name,
+                 mp_term_id, mp_term_name, p_value, percentage_change,
+                 effect_size, statistical_method, resource_name) = row
 
                 if self.testMode and marker_accession_id not in self.test_ids:
                     continue
@@ -162,142 +176,173 @@ class IMPC(Source):
                 ###### cleanup some of the identifiers ######
                 zygosity_id = self._map_zygosity(zygosity)
 
-                # colony ids sometimes have <> in them, spaces, or other non-alphanumerics
-                # and break our system; replace these with underscores
-                colony_id = '_'+re.sub('\W+', '_', colony)
+                # colony ids sometimes have <> in them, spaces,
+                # or other non-alphanumerics and break our system;
+                # replace these with underscores
+                colony_id = '_'+re.sub(r'\W+', '_', colony)
                 if self.nobnodes:
                     colony_id = ':'+colony_id
 
-                if not re.match('MGI', allele_accession_id):
-                    allele_accession_id = '_IMPC-'+re.sub(':', '', allele_accession_id)
+                if not re.match(r'MGI', allele_accession_id):
+                    allele_accession_id = '_IMPC-'+re.sub(r':', '',
+                                                          allele_accession_id)
                     if self.nobnodes:
                         allele_accession_id = ':'+allele_accession_id
-                if re.search('EUROCURATE', strain_accession_id):
-                    strain_accession_id = '_'+strain_accession_id   # the eurocurate links don't resolve at IMPC
+                if re.search(r'EUROCURATE', strain_accession_id):
+                    # the eurocurate links don't resolve at IMPC
+                    strain_accession_id = '_'+strain_accession_id
                     if self.nobnodes:
                         strain_accession_id = ':'+strain_accession_id
-                elif not re.match('MGI', strain_accession_id):
-                    logger.info("Found a strange strain accession...%s", strain_accession_id)
+                elif not re.match(r'MGI', strain_accession_id):
+                    logger.info("Found a strange strain accession...%s",
+                                strain_accession_id)
                     strain_accession_id = 'IMPC:'+strain_accession_id
 
                 ######################
-                # first, add the marker and variant to the graph
-                # as with MGI, the allele is the variant locus.  IF the marker is not known, we will call it a
-                # sequence alteration.  otherwise, we will create a BNode for the sequence alteration.
-                sequence_alteration_id = variant_locus_id = variant_locus_name = sequence_alteration_name = None
+                # first, add the marker and variant to the graph as with MGI,
+                # the allele is the variant locus.  IF the marker is not known,
+                # we will call it a sequence alteration.  otherwise,
+                # we will create a BNode for the sequence alteration.
+                sequence_alteration_id = variant_locus_id = None
+                variant_locus_name = sequence_alteration_name = None
 
                 # extract out what's within the <> to get the symbol
-                if re.match('.*<.*>', allele_symbol):
-                    sequence_alteration_name = re.match('.*<(.*)>', allele_symbol).group(1)
+                if re.match(r'.*<.*>', allele_symbol):
+                    sequence_alteration_name = re.match(r'.*<(.*)>',
+                                                        allele_symbol).group(1)
                 else:
                     sequence_alteration_name = allele_symbol
 
                 if marker_accession_id is not None and marker_accession_id == '':
-                    logger.warn("Marker unspecified on row %d", line_counter)
+                    logger.warning("Marker unspecified on row %d", line_counter)
                     marker_accession_id = None
 
                 if marker_accession_id is not None:
                     variant_locus_id = allele_accession_id
                     variant_locus_name = allele_symbol
                     variant_locus_type = geno.genoparts['variant_locus']
-                    geno.addGene(marker_accession_id, marker_symbol, geno.genoparts['gene'])
-                    geno.addAllele(variant_locus_id, variant_locus_name, variant_locus_type, None)
+                    geno.addGene(marker_accession_id, marker_symbol,
+                                 geno.genoparts['gene'])
+                    geno.addAllele(variant_locus_id, variant_locus_name,
+                                   variant_locus_type, None)
                     geno.addAlleleOfGene(variant_locus_id, marker_accession_id)
 
-                    sequence_alteration_id = '_seqalt'+re.sub(':', '', allele_accession_id)
+                    sequence_alteration_id = '_seqalt'+re.sub(r':', '',
+                                                              allele_accession_id)
                     if self.nobnodes:
                         sequence_alteration_id = ':'+sequence_alteration_id
-                    geno.addSequenceAlterationToVariantLocus(sequence_alteration_id, variant_locus_id)
+                    geno.addSequenceAlterationToVariantLocus(sequence_alteration_id,
+                                                             variant_locus_id)
 
                 else:
                     sequence_alteration_id = allele_accession_id
 
-                # IMPC contains targeted mutations with either gene traps, knockouts, insertion/intragenic deletions.
-                # but I don't really know what the SA is here, so I don't add it.
-                geno.addSequenceAlteration(sequence_alteration_id, sequence_alteration_name)
+                # IMPC contains targeted mutations with either gene traps,
+                # knockouts, insertion/intragenic deletions.
+                # but I don't really know what the SeqAlt is here,
+                # so I don't add it.
+                geno.addSequenceAlteration(sequence_alteration_id,
+                                           sequence_alteration_name)
 
 
                 ##############    BUILD THE COLONY    #############
                 # first, let's describe the colony that the animals come from
-                # The Colony ID refers to the ES cell clone used to generate a mouse strain.
-                # Terry sez: we use this clone ID to track ES cell -> mouse strain -> mouse phenotyping.
-                # The same ES clone maybe used at multiple centers, so we have to concatenate the two to have a
-                # unique ID.
+                # The Colony ID refers to the ES cell clone
+                #   used to generate a mouse strain.
+                # Terry sez: we use this clone ID to track
+                #   ES cell -> mouse strain -> mouse phenotyping.
+                # The same ES clone maybe used at multiple centers,
+                # so we have to concatenate the two to have a unique ID.
                 # some useful reading about generating mice from ES cells:
                 # http://ki.mit.edu/sbc/escell/services/details
 
-                # here, we'll make a genotype that derives from an ES cell with a given allele.  the strain is not
-                # really attached to the colony.
+                # here, we'll make a genotype
+                # that derives from an ES cell with a given allele.
+                # the strain is not really attached to the colony.
 
-                # the colony/clone is reflective of the allele, with unknown zygosity
+                # the colony/clone is reflective of the allele,
+                # with unknown zygosity
                 stem_cell_class = 'ERO:0002002'
                 gu.addIndividualToGraph(g, colony_id, colony, stem_cell_class)
 
                 # vslc of the colony has unknown zygosity
-                # note that we will define the allele (and it's relationship to the marker, etc.) later
-                # FIXME is it really necessary to create this vslc when we always know it's unknown zygosity?
+                # note that we will define the allele
+                # (and it's relationship to the marker, etc.) later
+                # FIXME is it really necessary to create this vslc
+                # when we always know it's unknown zygosity?
                 vslc_colony = '_'+allele_accession_id+geno.zygosity['indeterminate']
-                vslc_colony = re.sub(':', '', vslc_colony)
+                vslc_colony = re.sub(r':', '', vslc_colony)
                 if self.nobnodes:
                     vslc_colony = ':'+vslc_colony
                 vslc_colony_label = allele_symbol+'/<?>'
-                # for ease of reading, we make the colony genotype variables.  in the future, it might be desired
-                # to keep the vslcs
+                # for ease of reading, we make the colony genotype variables.
+                # in the future, it might be desired to keep the vslcs
                 colony_genotype_id = vslc_colony
                 colony_genotype_label = vslc_colony_label
                 geno.addGenotype(colony_genotype_id, colony_genotype_label)
-                geno.addParts(allele_accession_id, colony_genotype_id, geno.object_properties['has_alternate_part'])
-                geno.addPartsToVSLC(vslc_colony, allele_accession_id, None, geno.zygosity['indeterminate'],
+                geno.addParts(allele_accession_id, colony_genotype_id,
+                              geno.object_properties['has_alternate_part'])
+                geno.addPartsToVSLC(vslc_colony, allele_accession_id, None,
+                                    geno.zygosity['indeterminate'],
                                     geno.object_properties['has_alternate_part'])
-                gu.addTriple(g, colony_id, geno.object_properties['has_genotype'], colony_genotype_id)
+                gu.addTriple(g, colony_id,
+                             geno.object_properties['has_genotype'],
+                             colony_genotype_id)
 
                 ##############    BUILD THE ANNOTATED GENOTYPE    #############
-                # now, we'll build the genotype of the individual that derives from the colony/clone
-                # genotype that is attached to phenotype = colony_id + strain + zygosity + sex
-                # (and is derived from a colony)
+                # now, we'll build the genotype of the individual that derives
+                # from the colony/clone genotype that is attached to
+                # phenotype = colony_id + strain + zygosity + sex
+                #(and is derived from a colony)
 
                 # this is a sex-agnostic genotype
                 genotype_id = self.make_id((colony_id+phenotyping_center+zygosity+strain_accession_id))
                 geno.addSequenceDerivesFrom(genotype_id, colony_id)
 
-                # build the VSLC of the sex-agnostic genotype based on the zygosity
+                # build the VSLC of the sex-agnostic genotype
+                # based on the zygosity
                 allele1_id = allele_accession_id
                 allele2_id = allele2_rel = None
                 allele1_label = allele_symbol
                 allele2_label = '<?>'
-                # Making VSLC labels from the various parts, can change later if desired.
+                # Making VSLC labels from the various parts,
+                # can change later if desired.
                 if zygosity == 'heterozygote':
-                    allele2_label = re.sub('<.*', '<+>', allele1_label)
+                    allele2_label = re.sub(r'<.*', '<+>', allele1_label)
                     allele2_id = None
                 elif zygosity == 'homozygote':
                     allele2_label = allele1_label
                     allele2_id = allele1_id
                     allele2_rel = geno.object_properties['has_alternate_part']
                 elif zygosity == 'hemizygote':
-                    allele2_label = re.sub('<.*', '<0>', allele1_label)
+                    allele2_label = re.sub(r'<.*', '<0>', allele1_label)
                     allele2_id = None
                 elif zygosity == 'not_applicable':
-                    allele2_label = re.sub('<.*', '<?>', allele1_label)
+                    allele2_label = re.sub(r'<.*', '<?>', allele1_label)
                     allele2_id = None
                 else:
-                    logger.warn("found unknown zygosity %s", zygosity)
+                    logger.warning("found unknown zygosity %s", zygosity)
                     break
                 vslc_name = '/'.join((allele1_label, allele2_label))
 
                 # Add the VSLC
-                vslc_id = '_' + '-'.join((marker_accession_id, allele_accession_id, zygosity))
-                vslc_id = re.sub(':', '', vslc_id)
+                vslc_id = '_' + '-'.join((marker_accession_id,
+                                          allele_accession_id, zygosity))
+                vslc_id = re.sub(r':', '', vslc_id)
                 if self.nobnodes:
                     vslc_id = ':'+vslc_id
-                gu.addIndividualToGraph(g, vslc_id, vslc_name, geno.genoparts['variant_single_locus_complement'])
+                gu.addIndividualToGraph(g, vslc_id, vslc_name,
+                                        geno.genoparts['variant_single_locus_complement'])
                 geno.addPartsToVSLC(vslc_id, allele1_id, allele2_id, zygosity_id,
-                                    geno.object_properties['has_alternate_part'], allele2_rel)
+                                    geno.object_properties['has_alternate_part'],
+                                    allele2_rel)
 
                 # add vslc to genotype
                 geno.addVSLCtoParent(vslc_id, genotype_id)
 
                 # note that the vslc is also the gvc
-                gu.addType(g, vslc_id, Genotype.genoparts['genomic_variation_complement'])
+                gu.addType(g, vslc_id,
+                           Genotype.genoparts['genomic_variation_complement'])
 
                 # Add the genomic background
                 # create the genomic background id and name
@@ -308,31 +353,41 @@ class IMPC(Source):
 
                 genotype_name = vslc_name
                 if genomic_background_id is not None:
-                    geno.addGenotype(genomic_background_id, strain_name, geno.genoparts['genomic_background'])
+                    geno.addGenotype(genomic_background_id, strain_name,
+                                     geno.genoparts['genomic_background'])
 
-                    # make a phenotyping-center-specific strain to use as the background
+                    # make a phenotyping-center-specific strain
+                    # to use as the background
                     pheno_center_strain_label = strain_name+'/'+phenotyping_center
-                    pheno_center_strain_id = '-'.join((re.sub(':', '', genomic_background_id),
-                                                           re.sub('\s', '_', phenotyping_center)))
-                    if not re.match('^_', pheno_center_strain_id):
+                    pheno_center_strain_id = '-'.join((re.sub(r':', '',
+                                                              genomic_background_id),
+                                                       re.sub(r'\s', '_',
+                                                              phenotyping_center)))
+                    if not re.match(r'^_', pheno_center_strain_id):
                         pheno_center_strain_id = '_'+pheno_center_strain_id
                     if self.nobnodes:
                         pheno_center_strain_id = ':'+pheno_center_strain_id
-                    geno.addGenotype(pheno_center_strain_id, pheno_center_strain_label,
+                    geno.addGenotype(pheno_center_strain_id,
+                                     pheno_center_strain_label,
                                      geno.genoparts['genomic_background'])
-                    geno.addSequenceDerivesFrom(pheno_center_strain_id, genomic_background_id)
+                    geno.addSequenceDerivesFrom(pheno_center_strain_id,
+                                                genomic_background_id)
 
-                    # Making genotype labels from the various parts, can change later if desired.
-                    # since the genotype is reflective of the place it got made, should put that in to disambiguate
+                    # Making genotype labels from the various parts,
+                    # can change later if desired.
+                    # since the genotype is reflective of the place it got made,
+                    # should put that in to disambiguate
                     genotype_name = genotype_name+' ['+pheno_center_strain_label+']'
-                    geno.addGenomicBackgroundToGenotype(pheno_center_strain_id, genotype_id)
+                    geno.addGenomicBackgroundToGenotype(pheno_center_strain_id,
+                                                        genotype_id)
                     geno.addTaxon(pheno_center_strain_id, taxon_id)
-
-                geno.addSequenceDerivesFrom(genotype_id, colony_id)  # this is redundant, but i'll keep in in for now
+                # this is redundant, but i'll keep in in for now
+                geno.addSequenceDerivesFrom(genotype_id, colony_id)
                 genotype_name += '['+colony+']'
                 geno.addGenotype(genotype_id, genotype_name)
 
-                # Make the sex-qualified genotype, which is what the phenotype is associated with
+                # Make the sex-qualified genotype,
+                # which is what the phenotype is associated with
                 sex_qualified_genotype_id = self.make_id((colony_id+phenotyping_center+zygosity+strain_accession_id+sex))
                 sex_qualified_genotype_label = genotype_name+' ('+sex+')'
                 if sex == 'male':
@@ -342,8 +397,10 @@ class IMPC(Source):
                 else:
                     sq_type_id = geno.genoparts['sex_qualified_genotype']
 
-                geno.addGenotype(sex_qualified_genotype_id, sex_qualified_genotype_label, sq_type_id)
-                geno.addParts(genotype_id, sex_qualified_genotype_id, geno.object_properties['has_alternate_part'])
+                geno.addGenotype(sex_qualified_genotype_id,
+                                 sex_qualified_genotype_label, sq_type_id)
+                geno.addParts(genotype_id, sex_qualified_genotype_id,
+                              geno.object_properties['has_alternate_part'])
 
                 if genomic_background_id is not None and genomic_background_id != '':
                     # Add the taxon to the genomic_background_id
@@ -354,34 +411,42 @@ class IMPC(Source):
 
                 ##############    BUILD THE G2P ASSOC    #############
                 # from an old email dated July 23 2014:
-                # Phenotypes associations are made to imits colony_id+center+zygosity+gender
+                # Phenotypes associations are made to
+                # imits colony_id+center+zygosity+gender
 
                 phenotype_id = mp_term_id
 
-                # it seems that sometimes phenotype ids are missing.  indicate here
+                # it seems that sometimes phenotype ids are missing.
+                # indicate here
                 if phenotype_id is None or phenotype_id == '':
-                    logger.warn("No phenotype id specified for row %d: %s", line_counter, str(row))
+                    logger.warning("No phenotype id specified for row %d: %s",
+                                   line_counter, str(row))
                     continue
+                # experimental_phenotypic_evidence This was used in ZFIN
+                eco_id = "ECO:0000059"
 
-                eco_id = "ECO:0000059"  # experimental_phenotypic_evidence This was used in ZFIN
+                # the association comes as a result of a g2p from
+                # a procedure in a pipeline at a center and parameter tested
 
-                # the association comes as a result of a g2p from a procedure in a pipeline at a center
-                # and parameter tested
-
-                assoc = G2PAssoc(self.name, sex_qualified_genotype_id, phenotype_id)
+                assoc = G2PAssoc(self.name, sex_qualified_genotype_id,
+                                 phenotype_id)
                 assoc.add_evidence(eco_id)
                 # assoc.set_score(float(p_value))
 
-                # TODO add evidence instance using pipeline_stable_id + procedure_stable_id + parameter_stable_id
+                # TODO add evidence instance using
+                # pipeline_stable_id + procedure_stable_id + parameter_stable_id
 
                 assoc.add_association_to_graph(g)
                 assoc_id = assoc.get_association_id()
 
                 # add a free-text description
-                description = ' '.join((mp_term_name, 'phenotype determined by', phenotyping_center, 'in an',
-                                        procedure_name, 'assay where', parameter_name.strip(),
-                                        'was measured with an effect_size of', str(round(float(effect_size), 5)),
-                                         '(p =', "{:.4e}".format(float(p_value)), ').'))
+                description = ' '.join((mp_term_name, 'phenotype determined by',
+                                        phenotyping_center, 'in an',
+                                        procedure_name, 'assay where',
+                                        parameter_name.strip(),
+                                        'was measured with an effect_size of',
+                                        str(round(float(effect_size), 5)),
+                                        '(p =', "{:.4e}".format(float(p_value)), ').'))
 
                 gu.addDescription(g, assoc_id, description)
 
@@ -410,13 +475,14 @@ class IMPC(Source):
         if zygosity.strip() in type_map:
             typeid = type_map.get(zygosity)
         else:
-            logger.warn("Zygosity type not mapped: %s", zygosity)
+            logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
 
     def parse_checksum_file(self, file):
         """
         :param file
         :return dict
+
         """
         checksums = dict()
         file_path = '/'.join((self.rawdir, file))
@@ -432,6 +498,7 @@ class IMPC(Source):
         """
         test to see if fetched file matches checksum from ebi
         :return: True or False
+
         """
         is_match = True
         reference_checksums = self.parse_checksum_file(
@@ -440,7 +507,7 @@ class IMPC(Source):
             if os.path.isfile('/'.join((self.rawdir, file))):
                 if self.get_file_md5(self.rawdir, file) != md5:
                     is_match = False
-                    logger.warn('%s was not downloaded completely', file)
+                    logger.warning('%s was not downloaded completely', file)
                     return is_match
 
         return is_match
