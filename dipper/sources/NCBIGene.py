@@ -293,7 +293,7 @@ class NCBIGene(Source):
                         mychrom = makeChromID(c, tax_num, 'CHR')
                         # temporarily use the taxnum for the disambiguating label
                         mychrom_syn = makeChromLabel(c, tax_num)
-                        gu.addSynonym(g, mychrom,  mychrom_syn)
+                        gu.addSynonym(g, mychrom, mychrom_syn)
                         band_match = re.match(
                             r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
                         if band_match is not None and len(band_match.groups()) > 0:
