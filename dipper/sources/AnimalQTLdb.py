@@ -18,26 +18,30 @@ logger = logging.getLogger(__name__)
 
 class AnimalQTLdb(Source):
     """
-    The Animal Quantitative Trait Loci (QTL) database (Animal QTLdb) is
-    designed to house publicly all available QTL and single-nucleotide
-    polymorphism/gene association data on livestock animal species.  This includes:
-    * chicken
-    * horse
-    * cow
-    * sheep
-    * rainbow trout
-    * pig
-    While most of the phenotypes here are related to animal husbandry, production, and rearing, integration
-    of these phenotypes with other species may lead to insight for human disease.
+    The Animal Quantitative Trait Loci (QTL) database (Animal QTLdb) is designed
+    to house publicly all available QTL and single-nucleotide polymorphism/gene
+    association data on livestock animal species.  This includes:
+        * chicken
+        * horse
+        * cow
+        * sheep
+        * rainbow trout
+        * pig
+    While most of the phenotypes here are related to animal husbandry,
+    production, and rearing, integration of these phenotypes with other species
+    may lead to insight for human disease.
 
-    Here, we use the QTL genetic maps and their computed genomic locations to create
-    associations between the QTLs and their traits.  The traits come in their internal Animal Trait ontology
-    vocabulary, which they further map to [Vertebrate Trait](http://bioportal.bioontology.org/ontologies/VT),
+    Here, we use the QTL genetic maps and their computed genomic locations to
+    create associations between the QTLs and their traits.  The traits come in
+    their internal Animal Trait ontology vocabulary, which they further map to
+    [Vertebrate Trait](http://bioportal.bioontology.org/ontologies/VT),
     Product Trait, and Clinical Measurement Ontology vocabularies.
 
-    Since these are only associations to broad locations, we link the traits via "is_marker_for", since
-    there is no specific causative nature in the association.  p-values for the associations are attached
-    to the Association objects.  We default to the UCSC build for the genomic coordinates, and make equivalences.
+    Since these are only associations to broad locations, we link the traits via
+    "is_marker_for", since there is no specific causative nature in the
+    association.  p-values for the associations are attached to the Association
+    objects.  We default to the UCSC build for the genomic coordinates,
+    and make equivalences.
 
     Any genetic position ranges that are <0, we do not include here.
 
@@ -45,51 +49,67 @@ class AnimalQTLdb(Source):
 
     files = {
         # defaulting to this
-        'cattle_bp': {'file': 'QTL_Btau_4.6.gff.txt.gz',
-                      'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_Btau_4.6.gff.txt.gz'},
+        'cattle_bp': {
+            'file': 'QTL_Btau_4.6.gff.txt.gz',
+            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_Btau_4.6.gff.txt.gz'},
         # disabling this for now
-        # 'cattle_umd_bp': {'file': 'QTL_UMD_3.1.gff.txt.gz',
-        #          'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_UMD_3.1.gff.txt.gz'},
-        'cattle_cm': {'file': 'cattle_QTLdata.txt',
-                      'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
-        'chicken_bp': {'file': 'QTL_GG_4.0.gff.txt.gz',
-                       'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_GG_4.0.gff.txt.gz'},
-        'chicken_cm': {'file': 'chicken_QTLdata.txt',
-                       'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
-        'pig_bp': {'file': 'QTL_SS_10.2.gff.txt.gz',
-                   'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_SS_10.2.gff.txt.gz'},
-        'pig_cm': {'file': 'pig_QTLdata.txt',
-                   'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/pig_QTLdata.txt'},
-        'sheep_bp': {'file': 'QTL_OAR_3.1.gff.txt.gz',
-                     'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_OAR_3.1.gff.txt.gz'},
-        'sheep_cm': {'file': 'sheep_QTLdata.txt',
-                     'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
-        'horse_bp': {'file': 'QTL_EquCab2.0.gff.txt.gz',
-                     'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_EquCab2.0.gff.txt.gz'},
-        'horse_cm': {'file': 'horse_QTLdata.txt',
-                     'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt'},
-        'rainbow_trout_cm': {'file': 'rainbow_trout_QTLdata.txt',
-                             'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
+        # 'cattle_umd_bp': {
+        #   'file': 'QTL_UMD_3.1.gff.txt.gz',
+        #   'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_UMD_3.1.gff.txt.gz'},
+        'cattle_cm': {
+            'file': 'cattle_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
+        'chicken_bp': {
+            'file': 'QTL_GG_4.0.gff.txt.gz',
+            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_GG_4.0.gff.txt.gz'},
+        'chicken_cm': {
+            'file': 'chicken_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
+        'pig_bp': {
+            'file': 'QTL_SS_10.2.gff.txt.gz',
+            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_SS_10.2.gff.txt.gz'},
+        'pig_cm': {
+            'file': 'pig_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/pig_QTLdata.txt'},
+        'sheep_bp': {
+            'file': 'QTL_OAR_3.1.gff.txt.gz',
+            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_OAR_3.1.gff.txt.gz'},
+        'sheep_cm': {
+            'file': 'sheep_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
+        'horse_bp': {
+            'file': 'QTL_EquCab2.0.gff.txt.gz',
+            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_EquCab2.0.gff.txt.gz'},
+        'horse_cm': {
+            'file': 'horse_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt'},
+        'rainbow_trout_cm': {
+            'file': 'rainbow_trout_QTLdata.txt',
+            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
         # TODO add rainbow_trout_bp when available
-        'trait_mappings': {'file': 'trait_mappings',
-                           'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
+        'trait_mappings': {
+            'file': 'trait_mappings',
+            'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
     }
 
     # QTL ids
     test_ids = {
-        28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
+        28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795,
+        1798, 32133
     }
 
     def __init__(self):
         Source.__init__(self, 'animalqtldb')
 
         # update the dataset object with details about this resource
-        self.dataset = Dataset('animalqtldb', 'Animal QTL db',
-                               'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
-                               'http://www.animalgenome.org/QTLdb/faq#23')
+        self.dataset = Dataset(
+            'animalqtldb', 'Animal QTL db',
+            'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
+            'http://www.animalgenome.org/QTLdb/faq#23')
 
         # source-specific warnings.  will be cleared when resolved.
-        logger.warn("No licences or rights exist for the raw data from this resource.")
+        logger.warning(
+            "No licences or rights exist for the raw data from this resource.")
 
         return
 
@@ -120,7 +140,8 @@ class AnimalQTLdb(Source):
 
         geno = Genotype(g)
         # organisms  = ['chicken']
-        organisms = ['chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
+        organisms = [
+            'chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
 
         for o in organisms:
             tax_id = self._get_tax_by_common_name(o)
@@ -131,7 +152,7 @@ class AnimalQTLdb(Source):
             k = o+'_bp'
             if k in self.files:
                 file = self.files[k]['file']
-                m = re.search('QTL_([\w\.]+)\.gff.txt.gz', file)
+                m = re.search(r'QTL_([\w\.]+)\.gff.txt.gz', file)
                 if m is None:
                     logger.error("Can't match a gff build")
                 else:
@@ -140,12 +161,15 @@ class AnimalQTLdb(Source):
                     logger.info("Build = %s", build_id)
                     geno.addReferenceGenome(build_id, build, tax_id)
                 if build_id is not None:
-                    self._process_QTLs_genomic_location('/'.join((self.rawdir, file)), tax_id, build_id, build, limit)
+                    self._process_QTLs_genomic_location(
+                        '/'.join((self.rawdir, file)), tax_id, build_id, build,
+                        limit)
 
             k = o+'_cm'
             if k in self.files:
                 file = self.files[k]['file']
-                self._process_QTLs_genetic_location('/'.join((self.rawdir, file)), tax_id, o, limit)
+                self._process_QTLs_genetic_location(
+                    '/'.join((self.rawdir, file)), tax_id, o, limit)
 
         logger.info("Finished parsing")
 
@@ -162,6 +186,7 @@ class AnimalQTLdb(Source):
 
         :param limit:
         :return:
+
         """
         if self.testMode:
             g = self.testgraph
@@ -177,10 +202,13 @@ class AnimalQTLdb(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (qtl_id, qtl_symbol, trait_name, assotype, empty, chromosome, position_cm, range_cm,
-                 flankmark_a2, flankmark_a1, peak_mark, flankmark_b1, flankmark_b2, exp_id, model, test_base,
-                 sig_level, lod_score, ls_mean, p_values, f_statistics, variance, bayes_value, likelihood_ratio,
-                 trait_id, dom_effect, add_effect, pubmed_id, gene_id, gene_id_src, gene_id_type, empty2) = row
+                (qtl_id, qtl_symbol, trait_name, assotype, empty, chromosome,
+                 position_cm, range_cm, flankmark_a2, flankmark_a1, peak_mark,
+                 flankmark_b1, flankmark_b2, exp_id, model, test_base,
+                 sig_level, lod_score, ls_mean, p_values, f_statistics,
+                 variance, bayes_value, likelihood_ratio, trait_id, dom_effect,
+                 add_effect, pubmed_id, gene_id, gene_id_src, gene_id_type,
+                 empty2) = row
 
                 if self.testMode and int(qtl_id) not in self.test_ids:
                     continue
@@ -195,50 +223,70 @@ class AnimalQTLdb(Source):
                 # deal with the chromosome
                 chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
-                # add a version of the chromosome which is defined as the genetic map
+                # add a version of the chromosome which is defined as
+                # the genetic map
                 build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
-                geno.addChromosomeInstance(chromosome, build_id, build_label, chrom_id)
+                geno.addChromosomeInstance(
+                    chromosome, build_id, build_label, chrom_id)
                 start = stop = None
-                if re.search('-', range_cm):
-                    range_parts = re.split('-', range_cm)
+                if re.search(r'-', range_cm):
+                    range_parts = re.split(r'-', range_cm)
                     # check for poorly formed ranges
                     if len(range_parts) == 2 and range_parts[0] != '' and range_parts[1] != '':
-                        (start, stop) = [int(float(x.strip())) for x in re.split('-', range_cm)]
+                        (start, stop) = [int(float(x.strip())) for x in re.split(r'-', range_cm)]
                     else:
-                        logger.info("There's a cM range we can't handle for QTL %s: %s", qtl_id, range_cm)
+                        logger.info(
+                            "There's a cM range we can't handle for QTL %s: %s",
+                            qtl_id, range_cm)
                 elif position_cm != '':
                     start = stop = int(float(position_cm))
 
-                # FIXME remove converion to int for start/stop when schema can handle floats
-                # add in the genetic location based on the range
-                f.addFeatureStartLocation(start, chrom_in_build_id, None, [Feature.types['FuzzyPosition']])
-                f.addFeatureEndLocation(stop, chrom_in_build_id, None, [Feature.types['FuzzyPosition']])
+                # FIXME remove converion to int for start/stop
+                # when schema can handle floats add in the genetic location
+                # based on the range
+                f.addFeatureStartLocation(
+                    start, chrom_in_build_id, None,
+                    [Feature.types['FuzzyPosition']])
+                f.addFeatureEndLocation(
+                    stop, chrom_in_build_id, None,
+                    [Feature.types['FuzzyPosition']])
                 f.addFeatureToGraph(g)
 
-                # sometimes there's a peak marker, like a rsid.  we want to add that as a variant of the gene,
+                # sometimes there's a peak marker, like a rsid.
+                # we want to add that as a variant of the gene,
                 # and xref it to the qtl.
                 dbsnp_id = None
-                if peak_mark != '' and peak_mark != '.' and re.match('rs', peak_mark.strip()):
+                if peak_mark != '' and peak_mark != '.' and \
+                        re.match(r'rs', peak_mark.strip()):
                     dbsnp_id = 'dbSNP:'+peak_mark.strip()
 
-                    gu.addIndividualToGraph(g, dbsnp_id, None, geno.genoparts['sequence_alteration'])
+                    gu.addIndividualToGraph(
+                        g, dbsnp_id, None,
+                        geno.genoparts['sequence_alteration'])
                     gu.addXref(g, qtl_id, dbsnp_id)
 
                 if gene_id is not None and gene_id != '' and gene_id != '.':
-                    if gene_id_src == 'NCBIgene' or gene_id_src == '':  # we assume if no src is provided, it's NCBI
+                    # we assume if no src is provided, it's NCBI
+                    if gene_id_src == 'NCBIgene' or gene_id_src == '':
                         gene_id = 'NCBIGene:'+gene_id.strip()
-                        geno.addGene(gene_id, None)  # we will expect that these labels provided elsewhere
-                        geno.addAlleleOfGene(qtl_id, gene_id, geno.object_properties['feature_to_gene_relation'])   # FIXME what is the right relationship here?
+                        # we will expect that these labels provided elsewhere
+                        geno.addGene(gene_id, None)
+                        # FIXME what is the right relationship here?
+                        geno.addAlleleOfGene(
+                            qtl_id, gene_id,
+                            geno.object_properties['feature_to_gene_relation'])
+
 
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id
-                            vl_id = '_' + re.sub(':', '', gene_id) + '-' + peak_mark
+                            vl_id = '_' + re.sub(r':', '', gene_id) + '-' + peak_mark
                             if self.nobnodes:
                                 vl_id = ':' + vl_id
-                            geno.addSequenceAlterationToVariantLocus(dbsnp_id, vl_id)
+                            geno.addSequenceAlterationToVariantLocus(
+                                dbsnp_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
 
                 # add the trait
@@ -246,18 +294,21 @@ class AnimalQTLdb(Source):
 
                 # Add publication
                 r = None
-                if re.match('ISU.*', pubmed_id):
+                if re.match(r'ISU.*', pubmed_id):
                     pub_id = 'AQTLPub:'+pubmed_id.strip()
                     r = Reference(pub_id)
                 elif pubmed_id != '':
                     pub_id = 'PMID:'+pubmed_id.strip()
-                    r = Reference(pub_id, Reference.ref_types['journal_article'])
+                    r = Reference(
+                        pub_id, Reference.ref_types['journal_article'])
 
                 if r is not None:
                     r.addRefToGraph(g)
 
                 # make the association to the QTL
-                assoc = G2PAssoc(self.name, qtl_id, trait_id, gu.object_properties['is_marker_for'])
+                assoc = G2PAssoc(
+                    self.name, qtl_id, trait_id,
+                    gu.object_properties['is_marker_for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -272,8 +323,8 @@ class AnimalQTLdb(Source):
                 #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                 if p_values != '':
-                    s = re.sub('<', '', p_values)
-                    s = re.sub(',', '.', s)  # international notation
+                    s = re.sub(r'<', '', p_values)
+                    s = re.sub(r',', '.', s)  # international notation
                     score = float(s)
                     assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
@@ -282,7 +333,9 @@ class AnimalQTLdb(Source):
                 # make the association to the dbsnp_id, if found
                 if dbsnp_id is not None:
                     # make the association to the dbsnp_id
-                    assoc = G2PAssoc(self.name, dbsnp_id, trait_id, gu.object_properties['is_marker_for'])
+                    assoc = G2PAssoc(
+                        self.name, dbsnp_id, trait_id,
+                        gu.object_properties['is_marker_for'])
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
 
@@ -296,8 +349,8 @@ class AnimalQTLdb(Source):
                     #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                     if p_values != '':
-                        s = re.sub('<', '', p_values)
-                        s = re.sub(',', '.', s)
+                        s = re.sub(r'<', '', p_values)
+                        s = re.sub(r',', '.', s)
                         score = float(s)
                         assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
@@ -310,7 +363,8 @@ class AnimalQTLdb(Source):
         logger.info("Done with QTL genetic info")
         return
 
-    def _process_QTLs_genomic_location(self, raw, taxon_id, build_id, build_label, limit=None):
+    def _process_QTLs_genomic_location(
+            self, raw, taxon_id, build_id, build_label, limit=None):
         """
         This method
 
@@ -326,7 +380,8 @@ class AnimalQTLdb(Source):
         gu = GraphUtils(curie_map.get())
         line_counter = 0
         geno = Genotype(g)
-        genome_id = geno.makeGenomeID(taxon_id)  # assume that chrs get added to the genome elsewhere
+        # assume that chrs get added to the genome elsewhere
+        genome_id = geno.makeGenomeID(taxon_id)
 
         eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
         logger.info("Processing QTL locations for %s", taxon_id)
@@ -335,12 +390,13 @@ class AnimalQTLdb(Source):
             bad_attr_flag = False
             for row in reader:
                 line_counter += 1
-                if re.match('^#', ' '.join(row)):
+                if re.match(r'^#', ' '.join(row)):
                     continue
 
-                (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand, score, attr) = row
+                (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame,
+                 strand, score, attr) = row
 
-                # Chr.Z   Animal QTLdb    Production_QTL  33954873        34023581        .       .       .
+                # Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581        .       .       .
                 # QTL_ID=2242;Name="Spleen percentage";Abbrev="SPLP";PUBMED_ID=17012160;trait_ID=2234;
                 # trait="Spleen percentage";breed="leghorn";"FlankMarkers=ADL0022";VTO_name="spleen mass";
                 # CMO_name="spleen weight to body weight ratio";Map_Type="Linkage";Model="Mendelian";
@@ -349,20 +405,22 @@ class AnimalQTLdb(Source):
 
                 # make dictionary of attributes
                 # keys are:
-                # QTL_ID,Name,Abbrev,PUBMED_ID,trait_ID,trait,
-                # FlankMarkers,VTO_name,Map_Type,Significance,P-value,Model,Test_Base,Variance,
-                # Bayes-value,PTO_name,gene_IDsrc,peak_cM,CMO_name,gene_ID,F-Stat,LOD-score,Additive_Effect,
+                # QTL_ID,Name,Abbrev,PUBMED_ID,trait_ID,trait,FlankMarkers,
+                # VTO_name,Map_Type,Significance,P-value,Model,
+                # Test_Base,Variance, Bayes-value,PTO_name,gene_IDsrc,peak_cM,
+                # CMO_name,gene_ID,F-Stat,LOD-score,Additive_Effect,
                 # Dominance_Effect,Likelihood_Ratio,LS-means,Breed,
                 # trait (duplicate with Name),Variance,Bayes-value,
-                # F-Stat,LOD-score,Additive_Effect,Dominance_Effect,Likelihood_Ratio,LS-means
+                # F-Stat,LOD-score,Additive_Effect,Dominance_Effect,
+                # Likelihood_Ratio,LS-means
 
                 # deal with poorly formed attributes
-                if re.search('"FlankMarkers";', attr):
-                    attr = re.sub('FlankMarkers;', '', attr)
-                attr_items = re.sub('"', '', attr).split(";")
+                if re.search(r'"FlankMarkers";', attr):
+                    attr = re.sub(r'FlankMarkers;', '', attr)
+                attr_items = re.sub(r'"', '', attr).split(";")
                 bad_attrs = set()
                 for a in attr_items:
-                    if not re.search('=', a):
+                    if not re.search(r'=', a):
                         bad_attr_flag = True
                         # remove this attribute from the list
                         bad_attrs.add(a)
@@ -385,56 +443,63 @@ class AnimalQTLdb(Source):
                 pub_id = None
                 if 'PUBMED_ID' in attribute_dict.keys():
                     pub_id = attribute_dict.get('PUBMED_ID')
-                    if re.match('ISU.*', pub_id):
+                    if re.match(r'ISU.*', pub_id):
                         pub_id = 'AQTLPub:' + pub_id.strip()
                         p = Reference(pub_id)
                     else:
                         pub_id = 'PMID:' + pub_id.strip()
-                        p = Reference(pub_id, Reference.ref_types['journal_article'])
+                        p = Reference(
+                            pub_id, Reference.ref_types['journal_article'])
                     p.addRefToGraph(g)
 
                 # Add QTL to graph
-                assoc = G2PAssoc(self.name, qtl_id, trait_id, gu.object_properties['is_marker_for'])
+                assoc = G2PAssoc(
+                    self.name, qtl_id, trait_id,
+                    gu.object_properties['is_marker_for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():
-                    s = re.sub('<', '', attribute_dict.get('P-value'))
+                    s = re.sub(r'<', '', attribute_dict.get('P-value'))
                     if ',' in s:
-                        s = re.sub(',', '.', s)
+                        s = re.sub(r',', '.', s)
                     score = float(s)
                     assoc.set_score(score)
 
                 assoc.add_association_to_graph(g)
-                # TODO make association to breed (which means making QTL feature in Breed background)
+                # TODO make association to breed
+                # (which means making QTL feature in Breed background)
 
                 # get location of QTL
-                chromosome = re.sub('Chr\.', '', chromosome)
+                chromosome = re.sub(r'Chr\.', '', chromosome)
                 chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
-                geno.addChromosomeInstance(chromosome, build_id, build_label, chrom_id)
+                geno.addChromosomeInstance(
+                    chromosome, build_id, build_label, chrom_id)
                 qtl_feature = Feature(qtl_id, None, geno.genoparts['QTL'])
                 if start_bp == '':
                     start_bp = None
-                qtl_feature.addFeatureStartLocation(start_bp, chrom_in_build_id, strand,
-                                                    [Feature.types['FuzzyPosition']])
+                qtl_feature.addFeatureStartLocation(
+                    start_bp, chrom_in_build_id, strand,
+                    [Feature.types['FuzzyPosition']])
                 if stop_bp == '':
                     stop_bp = None
-                qtl_feature.addFeatureEndLocation(stop_bp, chrom_in_build_id, strand,
-                                                  [Feature.types['FuzzyPosition']])
+                qtl_feature.addFeatureEndLocation(
+                    stop_bp, chrom_in_build_id, strand,
+                    [Feature.types['FuzzyPosition']])
                 qtl_feature.addTaxonToFeature(g, taxon_id)
                 qtl_feature.addFeatureToGraph(g)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.warn("Bad attribute flags in this file")
+        logger.warning("Bad attribute flags in this file")
         logger.info("Done with QTL genomic mappings for %s", taxon_id)
         return
 
     def _process_trait_mappings(self, raw, limit=None):
         """
-        This method
+        This method mapps traits from/to ...
 
         Triples created:
 
@@ -461,46 +526,53 @@ class AnimalQTLdb(Source):
                 line_counter += 1
                 # need to skip the last line
                 if len(row) < 8:
-                    logger.info("skipping line %d: %s", line_counter, '\t'.join(row))
+                    logger.info(
+                        "skipping line %d: %s", line_counter, '\t'.join(row))
                     continue
-                (vto_id, pto_id, cmo_id, ato_column, species, trait_class, trait_type, qtl_count) = row
+                (vto_id, pto_id, cmo_id, ato_column, species, trait_class,
+                 trait_type, qtl_count) = row
 
-                ato_id = re.sub('ATO #', 'AQTLTrait:', re.sub('\].*', '', re.sub('\[', '', ato_column)))
+                ato_id = re.sub(r'ATO #', 'AQTLTrait:',
+                                re.sub(r'\].*', '',
+                                       re.sub(r'\[', '', ato_column)))
                 ato_id = ato_id.strip()
 
-                ato_label = re.sub('.*\]\s*', '', ato_column)
+                ato_label = re.sub(r'.*\]\s*', '', ato_column)
+
                 # if species == 'Cattle':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitCattle:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitCattle:', ato_id)
                 # elif species == 'Chicken':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitChicken:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitChicken:', ato_id)
                 # elif species == 'Sheep':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitSheep:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitSheep:', ato_id)
                 # elif species == 'Horse':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitHorse:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitHorse:', ato_id)
                 # elif species == 'Pig':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitPig:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitPig:', ato_id)
                 # elif species == 'Rainbow trout':
-                #     ato_id = re.sub('ATO:', 'AQTLTraitRainbowTrout:', ato_id)
+                #     ato_id = re.sub(r'ATO:', 'AQTLTraitRainbowTrout:', ato_id)
                 # else:
-                #     logger.warn(' Unknown species %s foufnd in trait mapping file.', species)
+                #     logger.warning(
+                #       'Unknown species %s foufnd in trait mapping file.',
+                #       species)
                 #     continue
                 #print(ato_label)
 
                 gu.addClassToGraph(g, ato_id, ato_label.strip())
 
-                if re.match('VT:.*', vto_id):
+                if re.match(r'VT:.*', vto_id):
                     gu.addClassToGraph(g, vto_id, None)
                     gu.addEquivalentClass(g, ato_id, vto_id)
-                if re.match('LPT:.*', pto_id):
+                if re.match(r'LPT:.*', pto_id):
                     gu.addClassToGraph(g, pto_id, None)
                     gu.addEquivalentClass(g, ato_id, pto_id)
-                if re.match('CMO:.*', cmo_id):
+                if re.match(r'CMO:.*', cmo_id):
                     gu.addClassToGraph(g, cmo_id, None)
                     gu.addXref(g, ato_id, cmo_id)
 
         logger.info("Done with trait mappings")
         return
-
+    # TODO TEC consider static functions
     def _get_tax_by_common_name(self, common_name):
 
         tax_map = {
@@ -550,18 +622,21 @@ class AnimalQTLdb(Source):
 
     def _map_linkage_by_organism(self, organism):
         """
-        Need to add appropriate linkage maps...but need more information before they become identified.
+        Need to add appropriate linkage maps...but need more information before
+        they become identified.
         This is not yet confirmed, thus is not utilized.
         :param organism:
         :return:
+
         """
         tax_map = {
-            'chicken': 'Wageningen-chicken',  # PMID:10645958
-            'cattle': 'USDA-MARC',  # PMID:9074927
-            'pig': 'USDA-MARC',   # PMID:8743988
-            'sheep': 'Wageningen-sheep',  # PMID:11435411  -- this is an assumption
-            'horse': 'Swinburne-Penedo',  # PMID:16314071  PMID:16093715
-            'rainbow_trout': 'USDA-NCCCWA'}  # PMID:19019240 PMID:22101344
+            'chicken': 'Wageningen-chicken',    # PMID:10645958
+            'cattle': 'USDA-MARC',              # PMID:9074927
+            'pig': 'USDA-MARC',                 # PMID:8743988
+            # -- this is an assumption
+            'sheep': 'Wageningen-sheep',        # PMID:11435411
+            'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
+            'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344
         return
 
     def getTestSuite(self):
