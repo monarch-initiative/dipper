@@ -1,10 +1,10 @@
 import logging
 import urllib
-from urllib import parse
-import http
-from http import client
 import csv
+import http
 import xml.etree.ElementTree as etree
+
+
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -22,8 +22,9 @@ class Ensembl(Source):
     """
     This is the processing module for Ensembl.
 
-    It only includes methods to acquire the equivalences between NCBIGene and ENSG ids using ENSEMBL's Biomart
-    services.
+    It only includes methods to acquire the equivalences between NCBIGene and
+    ENSG ids using ENSEMBL's Biomart services.
+
     """
 
     files = {
@@ -57,15 +58,17 @@ class Ensembl(Source):
         self.gene_ids = gene_ids
         self.load_bindings()
 
-        self.dataset = Dataset('ensembl', 'ENSEMBL', 'http://www.ensembl.org', None)
+        self.dataset = Dataset(
+            'ensembl', 'ENSEMBL', 'http://www.ensembl.org', None)
 
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
         self.gene_ids = []
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() \
+                or 'gene' not in config.get_config()['test_ids']:
+            logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
@@ -81,7 +84,8 @@ class Ensembl(Source):
             logger.info("Fetching genes for %s", str(t))
             loc_file = '/'.join((self.rawdir, 'ensembl_'+str(t)+'.txt'))
             # todo move into util?
-            params = urllib.parse.urlencode({'query': self._build_biomart_gene_query(str(t))})
+            params = urllib.parse.urlencode(
+                {'query': self._build_biomart_gene_query(str(t))})
             conn = http.client.HTTPConnection('www.ensembl.org')
             conn.request("GET", '/biomart/martservice?'+params)
             resp = conn.getresponse()
@@ -115,31 +119,35 @@ class Ensembl(Source):
     def _build_biomart_gene_query(self, taxid):
         """
         Building url to fetch equivalent identifiers via Biomart Restful API.
-        Documentation at http://www.ensembl.org/info/data/biomart/biomart_restful.html
+        Documentation at
+        http://www.ensembl.org/info/data/biomart/biomart_restful.html
         :param taxid:
         :return:
+
         """
 
-        cols_to_fetch = ["ensembl_gene_id", "external_gene_name", "description", "gene_biotype",  # basic stuff for ensembl ids
-                        "entrezgene"]
+        cols_to_fetch = [   # basic stuff for ensembl ids
+            "ensembl_gene_id", "external_gene_name", "description",
+            "gene_biotype", "entrezgene"]
 
         if taxid == '9606':
             cols_to_fetch.append("hgnc_id")
 
-        query_attributes = {"virtualSchemaName": "default", "formatter": "TSV", "header": "0",
-                 "uniqueRows": "1", "count": "0", "datasetConfigVersion": "0.6"}
+        query_attributes = {
+            "virtualSchemaName": "default", "formatter": "TSV", "header": "0",
+            "uniqueRows": "1", "count": "0", "datasetConfigVersion": "0.6"}
 
         ensembl_taxon_to_db_map = {
             '9606' : 'hsapiens_gene_ensembl',
             '10090' : 'mmusculus_gene_ensembl',
             '7955' : 'drerio_gene_ensembl',
             '28377': 'acarolinensis_gene_ensembl',  # green lizard
-            # '3702': 'ensembl_3702.txt',  # arabadopsis?
+            # '3702': 'ensembl_3702.txt',           # arabadopsis?
             '9913': 'btaurus_gene_ensembl',
             '6239': 'celegans_gene_ensembl',
             '9615': 'cfamiliaris_gene_ensembl',
             '9031': 'ggallus_gene_ensembl',
-            # '44689': 'ensembl_44689.txt',  #  dicty?
+            # '44689': 'ensembl_44689.txt',         #  dicty?
             '7227': 'dmelanogaster_gene_ensembl',  #
             '9796': 'ecaballus_gene_ensembl',  #
             '9544': 'mmulatta_gene_ensembl',  #
@@ -147,10 +155,10 @@ class Ensembl(Source):
             '9258': 'oanatinus_gene_ensembl',  #
             '9823': 'sscrofa_gene_ensembl',  #
             '10116': 'rnorvegicus_gene_ensembl',  #
-            # '4896': 'spombe_gene_ensembl',  # no pombe genome
+            # '4896': 'spombe_gene_ensembl',        # no pombe genome
             '31033': 'trubripes_gene_ensembl',  #
             '8364': 'xtropicalis_gene_ensembl',  #
-            # '4932': 'scerevisiae_gene_ensembl',  #  yeast
+            # '4932': 'scerevisiae_gene_ensembl',   #  yeast
             '9685': 'fcatus_gene_ensembl'
         }
         if taxid not in ensembl_taxon_to_db_map:
@@ -165,7 +173,8 @@ class Ensembl(Source):
         d = etree.SubElement(q, "Dataset", object_attributes)
 
         for i in cols_to_fetch:
-            a = etree.SubElement(d, "Attribute", {"name": i})
+            # TODO TEC check this change fron a -> q
+            q = etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
         prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'
@@ -194,15 +203,18 @@ class Ensembl(Source):
                 if len(row) < 4:
                     logger.error("Data error for file %s", raw)
                     return
-                (ensembl_gene_id, external_gene_name, description, gene_biotype, entrezgene) = row[0:5]
+                (ensembl_gene_id, external_gene_name, description, gene_biotype,
+                 entrezgene) = row[0:5]
 
-                # in the case of human genes, we also get the hgnc id, and is the last col
+                # in the case of human genes, we also get the hgnc id,
+                # and is the last col
                 if taxid == '9606':
                     hgnc_id = row[5]
                 else:
                     hgnc_id = None
 
-                if self.testMode and entrezgene != '' and int(entrezgene) not in self.gene_ids:
+                if self.testMode and entrezgene != '' \
+                        and int(entrezgene) not in self.gene_ids:
                     continue
 
                 line_counter += 1
@@ -211,7 +223,8 @@ class Ensembl(Source):
                     description = None
                 gene_type_id = self._get_gene_type(gene_biotype)
                 gene_type_id = None
-                gu.addClassToGraph(g, gene_id, external_gene_name, gene_type_id, description)
+                gu.addClassToGraph(
+                    g, gene_id, external_gene_name, gene_type_id, description)
 
                 if entrezgene != '':
                     gu.addEquivalentClass(g, gene_id, 'NCBIGene:'+entrezgene)
@@ -219,7 +232,8 @@ class Ensembl(Source):
                     gu.addEquivalentClass(g, gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
         gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
@@ -241,7 +255,7 @@ class Ensembl(Source):
             # IG_V_gene
             # IG_V_pseudogene
             'Mt_rRNA': 'SO:0001637',
-            'Mt_tRNA': 'SO:0001272',  # FIXME            'tRNA': 'SO:0001272'
+            'Mt_tRNA': 'SO:0001272',  # FIXME    'tRNA': 'SO:0001272'
             'TEC': '',
             # TR_C_gene
             # TR_D_gene
@@ -249,30 +263,37 @@ class Ensembl(Source):
             # TR_J_pseudogene
             # TR_V_gene
             # TR_V_pseudogene
-            'antisense': 'SO:0001263',  # FIXME non-specific term
+            'antisense': 'SO:0001263',      # FIXME non-specific term
             'lincRNA': 'SO:0001641',
-            'macro_lncRNA': 'SO:0001263',  # FIXME non-specific term
+            'macro_lncRNA': 'SO:0001263',   # FIXME non-specific term
             'miRNA': 'SO:0001265',
-            'misc_RNA': 'SO:0001263',  # FIXME non-specific term
+            'misc_RNA': 'SO:0001263',       # FIXME non-specific term
             'polymorphic_pseudogene': 'SO:0000336',
             'processed_pseudogene': 'SO:0000336',
             'processed_transcript': 'SO:0001263',  # non-coding RNA gene
             'protein_coding': 'SO:0001217',
             'pseudogene': 'SO:0000336',
             'rRNA': 'SO:0001637',
-            'ribozyme': 'SO:0001263',  # FIXME non-specific term
-            'sRNA': 'SO:0001263',  # FIXME non-specific term
-            'scaRNA': 'SO:0001263',  # FIXME non-specific term
+            'ribozyme': 'SO:0001263',   # FIXME non-specific term
+            'sRNA': 'SO:0001263',       # FIXME non-specific term
+            'scaRNA': 'SO:0001263',     # FIXME non-specific term
             # 'sense_intronic': '',
             # 'sense_overlapping': '',
             'snoRNA': 'SO:0001267',
-            'transcribed_processed_pseudogene': 'SO:0000336',  # FIXME non-specific term
-            'transcribed_unitary_pseudogene': 'SO:0000336', # FIXME non-specific term
-            'transcribed_unprocessed_pseudogene': 'SO:0000336',  # FIXME non-specific term
-            'translated_unprocessed_pseudogene': 'SO:0000336',  # FIXME non-specific term
-            'unitary_pseudogene': 'SO:0000336',  # FIXME non-specific term
-            'unprocessed_pseudogene': 'SO:0000336',  # FIXME non-specific term
-            'vaultRNA': 'SO:0001263', # FIXME non-specific term
+            # FIXME non-specific term
+            'transcribed_processed_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'transcribed_unitary_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'transcribed_unprocessed_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'translated_unprocessed_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'unitary_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'unprocessed_pseudogene': 'SO:0000336',
+            # FIXME non-specific term
+            'vaultRNA': 'SO:0001263',
             'ncRNA': 'SO:0001263',
             'other': 'SO:0000110',
             'snRNA': 'SO:0001268',
