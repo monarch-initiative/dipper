@@ -619,7 +619,7 @@ class AnimalQTLdb(Source):
                 build_id = 'NCBIAssembly:'+b.get('NCBIAssembly')
 
         return build_id
-
+        
     def _map_linkage_by_organism(self, organism):
         """
         Need to add appropriate linkage maps...but need more information before
