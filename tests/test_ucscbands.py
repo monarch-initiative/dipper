@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from dipper.sources.UCSCBands import UCSCBands
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from tests.test_source import SourceTestCase
+from dipper.sources.UCSCBands import UCSCBands
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -23,7 +23,8 @@ class UCSCBandsTestCase(SourceTestCase):
         self.source = None
         return
 
-    # TODO add some specific tests to make sure we are hitting all parts of the code
+    # TODO add some specific tests to make sure we are hitting
+    # all parts of the code
     #@unittest.skip('test not yet defined')
     #def test_ucscbandstest(self):
     #    logger.info("A UCSCBands-specific test")

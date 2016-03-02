@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-from dipper.sources.MGI import MGI
-from dipper import curie_map
-from rdflib import Graph
-from tests import test_general, test_source
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
-import os
+#import os
+#from rdflib import Graph
+#from tests import test_general, test_source
+from tests.test_source import SourceTestCase
+from dipper.sources.MGI import MGI
+#from dipper import curie_map
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -27,7 +27,8 @@ class MGITestCase(SourceTestCase):
         self.source = None
         return
 
-    # TODO add some specific tests to make sure we are hitting all parts of the code
+    # TODO add some specific tests to make sure we are
+    # hitting all parts of the code
     #@unittest.skip('test not yet defined')
     #def test_mgitest(self):
     #    logger.info("An MGI-specific test")

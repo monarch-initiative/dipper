@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from dipper.sources.MMRRC import MMRRC
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from tests.test_source import SourceTestCase
+from dipper.sources.MMRRC import MMRRC
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

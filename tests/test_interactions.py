@@ -67,6 +67,7 @@ class InteractionsTestCase(unittest.TestCase):
         eco = 'ECO:0000033'
         # TODO PYLINT  make_association_id() does not exist in CTD
         # there is "_make_association()" with a different sig
+    
         assoc_id = self.ctd.make_association_id(
             'ctd', chem_id, rel_id, disease_id, eco, pubmed_id)
         assoc_uri = gu.getNode(assoc_id)
