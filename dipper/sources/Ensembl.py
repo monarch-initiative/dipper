@@ -173,7 +173,8 @@ class Ensembl(Source):
         d = etree.SubElement(q, "Dataset", object_attributes)
 
         for i in cols_to_fetch:
-            # TODO TEC check this change fron a -> q
+            # TODO TEC check this change from a -> q
+            # we need to confirm the output from this change is acceptable
             q = etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
