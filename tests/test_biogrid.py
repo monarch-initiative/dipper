@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
-from dipper.sources.BioGrid import BioGrid
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from dipper.sources.BioGrid import BioGrid
+from tests.test_source import SourceTestCase
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

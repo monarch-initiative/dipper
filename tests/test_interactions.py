@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from dipper.sources.CTD import CTD
-from dipper import curie_map
-from rdflib import Graph
-
 import unittest
 import logging
+from rdflib import Graph
+from dipper.sources.CTD import CTD
+from dipper import curie_map
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -20,12 +19,14 @@ class InteractionsTestCase(unittest.TestCase):
         self.ctd = CTD()
         self.ctd.graph = Graph()
         self.ctd.g = self.ctd.graph
-        row1 = ['06-Paris-LA-66 protocol', 'C046983', 'foo',
-                'Precursor Cell Lymphoblastic Leukemia-Lymphoma',
-                'MESH:D054198', 'therapeutic', 'bar', 'baz', 'foo', '4519131']
-        row2 = ['10,10-bis(4-pyridinylmethyl)-9(10H)-anthracenone',
-                'C112297', 'foo', 'Hyperkinesis', 'MESH:D006948',
-                'marker/mechanism', 'bar', 'baz', 'foo', '19098162']
+        row1 = [
+            '06-Paris-LA-66 protocol', 'C046983', 'foo',
+            'Precursor Cell Lymphoblastic Leukemia-Lymphoma', 'MESH:D054198',
+            'therapeutic', 'bar', 'baz', 'foo', '4519131']
+        row2 = [
+            '10,10-bis(4-pyridinylmethyl)-9(10H)-anthracenone', 'C112297',
+            'foo', 'Hyperkinesis', 'MESH:D006948', 'marker/mechanism',
+            'bar', 'baz', 'foo', '19098162']
 
         self.ctd._process_interactions(row1)
         self.ctd._process_interactions(row2)
@@ -65,7 +66,8 @@ class InteractionsTestCase(unittest.TestCase):
         rel_id = gu.object_properties['substance_that_treats']
         eco = 'ECO:0000033'
 
-        assoc_id = self.ctd.make_association_id('ctd', chem_id, rel_id, disease_id, eco, pubmed_id)
+        assoc_id = self.ctd.make_association_id(
+            'ctd', chem_id, rel_id, disease_id, eco, pubmed_id)
         assoc_uri = gu.getNode(assoc_id)
 
         # Expected output from query

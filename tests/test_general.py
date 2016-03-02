@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-from dipper import curie_map
-from rdflib import Graph
-
 import unittest
 import logging
+from rdflib import Graph
+from dipper import curie_map
+
+
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -21,9 +23,10 @@ class GeneralGraphTestCase(unittest.TestCase):
 
     def test_curieprefixes(self):
         """
-        This will ensure that we can create identifiers for all of the defined curie prefixes using the
-        GraphUtils.getNode() method
+        This will ensure that we can create identifiers for all of the
+        defined curie prefixes using the GraphUtils.getNode() method
         :return:
+
         """
         from dipper.utils.GraphUtils import GraphUtils
 
@@ -43,6 +46,7 @@ class GeneralGraphTestCase(unittest.TestCase):
         This will read the specified file into a graph.  A simple parsing test.
         :param f:
         :return:
+
         """
         import os
         vg = Graph()
@@ -68,7 +72,8 @@ class GeneralGraphTestCase(unittest.TestCase):
         status = check_call(["owltools", f], stderr=subprocess.STDOUT)
         # returns zero is success!
         if status != 0:
-            logger.error('finished verifying with owltools with status %s', status)
+            logger.error(
+                'finished verifying with owltools with status %s', status)
         self.assertTrue(status == 0)
 
         return

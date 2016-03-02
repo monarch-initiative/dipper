@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-from dipper.sources.HGNC import HGNC
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from tests.test_source import SourceTestCase
+from dipper.sources.HGNC import HGNC
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

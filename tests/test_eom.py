@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-from dipper.sources.EOM import EOM
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from dipper.sources.EOM import EOM
+from tests.test_source import SourceTestCase
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -22,7 +21,8 @@ class EOMTestCase(SourceTestCase):
         self.source = None
         return
 
-    # TODO add some specific tests to make sure we are hitting all parts of the code
+    # TODO add some specific tests
+    # to make sure we are hitting all parts of the code
     #@unittest.skip('test not yet defined')
     #def test_eomtest(self):
     #    logger.info("A EOM-specific test")
