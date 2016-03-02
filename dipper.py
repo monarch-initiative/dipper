@@ -63,7 +63,7 @@ def main():
         help='limit number of rows')
     parser.add_argument(
         '--parse_only', action='store_true',
-        help='parse files without writing'),
+        help='parse files without writing')
     parser.add_argument(
         '--fetch_only', action='store_true',
         help='fetch sources without parsing')
