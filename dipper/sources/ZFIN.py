@@ -1092,7 +1092,7 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (genotype_id, genotype_name, background_id, empty) = row
+                (genotype_id, genotype_name, background_id) = row
 
                 if self.testMode \
                         and genotype_id not in self.test_ids['genotype']:
