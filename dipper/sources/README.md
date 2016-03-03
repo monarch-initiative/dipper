@@ -14,9 +14,10 @@ Each Source should typically have the following basic things defined:
 
     ```python
     files = {
-        key : {'file' : local.file.name,
-               'url' : 'http://remote.file.location'
-        }, ... }
+        key : {
+            'file' : local.file.name,
+            'url' : 'http://remote.file.location'},
+    ... }
     ```
 then you can simply call the built-in file fetching method to go get all of them.
 
@@ -60,5 +61,3 @@ Any Source should have a test suite written around it.  You should write a stand
 directory, following the convention of "test_<source_name>.py", and subclass it from ```GeneralSourceTestCase```.  
 
 The main ```dipper.py``` wrapper will register all tests within the source and run them automatically.
-
-
