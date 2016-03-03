@@ -1,9 +1,9 @@
 import re
 import hashlib
-import urllib
 import os
 import time
 import logging
+import urllib       #TODO tec look @ import rewuests
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import ConjunctiveGraph, Namespace
@@ -240,9 +240,11 @@ class Source:
         response = urllib.request.urlopen(req)
 
         try:
-            size = response.getheader('Content-length')
-            last_modified = response.getheader('last-modified')  # check me
+            resp_headers = response.info()
+            size = resp_headers.get('Content-length')
+            last_modified = resp_headers.get('last-modified')  # check me
         except OSError as e:  #URLError?
+            resp_headers = None
             size = 0
             last_modified = None
             logger.error(e)
@@ -254,7 +256,7 @@ class Source:
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
             dt_obj = datetime.strptime(
-                last_modified,"%a, %d %b %Y %H:%M:%S %Z")
+                last_modified, "%a, %d %b %Y %H:%M:%S %Z")
             # get local file details
 
             # check date on local vs remote file
@@ -422,7 +424,8 @@ class Source:
 
         try:
             response = urllib.request.urlopen(req)
-            byte_size = response.getheader('Content-length')
+            resp_header = response.info()
+            byte_size = resp_header.get('Content-length')
         except OSError as e:
             byte_size = None
             logger.error(e)
