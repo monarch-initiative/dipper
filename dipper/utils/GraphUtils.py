@@ -339,7 +339,7 @@ class GraphUtils:
         if fileformat is None:
             fileformat = 'rdfxml'
         if file is not None:
-            fileswriter = open(file, 'wb')
+            filewriter = open(file, 'wb')
 
             logger.info("Writing triples in %s to %s", fileformat, file)
             graph.serialize(filewriter, format=fileformat)
