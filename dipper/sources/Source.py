@@ -1,4 +1,3 @@
-
 import re
 import hashlib
 import urllib
@@ -152,7 +151,8 @@ class Source:
             else:
                 datasetfile = '.'.join((datasetfile, format))
 
-            logger.info("No version set for this datasource; setting to date issued.")
+            logger.info(
+                "No version set for this datasource; setting to date issued.")
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
@@ -201,8 +201,10 @@ class Source:
         :param long_string:
         :return:
         """
-        # FIXME for now, this will do md5.  probably not the best long-term solution
-        # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
+        # FIXME for now, this will do md5.
+        # probably not the best long-term solution
+        # note others available:
+        # md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
 
         byte_string = long_string.encode("utf-8")
 
@@ -219,7 +221,9 @@ class Source:
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
         """
-        logger.info("Checking if remote file (%s) is newer than local (%s)...", remote, local)
+        logger.info(
+            "Checking if remote file (%s) is newer than local (%s)...",
+            remote, local)
 
         # check if local file exists
         # if no local file, then remote is newer
@@ -249,8 +253,8 @@ class Source:
 
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
-            dt_obj = datetime.strptime(last_modified,
-                                       "%a, %d %b %Y %H:%M:%S %Z")
+            dt_obj = datetime.strptime(
+                last_modified,"%a, %d %b %Y %H:%M:%S %Z")
             # get local file details
 
             # check date on local vs remote file
@@ -260,9 +264,11 @@ class Source:
                     logger.info("Newer file exists on remote server")
                     return True
                 else:
-                    logger.info("Remote file has same filesize--will not download")
+                    logger.info(
+                        "Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
-            logger.info("Object on server is difference size in comparison to local file")
+            logger.info(
+                "Object on server is difference size in comparison to local file")
             return True
 
         return False
@@ -279,9 +285,9 @@ class Source:
         for f in self.files.keys():
             logger.info("Getting %s", f)
             file = self.files.get(f)
-            self.fetch_from_url(file['url'],
-                                '/'.join((self.rawdir, file['file'])),
-                                is_dl_forced, file.get('headers'))
+            self.fetch_from_url(
+                file['url'], '/'.join((self.rawdir, file['file'])),
+                is_dl_forced, file.get('headers'))
             self.dataset.setFileAccessUrl(file['url'])
 
             st = os.stat('/'.join((self.rawdir, file['file'])))
@@ -508,7 +514,8 @@ class Source:
         :return:
         """
         # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
-        # owl:versionInfo <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
+        # owl:versionInfo
+        # <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
 
         gu = GraphUtils(curie_map.get())
 
