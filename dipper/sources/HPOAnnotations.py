@@ -334,6 +334,8 @@ class HPOAnnotations(Source):
         :return:
 
         """
+
+        # TODO TEC as of 2016-Mar-2 this repo does not exist
         repo_dir = '/'.join((self.rawdir, 'git'))
         REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
         HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
