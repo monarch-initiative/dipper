@@ -70,9 +70,9 @@ class KEGG(Source):
         'pathway_disease': {
             'file': 'pathway_disease',
             'url': 'http://rest.kegg.jp/link/pathway/ds'},
-        'pathway_pathway': {
-            'file': 'pathway_eq',
-            'url': 'http://rest.kegg.jp/link/pathway/pathway'},
+        #'pathway_pathway': { # TEC 2016Mar03 does not exist here.
+        #    'file': 'pathway_eq',
+        #    'url': 'http://rest.kegg.jp/link/pathway/pathway'}, 
         'pathway_ko': {
             'file': 'pathway_ko',
             'url': 'http://rest.kegg.jp/link/pathway/ko'},
