@@ -236,11 +236,9 @@ class Source:
         response = urllib.request.urlopen(req)
 
         try:
-            resp_header = response.getheaders()
-            size = resp_header.get('Content-length')
-            last_modified = resp_header.get('last-modified')  # check me
+            size = response.getheader('Content-length')
+            last_modified = response.getheader('last-modified')  # check me
         except OSError as e:  #URLError?
-            resp_header = None
             size = 0
             last_modified = None
             logger.error(e)
@@ -418,9 +416,7 @@ class Source:
 
         try:
             response = urllib.request.urlopen(req)
-
-            resp_header = response.getheaders()
-            byte_size = resp_header.get('Content-length')
+            byte_size = response.getheader('Content-length')
         except OSError as e:
             byte_size = None
             logger.error(e)
