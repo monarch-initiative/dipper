@@ -83,8 +83,9 @@ class ZFIN(Source):
         'stage': {
             'file': 'stage_ontology.txt',
             'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
-        # 'wild_expression': {'file': 'wildtype-expression.txt',
-        #                     'url': 'http://zfin.org/Downloads/wildtype-expression.txt'},
+        # 'wild_expression': {
+        #   'file': 'wildtype-expression.txt',
+        #   'url': 'http://zfin.org/Downloads/wildtype-expression.txt'},
         'mappings': {
             'file': 'mappings.txt',
             'url': 'http://zfin.org/downloads/mappings.txt'},
@@ -773,7 +774,7 @@ class ZFIN(Source):
                     pass
                     # logger.info('no gene found for %s', allele_id)
 
-                if genes_from_hash is not None
+                if genes_from_hash is not None \
                         and genes_from_hash != [gene_id] \
                         and gene_id not in genes_from_hash:
                     logger.info(
@@ -1001,8 +1002,7 @@ class ZFIN(Source):
                 if self.nobnodes:
                     background_id = ':' + background_id
                 background_label = 'n.s. (' + background_num + ')'
-                background_desc = 'This genomic background is unknown.'/
-                    'This is a placeholder background for ' + gt + '.'
+                background_desc = 'This genomic background is unknown. This is a placeholder background for ' + gt + '.'
                 # there is no background for this genotype;
                 # need to add the taxon to this one!
                 # make an anonymous background for this genotype
@@ -1092,7 +1092,8 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (genotype_id, genotype_name, background_id) = row
+                #Genotype_ID 	Genotype_Name 	Background 	Background_Name
+                (genotype_id, genotype_name, background_id, unused, empty) = row
 
                 if self.testMode \
                         and genotype_id not in self.test_ids['genotype']:
@@ -1133,6 +1134,7 @@ class ZFIN(Source):
         This table provides the genotype IDs, name,
         and abbreviation of the wildtype genotypes.
         These are the typical genomic backgrounds...there's about 20 of them.
+        http://zfin.org/downloads/wildtypes_fish.txt
 
         Triples created:
         <genotype id> a GENO:wildtype
