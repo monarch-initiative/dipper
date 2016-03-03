@@ -155,7 +155,7 @@ class KEGG(Source):
 
         self._process_pathways(limit)
         self._process_pathway_pubmed(limit)
-        self._process_pathway_pathway(limit)
+        #self._process_pathway_pathway(limit)
         self._process_pathway_disease(limit)
         self._process_pathway_ko(limit)
 
