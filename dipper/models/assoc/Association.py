@@ -109,7 +109,7 @@ class Assoc:
             return
 
         # first, add the direct triple
-        # anonymous nodes are indicated with underscore
+        # anonymous (blank) nodes are indicated with underscore
         s = self.gu.getNode(self.sub)
         o = self.gu.getNode(self.obj)
         p = self.gu.getNode(self.rel)
