@@ -50,44 +50,44 @@ class WormBase(Source):
     files = {
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-            'url': wb_tp+\
+            'url': wbftp+\
                 '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
-        'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
-            'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        #'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
+        #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
+        #    'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
+            'url': wbftp+'/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
         'rnai_pheno': {
             'file': 'rnai_phenotypes.wb',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
+            'url': wbftp+'/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
             'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+            'url': wbftp+'/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {
         #   'file': 'development_association.wb',
-        #   'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/development_association.WS249.wb'},
+        #   'url wbftp+'/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {
         #   'file': 'anatomy_association.wb',
-        #   'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/ONTOLOGY/anatomy_association.WS249.wb'},
+        #   'url': wbftp+'/ONTOLOGY/anatomy_association.WS249.wb'},
         #'gene_interaction': {
         #   'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
-        #   'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
+        #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
         # 'orthologs': {
         #   'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
-        #   'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
+        #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+            'url': wbftp+'/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         'letter': {
             'file': 'letter.WSNUMBER',
-            'url': 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release/letter.WSNUMBER'},
+            'url': wbftp+'/letter.WSNUMBER'},
     }
 
     test_ids = {
@@ -203,7 +203,7 @@ class WormBase(Source):
         self.rnai_gene_map = {}
 
         self.process_gene_ids(limit)
-        self.process_gene_desc(limit)
+        # self.process_gene_desc(limit)       #TEC imput file is mia 2016-Mar-03
         self.process_allele_phenotype(limit)
         self.process_rnai_phenotypes(limit)
         self.process_pub_xrefs(limit)
