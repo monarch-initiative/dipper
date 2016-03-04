@@ -562,7 +562,7 @@ class WormBase(Source):
                 xref = re.sub(r'<BR>', '', xref)
                 xref = xref.strip()
                 if re.match(r'pmid', xref):
-                    xref_id = 'PMID:'+re.subr(r'pmid\s*', '', xref)
+                    xref_id = 'PMID:'+re.sub(r'pmid\s*', '', xref)
                     r = Reference(
                         xref_id, Reference.ref_types['journal_article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
