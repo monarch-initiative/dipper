@@ -125,8 +125,8 @@ class Ensembl(Source):
         :return:
 
         """
-
-        cols_to_fetch = [   # basic stuff for ensembl ids
+        # basic stuff for ensembl ids
+        cols_to_fetch = [  
             "ensembl_gene_id", "external_gene_name", "description",
             "gene_biotype", "entrezgene"]
 
@@ -148,16 +148,16 @@ class Ensembl(Source):
             '9615': 'cfamiliaris_gene_ensembl',
             '9031': 'ggallus_gene_ensembl',
             # '44689': 'ensembl_44689.txt',         #  dicty?
-            '7227': 'dmelanogaster_gene_ensembl',  #
-            '9796': 'ecaballus_gene_ensembl',  #
-            '9544': 'mmulatta_gene_ensembl',  #
-            '13616': 'mdomestica_gene_ensembl',  #
-            '9258': 'oanatinus_gene_ensembl',  #
-            '9823': 'sscrofa_gene_ensembl',  #
-            '10116': 'rnorvegicus_gene_ensembl',  #
+            '7227': 'dmelanogaster_gene_ensembl',   #
+            '9796': 'ecaballus_gene_ensembl',       #
+            '9544': 'mmulatta_gene_ensembl',        #
+            '13616': 'mdomestica_gene_ensembl',     #
+            '9258': 'oanatinus_gene_ensembl',       #
+            '9823': 'sscrofa_gene_ensembl',         #
+            '10116': 'rnorvegicus_gene_ensembl',    #
             # '4896': 'spombe_gene_ensembl',        # no pombe genome
-            '31033': 'trubripes_gene_ensembl',  #
-            '8364': 'xtropicalis_gene_ensembl',  #
+            '31033': 'trubripes_gene_ensembl',      #
+            '8364': 'xtropicalis_gene_ensembl',     #
             # '4932': 'scerevisiae_gene_ensembl',   #  yeast
             '9685': 'fcatus_gene_ensembl'
         }
@@ -172,10 +172,9 @@ class Ensembl(Source):
         }
         d = etree.SubElement(q, "Dataset", object_attributes)
 
-        for i in cols_to_fetch:
-            # TODO TEC check this change from a -> q
-            # we need to confirm the output from this change is acceptable
-            q = etree.SubElement(d, "Attribute", {"name": i})
+        # TODO TEC this attribute is unused
+        #for i in cols_to_fetch:
+        #    attrib = etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
         prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'
