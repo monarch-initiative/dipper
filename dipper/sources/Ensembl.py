@@ -172,9 +172,9 @@ class Ensembl(Source):
         }
         d = etree.SubElement(q, "Dataset", object_attributes)
 
-        # TODO TEC this attribute is unused
-        #for i in cols_to_fetch:
-        #    attrib = etree.SubElement(d, "Attribute", {"name": i})
+        # TEC: this a is unused
+        for i in cols_to_fetch:
+            a = etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
         prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'
