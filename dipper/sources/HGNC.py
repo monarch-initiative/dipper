@@ -39,7 +39,8 @@ class HGNC(Source):
         self.dataset = Dataset('hgnc', 'HGNC', 'http://www.genenames.org', None)
 
         self.gene_ids = []
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() \
+                or 'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
@@ -109,7 +110,8 @@ class HGNC(Source):
                 if line_counter <= 1:
                     continue
 
-                if self.testMode and entrez_id != '' and int(entrez_id) not in self.gene_ids:
+                if self.testMode and entrez_id != '' \
+                        and int(entrez_id) not in self.gene_ids:
                     continue
 
                 if name == '':
@@ -119,19 +121,20 @@ class HGNC(Source):
                 if locus_type == 'withdrawn':
                     gu.addDeprecatedClass(g, hgnc_id)
                 if entrez_id != '':
-                    gu.addEquivalentClass(g, hgnc_id, 'NCBIGene:' + entrez_id)
+                    gu.addEquivalentClass(
+                        g, hgnc_id, 'NCBIGene:' + entrez_id)
                 if ensembl_gene_id != '':
-                    gu.addEquivalentClass(g, hgnc_id,
-                                          'ENSEMBL:' + ensembl_gene_id)
+                    gu.addEquivalentClass(
+                        g, hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
                 geno.addTaxon('NCBITaxon:9606', hgnc_id)
 
                 # add pubs as "is about"
                 if pubmed_id != '':
                     for p in re.split(r'\|', pubmed_id.strip()):
                         if str(p) != '':
-                            gu.addTriple(g, 'PMID:' + str(p.strip()),
-                                         gu.object_properties['is_about'],
-                                         hgnc_id)
+                            gu.addTriple(
+                                g, 'PMID:' + str(p.strip()),
+                                gu.object_properties['is_about'], hgnc_id)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
@@ -162,7 +165,8 @@ class HGNC(Source):
                         gu.addClassToGraph(g, chrom_id, None)
                         f.addSubsequenceOfFeature(g, chrom_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
             # end loop through file
@@ -215,19 +219,19 @@ class HGNC(Source):
 
         locus_type_map = {
             'RNA, Y': 'SO:0000405',
-            'RNA, cluster': 'SO:0000655',           # ??? ncRNA
-            'RNA, long non-coding': 'SO:0001877',   # lncRNA
-            'RNA, micro': 'SO:0001265',             # miRNA
-            'RNA, misc': 'SO:0000655',              # ??? ncRNA
-            'RNA, ribosomal': 'SO:0001637',         # rRNA
+            'RNA, cluster': 'SO:0000655',               # ??? ncRNA
+            'RNA, long non-coding': 'SO:0001877',       # lncRNA
+            'RNA, micro': 'SO:0001265',                 # miRNA
+            'RNA, misc': 'SO:0000655',                  # ??? ncRNA
+            'RNA, ribosomal': 'SO:0001637',             # rRNA
             # small cytoplasmic is synonym of scRNA_primary_transcript
             'RNA, small cytoplasmic': 'SO:0001266',
-            'RNA, small nucleolar': 'SO:0001267',   # snoRNA
-            'RNA, transfer': 'SO:0001272',          # tRNA
-            'RNA, vault': 'SO:0000404',             # vault_RNA
+            'RNA, small nucleolar': 'SO:0001267',       # snoRNA
+            'RNA, transfer': 'SO:0001272',              # tRNA
+            'RNA, vault': 'SO:0000404',                 # vault_RNA
             # vertebrate_immunoglobulin_T_cell_receptor_segment
             'T cell receptor gene': 'SO:0000460',
-            'T cell receptor pseudogene': 'SO:0000336',  # pseudogene
+            'T cell receptor pseudogene': 'SO:0000336', # pseudogene
             # protein_coding - no way to say member of cluster
             'complex locus constituent': 'SO:0001217',
             'endogenous retrovirus': 'SO:0000100',  # endogenous_retroviral_gene
@@ -237,15 +241,15 @@ class HGNC(Source):
             'gene with protein product': 'SO:0001217',  # protein_coding_gene
             'immunoglobulin gene': 'SO:0000460',        # immunoglobulin_region
             'immunoglobulin pseudogene': 'SO:0000336',  # pseudogene  FIXME
-            'phenotype only': 'SO:0001500',  # heritable_phenotypic_marker
-            'protocadherin': 'SO:0000110',  # FIXME
-            'pseudogene': 'SO:0000336',  # pseudogene
-            'readthrough': 'SO:0000110',  # FIXME
-            'region': 'SO:0000001',  # region
-            'transposable element': 'SO:0000101',  # transposable element
-            'unknown': 'SO:0000110',  # sequence_feature
-            'virus integration site': 'SO:0000110',  # FIXME
-            'withdrawn': None  # TODO
+            'phenotype only': 'SO:0001500',        # heritable_phenotypic_marker
+            'protocadherin': 'SO:0000110',              # FIXME
+            'pseudogene': 'SO:0000336',                 # pseudogene
+            'readthrough': 'SO:0000110',                # FIXME
+            'region': 'SO:0000001',                     # region
+            'transposable element': 'SO:0000101',       # transposable element
+            'unknown': 'SO:0000110',                    # sequence_feature
+            'virus integration site': 'SO:0000110',     # FIXME
+            'withdrawn': None                           # TODO
         }
         t = None
         if locus_type in locus_type_map:
