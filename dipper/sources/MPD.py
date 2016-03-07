@@ -2,7 +2,7 @@ import csv
 import re
 import logging
 import io
-from zipfile import ZipFile
+import gzip
 from dipper.models.Provenance import Provenance
 
 from dipper.sources.Source import Source
@@ -42,23 +42,23 @@ class MPD(Source):
     the sex-qualified genotype/strain.
 
     """
-
+    mdpdl = 'http://phenomedoc.jax.org/MPD_downloads'
     files = {
         'ontology_mappings': {
             'file': 'ontology_mappings.csv',
-            'url': 'http://phenome.jax.org/download/ontology_mappings.csv'},
+            'url': mdpdl+'/ontology_mappings.csv'},
         'straininfo': {
             'file': 'straininfo.csv',
-            'url': 'http://phenome.jax.org/download/straininfo.csv'},
+            'url': mdpdl+'/straininfo.csv'},
         'assay_metadata': {
             'file': 'measurements.csv',
-            'url': 'http://phenome.jax.org/download/measurements.csv'},
+            'url': mdpdl+'/measurements.csv'},
         'strainmeans': {
-            'file': 'strainmeans.zip',
-            'url': 'http://phenome.jax.org/download/strainmeans.zip'},
-        'mpd_datasets_metadata': {
-            'file': 'mpd_datasets_metadata.xml',
-            'url': 'http://phenome.jax.org/download/mpd_datasets_metadata.xml'},
+            'file': 'strainmeans.csv.gz',
+            'url': mdpdl+'/strainmeans.csv.gz'},
+        #'mpd_datasets_metadata': { #TEC does not seem to be used
+        #    'file': 'mpd_datasets_metadata.xml.gz',
+        #    'url': mdpdl+'/mpd_datasets_metadata.xml.gz'},
     }
 
     # the following are strain ids for testing
@@ -170,18 +170,22 @@ class MPD(Source):
 
         with open(raw, 'r') as f:
             reader = csv.reader(f)
-            f.readline()  # read the header row; skip
+            # read the header row; skip
+            header = f.readline()
             for row in reader:
-                line_counter += 1
-                (assay_id, ont_term, descrip) = row
+                # blowing up on (trailing) empty line
+                try:
+                    (assay_id, ont_term, descrip) = row
+                except ValueError:
+                    continue
                 assay_id = int(assay_id)
-
                 if re.match(r'(MP|VT)', ont_term):
                     # add the mapping denovo
                     if assay_id not in self.assayhash:
                         self.assayhash[assay_id] = {}
                         self.assayhash[assay_id]['ont_terms'] = set()
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
+                    
 
         return
 
@@ -248,12 +252,17 @@ class MPD(Source):
 
         with open(raw, 'r') as f:
             reader = csv.reader(f)
-            f.readline()  # read the header row; skip
+            # read the header row; skip
+            header = f.readline()
+            #logger.info("HEADER: %s", header)
             for row in reader:
-                line_counter += 1
                 # measnum,projsym,varname,descrip,units,cat1,cat2,cat3,
                 # intervention,intparm,appmeth,panelsym,datatype,sextested,
                 # nstrainstested,ageweeks
+                # Again the last row has changed. contains: '(4486 rows)'
+                if len(row) != 16:
+                        continue
+                line_counter += 1                        
                 assay_id = int(row[0])
                 assay_label = row[3]
                 assay_units = row[4]
@@ -288,24 +297,21 @@ class MPD(Source):
         """
         logger.info("Processing strain means ...")
         line_counter = 0
-        f = '/'.join((self.rawdir, self.files['strainmeans']['file']))
-        myzip = ZipFile(f, 'r')
-        # assume that the first entry is the item
-        # fname = myzip.namelist()[0]
-
-        with myzip.open(
-            self.files['strainmeans']['file'].replace('.zip', '.csv'), 'r') as f:
-            #TODO PYLINT Redefinition of f type from str to _io.TextIOWrapper
+        raw = '/'.join((self.rawdir, self.files['strainmeans']['file']))
+        with gzip.open(raw, 'rb') as f:
             f = io.TextIOWrapper(f)
             reader = csv.reader(f)
             f.readline()  # read the header row; skip
             score_means_by_measure = {}
             strain_scores_by_measure = {}
             for row in reader:
-                line_counter += 1
-                (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
-                 cv, minval, maxval, logmean, logsd, zscore, logzscore) = row
-
+                try:
+                    (measnum, varname, strain, strainid, sex, mean, nmice, sd,
+                     sem, cv, minval, maxval, logmean, logsd, zscore,
+                     logzscore) = row
+                except ValueError:
+                    continue
+                line_counter += 1    
                 strain_num = int(strainid)
                 assay_num = int(measnum)
                 # assuming the zscore is across all the items
@@ -363,8 +369,9 @@ class MPD(Source):
                         zscore = measures[m]['zscore']
                         if abs(zscore) >= self.stdevthreshold:
                             scores_passing_threshold_count += 1
-                            # logger.info("Score passing threshold: %s | %s | %s",
-                            #             strain_id, assay_id, zscore)
+                            # logger.info(
+                            #   "Score passing threshold: %s | %s | %s",
+                            #   strain_id, assay_id, zscore)
                             # add the G2P assoc
                             prov = Provenance()
                             assay_label = self.assayhash[m]['assay_label']
