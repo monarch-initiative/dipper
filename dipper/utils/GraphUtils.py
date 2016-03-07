@@ -1,13 +1,11 @@
 import re
 import logging
-
 from rdflib import Literal, URIRef, BNode, Namespace
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 
 from dipper.utils.CurieUtil import CurieUtil
 
 __author__ = 'nlw'
-
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +111,7 @@ class GraphUtils:
         :param type:
         :param description:
         :return:
+
         """
 
         n = self.getNode(id)
@@ -141,11 +140,12 @@ class GraphUtils:
             g.add((n, DC['description'], Literal(description)))
         return g
 
-    def addOWLPropertyClassRestriction(self, g, class_id, property_id, property_value):
+    def addOWLPropertyClassRestriction(self, g, class_id, property_id,
+                                       property_value):
 
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
-        nid = '_'+re.sub(':', '', property_id)+re.sub(':', '', property_value)
+        nid = '_'+re.sub(r':', '', property_id)+re.sub(r':', '', property_value)
         n = self.getNode(nid)
 
         g.add((n, RDF['type'], self.OWLRESTRICTION))
@@ -193,6 +193,7 @@ class GraphUtils:
         :param newids: the class idlist that is
                        the replacement(s) of the old class.  Not required.
         :return:
+
         """
 
         n1 = URIRef(self.cu.get_uri(oldid))
@@ -212,6 +213,7 @@ class GraphUtils:
         :param newids: the individual idlist that is the replacement(s) of
                        the old individual.  Not required.
         :return:
+
         """
 
         n1 = URIRef(self.cu.get_uri(oldid))
@@ -236,8 +238,6 @@ class GraphUtils:
                 for i in newids:
                     n = URIRef(self.cu.get_uri(i.strip()))
                     g.add((n1, consider, n))
-
-
         return
 
     def addSubclass(self, g, parentid, childid):
@@ -257,7 +257,8 @@ class GraphUtils:
         return
 
     def addLabel(self, graph, subject_id, label):
-        graph.add((self.getNode(subject_id), RDFS['label'], Literal(label)))
+        graph.add(
+            (self.getNode(subject_id), RDFS['label'], Literal(label)))
         return
 
     def addSynonym(self, g, cid, synonym, synonym_type=None):
@@ -269,6 +270,7 @@ class GraphUtils:
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :return:
+
         """
         n = self.getNode(cid)
         if synonym_type is None:
@@ -295,7 +297,8 @@ class GraphUtils:
         return
 
     def addDepiction(self, g, subject_id, image_url):
-        g.add((self.getNode(subject_id), FOAF['depiction'], Literal(image_url)))
+        g.add(
+            (self.getNode(subject_id), FOAF['depiction'], Literal(image_url)))
         return
 
     def addComment(self, g, subject_id, comment):
@@ -310,22 +313,27 @@ class GraphUtils:
         return
 
     def addPage(self, g, subject_id, page_url):
-        g.add((self.getNode(subject_id), FOAF['page'], Literal(page_url)))
+        g.add(
+            (self.getNode(subject_id), FOAF['page'], Literal(page_url)))
         return
 
     def addTitle(self, g, subject_id, title):
-        g.add((self.getNode(subject_id), DC['title'], Literal(title)))
+        g.add(
+            (self.getNode(subject_id), DC['title'], Literal(title)))
         return
 
     def addMember(self, g, group_id, member_id):
-        self.addTriple(g, group_id, self.properties['has_member'], member_id)
+        self.addTriple(
+            g, group_id, self.properties['has_member'], member_id)
 
     def addMemberOf(self, g, member_id, group_id):
-        self.addTriple(g, member_id, self.properties['member_of'], group_id)
+        self.addTriple(
+            g, member_id, self.properties['member_of'], group_id)
         return
 
     def addInvolvedIn(self, g, member_id, group_id):
-        self.addTriple(g, member_id, self.properties['involved_in'], group_id)
+        self.addTriple(
+            g, member_id, self.properties['involved_in'], group_id)
 
     def write(self, graph, fileformat=None, file=None):
         """
@@ -334,6 +342,7 @@ class GraphUtils:
          to write turtle, specify format='turtle'
          an optional file can be supplied instead of stdout
         :return: None
+
         """
         filewriter = None
         if fileformat is None:
@@ -397,13 +406,13 @@ class GraphUtils:
         """
         base = Namespace(self.curie_map.get(''))
         n = None
-        if id is not None and re.match('^_', id):
+        if id is not None and re.match(r'^_', id):
             if materialize_bnode is True:
                 n = base[id]
             else: # replace the leading underscore to make it cleaner
-                n = BNode(re.sub('_', '', id, 1))
+                n = BNode(re.sub(r'_', '', id, 1))
         elif re.match(r'^\:', id):  # do we need to remove embedded ID colons?
-            n = base[re.sub(':', '', id, 1)]
+            n = base[re.sub(r':', '', id, 1)]
         else:
             u = self.cu.get_uri(id)
             if u is not None:
@@ -438,6 +447,7 @@ class GraphUtils:
         :param graph:
         :param op: a dictionary of object properties
         :return: None
+
         """
         self.loadProperties(graph, op, self.OBJPROP)
         return
@@ -450,13 +460,16 @@ class GraphUtils:
         :param op: a dictionary of object properties
         :param property_type: one of OWL:(Annotation|Data|Object)Property
         :return: None
+
         """
 
         if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error("bad property type assigned: %s, %s", property_type, op)
+            logger.error(
+                "bad property type assigned: %s, %s", property_type, op)
         else:
             for k in op:
-                graph.add((self.getNode(op[k]), RDF['type'], property_type))
+                graph.add(
+                    (self.getNode(op[k]), RDF['type'], property_type))
         return
 
     def loadAllProperties(self, graph):
@@ -465,6 +478,7 @@ class GraphUtils:
         (object, data, and annotation) into the supplied graph.
         :param graph:
         :return:
+
         """
 
         self.loadProperties(graph, self.object_properties, self.OBJPROP)

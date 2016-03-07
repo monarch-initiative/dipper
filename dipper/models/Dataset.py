@@ -18,8 +18,9 @@ class Dataset:
      http://htmlpreview.github.io/?
      https://github.com/joejimbo/HCLSDatasetDescriptions/blob/master/Overview.html#appendix_1
      (mind the wrap)
+
     """
-    
+
     namespaces = {
         'dctypes': 'http://purl.org/dc/dcmitype/',
         'pav': 'http://purl.org/pav/',
@@ -29,7 +30,7 @@ class Dataset:
     core_bindings = {'rdf': RDF, 'foaf': FOAF, 'xsd': XSD, 'dct': DCTERMS}
 
     def __init__(self, identifier, title, url, description=None,
-        license_url=None, data_rights=None):
+                 license_url=None, data_rights=None):
         DCTYPES = Namespace(self.namespaces['dctypes'])
         self.gu = GraphUtils(curie_map.get())
         self.identifier = URIRef(':'+identifier)
@@ -46,6 +47,7 @@ class Dataset:
         self.graph.add(
             (self.identifier, DCTERMS['identifier'], Literal(identifier)))
         self.graph.add((self.identifier, FOAF['page'], URIRef(url)))
+        self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
         # maybe in the future add the logo here:
         # schemaorg:logo <http://www.ebi.ac.uk/rdf/sites/ebi.ac.uk.rdf/files/resize/images/rdf/chembl_service_logo-146x48.gif> .
 
@@ -64,7 +66,7 @@ class Dataset:
             logger.debug('No rights provided.')
 
         if description is not None:
-            self.gu.addDescription(self.graph, self.identifier, description )
+            self.gu.addDescription(self.graph, self.identifier, description)
         return
 
     def load_bindings(self):
@@ -86,6 +88,7 @@ class Dataset:
         :param date_issued:
         :param version_id:
         :return:
+
         """
 
         if date_issued is not None:
@@ -110,7 +113,8 @@ class Dataset:
     def set_date_issued(self, date_issued):
 
         self.date_issued = date_issued
-        self.graph.add((self.identifier, DCTERMS['issued'], Literal(date_issued)))
+        self.graph.add(
+            (self.identifier, DCTERMS['issued'], Literal(date_issued)))
         logger.info("setting date to %s", date_issued)
 
         return
@@ -130,8 +134,9 @@ class Dataset:
             d = self.date_issued
         else:
             d = self.date_accessed
-            logger.info("""No date supplied for setting version;
-                using download timestamp for date_issued""")
+            logger.info(
+                "No date supplied for setting version; using download timestamp"
+                + " for date_issued")
 
         logger.info("setting version by date")
         self.set_version_by_num(d)
@@ -149,7 +154,6 @@ class Dataset:
 
         # set the monarch-generated-version of the resource-version
         # TODO sync this up with the ontology version
-        # TEC: does this belong in __init__() ?
         if version_num != self.date_accessed:
             self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
             self.graph.add(

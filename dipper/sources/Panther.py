@@ -15,31 +15,39 @@ logger = logging.getLogger(__name__)
 
 class Panther(Source):
     """
-    The pairwise orthology calls from Panther DB: http://pantherdb.org/ encompass 22 species,
+    The pairwise orthology calls from Panther DB:
+    http://pantherdb.org/ encompass 22 species,
     from the RefGenome and HCOP projects.
     Here, we map the orthology classes to RO homology relationships
     This resource may be extended in the future with additional species.
 
-    This currently makes a graph of orthologous relationships between genes, with the assumption that
-    gene metadata (labels, equivalent ids) are provided from other sources.
+    This currently makes a graph of orthologous relationships between genes,
+    with the assumption that gene metadata (labels, equivalent ids) are
+    provided from other sources.
 
-    Gene families are nominally created from the orthology files, though these are incomplete with
-    no hierarchical (subfamily) information.  This will get updated from the HMM files in the future.
+    Gene families are nominally created from the orthology files,
+    though these are incomplete with no hierarchical (subfamily) information.
+    This will get updated from the HMM files in the future.
 
-    Note that there is a fair amount of identifier cleanup performed, to align with our standard CURIE prefixes.
+    Note that there is a fair amount of identifier cleanup performed to align
+    with our standard CURIE prefixes.
 
-    The test graph of data is output based on configured "protein" identifiers in conf.json.
+    The test graph of data is output based on configured
+    "protein" identifiers in conf.json.
 
     By default, this will produce a file with ALL orthologous relationships.
-    IF YOU WANT ONLY A SUBSET, YOU NEED TO PROVIDE A FILTER UPON CALLING THIS WITH THE TAX IDS
+    IF YOU WANT ONLY A SUBSET, YOU NEED TO PROVIDE A FILTER UPON CALLING THIS
+    WITH THE TAXON IDS
 
     """
-
+    PNTHDL = 'ftp://ftp.pantherdb.org/ortholog/current_release'
     files = {
-        'refgenome': {'file': 'RefGenomeOrthologs.tar.gz',
-                      'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/RefGenomeOrthologs.tar.gz'},
-        'hcop': {'file': 'Orthologs_HCOP.tar.gz',
-                 'url': 'ftp://ftp.pantherdb.org/ortholog/current_release/Orthologs_HCOP.tar.gz'}
+        'refgenome': {
+            'file': 'RefGenomeOrthologs.tar.gz',
+            'url': PNTHDL+'/RefGenomeOrthologs.tar.gz'},
+        'hcop': {
+            'file': 'Orthologs_HCOP.tar.gz',
+            'url': PNTHDL+'/Orthologs_HCOP.tar.gz'}
     }
 
     def __init__(self, tax_ids=None):
@@ -47,30 +55,32 @@ class Panther(Source):
         self.tax_ids = tax_ids
         self.load_bindings()
 
-        self.dataset = Dataset('panther', 'Protein ANalysis THrough Evolutionary Relationships',
-                               'http://pantherdb.org/', None,
-                               'http://www.pantherdb.org/terms/disclaimer.jsp')
+        self.dataset = Dataset(
+            'panther', 'Protein ANalysis THrough Evolutionary Relationships',
+            'http://pantherdb.org/', None,
+            'http://www.pantherdb.org/terms/disclaimer.jsp')
 
         # # Defaults
         # if self.tax_ids is None:
         #     self.tax_ids = [9606, 10090, 7955]
 
-        if 'test_ids' not in config.get_config() or 'protein' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() \
+                or 'protein' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['protein']
-
-        # data-source specific warnings (will be removed when issues are cleared)
 
         return
 
     def fetch(self, is_dl_forced=False):
         """
         :return: None
+
         """
 
         self.get_files(is_dl_forced)
-        # TODO the version number is tricky to get...we can't get it from redirects of the url
+        # TODO the version number is tricky to get
+        # we can't get it from redirects of the url
         # TODO use the remote timestamp of the file?
 
         return
@@ -84,9 +94,11 @@ class Panther(Source):
             self.testMode = True
 
         if self.tax_ids is None:
-            logger.info("No taxon filter set; Dumping all orthologous associations.")
+            logger.info(
+                "No taxon filter set; Dumping all orthologous associations.")
         else:
-            logger.info("Only the following taxa will be dumped: %s", str(self.tax_ids))
+            logger.info(
+                "Only the following taxa will be dumped: %s", str(self.tax_ids))
 
         self._get_orthologs(limit)
 
@@ -98,23 +110,23 @@ class Panther(Source):
 
     def _get_orthologs(self, limit):
         """
-        This will process each of the specified pairwise orthology files, creating orthology associations
-        based on the specified orthology code.
-        this currently assumes that each of the orthology files is identically formatted.
-        relationships are made between genes here.
+        This will process each of the specified pairwise orthology files,
+        creating orthology associations based on the specified orthology code.
+        this currently assumes that each of the orthology files is identically
+        formatted. Relationships are made between genes here.
 
-        there is also a nominal amount of identifier re-formatting:
+        There is also a nominal amount of identifier re-formatting:
         MGI:MGI --> MGI
         Ensembl --> ENSEMBL
 
-        we skip any genes where we don't know how to map the gene identifiers.  for example,
-        Gene:Huwe1 for RAT is not an identifier, so we skip any mappings to this identifier.  Often, the
-        there are two entries for the same gene (base on equivalent Uniprot id), and so we are not
-        actually losing any information.
+        we skip any genes where we don't know how to map the gene identifiers.
+        For example, Gene:Huwe1 for RAT is not an identifier, so we skip any
+        mappings to this identifier.  Often, the there are two entries for the
+        same gene (base on equivalent Uniprot id), and so we are not actually
+        losing any information.
 
-        We presently have a hard-coded filter to
-        select only orthology relationships
-        where one of the pair is in our species of interest
+        We presently have a hard-coded filter to select only orthology
+        relationships where one of the pair is in our species of interest
         (Mouse and Human, for the moment).
         This will be added as a configurable parameter in the future.
 
@@ -133,6 +145,7 @@ class Panther(Source):
 
         :param limit:
         :return:
+
         """
         logger.info("getting orthologs")
 
@@ -165,22 +178,26 @@ class Panther(Source):
 
                     # a little feedback to the user since there's so many
                     if line_counter % 1000000 == 0:
-                        logger.info("Processed %d lines from %s", line_counter, fname.name)
+                        logger.info(
+                            "Processed %d lines from %s",
+                            line_counter, fname.name)
 
                     line = line.decode().strip()
 
                     # parse each row. ancestor_taxon is unused
                     # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6	LDO	Euarchontoglires	PTHR15964
-                    (a, b, orthology_class, ancestor_taxon, panther_id) = line.split('\t')
+                    (a, b, orthology_class, ancestor_taxon,
+                     panther_id) = line.split('\t')
                     (species_a, gene_a, protein_a) = a.split('|')
                     (species_b, gene_b, protein_b) = b.split('|')
 
                     # skip the entries that don't have homolog relationships
                     # with the test ids
-                    if self.testMode and not (re.sub(r'UniProtKB=', '',
-                                                     protein_a) in self.test_ids or
-                                              re.sub(r'UniProtKB=', '',
-                                                     protein_b) in self.test_ids):
+                    if self.testMode \
+                        and not (re.sub(r'UniProtKB=', '',
+                                        protein_a) in self.test_ids \
+                                        or re.sub(r'UniProtKB=', '', protein_b)\
+                                        in self.test_ids):
                         continue
 
                     # map the taxon abbreviations to ncbi taxon ids
@@ -197,9 +214,13 @@ class Panther(Source):
                     # gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where
                     # gene1 OR gene2 are in the taxid list (some-filter)
-                    if (self.tax_ids is not None and
-                            (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
-                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip())) not in self.tax_ids)):
+                    if (self.tax_ids is not None \
+                            and (int(re.sub(r'NCBITaxon:', '',
+                                            taxon_a.rstrip()))\
+                            not in self.tax_ids) \
+                            and (int(re.sub(r'NCBITaxon:', '',
+                                            taxon_b.rstrip())) \
+                            not in self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
@@ -221,7 +242,8 @@ class Panther(Source):
                         unprocessed_gene_ids.add(gene_b)
                     gene_b = clean_gene
 
-                    # a special case here; mostly some rat genes they use symbols instead of identifiers.  will skip
+                    # a special case here; mostly some rat genes
+                    # they use symbols instead of identifiers.  will skip
                     if gene_a is None or gene_b is None:
                         continue
 
@@ -233,27 +255,38 @@ class Panther(Source):
                     assoc = OrthologyAssoc(self.name, gene_a, gene_b, rel)
                     assoc.add_evidence(evidence_id)
 
-                    # add genes to graph; assume labels will be taken care of elsewhere
+                    # add genes to graph;
+                    # assume labels will be taken care of elsewhere
                     gu.addClassToGraph(g, gene_a, None)
                     gu.addClassToGraph(g, gene_b, None)
 
                     # might as well add the taxon info for completeness
-                    gu.addTriple(g, gene_a, gu.object_properties['in_taxon'], taxon_a)
-                    gu.addTriple(g, gene_b, gu.object_properties['in_taxon'], taxon_b)
+                    gu.addTriple(
+                        g, gene_a, gu.object_properties['in_taxon'], taxon_a)
+                    gu.addTriple(
+                        g, gene_b, gu.object_properties['in_taxon'], taxon_b)
 
                     assoc.add_association_to_graph(g)
 
-                    # note this is incomplete... it won't construct the full family hierarchy, just the top-grouping
-                    assoc.add_gene_family_to_graph(g, ':'.join(('PANTHER', panther_id)))
+                    # note this is incomplete...
+                    # it won't construct the full family hierarchy,
+                    # just the top-grouping
+                    assoc.add_gene_family_to_graph(
+                        g, ':'.join(('PANTHER', panther_id)))
 
-                    if not self.testMode and limit is not None and line_counter > limit:
+                    if not self.testMode \
+                            and limit is not None and line_counter > limit:
                         break
 
             logger.info("finished processing %s", f)
-            logger.warning("The following gene ids were unable to be processed: %s", str(unprocessed_gene_ids))
+            logger.warning(
+                "The following gene ids were unable to be processed: %s",
+                str(unprocessed_gene_ids))
 
-        gu.loadProperties(g, OrthologyAssoc.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, OrthologyAssoc.annotation_properties, gu.ANNOTPROP)
+        gu.loadProperties(
+            g, OrthologyAssoc.object_properties, gu.OBJPROP)
+        gu.loadProperties(
+            g, OrthologyAssoc.annotation_properties, gu.ANNOTPROP)
 
         return
 
@@ -301,7 +334,8 @@ class Panther(Source):
     @staticmethod
     def _map_orthology_code_to_RO(ortho):
         """
-        Map the panther-specific orthology code (P,O,LDO,X,LDX) to relationship-ontology
+        Map the panther-specific orthology code (P,O,LDO,X,LDX)
+        to relationship-ontology
         identifiers.
         :param ortho: orthology code
         :return: RO identifier
@@ -319,14 +353,16 @@ class Panther(Source):
         if ortho in ortho_to_ro_map:
             ro_id = ortho_to_ro_map.get(ortho)
         else:
-            logger.warning("unmapped orthology code %s. Defaulting to 'orthology'", ortho)
+            logger.warning(
+                "unmapped orthology code %s. Defaulting to 'orthology'", ortho)
 
         return ro_id
 
     @staticmethod
     def _clean_up_gene_id(geneid, sp):
         """
-        A series of identifier rewriting to conform with standard gene identifiers.
+        A series of identifier rewriting to conform with
+        standard gene identifiers.
         :param geneid:
         :param sp:
         :return:
@@ -341,11 +377,14 @@ class Panther(Source):
         geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
         if sp == 'CAEEL':
             if re.match(r'(Gene|ENSEMBLGenome):\w+\\.\d+', geneid):
-                geneid = re.sub(r'(?:Gene|ENSEMBLGenome):(\w+\\.\d+)', 'WormBase:\\1', geneid)
+                geneid = re.sub(
+                    r'(?:Gene|ENSEMBLGenome):(\w+\\.\d+)',
+                    'WormBase:\\1', geneid)
 
         if sp == 'DROME':
             if re.match(r'(ENSEMBLGenome):\w+\\.\d+', geneid):
-                geneid = re.sub(r'(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
+                geneid = re.sub(
+                    r'(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
 
         # rewrite GeneID --> NCBIGene
         geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
@@ -365,7 +404,9 @@ class Panther(Source):
         geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
         if re.match(r'(Gene|ENSEMBLGenome):', geneid):
-            # logger.warning("Found an identifier I don't know how to fix (species %s): %s", sp, geneid)
+            # logger.warning(
+            #   "Found an identifier I don't know how to fix (species %s): %s",
+            #   sp, geneid)
             geneid = None
 
         return geneid
