@@ -3,7 +3,7 @@ import hashlib
 import os
 import time
 import logging
-import urllib       #TODO tec look @ import rewuests
+import urllib       #TODO tec look @ import requests
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import ConjunctiveGraph, Namespace
@@ -49,8 +49,8 @@ class Source:
             self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
             logger.info("Setting outfile to %s", self.outfile)
 
-            self.datasetfile = '/'.join((self.outdir,
-                                         self.name + '_dataset.ttl'))
+            self.datasetfile = '/'.join(
+                (self.outdir, self.name + '_dataset.ttl'))
             logger.info("Setting dataset file to %s", self.datasetfile)
 
             self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
@@ -200,11 +200,12 @@ class Source:
         currently implemented with md5
         :param long_string:
         :return:
+
         """
         # FIXME for now, this will do md5.
         # probably not the best long-term solution
         # note others available:
-        # md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
+        # sha1(), sha224(), sha256(), sha384(), and sha512()
 
         byte_string = long_string.encode("utf-8")
 
@@ -220,6 +221,7 @@ class Source:
         :param remote: URL of file to fetch from remote server
         :param local: pathname to save file to locally
         :return: True if the remote file is newer and should be downloaded
+
         """
         logger.info(
             "Checking if remote file (%s) is newer than local (%s)...",
@@ -250,8 +252,9 @@ class Source:
             logger.error(e)
 
         st = os.stat(local)
-        logger.info("Local file date: %s",
-                    datetime.utcfromtimestamp(st[ST_CTIME]))
+        logger.info(
+            "Local file date: %s",
+            datetime.utcfromtimestamp(st[ST_CTIME]))
 
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
@@ -337,16 +340,17 @@ class Source:
             if self.compare_local_remote_bytes(remotefile, localfile):
                 logger.debug("local file is same size as remote after download")
             else:
-                raise Exception("Error when downloading files: "+\
-                                "local file size does not match"+\
-                                " remote file size")
+                raise Exception(
+                    "Error when downloading files: local file size " +
+                    "does not match remote file size")
         else:
             logger.info("Using existing file %s", localfile)
 
         st = os.stat(localfile)
         logger.info("file size: %s", st[ST_SIZE])
-        logger.info("file created: %s",
-                    time.asctime(time.localtime(st[ST_CTIME])))
+        logger.info(
+            "file created: %s",
+            time.asctime(time.localtime(st[ST_CTIME])))
         return
 
     def process_xml_table(self, elem, table_name, processing_function, limit):
@@ -392,8 +396,9 @@ class Source:
         :return:None
         """
         if len(row) != length:
-            raise Exception("row length does not match expected length of " +
-                            str(length)+"\nrow: "+str(row))
+            raise Exception(
+                "row length does not match expected length of " +
+                str(length)+"\nrow: "+str(row))
 
         return
 
@@ -451,9 +456,10 @@ class Source:
         local_size = self.get_local_file_size(localfile)
         if remote_size is not None and local_size != int(remote_size):
             is_equal = False
-            logger.error('local file and remote file different sizes\n'
-                         '%s has size %s, %s has size %s', localfile,
-                         local_size, remotefile, remote_size)
+            logger.error(
+                'local file and remote file different sizes\n'
+                '%s has size %s, %s has size %s',
+                localfile, local_size, remotefile, remote_size)
         return is_equal
 
     def file_len(self, fname):
@@ -490,6 +496,7 @@ class Source:
         An abstract method that should be overwritten with
         tests appropriate for the specific source.
         :return:
+
         """
         return None
 
@@ -515,6 +522,7 @@ class Source:
         Further information will be augmented in the dataset object.
         :param version:
         :return:
+
         """
         # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
         # owl:versionInfo
@@ -546,6 +554,7 @@ class Source:
         and overwrite the contents of the original file.
         :param filename:
         :return:
+
         """
 
         f = open(filename, 'r', encoding=encoding, newline='\n')
