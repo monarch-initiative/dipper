@@ -226,6 +226,7 @@ class HGNC(Source):
             'RNA, ribosomal': 'SO:0001637',             # rRNA
             # small cytoplasmic is synonym of scRNA_primary_transcript
             'RNA, small cytoplasmic': 'SO:0001266',
+            'RNA, small nuclear': 'SO:0001268',         # snRNA
             'RNA, small nucleolar': 'SO:0001267',       # snoRNA
             'RNA, transfer': 'SO:0001272',              # tRNA
             'RNA, vault': 'SO:0000404',                 # vault_RNA
