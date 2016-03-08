@@ -1566,7 +1566,7 @@ class FlyBase(PostgreSQLSource):
                 if int(type_id) in [  # allele of, etc
                         60384, 60410, 60409, 60413, 60414, 60401, 60399, 60400,
                         60401, 60402, 60415, 60417, 60418, 60420]:
-                    line_counter += 1  # TODO move this out of the if later
+                      # TODO move this out of the if later
                     # allele of gene
                     # in sql, we limited the
                     # subject to type_id = 219,33 object type_id  219  #??? TEC
@@ -1577,9 +1577,14 @@ class FlyBase(PostgreSQLSource):
                         allele_id = self.idhash['allele'][subject_id]
                     if object_id in self.idhash['gene']:
                         gene_id = self.idhash['gene'][object_id]
-
-                    gene_label = self.label_hash[gene_id]
-                    if allele_id is not None and gene_id is not None:
+                    if gene_id is not None:
+                        gene_label = self.label_hash[gene_id]
+                    else
+                         logger.error("The gene_id is None")
+                         continue
+                    # TODO move this out of the if later     
+                    line_counter += 1      
+                    if allele_id is not None:
                         if self.feature_types[subject_id] == Genotype.genoparts['reagent_targeted_gene']:
                             gu.addTriple(
                                 g, allele_id,
