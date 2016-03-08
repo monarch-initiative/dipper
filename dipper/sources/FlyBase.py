@@ -1580,11 +1580,13 @@ class FlyBase(PostgreSQLSource):
                     if gene_id is not None:
                         gene_label = self.label_hash[gene_id]
                     else:
-                        logger.error("The gene_id is None")
+                        logger.error(
+                            "The gene_id for object_id is None (sub_id,obj_id): %s \t %s",
+                            str(subject_id), str(object_id))
                         continue
                     # TODO move this out of the if later
                     line_counter += 1
-                    if allele_id is not None:
+                    if allele_id is not None and gene_id is not None:
                         if self.feature_types[subject_id] == Genotype.genoparts['reagent_targeted_gene']:
                             gu.addTriple(
                                 g, allele_id,
