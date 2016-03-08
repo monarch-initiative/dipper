@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 class OMIA(Source):
     """
     This is the parser for the
-    [Online Mendelian Inheritance in Animals (OMIA)](http://www.http://omia.angis.org.au),
+    [Online Mendelian Inheritance in Animals
+    (OMIA)](http://www.http://omia.angis.org.au),
     from which we process inherited disorders, other (single-locus) traits,
     and genes in >200 animal species (other than human and mouse and rats).
 

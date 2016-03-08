@@ -626,8 +626,7 @@ class WormBase(Source):
                 #     continue
 
                 if feature_type_label \
-                        not in [
-                                'gene', 'point_mutation', 'deletion',
+                        not in ['gene', 'point_mutation', 'deletion',
                                 'RNAi_reagent', 'duplication', 'enhancer',
                                 'binding_site', 'biological_region',
                                 'complex_substitution', 'substitution',
