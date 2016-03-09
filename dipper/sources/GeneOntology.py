@@ -208,7 +208,9 @@ class GeneOntology(Source):
                             uniprotid = ':'.join((db, gene_num))
                             gene_num = re.sub(r'\w+\:', '', gene_id)
                         elif len(mapped_ids) > 1:
-                            # logger.warning("Skipping gene id mapped for >1 gene %s --> %s", gene_num, str(mapped_ids))
+                            # logger.warning(
+                            #    "Skipping gene id mapped for >1 gene %s --> %s",
+                            #    gene_num, str(mapped_ids))
                             continue
                     else:
                         continue
@@ -219,7 +221,8 @@ class GeneOntology(Source):
                 else:
                     gene_id = ':'.join((db, gene_num))
 
-                if self.testMode and not(re.match(r'NCBIGene', gene_id)
+                if self.testMode \
+                        and not(re.match(r'NCBIGene', gene_id)
                         and int(gene_num) in self.test_ids):
                     continue
 

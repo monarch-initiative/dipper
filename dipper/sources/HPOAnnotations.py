@@ -252,13 +252,14 @@ class HPOAnnotations(Source):
                 #   dipper.models.assoc.D2PAssoc.D2PAssoc to
                 #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
                 if asp == 'O' or asp == 'M':  # organ abnormality or mortality
-                    assoc = D2PAssoc(self.name, disease_id, pheno_id, onset, freq)
+                    assoc = D2PAssoc(
+                        self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
                     assoc = DispositionAssoc(self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
                     assoc = DispositionAssoc(self.name, disease_id, pheno_id)
                 else:
-                    logger.error("I don't know what this aspect is:", asp)
+                    logger.error("I don't know what this aspect is: %s", asp)
 
                 assoc.add_evidence(eco_id)
 

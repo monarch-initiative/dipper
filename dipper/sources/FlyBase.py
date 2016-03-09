@@ -1349,7 +1349,7 @@ class FlyBase(PostgreSQLSource):
                 if dbxrefs is not None:
                     if len(dbxrefs) > 1:
                         logger.info(
-                            ">1 dbxref for this cvterm (%s: %s): ",
+                            ">1 dbxref for this cvterm (%s: %s): %s",
                             str(cvterm_id), name, dbxrefs.values())
                     elif len(dbxrefs) == 1:
                         # replace the cvterm with

@@ -185,7 +185,7 @@ class MPD(Source):
                         self.assayhash[assay_id] = {}
                         self.assayhash[assay_id]['ont_terms'] = set()
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
-                    
+
 
         return
 
@@ -261,8 +261,8 @@ class MPD(Source):
                 # nstrainstested,ageweeks
                 # Again the last row has changed. contains: '(4486 rows)'
                 if len(row) != 16:
-                        continue
-                line_counter += 1                        
+                    continue
+                line_counter += 1
                 assay_id = int(row[0])
                 assay_label = row[3]
                 assay_units = row[4]
@@ -311,7 +311,7 @@ class MPD(Source):
                      logzscore) = row
                 except ValueError:
                     continue
-                line_counter += 1    
+                line_counter += 1
                 strain_num = int(strainid)
                 assay_num = int(measnum)
                 # assuming the zscore is across all the items

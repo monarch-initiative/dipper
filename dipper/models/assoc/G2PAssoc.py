@@ -34,6 +34,7 @@ class G2PAssoc(Assoc):
         self.start_stage_id = None
         self.end_stage_id = None
         self.environment_id = None
+        self.stage_process_id = None
 
         self.set_subject(entity_id)
         self.set_object(phenotype_id)
@@ -95,7 +96,7 @@ class G2PAssoc(Assoc):
             self.gu.addTriple(g, stage_process_id,
                               self.gu.object_properties['ends_during'],
                               self.end_stage_id)
-            self.stage_process_id = stage_process_id # TEC: address in __init__?
+            self.stage_process_id = stage_process_id
 
             self.gu.addTriple(g, self.assoc_id,
                               self.gu.object_properties['has_qualifier'],

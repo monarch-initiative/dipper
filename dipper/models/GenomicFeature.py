@@ -318,7 +318,7 @@ class Feature():
         i += reference
         if coordinate is not None:
             # just in case it isn't a string already
-            i = '-'.join((i, str(coordinate))) 
+            i = '-'.join((i, str(coordinate)))
         if types is not None:
             tstring = self._getStrandStringFromPositionTypes(types)
             if tstring is not None:

@@ -43,7 +43,7 @@ class OMIM(Source):
      (to make equivalent ids).
      We also pull the phenotypic series annotations as grouping classes.
 
-     Note that ...
+     Note that ... ???
 
     """
 
@@ -69,7 +69,6 @@ class OMIM(Source):
 
 
     # the following test ids are in the config.json
-    # TEC PYLINT  where is "config.jason"
     test_ids = [
         119600, 120160, 157140, 158900, 166220, 168600, 219700,
         253250, 305900, 600669, 601278, 602421, 605073, 607822,   # coriell
@@ -421,8 +420,9 @@ class OMIM(Source):
                         assoc.add_association_to_graph(g)
 
                     elif len(ncbifeature) > 1:
-                        logger.info("Its ambiguous when %s maps to >1 gene id:",
-                                    omimid, str(ncbifeature))
+                        logger.info(
+                            "Its ambiguous when %s maps to >1 gene id: %s",
+                            omimid, str(ncbifeature))
                     else:  # no ncbi feature, make an anonymous one
                         feature_id = self._make_anonymous_feature(str(omimnum))
                         feature_label = abbrev

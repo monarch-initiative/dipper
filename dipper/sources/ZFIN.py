@@ -1159,7 +1159,7 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
                 (fish_num, fish_name, fish_abbreviation, genotype_num,
-                    empty) = row
+                 empty) = row
                 # ZDB-FISH-150901-10750	INDO	INDO	ZDB-GENO-980210-32
                 fish_id = 'ZFIN:'+fish_num
                 genotype_id = 'ZFIN:' + genotype_num.strip()
@@ -2403,7 +2403,7 @@ class ZFIN(Source):
                 # assume it gets added elsewhere
                 gu.addClassToGraph(g, chrom_id, None)
                 # FIXME - remove this hardcoding
-                build_label = 'danRer10'  
+                build_label = 'danRer10'
                 build_id = 'UCSC:'+build_label
                 chrom_in_build = makeChromID(chrom, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
