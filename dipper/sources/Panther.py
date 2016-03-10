@@ -98,7 +98,8 @@ class Panther(Source):
                 "No taxon filter set; Dumping all orthologous associations.")
         else:
             logger.info(
-                "Only the following taxa will be dumped: %s", str(self.tax_ids))
+                "Only the following taxa will be dumped: %s",
+                str(self.tax_ids))
 
         self._get_orthologs(limit)
 
@@ -193,11 +194,11 @@ class Panther(Source):
 
                     # skip the entries that don't have homolog relationships
                     # with the test ids
-                    if self.testMode \
-                        and not (re.sub(r'UniProtKB=', '',
-                                        protein_a) in self.test_ids \
-                                        or re.sub(r'UniProtKB=', '', protein_b)\
-                                        in self.test_ids):
+                    if self.testMode and not (
+                            re.sub(r'UniProtKB=', '',
+                                   protein_a) in self.test_ids or
+                            re.sub(r'UniProtKB=', '', protein_b)
+                            in self.test_ids):
                         continue
 
                     # map the taxon abbreviations to ncbi taxon ids
@@ -214,20 +215,17 @@ class Panther(Source):
                     # gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where
                     # gene1 OR gene2 are in the taxid list (some-filter)
-                    if (self.tax_ids is not None \
-                            and (int(re.sub(r'NCBITaxon:', '',
-                                            taxon_a.rstrip()))\
-                            not in self.tax_ids) \
-                            and (int(re.sub(r'NCBITaxon:', '',
-                                            taxon_b.rstrip())) \
-                            not in self.tax_ids)):
+                    if (self.tax_ids is not None and
+                            (int(re.sub(r'NCBITaxon:', '', not in self.tax_ids) and
+                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
+                             not in self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
                         if limit is not None and matchcounter > limit:
                             break
 
-                    #### end code block for filtering on taxon
+                    # ### end code block for filtering on taxon
 
                     # fix the gene identifiers
                     gene_a = re.sub(r'=', ':', gene_a)
@@ -373,18 +371,19 @@ class Panther(Source):
         # rewrite Ensembl --> ENSEMBL
         geneid = re.sub(r'Ensembl', 'ENSEMBL', geneid)
 
-        # rewrite Gene:CELE --> WormBase  these are old-school cosmid identifier
+        # rewrite Gene:CELE --> WormBase
+        # these are old-school cosmid identifier
         geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
         if sp == 'CAEEL':
-            if re.match(r'(Gene|ENSEMBLGenome):\w+\\.\d+', geneid):
+            if re.match(r'(Gene|ENSEMBLGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:Gene|ENSEMBLGenome):(\w+\\.\d+)',
-                    'WormBase:\\1', geneid)
+                    r'(?:Gene|ENSEMBLGenome):(\w+\.\d+)',
+                    r'WormBase:\1', geneid)
 
         if sp == 'DROME':
-            if re.match(r'(ENSEMBLGenome):\w+\\.\d+', geneid):
+            if re.match(r'(ENSEMBLGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
-                    r'(?:ENSEMBLGenome):(\w+\\.\d+)', 'FlyBase:\\1', geneid)
+                    r'(?:ENSEMBLGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
 
         # rewrite GeneID --> NCBIGene
         geneid = re.sub(r'GeneID', 'NCBIGene', geneid)
