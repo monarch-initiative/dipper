@@ -50,6 +50,7 @@ class CurieUtil(object):
             return None
         prefix = parts[0]
         if prefix in self.curie_map:
-            return '%s%s' % (self.curie_map.get(prefix), curie[(curie.index(':') + 1):])
+            return '%s%s' % (self.curie_map.get(prefix),
+                             curie[(curie.index(':') + 1):])
         logger.error("Curie prefix not defined for %s", curie)
         return None

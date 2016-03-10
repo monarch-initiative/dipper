@@ -3,7 +3,7 @@ import hashlib
 import os
 import time
 import logging
-import urllib       #TODO tec look @ import requests
+import urllib       # TODO tec look @ import requests
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import ConjunctiveGraph, Namespace
@@ -15,6 +15,7 @@ __author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
+CHUNK = 16 * 1024
 
 
 class Source:
@@ -147,7 +148,8 @@ class Source:
             # make the datasetfile name
             datasetfile = '/'.join((self.outdir, self.name+'_dataset'))
             if format in format_to_xtn:
-                datasetfile = '.'.join((datasetfile, format_to_xtn.get(format)))
+                datasetfile = '.'.join((datasetfile,
+                                        format_to_xtn.get(format)))
             else:
                 datasetfile = '.'.join((datasetfile, format))
 
@@ -211,11 +213,11 @@ class Source:
 
         return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
 
-
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
-        Given a remote file location, and the corresponding local file this will
-        check the datetime stamp on the files to see if the remote one is newer.
+        Given a remote file location, and the corresponding local file
+        this will check the datetime stamp on the files to see if the remote
+        one is newer.
         This is a convenience method to be used so that we don't have to
         re-fetch files that we already have saved locally
         :param remote: URL of file to fetch from remote server
@@ -245,7 +247,7 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-length')
             last_modified = resp_headers.get('last-modified')  # check me
-        except OSError as e:  #URLError?
+        except OSError as e:  # URLError?
             resp_headers = None
             size = 0
             last_modified = None
@@ -273,7 +275,7 @@ class Source:
                         "Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
             logger.info(
-                "Object on server is difference size in comparison to local file")
+                "Object on server is difference size to local file")
             return True
 
         return False
@@ -305,7 +307,8 @@ class Source:
 
         return
 
-    def fetch_from_url(self, remotefile, localfile, is_dl_forced, headers=None):
+    def fetch_from_url(
+            self, remotefile, localfile, is_dl_forced, headers=None):
         """
         Given a remote url and a local filename, this will first verify
         if the remote file is newer; if it is,
@@ -317,7 +320,6 @@ class Source:
 
         """
 
-        CHUNK = 16 * 1024
         if ((is_dl_forced is True) or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
@@ -338,7 +340,8 @@ class Source:
 
             logger.info("Finished.  Wrote file to %s", localfile)
             if self.compare_local_remote_bytes(remotefile, localfile):
-                logger.debug("local file is same size as remote after download")
+                logger.debug(
+                    "local file is same size as remote after download")
             else:
                 raise Exception(
                     "Error when downloading files: local file size " +
@@ -355,9 +358,9 @@ class Source:
 
     def process_xml_table(self, elem, table_name, processing_function, limit):
         """
-        This is a convenience function to process the elements of
-        an xml document, when the xml is used as an alternative way
-        of distributing sql-like tables.  In this case, the "elem" is akin to an
+        This is a convenience function to process the elements of an
+        xml document, when the xml is used as an alternative way of
+        distributing sql-like tables.  In this case, the "elem" is akin to an
         sql table, with it's name of ```table_name```.
         It will then process each ```row```
             given the ```processing_function``` supplied.
@@ -381,7 +384,8 @@ class Source:
                     row[ats['name']] = f.text
                 processing_function(row)
                 line_counter += 1
-                if self.testMode and limit is not None and line_counter > limit:
+                if self.testMode \
+                        and limit is not None and line_counter > limit:
                     continue
 
             elem.clear()  # discard the element

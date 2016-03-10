@@ -23,8 +23,8 @@ class NCBIGene(Source):
     """
     This is the processing module for the
     National Center for Biotechnology Information.  It includes parsers for
-    the gene_info (gene names, symbols, ids, equivalent ids),
-    gene history (alt ids), and gene2pubmed publication references about a gene.
+    the gene_info (gene names, symbols, ids, equivalent ids), gene history
+    (alt ids), and gene2pubmed publication references about a gene.
 
     This creates Genes as classes, when they are properly typed as such.
     For those entries where it is an 'unknown significance', it is added simply
@@ -88,7 +88,9 @@ class NCBIGene(Source):
             logger.info("Filtering on the following taxa: %s", str(tax_ids))
 
         self.gene_ids = []
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in \
+                config.get_config() or \
+                'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
@@ -196,13 +198,14 @@ class NCBIGene(Source):
                     label = None
                 else:
                     label = symbol
-
-                if gene_type_id == 'SO:0000110':  # sequence feature, not a gene
+                # sequence feature, not a gene
+                if gene_type_id == 'SO:0000110':
                     self.class_or_indiv[gene_id] = 'I'
                 else:
                     self.class_or_indiv[gene_id] = 'C'
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     continue
 
                 if self.class_or_indiv[gene_id] == 'C':
@@ -238,24 +241,33 @@ class NCBIGene(Source):
                                 # proteins are not == genes.
                                 gu.addTriple(
                                     g, gene_id,
-                                    self.properties['has_gene_product'], fixedr)
+                                    self.properties[
+                                        'has_gene_product'], fixedr)
                             else:
                                 # skip some of these for now
-                                if fixedr.split(':')[0] not in ['Vega', 'IMGT/GENE-DB']:
+                                if fixedr.split(':')[0] not in [
+                                        'Vega', 'IMGT/GENE-DB']:
                                     if self.class_or_indiv.get(gene_id) == 'C':
-                                        gu.addEquivalentClass(g, gene_id, fixedr)
+                                        gu.addEquivalentClass(
+                                            g, gene_id, fixedr)
                                     else:
-                                        gu.addSameIndividual(g, gene_id, fixedr)
+                                        gu.addSameIndividual(
+                                            g, gene_id, fixedr)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
                 # 438     ASMT      X|Y  with   Xp22.3 or Yp11.3    # in PAR
-                # 419     ART3      4    with   4q21.1|4p15.1-p14   # no idea why there's two bands listed - possibly 2 assemblies
+                # no idea why there's two bands listed - possibly 2 assemblies
+                # 419     ART3      4    with   4q21.1|4p15.1-p14
                 # 28227   PPP2R3B   X|Y  Xp22.33; Yp11.3            # in PAR
-                # 619538  OMS     10|19|3 10q26.3;19q13.42-q13.43;3p25.3   #this is of "unknown" type == susceptibility
-                # 101928066       LOC101928066    1|Un    -         # unlocated scaffold
-                # 11435   Chrna1  2       2 C3|2 43.76 cM           # mouse --> 2C3
-                # 11548   Adra1b  11      11 B1.1|11 25.81 cM       # mouse --> 11B1.1
+                # this is of "unknown" type == susceptibility
+                # 619538  OMS     10|19|3 10q26.3;19q13.42-q13.43;3p25.3
+                # unlocated scaffold
+                # 101928066       LOC101928066    1|Un    -\
+                # mouse --> 2C3
+                # 11435   Chrna1  2       2 C3|2 43.76 cM
+                # mouse --> 11B1.1
+                # 11548   Adra1b  11      11 B1.1|11 25.81 cM
                 # 11717   Ampd3   7       7 57.85 cM|7 E2-E3        # mouse
                 # 14421   B4galnt1        10      10 D3|10 74.5 cM  # mouse
                 # 323212  wu:fb92e12      19|20   -                 # fish
@@ -270,38 +282,42 @@ class NCBIGene(Source):
                 # FIXME remove the chr mapping below
                 # when we pull in the genomic coords
                 if str(chrom) != '-' and str(chrom) != '':
-                    if re.search(r'\|',
-                                 str(chrom)) and str(chrom) not in ['X|Y', 'X; Y']:
-                        # this means that there's uncertainty in the mapping.
+                    if re.search(r'\|', str(chrom)) and \
+                            str(chrom) not in ['X|Y', 'X; Y']:
+                        # means that there's uncertainty in the mapping.
                         # so skip it
                         # TODO we'll need to figure out how to deal with
                         # >1 loc mapping
                         logger.info(
-                            '%s is non-uniquely mapped to %s. Skipping for now.',
+                            '%s is non-uniquely mapped to %s.' +
+                            ' Skipping for now.',
                             gene_id, str(chr))
                         continue
                         # X|Y	Xp22.33;Yp11.3
 
-                    #if (not re.match(r'(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
+                    # if(not re.match(
+                    #        r'(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
                     if str(chrom) == 'X; Y':
                         chrom = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
                     for c in re.split(r'\|', str(chrom)):
-                        # assume that the chromosome label will get added elsewhere
+                        # assume that the chromosome label is added elsewhere
                         geno.addChromosomeClass(c, tax_id, None)
                         mychrom = makeChromID(c, tax_num, 'CHR')
-                        # temporarily use the taxnum for the disambiguating label
+                        # temporarily use taxnum for the disambiguating label
                         mychrom_syn = makeChromLabel(c, tax_num)
                         gu.addSynonym(g, mychrom, mychrom_syn)
                         band_match = re.match(
                             r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
-                        if band_match is not None and len(band_match.groups()) > 0:
+                        if band_match is not None and \
+                                len(band_match.groups()) > 0:
                             # if tax_num != '9606':
                             #     continue
                             # this matches the regular kind of chrs,
-                            #so make that kind of band
-                            # not sure why this matches? chrX|Y or 10090chr12|Un"
+                            # so make that kind of band
+                            # not sure why this matches?
+                            #   chrX|Y or 10090chr12|Un"
                             # TODO we probably need a different regex
                             # per organism
                             # the maploc_id already has the numeric chromosome
@@ -320,9 +336,9 @@ class NCBIGene(Source):
                                 maploc_id)
                         else:
                             # TODO handle these cases: examples are:
-                            # 15q11-q22, Xp21.2-p11.23, 15q22-qter, 10q11.1-q24,
-                            # 12p13.3-p13.2|12p13-p12, 1p13.3|1p21.3-p13.1,
-                            # 12cen-q21, 22q13.3|22q13.3
+                            # 15q11-q22,Xp21.2-p11.23,15q22-qter,10q11.1-q24,
+                            # 12p13.3-p13.2|12p13-p12,1p13.3|1p21.3-p13.1,
+                            # 12cen-q21,22q13.3|22q13.3
                             logger.debug(
                                 'not regular band pattern for %s: %s',
                                 gene_id, map_loc)
@@ -369,14 +385,14 @@ class NCBIGene(Source):
                 (tax_num, gene_num, discontinued_num, discontinued_symbol,
                  discontinued_date) = line.split('\t')
 
-                # ### set filter=None in init if you don't want to have a filter
+                # set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
                 #     if ((self.filter == 'taxids' and \
                 #          (int(tax_num) not in self.tax_ids))
                 #             or (self.filter == 'geneids' and \
                 #                 (int(gene_num) not in self.gene_ids))):
                 #         continue
-                # #### end filter
+                #  end filter
 
                 if gene_num == '-' or discontinued_num == '-':
                     continue
@@ -409,7 +425,8 @@ class NCBIGene(Source):
                 # also add the old symbol as a synonym of the new gene
                 gu.addSynonym(g, gene_id, discontinued_symbol)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and\
+                        (limit is not None and line_counter > limit):
                     break
 
         return
@@ -475,16 +492,18 @@ class NCBIGene(Source):
                 # add the publication as a NamedIndividual
                 # add type publication
                 gu.addIndividualToGraph(g, pubmed_id, None, None)
-                r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                r = Reference(
+                    pubmed_id, Reference.ref_types['journal_article'])
                 r.addRefToGraph(g)
                 gu.addTriple(
                     g, pubmed_id, gu.object_properties['is_about'], gene_id)
                 assoc_counter += 1
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
-
-        logger.info("Processed %d pub-gene associations", assoc_counter)
+        logger.info(
+            "Processed %d pub-gene associations", assoc_counter)
 
         return
 
@@ -514,8 +533,8 @@ class NCBIGene(Source):
             so_id = type_to_so_map.get(sotype)
         else:
             logger.warning(
-                "unmapped code %s. Defaulting to 'SO:0000110', sequence_feature.",
-                sotype)
+                "unmapped code %s. Defaulting to 'SO:0000110', " +
+                "sequence_feature.", sotype)
 
         return so_id
 
@@ -554,8 +573,8 @@ class NCBIGene(Source):
     def add_orthologs_by_gene_group(self, graph, gene_ids):
         """
         This will get orthologies between human and other vertebrate genomes
-        based on the gene_group annotation pipeline from NCBI.  More information
-        can be learned here:
+        based on the gene_group annotation pipeline from NCBI.
+        More information 9can be learned here:
         http://www.ncbi.nlm.nih.gov/news/03-13-2014-gene-provides-orthologs-regions/
         The method for associations is described in
         [PMCID:3882889](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3882889/)

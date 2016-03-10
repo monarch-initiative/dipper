@@ -36,7 +36,8 @@ class HGNC(Source):
         self.gene_ids = gene_ids
         self.load_bindings()
 
-        self.dataset = Dataset('hgnc', 'HGNC', 'http://www.genenames.org', None)
+        self.dataset = Dataset(
+            'hgnc', 'HGNC', 'http://www.genenames.org', None)
 
         self.gene_ids = []
         if 'test_ids' not in config.get_config() \
@@ -96,13 +97,14 @@ class HGNC(Source):
                 (hgnc_id, symbol, name, locus_group, locus_type, status,
                  location, location_sortable, alias_symbol, alias_name,
                  prev_symbol, prev_name, gene_family, gene_family_id,
-                 date_approved_reserved, date_symbol_changed, date_name_changed,
-                 date_modified, entrez_id, ensembl_gene_id, vega_id, ucsc_id,
-                 ena, refseq_accession, ccds_id, uniprot_ids, pubmed_id, mgd_id,
-                 rgd_id, lsdb, cosmic, omim_id, mirbase, homeodb, snornabase,
-                 bioparadigms_slc, orphanet, pseudogene_org, horde_id, merops,
-                 imgt, iuphar, kznf_gene_catalog, mamit_trnadb, cd, lncrnadb,
-                 enzyme_id, intermediate_filament_db) = row
+                 date_approved_reserved, date_symbol_changed,
+                 date_name_changed, date_modified, entrez_id, ensembl_gene_id,
+                 vega_id, ucsc_id, ena, refseq_accession, ccds_id, uniprot_ids,
+                 pubmed_id, mgd_id, rgd_id, lsdb, cosmic, omim_id, mirbase,
+                 homeodb, snornabase, bioparadigms_slc, orphanet,
+                 pseudogene_org, horde_id, merops, imgt, iuphar,
+                 kznf_gene_catalog, mamit_trnadb, cd, lncrnadb, enzyme_id,
+                 intermediate_filament_db) = row
 
                 line_counter += 1
 
@@ -194,13 +196,14 @@ class HGNC(Source):
                 (hgnc_id, symbol, name, locus_group, locus_type, status,
                  location, location_sortable, alias_symbol, alias_name,
                  prev_symbol, prev_name, gene_family, gene_family_id,
-                 date_approved_reserved, date_symbol_changed, date_name_changed,
-                 date_modified, entrez_id, ensembl_gene_id, vega_id, ucsc_id,
-                 ena, refseq_accession, ccds_id, uniprot_ids, pubmed_id, mgd_id,
-                 rgd_id, lsdb, cosmic, omim_id, mirbase, homeodb, snornabase,
-                 bioparadigms_slc, orphanet, pseudogene_org, horde_id, merops,
-                 imgt, iuphar, kznf_gene_catalog, mamit_trnadb, cd, lncrnadb,
-                 enzyme_id, intermediate_filament_db) = row
+                 date_approved_reserved, date_symbol_changed,
+                 date_name_changed, date_modified, entrez_id, ensembl_gene_id,
+                 vega_id, ucsc_id, ena, refseq_accession, ccds_id, uniprot_ids,
+                 pubmed_id, mgd_id, rgd_id, lsdb, cosmic, omim_id, mirbase,
+                 homeodb, snornabase, bioparadigms_slc, orphanet,
+                 pseudogene_org, horde_id, merops, imgt, iuphar,
+                 kznf_gene_catalog, mamit_trnadb, cd, lncrnadb, enzyme_id,
+                 intermediate_filament_db) = row
 
                 symbol_id_map[symbol.strip()] = hgnc_id
 
@@ -232,17 +235,18 @@ class HGNC(Source):
             'RNA, vault': 'SO:0000404',                 # vault_RNA
             # vertebrate_immunoglobulin_T_cell_receptor_segment
             'T cell receptor gene': 'SO:0000460',
-            'T cell receptor pseudogene': 'SO:0000336', # pseudogene
+            'T cell receptor pseudogene': 'SO:0000336',  # pseudogene
             # protein_coding - no way to say member of cluster
             'complex locus constituent': 'SO:0001217',
-            'endogenous retrovirus': 'SO:0000100',  # endogenous_retroviral_gene
+            # endogenous_retroviral_gene
+            'endogenous retrovirus': 'SO:0000100',
             # biological_region
             # TODO https://sourceforge.net/p/song/term-tracker/433/
             'fragile site': 'SO:0001411',
             'gene with protein product': 'SO:0001217',  # protein_coding_gene
             'immunoglobulin gene': 'SO:0000460',        # immunoglobulin_region
             'immunoglobulin pseudogene': 'SO:0000336',  # pseudogene  FIXME
-            'phenotype only': 'SO:0001500',        # heritable_phenotypic_marker
+            'phenotype only': 'SO:0001500',       # heritable_phenotypic_marker
             'protocadherin': 'SO:0000110',              # FIXME
             'pseudogene': 'SO:0000336',                 # pseudogene
             'readthrough': 'SO:0000110',                # FIXME

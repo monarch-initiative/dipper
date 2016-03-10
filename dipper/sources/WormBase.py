@@ -50,23 +50,23 @@ class WormBase(Source):
     files = {
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-            'url': wbftp+\
-                '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
-        #'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
+            'url': wbftp +
+            '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+        # 'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
         #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #    'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
-            'url': wbftp+'/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
+            'url': wbftp + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
         'rnai_pheno': {
             'file': 'rnai_phenotypes.wb',
-            'url': wbftp+'/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
+            'url': wbftp + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
             'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-            'url': wbftp+'/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+            'url': wbftp + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
@@ -76,7 +76,7 @@ class WormBase(Source):
         # 'genes_in_anatomy': {
         #   'file': 'anatomy_association.wb',
         #   'url': wbftp+'/ONTOLOGY/anatomy_association.WS249.wb'},
-        #'gene_interaction': {
+        # 'gene_interaction': {
         #   'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
         #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
         # 'orthologs': {
@@ -84,10 +84,10 @@ class WormBase(Source):
         #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-            'url': wbftp+'/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+            'url': wbftp + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         'letter': {
             'file': 'letter.WSNUMBER',
-            'url': wbftp+'/letter.WSNUMBER'},
+            'url': wbftp + '/letter.WSNUMBER'},
     }
 
     test_ids = {
@@ -118,7 +118,8 @@ class WormBase(Source):
         # figure out the version number by probing the "current_release",
         # then edit the file dict accordingly
         # connect to wormbase ftp
-        current_dev_release_dir = 'pub/wormbase/releases/current-development-release'
+        current_dev_release_dir = \
+            'pub/wormbase/releases/current-development-release'
         ftp = FTP('ftp.wormbase.org')
         ftp.login()
         ftp.cwd(current_dev_release_dir)
@@ -144,7 +145,8 @@ class WormBase(Source):
         """
         With the given version number ```vernum```,
         update the source's version number, and replace in the file hashmap.
-        We also save the "letter" for the version to maintain the version number.
+        We also save the "letter" for the version
+        to maintain the version number.
         :param vernum:
         :return:
 
@@ -203,7 +205,7 @@ class WormBase(Source):
         self.rnai_gene_map = {}
 
         self.process_gene_ids(limit)
-        # self.process_gene_desc(limit)       #TEC imput file is mia 2016-Mar-03
+        # self.process_gene_desc(limit)   #TEC imput file is mia 2016-Mar-03
         self.process_allele_phenotype(limit)
         self.process_rnai_phenotypes(limit)
         self.process_pub_xrefs(limit)
@@ -269,7 +271,6 @@ class WormBase(Source):
 
         return
 
-
     def process_gene_desc(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_desc']['file']))
 
@@ -282,7 +283,7 @@ class WormBase(Source):
 
         logger.info("Processing Gene descriptions")
         line_counter = 0
-        geno = Genotype(g)
+        # geno = Genotype(g)  # TODO unused
         with gzip.open(raw, 'rb') as csvfile:
             filereader = csv.reader(
                 io.TextIOWrapper(csvfile, newline=""), delimiter='\t',
@@ -333,7 +334,8 @@ class WormBase(Source):
         This file compactly lists variant to phenotype associations,
         such that in a single row, there may be >1 variant listed
         per phenotype and paper.  This indicates that each variant is
-        individually assocated with the given phenotype, as listed in 1+ papers.
+        individually assocated with the given phenotype,
+        as listed in 1+ papers.
         (Not that the combination of variants is producing the phenotype.)
         :param limit:
         :return:
@@ -347,7 +349,7 @@ class WormBase(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        # gu = GraphUtils(curie_map.get())  # TODO unused
 
         logger.info("Processing Allele phenotype associations")
         line_counter = 0
@@ -374,7 +376,8 @@ class WormBase(Source):
                     eco_id = 'ECO:0000015'
                 elif eco_symbol.strip() != '':
                     logger.warning(
-                        "Encountered an ECO code we don't have: %s", eco_symbol)
+                        "Encountered an ECO code we don't have: %s",
+                        eco_symbol)
 
                 # according to the GOA spec, persons are not allowed to be
                 # in the reference column, therefore they the variant and
@@ -444,7 +447,7 @@ class WormBase(Source):
                             if re.search(r'Person', ref):
                                 r.setType(r.ref_types['person'])
                                 # also add
-                                #inferred from background scientific knowledge
+                                # inferred from background scientific knowledge
                                 assoc.add_evidence('ECO:0000001')
                             r.addRefToGraph(g)
                             assoc.add_source(ref)
@@ -468,7 +471,7 @@ class WormBase(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        # gu = GraphUtils(curie_map.get())  # TODO unused
 
         logger.info("Processing RNAi phenotype associations")
         line_counter = 0
@@ -487,11 +490,12 @@ class WormBase(Source):
                     continue
 
                 gene_id = 'WormBase:'+gene_num
-                refs = list()
+                # refs = list()  # TODO unused
 
                 # the rnai_and_refs has this so that
                 # WBRNAi00008687|WBPaper00005654 WBRNAi00025197|WBPaper00006395 WBRNAi00045381|WBPaper00025054
-                # space delimited between RNAi sets; then each RNAi should have a paper
+                # space delimited between RNAi sets;
+                # then each RNAi should have a paper
 
                 rnai_sets = re.split(r' ', rnai_and_refs)
 
@@ -522,13 +526,12 @@ class WormBase(Source):
 
                     assoc = G2PAssoc(self.name, allele_id, phenotype_id)
                     assoc.add_source('WormBase:'+ref_num)
-                    eco_id = 'ECO:0000019'  # RNAi evidence
+                    # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph(g)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
-
 
         return
 
@@ -571,7 +574,7 @@ class WormBase(Source):
                     xref_id = 'DOI:'+re.sub(r'doi', '', xref.strip())
                     r = Reference(xref_id)
                 elif re.match(r'cgc', xref):
-                    #TODO not sure what to do here with cgc xrefs
+                    # TODO not sure what to do here with cgc xrefs
                     continue
                 else:
                     # logger.debug("Other xrefs like %s", xref)
@@ -586,7 +589,6 @@ class WormBase(Source):
                     break
 
         return
-
 
     def process_feature_loc(self, limit):
 
@@ -619,18 +621,17 @@ class WormBase(Source):
 # I	WormBase	gene	3747	3909	.	-	.	ID=Gene:WBGene00023193;Name=WBGene00023193;interpolated_map_position=-21.9064;sequence_name=Y74C9A.6;biotype=snoRNA;Alias=Y74C9A.6
 # I	absolute_pmap_position	gene	4119	10230	.	.	.	ID=gmap:homt-1;gmap=homt-1;status=cloned;Note=-21.8252 cM (+/- 0.00 cM)
 
-                # dbs = re.split(r' ',
-                #                'assembly_component expressed_sequence_match Coding_transcript Genomic_canonical Non_coding_transcript Orfeome Promoterome Pseudogene RNAi_primary RNAi_secondary Reference Transposon Transposon_CDS cDNA_for_RNAi miRanda ncRNA operon polyA_signal_sequence polyA_site snlRNA')
+                # dbs = re.split(
+                #   r' ', 'assembly_component expressed_sequence_match Coding_transcript Genomic_canonical Non_coding_transcript Orfeome Promoterome Pseudogene RNAi_primary RNAi_secondary Reference Transposon Transposon_CDS cDNA_for_RNAi miRanda ncRNA operon polyA_signal_sequence polyA_site snlRNA')
                 #
                 # if db not in dbs:
                 #     continue
 
-                if feature_type_label \
-                        not in ['gene', 'point_mutation', 'deletion',
-                                'RNAi_reagent', 'duplication', 'enhancer',
-                                'binding_site', 'biological_region',
-                                'complex_substitution', 'substitution',
-                                'insertion', 'inverted_repeat']:
+                if feature_type_label not in [
+                        'gene', 'point_mutation', 'deletion', 'RNAi_reagent',
+                        'duplication', 'enhancer', 'binding_site',
+                        'biological_region', 'complex_substitution',
+                        'substitution', 'insertion', 'inverted_repeat']:
                     # note biological_regions include balancers
                     # other options here: promoter, regulatory_region, reagent
                     continue
@@ -638,7 +639,9 @@ class WormBase(Source):
 
                 attribute_dict = {}
                 if attributes != '':
-                    attribute_dict = dict(item.split("=") for item in re.sub(r'"', '', attributes).split(";"))
+                    attribute_dict = dict(
+                        item.split("=")for item in
+                        re.sub(r'"', '', attributes).split(";"))
 
                 fid = flabel = desc = None
                 if 'ID' in attribute_dict:
@@ -672,11 +675,11 @@ class WormBase(Source):
                                 strain_to_variant_map[s.strip()] = set()
                             strain_to_variant_map[s.strip()].add(fid)
 
-                if feature_type_label == 'RNAi_reagent':
+                # if feature_type_label == 'RNAi_reagent':
                     # Target=WBRNAi00096030 1 4942
                     # this will tell us where the RNAi is actually binding
-                    target = attribute_dict.get('Target')
-                    rnai_num = re.split(r' ', target)[0]
+                    # target = attribute_dict.get('Target') # TODO unused
+                    # rnai_num = re.split(r' ', target)[0]  # TODO unused
                     # it will be the reagent-targeted-gene that has a position,
                     # (i think)
                     # TODO finish the RNAi binding location
@@ -773,9 +776,9 @@ class WormBase(Source):
                 if re.match(r'!', ''.join(row)):  # header
                     continue
                 line_counter += 1
-                (db, gene_num, gene_symbol, is_not, disease_id, ref, eco_symbol,
-                 with_or_from, aspect, gene_name, gene_synonym, gene_class,
-                 taxon, date, assigned_by, blank, blank2) = row
+                (db, gene_num, gene_symbol, is_not, disease_id, ref,
+                 eco_symbol, with_or_from, aspect, gene_name, gene_synonym,
+                 gene_class, taxon, date, assigned_by, blank, blank2) = row
 
                 if self.testMode and gene_num not in self.test_ids['gene']:
                     continue
@@ -816,12 +819,12 @@ class WormBase(Source):
         """
         The gene interaction file includes identified interactions,
         that are between two or more gene (products).
-        In the case of interactions with >2 genes, this requires creating groups
-        of genes that are involved in the interaction.
+        In the case of interactions with >2 genes, this requires creating
+        groups of genes that are involved in the interaction.
         From the wormbase help list: In the example WBInteraction000007779
         it would likely be misleading to suggest that lin-12 interacts with
         (suppresses in this case) smo-1 ALONE or that lin-12 suppresses let-60
-        ALONE; the observation (in the paper; see Table V in paper PMID:15990876)
+        ALONE; the observation in the paper; see Table V in paper PMID:15990876
         was that a lin-12 allele (heterozygous lin-12(n941/+)) could suppress
         the "multivulva" phenotype induced synthetically by simultaneous
         perturbation of BOTH smo-1 (by RNAi) AND let-60 (by the n2021 allele).
@@ -867,11 +870,17 @@ class WormBase(Source):
                 # TODO deal with subtypes
                 interaction_type_id = None
                 if interaction_type == 'Genetic':
-                    interaction_type_id = InteractionAssoc.interaction_object_properties['genetically_interacts_with']
+                    interaction_type_id = \
+                        InteractionAssoc.interaction_object_properties[
+                            'genetically_interacts_with']
                 elif interaction_type == 'Physical':
-                    interaction_type_id = InteractionAssoc.interaction_object_properties['molecularly_interacts_with']
+                    interaction_type_id = \
+                        InteractionAssoc.interaction_object_properties[
+                            'molecularly_interacts_with']
                 elif interaction_type == 'Regulatory':
-                    interaction_type_id = InteractionAssoc.interaction_object_properties['regulates']
+                    interaction_type_id = \
+                        InteractionAssoc.interaction_object_properties[
+                            'regulates']
                 else:
                     logger.info(
                         "An interaction type I don't understand %s",
@@ -884,7 +893,6 @@ class WormBase(Source):
                         str(row))
                     continue
 
-
                 gene_a_id = 'WormBase:'+row[5]
                 gene_b_id = 'WormBase:'+row[8]
 
@@ -892,7 +900,6 @@ class WormBase(Source):
                         and gene_a_id not in self.test_ids['gene'] \
                         and gene_b_id not in self.test_ids['gene']:
                     continue
-
 
                 assoc = InteractionAssoc(
                     self.name, gene_a_id, gene_b_id, interaction_type_id)
@@ -946,10 +953,12 @@ class WormBase(Source):
 
         return ftype_id
 
-    def make_reagent_targeted_gene_id(self, gene_id, reagent_id, nobnodes=False):
+    def make_reagent_targeted_gene_id(
+            self, gene_id, reagent_id, nobnodes=False):
 
         rtg_id = '_'+'-'.join((gene_id, reagent_id))
-        targeted_gene_id = re.sub(r'W(orm)?B(ase)?:', '', rtg_id)
+        # TODO targeted_gene_id unused
+        # targeted_gene_id = re.sub(r'W(orm)?B(ase)?:', '', rtg_id)
 
         if nobnodes:
             rtg_id = ':'+rtg_id
@@ -960,6 +969,7 @@ class WormBase(Source):
         import unittest
         from tests.test_wormbase import WormBaseTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(WormBaseTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(WormBaseTestCase)
 
         return test_suite

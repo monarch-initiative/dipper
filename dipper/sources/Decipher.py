@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class Decipher(Source):
     """
     The Decipher group curates and assembles the Development Disorder Genotype
-    – Phenotype Database (DDG2P) which is a curated list of genes reported to be
+    Phenotype Database (DDG2P) which is a curated list of genes reported to be
     associated with developmental disorders, compiled by clinicians as part of
     the DDD study to facilitate clinical feedback of likely causal variants.
 
@@ -33,8 +33,8 @@ class Decipher(Source):
 
     files = {
         'annot': {
-            'file' : 'ddg2p.zip',
-            'url' : 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip'}
+            'file': 'ddg2p.zip',
+            'url': 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip'}
     }
 
     def __init__(self):
@@ -53,8 +53,6 @@ class Decipher(Source):
             self.test_ids = []
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
-
-
 
         self.gu = GraphUtils(curie_map.get())
         self.g = self.graph
@@ -104,8 +102,9 @@ class Decipher(Source):
 
         According to http://www.gencodegenes.org/faq.html,
         "Gene names are usually HGNC or MGI-approved gene symbols mapped
-        to the GENCODE genes by the Ensembl xref pipeline. Sometimes, when there
-        is no official gene symbol, the Havana clone-based name is used."
+        to the GENCODE genes by the Ensembl xref pipeline. Sometimes,
+        when there is no official gene symbol, the Havana clone-based
+        name is used."
 
         The kind of variation that is linked to a disease is indicated
         (LOF, GOF, CNV, etc) in the source data.
@@ -139,8 +138,8 @@ class Decipher(Source):
         with myzip.open(fname, 'r') as f:
             f = io.TextIOWrapper(f)
             reader = csv.reader(f, delimiter='\t', quotechar='\"')
-            score_means_by_measure = {}
-            strain_scores_by_measure = {}
+            # score_means_by_measure = {}
+            # strain_scores_by_measure = {}   # TODO theseare unused
             for row in reader:
                 line_counter += 1
                 if re.match(r'#', row[0]):   # skip comments
@@ -182,6 +181,7 @@ class Decipher(Source):
                         # TODO negative annotation
                         continue
                     assoc = G2PAssoc(self.name, allele_id, omim_id)
+                    # TODO 'rel' is assigned to but never used
 
                     for p in re.split(r';', pubmed_ids):
                         p = p.strip()
@@ -205,8 +205,8 @@ class Decipher(Source):
                 # TODO hpo phenotypes
                 # since the DDG2P file is not documented,
                 # I don't know what the HPO annotations are actually about
-                # (are they about the gene?  the omim disease?  something else?)
-                # therefore, we wont create associations until this is clarified
+                # are they about the gene?  the omim disease?  something else?
+                # So, we wont create associations until this is clarified
 
                 if not self.testMode and limit is not None \
                         and line_counter > limit:
@@ -239,32 +239,33 @@ class Decipher(Source):
         allele_id = None
 
         # Loss of function : Nonsense, frame-shifting indel,
-        #       essential splice site mutation, whole gene deletion or any other
-        #       mutation where functional analysis demonstrates clear reduction
-        #       or loss of function
+        #   essential splice site mutation, whole gene deletion or any other
+        #   mutation where functional analysis demonstrates clear reduction
+        #   or loss of function
         # All missense/in frame : Where all the mutations described in the data
-        #       source are either missense or in frame deletions and there is no
-        #       evidence favoring either loss-of-function, activating or
-        #       dominant negative effect
+        #   source are either missense or in frame deletions and there is no
+        #   evidence favoring either loss-of-function, activating or
+        #   dominant negative effect
         # Dominant negative : Mutation within one allele of a gene that creates
-        #       a significantly greater deleterious effect on gene product
-        #       function than a monoallelic loss of function mutation
-        # Activating : Mutation, usually missense that results in a constitutive
-        #       functional activation of the gene product
+        #   a significantly greater deleterious effect on gene product
+        #   function than a monoallelic loss of function mutation
+        # Activating : Mutation, usually missense that results in
+        #   a constitutive functional activation of the gene product
         # Increased gene dosage : Copy number variation that increases
-        #       the functional dosage of the gene
+        #   the functional dosage of the gene
         # Cis-regulatory or promotor mutation : Mutation in cis-regulatory
-        #       elements that lies outwith the known transcription unit and
-        #       promotor of the controlled gene
+        #   elements that lies outwith the known transcription unit and
+        #   promotor of the controlled gene
         # Uncertain : Where the exact nature of the mutation is unclear or
-        #       not recorded
+        #   not recorded
         so_type = {                                 # type of variant
             'Loss of function': 'SO:0002054',       # loss of function
             'All missense/in frame': 'SO:0001583',  # missense
             'Dominant negative': 'SO:0002052',      # dominant negative
             'Activating': 'SO:0002053',             # gain of function
             'Increased gene dosage': 'SO:0001742',  # copy number gain
-            'Cis-regulatory or promotor mutation': 'SO:0001566',# regulatory region
+            # regulatory region
+            'Cis-regulatory or promotor mutation': 'SO:0001566',
             'Uncertain': 'SO:0001060',              # generic sequence
             '5 or 3UTR mutation': 'SO:0001622',     # UTR
         }

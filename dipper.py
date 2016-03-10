@@ -22,11 +22,12 @@ def main():
     source_to_class_map = {
         'hpoa': 'HPOAnnotations',   # ~3 min
         'zfin': 'ZFIN',
-        'omim': 'OMIM',    # full file takes ~15 min, due to required throttling
+        'omim': 'OMIM',  # full file takes ~15 min, due to required throttling
         'biogrid': 'BioGrid',  # interactions file takes <10 minutes
         'mgi': 'MGI',
         'impc': 'IMPC',
-        'panther': 'Panther',  # this takes a very long time, ~1hr to map 7 species-worth of associations
+        # Panther takes ~1hr to map 7 species-worth of associations
+        'panther': 'Panther',
         'ncbigene': 'NCBIGene',  # takes about 4 minutes to process 2 species
         'ucscbands': 'UCSCBands',
         'ctd': 'CTD',
@@ -42,7 +43,7 @@ def main():
         'orphanet': 'Orphanet',
         'omia': 'OMIA',
         'flybase': 'FlyBase',
-        'mmrrc' : 'MMRRC',
+        'mmrrc': 'MMRRC',
         'wormbase': 'WormBase',
         'mpd': 'MPD',
         'gwascatalog': 'GWASCatalog',
@@ -109,13 +110,13 @@ def main():
         help='serialization format: turtle (default), xml, n3, nt, raw',
         type=str)
 
-
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
-        # TODO PYLINT Used builtin function 'map'.
+        # TODO PYLINT Used builtin function 'map'. DONE?
         # Using a list comprehension can be clearer.
-        tax_ids = list(map(int, args.taxon.split(',')))
+        # tax_ids = list(map(int, args.taxon.split(',')))
+        tax_ids = [int(t) for t in args.taxon.split(',')]
 
     taxa_supported = [
         'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology']

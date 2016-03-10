@@ -18,13 +18,15 @@ from dipper import config
 
 
 logger = logging.getLogger(__name__)
+GOGA = 'http://geneontology.org/gene-associations'
 
 
 class GeneOntology(Source):
     """
     This is the parser for the
     [Gene Ontology Annotations](http://www.geneontology.org),
-    from which we process gene-process/function/subcellular location associations.
+    from which we process gene-process/function/subcellular
+    location associations.
 
     We generate the GO graph to include the following information:
     * genes
@@ -41,34 +43,34 @@ class GeneOntology(Source):
     files = {
         '9615': {
             'file': 'gene_association.goa_dog.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.goa_dog.gz'},
+            'url': GOGA+'/gene_association.goa_dog.gz'},
         '7227': {
             'file': 'gene_association.fb.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.fb.gz'},
+            'url': GOGA+'/gene_association.fb.gz'},
         '7955': {
             'file': 'gene_association.zfin.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.zfin.gz'},
+            'url': GOGA+'/gene_association.zfin.gz'},
         '10090': {
             'file': 'gene_association.mgi.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.mgi.gz'},
+            'url': GOGA+'/gene_association.mgi.gz'},
         '10116': {
             'file': 'gene_association.rgd.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.rgd.gz'},
+            'url': GOGA+'/gene_association.rgd.gz'},
         '6239': {
             'file': 'gene_association.wb.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.wb.gz'},
+            'url': GOGA+'/gene_association.wb.gz'},
         '9823': {
             'file': 'gene_association.goa_ref_pig.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.goa_ref_pig.gz'},
+            'url': GOGA+'/gene_association.goa_ref_pig.gz'},
         '9031': {
             'file': 'gene_association.goa_ref_chicken.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.goa_ref_chicken.gz'},
+            'url': GOGA+'/gene_association.goa_ref_chicken.gz'},
         '9606': {
             'file': 'gene_association.goa_ref_human.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.goa_ref_human.gz'},
+            'url': GOGA+'/gene_association.goa_ref_human.gz'},
         '9913': {
             'file': 'gene_association.goa_ref_cow.gz',
-            'url': 'http://geneontology.org/gene-associations/gene_association.goa_ref_cow.gz'},
+            'url': GOGA+'/gene_association.goa_ref_cow.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
@@ -95,12 +97,13 @@ class GeneOntology(Source):
 
         # update the dataset object with details about this resource
         # NO LICENSE for this resource
-        self.dataset = Dataset('go', 'GeneOntology',
-                               'http://www.geneontology.org', None,
-                               "https://creativecommons.org/licenses/by/4.0/legalcode",
-                               'http://geneontology.org/page/use-and-license')
+        self.dataset = Dataset(
+            'go', 'GeneOntology', 'http://www.geneontology.org', None,
+            "https://creativecommons.org/licenses/by/4.0/legalcode",
+            'http://geneontology.org/page/use-and-license')
 
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or \
+                'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -185,12 +188,14 @@ class GeneOntology(Source):
                  gene_product_form_id) = row
 
                 # test for required fields
-                if (db == '' or gene_num == '' or gene_symbol == ''
-                        or go_id == '' or ref == '' or eco_symbol == ''
-                        or aspect == '' or object_type == '' or taxon == ''
-                        or date == '' or assigned_by == ''):
-                    logger.error("Missing required part of annotation on row %d:\n"+'\t'.join(row),
-                                 line_counter)
+                if (db == '' or gene_num == '' or gene_symbol == '' or
+                        go_id == '' or ref == '' or eco_symbol == '' or
+                        aspect == '' or object_type == '' or taxon == '' or
+                        date == '' or assigned_by == ''):
+                    logger.error(
+                        "Missing required part of annotation " +
+                        "on row %d:\n"+'\t'.join(row),
+                        line_counter)
                     continue
 
                 # deal with qualifier NOT, contributes_to, colocalizes_with
@@ -209,7 +214,7 @@ class GeneOntology(Source):
                             gene_num = re.sub(r'\w+\:', '', gene_id)
                         elif len(mapped_ids) > 1:
                             # logger.warning(
-                            #    "Skipping gene id mapped for >1 gene %s --> %s",
+                            #   "Skipping gene id mapped for >1 gene %s -> %s",
                             #    gene_num, str(mapped_ids))
                             continue
                     else:
@@ -222,8 +227,9 @@ class GeneOntology(Source):
                     gene_id = ':'.join((db, gene_num))
 
                 if self.testMode \
-                        and not(re.match(r'NCBIGene', gene_id)
-                        and int(gene_num) in self.test_ids):
+                        and not(
+                            re.match(r'NCBIGene', gene_id) and
+                            int(gene_num) in self.test_ids):
                     continue
 
                 gu.addClassToGraph(g, gene_id, gene_symbol)
@@ -298,10 +304,14 @@ class GeneOntology(Source):
                     phenotypeid = go_id+'PHENOTYPE'
                     # create phenotype associations
                     for i in withitems:
-                        if i == '' or re.match(r'(UniProtKB|WBPhenotype|InterPro|HGNC)',
-                                               i):
-                            logger.warning("Don't know what having a uniprot id in the 'with' column means of %s",
-                                           uniprotid)
+                        if i == '' or \
+                                re.match(
+                                    r'(UniProtKB|WBPhenotype|InterPro|HGNC)',
+                                    i):
+                            logger.warning(
+                                "Don't know what having a uniprot id " +
+                                "in the 'with' column means of %s",
+                                uniprotid)
                             continue
                         i = re.sub(r'MGI\:MGI\:', 'MGI:', i)
                         i = re.sub(r'WB:', 'WormBase:', i)
@@ -309,9 +319,8 @@ class GeneOntology(Source):
                         # for worms and fish, they might give a RNAi or MORPH
                         # in these cases make a reagent-targeted gene
                         if re.search('MRPHLNO|CRISPR|TALEN', i):
-                            targeted_gene_id = zfin.make_targeted_gene_id(gene_id,
-                                                                          i,
-                                                                          self.nobnodes)
+                            targeted_gene_id = zfin.make_targeted_gene_id(
+                                gene_id, i, self.nobnodes)
                             geno.addReagentTargetedGene(i, gene_id,
                                                         targeted_gene_id)
                             # TODO PYLINT why is this:
@@ -321,19 +330,21 @@ class GeneOntology(Source):
                             assoc = G2PAssoc(self.name, targeted_gene_id,
                                              phenotypeid)
                         elif re.search(r'WBRNAi', i):
-                            targeted_gene_id = wbase.make_reagent_targeted_gene_id(gene_id, i, self.nobnodes)
-                            geno.addReagentTargetedGene(i, gene_id,
-                                                        targeted_gene_id)
-                            assoc = G2PAssoc(self.name, targeted_gene_id,
-                                             phenotypeid)
+                            targeted_gene_id = \
+                                wbase.make_reagent_targeted_gene_id(
+                                    gene_id, i, self.nobnodes)
+                            geno.addReagentTargetedGene(
+                                i, gene_id, targeted_gene_id)
+                            assoc = G2PAssoc(
+                                self.name, targeted_gene_id, phenotypeid)
                         else:
                             assoc = G2PAssoc(self.name, i, phenotypeid)
                         for r in refs:
                             r = r.strip()
                             if r != '':
                                 prefix = re.split(r':', r)[0]
-                                r = re.sub(prefix, self.clean_db_prefix(prefix),
-                                           r)
+                                r = re.sub(
+                                    prefix, self.clean_db_prefix(prefix), r)
                                 r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
                                 assoc.add_source(r)
                                 # experimental phenotypic evidence
@@ -342,7 +353,8 @@ class GeneOntology(Source):
                         # TODO should the G2PAssoc be
                         # the evidence for the GO assoc?
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -366,9 +378,13 @@ class GeneOntology(Source):
                     continue
                 if geneid.strip() != '':
                     idlist = re.split(r';', geneid)
-                    id_map[uniprotkb_ac.strip()] = ['NCBIGene:'+i.strip() for i in idlist]
+                    id_map[
+                        uniprotkb_ac.strip()] = [
+                            'NCBIGene:'+i.strip() for i in idlist]
                 elif ensembl.strip() != '':
-                    id_map[uniprotkb_ac.strip()] = ['ENSEMBL:'+i.strip() for i in idlist]
+                    id_map[
+                        uniprotkb_ac.strip()] = [
+                            'ENSEMBL:'+i.strip() for i in idlist]
 
         logger.info("Acquired %d uniprot-entrez mappings", len(id_map))
 
@@ -442,6 +458,7 @@ class GeneOntology(Source):
         import unittest
         from tests.test_geneontology import GeneOntologyTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneOntologyTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(GeneOntologyTestCase)
 
         return test_suite

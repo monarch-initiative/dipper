@@ -21,6 +21,8 @@ from dipper import config
 
 logger = logging.getLogger(__name__)
 
+HPOADL = 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
+
 
 class HPOAnnotations(Source):
     """
@@ -52,14 +54,14 @@ class HPOAnnotations(Source):
 
     files = {
         'annot': {
-            'file' : 'phenotype_annotation.tab',
-            'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab'},
+            'file': 'phenotype_annotation.tab',
+            'url': HPOADL + '/phenotype_annotation.tab'},
         'version': {
-            'file' : 'data_version.txt',
-            'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/data_version.txt'},
-        #'neg_annot': {
-        #   'file' : 'phenotype_annotation.tab',
-        #    'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab'},
+            'file': 'data_version.txt',
+            'url': HPOADL + '/data_version.txt'},
+        # 'neg_annot': {
+        #   'file': 'phenotype_annotation.tab',
+        #    'url': HPOADL + '/negative_phenotype_annotation.tab'},
         'doid': {
             'file': 'doid-edit.owl',
             'url': 'https://raw.githubusercontent.com/monarch-initiative/human-disease-ontology/master/src/ontology/doid-edit.owl'
@@ -74,7 +76,7 @@ class HPOAnnotations(Source):
         "ICE": "ECO:0000305",
         # Inferred from Electronic Annotation
         "IEA": "ECO:0000501",
-        # FIXME currently using "experimental evidence used in manual assertion"
+        # FIXME currently is"experimental evidence used in manual assertion"
         "PCS": "ECO:0000269",
         # Traceable Author Statement
         "TAS": "ECO:0000304",
@@ -95,15 +97,17 @@ class HPOAnnotations(Source):
 
         self.replaced_id_count = 0
 
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config()\
+                or 'disease' not in config.get_config()['test_ids']:
             logger.warning("not configured with disease test ids.")
             self.test_ids = []
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        # data-source specific warnings (will be removed when issues are cleared)
+        # data-source specific warnings to be removed when issues are cleared
         logger.warning(
-            "note that some ECO classes are missing for ICE, PCS, and ITM; using temporary mappings.")
+            "note that some ECO classes are missing for ICE, PCS, and ITM;" +
+            " using temporary mappings.")
 
         return
 
@@ -121,8 +125,8 @@ class HPOAnnotations(Source):
         with open(fname, 'r', encoding="utf8") as f:
             # 2015-04-23 13:01
             v = f.readline()  # read the first line (the only line, really)
-            d = datetime.strptime(v.strip(),
-                                  '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
+            d = datetime.strptime(
+                v.strip(), '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
         f.close()
 
         st = os.stat(fname)
@@ -232,7 +236,8 @@ class HPOAnnotations(Source):
                 if self.testMode:
                     try:
                         id_list = self.test_ids
-                        if id_list is None or disease_id.strip() not in id_list:
+                        if id_list is None \
+                                or disease_id.strip() not in id_list:
                             continue
                     except AttributeError:
                         continue
@@ -320,7 +325,8 @@ class HPOAnnotations(Source):
 
                 assoc.add_association_to_graph(g)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
             Assoc(None).load_all_properties(g)
@@ -398,7 +404,8 @@ class HPOAnnotations(Source):
             total_processed += self.process_common_disease_file(raw,
                                                                 unpadded_doids,
                                                                 limit)
-            if not self.testMode and limit is not None and total_processed > limit:
+            if not self.testMode \
+                    and limit is not None and total_processed > limit:
                 break
         logger.info("Finished iterating over all common disease files.")
         logger.info("Fixed %d/%d incorrectly zero-padded ids",
@@ -407,7 +414,7 @@ class HPOAnnotations(Source):
 
     def get_doid_ids_for_unpadding(self):
         """
-        Here, we fetch the doid owl file, and get all the doids out of the file.
+        Here, we fetch the doid owl file, and get all the doids.
         We figure out which are not zero-padded, so we can map the DOID
         to the correct identifier when processing the common annotation files.
 
@@ -516,9 +523,11 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for p in pub_ids.split(';'):
-                            if re.search(r'(DOID|MESH)', p) or re.search(r'Disease name contained',
-                                                                         description):
-                                # skip "pubs" that are derived from the classes themselves
+                            if re.search(r'(DOID|MESH)', p) \
+                                    or re.search(r'Disease name contained',
+                                                 description):
+                                # skip "pubs" that are derived from
+                                # the classes themselves
                                 continue
                             assoc.add_source(p.strip())
                     # TODO assigned by?
@@ -526,14 +535,15 @@ class HPOAnnotations(Source):
                     assoc.add_association_to_graph(g)
                     assoc_count += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
             if replace_id_flag:
                 logger.info("replaced DOID with unpadded version")
                 self.replaced_id_count += 1
-            logger.info("Added %d associations for %s.", assoc_count, disease_id)
-
+            logger.info(
+                "Added %d associations for %s.", assoc_count, disease_id)
         return assoc_count
 
     def getTestSuite(self):

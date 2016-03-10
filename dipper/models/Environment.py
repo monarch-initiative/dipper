@@ -56,8 +56,8 @@ class Environment():
 
         return
 
-    def addEnvironmentalCondition(
-        self, cond_id, cond_label, cond_type=None, cond_description=None):
+    def addEnvironmentalCondition(self, cond_id, cond_label, cond_type=None,
+                                  cond_description=None):
         if cond_type is None:
             cond_type = self.environment_parts['environmental_condition']
 
@@ -69,13 +69,13 @@ class Environment():
     def addComponentToEnvironment(self, env_id, component_id):
 
         self.gu.addTriple(
-            self.graph, env_id,cself.gu.object_properties['has_part'],
+            self.graph, env_id, cself.gu.object_properties['has_part'],
             component_id)
 
         return
 
     def addComponentAttributes(
-        self, component_id, entity_id, value=None, unit=None):
+            self, component_id, entity_id, value=None, unit=None):
 
         self.gu.addTriple(
             self.graph, component_id, self.gu.object_properties['has_part'],

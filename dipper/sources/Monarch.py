@@ -85,8 +85,8 @@ class Monarch(Source):
         # get file listing
         mypath = '/'.join((self.rawdir, 'OMIA-disease-phenotype'))
         file_list = [
-            f for f in listdir(mypath) if isfile(join(mypath, f)) and\
-            re.search(r'.txt$', f)]
+            f for f in listdir(mypath)
+            if isfile(join(mypath, f)) and re.search(r'.txt$', f)]
 
         for f in file_list:
             logger.info("Processing %s", f)
@@ -96,7 +96,8 @@ class Monarch(Source):
             bad_rows = list()
             fname = '/'.join((mypath, f))
             with open(fname, 'r') as csvfile:
-                filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+                filereader = csv.reader(
+                    csvfile, delimiter='\t', quotechar='\"')
                 for row in filereader:
                     line_counter += 1
                     if line_counter <= 1:
@@ -131,7 +132,8 @@ class Monarch(Source):
                     else:
                         assoc.add_source(
                             '/'.join(('http://omia.angis.org.au/OMIA' +
-                                      disease_num.strip(), species_id.strip())))
+                                      disease_num.strip(),
+                                      species_id.strip())))
                     assoc.add_association_to_graph(g)
                     aid = assoc.get_association_id()
                     if phenotype_description != '':

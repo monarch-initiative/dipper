@@ -329,7 +329,7 @@ class UCSCBands(Source):
                         mybands[chrom_num+band_num]['parent'] = chrom_num+parents[0]
                 else:
                     # TODO PYLINT why is 'parent'
-                    # a list() a couple of lines up and a set() here? 
+                    # a list() a couple of lines up and a set() here?
                     parents = set()
 
                 # loop through the parents and add them to the hash
