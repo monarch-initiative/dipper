@@ -725,7 +725,7 @@ class OMIM(Source):
                         d = ts['textSection']['textSectionContent']
                         # there are internal references to OMIM identifiers in
                         # the description, I am formatting them in our style.
-                        d = re.sub(r'{(\\d+)}', 'OMIM:\\1', d)
+                        d = re.sub(r'{(\d+)}', r'OMIM:\1', d)
 
                         # TODO
                         # reformat the citations in the description with PMIDs

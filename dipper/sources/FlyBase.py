@@ -537,7 +537,7 @@ class FlyBase(PostgreSQLSource):
                  timelastmodified, is_obsolete) = line
 
                 feature_key = feature_id
-                if re.search(r'[\|\s\[\]\{\}\\\\<\>]', uniquename):
+                if re.search(r'[\|\s\[\]\{\}\\<\>]', uniquename):
                     # some uniquenames have pipes or other nasty chars!
                     # for example: FB||||FBrf0133242|Hugh-u1
                     feature_id = self._makeInternalIdentifier(
@@ -1594,7 +1594,7 @@ class FlyBase(PostgreSQLSource):
                                 gene_id)
                         elif self.feature_types[subject_id] == Genotype.genoparts['transgenic_insertion']:
                             geno.addSequenceDerivesFrom(allele_id, gene_id)
-                        elif re.match(r'\w+\\\\', gene_label):
+                        elif re.match(r'\w+\\', gene_label):
                             # the thing that this is the allele of,
                             # is in some other species,
                             # so we do not want to create
