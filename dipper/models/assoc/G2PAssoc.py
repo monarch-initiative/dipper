@@ -7,6 +7,7 @@ __author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
+
 class G2PAssoc(Assoc):
     """
     A specific association class for defining Genotype-to-Phenotype
@@ -67,7 +68,7 @@ class G2PAssoc(Assoc):
     def add_association_to_graph(self, g, nobnodes=False):
         """
         Overrides  Association by including bnode support
-        
+
         The reified relationship between a genotype (or any genotype part)
         and a phenotype is decorated with some provenance information.
         This makes the assumption that
@@ -87,9 +88,9 @@ class G2PAssoc(Assoc):
             stage_process_id = '_'+re.sub(r':', '', stage_process_id)
             if nobnodes:
                 stage_process_id = ':'+stage_process_id
-            self.gu.addIndividualToGraph(g, stage_process_id, None,
-                                         self.g2p_types['developmental_process']
-                                        )
+            self.gu.addIndividualToGraph(
+                g, stage_process_id, None,
+                self.g2p_types['developmental_process'])
             self.gu.addTriple(g, stage_process_id,
                               self.gu.object_properties['starts_during'],
                               self.start_stage_id)
@@ -121,7 +122,8 @@ class G2PAssoc(Assoc):
         :return:
         """
 
-        attributes = [self.environment_id, self.start_stage_id, self.end_stage_id]
+        attributes = \
+            [self.environment_id, self.start_stage_id, self.end_stage_id]
         assoc_id = self.make_association_id(self.definedby,
                                             self.entity_id,
                                             self.rel,

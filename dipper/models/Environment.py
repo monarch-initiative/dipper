@@ -6,6 +6,7 @@ __author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
+
 class Environment():
     """
     These methods provide convenient methods
@@ -19,7 +20,7 @@ class Environment():
     # that we explicitly reference here
     environment_parts = {
         'environmental_system': 'ENVO:01000254',
-        'environmental_condition' : 'XCO:0000000',
+        'environmental_condition': 'XCO:0000000',
         'morpholio_reagent': 'REO:0000042',
         'talen_reagent': 'REO:0001022',
         'crispr_reagent': 'REO:crispr_TBD'
@@ -46,8 +47,8 @@ class Environment():
 
         return
 
-    def addEnvironment(self, env_id, env_label, env_type=None,
-                       env_description=None):
+    def addEnvironment(
+            self, env_id, env_label, env_type=None, env_description=None):
         if env_type is None:
             env_type = self.environment_parts['environmental_system']
 
@@ -56,8 +57,8 @@ class Environment():
 
         return
 
-    def addEnvironmentalCondition(self, cond_id, cond_label, cond_type=None,
-                                  cond_description=None):
+    def addEnvironmentalCondition(
+            self, cond_id, cond_label, cond_type=None, cond_description=None):
         if cond_type is None:
             cond_type = self.environment_parts['environmental_condition']
 
@@ -69,7 +70,8 @@ class Environment():
     def addComponentToEnvironment(self, env_id, component_id):
 
         self.gu.addTriple(
-            self.graph, env_id, cself.gu.object_properties['has_part'],
+            self.graph, env_id,
+            self.gu.object_properties['has_part'],  # TODO cbeck if cself
             component_id)
 
         return

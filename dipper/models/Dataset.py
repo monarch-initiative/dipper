@@ -1,4 +1,3 @@
-
 import logging
 from datetime import datetime
 from rdflib import Graph, Literal, URIRef, Namespace
@@ -135,8 +134,8 @@ class Dataset:
         else:
             d = self.date_accessed
             logger.info(
-                "No date supplied for setting version; using download timestamp"
-                + " for date_issued")
+                "No date supplied for setting version; "
+                "using download timestamp for date_issued")
 
         logger.info("setting version by date")
         self.set_version_by_num(d)
@@ -157,7 +156,8 @@ class Dataset:
         if version_num != self.date_accessed:
             self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
             self.graph.add(
-                (self.dipperized_version, DCTERMS['isVersionOf'], self.version))
+                (self.dipperized_version, DCTERMS['isVersionOf'],
+                 self.version))
             self.graph.add(
                 (self.dipperized_version, PAV['version'],
                  Literal(self.date_accessed)))

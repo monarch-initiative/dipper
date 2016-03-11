@@ -10,13 +10,13 @@ __author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
+
 class Feature():
     """
     Dealing with genomic features here.  By default they are all faldo:Regions.
-    We use SO for typing genomic features.
-    At the moment,
-    RO:has_subsequence is the default relationship between the regions, but this
-        should be tested/verified.
+    We use SO for typing genomic features. At the moment,
+    RO:has_subsequence is the default relationship
+    between the regions, but this should be tested/verified.
 
     TODO:
         the graph additions are in the addXToFeature functions,
@@ -102,8 +102,9 @@ class Feature():
         self.nobnodes = True  # TODO remove this before official release
         return
 
-    def addFeatureStartLocation(self, coordinate, reference_id, strand=None,
-                                position_types=None):
+    def addFeatureStartLocation(
+            self, coordinate, reference_id, strand=None,
+            position_types=None):
         """
         Adds coordinate details for the start of this feature.
         :param coordinate:
@@ -120,8 +121,9 @@ class Feature():
 
         return
 
-    def addFeatureEndLocation(self, coordinate, reference_id, strand=None,
-                              position_types=None):
+    def addFeatureEndLocation(
+            self, coordinate, reference_id, strand=None,
+            position_types=None):
         """
         Adds the coordinate details for the end of this feature
         :param coordinate:
@@ -183,8 +185,9 @@ class Feature():
 
         return strand_id
 
-    def addFeatureToGraph(self, graph, add_region=True, region_id=None,
-                          feature_as_class=False):
+    def addFeatureToGraph(
+            self, graph, add_region=True, region_id=None,
+            feature_as_class=False):
         """
         We make the assumption here that all features are instances.
         The features are located on a region,
@@ -197,10 +200,12 @@ class Feature():
         region_id a faldo:region
             faldo:begin start_position
             faldo:end end_position
-        start_position a (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
+        start_position a
+            (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
             faldo:position Integer(numeric position)
             faldo:reference reference_id
-        end_position a (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
+        end_position a
+            (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
             faldo:position Integer(numeric position)
             faldo:reference reference_id
 
@@ -227,11 +232,13 @@ class Feature():
                 # then we'll add an "unknown" other.
                 st = sp = 'UN'
                 strand = None
-                if self.start is not None and self.start['coordinate'] is not None:
+                if self.start is not None and \
+                        self.start['coordinate'] is not None:
                     st = str(self.start['coordinate'])
                     strand = self._getStrandStringFromPositionTypes(
                         self.start['type'])
-                if self.stop is not None and self.stop['coordinate'] is not None:
+                if self.stop is not None and\
+                        self.stop['coordinate'] is not None:
                     sp = str(self.stop['coordinate'])
                     if strand is not None:
                         strand = self._getStrandStringFromPositionTypes(
@@ -250,7 +257,8 @@ class Feature():
                     region_id = ':'+region_id
             self.gu.addTriple(graph, self.id, self.properties['location'],
                               region_id)
-            self.gu.addIndividualToGraph(graph, region_id, None, 'faldo:Region')
+            self.gu.addIndividualToGraph(
+                graph, region_id, None, 'faldo:Region')
         else:
             region_id = self.id
             self.gu.addType(graph, region_id, 'faldo:Region')
@@ -326,12 +334,14 @@ class Feature():
 
         return i
 
-    def addRegionPositionToGraph(self, graph, region_id, begin_position_id,
-                                 end_position_id):
+    def addRegionPositionToGraph(
+            self, graph, region_id, begin_position_id,
+            end_position_id):
 
         if begin_position_id is None:
             pass
-            # logger.warn("No begin position specified for region %s", region_id)
+            # logger.warn(
+            #   "No begin position specified for region %s", region_id)
         else:
             self.gu.addTriple(graph, region_id, self.properties['begin'],
                               begin_position_id)
@@ -345,8 +355,9 @@ class Feature():
 
         return
 
-    def addPositionToGraph(self, graph, reference_id, position,
-                           position_types=None, strand=None):
+    def addPositionToGraph(
+            self, graph, reference_id, position,
+            position_types=None, strand=None):
         """
         Add the positional information to the graph, following the faldo model.
         We assume that if the strand is None,
@@ -399,10 +410,10 @@ class Feature():
         :param parentid:
         :return:
         """
-        self.gu.addTriple(graph, self.id, self.properties['is_subsequence_of'],
-                          parentid)
-        self.gu.addTriple(graph, parentid, self.properties['has_subsequence'],
-                          self.id)
+        self.gu.addTriple(
+            graph, self.id, self.properties['is_subsequence_of'], parentid)
+        self.gu.addTriple(
+            graph, parentid, self.properties['has_subsequence'], self.id)
 
         return
 
@@ -416,8 +427,8 @@ class Feature():
         """
         # TEC: should taxon be set in __init__()?
         self.taxon = taxonid
-        self.gu.addTriple(graph, self.id, Assoc.properties['in_taxon'],
-                          self.taxon)
+        self.gu.addTriple(
+            graph, self.id, Assoc.properties['in_taxon'], self.taxon)
 
         return
 
@@ -455,7 +466,8 @@ def makeChromID(chrom, reference=None, prefix=None):
     :return:
     """
     if reference is None:
-        logger.warning('No reference for this chr. You may have conflicting ids')
+        logger.warning(
+            'No reference for this chr. You may have conflicting ids')
 
     # replace any chr-like prefixes with blank to standardize
     c = re.sub(r'ch(r?)[omse]*', '', str(chrom))

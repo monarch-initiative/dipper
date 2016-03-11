@@ -15,16 +15,16 @@ class Pathway():
     """
 
     pathway_parts = {
-        'signal_transduction' : 'GO:0007165',
-        'cellular_process' : 'GO:0009987',
-        'pathway' : 'PW:0000001',
+        'signal_transduction': 'GO:0007165',
+        'cellular_process': 'GO:0009987',
+        'pathway': 'PW:0000001',
         'gene_product': 'CHEBI:33695'  # bioinformation molecule
     }
 
     object_properties = {
         'involved_in': 'RO:0002331',
-        'gene_product_of' : 'RO:0002204',
-        'has_gene_product' : 'RO:0002205'
+        'gene_product_of': 'RO:0002204',
+        'has_gene_product': 'RO:0002205'
     }
 
     properties = object_properties.copy()
@@ -42,8 +42,9 @@ class Pathway():
 
         return
 
-    def addPathway(self, pathway_id, pathway_label, pathway_type=None,
-                   pathway_description=None):
+    def addPathway(
+            self, pathway_id, pathway_label, pathway_type=None,
+            pathway_description=None):
         """
         Adds a pathway as a class.  If no specific type is specified, it will
         default to a subclass of "GO:cellular_process" and "PW:pathway".
@@ -56,10 +57,11 @@ class Pathway():
 
         if pathway_type is None:
             pathway_type = self.pathway_parts['cellular_process']
-        self.gu.addClassToGraph(self.graph, pathway_id, pathway_label,
-                                pathway_type, pathway_description)
-        self.gu.addSubclass(self.graph, self.pathway_parts['pathway'],
-                            pathway_id)
+        self.gu.addClassToGraph(
+            self.graph, pathway_id, pathway_label, pathway_type,
+            pathway_description)
+        self.gu.addSubclass(
+            self.graph, self.pathway_parts['pathway'], pathway_id)
 
         return
 
@@ -80,11 +82,13 @@ class Pathway():
         gene_product = '_'+re.sub(r':', '', gene_id)+'product'
         if self.nobnodes:
             gene_product = ':'+gene_product
-        self.gu.addIndividualToGraph(self.graph, gene_product, None,
-                                     self.pathway_parts['gene_product'])
-        self.gu.addTriple(self.graph, gene_id,
-                          self.object_properties['has_gene_product'],
-                          gene_product)
+        self.gu.addIndividualToGraph(
+            self.graph, gene_product, None,
+            self.pathway_parts['gene_product'])
+        self.gu.addTriple(
+            self.graph, gene_id,
+            self.object_properties['has_gene_product'],
+            gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
 
         return

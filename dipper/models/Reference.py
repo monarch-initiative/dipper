@@ -32,7 +32,6 @@ class Reference:
         'webpage': 'SIO:000302'
     }
 
-
     def __init__(self, ref_id, ref_type=None):
         self.ref_id = None
         self.ref_url = None
@@ -110,10 +109,11 @@ class Reference:
             logger.error("You are missing an identifier for a reference.")
 
         # TODO what is the property here to add the date?
-        #if self.year is not None:
+        # if self.year is not None:
         #    gu.addTriple()
 
-        #if self.author_list is not None:
+        # if self.author_list is not None:
         #    for a in self.author_list:
-        #        gu.addTriple(g, self.ref_id, self.props['has_author'], a, True)
+        #        gu.addTriple(
+        #           g, self.ref_id, self.props['has_author'], a, True)
         return

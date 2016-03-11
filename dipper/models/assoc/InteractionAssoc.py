@@ -2,6 +2,7 @@ from dipper.models.assoc.Association import Assoc
 
 __author__ = 'nlw'
 
+
 class InteractionAssoc(Assoc):
 
     interaction_object_properties = {

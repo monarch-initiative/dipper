@@ -128,7 +128,7 @@ class Provenance:
         # TODO if score_type or score_value is None, then throw error
 
         score = {
-            'value':score_value,
+            'value': score_value,
             'type': score_type
         }
 
@@ -178,7 +178,8 @@ class Provenance:
         # # TODO deal with units
         # for m in measurement_data:
         #     s = measurement_data[m]
-        #     # we assume that the assay has already been added as an Individual
+        #     # we assume that the assay has already been added
+        #     # as an Individual
         #       with properties elsewhere
         #
         #     for i in s:
@@ -192,7 +193,8 @@ class Provenance:
         #
         #         self.gu.addIndividualToGraph(graph, mid, None,
         #                                       i.get('description'))
-        #         self.gu.addTriple(graph, mid, self.data_property['has_value'],
+        #         self.gu.addTriple(
+        #           graph, mid, self.data_property['has_value'],
         #                           i.get('value'))
         #         sig = i.get('significance')
         #         if sig is not None:

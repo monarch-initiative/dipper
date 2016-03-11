@@ -2,9 +2,11 @@ from dipper.models.assoc.Association import Assoc
 
 __author__ = 'nlw'
 
+
 class D2PAssoc(Assoc):
     """
-    A specific association class for defining Disease-to-Phenotype relationships
+    A specific association class for defining Disease-to-Phenotype
+    relationships
     This assumes that a graph is created outside of this class,
     and nodes get added.
     By default, an association will assume the "has_phenotype" relationship,

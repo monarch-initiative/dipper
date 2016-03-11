@@ -2,6 +2,7 @@ from dipper.models.assoc.Association import Assoc
 
 __author__ = 'nlw'
 
+
 class DispositionAssoc(Assoc):
     """
     A specific Association model for Heritability annotations.
