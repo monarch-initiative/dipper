@@ -77,7 +77,7 @@ class Monochrom(Source):
         },
         '10090': {
             'file': '10090cytoBand.txt.gz',
-            'url': MCDL + '/mm10/dat' + MCDL + 'abase/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/mm10/database/cytoBandIdeo.txt.gz',
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
