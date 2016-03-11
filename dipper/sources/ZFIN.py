@@ -99,7 +99,7 @@ class ZFIN(Source):
             'url': ZFDL + '/genbank.txt'},
         'uniprot': {
             'file': 'uniprot.txt',
-            'url': ZFDL +' /uniprot.txt'},
+            'url': ZFDL +'/uniprot.txt'},
         'gene': {
             'file': 'gene.txt',
             'url': 'http://zfin.org/downloads/gene.txt'},
