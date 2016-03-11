@@ -5,9 +5,6 @@ import logging
 from rdflib import Graph
 from dipper import curie_map
 
-
-
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 

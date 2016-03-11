@@ -23,8 +23,8 @@ class EOMTestCase(SourceTestCase):
 
     # TODO add some specific tests
     # to make sure we are hitting all parts of the code
-    #@unittest.skip('test not yet defined')
-    #def test_eomtest(self):
+    # @unittest.skip('test not yet defined')
+    # def test_eomtest(self):
     #    logger.info("A EOM-specific test")
     #
     #    return

@@ -4,9 +4,9 @@ import logging
 from dipper.sources.Coriell import Coriell
 from tests.test_source import SourceTestCase
 
-
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 class CoriellTestCase(SourceTestCase):
 

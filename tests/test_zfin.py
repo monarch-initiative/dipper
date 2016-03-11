@@ -5,7 +5,6 @@ import logging
 from tests.test_source import SourceTestCase
 from dipper.sources.ZFIN import ZFIN
 
-
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -24,7 +23,8 @@ class ZFINTestCase(SourceTestCase):
         return
 
     @unittest.skip(
-        'Will eventually write test to check if phenotype sextuples are mapped to ZP ids')
+        'Will eventually write test to check if phenotype sextuples' +
+        'are mapped to ZP ids')
     def test_allZPAvailable(self):
         """
         This test will identify if there are

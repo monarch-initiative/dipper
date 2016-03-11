@@ -2,12 +2,12 @@
 
 import unittest
 import logging
-#import os
-#from rdflib import Graph
-#from tests import test_general, test_source
+# import os
+# from rdflib import Graph
+# from tests import test_general, test_source
 from tests.test_source import SourceTestCase
 from dipper.sources.IMPC import IMPC
-#from dipper import curie_map
+# from dipper import curie_map
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ class IMPCTestCase(SourceTestCase):
         self.source = None
         return
 
-    #@unittest.skip('test not yet defined')
-    #def test_hpotest(self):
+    # @unittest.skip('test not yet defined')
+    # def test_hpotest(self):
     #    logger.info("An IMPC-specific test")
     #
     #    return

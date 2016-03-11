@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 import logging
-#import pprint
+# import pprint
 from dipper.sources.CTD import CTD
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from tests.test_source import SourceTestCase
@@ -51,10 +51,10 @@ class CTDTestCase(SourceTestCase):
         disease_uri = gu.getNode(disease_id)
         rel_id = gu.object_properties['substance_that_treats']
         rel_uri = gu.getNode(rel_id)
-        # TEC these are unused 2016-Mar
-        #pubmed_id = 'PMID:16785264'
-        #pubmed_uri = gu.getNode(pubmed_id)
-        #eco = 'ECO:0000033'
+        # TODO unused
+        # pubmed_id = 'PMID:16785264'
+        # pubmed_uri = gu.getNode(pubmed_id)
+        # eco = 'ECO:0000033'
 
         assoc = G2PAssoc(self.source.name, chem_id, disease_id, rel_id)
         assoc_id = assoc.make_g2p_id()
@@ -68,8 +68,9 @@ class CTDTestCase(SourceTestCase):
 
         self.assertTrue(
             expected_output in sparql_output,
-            "did not find expected association: "+str(expected_output)+" found "
-            +str(len(sparql_output)) + " others:\n"+str(sparql_output))
+            "did not find expected association: " + str(expected_output) +
+            " found " +
+            str(len(sparql_output)) + " others:\n" + str(sparql_output))
 
         logger.info("Test query data finished.")
 

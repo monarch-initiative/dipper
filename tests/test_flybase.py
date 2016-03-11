@@ -29,8 +29,8 @@ class FlyBaseTestCase(SourceTestCase):
         :return:
         """
         cvterm_list = {
-            131502: 'derived_sf_assoc_alleles', 
-            131495: 'derived_tp_assoc_alleles', 
+            131502: 'derived_sf_assoc_alleles',
+            131495: 'derived_tp_assoc_alleles',
             59983: 'associated_with',
             27: 'producedby',
             60095: 'gets_expression_data_from',
@@ -60,8 +60,8 @@ class FlyBaseTestCase(SourceTestCase):
                 "cvterm {0} not in file".format(cvterm))
             self.assertTrue(
                 cvterm_list[cvterm] == cvterms_from_file[cvterm],
-                "cvterm name mismatch (expected:{0}, has:{1})".format(cvterm_list[cvterm],
-                                                                                  cvterms_from_file[cvterm]))
+                "cvterm name mismatch (expected:{0}, has:{1})".format(
+                    cvterm_list[cvterm], cvterms_from_file[cvterm]))
 
         logger.info("All %d cvterms are as expected", len(cvterm_list))
 

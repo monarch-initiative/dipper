@@ -7,6 +7,7 @@ from tests.test_source import SourceTestCase
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+
 class BioGridTestCase(SourceTestCase):
 
     def setUp(self):

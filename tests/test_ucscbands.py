@@ -25,8 +25,8 @@ class UCSCBandsTestCase(SourceTestCase):
 
     # TODO add some specific tests to make sure we are hitting
     # all parts of the code
-    #@unittest.skip('test not yet defined')
-    #def test_ucscbandstest(self):
+    # @unittest.skip('test not yet defined')
+    # def test_ucscbandstest(self):
     #    logger.info("A UCSCBands-specific test")
     #
     #    return

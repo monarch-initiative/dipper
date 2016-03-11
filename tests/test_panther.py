@@ -8,6 +8,7 @@ from dipper.sources.Panther import Panther
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+
 class PantherTestCase(SourceTestCase):
 
     def setUp(self):
@@ -23,8 +24,8 @@ class PantherTestCase(SourceTestCase):
 
     # TODO add some specific tests to make sure we are
     # hitting all parts of the code
-    #@unittest.skip('test not yet defined')
-    #def test_panthertest(self):
+    # @unittest.skip('test not yet defined')
+    # def test_panthertest(self):
     #    logger.info("A Panther-specific test")
     #
     #    return

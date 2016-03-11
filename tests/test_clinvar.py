@@ -7,6 +7,7 @@ from tests.test_source import SourceTestCase
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+
 class ClinVarTestCase(SourceTestCase):
 
     def setUp(self):
@@ -27,7 +28,6 @@ class ClinVarTestCase(SourceTestCase):
     #    logger.info("A ClinVar-specific test")
     #
     #    return
-
 
 if __name__ == '__main__':
     unittest.main()

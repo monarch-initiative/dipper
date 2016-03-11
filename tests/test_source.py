@@ -6,8 +6,7 @@ import os
 import json
 from tests import test_general
 from tests import test_dataset
-#from dipper.sources.Source import Source
-
+# from dipper.sources.Source import Source
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -32,21 +31,21 @@ class SourceTestCase(unittest.TestCase):
         if self.source is not None:  # don't test the abstract class
             try:
                 self.source.parse()
-            except Exception as ParseException: # tec too broad?
+            except Exception as ParseException:  # tec too broad?
                 logger.error(ParseException)
-                self.assertFalse(True, "Parsing failed") # tec redundant?
+                self.assertFalse(True, "Parsing failed")
             try:
                 self.source.write(format='turtle')
             except Exception as WriteException:
                 logger.error(WriteException)
-                self.assertFalse(True, "Write failed")# tec redundant?
+                self.assertFalse(True, "Write failed")
 
         return
 
     def test_readGraph(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
-            p = os.path.abspath(f)
+            # p = os.path.abspath(f)  # TODO unused
             self.assertTrue(
                 os.path.exists(f), "path does not exist for {0}".format(f))
             test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
@@ -57,8 +56,8 @@ class SourceTestCase(unittest.TestCase):
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
-            #p = os.path.abspath(f) # tec unused
-            self.assertTrue(os.path.exists(f), "path does not exist for "+f)
+            # p = os.path.abspath(f) # tec unused
+            self.assertTrue(os.path.exists(f), "path does not exist for " + f)
             test_general.GeneralGraphTestCase().readGraphIntoOWL(f)
 
         return
@@ -76,11 +75,10 @@ class SourceTestCase(unittest.TestCase):
         if os.path.exists(os.path.join(os.path.dirname(__file__),
                                        'test_ids.json')):
             with open(
-                os.path.join(os.path.dirname(__file__),
-                             'test_ids.json')) as json_file:
+                os.path.join(
+                    os.path.dirname(__file__), 'test_ids.json')) as json_file:
                 conf = json.load(json_file)
         return conf
-
 
     def test_source_has_license(self):
         if self.source is not None:

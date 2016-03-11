@@ -5,9 +5,9 @@ import logging
 from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from tests.test_source import SourceTestCase
 
-
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 class AnimalQTLdbTestCase(SourceTestCase):
 
