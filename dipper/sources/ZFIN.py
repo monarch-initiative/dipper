@@ -64,21 +64,21 @@ class ZFIN(Source):
     files = {
         'geno': {
             'file': 'genotype_features.txt',
-            'url': ZFDL+'/genotype_features.txt'},
+            'url': ZFDL + '/genotype_features.txt'},
         'pheno': {
             'file': 'phenotype_fish.txt',
-            'url': ZFDL+'/phenotype_fish.txt'},
+            'url': ZFDL + '/phenotype_fish.txt'},
         'pubs': {
             'file': 'zfinpubs.txt',
-            'url': ZFDL+'/zfinpubs.txt'},
+            'url': ZFDL + '/zfinpubs.txt'},
         'zpmap': {
             'file': 'zp-mapping.txt',
             'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
         'morph': {
             'file': 'Morpholinos.txt',
-            'url': ZFDL+'/Morpholinos.txt'},
+            'url': ZFDL + '/Morpholinos.txt'},
         # 'enviro': {'file': 'pheno_environment.txt',
-        #            'url': ZFDL+'/pheno_environment.txt'},
+        #            'url': ZFDL + '/pheno_environment.txt'},
         'enviro': {
             'file': 'pheno_environment_fish.txt',
             'url': ZFDL+'/pheno_environment_fish.txt'},
@@ -87,19 +87,19 @@ class ZFIN(Source):
             'url': 'http://zfin.org/Downloads/stage_ontology.txt'},
         # 'wild_expression': {
         #   'file': 'wildtype-expression.txt',
-        #   'url': ZFDL+'/wildtype-expression.txt'},
+        #   'url': ZFDL + '/wildtype-expression.txt'},
         'mappings': {
             'file': 'mappings.txt',
-            'url': ZFDL+'/mappings.txt'},
+            'url': ZFDL + '/mappings.txt'},
         'backgrounds': {
             'file': 'genotype_backgrounds.txt',
-            'url': ZFDL+'/genotype_backgrounds.txt'},
+            'url': ZFDL + '/genotype_backgrounds.txt'},
         'genbank': {
             'file': 'genbank.txt',
-            'url': ZFDL+'/genbank.txt'},
+            'url': ZFDL + '/genbank.txt'},
         'uniprot': {
             'file': 'uniprot.txt',
-            'url': ZFDL+'/uniprot.txt'},
+            'url': ZFDL +' /uniprot.txt'},
         'gene': {
             'file': 'gene.txt',
             'url': 'http://zfin.org/downloads/gene.txt'},
@@ -107,39 +107,39 @@ class ZFIN(Source):
         #          'url': ZFDL+'/wildtypes.txt'},
         'wild': {
             'file': 'wildtypes.txt',
-            'url': ZFDL+'/wildtypes_fish.txt'},
+            'url': ZFDL + '/wildtypes_fish.txt'},
         'human_orthos': {
             'file': 'human_orthos.txt',
-            'url': ZFDL+'/human_orthos.txt'},
+            'url': ZFDL + '/human_orthos.txt'},
         'features': {
             'file': 'features.txt',
-            'url': ZFDL+'/features.txt'},
+            'url': ZFDL + '/features.txt'},
         'feature_affected_gene': {
             'file': 'features-affected-genes.txt',
-            'url': ZFDL+'/features-affected-genes.txt'},
+            'url': ZFDL + '/features-affected-genes.txt'},
         'gene_marker_rel': {
             'file': 'gene_marker_relationship.txt',
             'url': ZFDL+'/gene_marker_relationship.txt'},
         'crispr': {
             'file': 'CRISPR.txt',
-            'url': ZFDL+'/downloads/CRISPR.txt'},
+            'url': ZFDL + '/CRISPR.txt'},
         'talen': {
             'file': 'TALEN.txt',
-            'url': ZFDL+'/TALEN.txt'},
+            'url': ZFDL + '/TALEN.txt'},
         'pub2pubmed': {
             'file': 'pub_to_pubmed_id_translation.txt',
-            'url': ZFDL+'/pub_to_pubmed_id_translation.txt'},
+            'url': ZFDL + '/pub_to_pubmed_id_translation.txt'},
         'gene_coordinates': {
             'file': 'E_zfin_gene_alias.gff3',
-            'url': ZFDL+'/E_zfin_gene_alias.gff3'
+            'url': ZFDL + '/E_zfin_gene_alias.gff3'
         },
         'fish_disease_models': {
             'file': 'fish_model_disease.txt',
-            'url': ZFDL+'/fish_model_disease.txt'
+            'url': ZFDL + '/fish_model_disease.txt'
         },
         'fish_components': {
             'file': 'fish_components_fish.txt',
-            'url': ZFDL+'/fish_components_fish.txt'
+            'url': ZFDL + '/fish_components_fish.txt'
         },
 
     }
