@@ -93,7 +93,8 @@ class OMIA(Source):
                 492297, 434, 492296, 3430235, 200685834, 394659996, 200685845,
                 28713538, 291822383],
             'taxon': [9691, 9685, 9606, 9615, 9913, 93934, 37029, 9627, 9825],
-            # to be filled in during parsing of breed table for lookup by breed-associations
+            # to be filled in during parsing of breed table
+            # for lookup by breed-associations
             'breed': []
         }
         # to store a map of omia ids and any molecular info
@@ -122,10 +123,10 @@ class OMIA(Source):
     def parse(self, limit=None):
         # names of tables to iterate - probably don't need all these:
         # Article_Breed, Article_Keyword, Article_Gene, Article_Keyword,
-        # Article_People, Article_Phene, Articles, Breed, Breed_Phene, Genes_gb,
-        # Group_Categories, Group_MPO, Inherit_Type, Keywords, Landmark,
-        # Lida_Links, OMIA_Group, OMIA_author, Omim_Xref, People, Phene,
-        # Phene_Gene, Publishers, Resources, Species_gb, Synonyms
+        # Article_People, Article_Phene, Articles, Breed, Breed_Phene,
+        # Genes_gb, Group_Categories, Group_MPO, Inherit_Type, Keywords,
+        # Landmark, Lida_Links, OMIA_Group, OMIA_author, Omim_Xref, People,
+        # Phene, Phene_Gene, Publishers, Resources, Species_gb, Synonyms
 
         self.scrub()
 
@@ -176,7 +177,8 @@ class OMIA(Source):
 
         """
 
-        logger.info("Scrubbing out the nasty characters that break our parser.")
+        logger.info(
+            "Scrubbing out the nasty characters that break our parser.")
 
         myfile = '/'.join((self.rawdir, self.files['data']['file']))
         tmpfile = '/'.join((self.rawdir, self.files['data']['file']+'.tmp.gz'))
@@ -283,7 +285,6 @@ class OMIA(Source):
 
         filereader.readline()  # remove the xml declaration line
 
-
         for event, elem in ET.iterparse(filereader):
             self.process_xml_table(
                 elem, 'Article_Breed', self._process_article_breed_row, limit)
@@ -302,8 +303,7 @@ class OMIA(Source):
 
         return
 
-
-    # ############### INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ###################
+    # ############ INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ################
 
     def _process_species_table_row(self, row):
         # gb_species_id, sci_name, com_name, added_by, date_modified
@@ -311,7 +311,8 @@ class OMIA(Source):
         sci_name = row['sci_name']
         com_name = row['com_name']
 
-        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        if self.testMode and \
+                (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         self.gu.addClassToGraph(self.g, tax_id, sci_name)
@@ -326,7 +327,8 @@ class OMIA(Source):
     def _process_breed_row(self, row):
 
         # in test mode, keep all breeds of our test species
-        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        if self.testMode and \
+                (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         # save the breed keys in the test_ids for later processing
@@ -358,9 +360,9 @@ class OMIA(Source):
         else:
             omia_id = 'OMIA:'+str(row['omia_id'])
 
-        if self.testMode and not (int(row['gb_species_id']) \
-                                  in self.test_ids['taxon']
-                                  and omia_id in self.test_ids['disease']):
+        if self.testMode and not\
+                (int(row['gb_species_id']) in self.test_ids['taxon'] and
+                 omia_id in self.test_ids['disease']):
             return
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = omia_id
@@ -386,7 +388,8 @@ class OMIA(Source):
         species_id = 'NCBITaxon:'+str(gb_species_id)
         # use this instead
         species_label = self.label_hash.get('NCBITaxon:'+gb_species_id)
-        if sp_phene_label is None and omia_label is not None and species_label is not None:
+        if sp_phene_label is None and \
+                omia_label is not None and species_label is not None:
             sp_phene_label = ' '.join((omia_label, 'in', species_label))
         self.gu.addClassToGraph(
             self.g, sp_phene_id, sp_phene_label, omia_id, descr)
@@ -395,7 +398,8 @@ class OMIA(Source):
         self.label_hash[sp_phene_id] = sp_phene_label
         # add each of the following descriptions,
         # if they are populated, with a tag at the end.
-        for item in ['clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
+        for item in [
+                'clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
             if row[item] is not None and row[item] != '':
                 self.gu.addDescription(
                     self.g, sp_phene_id, row[item] + ' ['+item+']')
@@ -481,7 +485,8 @@ class OMIA(Source):
 
         disease_id = None
         group_category = row.get('group_category')
-        disease_id = self.map_omia_group_category_to_ontology_id(group_category)
+        disease_id = \
+            self.map_omia_group_category_to_ontology_id(group_category)
         if disease_id is not None:
             self.gu.addClassToGraph(self.g, disease_id, None)
             if disease_id == 'MP:0008762':  # embryonic lethal
@@ -577,10 +582,10 @@ class OMIA(Source):
         # get the omia id
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
-        if (self.testMode and not (omia_id in self.test_ids['disease']
-                                   and int(row['breed_id']) \
-                                   in self.test_ids['breed'])\
-                or breed_id is None or phene_id is None):
+        if (self.testMode and not (
+                omia_id in self.test_ids['disease'] and
+                int(row['breed_id']) in self.test_ids['breed']) or
+                breed_id is None or phene_id is None):
             return
 
         # FIXME we want a different relationship here
@@ -651,9 +656,10 @@ class OMIA(Source):
 
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
-        if self.testMode and not (omia_id in self.test_ids['disease']\
-           and row['gene_id'] in self.test_ids['gene'])\
-           or gene_id is None or phene_id is None:
+        if self.testMode and not (
+                omia_id in self.test_ids['disease'] and
+                row['gene_id'] in self.test_ids['gene']) or\
+                gene_id is None or phene_id is None:
             return
 
         # occasionally some phenes are missing!  (ex: 406)
@@ -830,17 +836,21 @@ class OMIA(Source):
             'ADV': None,  # autosomal dominant with variable expressivity
             'AID': 'GENO:0000259',  # autosomal incompletely dominant
             'ASD': 'GENO:0000145',  # autosomal semi-dominant
-            # autosomal recessive, semi-lethal <-- using generic autosomal recessive
+            # autosomal recessive, semi-lethal
+            # using generic autosomal recessive
             'ASL': 'GENO:0000150',
             'D': 'GENO:0000147',  # autosomal dominant
             'M': None,  # multifactorial
             'MAT': None,  # Maternal
-            # probably autosomal recessive  <-- using generic autosomal recessive
+            # probably autosomal recessive
+            # using generic autosomal recessive
             'PR':  'GENO:0000150',
             'R': 'GENO:0000150',  # Autosomal Recessive
-            # Recessive Embryonic Lethal   <-- using plain recessive
+            # Recessive Embryonic Lethal
+            # using plain recessive
             'REL': 'GENO:0000148',
-            # Autosomal Recessive Lethal  <-- using plain autosomal recessive
+            # Autosomal Recessive Lethal
+            # using plain autosomal recessive
             'RL': 'GENO:0000150',
             'S': 'GENO:0000146',  # Sex-linked   <--using allosomal dominant
             'SLi': None,  # Sex-limited
@@ -850,8 +860,8 @@ class OMIA(Source):
             'XLD': 'GENO:0000146',
             # X-linked Recessive    <-- temp using allosomal recessive  FIXME
             'XLR': 'GENO:0000149',
-            'Y': None, # Y-linked
-            'Z': None, # Z-linked
+            'Y': None,  # Y-linked
+            'Z': None,  # Z-linked
             # Z-linked recessive    <-- temp using allosomal recessive  FIXME
             'ZR': 'GENO:0000149',
             '999': None,  # Z-linked incompletely dominant

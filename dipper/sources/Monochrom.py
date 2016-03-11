@@ -11,63 +11,73 @@ from dipper import curie_map
 
 
 logger = logging.getLogger(__name__)
+MCDL = 'http://hgdownload.cse.ucsc.edu/goldenPath'
 
 
 class Monochrom(Source):
     """
-    This class will leverage the GENO ontology and modeling patterns to build an ontology of chromosomes
-    for any species. These classes represent major structural pieces of Chromosomes which are often universally
-    referenced, using physical properties/observations that remain constant across different genome builds
-    (such as banding patterns and arms). The idea is to create a scaffold upon which we can hang
-    build-specific chromosomal coordinates, and reason across them.
+    This class will leverage the GENO ontology and modeling patterns to build
+    an ontology of chromosomes for any species. These classes represent major
+    structural pieces of Chromosomes which are often universally referenced,
+    using physical properties/observations that remain constant over different
+    genome builds (such as banding patterns and arms). The idea is to create a
+    scaffold upon which we can hang build-specific chromosomal coordinates,
+    and reason across them.
 
-    In general, this will take the cytogenic bands files from UCSC, and create missing grouping classes, in order
-    to build the partonomy from a very specific chromosomal band up through the chromosome itself and enable
-    overlap and containment queries.  We use RO:subsequence_of as our relationship between nested chromosomal parts.
-    For example,
+    In general, this will take the cytogenic bands files from UCSC, and create
+    missing grouping classes, in order to build the partonomy from a very
+    specific chromosomal band up through the chromosome itself and enable
+    overlap and containment queries.  We use RO:subsequence_of as our
+    relationship between nested chromosomal parts. For example,
     13q21.31 ==>  13q21.31,  13q21.3,  13q21,  13q2,  13q, 13
 
     At the moment, this only computes the bands for
     Human, Mouse, Zebrafish, and Rat
     but will be expanding in the future as needed.
 
-    Because this is a universal framework to represent the chromosomal structure of any species, we must
-    mint identifiers for each chromosome and part.  We differentiate species by first creating a
-    species-specific genome, then for each species-specific chromosome we include the NCBI taxon number together with
-    the chromosome number, like:  ```<species number>chr<num><band>```.  For 13q21.31, this would be
+    Because this is a universal framework to represent the chromosomal
+    structure of any species, we must mint identifiers for each chromosome
+    and part. We differentiate species by first creating a species-specific
+    genome, then for each species-specific chromosome we include the NCBI taxon
+    number together with the chromosome number, like:
+    ```<species number>chr<num><band>```.  For 13q21.31, this would be
     9606chr13q21.31.
     We then create triples for a given band like:
     <pre>
     CHR:9606chr1p36.33 rdf[type] SO:chromosome_band
     CHR:9606chr1p36 subsequence_of :9606chr1p36.3
     </pre>
-    where any band in the file is an instance of a chr_band (or a more specific type), is a subsequence
-    of it's containing region.
+    where any band in the file is an instance of a chr_band
+    (or a more specific type), is a subsequence of it's containing region.
 
-    We determine the containing regions of the band by parsing the band-string; since each alphanumeric
-    is a significant "place", we can split it with the shorter strings being parents of the longer string
+    We determine the containing regions of the band by parsing the band-string;
+    since each alphanumeric is a significant "place", we can split it with the
+    shorter strings being parents of the longer string
 
-    Since this is small, and we have not limited other items in our test set to a small region, we
-    simply use the whole graph (genome) for testing purposes, and copy the main graph to the test graph.
+    Since this is small, and we have not limited other items in our test set to
+    a small region, we simply use the whole graph (genome)
+    for testing purposes, and copy the main graph to the test graph.
 
-    Since this Dipper class is building an ONTOLOGY, rather than instance-level data,
-    we must also include domain and range constraints, and other owl-isms.
+    Since this Dipper class is building an ONTOLOGY,
+    rather than instance-level data, we must also include domain and range
+    constraints, and other owl-isms.
 
     TODO: any species by commandline argument
 
-    We are currently mapping these to the **CHR idspace**, but this is NOT YET APPROVED and is subject to change.
+    We are currently mapping these to the **CHR idspace**,
+    but this is NOT YET APPROVED and is subject to change.
     """
 
     files = {
         '9606': {
             'file': '9606cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
+            'url': MCDL + '/hg19/database/cytoBand.txt.gz',
             'build_num': 'hg19',
             'genome_label': 'Human'
         },
         '10090': {
             'file': '10090cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/mm10/dat' + MCDL + 'abase/cytoBandIdeo.txt.gz',
             'build_num': 'mm10',
             'genome_label': 'Mouse'
         },
@@ -75,43 +85,43 @@ class Monochrom(Source):
         # for the following genomes at the moment
         '7955': {
             'file': '7955cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/danRer10/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/danRer10/database/cytoBandIdeo.txt.gz',
             'build_num': 'danRer10',
             'genome_label': 'Zebrafish'
         },
         '10116': {
             'file': '10116cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/rn6/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/rn6/database/cytoBandIdeo.txt.gz',
             'build_num': 'rn6',
             'genome_label': 'Rat'
         },
         '9913': {
             'file': 'bosTau7cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/bosTau7/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/bosTau7/database/cytoBandIdeo.txt.gz',
             'build_num': 'bosTau7',
             'genome_label': 'cow'
         },
         '9031': {
             'file': 'galGal4cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/galGal4/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/galGal4/database/cytoBandIdeo.txt.gz',
             'build_num': 'galGal4',
             'genome_label': 'chicken'
         },
         '9823': {
             'file': 'susScr3cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/susScr3/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/susScr3/database/cytoBandIdeo.txt.gz',
             'build_num': 'susScr3',
             'genome_label': 'pig'
         },
         '9940': {
             'file': 'oviAri3cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/oviAri3/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/oviAri3/database/cytoBandIdeo.txt.gz',
             'build_num': 'oviAri3',
             'genome_label': 'sheep'
         },
         '9796': {
             'file': 'equCab2cytoBand.txt.gz',
-            'url': 'http://hgdownload.cse.ucsc.edu/goldenPath/equCab2/database/cytoBandIdeo.txt.gz',
+            'url': MCDL + '/equCab2/database/cytoBandIdeo.txt.gz',
             'build_num': 'equCab2',
             'genome_label': 'horse'
         },
@@ -187,7 +197,7 @@ class Monochrom(Source):
     def _get_chrbands(self, limit, taxon):
         """
         For the given taxon, it will fetch the chr band file.
-        We will not deal with the coordinate information as part of this parser.
+        We will not deal with the coordinate information with this parser.
         Here, we only are concerned with building the partonomy.
         :param limit:
         :return:
@@ -202,7 +212,7 @@ class Monochrom(Source):
         genome_label = self.files[taxon]['genome_label']
         taxon_id = 'NCBITaxon:'+taxon
 
-        #add the taxon as a class.  adding the class label elsewhere
+        # add the taxon as a class.  adding the class label elsewhere
         self.gu.addClassToGraph(self.graph, taxon_id, None)
         self.gu.addSynonym(self.graph, taxon_id, genome_label)
 
@@ -239,14 +249,17 @@ class Monochrom(Source):
                 # ex: unlocalized scaffold: chr10_KL568008v1_random
                 # ex: unplaced scaffold: chrUn_AABR07022428v1
                 placed_scaffold_pattern = r'chr(\d+|X|Y|Z|W|MT|M)'
-                unlocalized_scaffold_pattern = placed_scaffold_pattern +\
-                                               r'_(\w+)_random'
-                unplaced_scaffold_pattern = r'chrUn_(\w+)'
+
+                # TODO unused
+                # unlocalized_scaffold_pattern = \
+                #    placed_scaffold_pattern + r'_(\w+)_random'
+                # unplaced_scaffold_pattern = r'chrUn_(\w+)'
 
                 m = re.match(placed_scaffold_pattern+r'$', chrom)
                 if m is not None and len(m.groups()) == 1:
                     # the chromosome is the first match of the pattern
-                    ch = m.group(1)
+                    # ch = m.group(1)  # TODO unused
+                    pass
                 else:
                     # let's skip over anything that isn't a placed_scaffold
                     # at the class level
@@ -273,8 +286,9 @@ class Monochrom(Source):
                     region_type_id = Feature.types['chromosome']
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
-                    if region_type_id in [Feature.types['chromosome_band'],
-                                          Feature.types['chromosome_subband']]:
+                    if region_type_id in [
+                            Feature.types['chromosome_band'],
+                            Feature.types['chromosome_subband']]:
                         stain_type = Feature.types.get(rtype)
                         if stain_type is not None:
                             self.gu.addOWLPropertyClassRestriction(
@@ -302,7 +316,8 @@ class Monochrom(Source):
                 # instead of iterating with range and len
                 for i in range(len(parents)):
                     pclassid = cclassid+parents[i]  # class chr parts
-                    pclass_label = makeChromLabel(chrom+parents[i], genome_label)
+                    pclass_label = \
+                        makeChromLabel(chrom+parents[i], genome_label)
 
                     rti = getChrPartTypeByNotation(parents[i])
 
@@ -316,7 +331,8 @@ class Monochrom(Source):
                         pid = cclassid+parents[i+1]   # the instance
                         self.gu.addOWLPropertyClassRestriction(
                             self.graph, pclassid,
-                            Feature.object_properties['is_subsequence_of'], pid)
+                            Feature.object_properties['is_subsequence_of'],
+                            pid)
                         self.gu.addOWLPropertyClassRestriction(
                             self.graph, pid,
                             Feature.object_properties['has_subsequence'],
@@ -405,7 +421,8 @@ class Monochrom(Source):
         # import unittest
         # from tests.test_ucscbands import UCSCBandsTestCase
         test_suite = None
-        # test_suite = unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
+        # test_suite = \
+        #   unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
 
         return test_suite
 
@@ -422,7 +439,8 @@ def getChrPartTypeByNotation(notation):
 
     """
 
-    # Note that for mouse, they don't usually include the "q" in their notation,
+    # Note that for mouse,
+    # they don't usually include the "q" in their notation,
     # though UCSC does. We may need to adjust for that here
 
     if re.match(r'p$', notation):

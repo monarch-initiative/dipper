@@ -15,35 +15,47 @@ from dipper.models.Reference import Reference
 __author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
+GRDL = 'http://ftp.ncbi.nih.gov/pub/GeneReviews'
 
 
 class GeneReviews(Source):
     """
-    Here we process the GeneReviews mappings to OMIM, plus inspect the GeneReviews (html) books to pull the
-    clinical descriptions in order to populate the definitions of the terms in the ontology.  We define
-    the GeneReviews items as classes that are either grouping classes over OMIM disease ids (gene ids are
-    filtered out), or are made as subclasses of DOID:4 (generic disease).
+    Here we process the GeneReviews mappings to OMIM,
+    plus inspect the GeneReviews (html) books to pull the clinical descriptions
+    in order to populate the definitions of the terms in the ontology.
+    We define the GeneReviews items as classes that are either grouping classes
+    over OMIM disease ids (gene ids are filtered out),
+    or are made as subclasses of DOID:4 (generic disease).
 
-    Note that GeneReviews [copyright policy](http://www.ncbi.nlm.nih.gov/books/NBK138602/) (as of 2015.11.20) says:
+    Note that GeneReviews
+    [copyright policy](http://www.ncbi.nlm.nih.gov/books/NBK138602/)
+    (as of 2015.11.20) says:
 
-    GeneReviews® chapters are owned by the University of Washington, Seattle, © 1993-2015. Permission is hereby
-    granted to reproduce, distribute, and translate copies of content materials provided that (i) credit
-    for source (www.ncbi.nlm.nih.gov/books/NBK1116/) and copyright (University of Washington, Seattle)
-    are included with each copy; (ii) a link to the original material is provided whenever the material
-    is published elsewhere on the Web; and (iii) reproducers, distributors, and/or translators comply with
-    this copyright notice and the GeneReviews Usage Disclaimer.
+    GeneReviews® chapters are owned by the University of Washington, Seattle,
+    © 1993-2015. Permission is hereby granted to reproduce, distribute,
+    and translate copies of content materials provided that
+    (i) credit for source (www.ncbi.nlm.nih.gov/books/NBK1116/)
+        and copyright (University of Washington, Seattle)
+        are included with each copy;
+    (ii) a link to the original material is provided whenever the material is
+        published elsewhere on the Web; and
+    (iii) reproducers, distributors, and/or translators comply with this
+        copyright notice and the GeneReviews Usage Disclaimer.
 
-    Furthermore, this script does not pull the GeneReviews books from the NCBI Bookshelf directly; scripting this
-    task is expressly prohibited by [NCBIBookshelf policy](http://www.ncbi.nlm.nih.gov/books/NBK45311/).
-    However, assuming you have acquired the books (in html format) via permissible means, a parser
-    for those books is provided here to extract the clinical descriptions to define the NBK identified classes.
+    This script doesn't pull the GeneReviews books from the NCBI Bookshelf
+    directly; scripting this task is expressly prohibited by
+    [NCBIBookshelf policy](http://www.ncbi.nlm.nih.gov/books/NBK45311/).
+    However, assuming you have acquired the books (in html format) via
+    permissible means, a parser for those books is provided here to extract
+    the clinical descriptions to define the NBK identified classes.
+
     """
 
     files = {
         'idmap': {'file': 'NBKid_shortname_OMIM.txt',
-                  'url': 'http://ftp.ncbi.nih.gov/pub/GeneReviews/NBKid_shortname_OMIM.txt'},
+                  'url': GRDL + '/NBKid_shortname_OMIM.txt'},
         'titles': {'file': 'GRtitle_shortname_NBKid.txt',
-                   'url': 'http://ftp.ncbi.nih.gov/pub/GeneReviews/GRtitle_shortname_NBKid.txt'}
+                   'url': GRDL + '/GRtitle_shortname_NBKid.txt'}
         }
 
     def __init__(self):
@@ -51,8 +63,9 @@ class GeneReviews(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('genereviews', 'Gene Reviews', 'http://genereviews.org/',
-                               None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
+        self.dataset = Dataset(
+            'genereviews', 'Gene Reviews', 'http://genereviews.org/',
+            None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
         self.dataset.set_citation('GeneReviews:NBK1116')
 
         self.gu = GraphUtils(curie_map.get())
@@ -60,20 +73,19 @@ class GeneReviews(Source):
         self.book_ids = set()
         self.all_books = {}
 
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or\
+                'disease' not in config.get_config()['test_ids']:
             logger.warning("not configured with disease test ids.")
             self.test_ids = list()
         else:
             # select ony those test ids that are omim's.
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        # data-source specific warnings (will be removed when issues are cleared)
-
         return
 
     def fetch(self, is_dl_forced=False):
         """
-        We fetch the GeneReviews id-label map and id-omim mapping files from NCBI.
+        We fetch GeneReviews id-label map and id-omim mapping files from NCBI.
         :return: None
         """
 
@@ -111,14 +123,18 @@ class GeneReviews(Source):
         NBK1103 trimethylaminuria       136132
         NBK1103 trimethylaminuria       602079
         NBK1104 cdls    122470
-        Where each of the rows represents a mapping between a gr id and an omim id.
-        These are a 1:many relationship, and some of the omim ids are genes (not diseases).
-        Therefore, we need to create a loose coupling here.  We make the assumption that these NBKs are
-        generally higher-level grouping classes; therefore the OMIM ids are treated as subclasses.  (This
-        assumption is poor for those omims that are actually genes, but we have no way of knowing what those
-        are here...we will just have to deal with that for now.)
+        Where each of the rows represents a mapping between
+        a gr id and an omim id. These are a 1:many relationship,
+        and some of the omim ids are genes(not diseases).
+        Therefore, we need to create a loose coupling here.
+        We make the assumption that these NBKs are generally higher-level
+        grouping classes; therefore the OMIM ids are treated as subclasses.
+        (This assumption is poor for those omims that are actually genes,
+        but we have no way of knowing what those are here...
+        we will just have to deal with that for now.)
         :param limit:
         :return:
+
         """
         raw = '/'.join((self.rawdir, self.files['idmap']['file']))
         gu = GraphUtils(curie_map.get())
@@ -137,13 +153,19 @@ class GeneReviews(Source):
                 (nbk_num, shortname, omim_num) = row
                 gr_id = 'GeneReviews:'+nbk_num
                 omim_id = 'OMIM:'+omim_num
-                if not ((self.testMode and len(self.test_ids) > 0 and omim_id in self.test_ids) or not self.testMode):
+                if not (
+                        (self.testMode and
+                         len(self.test_ids) > 0 and
+                         omim_id in self.test_ids) or not
+                        self.testMode):
                     continue
 
                 # sometimes there's bad omim nums
                 if len(omim_num) > 6:
-                    logger.warning("OMIM number incorrectly formatted in row %d; skipping:\n%s",
-                                   line_counter, '\t'.join(row))
+                    logger.warning(
+                        "OMIM number incorrectly formatted " +
+                        "in row %d; skipping:\n%s",
+                        line_counter, '\t'.join(row))
                     continue
 
                 # build up a hashmap of the mappings; then process later
@@ -157,17 +179,21 @@ class GeneReviews(Source):
 
                 allomimids.add(omim_num)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes = omim.process_entries(list(allomimids), filter_keep_phenotype_entry_ids,
-                                                           None, None, limit)
+        entries_that_are_phenotypes = \
+            omim.process_entries(
+                list(allomimids), filter_keep_phenotype_entry_ids,
+                None, None, limit)
 
         logger.info("Filtered out %d/%d entries that are genes or features",
-                    len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
+                    len(allomimids)-len(entries_that_are_phenotypes),
+                    len(allomimids))
 
         for nbk_num in self.book_ids:
             gr_id = 'GeneReviews:'+nbk_num
@@ -175,7 +201,8 @@ class GeneReviews(Source):
                 omim_ids = id_map.get(nbk_num)
                 for omim_num in omim_ids:
                     omim_id = 'OMIM:'+omim_num
-                    # add the gene reviews as a superclass to the omim id, but only if the omim id is not a gene
+                    # add the gene reviews as a superclass to the omim id,
+                    # but only if the omim id is not a gene
                     if omim_id in entries_that_are_phenotypes:
                         gu.addClassToGraph(self.graph, omim_id, None)
                         gu.addSubclass(self.graph, gr_id, omim_id)
@@ -191,12 +218,15 @@ class GeneReviews(Source):
         NBK1103 trimethylaminuria       136132
         NBK1103 trimethylaminuria       602079
         NBK1104 cdls    122470
-        Where each of the rows represents a mapping between a gr id and an omim id.
-        These are a 1:many relationship, and some of the omim ids are genes (not diseases).
-        Therefore, we need to create a loose coupling here.  We make the assumption that these NBKs are
-        generally higher-level grouping classes; therefore the OMIM ids are treated as subclasses.  (This
-        assumption is poor for those omims that are actually genes, but we have no way of knowing what those
-        are here...we will just have to deal with that for now.)
+        Where each of the rows represents a mapping between
+        a gr id and an omim id. These are a 1:many relationship,
+        and some of the omim ids are genes (not diseases).
+        Therefore, we need to create a loose coupling here.
+        We make the assumption that these NBKs are generally higher-level
+        grouping classes; therefore the OMIM ids are treated as subclasses.
+        (This assumption is poor for those omims that are actually genes,
+        but we have no way of knowing what those are here...
+        we will just have to deal with that for now.)
         :param limit:
         :return:
         """
@@ -222,7 +252,8 @@ class GeneReviews(Source):
 
     def create_books(self):
 
-        # note that although we put in the url to the book, NCBI Bookshelf does not allow robots to download content
+        # note that although we put in the url to the book,
+        # NCBI Bookshelf does not allow robots to download content
         book_item = {'file': 'books/',
                      'url': ''}
 
@@ -236,9 +267,12 @@ class GeneReviews(Source):
 
     def process_nbk_html(self, limit):
         """
-        Here we process the gene reviews books to fetch the clinical descriptions to include in the ontology.
-        We only use books that have been acquired manually, as NCBI Bookshelf does not permit automated downloads.
-        This parser will only process the books that are found in the ```raw/genereviews/books``` directory,
+        Here we process the gene reviews books to fetch
+        the clinical descriptions to include in the ontology.
+        We only use books that have been acquired manually,
+        as NCBI Bookshelf does not permit automated downloads.
+        This parser will only process the books that are found in
+        the ```raw/genereviews/books``` directory,
         permitting partial completion.
 
         :param limit:
@@ -264,7 +298,10 @@ class GeneReviews(Source):
             page = open(url)
             soup = BeautifulSoup(page.read())
 
-            clin_summary = soup.find('div', id=re.compile(".*Summary.sec0"))  # sec0 == clinical description
+            # sec0 == clinical description
+            clin_summary = \
+                soup.find(
+                    'div', id=re.compile(".*Summary.sec0"))
             if clin_summary is not None:
                 p = clin_summary.find('p')
                 ptext = p.text
@@ -278,7 +315,11 @@ class GeneReviews(Source):
                     ptext += ' '.join(item_text)
 
                 # add in the copyright and citation info to description
-                ptext = ' '.join((ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, '+nbk_id+']'))
+                ptext = \
+                    ' '.join(
+                        (ptext,
+                         '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
+                         nbk_id+']'))
 
                 self.gu.addDefinition(self.graph, nbk_id, ptext.strip())
 
@@ -288,22 +329,32 @@ class GeneReviews(Source):
             if pub_div is not None:
                 ref_list = pub_div.find_all('div', attrs={'class': "bk_ref"})
                 for r in ref_list:
-                    for a in r.find_all('a', attrs={'href': re.compile(r"pubmed")}):
+                    for a in r.find_all(
+                            'a', attrs={'href': re.compile(r"pubmed")}):
                         if re.match(r'PubMed:', a.text):
                             pmnum = re.sub(r'PubMed:\s*', '', a.text)
                         else:
-                            pmnum = re.search(r'\/pubmed\/(\d+)$', a['href']).group(1)
+                            pmnum = \
+                                re.search(
+                                    r'\/pubmed\/(\d+)$', a['href']).group(1)
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
-                            self.gu.addTriple(self.graph, pmid, self.gu.object_properties['is_about'], nbk_id)
+                            self.gu.addTriple(
+                                self.graph, pmid,
+                                self.gu.object_properties['is_about'],
+                                nbk_id)
                             pmid_set.add(pmnum)
-                            r = Reference(pmid, Reference.ref_types['journal_article'])
+                            r = Reference(
+                                pmid, Reference.ref_types['journal_article'])
                             r.addRefToGraph(self.graph)
 
             # TODO add author history, copyright, license to dataset
 
-            # TODO get PMID-NBKID equivalence (near foot of page), and make it "is about" link
-            # self.gu.addTriple(self.graph, pmid, self.gu.object_properties['is_about'], nbk_id)
+            # TODO get PMID-NBKID equivalence (near foot of page),
+            # and make it "is about" link
+            # self.gu.addTriple(
+            #   self.graph, pmid,
+            #   self.gu.object_properties['is_about'], nbk_id)
             # for example: NBK1191 PMID:20301370
 
             # add the book to the dataset
@@ -319,9 +370,11 @@ class GeneReviews(Source):
             if l > 100:
                 logger.warning("There were %d books not found.", l)
             else:
-                logger.warning("The following %d books were not found locally: %s",
-                               l, str(books_not_found))
-        logger.info("Finished processing %d books for clinical descriptions", c-l)
+                logger.warning(
+                    "The following %d books were not found locally: %s",
+                    l, str(books_not_found))
+        logger.info(
+            "Finished processing %d books for clinical descriptions", c-l)
 
         return
 
@@ -329,6 +382,7 @@ class GeneReviews(Source):
         import unittest
         from tests.test_genereviews import GeneReviewsTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneReviewsTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(GeneReviewsTestCase)
 
         return test_suite

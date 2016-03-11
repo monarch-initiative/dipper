@@ -70,7 +70,7 @@ class KEGG(Source):
         'pathway_disease': {
             'file': 'pathway_disease',
             'url': 'http://rest.kegg.jp/link/pathway/ds'},
-        #'pathway_pathway': { # TEC 2016Mar03 does not exist here.
+        # 'pathway_pathway': { # TEC 2016Mar03 does not exist here.
         #    'file': 'pathway_eq',
         #    'url': 'http://rest.kegg.jp/link/pathway/pathway'},
         'pathway_ko': {
@@ -85,20 +85,20 @@ class KEGG(Source):
         "disease": [
             "ds:H00015", "ds:H00026", "ds:H00712", "ds:H00736", "ds:H00014"],
         "genes": [
-            "hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387", "hsa:1080",
-            "hsa:11200", "hsa:1131", "hsa:1137", "hsa:126", "hsa:1277",
-            "hsa:1278", "hsa:1285", "hsa:1548", "hsa:1636", "hsa:1639",
-            "hsa:183", "hsa:185", "hsa:1910", "hsa:207", "hsa:2099", "hsa:2483",
-            "hsa:2539", "hsa:2629", "hsa:2697", "hsa:3161", "hsa:3845",
-            "hsa:4137", "hsa:4591", "hsa:472", "hsa:4744", "hsa:4835",
-            "hsa:4929", "hsa:5002", "hsa:5080", "hsa:5245", "hsa:5290",
-            "hsa:53630", "hsa:5630", "hsa:5663", "hsa:580", "hsa:5888",
-            "hsa:5972", "hsa:6311", "hsa:64327", "hsa:6531", "hsa:6647",
-            "hsa:672", "hsa:675", "hsa:6908", "hsa:7040", "hsa:7045",
-            "hsa:7048", "hsa:7157", "hsa:7251", "hsa:7490", "hsa:7517",
-            "hsa:79728", "hsa:83893", "hsa:83990", "hsa:841", "hsa:8438",
-            "hsa:8493", "hsa:860", "hsa:9568", "hsa:9627", "hsa:9821",
-            "hsa:999", "hsa:3460"],
+            "hsa:100506275", "hsa:285958", "hsa:286410", "hsa:6387",
+            "hsa:1080", "hsa:11200", "hsa:1131", "hsa:1137", "hsa:126",
+            "hsa:1277", "hsa:1278", "hsa:1285", "hsa:1548", "hsa:1636",
+            "hsa:1639", "hsa:183", "hsa:185", "hsa:1910", "hsa:207",
+            "hsa:2099", "hsa:2483", "hsa:2539", "hsa:2629", "hsa:2697",
+            "hsa:3161", "hsa:3845", "hsa:4137", "hsa:4591", "hsa:472",
+            "hsa:4744", "hsa:4835", "hsa:4929", "hsa:5002", "hsa:5080",
+            "hsa:5245", "hsa:5290", "hsa:53630", "hsa:5630", "hsa:5663",
+            "hsa:580", "hsa:5888", "hsa:5972", "hsa:6311", "hsa:64327",
+            "hsa:6531", "hsa:6647", "hsa:672", "hsa:675", "hsa:6908",
+            "hsa:7040", "hsa:7045", "hsa:7048", "hsa:7157", "hsa:7251",
+            "hsa:7490", "hsa:7517", "hsa:79728", "hsa:83893", "hsa:83990",
+            "hsa:841", "hsa:8438", "hsa:8493", "hsa:860", "hsa:9568",
+            "hsa:9627", "hsa:9821", "hsa:999", "hsa:3460"],
         "orthology_classes": [
             "ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
@@ -113,10 +113,12 @@ class KEGG(Source):
 
         # check to see if there are any ids configured in the config;
         # otherwise, warn
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or\
+                'disease' not in config.get_config()['test_ids']:
             logger.warning("not configured with disease test ids.")
         else:
-            self.test_ids['disease'] += config.get_config()['test_ids']['disease']
+            self.test_ids['disease'] += \
+                config.get_config()['test_ids']['disease']
 
         self.label_hash = {}
         self.omim_disease_hash = {}  # to hold the mappings of omim:kegg ids
@@ -155,7 +157,7 @@ class KEGG(Source):
 
         self._process_pathways(limit)
         self._process_pathway_pubmed(limit)
-        #self._process_pathway_pathway(limit)
+        # self._process_pathway_pathway(limit)
         self._process_pathway_disease(limit)
         self._process_pathway_ko(limit)
 
@@ -204,7 +206,8 @@ class KEGG(Source):
                 line_counter += 1
                 (pathway_id, pathway_name) = row
 
-                if self.testMode and pathway_id not in self.test_ids['pathway']:
+                if self.testMode and \
+                        pathway_id not in self.test_ids['pathway']:
                     continue
 
                 pathway_id = 'KEGG-'+pathway_id.strip()
@@ -213,10 +216,12 @@ class KEGG(Source):
                 # we know that the pathway images from kegg map 1:1 here.
                 # so add those
                 image_filename = re.sub(r'KEGG-path:', '', pathway_id) + '.png'
-                image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
+                image_url = \
+                    'http://www.genome.jp/kegg/pathway/map/'+image_filename
                 gu.addDepiction(g, pathway_id, image_url)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with pathways")
@@ -252,7 +257,8 @@ class KEGG(Source):
                 if disease_id not in self.label_hash:
                     self.label_hash[disease_id] = disease_name
 
-                if self.testMode and disease_id not in self.test_ids['disease']:
+                if self.testMode and\
+                        disease_id not in self.test_ids['disease']:
                     continue
 
                 # Add the disease as a class.
@@ -262,7 +268,8 @@ class KEGG(Source):
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (
+                        limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with diseases")
@@ -303,11 +310,12 @@ class KEGG(Source):
 
                 gene_id = 'KEGG-'+gene_id.strip()
 
-                # the gene listing has a bunch of labels that are delimited, as:
+                # the gene listing has a bunch of labels
+                # that are delimited, as:
                 # DST, BP240, BPA, BPAG1, CATX-15, CATX15, D6S1101, DMH, DT,
                 # EBSB2, HSAN6, MACF2; dystonin; K10382 dystonin
                 # it looks like the list is semicolon delimited
-                #(symbol, name, gene_class)
+                # (symbol, name, gene_class)
                 # where the symbol is a comma-delimited list
 
                 # here, we split them up.
@@ -343,7 +351,8 @@ class KEGG(Source):
                         ko = 'KEGG-ko:'+ko_match.group(1)
                         gu.addMemberOf(g, gene_id, ko)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with genes")
@@ -379,7 +388,9 @@ class KEGG(Source):
                 line_counter += 1
                 (orthology_class_id, orthology_class_name) = row
 
-                if self.testMode and orthology_class_id not in self.test_ids['orthology_classes']:
+                if self.testMode and \
+                        orthology_class_id not in \
+                        self.test_ids['orthology_classes']:
                     continue
 
                 # The orthology class is essentially a KEGG gene ID
@@ -413,7 +424,8 @@ class KEGG(Source):
                         for ecm in ec_matches:
                             gu.addXref(g, orthology_class_id, 'EC:'+ecm)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with ortholog classes")
@@ -455,16 +467,17 @@ class KEGG(Source):
                 # and is not 1:1 with the rest
 
                 # add the KO id as a gene-family grouping class
-                OrthologyAssoc(self.name, gene_id,
-                               None).add_gene_family_to_graph(g,
-                                                              orthology_class_id)
+                OrthologyAssoc(
+                    self.name, gene_id, None).add_gene_family_to_graph(
+                        g, orthology_class_id)
 
                 # add gene and orthology class to graph;
                 # assume labels will be taken care of elsewhere
                 gu.addClassToGraph(g, gene_id, None)
                 gu.addClassToGraph(g, orthology_class_id, None)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with orthologs")
@@ -521,8 +534,10 @@ class KEGG(Source):
                         disease_label = self.label_hash[disease_id]
                     if re.search(r'includ', str(disease_label)):
                         # they use 'including' when it's a grouping class
-                        logger.info("Skipping this association because it's a grouping class: %s",
-                                    disease_label)
+                        logger.info(
+                            "Skipping this association because " +
+                            "it's a grouping class: %s",
+                            disease_label)
                         continue
                     # type this disease_id as a disease
                     gu.addClassToGraph(g, disease_id, disease_label, 'DOID:4')
@@ -538,7 +553,8 @@ class KEGG(Source):
                     assoc.load_all_properties(g)
                     assoc.add_association_to_graph(g)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (
+                        limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with KEGG disease to gene")
@@ -581,7 +597,8 @@ class KEGG(Source):
                 line_counter += 1
                 (kegg_gene_id, omim_id, link_type) = row
 
-                if self.testMode and kegg_gene_id not in self.test_ids['genes']:
+                if self.testMode and \
+                        kegg_gene_id not in self.test_ids['genes']:
                     continue
 
                 kegg_gene_id = 'KEGG-'+kegg_gene_id.strip()
@@ -618,11 +635,13 @@ class KEGG(Source):
                     logger.warning('Unhandled link type for %s-%s: %s',
                                    kegg_gene_id, omim_id, link_type)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (
+                        limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with OMIM to KEGG gene")
-        gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+        gu.loadProperties(
+            g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
         gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
         gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
 
@@ -630,7 +649,8 @@ class KEGG(Source):
 
     def _process_omim2disease(self, limit=None):
         """
-        This method maps the KEGG disease IDs to the corresponding OMIM disease IDs.
+        This method maps the KEGG disease IDs to
+        the corresponding OMIM disease IDs.
         Currently this only maps KEGG diseases and OMIM diseases that are 1:1.
 
         Triples created:
@@ -663,26 +683,31 @@ class KEGG(Source):
                 if omim_disease_id not in self.omim_disease_hash:
                     self.omim_disease_hash[omim_disease_id] = [kegg_disease_id]
                 else:
-                    self.omim_disease_hash[omim_disease_id].append(kegg_disease_id)
+                    self.omim_disease_hash[
+                        omim_disease_id].append(kegg_disease_id)
 
                 # Create hash for the links from KEGG ID -> OMIM ID
                 if kegg_disease_id not in self.kegg_disease_hash:
                     self.kegg_disease_hash[kegg_disease_id] = [omim_disease_id]
                 else:
-                    self.kegg_disease_hash[kegg_disease_id].append(omim_disease_id)
+                    self.kegg_disease_hash[
+                        kegg_disease_id].append(omim_disease_id)
 
         # Now process the disease hashes
         # and only pass 1:1 omim disease:KEGG disease entries.
         for omim_disease_id in self.omim_disease_hash:
-            if self.testMode and omim_disease_id not in self.test_ids['disease']:
+            if self.testMode and \
+                    omim_disease_id not in self.test_ids['disease']:
                 continue
 
-            if (not self.testMode) and (limit is not None and line_counter > limit):
+            if (not self.testMode) and (
+                    limit is not None and line_counter > limit):
                 break
             line_counter += 1
 
             if len(self.omim_disease_hash[omim_disease_id]) == 1:
-                kegg_disease_id = ''.join(self.omim_disease_hash.get(omim_disease_id))
+                kegg_disease_id = \
+                    ''.join(self.omim_disease_hash.get(omim_disease_id))
                 if len(self.kegg_disease_hash[kegg_disease_id]) == 1:
                     # add ids, and deal with the labels separately
                     gu.addClassToGraph(g, kegg_disease_id, None)
@@ -726,7 +751,8 @@ class KEGG(Source):
                 line_counter += 1
                 (kegg_gene_id, ncbi_gene_id, link_type) = row
 
-                if self.testMode and kegg_gene_id not in self.test_ids['genes']:
+                if self.testMode and \
+                        kegg_gene_id not in self.test_ids['genes']:
                     continue
 
                 # Adjust the NCBI gene ID prefix.
@@ -740,7 +766,8 @@ class KEGG(Source):
                 gu.addClassToGraph(g, ncbi_gene_id, None)
                 gu.addEquivalentClass(g, kegg_gene_id, ncbi_gene_id)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.testMode) and (
+                        limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with KEGG gene IDs to NCBI gene IDs")
@@ -768,19 +795,22 @@ class KEGG(Source):
                 line_counter += 1
                 (pubmed_id, kegg_pathway_num) = row
 
-                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                if self.testMode and \
+                        kegg_pathway_num not in self.test_ids['pathway']:
                     continue
 
                 pubmed_id = pubmed_id.upper()
                 # will look like KEGG-path:map04130
                 kegg_id = 'KEGG-'+kegg_pathway_num
 
-                r = Reference(pubmed_id, Reference.ref_types['journal_article'])
+                r = Reference(
+                    pubmed_id, Reference.ref_types['journal_article'])
                 r.addRefToGraph(g)
                 gu.addTriple(g, pubmed_id,
                              GraphUtils.object_properties['is_about'], kegg_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -811,18 +841,22 @@ class KEGG(Source):
                 line_counter += 1
                 (disease_id, kegg_pathway_num) = row
 
-                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                if self.testMode and \
+                        kegg_pathway_num not in self.test_ids['pathway']:
                     continue
 
                 disease_id = 'KEGG-'+disease_id
                 # will look like KEGG-path:map04130 or KEGG-path:hsa04130
                 pathway_id = 'KEGG-'+kegg_pathway_num
 
-                gu.addTriple(g, pathway_id,
-                             GraphUtils.object_properties['causally_upstream_of_or_within'],
-                             disease_id)
+                gu.addTriple(
+                    g, pathway_id,
+                    GraphUtils.object_properties[
+                        'causally_upstream_of_or_within'],
+                    disease_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -850,7 +884,8 @@ class KEGG(Source):
                 line_counter += 1
                 (pathway_id_1, pathway_id_2) = row
 
-                if self.testMode and pathway_id_1 not in self.test_ids['pathway']:
+                if self.testMode and \
+                        pathway_id_1 not in self.test_ids['pathway']:
                     continue
 
                 pathway_id_1 = 'KEGG-'+pathway_id_1
@@ -860,7 +895,8 @@ class KEGG(Source):
                 if pathway_id_1 != pathway_id_2:
                     gu.addEquivalentClass(g, pathway_id_1, pathway_id_2)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -886,7 +922,8 @@ class KEGG(Source):
                 line_counter += 1
                 (ko_id, pathway_id) = row
 
-                if self.testMode and pathway_id not in self.test_ids['pathway']:
+                if self.testMode and \
+                        pathway_id not in self.test_ids['pathway']:
                     continue
 
                 pathway_id = 'KEGG-'+pathway_id
@@ -895,7 +932,8 @@ class KEGG(Source):
                 p = Pathway(g, self.nobnodes)
                 p.addGeneToPathway(pathway_id, ko_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -904,7 +942,8 @@ class KEGG(Source):
         """
         We actually want the association between the gene and the disease
         to be via an alternate locus not the "wildtype" gene itself.
-        so we make an anonymous alternate locus, and put that in the association
+        so we make an anonymous alternate locus,
+        and put that in the association
         We also make the label for the anonymous class,
         and add it to the label hash
 

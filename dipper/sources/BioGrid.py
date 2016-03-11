@@ -19,6 +19,7 @@ __author__ = 'nicole'
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
 logger = logging.getLogger(__name__)
+BGDL = 'http://thebiogrid.org/downloads/archives/Latest%20Release'
 
 
 class BioGrid(Source):
@@ -31,10 +32,10 @@ class BioGrid(Source):
     files = {
         'interactions': {
             'file': 'interactions.mitab.zip',
-            'url': 'http://thebiogrid.org/downloads/archives/Latest%20Release/BIOGRID-ALL-LATEST.mitab.zip'},
+            'url': BGDL + '/BIOGRID-ALL-LATEST.mitab.zip'},
         'identifiers':  {
             'file': 'identifiers.tab.zip',
-            'url': 'http://thebiogrid.org/downloads/archives/Latest%20Release/BIOGRID-IDENTIFIERS-LATEST.tab.zip'}
+            'url': BGDL + '/BIOGRID-IDENTIFIERS-LATEST.tab.zip'}
     }
 
     # biogrid-specific identifiers for use in subsetting identifier mapping
@@ -54,11 +55,13 @@ class BioGrid(Source):
             'http://wiki.thebiogrid.org/doku.php/terms_and_conditions')
 
         # Defaults
-        # taxids = [9606,10090,10116,7227,7955,6239,8355]  #our favorite animals
+        # our favorite animals
+        # taxids = [9606,10090,10116,7227,7955,6239,8355]
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or \
+                'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -90,7 +93,8 @@ class BioGrid(Source):
             # assume that the first entry is the item
             fname = flist[0]
             # get the version from the filename
-            version = re.match(r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
+            version = \
+                re.match(r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
         myzip.close()
 
         self.dataset.setVersion(filedate, str(version.groups()[0]))
@@ -150,16 +154,17 @@ class BioGrid(Source):
                 if self.testMode:
                     g = self.testgraph
                     # skip any genes that don't match our test set
-                    if (int(gene_a_num) not in self.test_ids) \
-                            or (int(gene_b_num) not in self.test_ids):
+                    if (int(gene_a_num) not in self.test_ids) or\
+                            (int(gene_b_num) not in self.test_ids):
                         continue
                 else:
                     g = self.graph
                     # when not in test mode, filter by taxon
-                    if int(re.sub(r'taxid:', '', taxid_a.rstrip())) \
-                            not in self.tax_ids \
-                            or int(re.sub(r'taxid:', '', taxid_b.rstrip())) \
-                            not in self.tax_ids:
+                    if int(re.sub(r'taxid:', '', taxid_a.rstrip())) not in\
+                            self.tax_ids or\
+                            int(re.sub(
+                                r'taxid:', '', taxid_b.rstrip())) not in\
+                            self.tax_ids:
                         continue
                     else:
                         matchcounter += 1
@@ -191,7 +196,8 @@ class BioGrid(Source):
                 assoc.add_association_to_graph(g)
                 assoc.load_all_properties(g)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and (
+                        limit is not None and line_counter > limit):
                     break
 
         myzip.close()
@@ -233,9 +239,13 @@ class BioGrid(Source):
                     continue
 
                 line = line.decode().strip()
-                # BIOGRID_ID IDENTIFIER_VALUE IDENTIFIER_TYPE ORGANISM_OFFICIAL_NAME
+                # BIOGRID_ID
+                # IDENTIFIER_VALUE
+                # IDENTIFIER_TYPE
+                # ORGANISM_OFFICIAL_NAME
                 # 1	814566	ENTREZ_GENE	Arabidopsis thaliana
-                (biogrid_num, id_num, id_type, organism_label) = line.split('\t')
+                (biogrid_num, id_num, id_type,
+                 organism_label) = line.split('\t')
 
                 if self.testMode:
                     g = self.testgraph
@@ -262,11 +272,11 @@ class BioGrid(Source):
                             and (prefix in geneidtypefilters):
                         mapped_id = ':'.join((prefix, id_num))
                         gu.addEquivalentClass(g, biogrid_id, mapped_id)
-                     # this symbol will only get attached to the biogrid class
+                    # this symbol will only get attached to the biogrid class
                     elif id_type == 'OFFICIAL_SYMBOL':
                         gu.addClassToGraph(g, biogrid_id, id_num)
                     # elif (id_type == 'SYNONYM'):
-                        #FIXME - i am not sure these are synonyms, altids?
+                    #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)
 
                 if not self.testMode and limit is not None \
@@ -281,13 +291,20 @@ class BioGrid(Source):
     def _map_MI_to_RO(mi_id):
         rel = InteractionAssoc.interaction_object_properties
         mi_ro_map = {
-            'MI:0403': rel['colocalizes_with'],             # colocalization
-            'MI:0407': rel['interacts_with'],               # direct interaction
-            'MI:0794': rel['genetically_interacts_with'],   # synthetic genetic interaction defined by inequality
-            'MI:0796': rel['genetically_interacts_with'],   # suppressive genetic interaction defined by inequality
-            'MI:0799': rel['genetically_interacts_with'],   # additive genetic interaction defined by inequality
-            'MI:0914': rel['interacts_with'],               # association
-            'MI:0915': rel['interacts_with']                # physical association
+            # colocalization
+            'MI:0403': rel['colocalizes_with'],
+            # direct interaction
+            'MI:0407': rel['interacts_with'],
+            # synthetic genetic interaction defined by inequality
+            'MI:0794': rel['genetically_interacts_with'],
+            # suppressive genetic interaction defined by inequality
+            'MI:0796': rel['genetically_interacts_with'],
+            # additive genetic interaction defined by inequality
+            'MI:0799': rel['genetically_interacts_with'],
+            # association
+            'MI:0914': rel['interacts_with'],
+            # physical association
+            'MI:0915': rel['interacts_with']
         }
 
         ro_id = rel['interacts_with']  # default
@@ -409,6 +426,7 @@ class BioGrid(Source):
         # TODO add InteractionAssoc tests
         # TODO add test about if all prefixes are mapped?
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
 
         return test_suite

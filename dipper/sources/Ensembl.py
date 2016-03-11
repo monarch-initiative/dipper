@@ -4,8 +4,6 @@ import csv
 import http
 import xml.etree.ElementTree as etree
 
-
-
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
@@ -138,9 +136,9 @@ class Ensembl(Source):
             "uniqueRows": "1", "count": "0", "datasetConfigVersion": "0.6"}
 
         ensembl_taxon_to_db_map = {
-            '9606' : 'hsapiens_gene_ensembl',
-            '10090' : 'mmusculus_gene_ensembl',
-            '7955' : 'drerio_gene_ensembl',
+            '9606': 'hsapiens_gene_ensembl',
+            '10090': 'mmusculus_gene_ensembl',
+            '7955': 'drerio_gene_ensembl',
             '28377': 'acarolinensis_gene_ensembl',  # green lizard
             # '3702': 'ensembl_3702.txt',           # arabadopsis?
             '9913': 'btaurus_gene_ensembl',
@@ -167,12 +165,12 @@ class Ensembl(Source):
         q = etree.Element("Query", query_attributes)
 
         object_attributes = {
-            "name" : ensembl_taxon_to_db_map[taxid],
+            "name": ensembl_taxon_to_db_map[taxid],
             "interface": "default"
         }
         d = etree.SubElement(q, "Dataset", object_attributes)
 
-        # TEC: this a is unused
+        # TODO unused?
         for i in cols_to_fetch:
             a = etree.SubElement(d, "Attribute", {"name": i})
 
@@ -203,8 +201,8 @@ class Ensembl(Source):
                 if len(row) < 4:
                     logger.error("Data error for file %s", raw)
                     return
-                (ensembl_gene_id, external_gene_name, description, gene_biotype,
-                 entrezgene) = row[0:5]
+                (ensembl_gene_id, external_gene_name, description,
+                 gene_biotype, entrezgene) = row[0:5]
 
                 # in the case of human genes, we also get the hgnc id,
                 # and is the last col
@@ -246,7 +244,7 @@ class Ensembl(Source):
     def _get_gene_type(self, biotype):
 
         type_id_map = {
-            '3prime_overlapping_ncrna' : 'SO:0001263',
+            '3prime_overlapping_ncrna': 'SO:0001263',
             # IG_C_gene
             # IG_C_pseudogene
             # IG_D_gene
@@ -313,6 +311,7 @@ class Ensembl(Source):
         import unittest
         from tests.test_ensembl import EnsemblTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(EnsemblTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(EnsemblTestCase)
 
         return test_suite

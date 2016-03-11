@@ -18,8 +18,8 @@ from dipper import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 
-
 logger = logging.getLogger(__name__)
+OMDL = 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM'
 
 
 class OMIM(Source):
@@ -50,10 +50,10 @@ class OMIM(Source):
     files = {
         'all': {
             'file': 'omim.txt.Z',
-            'url': 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/omim.txt.Z'},
+            'url': OMDL + '/omim.txt.Z'},
         'morbidmap': {
             'file': 'morbidmap.txt',
-            'url': 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM/morbidmap'},
+            'url':  OMDL + '/morbidmap'},
         'phenotypicSeries': {
             'file': 'phenotypicSeriesTitles.txt',
             'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab',
@@ -67,16 +67,20 @@ class OMIM(Source):
     # MIM_numbers, NCBI_Gene_IDs, Ensembl_Gene IDs, HGNC_Gene_Symbols
     # it may be sufficient to replace the missing omim.txt
 
-
     # the following test ids are in the config.json
     test_ids = [
         119600, 120160, 157140, 158900, 166220, 168600, 219700,
-        253250, 305900, 600669, 601278, 602421, 605073, 607822,   # coriell
-        102560, 102480, 100678, 102750, 600201,                   # genes
-        104200, 105400, 114480, 115300, 121900,                   # phenotype/disease -- indicate that here?
-        107670, 11600, 126453,                                    # gene of known sequence and has a phenotype
+        # coriell
+        253250, 305900, 600669, 601278, 602421, 605073, 607822,
+        # genes
+        102560, 102480, 100678, 102750, 600201,
+        # phenotype/disease -- indicate that here?
+        104200, 105400, 114480, 115300, 121900,
+        # gene of known sequence and has a phenotype
+        107670, 11600, 126453,
         102150, 104000, 107200, 100070, 611742, 611100,
-        102480]           # disease with known locus
+        # disease with known locus
+        102480]
 
     OMIM_API = "http://api.omim.org/api"
 
@@ -85,9 +89,10 @@ class OMIM(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('omim', 'Online Mendelian Inheritance in Man',
-                               'http://www.omim.org', None,
-                               'http://omim.org/help/agreement')
+        self.dataset = Dataset(
+            'omim', 'Online Mendelian Inheritance in Man',
+            'http://www.omim.org', None,
+            'http://omim.org/help/agreement')
 
         self.gu = GraphUtils(curie_map.get())
 
@@ -97,17 +102,21 @@ class OMIM(Source):
         # (will be removed when issues are cleared)
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'keys' not in config.get_config() and 'omim' not in config.get_config()['keys']:
+        if 'keys' not in config.get_config() and \
+                'omim' not in config.get_config()['keys']:
             logger.error("not configured with API key.")
 
         # check to see if there's any ids configured in the config;
         # otherwise, warn
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or \
+                'disease' not in config.get_config()['test_ids']:
             logger.warning("not configured with disease test ids.")
         else:
             # select ony those test ids that are omim's.
-            self.test_ids += [obj.replace('OMIM:', '') for obj in config.get_config()['test_ids']['disease']
-                              if re.match(r'OMIM:', obj)]
+            self.test_ids += \
+                [obj.replace('OMIM:', '')
+                 for obj in config.get_config()['test_ids']['disease']
+                 if re.match(r'OMIM:', obj)]
 
         return
 
@@ -118,6 +127,7 @@ class OMIM(Source):
         in the parsing function.  (To be refactored.)
         :param is_dl_forced:
         :return:
+
         """
         self.get_files(is_dl_forced)
 
@@ -236,7 +246,10 @@ class OMIM(Source):
             # and fetch from the OMIM api in batches of 20
 
             if self.testMode:
-                intersect = list(set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
+                intersect = \
+                    list(
+                        set([str(i)
+                            for i in self.test_ids]) & set(omimids[it:end]))
                 # some of the test ids are in the omimids
                 if len(intersect) > 0:
                     logger.info("found test ids: %s", intersect)
@@ -249,7 +262,8 @@ class OMIM(Source):
 
             p = urllib.parse.urlencode(omimparams)
             url = '/'.join((self.OMIM_API, 'entry'))+'?%s' % p
-            logger.info('fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
+            logger.info(
+                'fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
 
             # print ('fetching:',(',').join(omimids[it:end]))
             # print('url:', url)
@@ -323,7 +337,8 @@ class OMIM(Source):
         includes = set()
         includes.add('all')
 
-        self.process_entries(omimids, self._transform_entry, includes, g, limit)
+        self.process_entries(
+            omimids, self._transform_entry, includes, g, limit)
 
         self.gu.loadAllProperties(g)
 
@@ -409,7 +424,8 @@ class OMIM(Source):
                 genemap = e['entry']['geneMap']
                 is_gene = False
 
-                if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+                if omimtype == \
+                        Genotype.genoparts['heritable_phenotypic_marker']:
                     # get the ncbigene ids
                     ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
                     if len(ncbifeature) == 1:
@@ -435,7 +451,9 @@ class OMIM(Source):
                     feature_id = self._make_anonymous_feature(str(omimnum))
                     if abbrev is not None:
                         feature_label = abbrev
-                    omimtype = Genotype.genoparts['heritable_phenotypic_marker']
+                    omimtype = \
+                        Genotype.genoparts[
+                            'heritable_phenotypic_marker']
 
                 if feature_id is not None:
                     if 'comments' in genemap:
@@ -446,7 +464,8 @@ class OMIM(Source):
                     if 'cytoLocation' in genemap:
                         cytoloc = genemap['cytoLocation']
                         # parse the cytoloc.
-                        # add this omim thing as a subsequence of the cytofeature
+                        # add this omim thing as
+                        # a subsequence of the cytofeature
                         # 18p11.3-p11.2
                         # FIXME
                         # add the other end of the range,
@@ -458,7 +477,8 @@ class OMIM(Source):
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
-                            geno.addChromosomeClass(chrom_num, tax_id, tax_label)
+                            geno.addChromosomeClass(
+                                chrom_num, tax_id, tax_label)
 
                             # add the positional information, if available
                             fstart = fend = -1
@@ -473,33 +493,31 @@ class OMIM(Source):
                                                              'MONARCH')
                                 # then, add the chromosome instance
                                 # (from the given build)
-                                geno.addChromosomeInstance(chrom_num,
-                                                           build_id,
-                                                           build_num,
-                                                           chrom)
-                                if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+                                geno.addChromosomeInstance(
+                                    chrom_num, build_id, build_num, chrom)
+                                if omimtype == \
+                                        Genotype.genoparts[
+                                            'heritable_phenotypic_marker']:
                                     postypes = [Feature.types['FuzzyPosition']]
                                 else:
                                     postypes = None
                                 # NOTE that no strand information
                                 # is available in the API
-                                f.addFeatureStartLocation(fstart,
-                                                          chrom_in_build,
-                                                          None,
-                                                          postypes)
+                                f.addFeatureStartLocation(
+                                    fstart, chrom_in_build, None, postypes)
                                 if fend >= 0:
-                                    f.addFeatureEndLocation(fend,
-                                                            chrom_in_build,
-                                                            None,
-                                                            postypes)
+                                    f.addFeatureEndLocation(
+                                        fend, chrom_in_build, None, postypes)
                                 if fstart > fend:
-                                    logger.info("start>end (%d>%d) for %s",
-                                                fstart, fend, omimid)
+                                    logger.info(
+                                        "start>end (%d>%d) for %s",
+                                        fstart, fend, omimid)
                             # add the cytogenic location too
                             # for now, just take the first one
                             cytoloc = cytoloc.split('-')[0]
                             loc = makeChromID(cytoloc, tax_num, 'CHR')
-                            gu.addClassToGraph(g, loc, cytoloc)   # this is the chr band
+                            # this is the chr band
+                            gu.addClassToGraph(g, loc, cytoloc)
                             f.addSubsequenceOfFeature(g, loc)
                             f.addFeatureToGraph(g, True, None, is_gene)
 
@@ -540,14 +558,15 @@ class OMIM(Source):
 
         return
 
-
     def _process_morbidmap(self, limit):
         """
         This will process the morbidmap file to get the links between
-        omim genes and diseases. Here, we create anonymous nodes for
-        some variant loci that are variants of the gene that causes the disease.
+        omim genes and diseases. Here, we create anonymous nodes for some
+        variant loci that are variants of the gene that causes the disease.
         Triples created:
-        <some_anonymous_variant_locus> is_sequence_variant_instance_of <omim_gene_id>
+        <some_anonymous_variant_locus>
+            is_sequence_variant_instance_of
+                    <omim_gene_id>
         <some_anonymous_variant_locus> has_phenotype <omim_disease_id>
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
@@ -564,7 +583,8 @@ class OMIM(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         assoc_count = 0
-        with open('/'.join((self.rawdir, self.files['morbidmap']['file']))) as f:
+        with open(
+                '/'.join((self.rawdir, self.files['morbidmap']['file']))) as f:
             for line in f:
                 line = line.strip()
                 line_counter += 1
@@ -597,13 +617,15 @@ class OMIM(Source):
                                            disorder_num, disorder_label,
                                            phene_key)
                 elif nogene_match is not None:
-                    # this is a case where the disorder a blended gene/phenotype
+                    # this is a case where the disorder
+                    # a blended gene/phenotype
                     # we lookup the NCBIGene feature and make the association
                     (disorder_label, phene_key) = nogene_match.groups()
                     disorder_num = gene_num
                     # make what's in the gene column the disease
                     disorder_id = 'OMIM:'+str(disorder_num)
-                    if self.testMode and int(disorder_num) not in self.test_ids:
+                    if self.testMode and \
+                            int(disorder_num) not in self.test_ids:
                         continue
                     if disorder_id in self.omim_ncbigene_idmap:
                         # get the gene ids
@@ -614,29 +636,33 @@ class OMIM(Source):
                             # TODO add gene filter for testMode and NCBIGenes
                             gene_id = 'NCBIGene:'+str(gene_num).strip()
                             assoc_count += 1
-                            self._make_pheno_assoc(g, gene_id, gene_symbols[0],
-                                                   disorder_num, disorder_label,
-                                                   phene_key)
+                            self._make_pheno_assoc(
+                                g, gene_id, gene_symbols[0],
+                                disorder_num, disorder_label, phene_key)
                     else:
-                        # we can create an anonymous feature to house this thing
-                        # for example, 158900
+                        # we can create an anonymous feature
+                        # to house this thing for example, 158900
                         feature_id = self._make_anonymous_feature(gene_num)
                         assoc_count += 1
                         self._make_pheno_assoc(g, feature_id, gene_symbols[0],
                                                disorder_num, disorder_label,
                                                phene_key)
 
-                        logger.info("We don't have an NCBIGene feature id to link with %s, %s",
-                                    disorder_id, disorder_label)
+                        logger.info(
+                            "We don't have an NCBIGene feature id " +
+                            "to link with %s, %s",
+                            disorder_id, disorder_label)
 
                     if self.testMode and int(gene_num) not in self.test_ids:
                         continue
 
                 else:
-                    logger.warning("There are misformatted row %d:%s",
-                                   line_counter, str(line))
+                    logger.warning(
+                        "There are misformatted row %d:%s",
+                        line_counter, str(line))
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
             gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
@@ -685,16 +711,17 @@ class OMIM(Source):
             alt_locus = '_'+re.sub(r':', '', gene_id)+'-'+disorder_num+'VL'
             alt_label = gene_symbol.strip()
             if alt_label is not None and alt_label != '':
-                alt_label = ' '.join(('some variant of', alt_label,
-                                      'that', rel_label, disorder_label))
+                alt_label = \
+                    ' '.join(('some variant of', alt_label,
+                              'that', rel_label, disorder_label))
             else:
                 alt_label = None
 
             if self.nobnodes:
                 alt_locus = ':'+alt_locus
 
-            self.gu.addIndividualToGraph(g, alt_locus, alt_label,
-                                         Genotype.genoparts['variant_locus'])
+            self.gu.addIndividualToGraph(
+                g, alt_locus, alt_label, Genotype.genoparts['variant_locus'])
             geno.addAlleleOfGene(alt_locus, gene_id)
         else:
             # assume it's already been added
@@ -715,6 +742,7 @@ class OMIM(Source):
         If printed in turtle syntax, they will appear to be triple-quoted.
         :param entry:
         :return:
+
         """
         d = None
         if entry is not None:
@@ -764,8 +792,10 @@ class OMIM(Source):
                         geno.addAllele(al_id, al_label,
                                        geno.genoparts['variant_locus'],
                                        al_description)
-                        geno.addAlleleOfGene(al_id, 'OMIM:'+str(entry_num),
-                                             geno.object_properties['is_sequence_variant_instance_of'])
+                        geno.addAlleleOfGene(
+                            al_id, 'OMIM:'+str(entry_num),
+                            geno.object_properties[
+                                'is_sequence_variant_instance_of'])
                         for r in publist[al_id]:
                             pmid = ref_to_pmid[int(r)]
                             gu.addTriple(g, pmid,
@@ -773,8 +803,8 @@ class OMIM(Source):
                                          al_id)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
-                            dbsnp_ids = re.split(r',',
-                                                 al['allelicVariant']['dbSnps'])
+                            dbsnp_ids = \
+                                re.split(r',', al['allelicVariant']['dbSnps'])
                             for dnum in dbsnp_ids:
                                 did = 'dbSNP:'+dnum.strip()
                                 gu.addIndividualToGraph(g, did, None)
@@ -782,18 +812,20 @@ class OMIM(Source):
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each like RCV000020059;;;
-                            rcv_ids = re.split(r';;;',
-                                               al['allelicVariant']['clinvarAccessions'])
-                            rcv_ids = [(re.match(r'(RCV\d+)\;\;', r)).group(1) for r in rcv_ids]
+                            rcv_ids = \
+                                re.split(r';;;',
+                                         al['allelicVariant']['clinvarAccessions'])
+                            rcv_ids = [
+                                (re.match(r'(RCV\d+)\;\;', r)).group(1)
+                                for r in rcv_ids]
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:'+rnum
                                 gu.addXref(g, al_id, rid)
-                        gu.addPage(g, al_id,
-                                   "http://omim.org/entry/"+
-                                   str(entry_num)+"#"+
-                                   str(al_num).zfill(4))
-                    elif re.search(r'moved',
-                                   al['allelicVariant']['status']):
+                        gu.addPage(
+                            g, al_id, "http://omim.org/entry/" +
+                            str(entry_num)+"#" + str(al_num).zfill(4))
+                    elif re.search(
+                            r'moved', al['allelicVariant']['status']):
                         # for both 'moved' and 'removed'
                         moved_ids = None
                         if 'movedTo' in al['allelicVariant']:
@@ -850,7 +882,8 @@ class OMIM(Source):
         :return:
         """
         conjunctions = ['and', 'but', 'yet', 'for', 'nor', 'so']
-        little_preps = ['at', 'by', 'in', 'of', 'on', 'to', 'up', 'as', 'it', 'or']
+        little_preps = [
+            'at', 'by', 'in', 'of', 'on', 'to', 'up', 'as', 'it', 'or']
         articles = ['a', 'an', 'the']
 
         # remove the abbreviation
@@ -895,6 +928,7 @@ class OMIM(Source):
         These are grouping classes to hook the more granular OMIM diseases.
         :param limit:
         :return:
+
         """
         if self.testMode:
             g = self.testgraph
@@ -904,8 +938,10 @@ class OMIM(Source):
         gu = GraphUtils(curie_map.get())
         line_counter = 0
         start = False
-        with open('/'.join((self.rawdir,
-                            self.files['phenotypicSeries']['file']))) as f:
+        with open(
+                '/'.join(
+                    (self.rawdir,
+                     self.files['phenotypicSeries']['file']))) as f:
             for line in f:
                 # there's several lines of header in the file,
                 # so need to skip several lines:
@@ -922,7 +958,8 @@ class OMIM(Source):
                 omim_id = 'OMIM:'+ps_num
                 gu.addClassToGraph(g, omim_id, ps_label)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -943,12 +980,15 @@ class OMIM(Source):
                 if 'phenotypeMapList' in entry:
                     phenolist = entry['phenotypeMapList']
                     for p in phenolist:
-                        serieslist.append(p['phenotypeMap']['phenotypicSeriesNumber'])
-                if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
+                        serieslist.append(
+                            p['phenotypeMap']['phenotypicSeriesNumber'])
+                if 'geneMap' in entry and \
+                        'phenotypeMapList' in entry['geneMap']:
                     phenolist = entry['geneMap']['phenotypeMapList']
                     for p in phenolist:
                         if 'phenotypicSeriesNumber' in p['phenotypeMap']:
-                            serieslist.append(p['phenotypeMap']['phenotypicSeriesNumber'])
+                            serieslist.append(
+                                p['phenotypeMap']['phenotypicSeriesNumber'])
         # add this entry as a subclass of the series entry
         for ser in serieslist:
             series_id = 'OMIM:'+ser
@@ -1047,10 +1087,14 @@ class OMIM(Source):
             for r in reflist:
                 if 'pubmedID' in r['reference']:
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
-                    ref = Reference(pub_id, Reference.ref_types['journal_article'])
+                    ref = \
+                        Reference(
+                            pub_id, Reference.ref_types['journal_article'])
                 else:
                     # make blank node for internal reference
-                    pub_id = '_OMIM' + str(entry_num) + 'ref' + str(r['reference']['referenceNumber'])
+                    pub_id = \
+                        '_OMIM' + str(entry_num) + 'ref' + \
+                        str(r['reference']['referenceNumber'])
                     if self.nobnodes:
                         pub_id = ':' + pub_id
                     ref = Reference(pub_id)
@@ -1159,12 +1203,15 @@ def get_omim_id_from_entry(entry):
         omimid = None
     return omimid
 
+
 def filter_keep_phenotype_entry_ids(entry, graph=None):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'])
-    if omim_type != Genotype.genoparts['gene'] and omim_type != Genotype.genoparts['biological_region']:
+    if omim_type != \
+            Genotype.genoparts['gene'] and \
+            omim_type != Genotype.genoparts['biological_region']:
         return omim_id
 
     return None

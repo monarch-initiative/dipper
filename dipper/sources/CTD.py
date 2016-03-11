@@ -202,14 +202,16 @@ class CTD(Source):
                     pass
                 else:
                     row_count += 1
-                    if file == self.files['chemical_disease_interactions']['file']:
+                    if file == self.files[
+                            'chemical_disease_interactions']['file']:
                         self._process_interactions(row)
                     elif file == self.files['gene_pathway']['file']:
                         self._process_pathway(row)
                     elif file == self.files['gene_disease']['file']:
                         self._process_disease2gene(row)
 
-                if not self.testMode and limit is not None and row_count >= limit:
+                if not self.testMode and \
+                        limit is not None and row_count >= limit:
                     break
 
         return
@@ -231,11 +233,11 @@ class CTD(Source):
 
         entrez_id = 'NCBIGene:' + gene_id
 
-        pathways_to_scrub = ['REACT:116125', # disease
-                             "REACT:111045", # developmental biology
-                             "REACT:200794", # Mus musculus biological processes
-                             "REACT:13685",  # neuronal system ?
-                            ]
+        pathways_to_scrub = [
+            'REACT:116125',  # disease
+            "REACT:111045",  # developmental biology
+            "REACT:200794",  # Mus musculus biological processes
+            "REACT:13685"]   # neuronal system ?
 
         if pathway_id in pathways_to_scrub:
             # these are lame "pathways" like generic
@@ -276,11 +278,11 @@ class CTD(Source):
             afile_dt = os.stat(assoc_file)
             if dfile_dt < afile_dt:
                 logger.info(
-                    "Local disambiguating file date < chem-disease assoc file. "
+                    "Local file date before chem-disease assoc file. "
                     " Downloading...")
             else:
                 logger.info(
-                    "Local disambiguating file date > chem-disease assoc file. "
+                    "Local file date after chem-disease assoc file. "
                     " Skipping download.")
                 return
 
@@ -296,8 +298,8 @@ class CTD(Source):
                 (chem_name, chem_id, cas_rn, disease_name, disease_id,
                  direct_evidence, inferred_gene_symbol, inference_score,
                  omim_ids, pubmed_ids) = row
-                if direct_evidence == '' \
-                        or not re.match(dual_evidence, direct_evidence):
+                if direct_evidence == '' or not \
+                        re.match(dual_evidence, direct_evidence):
                     continue
                 if pubmed_ids is not None and pubmed_ids != '':
                     all_pubs.update(set(re.split(r'\|', pubmed_ids)))
@@ -360,8 +362,8 @@ class CTD(Source):
 
         # filter on those diseases that are mapped to omim ids in the test set
         intersect = list(
-            set(['OMIM:' + str(i) for i in omim_ids.split('|')] + [disease_id])\
-                & set(self.test_diseaseids))
+            set(['OMIM:' + str(i) for i in omim_ids.split('|')] +
+                [disease_id]) & set(self.test_diseaseids))
         if self.testMode and len(intersect) < 1:
             return
         chem_id = 'MESH:' + chem_id
@@ -426,8 +428,7 @@ class CTD(Source):
             'MESH:D004195',  # disease models, animal
             'MESH:D030342',  # genetic diseases, inborn
             'MESH:D040181',  # genetic dieases, x-linked
-            'MESH:D020022'   # genetic predisposition to a disease
-        ]
+            'MESH:D020022']   # genetic predisposition to a disease
 
         if disease_id in diseases_to_scrub:
             logger.info(
@@ -436,10 +437,10 @@ class CTD(Source):
             return
 
         intersect = list(
-            set(['OMIM:' + str(i) for i in omim_ids.split('|')] + [disease_id])\
-                & set(self.test_diseaseids))
-        if self.testMode and (int(gene_id) not in self.test_geneids \
-                or len(intersect) < 1):
+            set(['OMIM:' + str(i) for i in omim_ids.split('|')] +
+                [disease_id]) & set(self.test_diseaseids))
+        if self.testMode and (
+                int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
 
         # there are three kinds of direct evidence:

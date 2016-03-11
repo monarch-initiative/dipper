@@ -169,7 +169,8 @@ class MMRRC(Source):
 
                     # use the following if needing to add the
                     # sequence alteration types
-                    # var_type = self._get_variant_type_from_abbrev(mutation_type)
+                    # var_type =
+                    #   self._get_variant_type_from_abbrev(mutation_type)
                     # make a sequence alteration for this variant locus,
                     # and link the variation type to it
                     # sa_id = '_'+re.sub(r':','',mgi_allele_id)+'SA'
@@ -208,7 +209,8 @@ class MMRRC(Source):
 
                 # split apart the mp ids
                 # ataxia [MP:0001393] ,hypoactivity [MP:0001402] ...
-                # mp_ids are now a comma delimited list with MP terms in brackets
+                # mp_ids are now a comma delimited list
+                # with MP terms in brackets
                 phenotype_ids = []
                 if mp_ids != '':
                     for i in re.split(r',', mp_ids):
@@ -239,8 +241,9 @@ class MMRRC(Source):
                 strain_type = mouse_taxon
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
-                gu.addIndividualToGraph(g, strain_id, strain_label, strain_type,
-                                        research_areas)  # an inst of mouse??
+                gu.addIndividualToGraph(
+                    g, strain_id, strain_label, strain_type,
+                    research_areas)  # an inst of mouse??
                 gu.makeLeader(g, strain_id)
 
                 # phenotypes are associated with the alleles
@@ -257,7 +260,8 @@ class MMRRC(Source):
                         logger.info("Phenotypes and no allele for %s",
                                     strain_id)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and (
+                        limit is not None and line_counter > limit):
                     break
 
             # now that we've collected all of the variant information, build it
@@ -319,7 +323,8 @@ class MMRRC(Source):
                         gvc_id = re.sub(r':', '', gvc_id)
                         if self.nobnodes:
                             gvc_id = ':'+gvc_id
-                        gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
+                        gvc_label = \
+                            '; '.join(self.id_label_hash[v] for v in vslc_list)
                         gu.addIndividualToGraph(
                             g, gvc_id, gvc_label,
                             geno.genoparts['genomic_variation_complement'])
@@ -331,9 +336,10 @@ class MMRRC(Source):
                         gvc_label = self.id_label_hash[gvc_id]
 
                     genotype_label = gvc_label + ' [n.s.]'
-                    bkgd_id = '_'+re.sub(r':', '',
-                                         '-'.join((geno.genoparts['unspecified_genomic_background'],
-                                                   s)))
+                    bkgd_id = \
+                        '_' + re.sub(r':', '', '-'.join(
+                            (geno.genoparts['unspecified_genomic_background'],
+                             s)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
@@ -341,7 +347,8 @@ class MMRRC(Source):
                     geno.addGenomicBackground(
                         bkgd_id, 'unspecified ('+s+')',
                         geno.genoparts['unspecified_genomic_background'],
-                        "A placeholder for the unspecified genetic background for "+s)
+                        "A placeholder for the " +
+                        "unspecified genetic background for "+s)
                     geno.addGenomicBackgroundToGenotype(
                         bkgd_id, genotype_id,
                         geno.genoparts['unspecified_genomic_background'])
@@ -353,13 +360,16 @@ class MMRRC(Source):
                         g, s, geno.object_properties['has_genotype'],
                         genotype_id)
                 else:
-                    #logger.debug("Strain %s is not making a proper genotype.",
-                    # s)
+                    # logger.debug(
+                    #   "Strain %s is not making a proper genotype.", s)
                     pass
 
-            gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-            gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-            gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+            gu.loadProperties(
+                g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+            gu.loadProperties(
+                g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
+            gu.loadProperties(
+                g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
             gu.loadAllProperties(g)
 
             logger.warning(

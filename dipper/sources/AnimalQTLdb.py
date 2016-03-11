@@ -14,13 +14,15 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 
 
 logger = logging.getLogger(__name__)
+AQDL = 'http://www.animalgenome.org/QTLdb'
 
 
 class AnimalQTLdb(Source):
     """
-    The Animal Quantitative Trait Loci (QTL) database (Animal QTLdb) is designed
-    to house publicly all available QTL and single-nucleotide polymorphism/gene
-    association data on livestock animal species.  This includes:
+    The Animal Quantitative Trait Loci (QTL) database (Animal QTLdb)
+    is designed to house publicly all available QTL and
+    single-nucleotide polymorphism/gene association data on livestock
+    animal species.  This includes:
         * chicken
         * horse
         * cow
@@ -37,11 +39,11 @@ class AnimalQTLdb(Source):
     [Vertebrate Trait](http://bioportal.bioontology.org/ontologies/VT),
     Product Trait, and Clinical Measurement Ontology vocabularies.
 
-    Since these are only associations to broad locations, we link the traits via
-    "is_marker_for", since there is no specific causative nature in the
-    association.  p-values for the associations are attached to the Association
-    objects.  We default to the UCSC build for the genomic coordinates,
-    and make equivalences.
+    Since these are only associations to broad locations,
+    we link the traits via "is_marker_for", since there is no specific
+    causative nature in the association.  p-values for the associations
+    are attached to the Association objects.  We default to the UCSC build for
+    the genomic coordinates, and make equivalences.
 
     Any genetic position ranges that are <0, we do not include here.
 
@@ -51,45 +53,45 @@ class AnimalQTLdb(Source):
         # defaulting to this
         'cattle_bp': {
             'file': 'QTL_Btau_4.6.gff.txt.gz',
-            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_Btau_4.6.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz'},
         # disabling this for now
         # 'cattle_umd_bp': {
         #   'file': 'QTL_UMD_3.1.gff.txt.gz',
-        #   'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_UMD_3.1.gff.txt.gz'},
+        #   'url': AQDL + '/tmp/QTL_UMD_3.1.gff.txt.gz'},
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
-            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_GG_4.0.gff.txt.gz'},
+            'url': AQDL + 'tmp/QTL_GG_4.0.gff.txt.gz'},
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
         'pig_bp': {
             'file': 'QTL_SS_10.2.gff.txt.gz',
-            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_SS_10.2.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz'},
         'pig_cm': {
             'file': 'pig_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/pig_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt'},
         'sheep_bp': {
             'file': 'QTL_OAR_3.1.gff.txt.gz',
-            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_OAR_3.1.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz'},
         'sheep_cm': {
             'file': 'sheep_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
         'horse_bp': {
             'file': 'QTL_EquCab2.0.gff.txt.gz',
-            'url': 'http://www.animalgenome.org/QTLdb/tmp/QTL_EquCab2.0.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz'},
         'horse_cm': {
             'file': 'horse_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/horse_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt'},
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
-            'url': 'http://www.animalgenome.org/QTLdb/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
         # TODO add rainbow_trout_bp when available
         'trait_mappings': {
             'file': 'trait_mappings',
-            'url': 'http://www.animalgenome.org/QTLdb/export/trait_mappings.csv'}
+            'url': AQDL + '/export/trait_mappings.csv'}
     }
 
     # QTL ids
@@ -105,7 +107,7 @@ class AnimalQTLdb(Source):
         self.dataset = Dataset(
             'animalqtldb', 'Animal QTL db',
             'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
-            'http://www.animalgenome.org/QTLdb/faq#23')
+            AQDL + '/faq#23')
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warning(
@@ -178,7 +180,8 @@ class AnimalQTLdb(Source):
         logger.info("Found %d nodes", len(self.graph))
         return
 
-    def _process_QTLs_genetic_location(self, raw, taxon_id, common_name, limit=None):
+    def _process_QTLs_genetic_location(
+            self, raw, taxon_id, common_name, limit=None):
         """
         This function processes
 
@@ -228,18 +231,22 @@ class AnimalQTLdb(Source):
                 build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
-                chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
+                chrom_in_build_id = makeChromID(
+                    chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
                 start = stop = None
                 if re.search(r'-', range_cm):
                     range_parts = re.split(r'-', range_cm)
                     # check for poorly formed ranges
-                    if len(range_parts) == 2 and range_parts[0] != '' and range_parts[1] != '':
-                        (start, stop) = [int(float(x.strip())) for x in re.split(r'-', range_cm)]
+                    if len(range_parts) == 2 and\
+                            range_parts[0] != '' and range_parts[1] != '':
+                        (start, stop) = \
+                            [int(float(x.strip()))
+                             for x in re.split(r'-', range_cm)]
                     else:
                         logger.info(
-                            "There's a cM range we can't handle for QTL %s: %s",
+                            "A cM range we can't handle for QTL %s: %s",
                             qtl_id, range_cm)
                 elif position_cm != '':
                     start = stop = int(float(position_cm))
@@ -279,10 +286,11 @@ class AnimalQTLdb(Source):
                             qtl_id, gene_id,
                             geno.object_properties['feature_to_gene_relation'])
 
-
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id
-                            vl_id = '_' + re.sub(r':', '', gene_id) + '-' + peak_mark
+                            vl_id = \
+                                '_' + re.sub(
+                                    r':', '', gene_id) + '-' + peak_mark
                             if self.nobnodes:
                                 vl_id = ':' + vl_id
                             geno.addSequenceAlterationToVariantLocus(
@@ -357,7 +365,8 @@ class AnimalQTLdb(Source):
 
                     assoc.add_association_to_graph(g)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with QTL genetic info")
@@ -381,13 +390,13 @@ class AnimalQTLdb(Source):
         line_counter = 0
         geno = Genotype(g)
         # assume that chrs get added to the genome elsewhere
-        genome_id = geno.makeGenomeID(taxon_id)
+        # genome_id = geno.makeGenomeID(taxon_id)  # TODO unused
 
         eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
         logger.info("Processing QTL locations for %s", taxon_id)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
-            bad_attr_flag = False
+            # bad_attr_flag = False  # TODO unused
             for row in reader:
                 line_counter += 1
                 if re.match(r'^#', ' '.join(row)):
@@ -421,7 +430,7 @@ class AnimalQTLdb(Source):
                 bad_attrs = set()
                 for a in attr_items:
                     if not re.search(r'=', a):
-                        bad_attr_flag = True
+                        # bad_attr_flag = True  # TODO unused
                         # remove this attribute from the list
                         bad_attrs.add(a)
 
@@ -473,7 +482,8 @@ class AnimalQTLdb(Source):
                 chromosome = re.sub(r'Chr\.', '', chromosome)
                 chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
-                chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
+                chrom_in_build_id = \
+                    makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
                 qtl_feature = Feature(qtl_id, None, geno.genoparts['QTL'])
@@ -490,7 +500,8 @@ class AnimalQTLdb(Source):
                 qtl_feature.addTaxonToFeature(g, taxon_id)
                 qtl_feature.addFeatureToGraph(g)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         logger.warning("Bad attribute flags in this file")
@@ -550,13 +561,14 @@ class AnimalQTLdb(Source):
                 # elif species == 'Pig':
                 #     ato_id = re.sub(r'ATO:', 'AQTLTraitPig:', ato_id)
                 # elif species == 'Rainbow trout':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitRainbowTrout:', ato_id)
+                #     ato_id = re.sub(
+                #       r'ATO:', 'AQTLTraitRainbowTrout:', ato_id)
                 # else:
                 #     logger.warning(
                 #       'Unknown species %s foufnd in trait mapping file.',
                 #       species)
                 #     continue
-                #print(ato_label)
+                # print(ato_label)
 
                 gu.addClassToGraph(g, ato_id, ato_label.strip())
 
@@ -572,7 +584,8 @@ class AnimalQTLdb(Source):
 
         logger.info("Done with trait mappings")
         return
-    # TODO TEC consider static functions
+
+    # TODO consider static functions
     def _get_tax_by_common_name(self, common_name):
 
         tax_map = {
@@ -629,6 +642,8 @@ class AnimalQTLdb(Source):
         :return:
 
         """
+
+        # TODO  (I think) this hash is unreachable
         tax_map = {
             'chicken': 'Wageningen-chicken',    # PMID:10645958
             'cattle': 'USDA-MARC',              # PMID:9074927
@@ -637,12 +652,14 @@ class AnimalQTLdb(Source):
             'sheep': 'Wageningen-sheep',        # PMID:11435411
             'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
             'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344
+
         return
 
     def getTestSuite(self):
         import unittest
         from tests.test_animalqtl import AnimalQTLdbTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(AnimalQTLdbTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(AnimalQTLdbTestCase)
 
         return test_suite

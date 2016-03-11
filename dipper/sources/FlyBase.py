@@ -15,7 +15,7 @@ from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
-#from dipper.models.GenomicFeature import Feature
+# from dipper.models.GenomicFeature import Feature  # unused
 
 
 logger = logging.getLogger(__name__)
@@ -75,9 +75,10 @@ class FlyBase(PostgreSQLSource):
     test_keys = {
         'allele': [
             29677937, 23174110, 23230960, 23123654, 23124718, 23146222,
-            29677936, 23174703, 11384915, 11397966, 53333044, 23189969, 3206803,
-            29677937, 29677934, 23256689, 23213050, 23230614, 23274987, 53323093,
-            40362726, 11380755, 11380754, 23121027, 44425218, 28298666],
+            29677936, 23174703, 11384915, 11397966, 53333044, 23189969,
+            3206803, 29677937, 29677934, 23256689, 23213050, 23230614,
+            23274987, 53323093, 40362726, 11380755, 11380754, 23121027,
+            44425218, 28298666],
         'gene': [
             23220066, 10344219, 58107328, 3132660, 23193483, 3118401, 3128715,
             3128888, 23232298, 23294450, 3128626, 23255338, 8350351, 41994592,
@@ -117,10 +118,11 @@ class FlyBase(PostgreSQLSource):
         # source-specific warnings.  will be cleared when resolved.
         logger.warning("we are ignoring normal phenotypes for now")
 
-        # so that we don't have to deal with BNodes,
-        # we will create hash lookups for the internal identifiers the hash will
+        # so that we don't have to deal with BNodes, we will create
+        # hash lookups for the internal identifiers the hash will
         # hold the type-specific-object-keys to FB public identifiers. Then,
-        # subsequent views of the table will lookup the identifiers in the hash.
+        # subsequent views of the table will lookup the identifiers
+        # in the hash.
         # This allows us to do the 'joining' on the fly
         self.idhash = {
             'allele': {}, 'gene': {}, 'publication': {}, 'stock': {},
@@ -133,7 +135,7 @@ class FlyBase(PostgreSQLSource):
 
         # use this to store internally generated labels for various features
         self.label_hash = {}
-        # use this to store the genotype strain ids for building genotype labels
+        # use this to store the genotype strain ids for genotype labels
         self.geno_bkgd = {}
         # mappings between internal phenotype db key and multiple cv terms
         self.phenocv = {}
@@ -178,10 +180,12 @@ class FlyBase(PostgreSQLSource):
 
         # we want to fetch the features,
         # but just a subset to reduce the processing time
-        query = "SELECT feature_id, dbxref_id, organism_id, name, uniquename, "\
-                +"null as residues, seqlen, md5checksum, type_id, is_analysis, "\
-                +"timeaccessioned, timelastmodified, is_obsolete "\
-                +"FROM feature WHERE is_analysis = false"
+        query = \
+            "SELECT " \
+            " feature_id, dbxref_id, organism_id, name, uniquename, " \
+            " null as residues, seqlen, md5checksum, type_id, is_analysis," \
+            " timeaccessioned, timelastmodified, is_obsolete " \
+            "FROM feature WHERE is_analysis = false"
 
         self.fetch_query_from_pgdb(
             'feature', query, None, cxn, None, is_dl_forced)
@@ -305,8 +309,9 @@ class FlyBase(PostgreSQLSource):
                         and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode \
-                            and int(genotype_num) not in self.test_keys['genotype']:
+                    if self.testMode and \
+                            int(genotype_num) not in \
+                            self.test_keys['genotype']:
                         continue
 
                     gu.addIndividualToGraph(
@@ -377,7 +382,7 @@ class FlyBase(PostgreSQLSource):
                         continue
 
                     tax_label = self.label_hash[taxon]
-                     # add the tax in case it hasn't been already
+                    # add the tax in case it hasn't been already
                     gu.addClassToGraph(g, taxon, tax_label)
                     gu.addIndividualToGraph(g, stock_id, stock_label, taxon)
                     if is_obsolete == 't':
@@ -449,7 +454,8 @@ class FlyBase(PostgreSQLSource):
 
     def _process_environments(self):
         """
-        There's only about 30 environments in which the phenotypes are recorded.
+        There's only about 30 environments in which the phenotypes
+        are recorded.
         There are no externally accessible identifiers for environments,
         so we make anonymous nodes for now.
         Some of the environments are comprised of >1 of the other environments;
@@ -480,7 +486,8 @@ class FlyBase(PostgreSQLSource):
                 environment_internal_id = self._makeInternalIdentifier(
                     'environment', environment_num)
                 if environment_num not in self.idhash['environment']:
-                    self.idhash['environment'][environment_num] = environment_internal_id
+                    self.idhash['environment'][environment_num] = \
+                        environment_internal_id
 
                 environment_id = self.idhash['environment'][environment_num]
                 environment_label = uniquename
@@ -512,7 +519,8 @@ class FlyBase(PostgreSQLSource):
 
     def _process_features(self, limit):
         """
-        These are all of the genomic features genes, variations, transgenes, etc
+        These are all of the genomic features genes, variations,
+        transgenes, etc
         :param limit:
         :return:
 
@@ -532,9 +540,9 @@ class FlyBase(PostgreSQLSource):
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
             for line in filereader:
-                (feature_id, dbxref_id, organism_id, name, uniquename, residues,
-                 seqlen, md5checksum, type_id, is_analysis, timeaccessioned,
-                 timelastmodified, is_obsolete) = line
+                (feature_id, dbxref_id, organism_id, name, uniquename,
+                 residues, seqlen, md5checksum, type_id, is_analysis,
+                 timeaccessioned, timelastmodified, is_obsolete) = line
 
                 feature_key = feature_id
                 if re.search(r'[\|\s\[\]\{\}\\<\>]', uniquename):
@@ -563,8 +571,8 @@ class FlyBase(PostgreSQLSource):
                 elif re.search(r'FBt[ip]', feature_id):
                     self.idhash['feature'][feature_key] = feature_id
 
-                if self.testMode \
-                        and int(feature_key) not in self.test_keys['gene'] + \
+                if self.testMode and \
+                        int(feature_key) not in self.test_keys['gene'] + \
                         self.test_keys['allele'] + self.test_keys['feature']:
                     continue
 
@@ -691,9 +699,10 @@ class FlyBase(PostgreSQLSource):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode \
-                        and not (int(feature_key) in self.test_keys['gene']+self.test_keys['allele']
-                                 and int(genotype_key) in self.test_keys['genotype']):
+                if self.testMode and not (
+                        int(feature_key) in
+                        self.test_keys['gene']+self.test_keys['allele'] and
+                        int(genotype_key) in self.test_keys['genotype']):
                     continue
 
                 # what is cvterm_id for in this context???
@@ -738,8 +747,8 @@ class FlyBase(PostgreSQLSource):
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
             for line in filereader:
-                (phendesc_id, genotype_id, environment_id, description, type_id,
-                 pub_id) = line
+                (phendesc_id, genotype_id, environment_id, description,
+                 type_id, pub_id) = line
                 # 1	2	1	Hemizygous males are wild type, homozygous males are sterile.	60466	209729
 
                 line_counter += 1
@@ -756,8 +765,8 @@ class FlyBase(PostgreSQLSource):
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
 
-                if self.testMode \
-                        and int(genotype_key) not in self.test_keys['genotype']:
+                if self.testMode and\
+                        int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
                 # TODO type id ==> ECO???
@@ -807,9 +816,10 @@ class FlyBase(PostgreSQLSource):
                 # 2       3160606 99159
 
                 feature_key = feature_id
-                if self.testMode \
-                        and not (int(feature_key) in self.test_keys['gene']+self.test_keys['allele']
-                                 and int(pub_id) in self.test_keys['pub']):
+                if self.testMode and not (
+                        int(feature_key) in
+                        self.test_keys['gene']+self.test_keys['allele']and
+                        int(pub_id) in self.test_keys['pub']):
                     continue
                 if feature_key not in self.idhash['feature']:
                     continue
@@ -858,8 +868,8 @@ class FlyBase(PostgreSQLSource):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode \
-                        and int(genotype_key) not in self.test_keys['genotype']:
+                if self.testMode and int(genotype_key) not in \
+                        self.test_keys['genotype']:
                     continue
 
                 gu.addTriple(
@@ -912,7 +922,7 @@ class FlyBase(PostgreSQLSource):
                     dbxrefs = self.dbxrefs[str(dbxref_key)]
                     # pub_dbs = [75, 51, 76, 95, 126]
                     pmid_ids = [50, 77, 275, 286, 347]
-                    flybase_ids = [4]
+                    # flybase_ids = [4]  # TODO unused
                     isbn = [75, 51]
                     for d in dbxrefs:
                         dbxref_id = None
@@ -993,7 +1003,7 @@ class FlyBase(PostgreSQLSource):
                     108: 'CL',      # CL
                     114: 'CHEBI',   # CHEBI
                     115: 'KEGG',    # KEGG
-                    116: 'PubChem', # PubChem
+                    116: 'PubChem',  # PubChem
                     # 120,          # MA???
                     3: 'GO',        # GO
                     4: 'FlyBase',   # FlyBase
@@ -1014,7 +1024,7 @@ class FlyBase(PostgreSQLSource):
                     180: 'NCBIGene',  # entrezgene
                     # 192,          # Bloomington stock center
                     197: 'UBERON',  # Uberon
-                    212: 'ENSEMBL', # Ensembl
+                    212: 'ENSEMBL',  # Ensembl
                     # 129,          # GenomeRNAi
                     275: 'PMID',    # PubMed
                     286: 'PMID',    # pmid
@@ -1113,10 +1123,10 @@ class FlyBase(PostgreSQLSource):
                  cvalue_id, assay_id) = line
 
                 # 8505	unspecified
-                # 20142	mesothoracic leg disc | somatic clone	87719	60468		60468	60468
-                # 8507	sex comb | ectopic	88877	60468		60468	60468
-                # 8508	tarsal segment	83664	60468		60468	60468
-                # 18404	oocyte | oogenesis stage S9	86769	60468		60468	60468
+                # 20142	mesothoracic leg disc | somatic clone 87719 60468  60468 60468
+                # 8507	sex comb | ectopic 88877 60468  60468 60468
+                # 8508	tarsal segment	83664 60468  60468 60468
+                # 18404	oocyte | oogenesis stage S9	86769 60468  60468 60468
                 # for now make these as phenotypic classes
                 # will need to xref at some point
                 phenotype_key = phenotype_id
@@ -1135,7 +1145,8 @@ class FlyBase(PostgreSQLSource):
                 elif observable_id in self.idhash['cvterm']:
                     # observations to anatomical classes
                     cvterm_id = self.idhash['cvterm'][observable_id]
-                    phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
+                    phenotype_id = \
+                        self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
                     if cvterm_id is not None and cvterm_id in self.label_hash:
                         phenotype_label = self.label_hash[cvterm_id]
                         phenotype_label += ' phenotype'
@@ -1154,8 +1165,8 @@ class FlyBase(PostgreSQLSource):
 
                 # assay_id is currently only "undefined" key=60468
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and\
+                        limit is not None and line_counter > limit:
                     pass
                 else:
                     if phenotype_id is not None:
@@ -1206,8 +1217,8 @@ class FlyBase(PostgreSQLSource):
                     'phenstatement', phenstatement_key)
                 genotype_key = genotype_id
 
-                if self.testMode \
-                        and int(genotype_key) not in self.test_keys['genotype']:
+                if self.testMode and \
+                        int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
                 genotype_id = self.idhash['genotype'][genotype_key]
@@ -1216,7 +1227,8 @@ class FlyBase(PostgreSQLSource):
                 phenotype_key = phenotype_id
                 phenotype_internal_id = self._makeInternalIdentifier(
                     'phenotype', phenotype_key)  # TEMP
-                phenotype_internal_label = self.label_hash[phenotype_internal_id]
+                phenotype_internal_label = self.label_hash[
+                    phenotype_internal_id]
                 phenotype_id = self.idhash['phenotype'][phenotype_key]
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
@@ -1226,17 +1238,19 @@ class FlyBase(PostgreSQLSource):
                 assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
                 if phenotype_id in self.phenocv:
                     stages = set(
-                        s for s in self.phenocv[phenotype_id] if re.match(r'FBdv', s))
+                        s for s in
+                        self.phenocv[phenotype_id] if re.match(r'FBdv', s))
                     if len(stages) == 1:
                         s = stages.pop()
                         assoc.set_stage(s, s)
                     elif len(stages) > 1:
                         logger.warning(
-                            "There's more than one stage specified for a "\
+                            "There's more than one stage specified per " +
                             "phenotype. I don't know what to do. %s",
                             str(stages))
                     non_stage_ids = self.phenocv[phenotype_id] - stages
-                    logger.debug('Other non-stage bits: %s', str(non_stage_ids))
+                    logger.debug(
+                        'Other non-stage bits: %s', str(non_stage_ids))
                     # TODO do something with the other parts
                     # of a pheno-cv relationship
                 assoc.set_environment(environment_id)
@@ -1320,9 +1334,9 @@ class FlyBase(PostgreSQLSource):
                 (cvterm_id, cv_id, definition, dbxref_id, is_obsolete,
                  is_relationshiptype, name) = line
 
-                # 316	6		1665919	0	0	rRNA_cleavage_snoRNA_primary_transcript
-                # 28	5		1663309	0	0	synonym
-                # 455	6		1665920	0	0	tmRNA
+                # 316 6 1665919 0 0 rRNA_cleavage_snoRNA_primary_transcript
+                # 28  5 1663309 0 0 synonym
+                # 455 6 1665920 0 0 tmRNA
 
                 # not sure the following is necessary
                 # cv_prefixes = {
@@ -1355,7 +1369,8 @@ class FlyBase(PostgreSQLSource):
                         # replace the cvterm with
                         # the dbxref (external) identifier
                         did = dbxrefs.popitem()[1]
-                        self.idhash['cvterm'][cvterm_key] = did  # get the value
+                        # get the value
+                        self.idhash['cvterm'][cvterm_key] = did
                         # also add the label to the dbxref
                         self.label_hash[did] = name
         return
@@ -1395,8 +1410,8 @@ class FlyBase(PostgreSQLSource):
 
     def _process_feature_dbxref(self, limit):
         """
-        This is the mapping between the flybase features and
-        external repositories. Generally we want to leave the flybase feature id
+        This is the mapping between the flybase features and external
+        repositories. Generally we want to leave the flybase feature id
         as the primary identifier. But we need to make the equivalences/sameAs.
 
         :param limit:
@@ -1473,15 +1488,16 @@ class FlyBase(PostgreSQLSource):
 
                 # FIXME - some flybase genes are xrefed to OMIM diseases!!!!!!
                 # for example,
-                # FBog0000375495 xref to omim 601181 (gene) & 608033 (phenotype)
+                # FBog0000375495 xref to omim 601181 (gene)
+                # and 608033 (phenotype)
 
         return
 
     def _get_derived_feature_types(self, limit):
         """
         Make a pass through the feature table in order to properly type
-        the FBal (allele) features, which are derived either from other sequence
-        features (which can be things like RNAi products)
+        the FBal (allele) features, which are derived either from other
+        sequence features (which can be things like RNAi products)
         or transgenic-transposons.  We'll save the allele type into a hasmap.
 
         :param limit:
@@ -1506,14 +1522,16 @@ class FlyBase(PostgreSQLSource):
 
                 if int(type_id) in [131495, 129784]:
                     # derived_tp_assoc_alleles
-                    self.feature_types[subject_id] = Genotype.genoparts['transgenic_insertion']
+                    self.feature_types[subject_id] = \
+                        Genotype.genoparts['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
                     gu.addType(g, sid, self.feature_types[subject_id])
                 elif int(type_id) in [131502, 129791]:
                     # only take the derived_sf_assoc_alleles
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
-                    self.feature_types[subject_id] = Genotype.genoparts['reagent_targeted_gene']
+                    self.feature_types[subject_id] = \
+                        Genotype.genoparts['reagent_targeted_gene']
                     sid = self.idhash['allele'].get(subject_id)
                     gu.addType(g, sid, self.feature_types[subject_id])
 
@@ -1522,14 +1540,13 @@ class FlyBase(PostgreSQLSource):
 
         return
 
-
     def _process_feature_relationship(self, limit):
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
-        ti_allele_map = {}  # TODO to be used when building genotypes
+        # ti_allele_map = {}  # TODO to be used when building genotypes
 
         line_counter = 0
         geno = Genotype(g)
@@ -1548,12 +1565,12 @@ class FlyBase(PostgreSQLSource):
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
 
-                if self.testMode \
-                        and not (int(subject_id) in self.test_keys['gene'] +
-                                 self.test_keys['allele']+self.test_keys['feature'] \
-                                 and int(object_id) in self.test_keys['gene'] +
-                                 self.test_keys['allele'] +
-                                 self.test_keys['feature']):
+                if self.testMode and not (
+                        int(subject_id) in self.test_keys['gene'] +
+                        self.test_keys['allele']+self.test_keys['feature'] and
+                        int(object_id) in self.test_keys['gene'] +
+                        self.test_keys['allele'] +
+                        self.test_keys['feature']):
                     continue
 
                 if subject_id in self.deprecated_features \
@@ -1566,7 +1583,7 @@ class FlyBase(PostgreSQLSource):
                 if int(type_id) in [  # allele of, etc
                         60384, 60410, 60409, 60413, 60414, 60401, 60399, 60400,
                         60401, 60402, 60415, 60417, 60418, 60420]:
-                      # TODO move this out of the if later
+                    # TODO move this out of the if later
                     # allele of gene
                     # in sql, we limited the
                     # subject to type_id = 219,33 object type_id  219  #??? TEC
@@ -1581,18 +1598,21 @@ class FlyBase(PostgreSQLSource):
                         gene_label = self.label_hash[gene_id]
                     else:
                         logger.error(
-                            "The gene_id for object_id is None (sub_id,obj_id): %s \t %s",
+                            "The gene_id for object_id is None: %s \t %s",
                             str(subject_id), str(object_id))
                         continue
                     # TODO move this out of the if later
                     line_counter += 1
                     if allele_id is not None and gene_id is not None:
-                        if self.feature_types[subject_id] == Genotype.genoparts['reagent_targeted_gene']:
+                        if self.feature_types[subject_id] == \
+                                Genotype.genoparts['reagent_targeted_gene']:
                             gu.addTriple(
                                 g, allele_id,
-                                Genotype.object_properties['is_targeted_expression_variant_of'],
+                                Genotype.object_properties[
+                                    'is_targeted_expression_variant_of'],
                                 gene_id)
-                        elif self.feature_types[subject_id] == Genotype.genoparts['transgenic_insertion']:
+                        elif self.feature_types[subject_id] == \
+                                Genotype.genoparts['transgenic_insertion']:
                             geno.addSequenceDerivesFrom(allele_id, gene_id)
                         elif re.match(r'\w+\\', gene_label):
                             # the thing that this is the allele of,
@@ -1643,7 +1663,8 @@ class FlyBase(PostgreSQLSource):
                             reagent_id, reagent_label, None, gene_id)
                         geno.addReagentTargetedGene(reagent_id, gene_id)
                     elif reagent_id is not None and allele_id is not None:
-                        geno.addReagentTargetedGene(reagent_id, None, allele_id)
+                        geno.addReagentTargetedGene(
+                                reagent_id, None, allele_id)
                     # elif allele_id is not None and ti_id is not None:
                     #     # the FBti == transgenic insertion,
                     #     which is basically the sequence alteration
@@ -1776,12 +1797,12 @@ class FlyBase(PostgreSQLSource):
                 # unless we actually use it therefore it is added outside of
                 # this function
 
-                if self.testMode \
-                        and int(organism_id) not in self.test_keys['organism']:
+                if self.testMode and\
+                        int(organism_id) not in self.test_keys['organism']:
                     continue
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and\
+                        limit is not None and line_counter > limit:
                     pass
                 else:
                     gu.addClassToGraph(g, tax_id, tax_label)
@@ -1840,8 +1861,8 @@ class FlyBase(PostgreSQLSource):
 
                 (organism_dbxref_id, organism_id, dbxref_id) = line
 
-                if self.testMode \
-                        and int(organism_id) not in self.test_keys['organism']:
+                if self.testMode and\
+                        int(organism_id) not in self.test_keys['organism']:
                     continue
 
                 organism_key = organism_id
@@ -1864,8 +1885,8 @@ class FlyBase(PostgreSQLSource):
                             gu.makeLeader(g, did)
                         line_counter += 1
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and\
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1896,7 +1917,8 @@ class FlyBase(PostgreSQLSource):
 
         with gzip.open(raw, 'rb') as f:
             filereader = csv.reader(
-                io.TextIOWrapper(f, newline=""), delimiter='\t', quotechar='\"')
+                io.TextIOWrapper(f, newline=""),
+                delimiter='\t', quotechar='\"')
             for line in filereader:
                 # skip comments
                 if re.match(r'#', ''.join(line)) or ''.join(line) == '':
@@ -1905,9 +1927,9 @@ class FlyBase(PostgreSQLSource):
                  evidence_or_interacting_allele, pub_id) = line
                 line_counter += 1
 
-                if self.testMode \
-                        and self.test_ids['disease'] is not None \
-                        and doid_id not in self.test_ids['disease']:
+                if self.testMode and\
+                        self.test_ids['disease'] is not None and\
+                        doid_id not in self.test_ids['disease']:
                     continue
 
                 rel = None
@@ -1925,7 +1947,8 @@ class FlyBase(PostgreSQLSource):
                 if pub_id != '':
                     pub_id = 'FlyBase:'+pub_id
                     assoc.add_source(pub_id)
-                if evidence_or_interacting_allele == 'inferred from mutant phenotype':
+                if evidence_or_interacting_allele == \
+                        'inferred from mutant phenotype':
                     evidence_id = 'ECO:0000015'
                     assoc.add_evidence(evidence_id)
                 else:
@@ -1933,8 +1956,8 @@ class FlyBase(PostgreSQLSource):
 
                 assoc.add_association_to_graph(g)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and\
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1979,15 +2002,16 @@ class FlyBase(PostgreSQLSource):
                 # linked_image
                 if int(type_id) == 131520 and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
-                    image_url = 'http://flybase.org/tmp-shared/reports/'+value+'.png'
+                    image_url = \
+                        'http://flybase.org/tmp-shared/reports/'+value+'.png'
                     if sid is not None:
                         gu.addDepiction(g, sid, image_url)
                     # TODO should this be a Reference object?
 
                 # TODO add the stockprop_pub table when there is data to pull
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and\
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -2009,7 +2033,9 @@ class FlyBase(PostgreSQLSource):
         l = ftp.nlst()          # get list of files
         ftp.quit()
         f = None
-        f_list = [i for i, x in enumerate(l) if re.match(r'allele_human_disease_model', x)]
+        f_list = [
+            i for i, x in enumerate(l)
+            if re.match(r'allele_human_disease_model', x)]
         if len(f_list) == 0:
             logger.error("Can't find the human_disease_model file")
         elif len(f_list) > 1:
@@ -2041,7 +2067,7 @@ class FlyBase(PostgreSQLSource):
         necessarily re-distribute those internal identifiers.
         Therefore, we make them into keys in a consistent way here.
         :param prefix: the object type to prefix the key with,
-                       since the numbers themselves are not unique across tables
+                    since the numbers themselves are not unique across tables
         :param key: the number (unique key)
         :return:
 
@@ -2056,6 +2082,7 @@ class FlyBase(PostgreSQLSource):
         import unittest
         from tests.test_flybase import FlyBaseTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
 
         return test_suite

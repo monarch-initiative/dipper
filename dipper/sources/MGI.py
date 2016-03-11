@@ -21,27 +21,39 @@ logger = logging.getLogger(__name__)
 
 class MGI(PostgreSQLSource):
     """
-    This is the [Mouse Genome Informatics](http://www.informatics.jax.org/) resource,
+    This is the
+    [Mouse Genome Informatics](http://www.informatics.jax.org/) resource,
     from which we process genotype and phenotype data about laboratory mice.
     Genotypes leverage the GENO genotype model.
 
-    Here, we connect to their public database, and download a subset of tables/views to get specifically at the
-    geno-pheno data, then iterate over the tables.  We end up effectively performing joins when adding nodes
-    to the graph.
-    In order to use this parser, you will need to have user/password connection details in your conf.json file, like:
+    Here, we connect to their public database, and download a subset of
+    tables/views to get specifically at the geno-pheno data,
+    then iterate over the tables.  We end up effectively performing joins
+    when adding nodes to the graph.
+    In order to use this parser, you will need to have user/password connection
+    details in your conf.json file, like:
       dbauth : {
         'mgi' : {'user' : '<username>', 'password' : '<password>'}
       }
     You can request access by contacting mgi-help@jax.org
+
     """
 
     # CONSIDER IF WE NEED:
-    # mgi_organism_acc_view: Consider using this for the taxon mapping instead of the hashmap encoded below
-    # mgi_reference_allele_view: Don't believe this view is used in either the genotype of phenotype view
+    # mgi_organism_acc_view:
+    #    Consider using this for the taxon mapping instead of
+    #   the hashmap encoded below
+    # mgi_reference_allele_view:
+    #   Don't believe this view is used in either
+    #    the genotype of phenotype view
     # all_allele_cellline_view: When we want to start dealing with cell lines
     # mgi_note_strain_view: prose descriptions of strains.
-    # prb_strain_summary_view: Don't believe this view is used in either the genotype of phenotype view
-    # prb_strain_marker_view: eventually i think we want this because it has other relevant markers that are affected
+    # prb_strain_summary_view:
+    #   Don't believe this view is used in
+    #    either the genotype of phenotype view
+    # prb_strain_marker_view:
+    #    eventually i think we want this because
+    # it has other relevant markers that are affected
 
     tables = [
         'mgi_dbinfo',
@@ -65,65 +77,86 @@ class MGI(PostgreSQLSource):
         'mrk_location_cache',  # gene locations
     ]
 
-    # for testing purposes, this is a list of internal db keys to match and select only portions of the source
+    # for testing purposes, this is a list of internal db keys
+    # to match and select only portions of the source
     test_keys = {
-        'allele': [1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139, 4334, 817387, 8567,
-                   476, 42885, 3658, 1193, 6978, 6598, 16698, 626329, 33649,
-                   835532, 7861, 33649, 6308, 1285, 827608],
-        'marker': [357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717, 38415, 12944,
-                   377, 77197, 18436, 30157, 14252, 412465, 38598, 185833, 35408, 118781,
-                   37270, 31169, 25040, 81079],
-        'annot': [6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447, 189448, 189449, 189450,
-                  189451, 189452, 318424, 717023, 717024, 717025, 717026, 717027, 717028, 717029, 5123647,
-                  928426, 5647502, 6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
-                  13487624, 23241933, 23534428, 23535949, 23546035, 24722398, 29645663, 29645664,
-                  29645665, 29645666, 29645667, 29645682, 43803707, 43804057, 43805682, 43815003,
-                  43838073, 58485679, 59357863, 59357864, 59357865, 59357866, 59357867, 60448185,
-                  60448186, 60448187, 62628962, 69611011, 69611253, 79642481, 79655585, 80436328,
-                  83942519, 84201418, 90942381, 90942382, 90942384, 90942385, 90942386, 90942389,
-                  90942390, 90942391, 90942392, 92947717, 92947729, 92947735, 92947757, 92948169,
-                  92948441, 92948518, 92949200, 92949301, 93092368, 93092369, 93092370, 93092371,
-                  93092372, 93092373, 93092374, 93092375, 93092376, 93092377, 93092378, 93092379,
-                  93092380, 93092381, 93092382, 93401080, 93419639, 93436973, 93436974, 93436975,
-                  93436976, 93436977, 93459094, 93459095, 93459096, 93459097, 93484431, 93484432,
-                  93491333, 93491334, 93491335, 93491336, 93491337, 93510296, 93510297, 93510298,
-                  93510299, 93510300, 93548463, 93551440, 93552054, 93576058, 93579091, 93579870,
-                  93581813, 93581832, 93581841, 93581890, 93583073, 93583786, 93584586, 93587213,
-                  93604448, 93607816, 93613038, 93614265, 93618579, 93620355, 93621390, 93624755,
-                  93626409, 93626918, 93636629, 93642680, 93643814, 93643825, 93647695, 93648755, 93652704,
-                  5123647, 71668107, 71668108, 71668109, 71668110, 71668111, 71668112, 71668113,
-                  71668114, 74136778, 107386012, 58485691],
-        'genotype': [81, 87, 142, 206, 281, 283, 286, 287, 341, 350, 384, 406, 407, 411, 425, 457, 458, 461, 476, 485,
-                     537, 546, 551,
-                     553, 11702, 12910, 13407, 13453, 14815, 26655, 28610, 37313, 38345, 59766, 60082,
-                     65406, 64235],
-        'pub': [73197, 165659, 134151, 76922, 181903, 26681, 128938, 80054, 156949, 159965, 53672, 170462,
-                206876, 87798, 100777, 176693, 139205, 73199, 74017, 102010, 152095, 18062, 216614, 61933,
-                13385, 32366, 114625, 182408, 140802],
-        'strain': [30639, 33832, 33875, 33940, 36012, 59504, 34338, 34382, 47670, 59802, 33946, 31421,
-                   64, 40, 14, -2, 30639, 15975, 35077, 12610, -1, 28319, 27026, 141, 62299],
-        'notes': [5114, 53310, 53311, 53312, 53313, 53314, 53315, 53316, 53317, 53318, 53319, 53320,
-                  71099, 501751, 501752, 501753, 501754, 501755, 501756, 501757, 744108, 1055341,
-                  6049949, 6621213, 6621216, 6621218, 6621219, 7108498, 14590363, 14590364, 14590365,
-                  25123358, 25123360, 26688159, 32028545, 32028546, 32028547, 32028548, 32028549,
-                  32028564, 37833486, 47742903, 47743253, 47744878, 47754199, 47777269, 65105483,
-                  66144014, 66144015, 66144016, 66144017, 66144018, 70046116, 78382808, 78383050,
-                  103920312, 103920318, 103920319, 103920320, 103920322, 103920323, 103920324,
-                  103920325, 103920326, 103920328, 103920330, 103920331, 103920332, 103920333,
-                  106390006, 106390018, 106390024, 106390046, 106390458, 106390730, 106390807,
-                  106391489, 106391590, 106579450, 106579451, 106579452, 106579453, 106579454,
-                  106579455, 106579456, 106579457, 106579458, 106579459, 106579460, 106579461,
-                  106579462, 106579463, 106579464, 106949909, 106949910, 106969368, 106969369,
-                  106996040, 106996041, 106996042, 106996043, 106996044, 107022123, 107022124,
-                  107022125, 107022126, 107052057, 107052058, 107058959, 107058960, 107058961,
-                  107058962, 107058963, 107077922, 107077923, 107077924, 107077925, 107077926,
-                  107116089, 107119066, 107119680, 107154485, 107155254, 107158128, 107159385,
-                  107160435, 107163154, 107163183, 107163196, 107163271, 107164877, 107165872,
-                  107166942, 107168838, 107170557, 107174867, 107194346, 107198590, 107205179,
-                  107206725, 107212120, 107214364, 107214911, 107215700, 107218519, 107218642,
-                  107219974, 107221415, 107222064, 107222717, 107235068, 107237686, 107242709,
-                  107244121, 107244139, 107248964, 107249091, 107250401, 107251870, 107255383, 107256603]
-
+        'allele': [
+            1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139,
+            4334, 817387, 8567, 476, 42885, 3658, 1193, 6978, 6598, 16698,
+            626329, 33649, 835532, 7861, 33649, 6308, 1285, 827608],
+        'marker': [
+            357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717,
+            38415, 12944, 377, 77197, 18436, 30157, 14252, 412465, 38598,
+            185833, 35408, 118781, 37270, 31169, 25040, 81079],
+        'annot': [
+            6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447,
+            189448, 189449, 189450, 189451, 189452, 318424, 717023, 717024,
+            717025, 717026, 717027, 717028, 717029, 5123647, 928426, 5647502,
+            6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
+            13487624, 23241933, 23534428, 23535949, 23546035, 24722398,
+            29645663, 29645664, 29645665, 29645666, 29645667, 29645682,
+            43803707, 43804057, 43805682, 43815003, 43838073, 58485679,
+            59357863, 59357864, 59357865, 59357866, 59357867, 60448185,
+            60448186, 60448187, 62628962, 69611011, 69611253, 79642481,
+            79655585, 80436328, 83942519, 84201418, 90942381, 90942382,
+            90942384, 90942385, 90942386, 90942389, 90942390, 90942391,
+            90942392, 92947717, 92947729, 92947735, 92947757, 92948169,
+            92948441, 92948518, 92949200, 92949301, 93092368, 93092369,
+            93092370, 93092371, 93092372, 93092373, 93092374, 93092375,
+            93092376, 93092377, 93092378, 93092379, 93092380, 93092381,
+            93092382, 93401080, 93419639, 93436973, 93436974, 93436975,
+            93436976, 93436977, 93459094, 93459095, 93459096, 93459097,
+            93484431, 93484432, 93491333, 93491334, 93491335, 93491336,
+            93491337, 93510296, 93510297, 93510298, 93510299, 93510300,
+            93548463, 93551440, 93552054, 93576058, 93579091, 93579870,
+            93581813, 93581832, 93581841, 93581890, 93583073, 93583786,
+            93584586, 93587213, 93604448, 93607816, 93613038, 93614265,
+            93618579, 93620355, 93621390, 93624755, 93626409, 93626918,
+            93636629, 93642680, 93643814, 93643825, 93647695, 93648755,
+            93652704, 5123647, 71668107, 71668108, 71668109, 71668110,
+            71668111, 71668112, 71668113, 71668114, 74136778, 107386012,
+            58485691],
+        'genotype': [
+            81, 87, 142, 206, 281, 283, 286, 287, 341, 350, 384, 406, 407, 411,
+            425, 457, 458, 461, 476, 485, 537, 546, 551, 553, 11702, 12910,
+            13407, 13453, 14815, 26655, 28610, 37313, 38345, 59766, 60082,
+            65406, 64235],
+        'pub': [
+            73197, 165659, 134151, 76922, 181903, 26681, 128938, 80054, 156949,
+            159965, 53672, 170462, 206876, 87798, 100777, 176693, 139205,
+            73199, 74017, 102010, 152095, 18062, 216614, 61933, 13385, 32366,
+            114625, 182408, 140802],
+        'strain': [
+            30639, 33832, 33875, 33940, 36012, 59504, 34338, 34382, 47670,
+            59802, 33946, 31421, 64, 40, 14, -2, 30639, 15975, 35077, 12610,
+            -1, 28319, 27026, 141, 62299],
+        'notes': [
+            5114, 53310, 53311, 53312, 53313, 53314, 53315, 53316, 53317,
+            53318, 53319, 53320, 71099, 501751, 501752, 501753, 501754, 501755,
+            501756, 501757, 744108, 1055341, 6049949, 6621213, 6621216,
+            6621218, 6621219, 7108498, 14590363, 14590364, 14590365, 25123358,
+            25123360, 26688159, 32028545, 32028546, 32028547, 32028548,
+            32028549, 32028564, 37833486, 47742903, 47743253, 47744878,
+            47754199, 47777269, 65105483, 66144014, 66144015, 66144016,
+            66144017, 66144018, 70046116, 78382808, 78383050, 103920312,
+            103920318, 103920319, 103920320, 103920322, 103920323, 103920324,
+            103920325, 103920326, 103920328, 103920330, 103920331, 103920332,
+            103920333, 106390006, 106390018, 106390024, 106390046, 106390458,
+            106390730, 106390807, 106391489, 106391590, 106579450, 106579451,
+            106579452, 106579453, 106579454, 106579455, 106579456, 106579457,
+            106579458, 106579459, 106579460, 106579461, 106579462, 106579463,
+            106579464, 106949909, 106949910, 106969368, 106969369, 106996040,
+            106996041, 106996042, 106996043, 106996044, 107022123, 107022124,
+            107022125, 107022126, 107052057, 107052058, 107058959, 107058960,
+            107058961, 107058962, 107058963, 107077922, 107077923, 107077924,
+            107077925, 107077926, 107116089, 107119066, 107119680, 107154485,
+            107155254, 107158128, 107159385, 107160435, 107163154, 107163183,
+            107163196, 107163271, 107164877, 107165872, 107166942, 107168838,
+            107170557, 107174867, 107194346, 107198590, 107205179, 107206725,
+            107212120, 107214364, 107214911, 107215700, 107218519, 107218642,
+            107219974, 107221415, 107222064, 107222717, 107235068, 107237686,
+            107242709, 107244121, 107244139, 107248964, 107249091, 107250401,
+            107251870, 107255383, 107256603]
     }
 
     def __init__(self):
@@ -131,32 +164,43 @@ class MGI(PostgreSQLSource):
         self.namespaces.update(curie_map.get())
 
         # update the dataset object with details about this resource
-        self.dataset = Dataset('mgi', 'MGI', 'http://www.informatics.jax.org/', None,
-                               'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
+        self.dataset = Dataset(
+            'mgi', 'MGI', 'http://www.informatics.jax.org/', None,
+            'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and 'mgi' not in config.get_config()['dbauth']:
+        if 'dbauth' not in config.get_config() and \
+                'mgi' not in config.get_config()['dbauth']:
             logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warning("we are ignoring normal phenotypes for now")
 
-        # so that we don't have to deal with BNodes, we will create hash lookups for the internal identifiers
-        # the hash will hold the type-specific-object-keys to MGI public identifiers.  then, subsequent
-        # views of the table will lookup the identifiers in the hash.  this allows us to do the 'joining' on the
-        # fly
-        self.idhash = {'allele': {}, 'marker': {}, 'publication': {}, 'strain': {},
-                       'genotype': {}, 'annot': {}, 'notes': {}, 'seqalt': {}}
-        self.markers = {'classes': [], 'indiv': []}  # to store if a marker is a class or indiv
-
-        self.label_hash = {}  # use this to store internally generated labels for various features
-        self.geno_bkgd = {}  # use this to store the genotype strain ids for building genotype labels
+        # so that we don't have to deal with BNodes,
+        # we will create hash lookups
+        # for the internal identifiers the hash will hold
+        # the type-specific-object-keys to MGI public identifiers.
+        # then, subsequent views of the table will lookup the identifiers
+        # in the hash.  this allows us to do the 'joining' on the fly
+        self.idhash = {
+            'allele': {}, 'marker': {}, 'publication': {}, 'strain': {},
+            'genotype': {}, 'annot': {}, 'notes': {}, 'seqalt': {}}
+        # to store if a marker is a class or indiv
+        self.markers = {
+            'classes': [], 'indiv': []}
+        # use this to store internally generated labels for various features
+        self.label_hash = {}
+        # use this to store the genotype strain ids
+        # for building genotype labels
+        self.geno_bkgd = {}
         self.strain_to_genotype_map = {}
 
         self.wildtype_alleles = set()
 
-        # also add the gene ids from the config in order to capture transgenes of the test set
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
+        # also add the gene ids from the config
+        # in order to capture transgenes of the test set
+        if 'test_ids' not in config.get_config() or\
+                'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -164,26 +208,31 @@ class MGI(PostgreSQLSource):
 
     def fetch(self, is_dl_forced=False):
         """
-        For the MGI resource, we connect to the remote database, and pull the tables into local files.
+        For the MGI resource, we connect to the remote database,
+        and pull the tables into local files.
         We'll check the local table versions against the remote version
         :return:
         """
 
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
-        cxn.update({'host': 'mgi-adhoc.jax.org', 'database': 'mgd', 'port': 5432})
+        cxn.update(
+            {'host': 'mgi-adhoc.jax.org', 'database': 'mgd', 'port': 5432})
 
-        self.dataset.setFileAccessUrl(''.join(('jdbc:postgresql://', cxn['host'], ':',
-                                               str(cxn['port']), '/', cxn['database'])))
+        self.dataset.setFileAccessUrl(
+            ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
+                    '/', cxn['database'])))
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
-        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)  # always get this - it has the verion info
+        # always get this - it has the verion info
+        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)
         self.fetch_transgene_genes_from_db(cxn)
 
         datestamp = ver = None
-        # get the resource version information from table mgi_dbinfo, already fetched above
+        # get the resource version information from
+        # table mgi_dbinfo, already fetched above
         outfile = '/'.join((self.rawdir, 'mgi_dbinfo'))
 
         if os.path.exists(outfile):
@@ -193,10 +242,13 @@ class MGI(PostgreSQLSource):
                 cols = info.split('\t')
                 ver = cols[0]  # col 0 is public_version
                 ver = ver.replace('MGI ', '')  # MGI 5.20 --> 5.20
-                # MGI has a datestamp for the data within the database; use it instead of the download date
+                # MGI has a datestamp for the data within the database;
+                # use it instead of the download date
                 # datestamp in the table: 2014-12-23 00:14:20
                 d = cols[7].strip()  # modification date
-                datestamp = datetime.strptime(d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+                datestamp = \
+                    datetime.strptime(
+                        d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
 
         self.dataset.setVersion(datestamp, ver)
@@ -205,11 +257,15 @@ class MGI(PostgreSQLSource):
 
     def parse(self, limit=None):
         """
-        We process each of the postgres tables in turn.  The order of processing is important here, as we build
-        up a hashmap of internal vs external identifers (unique keys by type to MGI id).  These include
-        allele, marker (gene), publication, strain, genotype, annotation (association), and descriptive notes.
+        We process each of the postgres tables in turn.
+        The order of processing is important here, as we build
+        up a hashmap of internal vs external identifers
+        (unique keys by type to MGI id).  These include allele, marker (gene),
+        publication, strain, genotype, annotation (association),
+        and descriptive notes.
         :param limit: Only parse this many lines of each table
         :return:
+
         """
         if limit is not None:
             logger.info("Only parsing first %d rows of each file", limit)
@@ -226,7 +282,8 @@ class MGI(PostgreSQLSource):
         self._process_bib_acc_view(limit)
         self._process_gxd_genotype_summary_view(limit)
 
-        # The following will use the hash populated above to lookup the ids when filling in the graph
+        # The following will use the hash populated above
+        # to lookup the ids when filling in the graph
         self._process_prb_strain_view(limit)
         # self._process_prb_strain_genotype_view(limit)
         self._process_gxd_genotype_view(limit)
@@ -256,14 +313,15 @@ class MGI(PostgreSQLSource):
 
     def fetch_transgene_genes_from_db(self, cxn):
         """
-        This is a custom query to fetch the non-mouse genes that are part of transgene alleles.
+        This is a custom query to fetch the non-mouse genes that
+        are part of transgene alleles.
 
         :param cxn:
         :return:
         """
 
         query = "" + \
-                "select r._relationship_key as rel_key, " + \
+                "SELECT r._relationship_key as rel_key, " + \
                 "r._object_key_1 as object_1, " + \
                 "a.accid as allele_id, " + \
                 "alabel.label as allele_label, " + \
@@ -272,42 +330,46 @@ class MGI(PostgreSQLSource):
                 "t._term_key as property_key, " +\
                 "t.term as property_name, " +\
                 "rp.value as property_value " +\
-                "from mgi_relationship r " +\
-                "join mgi_relationship_category rc " +\
-                "on r._category_key = rc._category_key " +\
-                "join acc_accession a " +\
-                "on r._object_key_1 = a._object_key " +\
-                "and rc._mgitype_key_1 = a._mgitype_key " +\
-                "and a._logicaldb_key = 1 " +\
-                "join all_label alabel " +\
-                "on a._object_key = alabel._allele_key " +\
-                "and alabel._label_status_key = 1 " +\
-                "and alabel.priority = 1 " +\
-                "join mgi_relationship_property rp " +\
-                "on r._relationship_key = rp._relationship_key " +\
-                "and rp._propertyname_key = 12948292  " +\
-                "join voc_term t " +\
-                "on rp._propertyname_key = t._term_key " +\
-                "where r._category_key = 1004  "
+                "FROM mgi_relationship r " +\
+                "JOIN mgi_relationship_category rc " +\
+                "ON r._category_key = rc._category_key " +\
+                "JOIN acc_accession a " +\
+                "ON r._object_key_1 = a._object_key " +\
+                "AND rc._mgitype_key_1 = a._mgitype_key " +\
+                "AND a._logicaldb_key = 1 " +\
+                "JOIN all_label alabel " +\
+                "ON a._object_key = alabel._allele_key " +\
+                "AND alabel._label_status_key = 1 " +\
+                "AND alabel.priority = 1 " +\
+                "JOIN mgi_relationship_property rp " +\
+                "ON r._relationship_key = rp._relationship_key " +\
+                "AND rp._propertyname_key = 12948292  " +\
+                "JOIN voc_term t " +\
+                "ON rp._propertyname_key = t._term_key " +\
+                "WHERE r._category_key = 1004  "
 
-        self.fetch_query_from_pgdb('mgi_relationship_transgene_genes', query, None, cxn)
+        self.fetch_query_from_pgdb(
+            'mgi_relationship_transgene_genes', query, None, cxn)
 
         return
 
     def _process_gxd_genotype_view(self, limit=None):
         """
-        This table indicates the relationship between a genotype and it's background strain.  It leverages the
-        Genotype class methods to do this.
+        This table indicates the relationship between a genotype
+        and it's background strain.  It leverages the Genotype class methods
+        to do this.
 
         Makes these triples:
         <MGI:genotypeid> GENO:has_reference_part <MGI:strainid>
         <MGI:strainid> a GENO:genomic_background
 
-        If the genotype id isn't in the hashmap, it adds it here (but this shouldn't happen):
+        If the genotype id isn't in the hashmap, it adds it here
+        (but this shouldn't happen):
         <MGI:genotypeid> a GENO:genotype
 
-        If the strain isn't in the hashmap, it also adds it here with a monarchized identifier using the
-        unique key of the strain, formatted like:  :_mgistrainkey12345
+        If the strain isn't in the hashmap, it also adds it here with a
+        monarchized identifier using the unique key of the strain,
+        formatted like:  :_mgistrainkey12345
 
         :param limit:
         :return:
@@ -327,21 +389,25 @@ class MGI(PostgreSQLSource):
             f1.readline()  # read the header row; skip
             for line in f1:
                 line_counter += 1
-                (genotype_key, strain_key, isconditional, note, existsas_key, createdby_key, modifiedby_key,
-                 creation_date, modification_date, strain, mgiid, dbname, createdbymodifiedby, existsas,
-                 empty) = line.split('\t')
+                (genotype_key, strain_key, isconditional, note, existsas_key,
+                 createdby_key, modifiedby_key, creation_date,
+                 modification_date, strain, mgiid, dbname, createdbymodifiedby,
+                 existsas, empty) = line.split('\t')
 
                 if self.testMode is True:
                     if int(genotype_key) not in self.test_keys.get('genotype'):
                         continue
 
                 if self.idhash['genotype'].get(genotype_key) is None:
-                    # just in case we haven't seen it before, catch and add the id mapping here
+                    # just in case we haven't seen it before,
+                    # catch and add the id mapping here
                     self.idhash['genotype'][genotype_key] = mgiid
                     geno.addGenotype(mgiid, None)
-                    # the label is elsewhere... need to add the MGI label as a synonym
+                    # the label is elsewhere...
+                    # need to add the MGI label as a synonym
 
-                # if it's in the hash, assume that the individual was created elsewhere
+                # if it's in the hash,
+                # assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
                 background_type = geno.genoparts['genomic_background']
                 if strain_id is None or int(strain_key) < 0:
@@ -356,32 +422,34 @@ class MGI(PostgreSQLSource):
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.
                         # so add instances of each.
-                        strain_id = self._makeInternalIdentifier('strain',
-                                                                 re.sub(r':', '',
-                                                                        str(strain_id)))
+                        strain_id = \
+                            self._makeInternalIdentifier(
+                                'strain', re.sub(r':', '', str(strain_id)))
                         strain_id += re.sub(r':', '', str(mgiid))
                         if self.nobnodes:
                             strain_id = ':' + strain_id
-                        gu.addDescription(g, strain_id,
-                                          "This genomic background is unknown.  "+
-                                          "This is a placeholder background for "+
-                                          mgiid + ".")
-                        background_type = geno.genoparts['unspecified_genomic_background']
+                        gu.addDescription(
+                            g, strain_id,
+                            "This genomic background is unknown.  " +
+                            "This is a placeholder background for " +
+                            mgiid + ".")
+                        background_type = \
+                            geno.genoparts['unspecified_genomic_background']
 
                     # add it back to the idhash
                     logger.info("adding background as internal id: %s %s: %s",
                                 strain_key, strain, strain_id)
 
-
-                geno.addGenomicBackgroundToGenotype(strain_id, mgiid,
-                                                    background_type)
+                geno.addGenomicBackgroundToGenotype(
+                    strain_id, mgiid, background_type)
 
                 self.label_hash[strain_id] = strain
 
                 # add BG to a hash so we can build the genotype label later
                 self.geno_bkgd[mgiid] = strain_id
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -442,11 +510,13 @@ class MGI(PostgreSQLSource):
                     pass
                     # TODO what to do with != preferred
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         # now, loop through the hash and add the genotypes as individuals
-        # we add the mgi genotype as a synonym (we generate our own label later)
+        # we add the mgi genotype as a synonym
+        # (we generate our own label later)
         gutil = Genotype(g)
         for gt in geno_hash:
             geno = geno_hash.get(gt)
@@ -513,13 +583,15 @@ class MGI(PostgreSQLSource):
                     # add the allele key to the hash for later lookup
                     self.idhash['allele'][object_key] = mgiid
                     # TODO consider not adding the individuals in this one
-                    gu.addIndividualToGraph(g, mgiid, short_description.strip(),
-                                            altype, description.strip())
+                    gu.addIndividualToGraph(
+                        g, mgiid, short_description.strip(),
+                        altype, description.strip())
                     self.label_hash[mgiid] = short_description.strip()
 
                 # TODO deal with non-preferreds, are these deprecated?
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -557,7 +629,9 @@ class MGI(PostgreSQLSource):
 
         geno = Genotype(g)
         line_counter = 0
-        logger.info("adding alleles, mapping to markers, extracting their sequence alterations")
+        logger.info(
+            "adding alleles, mapping to markers, " +
+            "extracting their sequence alterations")
         raw = '/'.join((self.rawdir, 'all_allele_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -604,7 +678,8 @@ class MGI(PostgreSQLSource):
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = geno.genoparts['variant_locus']
-                    locus_rel = geno.properties['is_sequence_variant_instance_of']
+                    locus_rel = \
+                        geno.properties['is_sequence_variant_instance_of']
                 # for wild type alleles:
                 elif iswildtype == '1':
                     locus_type = geno.genoparts['reference_locus']
@@ -627,9 +702,9 @@ class MGI(PostgreSQLSource):
                 if allele_label is not None and allele_label == marker_label:
                     gu.addSameIndividual(g, allele_id, marker_id)
                     self.idhash['seqalt'][allele_key] = allele_id
-                    gu.addComment(g, allele_id,
-                                  self._makeInternalIdentifier('allele',
-                                                               allele_key))
+                    gu.addComment(
+                        g, allele_id,
+                        self._makeInternalIdentifier('allele', allele_key))
                 elif marker_id is not None:
                     # marker_id will be none if the allele
                     # is not linked to a marker
@@ -642,12 +717,13 @@ class MGI(PostgreSQLSource):
                     sa_label = symbol
                     sa_id = iseqalt_id
 
-                    if marker_key is not None and allele_label != marker_label and marker_key != '':
+                    if marker_key is not None and \
+                            allele_label != marker_label and marker_key != '':
                         # sequence alteration has label reformatted(symbol)
                         if re.match(r".*<.*>.*", symbol):
                             sa_label = re.sub(r".*<", "<", symbol)
                         elif re.match(r"\+", symbol):
-                            # TODO: Check to see if this is the proper handling,
+                            # TODO: Check to see if this is the proper handling
                             # as while symbol is just +,
                             # marker symbol has entries without any <+>.
                             sa_label = '<+>'
@@ -667,11 +743,13 @@ class MGI(PostgreSQLSource):
 
                     strain_id = self.idhash['strain'].get(strain_key)
                     # scrub out if the strain is "not specified"
-                    if strain_id is not None and strain_id not in ['MGI:4867032',
-                                                                   'MGI:5649511']:
+                    if strain_id is not None and \
+                            strain_id not in [
+                                'MGI:4867032', 'MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -745,9 +823,10 @@ class MGI(PostgreSQLSource):
                 # FIXME: handle null alleles
                 vslc_label = allele1+'/'
                 if allele2_id is None:
-                    if zygosity_id in [geno.zygosity['hemizygous'],
-                                       geno.zygosity['hemizygous-x'],
-                                       geno.zygosity['hemizygous-y']]:
+                    if zygosity_id in [
+                            geno.zygosity['hemizygous'],
+                            geno.zygosity['hemizygous-x'],
+                            geno.zygosity['hemizygous-y']]:
                         vslc_label += '0'
                     elif zygosity_id == geno.zygosity['heterozygous']:
                         vslc_label += '+'
@@ -757,29 +836,32 @@ class MGI(PostgreSQLSource):
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
                     else:
-                        logger.info("A different kind of zygosity is found: %s",
-                                    zygosity_id)
+                        logger.info(
+                            "A different kind of zygosity is found: %s",
+                            zygosity_id)
                         vslc_label += '?'
                 else:
                     vslc_label += allele2
 
-                gu.addIndividualToGraph(g, ivslc_id, vslc_label,
-                                        geno.genoparts['variant_single_locus_complement'])
+                gu.addIndividualToGraph(
+                    g, ivslc_id, vslc_label,
+                    geno.genoparts['variant_single_locus_complement'])
                 self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = geno.object_properties['has_alternate_part']
                 if allele1_id in self.wildtype_alleles:
                     rel1 = geno.object_properties['has_reference_part']
                 if allele2_id in self.wildtype_alleles:
                     rel2 = geno.object_properties['has_reference_part']
-                geno.addPartsToVSLC(ivslc_id, allele1_id, allele2_id,
-                                    zygosity_id, rel1, rel2)
+                geno.addPartsToVSLC(
+                    ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
 
                 # if genotype_id not in geno_hash:
                 #     geno_hash[genotype_id] = [vslc_label]
                 # else:
                 #     geno_hash[genotype_id] += [vslc_label]
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         # build the gvc and the genotype label
@@ -799,21 +881,25 @@ class MGI(PostgreSQLSource):
                     vslc_labels.append(self.label_hash[v])
                 gvc_label = '; '.join(vslc_labels)
 
-                gu.addIndividualToGraph(g, gvc_id, gvc_label,
-                                        geno.genoparts['genomic_variation_complement'])
+                gu.addIndividualToGraph(
+                    g, gvc_id, gvc_label,
+                    geno.genoparts['genomic_variation_complement'])
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
-                    geno.addParts(v, gvc_id,
-                                  geno.object_properties['has_alternate_part'])
+                    geno.addParts(
+                        v, gvc_id,
+                        geno.object_properties['has_alternate_part'])
                     geno.addVSLCtoParent(v, gvc_id)
-                geno.addParts(gvc_id, gt,
-                              geno.object_properties['has_alternate_part'])
+                geno.addParts(
+                    gvc_id, gt,
+                    geno.object_properties['has_alternate_part'])
             elif len(vslcs) == 1:
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
-                gu.addIndividualToGraph(g, gvc_id, gvc_label,
-                                        geno.genoparts['genomic_variation_complement'])
+                gu.addIndividualToGraph(
+                    g, gvc_id, gvc_label,
+                    geno.genoparts['genomic_variation_complement'])
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
@@ -867,12 +953,14 @@ class MGI(PostgreSQLSource):
                  mutation) = line.split('\t')
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = self._makeInternalIdentifier('seqalt',
-                                                              allele_key,
-                                                              self.nobnodes)
+                    iseqalt_id = \
+                        self._makeInternalIdentifier(
+                            'seqalt', allele_key, self.nobnodes)
 
                 if self.nobnodes is True:
-                    if self.testMode and int(allele_key) not in self.test_keys.get('allele'):
+                    if self.testMode and \
+                            int(allele_key) not in \
+                            self.test_keys.get('allele'):
                         continue
 
                 # TODO we might need to map the seq alteration to the MGI id
@@ -893,7 +981,8 @@ class MGI(PostgreSQLSource):
 
                 gu.addIndividualToGraph(g, iseqalt_id, None, seq_alt_type_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -913,7 +1002,8 @@ class MGI(PostgreSQLSource):
         """
 
         # TODO also get Strain/Attributes (annottypekey = 1000)
-        # TODO what is Phenotype (Derived) vs non-derived?  (annottypekey = 1015)
+        # TODO what is Phenotype (Derived) vs
+        # non-derived?  (annottypekey = 1015)
         # TODO is evidence in this table?  what is the evidence vocab key?
 
         gu = GraphUtils(curie_map.get())
@@ -928,10 +1018,11 @@ class MGI(PostgreSQLSource):
             f.readline()  # read the header row; skip
             for line in f:
 
-                (annot_key, annot_type_key, object_key, term_key, qualifier_key,
-                 creation_date, modification_date, qualifier, term, sequence_num,
-                 accid, logicaldb_key, vocab_key, mgi_type_key,
-                 evidence_vocab_key, anot_type) = line.split('\t')
+                (annot_key, annot_type_key, object_key, term_key,
+                 qualifier_key, creation_date, modification_date, qualifier,
+                 term, sequence_num, accid, logicaldb_key, vocab_key,
+                 mgi_type_key, evidence_vocab_key,
+                 anot_type) = line.split('\t')
 
                 if self.testMode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
@@ -983,7 +1074,8 @@ class MGI(PostgreSQLSource):
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
                         assoc.set_object(omim_id)
-                        assoc.set_relationship(gu.object_properties['model_of'])
+                        assoc.set_relationship(
+                            gu.object_properties['model_of'])
                         assoc.add_association_to_graph(g)
                         assoc_id = assoc.get_association_id()
                 elif annot_type_key == '1011':
@@ -1007,7 +1099,8 @@ class MGI(PostgreSQLSource):
                         assoc = Assoc(self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(omim_id)
-                        assoc.set_relationship(gu.object_properties['model_of'])
+                        assoc.set_relationship(
+                            gu.object_properties['model_of'])
                         assoc.add_association_to_graph(g)
                         assoc_id = assoc.get_association_id()
 
@@ -1016,7 +1109,8 @@ class MGI(PostgreSQLSource):
                     self.idhash['annot'][annot_key] = assoc_id
                     gu.addComment(g, assoc_id, "annot_key:"+annot_key)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1086,7 +1180,8 @@ class MGI(PostgreSQLSource):
                              Assoc.object_properties['has_source'],
                              jnumid)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1140,7 +1235,8 @@ class MGI(PostgreSQLSource):
                 r = Reference(accid)
                 r.addRefToGraph(g)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
@@ -1197,7 +1293,8 @@ class MGI(PostgreSQLSource):
                     logger.warning("Publication from (%s) not mapped for %s",
                                    logical_db, object_key)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1256,7 +1353,8 @@ class MGI(PostgreSQLSource):
                         geno.addTaxon(sp, strain_id)
                     gu.addIndividualToGraph(g, strain_id, strain, sp)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1347,7 +1445,8 @@ class MGI(PostgreSQLSource):
                     if taxon_id == 'NCBITaxon:10090':
                         gu.makeLeader(g, marker_id)
 
-                    if not self.testMode and limit is not None and line_counter > limit:
+                    if not self.testMode and \
+                            limit is not None and line_counter > limit:
                         break
 
         return
@@ -1403,12 +1502,14 @@ class MGI(PostgreSQLSource):
                     if logicaldb_key == '60':
                         mapped_id = 'ENSEMBL:'+accid
                     elif logicaldb_key == '1':
-                        continue  # don't need to add the equivalence to itself.
+                        # don't need to add the equivalence to itself.
+                        continue
                     elif logicaldb_key == '55':
                         mapped_id = 'NCBIGene:'+accid
 
                     if mapped_id is not None:
-                        if mgiid in self.markers['classes'] or subtype in ['Gene', 'Pseudogene']:
+                        if mgiid in self.markers['classes'] or \
+                                subtype in ['Gene', 'Pseudogene']:
                             gu.addClassToGraph(g, mapped_id, None)
                             gu.addEquivalentClass(g, mgiid, mapped_id)
                         elif mgiid in self.markers['indiv']:
@@ -1418,7 +1519,8 @@ class MGI(PostgreSQLSource):
                     # could parse the "subtype" string
                     # to get the kind of thing the marker is
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1441,17 +1543,18 @@ class MGI(PostgreSQLSource):
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
-                (accession_key, accid, prefix_part, numeric_part, logicaldb_key,
-                 object_key, mgi_type_key, private, preferred, created_by_key,
-                 modified_by_key, creation_date, modification_date, logicaldb,
-                 organism_key) = line.split('\t')
+                (accession_key, accid, prefix_part, numeric_part,
+                 logicaldb_key, object_key, mgi_type_key, private, preferred,
+                 created_by_key, modified_by_key, creation_date,
+                 modification_date, logicaldb, organism_key) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and prefix_part == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and \
+                        prefix_part == 'MGI:' and preferred == '1':
                     self.idhash['marker'][object_key] = accid
 
         return
@@ -1481,10 +1584,10 @@ class MGI(PostgreSQLSource):
             f.readline()  # read the header row; skip
             for line in f:
                 line_counter += 1
-                (accession_key, accid, prefix_part, numeric_part, logicaldb_key,
-                 object_key, mgi_type_key, private, preferred, created_by_key,
-                 modified_by_key, creation_date, modification_date, logicaldb,
-                 organism_key) = line.split('\t')
+                (accession_key, accid, prefix_part, numeric_part,
+                 logicaldb_key, object_key, mgi_type_key, private, preferred,
+                 created_by_key, modified_by_key, creation_date,
+                 modification_date, logicaldb, organism_key) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
@@ -1521,7 +1624,8 @@ class MGI(PostgreSQLSource):
                         logger.error("mgiid not in class or indiv hash %s",
                                      mgiid)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1569,7 +1673,8 @@ class MGI(PostgreSQLSource):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and \
+                        prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
                     gu.addIndividualToGraph(g, accid, None, tax_id)
 
@@ -1632,7 +1737,7 @@ class MGI(PostgreSQLSource):
                         # scrub out the backticks from accids
                         # TODO notify the source upstream
                         accid = re.sub(r'`', '', accid)
-                        strain_id = 'JAX:'+accid
+                        strain_id = 'JAX:' + accid
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
                         if not re.match(r'MMRRC:', strain_id):
@@ -1640,11 +1745,11 @@ class MGI(PostgreSQLSource):
                     elif logicaldb_key == '37':  # EMMA
                         strain_id = re.sub(r'EM:', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
-                        strain_id = 'APB:'+accid  # Check
+                        strain_id = 'APB:' + accid  # Check
                     elif logicaldb_key == '40':  # ORNL
                         # ORNL is not in existence any more.
                         # these are deprecated, and we will prefix with JAX
-                        strain_id = 'JAX:'+accid
+                        strain_id = 'JAX:' + accid
                         comment = "Originally from ORNL."
                         deprecated = True
                         # add these as synonyms of the MGI mouse
@@ -1661,9 +1766,9 @@ class MGI(PostgreSQLSource):
                         strain_id = accid
                     elif logicaldb_key == '70':  # RIKEN
                         # like 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160'
-                        strain_id = 'RBRC:'+accid
+                        strain_id = 'RBRC:' + accid
                     elif logicaldb_key == '87':
-                        strain_id = 'MUGEN:'+accid
+                        strain_id = 'MUGEN:' + accid
                         # I can't figure out how to get to some of the strains
 
                     # TODO get non-preferred ids==deprecated?
@@ -1681,7 +1786,8 @@ class MGI(PostgreSQLSource):
                     if comment is not None:
                         gu.addComment(g, strain_id, comment)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1711,9 +1817,9 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (note_key, object_key, mgitype_key, notetype_key, createdby_key,
-                 modifiedby_key, creation_date, modification_date, notetype,
-                 note, sequencenum) = line
+                (note_key, object_key, mgitype_key, notetype_key,
+                 createdby_key, modifiedby_key, creation_date,
+                 modification_date, notetype, note, sequencenum) = line
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('notes'):
@@ -1727,7 +1833,8 @@ class MGI(PostgreSQLSource):
                 if annot_id is not None:
                     gu.addDescription(g, annot_id, note.strip())
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1766,7 +1873,8 @@ class MGI(PostgreSQLSource):
 
                 # make the chromsomome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
-                if version is not None and version != '' and version != '(null)':
+                if version is not None and \
+                        version != '' and version != '(null)':
 
                     # switch on maptype or mapkey
                     assembly = version
@@ -1789,9 +1897,9 @@ class MGI(PostgreSQLSource):
                         f.addFeatureStartLocation(int(float(startcoordinate)),
                                                   chrom_id, strand)
                     else:
-                        f.addFeatureStartLocation(startcoordinate, chrom_id,
-                                                  strand,
-                                                  [Feature.types['FuzzyPosition']])
+                        f.addFeatureStartLocation(
+                            startcoordinate, chrom_id, strand,
+                            [Feature.types['FuzzyPosition']])
                     if endcoordinate is not None:
                         f.addFeatureEndLocation(int(float(endcoordinate)),
                                                 chrom_id, strand)
@@ -1806,7 +1914,8 @@ class MGI(PostgreSQLSource):
                     logger.warning('marker key %s not in idhash',
                                    str(marker_key))
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
@@ -1834,7 +1943,7 @@ class MGI(PostgreSQLSource):
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
         geno = Genotype(g)
 
-        gu = GraphUtils(curie_map.get())
+        # gu = GraphUtils(curie_map.get())  # TODO unused
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1859,7 +1968,8 @@ class MGI(PostgreSQLSource):
                     seqalt_id = allele_id
                 geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
@@ -1881,7 +1991,7 @@ class MGI(PostgreSQLSource):
             g = self.graph
         logger.info("Assembling notes on alleles")
         raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
-        geno = Genotype(g)
+        # geno = Genotype(g)  # TODO unused
 
         gu = GraphUtils(curie_map.get())
         notehash = {}
@@ -1892,9 +2002,9 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (note_key, object_key, mgitype_key, notetype_key, createdby_key,
-                 modifiedby_key, creation_date, modification_date, notetype,
-                 note, sequencenum) = line
+                (note_key, object_key, mgitype_key, notetype_key,
+                 createdby_key, modifiedby_key, creation_date,
+                 modification_date, notetype, note, sequencenum) = line
 
                 # read all the notes into a hash to concatenate
                 if object_key not in notehash:
@@ -1902,9 +2012,12 @@ class MGI(PostgreSQLSource):
                 if notetype not in notehash[object_key]:
                     notehash[object_key][notetype] = []
                 if len(notehash[object_key][notetype]) < int(sequencenum):
-                    for i in range(len(notehash[object_key][notetype]), int(sequencenum)):
+                    for i in range(
+                            len(notehash[object_key][notetype]),
+                            int(sequencenum)):
                         notehash[object_key][notetype].append('')
-                notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
+                notehash[object_key][notetype][int(sequencenum)-1] = \
+                    note.strip()
 
             # finish iteration over notes
 
@@ -1918,13 +2031,15 @@ class MGI(PostgreSQLSource):
             if allele_id is None:
                 continue
             for n in notehash[allele_key]:
-                logger.info("found %d %s notes for %s",
-                            len(notehash[allele_key]), n, allele_id)
+                logger.info(
+                    "found %d %s notes for %s",
+                    len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
                 notes += ' ['+n+']'
                 gu.addDescription(g, allele_id, notes)
 
-            if not self.testMode and limit is not None and line_counter > limit:
+            if not self.testMode and \
+                    limit is not None and line_counter > limit:
                 break
 
         return
@@ -1960,42 +2075,46 @@ class MGI(PostgreSQLSource):
                  modifiedby) = line
 
                 if self.testMode is True:
-                    if int(genotype_key) not in self.test_keys.get('genotype')\
-                            and int(strain_key) not in self.test_keys.get('strain'):
+                    if int(genotype_key) not in \
+                            self.test_keys.get('genotype') and \
+                            int(strain_key) not in \
+                            self.test_keys.get('strain'):
                         continue
 
                 strain_id = self.idhash['strain'].get(strain_key)
                 if strain_id is None:
-                    strain_id = self._makeInternalIdentifier('strain',
-                                                             strain_key,
-                                                             self.nobnodes)
+                    strain_id = self._makeInternalIdentifier(
+                        'strain', strain_key, self.nobnodes)
                 genotype_id = self.idhash['genotype'].get(genotype_key)
                 if genotype_id is None:
-                    genotype_id = self._makeInternalIdentifier('genotype',
-                                                               genotype_key,
-                                                               self.nobnodes)
+                    genotype_id = self._makeInternalIdentifier(
+                        'genotype', genotype_key, self.nobnodes)
 
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                gu.addTriple(g, strain_id,
-                             Genotype.object_properties['has_genotype'],
-                             genotype_id)
+                gu.addTriple(
+                    g, strain_id,
+                    Genotype.object_properties['has_genotype'],
+                    genotype_id)
                 # TODO
                 # verify if this should be contingent on the exactness or not
                 # if qualifier == 'Exact':
-                #     gu.addTriple(g, strain_id,
-                #                  Genotype.object_properties['has_genotype'],
-                #                  genotype_id)
+                #     gu.addTriple(
+                #       g, strain_id,
+                #       Genotype.object_properties['has_genotype'],
+                #       genotype_id)
                 # else:
                 #     gu.addXref(g, strain_id, genotype_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and \
+                        limit is not None and line_counter > limit:
                     break
 
         return
 
-    # TODO: Finish identifying SO/GENO terms for mappings for those found in MGI
+    # TODO: Finish identifying SO/GENO terms
+    # for mappings for those found in MGI
     @staticmethod
     def _map_seq_alt_type(sequence_alteration_type):
         seqalttype = 'SO:0001059'  # default to sequence_alteration
@@ -2032,7 +2151,8 @@ class MGI(PostgreSQLSource):
             seqalttype = type_map.get(sequence_alteration_type.strip())
         else:
             logger.error(
-                "Sequence Alteration Type (%s) not mapped; defaulting to sequence_alteration",
+                "Sequence Alteration Type (%s) not mapped; " +
+                "defaulting to sequence_alteration",
                 sequence_alteration_type)
 
         return seqalttype
@@ -2053,10 +2173,12 @@ class MGI(PostgreSQLSource):
         so_id = None
         marker_category_to_so_map = {
             '6238160': 'SO:0000704',  # gene
-            '15406202': 'SO:0001263', # lncRNA gene --> ncRNA gene  FIXME
+
+            '15406202': 'SO:0001263',  # lncRNA gene --> ncRNA gene FIXME
             '6238161': 'SO:0001217',  # protein coding gene
             '6238162': 'SO:0001263',  # non-coding RNA gene
-            '15406203': 'SO:0001263', # antisense lncRNA gene --> ncRNA gene FIXME
+            # antisense lncRNA gene --> ncRNA gene FIXME
+            '15406203': 'SO:0001263',
             '6238163': 'SO:0001637',  # rRNA gene
             '6238164': 'SO:0001272',  # tRNA gene
             '6238165': 'SO:0001268',  # snRNA gene
@@ -2082,16 +2204,21 @@ class MGI(PostgreSQLSource):
             '7196773': 'SO:1000044',  # chromosomal translocation
             '7196774': 'SO:1000037',  # chromosomal duplication
             '7196775': 'SO:0000453',  # chromosomal transposition
-            '7222413': 'SO:0000830',  # unclassified cytogenetic marker --> chromosome_part
+            # unclassified cytogenetic marker --> chromosome_part
+            '7222413': 'SO:0000830',
             '7288448': 'SO:0000341',  # pseudogenic region
             '7288449': 'SO:0001841',  # polymorphic pseudogene
             '7648966': 'SO:0000180',  # retrotransposon
             '7648967': 'SO:0000624',  # telomere
             '7648968': 'SO:0000643',  # minisatellite
-            '7648969': 'SO:0000110',  # unclassified other genome feature --> sequence feature
-            '9272146': 'SO:0000903',  # endogenous retroviral region --> endogenous retroviral sequence
-            '11928467': 'SO:0001060',  # mutation defined region --> sequence variant
-            '15406204': 'SO:0001263',  # intronic lncRNA gene  --> ncRNA gene   #FIXME
+            # unclassified other genome feature --> sequence feature
+            '7648969': 'SO:0000110',
+            # endogenous retroviral region --> endogenous retroviral sequence
+            '9272146': 'SO:0000903',
+            # mutation defined region --> sequence variant
+            '11928467': 'SO:0001060',
+            # intronic lncRNA gene  --> ncRNA gene   #FIXME
+            '15406204': 'SO:0001263',
             '15406205': 'SO:0000307',  # CpG island
             '15406206': 'SO:0000374',  # ribozyme gene  --> ribozyme
             '15406207': 'SO:0000167',  # promoter
@@ -2129,7 +2256,8 @@ class MGI(PostgreSQLSource):
         marktype = None
         type_map = {
             'Complex/Cluster/Region': 'SO:0000110',  # sequence feature
-            # transgene WE redefine these as transgenic insertion features instead
+            # transgene
+            # WE redefine these as transgenic insertion features instead
             'Transgene': 'SO:0001218',
             'Gene': 'SO:0000704',  # gene
             'QTL': 'SO:0000771',  # QTL
@@ -2223,7 +2351,8 @@ class MGI(PostgreSQLSource):
             'laboratory mouse and M. m. musculus (Prague)': '39442',
             'M. m. castaneus and M. m. musculus': '477816',
             'M. m. domesticus (Canada)': '10092',
-            'M. m. domesticus and M. m. domesticus poschiavinus': '10092',# FIXME
+            # FIXME9
+            'M. m. domesticus and M. m. domesticus poschiavinus': '10092',
             'M. m. musculus and M. spretus or M. m. domesticus': '186842',
             'M. chypre': '862507',  # unclassified mus
             'M. cookii (Southeast Asia)': '10098',

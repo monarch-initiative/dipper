@@ -56,7 +56,7 @@ class MPD(Source):
         'strainmeans': {
             'file': 'strainmeans.csv.gz',
             'url': mdpdl+'/strainmeans.csv.gz'},
-        #'mpd_datasets_metadata': { #TEC does not seem to be used
+        # 'mpd_datasets_metadata': { #TEC does not seem to be used
         #    'file': 'mpd_datasets_metadata.xml.gz',
         #    'url': mdpdl+'/mpd_datasets_metadata.xml.gz'},
     }
@@ -66,10 +66,11 @@ class MPD(Source):
     #   "MPD:2", "MPD:3", "MPD:5", "MPD:6", "MPD:9", "MPD:11", "MPD:18",
     #   "MPD:20", "MPD:24", "MPD:28", "MPD:30", "MPD:33", "MPD:34", "MPD:36",
     #   "MPD:37", "MPD:39", "MPD:40", "MPD:42", "MPD:47", "MPD:66", "MPD:68",
-    #   "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438", "MPD:457",
-    #   "MPD:473", "MPD:481", "MPD:759", "MPD:766", "MPD:770", "MPD:849",
-    #   "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005", "MPD:1017",
-    #   "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
+    #   "MPD:71", "MPD:75", "MPD:78", "MPD:122", "MPD:169", "MPD:438",
+    #   "MPD:457","MPD:473", "MPD:481", "MPD:759", "MPD:766", "MPD:770",
+    #   "MPD:849",  "MPD:857", "MPD:955", "MPD:964", "MPD:988", "MPD:1005",
+    #   "MPD:1017", "MPD:1204", "MPD:1233", "MPD:1235", "MPD:1236", "MPD:1237"]
+
     test_ids = [
         'MPD:6', 'MPD:849', 'MPD:425', 'MPD:569', "MPD:10", "MPD:1002",
         "MPD:39", "MPD:2319"]
@@ -163,7 +164,7 @@ class MPD(Source):
 
     def _process_ontology_mappings_file(self, limit):
 
-        line_counter = 0
+        # line_counter = 0  # TODO unused
 
         logger.info("Processing ontology mappings...")
         raw = '/'.join((self.rawdir, 'ontology_mappings.csv'))
@@ -171,9 +172,8 @@ class MPD(Source):
         with open(raw, 'r') as f:
             reader = csv.reader(f)
             # read the header row; skip
-            header = f.readline()
+            f.readline()
             for row in reader:
-                # blowing up on (trailing) empty line
                 try:
                     (assay_id, ont_term, descrip) = row
                 except ValueError:
@@ -186,11 +186,10 @@ class MPD(Source):
                         self.assayhash[assay_id]['ont_terms'] = set()
                     self.assayhash[assay_id]['ont_terms'].add(ont_term)
 
-
         return
 
     def _process_straininfo(self, limit):
-        line_counter = 0
+        # line_counter = 0  # TODO unused
         if self.testMode:
             g = self.testgraph
         else:
@@ -207,11 +206,12 @@ class MPD(Source):
             reader = csv.reader(f, delimiter=',', quotechar='\"')
             f.readline()  # read the header row; skip
             for row in reader:
-                (strain_name, vendor, stocknum, panel, mpd_strainid, straintype,
-                 n_proj, n_snp_datasets, mpdshortname, url) = row
+                (strain_name, vendor, stocknum, panel, mpd_strainid,
+                 straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
                 # create the strain as an instance of the taxon
-                if self.testMode and 'MPD:'+str(mpd_strainid) not in self.test_ids:
+                if self.testMode and \
+                        'MPD:'+str(mpd_strainid) not in self.test_ids:
                     continue
                 strain_id = 'MPD-strain:'+str(mpd_strainid)
                 gu.addIndividualToGraph(g, strain_id, strain_name, tax_id)
@@ -254,7 +254,7 @@ class MPD(Source):
             reader = csv.reader(f)
             # read the header row; skip
             header = f.readline()
-            #logger.info("HEADER: %s", header)
+            logger.info("HEADER: %s", header)
             for row in reader:
                 # measnum,projsym,varname,descrip,units,cat1,cat2,cat3,
                 # intervention,intparm,appmeth,panelsym,datatype,sextested,
@@ -329,8 +329,8 @@ class MPD(Source):
                     strain_scores_by_measure[strain_num] = {}
                 if sex not in strain_scores_by_measure[strain_num]:
                     strain_scores_by_measure[strain_num][sex] = {}
-                strain_scores_by_measure[strain_num][sex][assay_num] = {
-                    'mean':float(mean), 'zscore':float(zscore)}
+                strain_scores_by_measure[strain_num][sex][assay_num] = \
+                    {'mean': float(mean), 'zscore': float(zscore)}
 
             # end loop over strainmeans
         self.score_means_by_measure = score_means_by_measure
@@ -377,8 +377,10 @@ class MPD(Source):
                             assay_label = self.assayhash[m]['assay_label']
                             if assay_label is not None:
                                 assay_label += ' ('+str(m)+')'
-                            assay_type = self.assayhash[m]['assay_type']
-                            assay_description = self.assayhash[m]['description']
+                            # TODO unused
+                            # assay_type = self.assayhash[m]['assay_type']
+                            assay_description = \
+                                self.assayhash[m]['description']
                             assay_type_id = Provenance.prov_types['assay']
                             comment = ' '.join((assay_label,
                                                 '(zscore='+str(zscore)+')'))
@@ -407,7 +409,8 @@ class MPD(Source):
         """
         Create an association between a sex-specific strain id
         and each of the phenotypes.
-        Here, we create a genotype from the strain, and a sex-specific genotype.
+        Here, we create a genotype from the strain,
+        and a sex-specific genotype.
         Each of those genotypes are created as anonymous nodes.
 
         The evidence code is hardcoded to be:
@@ -464,7 +467,7 @@ class MPD(Source):
             Genotype.object_properties['has_sex_agnostic_genotype_part'],
             genotype_id)
 
-        ##############    BUILD THE G2P ASSOC    #############
+        # #############    BUILD THE G2P ASSOC    #############
         # TODO add more provenance info when that model is completed
 
         if phenotypes is not None:
@@ -512,15 +515,18 @@ class MPD(Source):
         if intervention is not None and intervention != "":
             description += " in response to [" + intervention + "]"
         if intparm is not None and intervention != "":
-            description += ". This represents the [" + intparm + \
-                           "] arm, using materials and methods that included ["+\
-                            appmeth + "]"
+            description += \
+                ". This represents the [" + intparm + \
+                "] arm, using materials and methods that included [" +\
+                appmeth + "]"
 
-        description += ".  The overall experiment is entitled [" + projsym + "].  "
+        description += \
+            ".  The overall experiment is entitled [" + projsym + "].  "
 
-        description += "It was conducted in [" + sextested + "] mice at [" + \
-                        ageweeks + "] of age in" + " [" + nstrainstested + \
-                        "] different mouse strains. "
+        description += \
+            "It was conducted in [" + sextested + "] mice at [" + \
+            ageweeks + "] of age in" + " [" + nstrainstested + \
+            "] different mouse strains. "
         description += "Keywords: " + cat1 + \
                        ((", " + cat2) if cat2.strip() is not "" else "") + \
                        ((", " + cat3) if cat3.strip() is not "" else "") + "."

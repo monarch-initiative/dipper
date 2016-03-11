@@ -21,9 +21,10 @@ class GWASCatalog(Source):
     """
     The NHGRI-EBI Catalog of published genome-wide association studies.
 
-    We link the variants recorded here to the curated EFO-classes using a "contributes_to" linkage because
-    the only thing we know is that the SNPs are associated with the trait/disease, but we don't know if it
-    is actually causative.
+    We link the variants recorded here to the curated EFO-classes using a
+    "contributes_to" linkage because the only thing we know is that the SNPs
+    are associated with the trait/disease,
+    but we don't know if it is actually causative.
 
     Description of the GWAS catalog is here:
     http://www.ebi.ac.uk/gwas/docs/fileheaders#_file_headers_for_catalog_version_1_0_1
@@ -58,8 +59,8 @@ class GWASCatalog(Source):
             'http://creativecommons.org/licenses/by/3.0/', None)
         # 'http://www.ebi.ac.uk/gwas/docs/about'  # TODO add this
 
-        if 'test_ids' not in config.get_config() \
-            or 'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or \
+                'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']
@@ -145,9 +146,9 @@ class GWASCatalog(Source):
                      platform_with_snps_passing_qc, cnv_flag, mapped_trait,
                      mapped_trait_uri) = row
 
-                    intersect = list(
-                        set([str(i) for i in self.test_ids['gene']]) \
-                            & set(re.split(r',', snp_gene_nums)))
+                    intersect = \
+                        list(set([str(i) for i in self.test_ids['gene']]) &
+                             set(re.split(r',', snp_gene_nums)))
                     # skip if no matches found in test set
                     if self.testMode and len(intersect) == 0:
                         continue
@@ -186,8 +187,8 @@ class GWASCatalog(Source):
                         # rs numbers.
                     elif re.match(r'chr', strongest_snp_risk_allele):
                         # like: chr10:106180121-G
-                        rs_id = ':'+\
-                            'gwas-'+re.sub(
+                        rs_id = ':gwas-' + \
+                            re.sub(
                                 r':', '-', strongest_snp_risk_allele.strip())
                     elif strongest_snp_risk_allele.strip() == '':
                         # logger.debug(
@@ -222,9 +223,10 @@ class GWASCatalog(Source):
 
                     # add the feature to the graph
                     snp_description = None
-                    if risk_allele_frequency != '' \
-                            and risk_allele_frequency != 'NR':
-                        snp_description = str(risk_allele_frequency)+\
+                    if risk_allele_frequency != '' and \
+                            risk_allele_frequency != 'NR':
+                        snp_description = \
+                            str(risk_allele_frequency) + \
                             ' [risk allele frequency]'
 
                     f = Feature(
@@ -256,11 +258,11 @@ class GWASCatalog(Source):
                         current_rs_id += str(snp_id_current)
                         gu.addDeprecatedIndividual(g, rs_id, current_rs_id)
                         # TODO check on this
-                        # should we add the annotations to the current, or orig?
+                        # should we add the annotations to the current
+                        # or orig?
                         gu.makeLeader(g, current_rs_id)
                     else:
                         gu.makeLeader(g, rs_id)
-
 
                     # add the feature as a sequence alteration
                     # affecting various genes
@@ -269,8 +271,8 @@ class GWASCatalog(Source):
                     if snp_gene_nums != '':
                         for s in re.split(r',', snp_gene_nums):
                             s = s.strip()
-                             # still have to test for this,
-                             # because sometimes there's a leading comma
+                            # still have to test for this,
+                            # because sometimes there's a leading comma
                             if s != '':
                                 gene_id = 'NCBIGene:'+s
                                 geno.addAlleleOfGene(rs_id, gene_id)
@@ -291,11 +293,13 @@ class GWASCatalog(Source):
                                 'downstream_of_sequence_of'],
                             upstream_gene_id)
 
-                    description = 'A study of ' + disease_or_trait + ' in ' +\
-                            initial_sample_description
+                    description = 'A study of ' + disease_or_trait + \
+                        ' in ' + initial_sample_description
                     if replicate_sample_description != '':
-                        description = ' '.join(
-                            (description, 'with', replicate_sample_description))
+                        description = \
+                            ' '.join(
+                                (description, 'with',
+                                 replicate_sample_description))
                     if platform_with_snps_passing_qc != '':
                         description = ' '.join(
                             (description, 'on platform',
@@ -314,7 +318,8 @@ class GWASCatalog(Source):
                                 self.name, rs_id, tid,
                                 gu.object_properties['contributes_to'])
                             assoc.add_source(pubmed_id)
-                            # combinatorial evidence used in automatic assertion
+                            # combinatorial evidence
+                            # used in automatic assertion
                             eco_id = 'ECO:0000213'
                             assoc.add_evidence(eco_id)
 
@@ -323,8 +328,8 @@ class GWASCatalog(Source):
                             # assoc.set_score(pvalue)
                             assoc.add_association_to_graph(g)
 
-                    if not self.testMode \
-                            and (limit is not None and line_counter > limit):
+                    if not self.testMode and\
+                            (limit is not None and line_counter > limit):
                         break
 
             Assoc(self.name).load_all_properties(g)
@@ -366,6 +371,7 @@ class GWASCatalog(Source):
         import unittest
         from tests.test_gwascatalog import GWASCatalogTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(GWASCatalogTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(GWASCatalogTestCase)
 
         return test_suite

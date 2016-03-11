@@ -55,13 +55,14 @@ class EOM(PostgreSQLSource):
 
         # update the dataset object with details about this resource
         # TODO put this into a conf file?
-        self.dataset = Dataset('eom', 'EOM',
-                               'http://elementsofmorphology.nih.gov', None,
-                               'http://www.genome.gov/copyright.cfm',
-                               'https://creativecommons.org/publicdomain/mark/1.0/')
+        self.dataset = Dataset(
+            'eom', 'EOM', 'http://elementsofmorphology.nih.gov', None,
+            'http://www.genome.gov/copyright.cfm',
+            'https://creativecommons.org/publicdomain/mark/1.0/')
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() or 'disco' not in config.get_config()['dbauth']:
+        if 'dbauth' not in config.get_config() or \
+                'disco' not in config.get_config()['dbauth']:
             logger.error("not configured with PG user/password.")
 
         # source-specific warnings.  will be cleared when resolved.
@@ -72,13 +73,13 @@ class EOM(PostgreSQLSource):
         '''create the connection details for DISCO'''
 
         cxn = config.get_config()['dbauth']['disco']
-        cxn.update({'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
-                    'port': 5432})
+        cxn.update(
+            {'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
+             'port': 5432})
 
-        self.dataset.setFileAccessUrl(''.join(('jdbc:postgresql://',
-                                               cxn['host'], ':',
-                                               str(cxn['port']), '/',
-                                               cxn['database'])))
+        self.dataset.setFileAccessUrl(
+            ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
+                    '/', cxn['database'])))
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -137,7 +138,8 @@ class EOM(PostgreSQLSource):
                 rdf:label Literal(eom label)
                 OIO:hasRelatedSynonym Literal(synonym list)
                 IAO:definition Literal(objective_def. subjective def)
-                foaf:depiction Literal(small_image_url),Literal(large_image_url)
+                foaf:depiction Literal(small_image_url),
+                               Literal(large_image_url)
                 foaf:page Literal(page_url)
                 rdfs:comment Literal(long commented text)
 
@@ -154,11 +156,12 @@ class EOM(PostgreSQLSource):
             filereader = csv.reader(f1, delimiter='\t', quotechar='\"')
             for line in filereader:
                 line_counter += 1
-                (morphology_term_id, morphology_term_num, morphology_term_label,
-                 morphology_term_url, terminology_category_label,
-                 terminology_category_url, subcategory, objective_definition,
-                 subjective_definition, comments, synonyms, replaces,
-                 small_figure_url, large_figure_url, e_uid, v_uid, v_uuid,
+                (morphology_term_id, morphology_term_num,
+                 morphology_term_label, morphology_term_url,
+                 terminology_category_label, terminology_category_url,
+                 subcategory, objective_definition, subjective_definition,
+                 comments, synonyms, replaces, small_figure_url,
+                 large_figure_url, e_uid, v_uid, v_uuid,
                  v_last_modified) = line
 
                 # note:
@@ -174,18 +177,19 @@ class EOM(PostgreSQLSource):
 
                 # Assemble the description text
 
-                if subjective_definition != '' and not (re.match(r'.+\.$',
-                                                                 subjective_definition)):
+                if subjective_definition != '' and not (
+                        re.match(r'.+\.$', subjective_definition)):
                     # add a trailing period.
                     subjective_definition = subjective_definition.strip() + '.'
-                if objective_definition != '' and not (re.match(r'.+\.$',
-                                                                objective_definition)):
+                if objective_definition != '' and not (
+                        re.match(r'.+\.$', objective_definition)):
                     # add a trailing period.
                     objective_definition = objective_definition.strip() + '.'
 
-                definition = '  '.join((objective_definition,
-                                        subjective_definition)).strip()
-
+                definition = \
+                    '  '.join(
+                        (objective_definition, subjective_definition)).strip()
+                        
                 gu.addDefinition(self.graph, morphology_term_id, definition)
 
                 # <term id> FOAF:depicted_by literal url
@@ -209,14 +213,16 @@ class EOM(PostgreSQLSource):
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        gu.addSynonym(self.graph, morphology_term_id, s.strip(),
-                                      gu.properties['hasExactSynonym'])
+                        gu.addSynonym(
+                            self.graph, morphology_term_id, s.strip(),
+                            gu.properties['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
-                        gu.addSynonym(self.graph, morphology_term_id, s.strip(),
-                                      gu.properties['hasRelatedSynonym'])
+                        gu.addSynonym(
+                            self.graph, morphology_term_id, s.strip(),
+                            gu.properties['hasRelatedSynonym'])
 
                 # morphology_term_id has page morphology_term_url
                 gu.addPage(self.graph, morphology_term_id, morphology_term_url)
@@ -243,7 +249,8 @@ class EOM(PostgreSQLSource):
             for line in f1:
                 line_counter += 1
 
-                (morphology_term_id, morphology_term_label, hp_id, hp_label, notes) = line.split('\t')
+                (morphology_term_id, morphology_term_label, hp_id, hp_label,
+                 notes) = line.split('\t')
 
                 # Sub out the underscores for colons.
                 hp_id = re.sub('_', ':', hp_id)
@@ -251,7 +258,8 @@ class EOM(PostgreSQLSource):
                     # add the HP term as a class
                     gu.addClassToGraph(self.graph, hp_id, None)
                     # Add the HP ID as an equivalent class
-                    gu.addEquivalentClass(self.graph, morphology_term_id, hp_id)
+                    gu.addEquivalentClass(
+                        self.graph, morphology_term_id, hp_id)
                 else:
                     logger.warning('No matching HP term for %s',
                                    morphology_term_label)
