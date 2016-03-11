@@ -63,7 +63,7 @@ class AnimalQTLdb(Source):
             'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
-            'url': AQDL + 'tmp/QTL_GG_4.0.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz'},
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
