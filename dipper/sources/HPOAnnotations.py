@@ -301,8 +301,9 @@ class HPOAnnotations(Source):
                                 pub = omimurl
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
-                                orphaneturl = ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                                       str(orphanetnum)))
+                                orphaneturl = \
+                                    ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                             str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
@@ -474,14 +475,23 @@ class HPOAnnotations(Source):
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            csvfile.readline()  # skip the header row
+            header = csvfile.readline()  # skip the header row
+            #logger.info("HEADER: %s",header)
             disease_id = None
             for row in filereader:
-                (did, dname, gid, gene_name, genotype, gene_symbols,
-                 phenotype_id, phenotype_name, age_of_onset_id,
-                 age_of_onseet_name, eid, evidence_name, frequency, sex_id,
-                 sex_name, negation_id, negation_name, description, pub_ids,
-                 assigned_by, date_created) = row
+
+                if 21 == len(row):
+                    (did, dname, gid, gene_name, genotype, gene_symbols,
+                     phenotype_id, phenotype_name, age_of_onset_id,
+                     age_of_onset_name, eid, evidence_name, frequency, sex_id,
+                     sex_name, negation_id, negation_name, description, pub_ids,
+                     assigned_by, date_created) = row
+                else:
+                    logger.warning(
+                        "Wrong number of columns! expected 21, got: %s in: %s",
+                        len(row), raw)
+                    logger.warning("%s", row)
+                    continue
 
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
