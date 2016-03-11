@@ -24,10 +24,16 @@ __copyright__ = "Copyright (c) 2001 Mark Pilgrim"
 # Define exceptions
 class RomanError(Exception):
     pass
+
+
 class OutOfRangeError(RomanError):
     pass
+
+
 class NotIntegerError(RomanError):
     pass
+
+
 class InvalidRomanNumeralError(RomanError):
     pass
 
@@ -73,7 +79,8 @@ romanNumeralPattern = re.compile("""
     (IX|IV|V?I{0,3})    # ones - 9 (IX), 4 (IV), 0-3 (0 to 3 I's),
                         #        or 5-8 (V, followed by 0 to 3 I's)
     [A-Z]               # optional suffix letter,
-                        #    but don't retain <-- differs from original roman.py
+                        #        but don't retain.
+                        #         differs from original roman.py
     $                   # end of string
     """, re.VERBOSE)
 

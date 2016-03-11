@@ -8,6 +8,7 @@ __version__ = 0.4
 # from https://raw.githubusercontent.com/mahmoudadel2/pysed/master/pysed.py
 # with a few edits from us
 
+
 def replace(oldstr, newstr, infile, dryrun=False):
     """
     Sed-like Replace function..
@@ -41,7 +42,8 @@ def rmlinematch(oldstr, infile, dryrun=False):
     Sed-like line deletion function based on given string..
     Usage: pysed.rmlinematch(<Unwanted string>, <Text File>)
     Example: pysed.rmlinematch('xyz', '/path/to/file.txt')
-    Example 'DRYRUN': pysed.rmlinematch('xyz', '/path/to/file.txt', dryrun=True)
+    Example
+        'DRYRUN': pysed.rmlinematch('xyz', '/path/to/file.txt', dryrun=True)
     #This will dump the output to STDOUT instead of changing the input file.
     """
     linelist = []

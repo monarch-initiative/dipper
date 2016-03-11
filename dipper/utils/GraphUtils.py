@@ -56,7 +56,7 @@ class GraphUtils:
         'part_of': 'BFO:0000050',
         'has_part': 'BFO:0000051',
         'mentions': 'IAO:0000142',
-        'model_of' : 'RO:0003301',
+        'model_of': 'RO:0003301',
         'has_gene_product': 'RO:0002205',
         'existence_starts_at': 'UBERON:existence_starts_at',
         'existence_starts_during': 'RO:0002488',
@@ -140,12 +140,13 @@ class GraphUtils:
             g.add((n, DC['description'], Literal(description)))
         return g
 
-    def addOWLPropertyClassRestriction(self, g, class_id, property_id,
-                                       property_value):
+    def addOWLPropertyClassRestriction(
+            self, g, class_id, property_id, property_value):
 
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
-        nid = '_'+re.sub(r':', '', property_id)+re.sub(r':', '', property_value)
+        nid = \
+            '_'+re.sub(r':', '', property_id)+re.sub(r':', '', property_value)
         n = self.getNode(nid)
 
         g.add((n, RDF['type'], self.OWLRESTRICTION))
@@ -153,7 +154,6 @@ class GraphUtils:
         g.add((n, OWL['someValuesFrom'], self.getNode(property_value)))
 
         g.add((self.getNode(class_id), self.SUBCLASS, n))
-
 
         return
 
@@ -179,9 +179,9 @@ class GraphUtils:
         graph.add((self.getNode(person_id), RDF['type'], self.PERSON))
         if person_label is not None:
             graph.add(
-                (self.getNode(person_id), RDFS['label'], Literal(person_label)))
+                (self.getNode(person_id), RDFS['label'],
+                 Literal(person_label)))
         return
-
 
     def addDeprecatedClass(self, g, oldid, newids=None):
         """
@@ -303,7 +303,8 @@ class GraphUtils:
 
     def addComment(self, g, subject_id, comment):
         g.add(
-            (self.getNode(subject_id), DC['comment'], Literal(comment.strip())))
+            (self.getNode(subject_id), DC['comment'],
+             Literal(comment.strip())))
         return
 
     def addDescription(self, g, subject_id, description):
@@ -392,14 +393,13 @@ class GraphUtils:
 
         return
 
-
     def _getNode(self, id, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.
         If an id starts with an underscore, it assigns it to a BNode, otherwise
         it creates it with a standard URIRef. Alternatively,
-        if materialize_bnode is True, it will add any nodes that would have been
-        blank into the BASE space.
+        if materialize_bnode is True,
+        it will add any nodes that would have been blank into the BASE space.
         This will return None if it can't map the node properly.
         :param id:
         :return:
@@ -409,7 +409,7 @@ class GraphUtils:
         if id is not None and re.match(r'^_', id):
             if materialize_bnode is True:
                 n = base[id]
-            else: # replace the leading underscore to make it cleaner
+            else:  # replace the leading underscore to make it cleaner
                 n = BNode(re.sub(r'_', '', id, 1))
         elif re.match(r'^\:', id):  # do we need to remove embedded ID colons?
             n = base[re.sub(r':', '', id, 1)]

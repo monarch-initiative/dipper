@@ -13,7 +13,7 @@ class DipperUtil:
     Various utilities and quick methods used in this application
     """
 
-    def flatten(l):
+    def flatten(self, l):
         """
         Remove None from an array or list
         TODO: rename. flattening a list means promoting sublists elements
