@@ -163,7 +163,8 @@ class Monarch(Source):
     # def get_files_from_git(self):
     #
     #     base_url = 'https://raw.githubusercontent.com'
-    #     path = 'monarch-initiative/data-boutique/master/OMIA-disease-phenotype/000060.txt?'
+    #     path = \
+    #       'monarch-initiative/data-boutique/master/OMIA-disease-phenotype/000060.txt?'
     #     params = {
     #         'token': None
     #     }
