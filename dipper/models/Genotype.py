@@ -507,7 +507,6 @@ class Genotype():
 
         return
 
-
     def addTargetedGeneComplement(
             self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
         if tgc_type is None:

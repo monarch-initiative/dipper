@@ -453,6 +453,7 @@ class Feature():
         self.nobnodes = nobnodes
         return
 
+
 def makeChromID(chrom, reference=None, prefix=None):
     """
     This will take a chromosome number and a NCBI taxon number,

@@ -189,7 +189,7 @@ class EOM(PostgreSQLSource):
                 definition = \
                     '  '.join(
                         (objective_definition, subjective_definition)).strip()
-                        
+
                 gu.addDefinition(self.graph, morphology_term_id, definition)
 
                 # <term id> FOAF:depicted_by literal url

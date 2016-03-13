@@ -2426,7 +2426,7 @@ class MGI(PostgreSQLSource):
             'M. m. domesticus (PA)': '10092',
             'M. m. domesticus (DE)': '10092',
             'laboratory mouse and M. m. castaneus': '10090',
-            'M. hortulanus (Austria)': '10103', # synonymous with Mus spicilegus
+            'M. hortulanus (Austria)': '10103',  # synonymous with Mus spicilegus
             'M. m. musculus and M. hortulanus': '862507',
             'Not Applicable': None,
             'M. mattheyi': '41270',

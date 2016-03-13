@@ -348,7 +348,6 @@ class HPOAnnotations(Source):
         REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
         HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
-
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
             shutil.rmtree(repo_dir)
@@ -476,7 +475,7 @@ class HPOAnnotations(Source):
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = csvfile.readline()  # skip the header row
-            #logger.info("HEADER: %s",header)
+            # logger.info("HEADER: %s",header)
             disease_id = None
             for row in filereader:
 

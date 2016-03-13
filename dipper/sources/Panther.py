@@ -215,9 +215,11 @@ class Panther(Source):
                     # gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where
                     # gene1 OR gene2 are in the taxid list (some-filter)
-                    if (self.tax_ids is not None and 
-                            (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip())) not in self.tax_ids) and
-                                (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip())) not in self.tax_ids)):
+                    if (self.tax_ids is not None and
+                            (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip())) not in
+                             self.tax_ids) and
+                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip())) not in
+                             self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
