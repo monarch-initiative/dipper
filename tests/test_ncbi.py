@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-from dipper.sources.NCBIGene import NCBIGene
-from dipper import curie_map
-from rdflib import Graph
-from tests import test_general, test_source
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
-import os
+# import os
+# from rdflib import Graph
+# from tests import test_general, test_source
+from tests.test_source import SourceTestCase
+from dipper.sources.NCBIGene import NCBIGene
+# from dipper import curie_map
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -27,9 +27,10 @@ class NCBITestCase(SourceTestCase):
         self.source = None
         return
 
-    # TODO add some specific tests to make sure we are hitting all parts of the code
-    #@unittest.skip('test not yet defined')
-    #def test_ncbitest(self):
+    # TODO add some specific tests to make sure we are hitting
+    # all parts of the code
+    # @unittest.skip('test not yet defined')
+    # def test_ncbitest(self):
     #    logger.info("An NCBI-specific test")
     #
     #    return

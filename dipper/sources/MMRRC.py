@@ -2,7 +2,7 @@ import csv
 import re
 import os
 from datetime import datetime
-from stat import *
+from stat import ST_CTIME
 import logging
 
 from dipper.utils.GraphUtils import GraphUtils
@@ -18,38 +18,48 @@ logger = logging.getLogger(__name__)
 
 class MMRRC(Source):
     """
-    Here we process the Mutant Mouse Resource and Research Center (https://www.mmrrc.org) strain data,
+    Here we process the Mutant Mouse Resource and Research Center
+    (https://www.mmrrc.org) strain data,
     which includes:
     *  strains, their mutant alleles
     *  phenotypes of the alleles
     *  descriptions of the research uses of the strains
 
-    Note that some gene identifiers are not included (for many of the transgenics with human genes) in the raw data.
-    We do our best to process the links between the variant and the affected gene, but sometimes the mapping
-    is not clear, and we do not include it.  Many of these details will be solved by merging this source
-    with the MGI data source, who has the variant-to-gene designations.
+    Note that some gene identifiers are not included
+    (for many of the transgenics with human genes) in the raw data.
+    We do our best to process the links between the variant and
+    the affected gene, but sometimes the mapping is not clear,
+    and we do not include it.
+    Many of these details will be solved by merging this source with
+    the MGI data source, who has the variant-to-gene designations.
 
-    Also note that even though the strain pages at the MMRRC site do list phenotypic differences in the context
-    of the strain backgrounds, they do not provide that data to us, and thus we cannot supply that disambiguation here.
+    Also note that even though the strain pages at the MMRRC site do list
+    phenotypic differences in the context of the strain backgrounds,
+    they do not provide that data to us,
+    and thus we cannot supply that disambiguation here.
     """
 
     files = {
-        'catalog': {'file': 'mmrrc_catalog_data.csv',
-                    'url': 'https://www.mmrrc.org/about/mmrrc_catalog_data.csv'},
+        'catalog': {
+            'file': 'mmrrc_catalog_data.csv',
+            'url': 'https://www.mmrrc.org/about/mmrrc_catalog_data.csv'},
     }
 
     test_ids = [
-        'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC', 'MMRRC:037884-UCD', 'MMRRC:000255-MU',
-        'MMRRC:037372-UCD', 'MMRRC:000001-UNC'
+        'MMRRC:037507-MU', 'MMRRC:041175-UCD', 'MMRRC:036933-UNC',
+        'MMRRC:037884-UCD', 'MMRRC:000255-MU', 'MMRRC:037372-UCD',
+        'MMRRC:000001-UNC'
     ]
 
     def __init__(self):
         Source.__init__(self, 'mmrrc')
-
+        self.strain_hash = {}
+        self.id_label_hash = {}
         self.load_bindings()
-        self.dataset = Dataset('mmrrc', 'Mutant Mouse Regional Resource Centers',
-                               'https://www.mmrrc.org', None,
-                               'https://www.mmrrc.org/about/data_download.php')
+        self.dataset = Dataset(
+            'mmrrc', 'Mutant Mouse Regional Resource Centers',
+            'https://www.mmrrc.org', None,
+            'https://www.mmrrc.org/about/data_download.php')
 
         return
 
@@ -60,8 +70,9 @@ class MMRRC(Source):
         st = os.stat(fname)
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
-        # TODO note can set the data version to what is in the header
-        # first line like: This MMRRC catalog data file was generated on 2015-04-22
+        # TODO note: can set the data version to what is in the header
+        # first line like:
+        # This MMRRC catalog data file was generated on 2015-04-22
 
         self.dataset.setVersion(filedate)
 
@@ -84,18 +95,23 @@ class MMRRC(Source):
 
     def _process_phenotype_data(self, limit):
         """
-        # NOTE: If a Strain carries more than one mutation, each Mutation description,
-        i.e., the set: (Mutation Type - Chromosome - Gene Symbol - Gene Name - Allele Symbol - Allele Name)
+        NOTE: If a Strain carries more than one mutation,
+        then each Mutation description,
+        i.e., the set: (
+            Mutation Type - Chromosome - Gene Symbol -
+            Gene Name - Allele Symbol - Allele Name)
         will require a separate line.
 
-        Note that MMRRC curates phenotypes to alleles, even though they distribute only one file with the
+        Note that MMRRC curates phenotypes to alleles,
+        even though they distribute only one file with the
         phenotypes appearing to be associated with a strain.
 
-        So, here we process the allele-to-phenotype relationships separately from the strain-to-allele
-        relationships.
+        So, here we process the allele-to-phenotype relationships separately
+        from the strain-to-allele relationships.
 
         :param limit:
         :return:
+
         """
         if self.testMode:
             g = self.testgraph
@@ -121,22 +137,26 @@ class MMRRC(Source):
                     continue
 
                 (strain_id, strain_label, strain_type_symbol, strain_state,
-                 mgi_allele_id, mgi_allele_symbol, mgi_allele_name, mutation_type, chrom,
-                 mgi_gene_id, mgi_gene_symbol, mgi_gene_name, sds_url, accepted_date, mp_ids,
-                 pubmed_nums, research_areas) = row
+                 mgi_allele_id, mgi_allele_symbol, mgi_allele_name,
+                 mutation_type, chrom, mgi_gene_id, mgi_gene_symbol,
+                 mgi_gene_name, sds_url, accepted_date, mp_ids, pubmed_nums,
+                 research_areas) = row
 
                 if self.testMode and (strain_id not in self.test_ids):
                     continue
 
-                # strip off stuff after the dash - is the holding center important?
+                # strip off stuff after the dash -
+                # is the holding center important?
                 # MMRRC:00001-UNC --> MMRRC:00001
-                strain_id = re.sub('-\w+$', '', strain_id)
+                strain_id = re.sub(r'-\w+$', '', strain_id)
 
                 self.id_label_hash[strain_id] = strain_label
 
-                # get the variant or gene to save for later building of the genotype
+                # get the variant or gene to save for later building of
+                # the genotype
                 if strain_id not in self.strain_hash:
-                    self.strain_hash[strain_id] = {'variants': set(), 'genes': set()}
+                    self.strain_hash[strain_id] = {'variants': set(),
+                                                   'genes': set()}
 
                 # clean up the bad one
                 if mgi_allele_id == 'multiple mutation':
@@ -147,31 +167,40 @@ class MMRRC(Source):
                     self.strain_hash[strain_id]['variants'].add(mgi_allele_id)
                     self.id_label_hash[mgi_allele_id] = mgi_allele_symbol
 
-                    # use the following if needing to add the sequence alteration types
-                    # var_type = self._get_variant_type_from_abbrev(mutation_type)
-                    # make a sequence alteration for this variant locus, and link the variation type to it
-                    # sa_id = '_'+re.sub(':','',mgi_allele_id)+'SA'
+                    # use the following if needing to add the
+                    # sequence alteration types
+                    # var_type =
+                    #   self._get_variant_type_from_abbrev(mutation_type)
+                    # make a sequence alteration for this variant locus,
+                    # and link the variation type to it
+                    # sa_id = '_'+re.sub(r':','',mgi_allele_id)+'SA'
                     # if self.nobnodes:
                     #     sa_id = ':'+sa_id
                     # gu.addIndividualToGraph(g, sa_id, None, var_type)
-                    # geno.addSequenceAlterationToVariantLocus(sa_id, mgi_allele_id)
+                    # geno.addSequenceAlterationToVariantLocus(sa_id,
+                    #                                          mgi_allele_id)
 
                 # scrub out any spaces
-                mgi_gene_id = re.sub('\s+', '', mgi_gene_id)
+                mgi_gene_id = re.sub(r'\s+', '', mgi_gene_id)
                 if mgi_gene_id.strip() != '':
-                    if re.match('Gene\s*ID:', mgi_gene_id, re.I):
-                        mgi_gene_id = re.sub('Gene\s*ID:\s*', 'NCBIGene:', mgi_gene_id)
-                    elif not re.match('MGI', mgi_gene_id):
+                    if re.match(r'Gene\s*ID:', mgi_gene_id, re.I):
+                        mgi_gene_id = re.sub(r'Gene\s*ID:\s*', 'NCBIGene:',
+                                             mgi_gene_id)
+                    elif not re.match(r'MGI', mgi_gene_id):
                         logger.info("Gene id not recognized: %s", mgi_gene_id)
-                        if re.match('\d+$', mgi_gene_id):
-                            mgi_gene_id = 'MGI:'+str(mgi_gene_id)  # assume that if it's all numbers, it's MGI
+                        if re.match(r'\d+$', mgi_gene_id):
+                            # assume that if it's all numbers, then it's MGI
+                            mgi_gene_id = 'MGI:'+str(mgi_gene_id)
                             logger.info("Assuming numerics are MGI.")
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
                     self.id_label_hash[mgi_gene_id] = mgi_gene_symbol
 
-                # catch some errors - some things have gene labels, but no identifiers - report
+                # catch some errors -
+                # some things have gene labels, but no identifiers - report
                 if mgi_gene_symbol.strip() != '' and mgi_gene_id == '':
-                    logger.error("Gene label with no identifier for strain %s: %s", strain_id, mgi_gene_symbol)
+                    logger.error(
+                        "Gene label with no identifier for strain %s: %s",
+                        strain_id, mgi_gene_symbol)
                     genes_with_no_ids.add(mgi_gene_symbol.strip())
                     # make a temp id for genes that aren't identified
                     # tmp_gene_id = '_'+mgi_gene_symbol
@@ -180,12 +209,13 @@ class MMRRC(Source):
 
                 # split apart the mp ids
                 # ataxia [MP:0001393] ,hypoactivity [MP:0001402] ...
-                # mp_ids are now a comma delimited list with MP terms in brackets
+                # mp_ids are now a comma delimited list
+                # with MP terms in brackets
                 phenotype_ids = []
                 if mp_ids != '':
-                    for i in re.split(',', mp_ids):
+                    for i in re.split(r',', mp_ids):
                         i = i.strip()
-                        mps = re.search('\[(.*)\]', i)
+                        mps = re.search(r'\[(.*)\]', i)
                         if mps is not None:
                             mp_id = mps.group(1).strip()
                             phenotype_ids.append(mp_id)
@@ -193,13 +223,15 @@ class MMRRC(Source):
                 # pubmed ids are space delimited
                 pubmed_ids = []
                 if pubmed_nums.strip() != '':
-                    for i in re.split('\s+', pubmed_nums):
+                    for i in re.split(r'\s+', pubmed_nums):
                         pmid = 'PMID:'+i.strip()
                         pubmed_ids.append(pmid)
-                        r = Reference(pmid, Reference.ref_types['journal_article'])
+                        r = Reference(pmid,
+                                      Reference.ref_types['journal_article'])
                         r.addRefToGraph(g)
 
-                # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001 is a good example of 4 genotype parts
+                # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001
+                # is a good example of 4 genotype parts
 
                 gu.addClassToGraph(g, mouse_taxon, None)
                 if research_areas.strip() == '':
@@ -209,21 +241,27 @@ class MMRRC(Source):
                 strain_type = mouse_taxon
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
-                gu.addIndividualToGraph(g, strain_id, strain_label, strain_type, research_areas)  # an inst of mouse??
+                gu.addIndividualToGraph(
+                    g, strain_id, strain_label, strain_type,
+                    research_areas)  # an inst of mouse??
                 gu.makeLeader(g, strain_id)
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
-                    gu.addClassToGraph(g, pid, None)   # assume the phenotype label is in the ontology
+                    # assume the phenotype label is in the ontology
+                    gu.addClassToGraph(g, pid, None)
                     if mgi_allele_id is not None and mgi_allele_id != '':
-                        assoc = G2PAssoc(self.name, mgi_allele_id, pid, gu.object_properties['has_phenotype'])
+                        assoc = G2PAssoc(self.name, mgi_allele_id, pid,
+                                         gu.object_properties['has_phenotype'])
                         for p in pubmed_ids:
                             assoc.add_source(p)
                         assoc.add_association_to_graph(g)
                     else:
-                        logger.info("Phenotypes and no allele for %s", strain_id)
+                        logger.info("Phenotypes and no allele for %s",
+                                    strain_id)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode and (
+                        limit is not None and line_counter > limit):
                     break
 
             # now that we've collected all of the variant information, build it
@@ -238,7 +276,8 @@ class MMRRC(Source):
                     for v in variants:
                         vl_id = v
                         vl_symbol = self.id_label_hash[vl_id]
-                        geno.addAllele(vl_id, vl_symbol, geno.genoparts['variant_locus'])
+                        geno.addAllele(vl_id, vl_symbol,
+                                       geno.genoparts['variant_locus'])
                         vl_set.add(vl_id)
                         if len(variants) == 1 and len(genes) == 1:
                             for gene in genes:
@@ -249,12 +288,13 @@ class MMRRC(Source):
                     # it's just anonymous variants in some gene
                     for gene in genes:
                         vl_id = '_'+gene+'-VL'
-                        vl_id = re.sub(':', '', vl_id)
+                        vl_id = re.sub(r':', '', vl_id)
                         if self.nobnodes:
                             vl_id = ':'+vl_id
                         vl_symbol = self.id_label_hash[gene]+'<?>'
                         self.id_label_hash[vl_id] = vl_symbol
-                        geno.addAllele(vl_id, vl_symbol, geno.genoparts['variant_locus'])
+                        geno.addAllele(vl_id, vl_symbol,
+                                       geno.genoparts['variant_locus'])
                         geno.addGene(gene, self.id_label_hash[gene])
                         geno.addAlleleOfGene(vl_id, gene)
                         vl_set.add(vl_id)
@@ -263,24 +303,31 @@ class MMRRC(Source):
                 vl_list = sorted(vl_set)
                 vslc_list = []
                 for vl in vl_list:
-                    vslc_id = '_'+re.sub('^_', '', vl)+'U'  # for unknown zygosity
-                    vslc_id = re.sub(':', '', vslc_id)
+                    # for unknown zygosity
+                    vslc_id = '_'+re.sub(r'^_', '', vl)+'U'
+                    vslc_id = re.sub(r':', '', vslc_id)
                     if self.nobnodes:
                         vslc_id = ':' + vslc_id
                     vslc_label = self.id_label_hash[vl] + '/?'
                     self.id_label_hash[vslc_id] = vslc_label
                     vslc_list.append(vslc_id)
-                    geno.addPartsToVSLC(vslc_id, vl, None, geno.zygosity['indeterminate'],
-                                        geno.object_properties['has_alternate_part'], None)
-                    gu.addIndividualToGraph(g, vslc_id, vslc_label, geno.genoparts['variant_single_locus_complement'])
+                    geno.addPartsToVSLC(
+                        vslc_id, vl, None, geno.zygosity['indeterminate'],
+                        geno.object_properties['has_alternate_part'], None)
+                    gu.addIndividualToGraph(
+                        g, vslc_id, vslc_label,
+                        geno.genoparts['variant_single_locus_complement'])
                 if len(vslc_list) > 0:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
-                        gvc_id = re.sub(':', '', gvc_id)
+                        gvc_id = re.sub(r':', '', gvc_id)
                         if self.nobnodes:
                             gvc_id = ':'+gvc_id
-                        gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
-                        gu.addIndividualToGraph(g, gvc_id, gvc_label, geno.genoparts['genomic_variation_complement'])
+                        gvc_label = \
+                            '; '.join(self.id_label_hash[v] for v in vslc_list)
+                        gu.addIndividualToGraph(
+                            g, gvc_id, gvc_label,
+                            geno.genoparts['genomic_variation_complement'])
                         for vslc_id in vslc_list:
                             geno.addVSLCtoParent(vslc_id, gvc_id)
                     else:
@@ -289,39 +336,56 @@ class MMRRC(Source):
                         gvc_label = self.id_label_hash[gvc_id]
 
                     genotype_label = gvc_label + ' [n.s.]'
-                    bkgd_id = '_'+re.sub(':', '', '-'.join((geno.genoparts['unspecified_genomic_background'], s)))
+                    bkgd_id = \
+                        '_' + re.sub(r':', '', '-'.join(
+                            (geno.genoparts['unspecified_genomic_background'],
+                             s)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
                     if self.nobnodes:
                         bkgd_id = ':'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
-                    geno.addGenomicBackground(bkgd_id, 'unspecified ('+s+')',
-                                              geno.genoparts['unspecified_genomic_background'],
-                                              "A placeholder for the unspecified genetic background for "+s)
-                    geno.addGenomicBackgroundToGenotype(bkgd_id, genotype_id,
-                                                        geno.genoparts['unspecified_genomic_background'])
-                    geno.addParts(gvc_id, genotype_id, geno.object_properties['has_alternate_part'])
+                    geno.addGenomicBackground(
+                        bkgd_id, 'unspecified ('+s+')',
+                        geno.genoparts['unspecified_genomic_background'],
+                        "A placeholder for the " +
+                        "unspecified genetic background for "+s)
+                    geno.addGenomicBackgroundToGenotype(
+                        bkgd_id, genotype_id,
+                        geno.genoparts['unspecified_genomic_background'])
+                    geno.addParts(
+                        gvc_id, genotype_id,
+                        geno.object_properties['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
-                    gu.addTriple(g, s, geno.object_properties['has_genotype'], genotype_id)
+                    gu.addTriple(
+                        g, s, geno.object_properties['has_genotype'],
+                        genotype_id)
                 else:
-                    # logger.debug("Strain %s is not making a proper genotype.", s)
+                    # logger.debug(
+                    #   "Strain %s is not making a proper genotype.", s)
                     pass
 
-            gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-            gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-            gu.loadProperties(g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
+            gu.loadProperties(
+                g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
+            gu.loadProperties(
+                g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
+            gu.loadProperties(
+                g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
             gu.loadAllProperties(g)
 
-            logger.warn("The following gene symbols did not list identifiers: %s",
-                        str(sorted(list(genes_with_no_ids))))
+            logger.warning(
+                "The following gene symbols did not list identifiers: %s",
+                str(sorted(list(genes_with_no_ids))))
 
         return
 
     @staticmethod
     def _get_variant_type_from_abbrev(abbrev):
         """
-        All variants are generically typed as "sequence_alterations" unless otherwise stated.
+        All variants are generically typed as "sequence_alterations"
+        unless otherwise stated.
         :param abbrev:
         :return:
+
         """
         variant_type = None
 
@@ -332,7 +396,8 @@ class MMRRC(Source):
             'GT': 'SO:0001059',  # gene trap
             'CI': 'SO:0001059',  # chemically induced mutation
             'RAD': 'SO:0001059',  # radiation induced mutation
-            'CH': 'SO:1000183',  # chromosomal aberration --> chromosomal structure variation
+            # chromosomal aberration --> chromosomal structure variation
+            'CH': 'SO:1000183',
             'RB': 'SO:1000043',  # Robertsonian translocation
             'TL': 'SO:1000048',  # reciprocal translocation
             'TP': 'SO:0000453',  # transposition
@@ -345,7 +410,7 @@ class MMRRC(Source):
         if abbrev in var_dict:
             variant_type = var_dict[abbrev]
         else:
-            logger.warn("Variant type not recognized: %s", abbrev)
+            logger.warning("Variant type not recognized: %s", abbrev)
 
         return variant_type
 

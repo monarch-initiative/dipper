@@ -118,7 +118,12 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * OMIA (non-laboratory animal phenotypes)
     * Wormbase (genes, alleles, phenotypes)
     * FlyBase (genotype, phenotype)
-    
+
+   ```
+   hpoa,zfin,omim,biogrid,mgi,impc,panther,ncbigene,ucscbands,
+   ctd,genereviews,eom,coriell,clinvar,monochrom,kegg,animalqtldb,
+   ensembl,hgnc,orphanet,omia,flybase,mmrrc,wormbase,mpd,gwascatalog,go
+   ``` 
 * Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
 Please see our [best-practies documentation](sources/README.md) for details on writing new Source parsers 
 using Dipper code, and make a Pull request.  
@@ -151,4 +156,3 @@ For more information regarding identifiers terminology and notation, see McMurry
 
 More detailed identifier documentation for Monarch is a work in progress, available [here:](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit)
 Please feel free to pose any questions or concerns to info@monarchinitiative.org.
-

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-from dipper.sources.ZFIN import ZFIN
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from tests.test_source import SourceTestCase
+from dipper.sources.ZFIN import ZFIN
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -23,13 +22,18 @@ class ZFINTestCase(SourceTestCase):
         self.source = None
         return
 
-    @unittest.skip('Will eventually write test to check if phenotype sextuples are mapped to ZP ids')
+    @unittest.skip(
+        'Will eventually write test to check if phenotype sextuples' +
+        'are mapped to ZP ids')
     def test_allZPAvailable(self):
         """
-        This test will identify if there are any missing ZP terms in the mapping file
+        This test will identify if there are
+        any missing ZP terms in the mapping file
         :return:
+
         """
-        # TODO add this test to check if all phenotype sextuples are mapped to ZP ids
+        # TODO add this test to check if all phenotype sextuples
+        # are mapped to ZP ids
 
         return
 

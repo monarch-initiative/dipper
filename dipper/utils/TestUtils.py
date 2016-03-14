@@ -1,7 +1,7 @@
-from rdflib import Graph
 import os
 import logging
 import sys
+from rdflib import Graph
 
 logger = logging.getLogger(__name__)
 

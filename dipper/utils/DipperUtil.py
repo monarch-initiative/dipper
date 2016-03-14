@@ -1,15 +1,10 @@
-__author__ = 'nlw'
-
-
 import logging
-import re
 import unicodedata
 import urllib
-from urllib import request, parse
 from Bio import Entrez
 import json
 
-
+__author__ = 'nlw'
 logger = logging.getLogger(__name__)
 
 
@@ -21,16 +16,19 @@ class DipperUtil:
     def flatten(self, l):
         """
         Remove None from an array or list
+        TODO: rename. flattening a list means promoting sublists elements
+        not removing empty elements
         :param l: An array
         :return:  An array with the None elements removed
+
         """
+
         l = list(filter(None.__ne__, l))
 
         return l
 
     def remove_control_characters(self, s):
         return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
-
 
     @staticmethod
     def get_ncbi_taxon_num_by_label(label):
@@ -44,7 +42,7 @@ class DipperUtil:
         path = 'entrez/eutils/esearch.fcgi'
 
         params = {
-            'db':'taxonomy',
+            'db': 'taxonomy',
             'retmode': 'json',
             'term': label,
         }
@@ -77,7 +75,8 @@ class DipperUtil:
         # first, get the homologene id from the gene id
         # gene_id = '1264'  for testing
         gid = str(gene_num)
-        handle = Entrez.esearch(db="homologene",term=gid+"[Gene ID]", retmode="json")
+        handle = Entrez.esearch(db="homologene", term=gid+"[Gene ID]",
+                                retmode="json")
         record = handle.read()
         j = json.loads(record)
         homologene_ids = j["esearchresult"]["idlist"]

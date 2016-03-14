@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-from dipper.sources.MPD import MPD
-from dipper import curie_map
-from rdflib import Graph
-from tests import test_general, test_source
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
-import os
+# import os
+# from rdflib import Graph
+# from tests import test_general, test_source
+from tests.test_source import SourceTestCase
+from dipper.sources.MPD import MPD
+# from dipper import curie_map
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -27,8 +26,8 @@ class MPDTestCase(SourceTestCase):
         self.source = None
         return
 
-    #@unittest.skip('test not yet defined')
-    #def test_hpotest(self):
+    # @unittest.skip('test not yet defined')
+    # def test_hpotest(self):
     #    logger.info("An MPD-specific test")
     #
     #    return

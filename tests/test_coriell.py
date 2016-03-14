@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
-from dipper.sources.Coriell import Coriell
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from dipper.sources.Coriell import Coriell
+from tests.test_source import SourceTestCase
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

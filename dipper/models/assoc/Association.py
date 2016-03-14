@@ -1,5 +1,3 @@
-__author__ = 'nlw'
-
 import re
 import logging
 import hashlib
@@ -11,12 +9,15 @@ from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
+__author__ = 'nlw'
+
 logger = logging.getLogger(__name__)
 
 
 class Assoc:
     """
-    An abstract class for OBAN (Monarch)-style associations, to enable attribution of source and evidence
+    An abstract class for OBAN (Monarch)-style associations,
+    to enable attribution of source and evidence
     on statements.
     """
 
@@ -78,7 +79,8 @@ class Assoc:
         self.description = None
         self.source = []
         self.evidence = []
-        self.provenance = []   # this is going to be used for the refactored evidence/provenance
+        # this is going to be used for the refactored evidence/provenance
+        self.provenance = []
 
         self.score = None
         self.score_type = None
@@ -107,46 +109,74 @@ class Assoc:
             return
 
         # first, add the direct triple
-        # anonymous nodes are indicated with underscore
+        # anonymous (blank) nodes are indicated with underscore
         s = self.gu.getNode(self.sub)
         o = self.gu.getNode(self.obj)
         p = self.gu.getNode(self.rel)
 
-        g.add((s, p, o))
+        if s is None:
+            logging.error(
+                "Unable to retrieve graph node for Subject %s ", self.sub)
+            return
+                
+        elif p is None:
+            logging.error(
+                "Unable to retrieve graph node for Predicate %s ", self.rel)
+            return
+                
+        elif o is None:
+            logging.error(
+                "Unable to retrieve graph node for Object %s ", self.obj)
+            return
+        else:
+            g.add((s, p, o))
 
         if self.assoc_id is None:
             self.set_association_id()
 
         node = self.gu.getNode(self.assoc_id)
-        g.add((node, RDF['type'], self.gu.getNode(self.assoc_types['association'])))
+        g.add((node, RDF['type'],
+               self.gu.getNode(self.assoc_types['association'])))
 
-        self.gu.addTriple(g, self.assoc_id, self.object_properties['has_subject'], self.sub)
-        self.gu.addTriple(g, self.assoc_id, self.object_properties['has_object'], self.obj)
-        self.gu.addTriple(g, self.assoc_id, self.object_properties['has_predicate'], self.rel)
+        self.gu.addTriple(g, self.assoc_id,
+                          self.object_properties['has_subject'], self.sub)
+        self.gu.addTriple(g, self.assoc_id,
+                          self.object_properties['has_object'], self.obj)
+        self.gu.addTriple(g, self.assoc_id,
+                          self.object_properties['has_predicate'], self.rel)
 
         if self.description is not None:
             self.gu.addDescription(g, self.assoc_id, self.description)
 
         if self.evidence is not None and len(self.evidence) > 0:
             for e in self.evidence:
-                self.gu.addTriple(g, self.assoc_id, self.object_properties['has_evidence'], e)
+                self.gu.addTriple(g, self.assoc_id,
+                                  self.object_properties['has_evidence'], e)
 
         if self.source is not None and len(self.source) > 0:
             for s in self.source:
                 if re.match('http', s):
-                    # TODO assume that the source is a publication?  use Reference class here
-                    self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s, True)
+                    # TODO assume that the source is a publication?
+                    # use Reference class here
+                    self.gu.addTriple(g, self.assoc_id,
+                                      self.object_properties['has_source'], s,
+                                      True)
                 else:
-                    self.gu.addTriple(g, self.assoc_id, self.object_properties['has_source'], s)
+                    self.gu.addTriple(g, self.assoc_id,
+                                      self.object_properties['has_source'], s)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for p in self.provenance:
-                self.gu.addTriple(g, self.assoc_id, self.object_properties['has_provenance'], p)
+                self.gu.addTriple(g, self.assoc_id,
+                                  self.object_properties['has_provenance'], p)
 
         if self.score is not None:
-            self.gu.addTriple(g, self.assoc_id, self.properties['has_measurement'],
-                              Literal(self.score, datatype=XSD['float']), True)
-            # TODO update with some kind of instance of scoring object that has a unit and type
+            self.gu.addTriple(
+                g, self.assoc_id, self.properties['has_measurement'],
+                Literal(self.score, datatype=XSD['float']), True)
+            # TODO
+            # update with some kind of instance of scoring object
+            # that has a unit and type
 
         return
 
@@ -170,14 +200,17 @@ class Assoc:
 
     def set_association_id(self, assoc_id=None):
         """
-        This will set the association ID based on the internal parts of the association.
-        To be used in cases where an external association identifier should be used.
+        This will set the association ID based on the internal parts
+            of the association.
+        To be used in cases where an external association identifier
+            should be used.
 
         :param assoc_id:
         :return:
         """
         if assoc_id is None:
-            self.assoc_id = self.make_association_id(self.definedby, self.sub, self.rel, self.obj)
+            self.assoc_id = self.make_association_id(self.definedby, self.sub,
+                                                     self.rel, self.obj)
         else:
             self.assoc_id = assoc_id
 
@@ -206,6 +239,7 @@ class Assoc:
         :param identifier:
         :return:
         """
+
         if identifier is not None and identifier.strip() != '':
             self.evidence += [identifier]
 
@@ -213,12 +247,14 @@ class Assoc:
 
     def add_source(self, identifier):
         """
-        Add a source identifier (such as publication id) to the association object (maintained as a list)
+        Add a source identifier (such as publication id)
+        to the association object (maintained as a list)
         TODO we need to greatly expand this function!
 
         :param identifier:
         :return:
         """
+
         if identifier is not None and identifier.strip() != '':
             self.source += [identifier]
 
@@ -245,7 +281,8 @@ class Assoc:
 
     def _get_source_uri(self, pub_id):
         """
-        Given some kind of pub_id (which might be a CURIE or url), convert it into a proper node.
+        Given some kind of pub_id (which might be a CURIE or url),
+        convert it into a proper node.
 
         :param pub_id:
         :return: source: Well-formed URI for the given identifier (or url)
@@ -259,17 +296,21 @@ class Assoc:
             if u is not None:
                 source = URIRef(u)
             else:
-                logger.error("An id we don't know how to deal with: %s", pub_id)
+                logger.error(
+                    "An id we don't know how to deal with: %s", pub_id)
 
         return source
 
     @staticmethod
-    def make_association_id(definedby, subject, predicate, object, attributes=None):
+    def make_association_id(definedby, subject, predicate, object,
+                            attributes=None):
         """
-        A method to create unique identifiers for OBAN-style associations, based on all the parts of the assn
+        A method to create unique identifiers for OBAN-style associations,
+        based on all the parts of the association
         If any of the items is empty or None, it will convert it to blank.
         It effectively md5 hashes the (+)-joined string from the values.
-        Subclasses of Assoc can submit an additional array of attributes that will be added to the ID.
+        Subclasses of Assoc can submit an additional array of attributes
+        that will be added to the ID.
 
         :param definedby: The (data) resource that provided the annotation
         :param subject:
@@ -278,10 +319,14 @@ class Assoc:
         :param attributes:
         :return:
         """
-        # note others available: md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
 
-        # putting definedby first, as this will usually be the datasource providing the annotation
-        # this will end up making the first few parts of the id be the same for all annotations in that resource
+        # note others available:
+        #   md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
+        # TEC: at our scale, md5 is in danger of having collisions.
+        # putting definedby first,
+        # as this will usually be the datasource providing the annotation
+        # this will end up making the first few parts of the id
+        # be the same for all annotations in that resource
         items_to_hash = [definedby, subject, predicate, object]
         if attributes is not None:
             items_to_hash += attributes

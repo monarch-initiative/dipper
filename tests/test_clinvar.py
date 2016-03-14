@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-
+import unittest
+import logging
 from dipper.sources.ClinVar import ClinVar
 from tests.test_source import SourceTestCase
 
-import unittest
-import logging
-
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 class ClinVarTestCase(SourceTestCase):
 
@@ -29,7 +28,6 @@ class ClinVarTestCase(SourceTestCase):
     #    logger.info("A ClinVar-specific test")
     #
     #    return
-
 
 if __name__ == '__main__':
     unittest.main()

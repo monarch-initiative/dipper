@@ -17,16 +17,18 @@ logger = logging.getLogger(__name__)
 
 class Monarch(Source):
     """
-    This is the parser for data curated by the [Monarch Initiative](http://www.monarchinitiative.org).  Data is
-    currently maintained in a private repository, soon to be released.
+    This is the parser for data curated by the
+    [Monarch Initiative](http://www.monarchinitiative.org).
+    Data is currently maintained in a private repository, soon to be released.
+
     """
 
     def __init__(self):
         Source.__init__(self, 'monarch')
 
-        self.dataset = Dataset('monarch', 'MonarchInitiative', 'http://www.monarchinitiative.org', None,
-                               'http://creativecommons.org/licenses/by/4.0/',
-                               None)
+        self.dataset = Dataset(
+            'monarch', 'MonarchInitiative', 'http://www.monarchinitiative.org',
+            None, 'http://creativecommons.org/licenses/by/4.0/', None)
 
         return
 
@@ -35,7 +37,8 @@ class Monarch(Source):
         # fetch all the files
         # self.get_files(is_dl_forced)
 
-        logger.info("Temporarily using local files until they move to public git")
+        logger.info(
+            "Temporarily using local files until they move to public git")
 
         return
 
@@ -76,11 +79,14 @@ class Monarch(Source):
 
         gu = GraphUtils(curie_map.get())
 
-        logger.info("Processing Monarch OMIA Animal disease-phenotype associations")
+        logger.info(
+            "Processing Monarch OMIA Animal disease-phenotype associations")
 
         # get file listing
         mypath = '/'.join((self.rawdir, 'OMIA-disease-phenotype'))
-        file_list = [f for f in listdir(mypath) if isfile(join(mypath, f)) and re.search('.txt$', f)]
+        file_list = [
+            f for f in listdir(mypath)
+            if isfile(join(mypath, f)) and re.search(r'.txt$', f)]
 
         for f in file_list:
             logger.info("Processing %s", f)
@@ -90,22 +96,25 @@ class Monarch(Source):
             bad_rows = list()
             fname = '/'.join((mypath, f))
             with open(fname, 'r') as csvfile:
-                filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+                filereader = csv.reader(
+                    csvfile, delimiter='\t', quotechar='\"')
                 for row in filereader:
                     line_counter += 1
                     if line_counter <= 1:
                         continue  # skip header
                     if len(row) != 22:
-                        logger.info("Not enough cols (%d) in %s - please fix", len(row), f)
+                        logger.info("Not enough cols (%d) in %s - please fix",
+                                    len(row), f)
                         continue
-                    (disease_num, species_id, breed_name, variant, inheritance, phenotype_id, phenotype_name,
-                     entity_id, entity_name,
-                     quality_id, quality_name, related_entity_id, related_entity_name, abnormal_id, abnormal_name,
-                     phenotype_description, assay, frequency, pubmed_id, pub_description,
-                     curator_notes, date_created) = row
+                    (disease_num, species_id, breed_name, variant, inheritance,
+                     phenotype_id, phenotype_name, entity_id, entity_name,
+                     quality_id, quality_name, related_entity_id,
+                     related_entity_name, abnormal_id, abnormal_name,
+                     phenotype_description, assay, frequency, pubmed_id,
+                     pub_description, curator_notes, date_created) = row
 
                     if phenotype_id == '':
-                        # logger.warn('Missing phenotype in row:\n%s', row)
+                        # logger.warning('Missing phenotype in row:\n%s', row)
                         count_missing += 1
                         bad_rows.append(row)
                         continue
@@ -117,27 +126,36 @@ class Monarch(Source):
                         disease_id = '-'.join((disease_id, species_id))
                     assoc = D2PAssoc(self.name, disease_id, phenotype_id)
                     if pubmed_id != '':
-                        for p in re.split('[,;]', pubmed_id):
+                        for p in re.split(r'[,;]', pubmed_id):
                             pmid = 'PMID:'+p.strip()
                             assoc.add_source(pmid)
                     else:
-                        assoc.add_source('/'.join(('http://omia.angis.org.au/OMIA'+disease_num.strip(), species_id.strip())))
+                        assoc.add_source(
+                            '/'.join(('http://omia.angis.org.au/OMIA' +
+                                      disease_num.strip(),
+                                      species_id.strip())))
                     assoc.add_association_to_graph(g)
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
                         gu.addDescription(g, aid, phenotype_description)
                     if breed_name != '':
-                        gu.addDescription(g, aid, breed_name.strip()+' [observed in]')
+                        gu.addDescription(g, aid,
+                                          breed_name.strip()+' [observed in]')
                     if assay != '':
                         gu.addDescription(g, aid, assay.strip()+' [assay]')
                     if curator_notes != '':
                         gu.addComment(g, aid, curator_notes.strip())
 
                     if entity_id != '' or quality_id != '':
-                        logger.info("EQ not empty for %s: %s + %s", disease_id, entity_name, quality_name)
+                        logger.info("EQ not empty for %s: %s + %s", disease_id,
+                                    entity_name, quality_name)
             if count_missing > 0:
-                logger.warn("You are missing %d/%d D2P annotations from id %s", count_missing, line_counter-1, f)
-                logger.warn("Bad rows:\n"+"\n".join(map(str, bad_rows)))
+                logger.warning(
+                    "You are missing %d/%d D2P annotations from id %s",
+                    count_missing, line_counter-1, f)
+                # TODO PYLINT Used builtin function 'map'.
+                # Using a list comprehension can be clearer.
+                logger.warning("Bad rows:\n"+"\n".join(map(str, bad_rows)))
             # finish loop through all files
 
         return
@@ -145,7 +163,8 @@ class Monarch(Source):
     # def get_files_from_git(self):
     #
     #     base_url = 'https://raw.githubusercontent.com'
-    #     path = 'monarch-initiative/data-boutique/master/OMIA-disease-phenotype/000060.txt?'
+    #     path = \
+    #       'monarch-initiative/data-boutique/master/OMIA-disease-phenotype/000060.txt?'
     #     params = {
     #         'token': None
     #     }

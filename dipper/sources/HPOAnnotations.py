@@ -1,7 +1,7 @@
 import csv
 import os
 from datetime import datetime
-from stat import *
+from stat import ST_CTIME
 import logging
 import re
 import shutil
@@ -21,38 +21,47 @@ from dipper import config
 
 logger = logging.getLogger(__name__)
 
+HPOADL = 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
+
 
 class HPOAnnotations(Source):
     """
-    The [Human Phenotype Ontology](http://human-phenotype-ontology.org) group curates and assembles
-    over 115,000 annotations to hereditary diseases using the HPO ontology.
-    Here we create OBAN-style associations between diseases and phenotypic features, together with their
-    evidence, and age of onset and frequency (if known).
-    The parser currently only processes the "abnormal" annotations.  Association to "remarkable normality"
-    will be added in the near future.
+    The [Human Phenotype Ontology](http://human-phenotype-ontology.org) group
+    curates and assembles over 115,000 annotations to hereditary diseases
+    using the HPO ontology. Here we create OBAN-style associations
+    between diseases and phenotypic features, together with their evidence,
+    and age of onset and frequency (if known).
+    The parser currently only processes the "abnormal" annotations.
+    Association to "remarkable normality" will be added in the near future.
 
     We create additional associations from text mining.  See info at
     http://pubmed-browser.human-phenotype-ontology.org/.
 
-    Also, you can read about these annotations in [PMID:26119816](http://www.ncbi.nlm.nih.gov/pubmed/26119816).
+    Also, you can read about these annotations in
+    [PMID:26119816](http://www.ncbi.nlm.nih.gov/pubmed/26119816).
 
-    In order to properly test this class, you should have a conf.json file configured with some test ids, in
+    In order to properly test this class,
+    you should have a conf.json file configured with some test ids, in
     the structure of:
         <pre>
         test_ids: {
-            "disease" : ["OMIM:119600", "OMIM:120160"]  # as examples.  put your favorite ids in the config.
+            # as examples.  put your favorite ids in the config.
+            "disease" : ["OMIM:119600", "OMIM:120160"]
         }
         </pre>
+
     """
 
     files = {
-        'annot': {'file' : 'phenotype_annotation.tab',
-                   'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/phenotype_annotation.tab'},
-        'version': {'file' : 'data_version.txt',
-                    'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/data_version.txt'},
-#       'neg_annot': {'file' : 'phenotype_annotation.tab',
-#                     'url' : 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc/negative_phenotype_annotation.tab'
-#        },
+        'annot': {
+            'file': 'phenotype_annotation.tab',
+            'url': HPOADL + '/phenotype_annotation.tab'},
+        'version': {
+            'file': 'data_version.txt',
+            'url': HPOADL + '/data_version.txt'},
+        # 'neg_annot': {
+        #   'file': 'phenotype_annotation.tab',
+        #    'url': HPOADL + '/negative_phenotype_annotation.tab'},
         'doid': {
             'file': 'doid-edit.owl',
             'url': 'https://raw.githubusercontent.com/monarch-initiative/human-disease-ontology/master/src/ontology/doid-edit.owl'
@@ -61,12 +70,19 @@ class HPOAnnotations(Source):
 
     # note, two of these codes are awaiting term requests.  see #114 and
     # https://code.google.com/p/evidenceontology/issues/detail?id=32
+    # TODO TEC see if the GC issue translatedto a GH issue
     eco_dict = {
-        "ICE": "ECO:0000305",  # FIXME currently using "curator inference used in manual assertion"
-        "IEA": "ECO:0000501",  # Inferred from Electronic Annotation
-        "PCS": "ECO:0000269",  # FIXME currently using "experimental evidence used in manual assertion"
-        "TAS": "ECO:0000304",   # Traceable Author Statement
-        "ITM": "ECO:0000246",  # FIXME currently using computational combinatorial evidence in automatic assertion
+        # FIXME currently using "curator inference used in manual assertion"
+        "ICE": "ECO:0000305",
+        # Inferred from Electronic Annotation
+        "IEA": "ECO:0000501",
+        # FIXME currently is"experimental evidence used in manual assertion"
+        "PCS": "ECO:0000269",
+        # Traceable Author Statement
+        "TAS": "ECO:0000304",
+        # FIXME currently using computational combinatorial evidence
+        # in automatic assertion
+        "ITM": "ECO:0000246",
     }
 
     def __init__(self):
@@ -74,18 +90,24 @@ class HPOAnnotations(Source):
 
         self.load_bindings()
 
-        self.dataset = Dataset('hpoa', 'Human Phenotype Ontology',
-                               'http://www.human-phenotype-ontology.org', None,
-                               'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
+        self.dataset = Dataset(
+            'hpoa', 'Human Phenotype Ontology',
+            'http://www.human-phenotype-ontology.org', None,
+            'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
 
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with disease test ids.")
+        self.replaced_id_count = 0
+
+        if 'test_ids' not in config.get_config()\
+                or 'disease' not in config.get_config()['test_ids']:
+            logger.warning("not configured with disease test ids.")
             self.test_ids = []
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        # data-source specific warnings (will be removed when issues are cleared)
-        logger.warn("note that some ECO classes are missing for ICE, PCS, and ITM; using temporary mappings.")
+        # data-source specific warnings to be removed when issues are cleared
+        logger.warning(
+            "note that some ECO classes are missing for ICE, PCS, and ITM;" +
+            " using temporary mappings.")
 
         return
 
@@ -103,14 +125,17 @@ class HPOAnnotations(Source):
         with open(fname, 'r', encoding="utf8") as f:
             # 2015-04-23 13:01
             v = f.readline()  # read the first line (the only line, really)
-            d = datetime.strptime(v.strip(), '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
+            d = datetime.strptime(
+                v.strip(), '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
         f.close()
 
         st = os.stat(fname)
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
-        # this will cause two dates to be attached to the dataset (one from the filedate, and the other from here)
-        # TODO when #112 is implemented, this will result in only the whole dataset being versioned
+        # this will cause two dates to be attached to the dataset
+        # (one from the filedate, and the other from here)
+        # TODO when #112 is implemented,
+        # this will result in only the whole dataset being versioned
         self.dataset.setVersion(filedate, d)
 
         self.get_common_files()
@@ -123,6 +148,7 @@ class HPOAnnotations(Source):
         For this resource, this currently includes:
         * revise errors in identifiers for some OMIM and PMIDs
         :return: None
+
         """
         # scrub file of the oddities...lots of publication rewriting
         f = '/'.join((self.rawdir, self.files['annot']['file']))
@@ -157,7 +183,9 @@ class HPOAnnotations(Source):
             self.testMode = True
 
         # rare disease-phenotype associations
-        self._process_phenotype_tab('/'.join((self.rawdir, self.files['annot']['file'])), limit)
+        self._process_phenotype_tab('/'.join((self.rawdir,
+                                              self.files['annot']['file'])),
+                                    limit)
 
         # TODO add negative phenotype statements #113
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
@@ -171,20 +199,24 @@ class HPOAnnotations(Source):
 
     def _map_evidence_to_codes(self, code_string):
         """
-        A simple mapping of the code_string to it's ECO class using the dictionary defined here
+        A simple mapping of the code_string to it's ECO class
+        using the dictionary defined here
         Currently includes ICE, IEA, PCS, TAS
         :param code_string:
         :return:
+
         """
         return self.eco_dict.get(code_string)
 
     def _process_phenotype_tab(self, raw, limit):
         """
-        see info on format here:http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
+        see info on format here:
+        http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
 
         :param raw:
         :param limit:
         :return:
+
         """
         if self.testMode:
             g = self.testgraph
@@ -197,13 +229,15 @@ class HPOAnnotations(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (db, num, name, qual, pheno_id, publist, eco, onset, freq, w, asp, syn, date, curator) = row
+                (db, num, name, qual, pheno_id, publist, eco, onset, freq, w,
+                 asp, syn, date, curator) = row
                 disease_id = db + ":" + str(num)
 
                 if self.testMode:
                     try:
                         id_list = self.test_ids
-                        if id_list is None or disease_id.strip() not in id_list:
+                        if id_list is None \
+                                or disease_id.strip() not in id_list:
                             continue
                     except AttributeError:
                         continue
@@ -217,61 +251,71 @@ class HPOAnnotations(Source):
                 if onset is not None and onset.strip() != '':
                     gu.addClassToGraph(g, onset, None)
 
-                # we want to do things differently depending on the aspect of the annotation
+                # we want to do things differently depending on
+                # the aspect of the annotation
+                # TODO PYLINT Redefinition of assoc type from
+                #   dipper.models.assoc.D2PAssoc.D2PAssoc to
+                #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
                 if asp == 'O' or asp == 'M':  # organ abnormality or mortality
-                    assoc = D2PAssoc(self.name, disease_id, pheno_id, onset, freq)
+                    assoc = D2PAssoc(
+                        self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
                     assoc = DispositionAssoc(self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
                     assoc = DispositionAssoc(self.name, disease_id, pheno_id)
                 else:
-                    logger.error("I don't know what this aspect is:", asp)
+                    logger.error("I don't know what this aspect is: %s", asp)
 
                 assoc.add_evidence(eco_id)
 
-                publist = re.split('[,;]', publist)
+                publist = re.split(r'[,;]', publist)
                 # blow these apart if there is a list of pubs
                 for pub in publist:
                     pub = pub.strip()
                     pubtype = None
                     if pub != '':
-                        # if re.match('http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
+                        # if re.match(r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
                         #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
-                        #     m = re.search('part\=(\w+)', pub)
+                        #     m = re.search(r'part\=(\w+)', pub)
                         #     pub_id = 'GeneReviews:'+m.group(1)
-                        # elif re.search('http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
-                        #     m = re.search('Expert=(\d+)', pub)
+                        # elif re.search(r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
+                        #     m = re.search(r'Expert=(\d+)', pub)
                         #     pub_id = 'Orphanet:'+m.group(1)
 
-                        if re.match('(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
-                            if re.match('PMID', pub):
+                        if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
+                            if re.match(r'PMID', pub):
                                 pubtype = Reference.ref_types['journal_article']
-                            elif re.match('HPO', pub):
+                            elif re.match(r'HPO', pub):
                                 pubtype = Reference.ref_types['person']
                             else:
                                 pubtype = Reference.ref_types['publication']
                             r = Reference(pub, pubtype)
                             r.addRefToGraph(g)
-                        elif re.match('(OMIM|Orphanet|DECIPHER)', pub):
-                            # make the pubs a reference to the website, instead of the curie
-                            if re.match('OMIM', pub):
-                                omimnum = re.sub('OMIM:','', pub)
-                                omimurl = '/'.join(('http://omim.org/entry', str(omimnum)))
+                        elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
+                            # make the pubs a reference to the website,
+                            # instead of the curie
+                            if re.match(r'OMIM', pub):
+                                omimnum = re.sub(r'OMIM:', '', pub)
+                                omimurl = '/'.join(('http://omim.org/entry',
+                                                    str(omimnum)))
                                 pub = omimurl
-                            elif re.match('Orphanet:', pub):
-                                orphanetnum = re.sub('Orphanet:','', pub)
-                                orphaneturl = ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                                       str(orphanetnum)))
+                            elif re.match(r'Orphanet:', pub):
+                                orphanetnum = re.sub(r'Orphanet:', '', pub)
+                                orphaneturl = \
+                                    ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                             str(orphanetnum)))
                                 pub = orphaneturl
-                            elif re.match('DECIPHER:', pub):
-                                deciphernum = re.sub('DECIPHER:', '', pub)
-                                decipherurl = '/'.join(('https://decipher.sanger.ac.uk/syndrome', deciphernum))
+                            elif re.match(r'DECIPHER:', pub):
+                                deciphernum = re.sub(r'DECIPHER:', '', pub)
+                                decipherurl = '/'.join(('https://decipher.sanger.ac.uk/syndrome',
+                                                        deciphernum))
                                 pub = decipherurl
                             pubtype = Reference.ref_types['webpage']
-                        elif re.match('http', pub):
+                        elif re.match(r'http', pub):
                             pass
                         else:
-                            logger.error('Unknown pub type for %s: %s', disease_id, pub)
+                            logger.error('Unknown pub type for %s: %s',
+                                         disease_id, pub)
                             print(disease_id, 'pubs:', str(publist))
                             continue
 
@@ -282,7 +326,8 @@ class HPOAnnotations(Source):
 
                 assoc.add_association_to_graph(g)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
             Assoc(None).load_all_properties(g)
@@ -295,11 +340,13 @@ class HPOAnnotations(Source):
         [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
         These files get added to the files object, and iterated over separately.
         :return:
+
         """
+
+        # TODO TEC as of 2016-Mar-2 this repo does not exist
         repo_dir = '/'.join((self.rawdir, 'git'))
         REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
         HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
-
 
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
@@ -322,12 +369,13 @@ class HPOAnnotations(Source):
         filelist = os.listdir(common_disease_dir)
         fcount = 0
         for f in filelist:
-            if not re.search('\.tab', f):
+            if not re.search(r'\.tab', f):
                 continue
             fcount += 1
             self.files['common'+str(fcount).zfill(7)] = {
                 'file': '/'.join((common_disease_dir, f)),
-                # TODO add url to reference the file?  need to get git version somehow?
+                # TODO add url to reference the file?
+                # need to get git version somehow?
             }
             # TODO add this to the dataset
         logger.info("Found %d common disease files", fcount)
@@ -336,9 +384,11 @@ class HPOAnnotations(Source):
 
     def process_all_common_disease_files(self, limit=None):
         """
-        Loop through all of the files that we previously fetched from git, creating the disease-phenotype assoc.
+        Loop through all of the files that we previously fetched from git,
+        creating the disease-phenotype assoc.
         :param limit:
         :return:
+
         """
 
         self.replaced_id_count = 0
@@ -347,27 +397,33 @@ class HPOAnnotations(Source):
         logger.info("Iterating over all common disease files")
         common_file_count = 0
         for f in self.files:
-            if not re.match('common', f):
+            if not re.match(r'common', f):
                 continue
             common_file_count += 1
             raw = self.files[f]['file']
-            total_processed += self.process_common_disease_file(raw, unpadded_doids, limit)
-            if not self.testMode and limit is not None and total_processed > limit:
+            total_processed += self.process_common_disease_file(raw,
+                                                                unpadded_doids,
+                                                                limit)
+            if not self.testMode \
+                    and limit is not None and total_processed > limit:
                 break
         logger.info("Finished iterating over all common disease files.")
-        logger.info("Fixed %d/%d incorrectly zero-padded ids", self.replaced_id_count, common_file_count)
+        logger.info("Fixed %d/%d incorrectly zero-padded ids",
+                    self.replaced_id_count, common_file_count)
         return
 
     def get_doid_ids_for_unpadding(self):
         """
-        Here, we fetch the doid owl file, and get all the doids out of the file.  We figure out which are
-        not zero-padded, so we can map the DOID to the correct identifier when processing the common annotation
-        files.
+        Here, we fetch the doid owl file, and get all the doids.
+        We figure out which are not zero-padded, so we can map the DOID
+        to the correct identifier when processing the common annotation files.
 
-        This may become obsolete when https://github.com/monarch-initiative/hpo-annotation-data/issues/84
+        This may become obsolete when
+        https://github.com/monarch-initiative/hpo-annotation-data/issues/84
         is addressed.
 
         :return:
+
         """
 
         logger.info("Building list of non-zero-padded DOIDs")
@@ -376,18 +432,20 @@ class HPOAnnotations(Source):
         # scan the file and get all doids
         with open(raw_file, 'r', encoding="utf8") as f:
             for line in f:
-                matches = re.search('(DOID_\d+)', line)
+                matches = re.search(r'(DOID_\d+)', line)
                 if matches is not None:
                     for m in matches.groups():
-                        doids.add(re.sub('_', ':', m))
+                        doids.add(re.sub(r'_', ':', m))
 
         nopad_doids = set()
         for d in doids:
-            num = re.sub('DOID[:_]', '', d)
-            if not re.match('0', str(num)):  # look for things not starting with zero
-                 nopad_doids.add(num)
+            num = re.sub(r'DOID[:_]', '', d)
+            # look for things not starting with zero
+            if not re.match(r'^0', str(num)):
+                nopad_doids.add(num)
 
-        logger.info("Found %d/%d DOIDs are not zero-padded", len(nopad_doids), len(doids))
+        logger.info("Found %d/%d DOIDs are not zero-padded",
+                    len(nopad_doids), len(doids))
 
         return nopad_doids
 
@@ -396,12 +454,14 @@ class HPOAnnotations(Source):
         Make disaese-phenotype associations.
         Some identifiers need clean up:
           * DOIDs are listed as DOID-DOID: --> DOID:
-          * DOIDs may be unnecessarily zero-padded.  these are remapped to their non-padded equivalent.
+          * DOIDs may be unnecessarily zero-padded.
+            these are remapped to their non-padded equivalent.
 
         :param raw:
         :param unpadded_doids:
         :param limit:
         :return:
+
         """
         if self.testMode:
             g = self.testgraph
@@ -414,22 +474,33 @@ class HPOAnnotations(Source):
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            csvfile.readline()  # skip the header row
+            header = csvfile.readline()  # skip the header row
+            # logger.info("HEADER: %s",header)
             disease_id = None
             for row in filereader:
-                (did, dname, gid, gene_name, genotype, gene_symbols, phenotype_id, phenotype_name,
-                 age_of_onset_id, age_of_onseet_name,
-                 eid, evidence_name, frequency, sex_id, sex_name, negation_id, negation_name, description,
-                 pub_ids, assigned_by, date_created) = row
 
-                disease_id = re.sub('DO(ID)?[-\:](DOID:)?', 'DOID:', did)
-                disease_id = re.sub('MESH-', 'MESH:', disease_id)
-                if not re.search('(DOID\:|MESH\:\w)\d+', disease_id):
-                    logger.warn("Invalid id format: %s", disease_id)
+                if 21 == len(row):
+                    (did, dname, gid, gene_name, genotype, gene_symbols,
+                     phenotype_id, phenotype_name, age_of_onset_id,
+                     age_of_onset_name, eid, evidence_name, frequency, sex_id,
+                     sex_name, negation_id, negation_name, description, pub_ids,
+                     assigned_by, date_created) = row
+                else:
+                    logger.warning(
+                        "Wrong number of columns! expected 21, got: %s in: %s",
+                        len(row), raw)
+                    logger.warning("%s", row)
+                    continue
 
-                # figure out if the doid should be unpadded, then use the unpadded version instead
-                if re.match('DOID', disease_id):
-                    unpadded_num = re.sub('DOID:', '', disease_id)
+                disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
+                disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
+                if not re.search(r'(DOID\:|MESH\:\w)\d+', disease_id):
+                    logger.warning("Invalid id format: %s", disease_id)
+
+                # figure out if the doid should be unpadded,
+                # then use the unpadded version instead
+                if re.match(r'DOID', disease_id):
+                    unpadded_num = re.sub(r'DOID:', '', disease_id)
                     unpadded_num = unpadded_num.lstrip('0')
                     if unpadded_num in unpadded_doids:
                         fixed_id = 'DOID:'+unpadded_num
@@ -437,7 +508,8 @@ class HPOAnnotations(Source):
                         disease_id = fixed_id.strip()
 
                 if self.testMode and disease_id not in self.test_ids:
-                    # since these are broken up into disease-by-disease, just skip the whole file
+                    # since these are broken up into disease-by-disease,
+                    # just skip the whole file
                     return 0
                 else:
                     line_counter += 1
@@ -460,8 +532,11 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for p in pub_ids.split(';'):
-                            if re.search('(DOID|MESH)', p) or re.search('Disease name contained', description):
-                                # skip "pubs" that are derived from the classes themselves
+                            if re.search(r'(DOID|MESH)', p) \
+                                    or re.search(r'Disease name contained',
+                                                 description):
+                                # skip "pubs" that are derived from
+                                # the classes themselves
                                 continue
                             assoc.add_source(p.strip())
                     # TODO assigned by?
@@ -469,14 +544,15 @@ class HPOAnnotations(Source):
                     assoc.add_association_to_graph(g)
                     assoc_count += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode \
+                        and limit is not None and line_counter > limit:
                     break
 
             if replace_id_flag:
                 logger.info("replaced DOID with unpadded version")
                 self.replaced_id_count += 1
-            logger.info("Added %d associations for %s.", assoc_count, disease_id)
-
+            logger.info(
+                "Added %d associations for %s.", assoc_count, disease_id)
         return assoc_count
 
     def getTestSuite(self):

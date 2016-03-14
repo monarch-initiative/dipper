@@ -9,7 +9,7 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: BioGrid-fetch BioGrid-test ClinVar-fetch ClinVar-test  \
+test: BioGrid-fetch BioGrid-test   \
 ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test
 
 BioGrid-fetch:
@@ -18,11 +18,11 @@ BioGrid-fetch:
 BioGrid-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_biogrid.py
 
-ClinVar-fetch:
-	$(DIPPER_BIN) --sources clinvar --no_verify --fetch_only
+#ClinVar-fetch:
+#	$(DIPPER_BIN) --sources clinvar --no_verify --fetch_only
 
-ClinVar-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_clinvar.py
+#ClinVar-test:
+#	$(NOSE) --with-coverage --cover-package=dipper tests/test_clinvar.py
 
 GeneReviews-fetch:
 	$(DIPPER_BIN) --sources genereviews --no_verify --fetch_only

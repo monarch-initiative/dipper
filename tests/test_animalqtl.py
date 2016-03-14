@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+import unittest
+import logging
 from dipper.sources.AnimalQTLdb import AnimalQTLdb
 from tests.test_source import SourceTestCase
 
-import unittest
-import logging
-
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 class AnimalQTLdbTestCase(SourceTestCase):
 

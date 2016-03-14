@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from dipper.sources.WormBase import WormBase
-from tests.test_source import SourceTestCase
-
 import unittest
 import logging
+from tests.test_source import SourceTestCase
+from dipper.sources.WormBase import WormBase
+
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)

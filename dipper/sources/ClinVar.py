@@ -8,7 +8,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.assoc.Association import Assoc
+# from dipper.models.assoc.Association import Assoc  # unused
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Reference import Reference
 from dipper import curie_map
@@ -17,36 +17,39 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 
 
 logger = logging.getLogger(__name__)
+CVDL = 'http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited'
 
 
 class ClinVar(Source):
     """
-    ClinVar is a host of clinically relevant variants, both directly-submitted and curated from the literature.
-    We process the variant_summary file here, which is a digested version of their full xml.  We add all
-    variants (and coordinates/build) from their system.
+    ClinVar is a host of clinically relevant variants, both directly-submitted
+    and curated from the literature. We process the variant_summary file here,
+    which is a digested version of their full xml.  We add all variants
+    (and coordinates/build) from their system.
+
     """
 
     files = {
         'variant_summary': {
             'file': 'variant_summary.txt.gz',
-            'url': 'http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz'
+            'url': CVDL + '/variant_summary.txt.gz'
         },
         'variant_citations': {
             'file': 'variant_citations.txt',
-            'url': 'http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/var_citations.txt'
+            'url':  CVDL + '/var_citations.txt'
         }
-        # TODO work through xml
-
     }
 
-    variant_ids = [4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246, 7105, 8877, 9295, 9296,
-                   9297, 9298, 9449, 10072, 10361, 10382, 12528, 12529, 12530, 12531, 12532, 14353, 14823,
-                   15872, 17232, 17233,
-                   17234, 17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179, 18180, 18181,
-                   18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005, 98006, 98008, 98009, 98194, 98195,
-                   98196, 98197, 98198, 100055,
-                   112885, 114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147, 132148, 144375,
-                   146588, 147536, 147814, 147936, 152976, 156327, 161457, 162000, 167132]
+    variant_ids = [
+        4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246,
+        7105, 8877, 9295, 9296, 9297, 9298, 9449, 10072, 10361, 10382, 12528,
+        12529, 12530, 12531, 12532, 14353, 14823, 15872, 17232, 17233, 17234,
+        17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179,
+        18180, 18181, 18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005,
+        98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055, 112885,
+        114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147,
+        132148, 144375, 146588, 147536, 147814, 147936, 152976, 156327, 161457,
+        162000, 167132]
 
     def __init__(self, tax_ids=None, gene_ids=None):
         Source.__init__(self, 'clinvar')
@@ -56,18 +59,21 @@ class ClinVar(Source):
         self.filter = 'taxids'
         self.load_bindings()
 
-        self.dataset = Dataset('ClinVar', 'National Center for Biotechnology Information', 
-                               'http://www.ncbi.nlm.nih.gov/clinvar/', None,
-                               'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
-                               'https://creativecommons.org/publicdomain/mark/1.0/')
+        self.dataset = Dataset(
+            'ClinVar', 'National Center for Biotechnology Information',
+            'http://www.ncbi.nlm.nih.gov/clinvar/', None,
+            'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
+            'https://creativecommons.org/publicdomain/mark/1.0/')
 
-        if 'test_ids' not in config.get_config() or 'gene' not in config.get_config()['test_ids']:
-            logger.warn("not configured with gene test ids.")
+        if 'test_ids' not in config.get_config() or \
+                'gene' not in config.get_config()['test_ids']:
+            logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
-        if 'test_ids' not in config.get_config() or 'disease' not in config.get_config()['test_ids']:
-            logger.warn("not configured with disease test ids.")
+        if 'test_ids' not in config.get_config() or \
+                'disease' not in config.get_config()['test_ids']:
+            logger.warning("not configured with disease test ids.")
         else:
             self.disease_ids = config.get_config()['test_ids']['disease']
 
@@ -84,11 +90,13 @@ class ClinVar(Source):
 
     def scrub(self):
         """
-        The var_citations file has a bad row in it with > 6 cols.  I will comment these out.
+        The var_citations file has a bad row in it with > 6 cols.
+        I will comment these out.
 
         :return:
+
         """
-        # awk  -F"\t" '{if (NF <= 6) print $1, $2, $3, $4, $5, $6 ; OFS = "\t"}' variant_citations.txt
+        # awk  -F"\t" 'BEFIN{OFS = "\t"}NF==6{print}' variant_citations.txt
         f = '/'.join((self.rawdir, self.files['variant_citations']['file']))
         logger.info('removing the line that has too many cols (^15091)')
         pysed.replace("^15091", '#15091', f)
@@ -122,6 +130,7 @@ class ClinVar(Source):
 
         :param limit:
         :return:
+
         """
         gu = GraphUtils(curie_map.get())
 
@@ -152,7 +161,7 @@ class ClinVar(Source):
             for line in f:
                 # skip comments
                 line = line.decode().strip()
-                if re.match('^#', line):
+                if re.match(r'^#', line):
                     continue
 
                 # AlleleID               integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
@@ -188,24 +197,30 @@ class ClinVar(Source):
                 #                            e.g. http://www.ncbi.nlm.nih.gov/clinvar/variation/1756/
                 #
 
-                # a crude check that there's an expected number of cols.  if not, error out because something changed.
+                # a crude check that there's an expected number of cols.
+                # if not, error out because something changed.
                 num_cols = len(line.split('\t'))
                 expected_numcols = 29
                 if num_cols != expected_numcols:
-                    logger.error("Unexpected number of columns in raw file (%d actual vs %d expected)",
-                                 num_cols, expected_numcols)
+                    logger.error(
+                        "Unexpected number of columns in raw file " +
+                        "(%d actual vs %d expected)",
+                        num_cols, expected_numcols)
 
-                (allele_num, allele_type, allele_name, gene_num, gene_symbol, clinical_significance,
-                 dbsnp_num, dbvar_num, rcv_nums, tested_in_gtr, phenotype_ids, origin,
-                 assembly, chr, start, stop, cytogenetic_loc,
-                 review_status, hgvs_c, hgvs_p, number_of_submitters, last_eval,
-                 guidelines, other_ids, variant_num, reference_allele, alternate_allele, categories,
+                (allele_num, allele_type, allele_name, gene_num, gene_symbol,
+                 clinical_significance, dbsnp_num, dbvar_num, rcv_nums,
+                 tested_in_gtr, phenotype_ids, origin, assembly, chr, start,
+                 stop, cytogenetic_loc, review_status, hgvs_c, hgvs_p,
+                 number_of_submitters, last_eval, guidelines, other_ids,
+                 variant_num, reference_allele, alternate_allele, categories,
                  ChromosomeAccession) = line.split('\t')
 
-                # #### set filter=None in init if you don't want to have a filter
+                # ###set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
-                #    if ((self.filter == 'taxids' and (int(tax_num) not in self.tax_ids))
-                #            or (self.filter == 'geneids' and (int(gene_num) not in self.gene_ids))):
+                #    if ((self.filter == 'taxids' and\
+                #            (int(tax_num) not in self.tax_ids)) or\
+                #            (self.filter == 'geneids' and\
+                #             (int(gene_num) not in self.gene_ids))):
                 #        continue
                 # #### end filter
 
@@ -214,18 +229,24 @@ class ClinVar(Source):
                 pheno_list = []
                 if phenotype_ids != '-':
                     # trim any leading/trailing semicolons/commas
-                    phenotype_ids = re.sub('^[;,]', '', phenotype_ids)
-                    phenotype_ids = re.sub('[;,]$', '', phenotype_ids)
-                    pheno_list = re.split('[,;]', phenotype_ids)
+                    phenotype_ids = re.sub(r'^[;,]', '', phenotype_ids)
+                    phenotype_ids = re.sub(r'[;,]$', '', phenotype_ids)
+                    pheno_list = re.split(r'[,;]', phenotype_ids)
 
                 if self.testMode:
-                    # get intersection of test disease ids and these phenotype_ids
-                    intersect = list(set([str(i) for i in self.disease_ids]) & set(pheno_list))
-                    if int(gene_num) not in self.gene_ids and int(variant_num) not in self.variant_ids \
-                            and len(intersect) < 1:
+                    # get intersection of test disease ids
+                    # and these phenotype_ids
+                    intersect = \
+                        list(
+                            set([str(i)
+                                for i in self.disease_ids]) & set(pheno_list))
+                    if int(gene_num) not in self.gene_ids and\
+                            int(variant_num) not in self.variant_ids and\
+                            len(intersect) < 1:
                         continue
 
-                # TODO may need to switch on assembly to create correct assembly/build identifiers
+                # TODO may need to switch on assembly to create correct
+                # assembly/build identifiers
                 build_id = ':'.join(('NCBIGenome', assembly))
 
                 # make the reference genome build
@@ -236,35 +257,48 @@ class ClinVar(Source):
                 if str(chr) == '':
                     # check cytogenic location
                     if str(cytogenetic_loc).strip() != '':
-                        # use cytogenic location to get the approximate location
-                        # strangely, they still put an assembly number even when there's no numeric location
-                        if not re.search('-',str(cytogenetic_loc)):
-                            band_id = makeChromID(re.split('-',str(cytogenetic_loc)), tax_num, 'CHR')
-                            geno.addChromosomeInstance(cytogenetic_loc, build_id, assembly, band_id)
-                            bandinbuild_id = makeChromID(re.split('-',str(cytogenetic_loc)), assembly, 'MONARCH')
+                        # use cytogenic location to get the apx location
+                        # oddly, they still put an assembly number even when
+                        # there's no numeric location
+                        if not re.search(r'-', str(cytogenetic_loc)):
+                            band_id = makeChromID(
+                                re.split(r'-', str(cytogenetic_loc)),
+                                tax_num, 'CHR')
+                            geno.addChromosomeInstance(
+                                cytogenetic_loc, build_id, assembly, band_id)
+                            bandinbuild_id = makeChromID(
+                                re.split(r'-', str(cytogenetic_loc)),
+                                assembly, 'MONARCH')
                         else:
                             # can't deal with ranges yet
                             pass
                 else:
-                    # add the human chromosome class to the graph, and add the build-specific version of it
+                    # add the human chromosome class to the graph,
+                    # and add the build-specific version of it
                     chr_id = makeChromID(str(chr), tax_num, 'CHR')
                     geno.addChromosomeClass(str(chr), tax_id, tax_label)
-                    geno.addChromosomeInstance(str(chr), build_id, assembly, chr_id)
+                    geno.addChromosomeInstance(
+                        str(chr), build_id, assembly, chr_id)
                     chrinbuild_id = makeChromID(str(chr), assembly, 'MONARCH')
 
                 seqalt_id = ':'.join(('ClinVarVariant', variant_num))
                 gene_id = None
-                if str(gene_num) != '-1' and str(gene_num) != 'more than 10':  # they use -1 to indicate unknown gene
+
+                # they use -1 to indicate unknown gene
+                if str(gene_num) != '-1' and str(gene_num) != 'more than 10':
                     gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
                 # FIXME there are some "variants" that are actually haplotypes
-                # probably will get taken care of when we switch to processing the xml
-                # for example, variant_num = 38562
-                # but there's no way to tell if it's a haplotype in the csv data
-                # so the dbsnp or dbvar should probably be primary, and the variant num be the vslc,
+                # probably will get taken care of when we switch to processing
+                # the xml for example, variant_num = 38562
+                # but there's no way to tell if it's a haplotype
+                # in the csv data so the dbsnp or dbvar
+                # should probably be primary,
+                # and the variant num be the vslc,
                 # with each of the dbsnps being added to it
 
-                # todo clinical significance needs to be mapped to a list of terms
+                # TODO clinical significance needs to be mapped to
+                # a list of terms
                 # first, make the variant:
                 f = Feature(seqalt_id, allele_name, allele_type_id)
 
@@ -275,13 +309,16 @@ class ClinVar(Source):
 
                 f.addFeatureToGraph(g)
                 f.addTaxonToFeature(g, tax_id)
-                gu.makeLeader(g, seqalt_id)  # make the ClinVarVariant the clique leader
+                # make the ClinVarVariant the clique leader
+                gu.makeLeader(g, seqalt_id)
 
                 if bandinbuild_id is not None:
                     f.addSubsequenceOfFeature(g, bandinbuild_id)
 
-                # CHECK - this makes the assumption that there is only one affected chromosome per variant
-                # what happens with chromosomal rearrangement variants?  shouldn't both chromosomes be here?
+                # CHECK - this makes the assumption that there is
+                # only one affected chromosome per variant what happens with
+                # chromosomal rearrangement variants?
+                # shouldn't both chromosomes be here?
 
                 # add the hgvs as synonyms
                 if hgvs_c != '-' and hgvs_c.strip() != '':
@@ -302,8 +339,8 @@ class ClinVar(Source):
                 # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
                 if rcv_nums != '-':
-                    for rcv_num in re.split(';',rcv_nums):
-                        rcv_id = 'ClinVar:'+rcv_num
+                    for rcv_num in re.split(r';', rcv_nums):
+                        rcv_id = 'ClinVar:' + rcv_num
                         gu.addIndividualToGraph(g, rcv_id, None)
                         gu.addXref(g, seqalt_id, rcv_id)
 
@@ -315,38 +352,48 @@ class ClinVar(Source):
                     if self.nobnodes:
                         vl_id = ':'+vl_id
                     vl_label = allele_name
-                    gu.addIndividualToGraph(g, vl_id, vl_label, geno.genoparts['variant_locus'])
+                    gu.addIndividualToGraph(
+                        g, vl_id, vl_label, geno.genoparts['variant_locus'])
                     geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
                     geno.addAlleleOfGene(vl_id, gene_id)
                 else:
                     # some basic reporting
-                    gmatch = re.search('\(\w+\)', allele_name)
+                    gmatch = re.search(r'\(\w+\)', allele_name)
                     if gmatch is not None and len(gmatch.groups()) > 0:
-                        logger.info("Gene found in allele label, but no id provided: %s", gmatch.group(1))
-                    elif re.match('more than 10', gene_symbol):
-                        logger.info("More than 10 genes found; need to process XML to fetch (variant=%d)", int(variant_num))
+                        logger.info(
+                            "Gene found in allele label, but no id provided: %s",
+                            gmatch.group(1))
+                    elif re.match(r'more than 10', gene_symbol):
+                        logger.info(
+                            "More than 10 genes found; "
+                            "need to process XML to fetch (variant=%d)",
+                            int(variant_num))
                     else:
-                        logger.info("No gene listed for variant %d", int(variant_num))
+                        logger.info(
+                            "No gene listed for variant %d",
+                            int(variant_num))
 
-                # parse the list of "phenotypes" which are diseases.  add them as an association
+                # parse the list of "phenotypes" which are diseases.
+                # add them as an association
                 # ;GeneReviews:NBK1440,MedGen:C0392514,OMIM:235200,SNOMED CT:35400008;MedGen:C3280096,OMIM:614193;MedGen:CN034317,OMIM:612635;MedGen:CN169374
-                # the list is both semicolon delimited and comma delimited, but i don't know why!
-                # some are bad, like: Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
+                # the list is both semicolon delimited and comma delimited,
+                # but i don't know why! some are bad, like:
+                # Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
                 if phenotype_ids != '-':
                     for p in pheno_list:
-                        m = re.match("(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
+                        m = re.match(r"(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
                         if m is not None and len(m.groups()) > 0:
                             p = re.sub(m.group(1), 'Orphanet:', p.strip())
-                        elif re.match('SNOMED CT', p):
-                            p = re.sub('SNOMED CT', 'SNOMED', p.strip())
+                        elif re.match(r'SNOMED CT', p):
+                            p = re.sub(r'SNOMED CT', 'SNOMED', p.strip())
 
                         assoc = G2PAssoc(self.name, seqalt_id, p.strip())
                         assoc.add_association_to_graph(g)
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')
-                    # process the "other ids"
-                    # ex: CFTR2:F508del,HGMD:CD890142,OMIM Allelic Variant:602421.0001
+                    # process the "other ids" ex:
+                    # CFTR2:F508del,HGMD:CD890142,OMIM Allelic Variant:602421.0001
                     # TODO make more xrefs
                     for xrefid in id_list:
                         prefix = xrefid.split(':')[0].strip()
@@ -357,20 +404,24 @@ class ClinVar(Source):
                         elif prefix == 'HGMD':
                             gu.addIndividualToGraph(g, xrefid, None)
                             gu.addSameIndividual(g, seqalt_id, xrefid)
-                        elif prefix == 'dbVar' and dbvar_num == xrefid.split(':')[1].strip():
+                        elif prefix == 'dbVar' \
+                                and dbvar_num == xrefid.split(':')[1].strip():
                             pass  # skip over this one
-                        elif re.search('\s', prefix):
+                        elif re.search(r'\s', prefix):
                             pass
-                            # logger.debug('xref prefix has a space: %s', xrefid)
+                            # logger.debug(
+                            #   'xref prefix has a space: %s', xrefid)
                         else:
                             # should be a good clean prefix
-                            # note that HGMD variants are in here as Xrefs because we can't resolve URIs for them
+                            # note that HGMD variants are in here as Xrefs
+                            # because we can't resolve URIs for them
                             # logger.info("Adding xref: %s", xrefid)
                             # gu.addXref(g, seqalt_id, xrefid)
                             # logger.info("xref prefix to add: %s", xrefid)
                             pass
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None \
+                        and line_counter > limit:
                     break
 
         gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
@@ -384,19 +435,24 @@ class ClinVar(Source):
     def _get_var_citations(self, limit):
 
         # Generated weekly, the first of the week
-        # A tab-delimited report of citations associated with data in ClinVar, connected to the AlleleID, the VariationID, and either rs# from dbSNP or nsv in dbVar.
+        # A tab-delimited report of citations associated with data in ClinVar,
+        # connected to the AlleleID, the VariationID, and either rs# from dbSNP
+        # or nsv in dbVar.
         #
-        # AlleleID          integer value as stored in the AlleleID field in ClinVar  (//Measure/@ID in the XML)
-        # VariationID       The identifier ClinVar uses to anchor its default display. (in the XML,  //MeasureSet/@ID)
+        # AlleleID          int value  (xpath //Measure/@ID )
+        # VariationID       ID ClinVar uses to anchor default display.
+        #                   (xpath  //MeasureSet/@ID)
         # rs			    rs identifier from dbSNP
         # nsv				nsv identifier from dbVar
-        # citation_source	The source of the citation, either PubMed, PubMedCentral, or the NCBI Bookshelf
+        # citation_source	The source of the citation, either PubMed,
+        #                   PubMedCentral, or the NCBI Bookshelf
         # citation_id		The identifier used by that source
 
         gu = GraphUtils(curie_map.get())
         logger.info("Processing Citations for variants")
         line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['variant_citations']['file']))
+        myfile = \
+            '/'.join((self.rawdir, self.files['variant_citations']['file']))
         if self.testMode:
             g = self.testgraph
         else:
@@ -408,9 +464,10 @@ class ClinVar(Source):
             for line in filereader:
                 # skip comments
                 line = line
-                if re.match('^#', line[0]):
+                if re.match(r'^#', line[0]):
                     continue
-                (allele_num, variant_num, rs_num, nsv_num, citation_source, citation_id) = line
+                (allele_num, variant_num, rs_num, nsv_num, citation_source,
+                 citation_id) = line
 
                 line_counter += 1
 
@@ -419,12 +476,16 @@ class ClinVar(Source):
                         continue
 
                 if citation_id.strip() == '':
-                    logger.info("Skipping blank citation for ClinVarVariant:%s", str(variant_num))
+                    logger.info(
+                        "Skipping blank citation for ClinVarVariant:%s",
+                        str(variant_num))
                     continue
 
-                # the citation for a variant is made to some kind of combination of the ids here.
-                # but i'm not sure which we don't know what the citation is for exactly, other
-                # than the variant.  so use mentions
+                # the citation for a variant is made to some kind of
+                # combination of the ids here.
+                # but i'm not sure which, we don't know what the
+                # citation is for exactly, other than the variant.
+                # so use mentions
 
                 var_id = 'ClinVarVariant:'+variant_num
 
@@ -438,11 +499,14 @@ class ClinVar(Source):
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
-                    r = Reference(ref_id, Reference.ref_types['journal_article'])
+                    r = Reference(
+                        ref_id, Reference.ref_types['journal_article'])
                     r.addRefToGraph(g)
-                    gu.addTriple(g, ref_id, self.properties['is_about'], var_id)
+                    gu.addTriple(
+                        g, ref_id, self.properties['is_about'], var_id)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.testMode \
+                        and (limit is not None and line_counter > limit):
                     break
 
         logger.info("Finished processing citations for variants")
@@ -451,9 +515,10 @@ class ClinVar(Source):
 
     def _map_type_of_allele(self, alleletype):
         # TODO this will get deprecated when we parse the xml file
+        # TODO static?
         so_id = 'SO:0001059'
         type_to_so_map = {
-            'NT expansion': 'SO:1000039',  # direct tandem duplication
+            'NT expansion': 'SO:1000039',           # direct tandem duplication
             'copy number gain': 'SO:0001742',
             'copy number loss': 'SO:0001743',
             'deletion': 'SO:0000159',
@@ -462,8 +527,10 @@ class ClinVar(Source):
             'indel': 'SO:1000032',
             'insertion': 'SO:0000667',
             'inversion': 'SO:1000036',
-            'protein only': 'SO:0001580',   # coding sequence variant.  check me
-            'short repeat': 'SO:0000657',   # repeat region - not sure if this is what's intended.
+            # check me
+            'protein only': 'SO:0001580',           # coding sequence variant
+            # not sure if this is what's intended.
+            'short repeat': 'SO:0000657',           # repeat region
             'single nucleotide variant': 'SO:0001483',
             'structural variant': 'SO:0001537',
             'undetermined variant': 'SO:0001059'    # sequence alteration
@@ -472,7 +539,9 @@ class ClinVar(Source):
         if alleletype in type_to_so_map:
             so_id = type_to_so_map.get(alleletype)
         else:
-            logger.warn("unmapped code %s. Defaulting to 'SO:sequence_alteration'.", alleletype)
+            logger.warning(
+                "unmapped code %s. Defaulting to 'SO:sequence_alteration'.",
+                alleletype)
 
         return so_id
 
@@ -481,6 +550,7 @@ class ClinVar(Source):
         from tests.test_clinvar import ClinVarTestCase
         # TODO add G2PAssoc, Genotype tests
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(ClinVarTestCase)
+        test_suite = \
+            unittest.TestLoader().loadTestsFromTestCase(ClinVarTestCase)
 
         return test_suite
