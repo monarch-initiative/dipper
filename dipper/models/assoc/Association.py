@@ -114,7 +114,22 @@ class Assoc:
         o = self.gu.getNode(self.obj)
         p = self.gu.getNode(self.rel)
 
-        g.add((s, p, o))
+        if s is None:
+            logging.error(
+                "Unable to retrieve graph node for Subject %s ", self.sub)
+            return
+                
+        elif p is None:
+            logging.error(
+                "Unable to retrieve graph node for Predicate %s ", self.rel)
+            return
+                
+        elif o is None:
+            logging.error(
+                "Unable to retrieve graph node for Object %s ", self.obj)
+            return
+        else:
+            g.add((s, p, o))
 
         if self.assoc_id is None:
             self.set_association_id()
@@ -156,9 +171,9 @@ class Assoc:
                                   self.object_properties['has_provenance'], p)
 
         if self.score is not None:
-            self.gu.addTriple(g,
-                              self.assoc_id, self.properties['has_measurement'],
-                              Literal(self.score, datatype=XSD['float']), True)
+            self.gu.addTriple(
+                g, self.assoc_id, self.properties['has_measurement'],
+                Literal(self.score, datatype=XSD['float']), True)
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
@@ -281,7 +296,8 @@ class Assoc:
             if u is not None:
                 source = URIRef(u)
             else:
-                logger.error("An id we don't know how to deal with: %s", pub_id)
+                logger.error(
+                    "An id we don't know how to deal with: %s", pub_id)
 
         return source
 
