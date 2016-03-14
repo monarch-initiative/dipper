@@ -39,7 +39,7 @@ class CTDTestCase(SourceTestCase):
                        WHERE {
                            ?assoc a OBAN:association ;
                            OBAN:association_has_object ?disease ;
-                           OBAN:association_has_object_property ?rel ;
+                           OBAN:association_has_predicate ?rel ;
                            OBAN:association_has_subject ?chemical .}
                        """
 
