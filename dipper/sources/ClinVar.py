@@ -36,7 +36,7 @@ class ClinVar(Source):
         },
         'variant_citations': {
             'file': 'variant_citations.txt',
-            'url':  CVDL + '/tab_delimited/var_citations.txt'
+            'url':  CVDL + '/var_citations.txt'
         }
     }
 
