@@ -9,7 +9,7 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: BioGrid-fetch BioGrid-test ClinVar-fetch ClinVar-test  \
+test: BioGrid-fetch BioGrid-test   \
 ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test
 
 BioGrid-fetch:
