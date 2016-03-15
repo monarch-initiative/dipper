@@ -27,12 +27,12 @@ like [Protege](http://protege.stanford.edu/).
 ## Requirements
 * [Python 3](https://www.python.org/downloads/) or higher (and therefore pip3 if using pip)
 * One of the unit tests requires
-[owltools](https://code.google.com/p/owltools/wiki/InstallOWLTools) be available on your path.  You could modify
+[owltools](https://github.com/owlcollab/owltools) be available on your path.  You could modify
 the code to skip this, if necessary
 * Running make test requires nosetests (if on OS X you may need to `sudo pip3 install nose`)
 
 * Required external python packages:
-    * [rdflib](https://code.google.com/p/rdflib/)
+    * [rdflib](https://pypi.python.org/pypi/rdflib)
     * isodate
     * roman
     * pyyaml
