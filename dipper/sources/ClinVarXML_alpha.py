@@ -9,16 +9,20 @@ import xml.etree.ElementTree as ET
 
 # http://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/sample_xml/RCV000077146.xml
 
-# I'm running in another dir so you will have to also
-# have the xml and the mapping file there too
+# I'm running in another dir so you will have to also,
+# be sure to have the xml and the mapping file there too
 
 # FILENAME = 'BRCA_ClinVarSet.xml.gz'
 #
 FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
 
+# TODO: Edge labels done once at the beginning
+# <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
+# <SEPIO:0000011><rdfs:label><'has_provenance'>  .
+# <SEPIO:0000017><rdfs:label><'has_agent'>  .
+# <SEPIO:0000095><rdfs:label><'before_date'>  .
+# <SEPIO:0000041><rdfs:label><'specified_by'>  .
 
-# scv_assertcount = scv_measurecount = scv_traitcount = scv_citecount = 0
-# rs_cvset = 0
 
 # larval stage term mapping file
 # will want namespace I expect.
@@ -51,10 +55,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             continue  # or break?
 
         # There is only one RCV per ClinVarSet
-        rcv_variant_id = rcv_variant_type = None
-        rcv_disease_db = rcv_disease_id = None
-        RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
+        rcv_variant_id = rcv_variant_type = rcv_variant_label = None
+        rcv_disease_db = rcv_disease_id = rcv_disease_label = None
+        rcv_disease_curi = None
 
+        RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
         rcv_created = RCVAssertion.get('DateCreated')
         rcv_updated = RCVAssertion.get('DateLastUpdated')
         rcv_id = RCVAssertion.get('ID')
@@ -66,7 +71,6 @@ with gzip.open(FILENAME, 'rt') as fh:
         if RCVAssertion.find('RecordStatus').text != 'current':
             print(
                 rcv_acc + " <is not current on> " + rs_dated, file=sys.stderr)
-            pass
 
         # Child elements
         #
@@ -89,8 +93,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         RCV_MeasureSet = RCVAssertion.find('MeasureSet')
         # Note: it is a "set" but have only seen a half dozen with two,
-        # all of type:  copy number gain            SO:0001742t.
-        rcv_variant_id = rcv_variant_type = rcv_variant_label = None
+        # all of type:  copy number gain  SO:0001742
         rcv_variant_id = RCV_MeasureSet.get('ID')
 
         for RCV_Measure in \
@@ -101,6 +104,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
                     RCV_Measure.get('Type').text, file=sys.stderr)
                 continue
+
             RCV_VariantName = RCV_Measure.find(
                 'Name/ElementValue[@Type="Preferred"]')
             if RCV_VariantName is not None:
@@ -115,16 +119,12 @@ with gzip.open(FILENAME, 'rt') as fh:
         # reluctantly starting with the RCV disease
         # not the SCV traits as submitted due to time constraints
 
-        # RCV_TraitSet = RCVAssertion.find('TraitSet')
-
         for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
 
-            # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/
-            # TraitSet/Trait[@Type="Disease"]/@ID
+            # /RCV/TraitSet/Trait[@Type="Disease"]/@ID
             # 144,327   2016-Mar
 
-            # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/
-            # TraitSet/Trait[@Type="Disease"]/XRef/@DB
+            # /RCV/TraitSet/Trait[@Type="Disease"]/XRef/@DB
             #     29 Human Phenotype Ontology
             #     82 EFO
             #    659 Gene
@@ -138,7 +138,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
-                print("rcv_disease_label: ", rcv_disease_label)
+                # print(rcv_acc + ' ' + rcv_disease_label)
             else:
                 print(rcv_acc + " MISSING DISEASE NAME ", file=sys.stderr)
 
@@ -152,7 +152,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     break
 
             # Accept Orphanet if no OMIM
-            if rcv_disease_db is None:
+            if rcv_disease_db is None or rcv_disease_id is None:
                 for RCV_Trait in \
                         RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                     if rcv_disease_db is not None:
@@ -169,26 +169,27 @@ with gzip.open(FILENAME, 'rt') as fh:
                 for RCV_Trait in\
                         RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                     for RCV_TraitXRef in RCV_Trait.findall('XRef'):
-                        print(
-                            rcv_acc + "\tUNKNOWN DISEASE DB:\t" +
-                            RCV_TraitXRef.get('DB') + "\t" +
-                            RCV_TraitXRef.get('ID'), file=sys.stderr)
+                        # print(
+                        #    rcv_acc + " UNKNOWN DISEASE DB:\t" +
+                        #    RCV_TraitXRef.get('DB') + ":" +
+                        #    RCV_TraitXRef.get('ID'), file=sys.stderr)
                         # 82372 MedGen
                         #    58 EFO
                         #     1 Human Phenotype Ontology
+                        break
 
         # Check that we have enough info from the RCV
         # to justify parsing the related SCVs
         if rcv_disease_db is None or rcv_disease_id is None or \
-                rcv_variant_id is None or rcv_variant_type is None:
+                rcv_disease_label is None or rcv_variant_id is None or \
+                rcv_variant_type is None or rcv_variant_label is None:
+            print(rcv_acc + " ERROR IS WONKY BYEBYE", file=sys.stderr)
             continue
 
-        rcv_disease_curi = rcv_disease_db + '.' + rcv_disease_id
-        # else:
-        #    print(rcv_acc + "\t" + rcv_variant_id  + "\t" + rcv_variant_type)
-        #    print(rcv_acc + "\t" + rcv_disease_db + "\t" + rcv_disease_id)
+        rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
 
         #######################################################################
+        # Descend into each SCV grouped with the current RCV
         #######################################################################
 
         for SCV_Assertion in ClinVarSet.findall('ClinVarAssertion'):
@@ -216,21 +217,19 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             scv_id = SCV_Assertion.get('ID')
             monarch_id = hashlib.md5(
-                rcv_id.encode('utf-8') + scv_id.encode('utf-8')).hexdigest()[1:17]
-
+                (rcv_id + scv_id).encode('utf-8')).hexdigest()[1:17]
             monarch_assoc = 'MONARCH:' + monarch_id
 
-            # blank node identifiers
-            evidence_id = r'_' + monarch_assoc + '->evidence'
-            provenance_id = r'_' + monarch_assoc + '->provenance'
-            assertion_id = provenance_id + '->assertion'
+            ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
+            scv_acc = ClinVarAccession.get('Acc')
+            scv_accver = int(ClinVarAccession.get('Version'))
+            scv_orgid = ClinVarAccession.get('OrgID')
+            scv_updated = ClinVarAccession.get('DateUpdated')
 
-            # TODO: Edge labels done once at the beginning
-            # <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
-            # <SEPIO:0000011><rdfs:label><'has_provenance'>  .
-            # <SEPIO:0000017><rdfs:label><'has_agent'>  .
-            # <SEPIO:0000095><rdfs:label><'before_date'>  .
-            # <SEPIO:0000041><rdfs:label><'specified_by'>  .
+            # blank node identifiers
+            evidence_id = '_' + monarch_assoc + '->evidence'
+            provenance_id = '_' + monarch_assoc + '->provenance'
+            assertion_id = provenance_id + '->assertion'
 
             # TRIPLES
             # <monarch_assoc><rdf:type><OBAN:association>  .
@@ -239,10 +238,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             # <ClinVarVariant:rcv_variant_id><rdf:type><rcv_variant_type>  .
             # <monarch_assoc><association_has_object><rcv_disease_db:rcv_disease_id>  .
             # <rcv_disease_db:rcv_disease_id><rdfs:label><rcv_disease_label>  .
-
             # <monarch_assoc><SEPIO:0000007><_:evidence_id>  .
             # <monarch_assoc><SEPIO:0000011><_:provenance_id>  .
-
             # <_:evidence_id><rdf:type><SEPIO:0000000> .
             # <_:evidence_id><rdfs:label><'evidence line'> .
             # <_:provenance_id><rdf:type><SEPIO:0000003> .
@@ -251,22 +248,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             # <_:provenance_id><had_output><_:assertion_id> .
             # <_:assertion_id><rdf:type><SEPIO:0000001> .
             # <_:assertion_id><rdfs:label><'assertion'>  .
-
-            # scv_name = SCV_Assertion.get('SubmissionName')
-            # ClinVarSubmissionID
-            ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
-            scv_acc = ClinVarAccession.get('Acc')
-            scv_accver = int(ClinVarAccession.get('Version'))
-            scv_orgid = ClinVarAccession.get('OrgID')
-            scv_updated = ClinVarAccession.get('DateUpdated')
-
-            # TRIPLES
-            # TODO CURI for
-            # CVS: = 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'
-            #
             # <_:assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
-            # <_:provenance_id><SEPIO:0000017><CVS:scv_orgid>  .
-            # <CVS:scv_orgid><rdf:type><FOAF:organization>  .
+            # <_:provenance_id><SEPIO:0000017><ClinVar:submitters/scv_orgid>  .
+            # <ClinVar:submitters/scv_orgid><rdf:type><FOAF:organization>  .
             # <_:provenance_id><SEPIO:0000095><scv_updated>  .
 
             # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
@@ -285,8 +269,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # SEPIO:0000037 'variant classification guideline' #class label
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
-            # AdditionalSubmitters
             # RecordStatus                             # assert =='current' ?
+
             ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
             # scv_eval_date = ClinicalSignificance.get('DateLastEvaluated')
             # SCV_ReviewStatus = ClinicalSignificance.find('ReviewStatus')
@@ -319,45 +303,44 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             for SCV_ObsIn in SCV_Assertion.findall('ObservedIn'):
 
-                # /*/*/*/ObservedIn/Sample
-                # /*/*/*/ObservedIn/Method
-                # /*/*/*/ObservedIn/ObservedData
-                # /*/*/*/ObservedIn/TraitSet
-                # /*/*/*/ObservedIn/Citation
-                # /*/*/*/ObservedIn/Co-occurrenceSet
-                # /*/*/*/ObservedIn/Comment
-                # /*/*/*/ObservedIn/XRef
+                # /SCV/ObservedIn/Sample
+                # /SCV/ObservedIn/Method
+                # /SCV/ObservedIn/ObservedData
+                # /SCV/ObservedIn/TraitSet
+                # /SCV/ObservedIn/Citation
+                # /SCV/ObservedIn/Co-occurrenceSet
+                # /SCV/ObservedIn/Comment
+                # /SCV/ObservedIn/XRef
 
                 # Sample/Origin
                 # Sample/Species@TaxonomyId="9606" is a constant
                 # scv_affectedstatus = \
                 #    SCV_ObsIn.find('Sample').find('AffectedStatus').text
 
-                # Method/NamePlatform
-                # Method/TypePlatform
-                # Method/Description
-                # Method/SourceType
-                # Method/MethodType
-                # SCV/ObservedIn/Method/MethodType
+                # /SCV/ObservedIn/Method/NamePlatform
+                # /SCV/ObservedIn/Method/TypePlatform
+                # /SCV/ObservedIn/Method/Description
+                # /SCV/ObservedIn/Method/SourceType
+                # /SCV/ObservedIn/Method/MethodType
+                # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
                     if 'not provided' != SCV_OIMT.text:
                         scv_evidence_type = onto_map[SCV_OIMT.text]
-                        # TODO need 'not provided' mapping
+                        # TODO need 'not provided' mapping? prolly not.
 
-                    # TRIPLES
-                    # has_supporting_process
-                    # <_:evidence_id><SEPIO:0000085><scv_evidence_type>
+                        # TRIPLES
+                        # has_supporting_process
+                        # <_:evidence_id><SEPIO:0000085><scv_evidence_type>
 
-                # ObservedData/Attribute@Type
-                # ObservedData/Attribute@integerValue
+                # /SCV/ObservedIn/ObservedData/Attribute@Type
+                # /SCV/ObservedIn/ObservedData/Attribute@integerValue
 
+                # Trait being taken from RCV instead (,for now)
                 # for SCV_TraitSet in SCV_ObsIn.findall('TraitSet'):
 
                     # /*/*/*/*/TraitSet/Comment
                     # /*/*/*/*/TraitSet/Trait
-
                     # for SCV_Trait in SCV_TraitSet.findall('Trait'):
-
                     #   # /*/*/*/*/*/Trait/Name
                     #   # /*/*/*/*/*/Trait/Symbol
                     #   # /*/*/*/*/*/Trait/TraitRelationship
@@ -406,7 +389,8 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                             SCV_NCBI = SCV_Measure.find('XRef[@DB="Gene"]')
                             if SCV_NCBI is not None:
-                                scv_ncbigene_id = 'NCBIGene:' + SCV_NCBI.get('ID')
+                                scv_ncbigene_id = '\
+                                    NCBIGene:' + SCV_NCBI.get('ID')
 
                             # TRIPLES
                             # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
