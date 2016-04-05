@@ -498,7 +498,7 @@ class ZFIN(Source):
                 gene_to_reagent_hash = {}
                 for eid in extrinsic_list:
                     # link the morpholino to the genes that it affects
-                    eid = 'ZFIN:'+eid
+                    eid = 'ZFIN:' + eid
 
                     # just in case, skip over the ALTs
                     if re.search(r'ALT', eid):
@@ -622,11 +622,11 @@ class ZFIN(Source):
         for a in allele_to_construct_hash:
             if self.testMode and a not in self.test_ids['allele']:
                 continue
-            allele_id = 'ZFIN:'+a
+            allele_id = 'ZFIN:' + a
             constructs = allele_to_construct_hash.get(a)
             if len(constructs) > 0:
                 for c in constructs:
-                    cid = 'ZFIN:'+c
+                    cid = 'ZFIN:' + c
                     geno.addSequenceDerivesFrom(allele_id, cid)
                     # logger.info("constructs for %s: %s", allele_id,
                     #             str(constructs))
