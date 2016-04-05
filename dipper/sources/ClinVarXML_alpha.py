@@ -8,9 +8,14 @@ import xml.etree.ElementTree as ET
 # from dipper import curie_map  # not there yet
 
 # http://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/sample_xml/RCV000077146.xml
+
+# I'm running in another dir so you will have to also
+# have the xml and the mapping file there too
+
 # FILENAME = 'BRCA_ClinVarSet.xml.gz'
 #
 FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
+
 
 # scv_assertcount = scv_measurecount = scv_traitcount = scv_citecount = 0
 # rs_cvset = 0
@@ -18,9 +23,9 @@ FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
 # larval stage term mapping file
 # will want namespace I expect.
 # strips comments and blank lines
-# OR convert to YAML see: curi_map.yaml
+# ... OR convert to YAML see: curi_map.yaml
 onto_map = {}
-with open("term_onto.txt") as f:
+with open("clinvar_alpha_word_ontology.txt") as f:
     for line in f:
         line = line.partition('#')[0].strip()
         if line != "":
@@ -96,8 +101,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
                     RCV_Measure.get('Type').text, file=sys.stderr)
                 continue
-            rcv_variant_label = \
-                RCV_Measure.find('Name/ElementValue[@Type="Preferred"]').text
+            RCV_VariantName = RCV_Measure.find(
+                'Name/ElementValue[@Type="Preferred"]')
+            if RCV_VariantName is not None:
+                rcv_variant_label = RCV_VariantName.text
+            else:
+                print(
+                    rcv_acc + " VARIANT MISSING LABEL", file=sys.stderr)
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         #######################################################################
@@ -299,7 +309,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # if scv_geno is not None:
                 #   we have the association's pathnogicty call
                 #   TRIPLES
-                #   CLINVAR: = '"http://www.ncbi.nlm.nih.gov/clinvar/'
+                #   CLINVAR: = 'http://www.ncbi.nlm.nih.gov/clinvar/'
                 #   <monarch_assoc><OBAN:association_has_predicate><scv_geno>
                 #   <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                 #   <monarch_assoc><OIO:hasdbxref><CLINVAR:rcv_acc>
@@ -330,10 +340,10 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # Method/MethodType
                 # SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
-                    if  'not provided' != SCV_OIMT.text:
+                    if 'not provided' != SCV_OIMT.text:
                         scv_evidence_type = onto_map[SCV_OIMT.text]
                         # TODO need 'not provided' mapping
-                    
+
                     # TRIPLES
                     # has_supporting_process
                     # <_:evidence_id><SEPIO:0000085><scv_evidence_type>
