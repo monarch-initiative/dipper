@@ -6,6 +6,7 @@ import gzip
 import xml.etree.ElementTree as ET
 
 # from dipper import curie_map  # not there yet
+# from dipper import CurieUtils
 
 # http://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/sample_xml/RCV000077146.xml
 
@@ -16,13 +17,30 @@ import xml.etree.ElementTree as ET
 #
 FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
 
-# TODO: Edge labels done once at the beginning
-# <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
-# <SEPIO:0000011><rdfs:label><'has_provenance'>  .
-# <SEPIO:0000017><rdfs:label><'has_agent'>  .
-# <SEPIO:0000095><rdfs:label><'before_date'>  .
-# <SEPIO:0000041><rdfs:label><'specified_by'>  .
 
+def write_spo(s, p, o):
+    # to expand we could use utils/CuriUtil.get_uri(curi)
+    match = re.match(r'.*:[!-~]+', o)
+    if match is not None:
+        # TODO: really need a more rigorous literal/curi check
+        o = '<' + o + '>'
+    else:
+        o = '"' + o + '"'
+    print('<' + s + '> <' + p + '> ' + o + '  .')
+    return
+
+# Edge labels done once at the beginning
+# TRIPLES
+# <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
+write_spo('SEPIO:0000007', 'rdfs:label', 'has_supporting_evidence')
+# <SEPIO:0000011><rdfs:label><'has_provenance'>  .
+write_spo('SEPIO:0000011', 'rdfs:label', 'has_provenance')
+# <SEPIO:000001><rdfs:label><'has_agent'>  .
+write_spo('SEPIO:0000001', 'rdfs:label', 'has_agent')
+# <SEPIO:0000095><rdfs:label><'before_date'>  .
+write_spo('SEPIO:0000095', 'rdfs:label', 'before_date')
+# <SEPIO:0000041><rdfs:label><'specified_by'>  .
+write_spo('SEPIO:0000041', 'rdfs:label', 'specified_by')
 
 # larval stage term mapping file
 # will want namespace I expect.
@@ -132,9 +150,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             #  57356 OMIM
             # 142532 MedGen
 
-            RCV_TraitName = \
-                    RCV_TraitSet.find(
-                        'Trait[@Type="Disease"]/Name/ElementValue[@Type="Preferred"]')
+            RCV_TraitName = RCV_TraitSet.find(
+                'Trait[@Type="Disease"]/Name/ElementValue[@Type="Preferred"]')
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
@@ -222,36 +239,76 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
             scv_acc = ClinVarAccession.get('Acc')
-            scv_accver = int(ClinVarAccession.get('Version'))
+            scv_accver = ClinVarAccession.get('Version')
             scv_orgid = ClinVarAccession.get('OrgID')
             scv_updated = ClinVarAccession.get('DateUpdated')
 
             # blank node identifiers
-            evidence_id = '_' + monarch_assoc + '->evidence'
-            provenance_id = '_' + monarch_assoc + '->provenance'
-            assertion_id = provenance_id + '->assertion'
+            _evidence_id = '_' + monarch_assoc + '|evidence'
+            _provenance_id = '_' + monarch_assoc + '|provenance'
+            _assertion_id = _provenance_id + '|assertion'
 
             # TRIPLES
             # <monarch_assoc><rdf:type><OBAN:association>  .
-            # <monarch_assoc><association_has_subject><ClinVarVariant:rcv_variant_id>  .
+            write_spo(monarch_assoc, 'rdf:type', 'OBAN:association')
+            # <monarch_assoc>
+            #   <OBAN:association_has_subject>
+            #       <ClinVarVariant:rcv_variant_id>
+            write_spo(
+                monarch_assoc,
+                'OBAN:association_has_subject',
+                'ClinVarVariant:rcv_variant_id')
             # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv_variant_label>  .
+            write_spo(
+                'ClinVarVariant:' + rcv_variant_id,
+                'rdfs:label', rcv_variant_label)
             # <ClinVarVariant:rcv_variant_id><rdf:type><rcv_variant_type>  .
-            # <monarch_assoc><association_has_object><rcv_disease_db:rcv_disease_id>  .
-            # <rcv_disease_db:rcv_disease_id><rdfs:label><rcv_disease_label>  .
-            # <monarch_assoc><SEPIO:0000007><_:evidence_id>  .
-            # <monarch_assoc><SEPIO:0000011><_:provenance_id>  .
-            # <_:evidence_id><rdf:type><SEPIO:0000000> .
-            # <_:evidence_id><rdfs:label><'evidence line'> .
-            # <_:provenance_id><rdf:type><SEPIO:0000003> .
-            # <_:provenance_id><rdfs:label><'assertion process'>  .
-            # <_:provenance_id><ECO:9000001><_:evidence_id>  .
-            # <_:provenance_id><had_output><_:assertion_id> .
-            # <_:assertion_id><rdf:type><SEPIO:0000001> .
-            # <_:assertion_id><rdfs:label><'assertion'>  .
-            # <_:assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
-            # <_:provenance_id><SEPIO:0000017><ClinVar:submitters/scv_orgid>  .
+            write_spo(
+                'ClinVarVariant:' + rcv_variant_id,
+                'rdf:type',
+                rcv_variant_type)
+            # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
+            write_spo(
+                monarch_assoc, 'OBAN:association_has_object', rcv_disease_curi)
+            # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
+            write_spo(rcv_disease_curi, 'rdfs:label', rcv_disease_label)
+            # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
+            write_spo(monarch_assoc, 'SEPIO:0000007', ':' + _evidence_id)
+            # <monarch_assoc><SEPIO:0000011><:_provenance_id>  .
+            write_spo(monarch_assoc, 'SEPIO:0000011', ':' + _provenance_id)
+            # <:_evidence_id><rdf:type><SEPIO:0000000> .
+            write_spo(':' + _evidence_id, 'rdf:type', 'SEPIO:0000000')
+            # <:_evidence_id><rdfs:label><'evidence line'> .
+            write_spo(':' + _evidence_id, 'rdfs:label', 'evidence line')
+            # <:_provenance_id><rdf:type><SEPIO:0000003> .
+            write_spo(':' + _provenance_id, 'rdf:type', 'SEPIO:0000003')
+            # <:_provenance_id><rdfs:label><'assertion process'>  .
+            write_spo(':' + _provenance_id, 'rdfs:label', 'assertion process')
+            # <:_provenance_id><ECO:9000001><:_evidence_id>  .
+            write_spo(':' + _provenance_id, 'ECO:9000001', ':' + _evidence_id)
+            # <:_provenance_id><had_output><:_assertion_id> .
+            write_spo(':' + _provenance_id, 'had_output', ':' + _assertion_id)
+            # <:_assertion_id><rdf:type><SEPIO:0000001> .
+            write_spo(':' + _assertion_id, 'rdf:type', 'SEPIO:0000001')
+            # <:_assertion_id><rdfs:label><'assertion'>  .
+            write_spo(':' + _assertion_id, 'rdfs:label', 'assertion')
+            # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
+            write_spo(
+                ':' + _assertion_id,
+                'dc:identifier',
+                scv_acc + '.' + scv_accver)
+            # <:_provenance_id><SEPIO:0000017><ClinVar:submitters/scv_orgid>  .
+            write_spo(
+                ':' + _provenance_id,
+                'SEPIO:0000017',
+                'ClinVar:submitters/' + scv_orgid)
             # <ClinVar:submitters/scv_orgid><rdf:type><FOAF:organization>  .
-            # <_:provenance_id><SEPIO:0000095><scv_updated>  .
+            write_spo(
+                'ClinVar:submitters/' + scv_orgid,
+                'rdf:type',
+                'FOAF:organization')
+            # <:_provenance_id><SEPIO:0000095><scv_updated>  .
+            write_spo(':' + _provenance_id, 'SEPIO:0000095', scv_updated)
 
             # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
             SCV_Attribute = \
@@ -261,8 +318,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_att_method = SCV_Attribute.text
                 # TRIPLES
                 # specified_by
-                # <_:provenance_id><SEPIO:0000041><scv_att_method>
-                # not done!!!
+                # <:_provenance_id><SEPIO:0000041><scv_att_method>
+                write_spo(':' + _provenance_id, 'EPIO:0000041', scv_att_method)
+                # TODO: not done!!!
                 # SEPIO:1000001
                 # 'ENIGMA BRCA1/2 Classification Criteria (2015)'
                 # 'variant classification guideline'
@@ -283,20 +341,34 @@ with gzip.open(FILENAME, 'rt') as fh:
             if SCV_Citation is not None:
                 scv_citation_id = SCV_Citation.text
                 # TRIPLES
-                # <_:evidence_id><SEPIO:0000084><PMID:scv_citation_id>
+                # <:_evidence_id><SEPIO:0000084><PMID:scv_citation_id>  .
+                write_spo(
+                    ':' + _evidence_id,
+                    'SEPIO:0000084',
+                    'PMID:' + scv_citation_id)
                 # <PMID:scv_citation_id><rdfs:label><'literature-based study'>
+                write_spo(
+                    'PMID:' + scv_citation_id,
+                    'rdfs:label',
+                    'literature-based study')
 
             scv_significance = scv_geno = None
             if SCV_Description:
                 scv_significance = SCV_Description.text
                 scv_geno = onto_map[scv_significance]
-                # if scv_geno is not None:
-                #   we have the association's pathnogicty call
-                #   TRIPLES
-                #   CLINVAR: = 'http://www.ncbi.nlm.nih.gov/clinvar/'
-                #   <monarch_assoc><OBAN:association_has_predicate><scv_geno>
-                #   <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
-                #   <monarch_assoc><OIO:hasdbxref><CLINVAR:rcv_acc>
+                if scv_geno is not None:
+                    # we have the association's pathnogicty call
+                    # TRIPLES
+                    # <monarch_assoc><OBAN:association_has_predicate><scv_geno>
+                    write_spo(
+                        monarch_assoc,
+                        'OBAN:association_has_predicate',
+                        scv_geno)
+                    # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
+                    write_spo(rcv_variant_id, scv_geno, rcv_disease_curi)
+                    # <monarch_assoc><OIO:hasdbxref><ClinVar:rcv_acc>  .
+                    write_spo(
+                        monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc)
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
@@ -330,7 +402,11 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                         # TRIPLES
                         # has_supporting_process
-                        # <_:evidence_id><SEPIO:0000085><scv_evidence_type>
+                        # <:_evidence_id><SEPIO:0000085><scv_evidence_type>
+                        write_spo(
+                            ':' + _evidence_id,
+                            'SEPIO:0000085',
+                            scv_evidence_type)
 
                 # /SCV/ObservedIn/ObservedData/Attribute@Type
                 # /SCV/ObservedIn/ObservedData/Attribute@integerValue
@@ -392,9 +468,17 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 scv_ncbigene_id = '\
                                     NCBIGene:' + SCV_NCBI.get('ID')
 
-                            # TRIPLES
-                            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-                            # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
+                                # TRIPLES
+                                # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
+                                write_spo(
+                                    rcv_variant_id,
+                                    'GENO:0000418',
+                                    scv_ncbigene_id)
+                                # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
+                                write_spo(
+                                    scv_ncbigene_id,
+                                    'rdfs:labe',
+                                    scv_gene_symbol)
 
             # for SCV_Citation in SCV_Assertion.findall('Citation'):
             #    # init
