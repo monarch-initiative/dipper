@@ -1,4 +1,12 @@
 #! /usr/bin/python3
+
+'''
+    First pass at convertunv Clinvar XML into
+    RDF triples to be ingested by SciGraph.
+    These triples comform to the core of the
+    SEPIO Evidence & Provenance model 2016 Apr
+
+'''
 import hashlib
 import re
 import sys
@@ -18,15 +26,23 @@ import xml.etree.ElementTree as ET
 FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
 
 
-def write_spo(s, p, o):
-    # to expand we could use utils/CuriUtil.get_uri(curi)
-    match = re.match(r'.*:[!-~]+', o)
+def write_spo(sub, prd, obj):
+    '''
+    Decorates the three given strings
+    as a line of ntriples
+    and sends them to std out
+    '''
+
+    # To expand we could use utils/CuriUtil.get_uri(curi)
+    # sub & prd are allways uri,
+    # obj  is a uri or literal [string|number]
+    match = re.match(r'.*:[!-~]+', obj)
     if match is not None:
         # TODO: really need a more rigorous literal/curi check
-        o = '<' + o + '>'
+        obj = '<' + obj + '>'
     else:
-        o = '"' + o + '"'
-    print('<' + s + '> <' + p + '> ' + o + '  .')
+        obj = '"' + obj + '"'
+    print('<' + sub + '> <' + prd + '> ' + obj + ' .')
     return
 
 # Edge labels done once at the beginning
@@ -46,19 +62,19 @@ write_spo('SEPIO:0000041', 'rdfs:label', 'specified_by')
 # will want namespace I expect.
 # strips comments and blank lines
 # ... OR convert to YAML see: curi_map.yaml
-onto_map = {}
+ONTOMAP = {}
 with open("clinvar_alpha_word_ontology.txt") as f:
     for line in f:
         line = line.partition('#')[0].strip()
         if line != "":
             (key, val) = re.split(r'\t+', line, 2)
-            onto_map[key.strip()] = val.strip()
+            ONTOMAP[key.strip()] = val.strip()
 
 #######################################################
 # main loop over xml
 with gzip.open(FILENAME, 'rt') as fh:
-    tree = ET.parse(fh)
-    ReleaseSet = tree.getroot()
+    TREE = ET.parse(fh)
+    ReleaseSet = TREE.getroot()
     if ReleaseSet.get('Type') != 'full':
         print("Not a full release", file=sys.stderr)
         sys.exit(-1)
@@ -116,7 +132,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         for RCV_Measure in \
                 RCV_MeasureSet.findall('Measure'):
-            rcv_variant_type = onto_map.get(RCV_Measure.get('Type'))
+            rcv_variant_type = ONTOMAP.get(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
                 print(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
@@ -180,16 +196,28 @@ with gzip.open(FILENAME, 'rt') as fh:
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
 
+            # Otherwise go with MedGen
+            if rcv_disease_db is None or rcv_disease_id is None:
+                for RCV_Trait in \
+                        RCV_TraitSet.findall('Trait[@Type="Disease"]'):
+                    if rcv_disease_db is not None:
+                        break
+                    for RCV_TraitXRef in RCV_Trait.findall(
+                            'XRef[@DB="MedGen"]'):
+                        rcv_disease_db = RCV_TraitXRef.get('DB')
+                        rcv_disease_id = RCV_TraitXRef.get('ID')
+                        break
+
             # See if there are any leftovers. Possibilities include:
-            # EFO, Gene, Human Phenotype Ontology, MedGen
+            # EFO, Gene, Human Phenotype Ontology
             if rcv_disease_db is None:
                 for RCV_Trait in\
                         RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                     for RCV_TraitXRef in RCV_Trait.findall('XRef'):
-                        # print(
-                        #    rcv_acc + " UNKNOWN DISEASE DB:\t" +
-                        #    RCV_TraitXRef.get('DB') + ":" +
-                        #    RCV_TraitXRef.get('ID'), file=sys.stderr)
+                        print(
+                            rcv_acc + " UNKNOWN DISEASE DB:\t" +
+                            RCV_TraitXRef.get('DB') + ":" +
+                            RCV_TraitXRef.get('ID'), file=sys.stderr)
                         # 82372 MedGen
                         #    58 EFO
                         #     1 Human Phenotype Ontology
@@ -200,7 +228,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            print(rcv_acc + " ERROR IS WONKY BYEBYE", file=sys.stderr)
+            print(rcv_acc + " RCV IS WONKY, BYEBYE", file=sys.stderr)
             continue
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
@@ -267,6 +295,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'ClinVarVariant:' + rcv_variant_id,
                 'rdf:type',
                 rcv_variant_type)
+            # <ClinVarVariant:rcv_variant_id><rdf:type><owl:Class> TODO ???
+
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
                 monarch_assoc, 'OBAN:association_has_object', rcv_disease_curi)
@@ -315,16 +345,17 @@ with gzip.open(FILENAME, 'rt') as fh:
                 SCV_Assertion.find(
                     'AttributeSet/Attribute[@Type="AssertionMethod"]')
             if SCV_Attribute is not None:
-                scv_att_method = SCV_Attribute.text
-                # TRIPLES
-                # specified_by
-                # <:_provenance_id><SEPIO:0000041><scv_att_method>
-                write_spo(':' + _provenance_id, 'EPIO:0000041', scv_att_method)
-                # TODO: not done!!!
-                # SEPIO:1000001
-                # 'ENIGMA BRCA1/2 Classification Criteria (2015)'
-                # 'variant classification guideline'
-                # SEPIO:0000037 'variant classification guideline' #class label
+                scv_assert_method = SCV_Attribute.text
+                # this string needs to be mapped to a <sepio:100...n> class iri
+                # these OWLclass & labels etc should be done in a stand alone
+                # file and imported
+
+                if scv_assert_method in ONTOMAP:
+                    scv_assert_id = ONTOMAP[scv_assert_method]
+                    # TRIPLES   specified_by
+                    # <:_provenance_id><SEPIO:0000041><scv_att_id>
+                    write_spo(
+                        ':' + _provenance_id, 'EPIO:0000041', scv_assert_id)
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
             # RecordStatus                             # assert =='current' ?
@@ -355,7 +386,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             scv_significance = scv_geno = None
             if SCV_Description:
                 scv_significance = SCV_Description.text
-                scv_geno = onto_map[scv_significance]
+                scv_geno = ONTOMAP[scv_significance]
                 if scv_geno is not None:
                     # we have the association's pathnogicty call
                     # TRIPLES
@@ -396,8 +427,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
-                    if 'not provided' != SCV_OIMT.text:
-                        scv_evidence_type = onto_map[SCV_OIMT.text]
+                    if SCV_OIMT.text != 'not provided':
+                        scv_evidence_type = ONTOMAP[SCV_OIMT.text]
                         # TODO need 'not provided' mapping? prolly not.
 
                         # TRIPLES
@@ -477,7 +508,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
                                 write_spo(
                                     scv_ncbigene_id,
-                                    'rdfs:labe',
+                                    'rdfs:label',
                                     scv_gene_symbol)
 
             # for SCV_Citation in SCV_Assertion.findall('Citation'):
