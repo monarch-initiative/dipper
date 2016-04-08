@@ -13,7 +13,6 @@ from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
-from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
 from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
@@ -813,8 +812,9 @@ class OMIM(Source):
                             # clinvarAccessions triple semicolon delimited
                             # each like RCV000020059;;;
                             rcv_ids = \
-                                re.split(r';;;',
-                                         al['allelicVariant']['clinvarAccessions'])
+                                re.split(
+                                    r';;;',
+                                    al['allelicVariant']['clinvarAccessions'])
                             rcv_ids = [
                                 (re.match(r'(RCV\d+)\;\;', r)).group(1)
                                 for r in rcv_ids]
@@ -1079,7 +1079,6 @@ class OMIM(Source):
         """
 
         ref_to_pmid = {}
-        du = DipperUtil()
         entry_num = entry['mimNumber']
         gu = GraphUtils(curie_map.get())
         if 'referenceList' in entry:
@@ -1108,7 +1107,8 @@ class OMIM(Source):
                         citation = re.split(r'\.\,', author_list)[0] + ' et al'
                     if 'source' in r['reference']:
                         source = r['reference']['source']
-                    citation = '; '.join(du.flatten([citation, title, source]))
+                    citation = '; '.join(
+                        list(filter(None.__ne__, [citation, title, source])))
                     ref.setShortCitation(citation)
                 ref.addRefToGraph(g)
                 ref_to_pmid[r['reference']['referenceNumber']] = pub_id
