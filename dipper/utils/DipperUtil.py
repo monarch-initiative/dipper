@@ -74,9 +74,12 @@ class DipperUtil:
         Entrez.tool = "Dipper"
         # first, get the homologene id from the gene id
         # gene_id = '1264'  for testing
+
+        # TODO revisit bringing all of Biopython
+        # as a dependency just to do a eutils call
         gid = str(gene_num)
-        handle = Entrez.esearch(db="homologene", term=gid+"[Gene ID]",
-                                retmode="json")
+        handle = Entrez.esearch(
+            db="homologene", term=gid+"[Gene ID]", retmode="json")
         record = handle.read()
         j = json.loads(record)
         homologene_ids = j["esearchresult"]["idlist"]
