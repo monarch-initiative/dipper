@@ -286,7 +286,10 @@ class ClinVar(Source):
 
                 # they use -1 to indicate unknown gene
                 if str(gene_num) != '-1' and str(gene_num) != 'more than 10':
-                    gene_id = ':'.join(('NCBIGene', str(gene_num)))
+                    if re.match(r'^Gene:', gene_num):
+                        gene_num = "NCBI" + gene_num
+                    else:
+                        gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
                 # FIXME there are some "variants" that are actually haplotypes
                 # probably will get taken care of when we switch to processing
@@ -384,8 +387,10 @@ class ClinVar(Source):
                         m = re.match(r"(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
                         if m is not None and len(m.groups()) > 0:
                             p = re.sub(m.group(1), 'Orphanet:', p.strip())
-                        elif re.match(r'SNOMED CT', p):
-                            p = re.sub(r'SNOMED CT', 'SNOMED', p.strip())
+                        elif re.match(r"ORPHA:", p):
+                            p = re.sub(r'ORPHA:', 'Orphanet:', p.strip())
+                        elif re.match(r'SNOMED .*', p):
+                            p = re.sub(r'SNOMED .*', 'SNOMED', p.strip())
 
                         assoc = G2PAssoc(self.name, seqalt_id, p.strip())
                         assoc.add_association_to_graph(g)
