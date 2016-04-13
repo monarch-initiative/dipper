@@ -4,7 +4,7 @@ import re
 import time
 from datetime import datetime
 import json
-from subprocess import call
+# from subprocess import call # unused
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -18,7 +18,12 @@ from dipper import curie_map
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 
 logger = logging.getLogger(__name__)
-OMDL = 'ftp://anonymous:info%40monarchinitiative.org@ftp.omim.org/OMIM'
+
+OMDL = 'http://omim.org/static/omim/data'
+# omimftp key EXPIRES April 11th, 2017
+# get a new one here: http://omim.org/help/api
+OMDLLIC = \
+    'http://data.omim.org/downloads/' + config.get_config()['keys']['omimftp']
 
 
 class OMIM(Source):
@@ -48,23 +53,17 @@ class OMIM(Source):
 
     files = {
         'all': {
-            'file': 'omim.txt.Z',
-            'url': OMDL + '/omim.txt.Z'},
+            'file': 'mim2gene.txt',
+            'url': OMDL + '/mim2gene.txt'},
         'morbidmap': {
             'file': 'morbidmap.txt',
-            'url':  OMDL + '/morbidmap'},
-        'phenotypicSeries': {
-            'file': 'phenotypicSeriesTitles.txt',
-            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab',
-            'headers': {'User-Agent': 'Mozilla/5.0'}}
+            'url':  OMDLLIC + '/morbidmap.txt'},
+        # /mimTitles.txt
+        # /genemap.txt
+        # /genemap2.txt
+        # /omim.txt.Z                   replaced by mim2gene.txt
+        # /phenotypicSeriesTitles.txt   DOES NOT EXIST
     }
-
-    # TODO PYLINT
-    # 2016-FEB  The only file OMIM makes freely available (w/o permission) is:
-    # http://omim.org/static/omim/data/mim2gene.txt
-    # which has:
-    # MIM_numbers, NCBI_Gene_IDs, Ensembl_Gene IDs, HGNC_Gene_Symbols
-    # it may be sufficient to replace the missing omim.txt
 
     # the following test ids are in the config.json
     test_ids = [
@@ -81,7 +80,8 @@ class OMIM(Source):
         # disease with known locus
         102480]
 
-    OMIM_API = "http://api.omim.org/api"
+    OMIM_API = 'http://api.omim.org/api'
+    # + '/entry?apikey="' + config.get_config()['keys']['omim'] + '&'
 
     def __init__(self):
         Source.__init__(self, 'omim')
@@ -143,7 +143,7 @@ class OMIM(Source):
 
         self._process_all(limit)
         self._process_morbidmap(limit)
-        self._process_phenotypicseries(limit)
+        # self._process_phenotypicseries(limit) # no longer readily available?
 
         self.load_core_bindings()
         self.load_bindings()
@@ -153,31 +153,44 @@ class OMIM(Source):
         return
 
     def _get_omim_ids(self):
-        omimids = []
+        omimids = []        # all types
+        omimgene = []       # 15234 gene
+        omimpheno = []      # 6329 phenotype
+        omimphenogene = []  # 1808 predominantly phenotypes
+        omimredact = []     # 1204 moved/removed
+        omimgenepheno = []  # 85 gene/phenotype
 
-        # an omim-specific thing here; from the omim.txt.gz file,
-        # get the omim numbers
-        # not unzipping the file
-        logger.info("Obtaining OMIM record identifiers")
+        logger.info("Obtaining OMIM record identifiers from:")
         line_counter = 0
         omimfile = '/'.join((self.rawdir, self.files['all']['file']))
         logger.info("FILE: %s", omimfile)
         # TODO check to see if the file is there
-        call(["uncompress", omimfile])
-        omimfile = omimfile.replace('.Z', '')
         with open(omimfile, "r") as f:
+            f.readline()            # copyright
+            line = f.readline()     # Generated: YYYY-MM-DD
+            f.readline()            # column headers
             for line in f:
-                line = line.strip()
+                line_counter += 1
+                (OMIM, MIMType, NCBIGene, HGNC, Ensembl) = line.split('\t')
+                omimids.append(OMIM)
+                if MIMType == 'gene':
+                    omimgene.append(OMIM)
+                elif MIMType == 'phenotype':
+                    omimpheno.append(OMIM)
+                elif MIMType == 'predominantly phenotypes':
+                    omimphenogene.append(OMIM)
+                elif MIMType == 'moved/removed':
+                    omimredact.append(OMIM)
+                elif MIMType == 'gene/phenotype':
+                    omimgenepheno.append(OMIM)
 
-                if line == "*FIELD* NO":
-                    line_counter += 1
-                    # read the next line
-                    number = f.readline().strip()
-                    omimids.append(number)
-
-        # recompress the file
-        call(["compress", omimfile])
-        logger.info("Done.  I found %d omim ids", omimids.__len__())
+        logger.info("Done. found %d omim ids", omimids.__len__())
+        logger.info("Found %d gene omim ids", omimgene.__len__())
+        logger.info("Found %d phenotype omim ids", omimpheno.__len__())
+        logger.info("Found %d omim phenogene", omimphenogene.__len__())
+        logger.info("Found %d omim redacted ids", omimredact.__len__())
+        logger.info(
+            "Found %d omim genepheno ids", omimgenepheno.__len__())
         return omimids
 
     def process_entries(self, omimids, transform,
@@ -264,16 +277,23 @@ class OMIM(Source):
             logger.info(
                 'fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
 
-            # print ('fetching:',(',').join(omimids[it:end]))
+            # print('fetching:', (',').join(omimids[it:end]))
             # print('url:', url)
 
-            # TODO try/catch
-            d = urllib.request.urlopen(url)
+            try:
+                d = urllib.request.urlopen(url)
+            except OSError as e:  # URLError?
+                logger.error(e)
+
             resp = d.read().decode()
             request_time = datetime.now()
             it += groupsize
 
             myjson = json.loads(resp)
+            # snag a copy, hopefully we will get the ftp dl soon
+            # with open('./raw/omim/_' + str(it) + '.json', 'w') as fp:
+            #    json.dump(myjson, fp)
+
             entries = myjson['omim']['entryList']
 
             for e in entries:
@@ -553,7 +573,7 @@ class OMIM(Source):
 
             self._get_pubs(e['entry'], g)
 
-            self._get_process_allelic_variants(e['entry'], g)
+            # self._get_process_allelic_variants(e['entry'], g)  # temp gag
 
         return
 
@@ -583,12 +603,26 @@ class OMIM(Source):
         gu = GraphUtils(curie_map.get())
         assoc_count = 0
         with open(
-                '/'.join((self.rawdir, self.files['morbidmap']['file']))) as f:
+                '/'.join((
+                    self.rawdir, self.files['morbidmap']['file']))) as f:
+            # Copyright
+            # Generated: 2016-04-11
+            # See end of file for additional documentation on specific fields
+            # Phenotype	Gene Symbols	MIM Number	Cyto Location
+            #
+            # since there are comments at the end of the file as well,
+            # filter both header & footer as lines beginning with octothorp
+
             for line in f:
                 line = line.strip()
+                if line.startswith('#'):
+                    continue  # header/footer
+
+                (disorder, gene_symbols, gene_num, loc) = line.split('\t')
                 line_counter += 1
-                (disorder, gene_symbols, gene_num, loc) = line.split('|')
-                # TODO PYLINT loc unused
+
+                logger.info("morbidmap disorder:  %s", disorder)
+
                 # disorder = disorder label , number (mapping key)
                 # 3-M syndrome 1, 273750 (3)|CUL7, 3M1|609577|6p21.1
 
@@ -596,18 +630,18 @@ class OMIM(Source):
                 # (not genes though), the omim id is only listed as the gene
                 # Alopecia areata 1 (2)|AA1|104000|18p11.3-p11.2
                 # when there's a gene and disease
-                disorder_match = re.match(r'(.*), (\d{6})\s*(?:\((\d+)\))?',
-                                          disorder)
+
+                disorder_match = re.match(
+                    r'(.*), (\d{6})\s*(?:\((\d+)\))?', disorder)
                 nogene_match = re.match(r'(.*)\s+\((\d+)\)', disorder)
 
                 if disorder_match is not None:
                     disorder_parts = disorder_match.groups()
                     (disorder_label, disorder_num, phene_key) = disorder_parts
 
-                    if self.testMode and (int(disorder_num) not in
-                                          self.test_ids or
-                                          int(gene_num) not in
-                                          self.test_ids):
+                    if self.testMode and (
+                            int(disorder_num) not in self.test_ids or
+                            int(gene_num) not in self.test_ids):
                         continue
                     assoc_count += 1
                     gene_symbols = gene_symbols.split(', ')
@@ -643,9 +677,9 @@ class OMIM(Source):
                         # to house this thing for example, 158900
                         feature_id = self._make_anonymous_feature(gene_num)
                         assoc_count += 1
-                        self._make_pheno_assoc(g, feature_id, gene_symbols[0],
-                                               disorder_num, disorder_label,
-                                               phene_key)
+                        self._make_pheno_assoc(
+                            g, feature_id, gene_symbols[0], disorder_num,
+                            disorder_label, phene_key)
 
                         logger.info(
                             "We don't have an NCBIGene feature id " +
@@ -816,7 +850,7 @@ class OMIM(Source):
                                     r';;;',
                                     al['allelicVariant']['clinvarAccessions'])
                             rcv_ids = [
-                                (re.match(r'(RCV\d+)\;\;', r)).group(1)
+                                (re.match(r'(RCV\d+)\;{3}', r)).group(1)
                                 for r in rcv_ids]
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:'+rnum
