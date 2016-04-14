@@ -20,15 +20,13 @@ from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 logger = logging.getLogger(__name__)
 
 
-HOST = 'http://data.omim.org'
-OMDL = HOST + '/static/omim/data'
-
 # omimftp key EXPIRES April 11th, 2017
 # get a new one here: http://omim.org/help/api
-OMDLLIC = HOST + '/downloads/' + config.get_config()['keys']['omimftp']
+OMIMFTP = 'http://data.omim.org/downloads/' + \
+    config.get_config()['keys']['omimftp']
 
-OMIM_API = HOST + '/api'
-# + '/entry?apikey="' + config.get_config()['keys']['omim'] + '&'
+OMIMAPI = 'http://api.omim.org/api/entry?format=json&apiKey=' + \
+    config.get_config()['keys']['omim'] + '&'
 
 
 class OMIM(Source):
@@ -59,13 +57,13 @@ class OMIM(Source):
     files = {
         'all': {
             'file': 'mim2gene.txt',
-            'url': OMDL + '/mim2gene.txt'},
+            'url': 'http://omim.org/static/omim/data/mim2gene.txt'},
         'morbidmap': {
             'file': 'morbidmap.txt',
-            'url':  OMDLLIC + '/morbidmap.txt'},
-        'phenotypicSeriesTitles': {
+            'url':  OMIMFTP + '/morbidmap.txt'},
+        'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
-            'url': HOST + '/phenotypicSeriesTitle/all?format=tab',
+            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tab',
             'headers': {'User-Agent': 'Mozilla/5.0'}}
 
         # FTP files
@@ -226,17 +224,11 @@ class OMIM(Source):
         :return:
         """
 
-        omimparams = {
-            'format': 'json'
-        }
+        omimparams = {}
 
         # add the included_fields as parameters
         if included_fields is not None and len(included_fields) > 0:
             omimparams['include'] = ','.join(included_fields)
-
-        # you will need to add the API key into the conf.json file, like:
-        # keys : { 'omim' : '<your api key here>' }
-        omimparams.update({'apiKey': config.get_config()['keys']['omim']})
 
         gu = GraphUtils(curie_map.get())
         processed_entries = list()
@@ -262,7 +254,7 @@ class OMIM(Source):
             maxit = omimids.__len__()
 
         while it < maxit:
-            end = min((maxit, it+groupsize))
+            end = min((maxit, it + groupsize))
             # iterate through the omim ids list,
             # and fetch from the OMIM api in batches of 20
 
@@ -281,19 +273,14 @@ class OMIM(Source):
             else:
                 omimparams.update({'mimNumber': ','.join(omimids[it:end])})
 
-            p = urllib.parse.urlencode(omimparams)
-            url = '/'.join((OMIM_API, 'entry'))+'?%s' % p
-            logger.info(
-                'fetching: %s', '/'.join((OMIM_API, 'entry'))+'?%s' % p)
-
-            # print('fetching:', (',').join(omimids[it:end]))
-            # print('url:', url)
+            url = OMIMAPI + urllib.parse.urlencode(omimparams)
+            logger.info('fetching: %s', url)
 
             try:
                 d = urllib.request.urlopen(url)
             except OSError as e:  # URLError?
                 logger.error(e)
-                continue
+                break
 
             resp = d.read().decode()
             request_time = datetime.now()
@@ -981,20 +968,20 @@ class OMIM(Source):
         logger.info("getting phenotypic series titles")
         gu = GraphUtils(curie_map.get())
         line_counter = 0
-        start = False
         with open(
                 '/'.join(
                     (self.rawdir,
                      self.files['phenotypicSeries']['file']))) as f:
+            # there's several lines of header in the file,
+            # so need to skip several lines:
+            f.readline()  # OMIM Phenotypic Series Titles
+            f.readline()  # Downloaded:	Apr 14, 2016
+            f.readline()  # Copyright (c) 1966-2015
+            f.readline()  # <blank>
+            f.readline()  # Phenotypic Series Title	Phenotypic Series number
             for line in f:
-                # there's several lines of header in the file,
-                # so need to skip several lines:
-                if not start:
-                    if re.match(r'Phenotypic Series', line):
-                        start = True
-                    continue
-                if re.match(r'\w*$', line):
-                    # skip blank lines
+                if re.match(r'^\w*$', line):
+                    # skip blank lines,
                     continue
                 line = line.strip()
                 line_counter += 1
