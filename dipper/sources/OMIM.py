@@ -19,11 +19,16 @@ from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 
 logger = logging.getLogger(__name__)
 
-OMDL = 'http://omim.org/static/omim/data'
+
+HOST = 'http://data.omim.org'
+OMDL = HOST + '/static/omim/data'
+
 # omimftp key EXPIRES April 11th, 2017
 # get a new one here: http://omim.org/help/api
-OMDLLIC = \
-    'http://data.omim.org/downloads/' + config.get_config()['keys']['omimftp']
+OMDLLIC = HOST + '/downloads/' + config.get_config()['keys']['omimftp']
+
+OMIM_API = HOST + '/api'
+# + '/entry?apikey="' + config.get_config()['keys']['omim'] + '&'
 
 
 class OMIM(Source):
@@ -58,11 +63,18 @@ class OMIM(Source):
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url':  OMDLLIC + '/morbidmap.txt'},
+        'phenotypicSeriesTitles': {
+            'file': 'phenotypic_series_title_all.txt',
+            'url': HOST + '/phenotypicSeriesTitle/all?format=tab',
+            'headers': {'User-Agent': 'Mozilla/5.0'}}
+
+        # FTP files
         # /mimTitles.txt
         # /genemap.txt
         # /genemap2.txt
         # /omim.txt.Z                   replaced by mim2gene.txt
-        # /phenotypicSeriesTitles.txt   DOES NOT EXIST
+        # Download from a page not FTP
+        # /phenotypic_series_title_all.txt
     }
 
     # the following test ids are in the config.json
@@ -79,9 +91,6 @@ class OMIM(Source):
         102150, 104000, 107200, 100070, 611742, 611100,
         # disease with known locus
         102480]
-
-    OMIM_API = 'http://api.omim.org/api'
-    # + '/entry?apikey="' + config.get_config()['keys']['omim'] + '&'
 
     def __init__(self):
         Source.__init__(self, 'omim')
@@ -143,7 +152,7 @@ class OMIM(Source):
 
         self._process_all(limit)
         self._process_morbidmap(limit)
-        # self._process_phenotypicseries(limit) # no longer readily available?
+        self._process_phenotypicseries(limit)
 
         self.load_core_bindings()
         self.load_bindings()
@@ -273,9 +282,9 @@ class OMIM(Source):
                 omimparams.update({'mimNumber': ','.join(omimids[it:end])})
 
             p = urllib.parse.urlencode(omimparams)
-            url = '/'.join((self.OMIM_API, 'entry'))+'?%s' % p
+            url = '/'.join((OMIM_API, 'entry'))+'?%s' % p
             logger.info(
-                'fetching: %s', '/'.join((self.OMIM_API, 'entry'))+'?%s' % p)
+                'fetching: %s', '/'.join((OMIM_API, 'entry'))+'?%s' % p)
 
             # print('fetching:', (',').join(omimids[it:end]))
             # print('url:', url)
@@ -284,6 +293,7 @@ class OMIM(Source):
                 d = urllib.request.urlopen(url)
             except OSError as e:  # URLError?
                 logger.error(e)
+                continue
 
             resp = d.read().decode()
             request_time = datetime.now()
