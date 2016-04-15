@@ -1594,12 +1594,19 @@ class FlyBase(PostgreSQLSource):
                         allele_id = self.idhash['allele'][subject_id]
                     if object_id in self.idhash['gene']:
                         gene_id = self.idhash['gene'][object_id]
-                    if gene_id is not None:
-                        gene_label = self.label_hash[gene_id]
+                    if gene_id is not None and gene_id in self.label_hash:
+                        # TODO FAIL: KeyError: None   default?
+                        logger.info("getting label for gene_id:\t%s", gene_id)
+                        gene_label = self.label_hash[gene_id]  
                     else:
-                        logger.error(
-                            "The gene_id for object_id is None: %s \t %s",
-                            str(subject_id), str(object_id))
+                        if gene_id is None:
+                            logger.error(
+                                "The gene_id for object_id is None: %s \t %s",
+                                str(subject_id), str(object_id))
+                        if not (gene_id in self.label_hash):
+                            logger.error(
+                                "gene_id's label missing for: %s\t%s\t%s",
+                                str(subject_id), str(object_id), str(object_id))
                         continue
                     # TODO move this out of the if later
                     line_counter += 1
