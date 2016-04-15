@@ -1,31 +1,16 @@
 import logging
 import unicodedata
-import urllib
-from Bio import Entrez
-import json
+import requests
 
-__author__ = 'nlw'
+__author__ = ('nlw', 'tec')
 logger = logging.getLogger(__name__)
 
 
 class DipperUtil:
     """
     Various utilities and quick methods used in this application
+
     """
-
-    def flatten(self, l):
-        """
-        Remove None from an array or list
-        TODO: rename. flattening a list means promoting sublists elements
-        not removing empty elements
-        :param l: An array
-        :return:  An array with the None elements removed
-
-        """
-
-        l = list(filter(None.__ne__, l))
-
-        return l
 
     def remove_control_characters(self, s):
         return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
@@ -34,29 +19,21 @@ class DipperUtil:
     def get_ncbi_taxon_num_by_label(label):
         """
         Here we want to look up the NCBI Taxon id using some kind of label.
-
         It will only return a result if there is a unique hit.
         :return:
+
         """
         domain = 'http://eutils.ncbi.nlm.nih.gov'
         path = 'entrez/eutils/esearch.fcgi'
-
-        params = {
+        req = {
             'db': 'taxonomy',
             'retmode': 'json',
-            'term': label,
-        }
+            'term': label}
 
-        p = urllib.parse.urlencode(params)
-        url = '/'.join((domain, path))+'?%s' % p
-        logger.info('fetching: %s', url)
-
-        d = urllib.request.urlopen(url)
-        resp = d.read().decode()
-
-        myjson = json.loads(resp)
-
-        result = myjson['esearchresult']
+        r = requests.get(domain + path, params=req)
+        logger.info('fetching: %s', r.url)
+        r.raise_for_status()
+        result = r.json()['esearchresult']
 
         tax_num = None
         if str(result['count']) == '1':
@@ -69,29 +46,29 @@ class DipperUtil:
 
     @staticmethod
     def get_homologene_by_gene_num(gene_num):
-
-        Entrez.email = "info@monarchinitiative.org"
-        Entrez.tool = "Dipper"
         # first, get the homologene id from the gene id
         # gene_id = '1264'  for testing
-
-        # TODO revisit bringing all of Biopython
-        # as a dependency just to do a eutils call
-        gid = str(gene_num)
-        handle = Entrez.esearch(
-            db="homologene", term=gid+"[Gene ID]", retmode="json")
-        record = handle.read()
-        j = json.loads(record)
-        homologene_ids = j["esearchresult"]["idlist"]
-
+        host = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
+        esearch = host + '/esearch.fcgi'
+        esummary = host + '/esummary.fcgi'
+        req = {
+            'email': 'info@monarchinitiative.org',
+            'tool': 'Dipper',
+            'db': 'homologene',
+            'retmode': 'json',
+            'term': str(gene_num) + "[Gene ID]"
+            # 'usehistory': None  # y/n
+            # 'rettype':  [uilist|count]
+        }
+        r = requests.get(esearch, params=req)
+        homologene_ids = r.json()['esearchresult']['idlist']
         if len(homologene_ids) != 1:
             return
-
         hid = homologene_ids[0]
         # now, fetch the homologene record
-        handle = Entrez.esummary(db="homologene", id=hid, retmode="json")
-        record = handle.read()
-        j = json.loads(record)
+        req = {'db': 'homologene', 'id': hid, 'retmode': 'json'}
+        r = requests.get(esummary, params=req)
+        j = r.json()
 
         if 'result' in j and hid in j['result']:
             homologs = j['result'][hid]
