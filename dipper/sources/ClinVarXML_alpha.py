@@ -108,15 +108,15 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         # Child elements
         #
-        # /*/*/ReferenceClinVarAssertion/Assertion
-        # /*/*/ReferenceClinVarAssertion/AttributeSet
-        # /*/*/ReferenceClinVarAssertion/Citation
-        # /*/*/ReferenceClinVarAssertion/ClinVarAccession
-        # /*/*/ReferenceClinVarAssertion/ClinicalSignificance
-        # /*/*/ReferenceClinVarAssertion/MeasureSet
-        # /*/*/ReferenceClinVarAssertion/ObservedIn
-        # /*/*/ReferenceClinVarAssertion/RecordStatus
-        # /*/*/ReferenceClinVarAssertion/TraitSet
+        # /RCV/Assertion
+        # /RCV/AttributeSet
+        # /RCV/Citation
+        # /RCV/ClinVarAccession
+        # /RCV/ClinicalSignificance
+        # /RCV/MeasureSet
+        # /RCV/ObservedIn
+        # /RCV/RecordStatus
+        # /RCV/TraitSet
 
         #######################################################################
         # Our Genotype/Subject is a sequence alteration / Variant
@@ -239,26 +239,26 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         for SCV_Assertion in ClinVarSet.findall('ClinVarAssertion'):
 
-            # /*/*/ClinVarAssertion/AdditionalSubmitters
-            # /*/*/ClinVarAssertion/Assertion
-            # /*/*/ClinVarAssertion/AttributeSet
-            # /*/*//ClinVarAssertion/Citation
-            # /*/*/ClinVarAssertion/ClinVarAccession
-            # /*/*/ClinVarAssertion/ClinVarSubmissionID
-            # /*/*/ClinVarAssertion/ClinicalSignificance
-            # /*/*/ClinVarAssertion/Comment
-            # /*/*/ClinVarAssertion/CustomAssertionScore
-            # /*/*/ClinVarAssertion/ExternalID
-            # /*/*/ClinVarAssertion/MeasureSet
-            # /*/*/ClinVarAssertion/ObservedIn
-            # /*/*/ClinVarAssertion/RecordStatus
-            # /*/*/ClinVarAssertion/StudyDescription
-            # /*/*/ClinVarAssertion/StudyName
-            # /*/*/ClinVarAssertion/TraitSet
-            # scv_assertcount += 1
+            # /SCV/AdditionalSubmitters
+            # /SCV/Assertion
+            # /SCV/AttributeSet
+            # /SCV/Citation
+            # /SCV/ClinVarAccession
+            # /SCV/ClinVarSubmissionID
+            # /SCV/ClinicalSignificance
+            # /SCV/Comment
+            # /SCV/CustomAssertionScore
+            # /SCV/ExternalID
+            # /SCV/MeasureSet
+            # /SCV/ObservedIn
+            # /SCV/RecordStatus
+            # /SCV/StudyDescription
+            # /SCV/StudyName
+            # /SCV/TraitSet
 
             # init
             # scv_review = scv_significance = None
+            # scv_assertcount += 1
 
             scv_id = SCV_Assertion.get('ID')
             monarch_id = hashlib.md5(
@@ -388,7 +388,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_significance = SCV_Description.text
                 scv_geno = ONTOMAP[scv_significance]
                 if scv_geno is not None:
-                    # we have the association's pathnogicty call
+                    # we have the association's (SCV) pathnogicty call
                     # TRIPLES
                     # <monarch_assoc><OBAN:association_has_predicate><scv_geno>
                     write_spo(
@@ -415,8 +415,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Comment
                 # /SCV/ObservedIn/XRef
 
-                # Sample/Origin
-                # Sample/Species@TaxonomyId="9606" is a constant
+                # /SCV/Sample/Origin
+                # /SCV/Sample/Species@TaxonomyId="9606" is a constant
                 # scv_affectedstatus = \
                 #    SCV_ObsIn.find('Sample').find('AffectedStatus').text
 
@@ -445,13 +445,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # Trait being taken from RCV instead (,for now)
                 # for SCV_TraitSet in SCV_ObsIn.findall('TraitSet'):
 
-                    # /*/*/*/*/TraitSet/Comment
-                    # /*/*/*/*/TraitSet/Trait
+                    # /SCV/ObservedIn/TraitSet/Comment
+                    # /SCV/ObservedIn/TraitSet/Trait
                     # for SCV_Trait in SCV_TraitSet.findall('Trait'):
-                    #   # /*/*/*/*/*/Trait/Name
-                    #   # /*/*/*/*/*/Trait/Symbol
-                    #   # /*/*/*/*/*/Trait/TraitRelationship
-                    #   # /*/*/*/*/*/Trait/XRef
+                    #   # /SCV/ObservedIn/TraitSet/Trait/Name
+                    #   # /SCV/ObservedIn/TraitSet/Trait/Symbol
+                    #   # /SCV/ObservedIn/TraitSet/Trait/TraitRelationship
+                    #   # /SCV/ObservedIn/TraitSet/Trait/XRef
 
                     #   # init
                     #   scv_traitname = scv_xref = scv_db = None
