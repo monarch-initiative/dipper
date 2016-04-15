@@ -262,7 +262,7 @@ class WormBase(Source):
                 if live == 'Dead':
                     gu.addDeprecatedClass(g, gene_id)
                 geno.addTaxon(taxon_id, gene_id)
-                if gene_synonym != '':
+                if gene_synonym != '' and gene_synonym is not None:
                     gu.addSynonym(g, gene_id, gene_synonym)
 
                 if not self.testMode \
