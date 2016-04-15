@@ -1,10 +1,9 @@
 import logging
-import urllib
 import re
 import time
 from datetime import datetime
 import json
-# from subprocess import call # unused
+import urllib
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
