@@ -43,9 +43,9 @@ the code to skip this, if necessary
     * [python-docx](https://github.com/python-openxml/python-docx)
     * beautifulsoup4
     * GitPython
-    * [biopython](https://github.com/biopython/biopython)
     * intermine
     * pysftp
+    * [Requests](http://requests.readthedocs.org/en/master/)
     
 Note, Dipper imports source modules dynamically at runtime.  As a result it is possible to build a core set
 of requirements and add source specific dependencies as needed.  Presently this only implemented with pip requirements
@@ -61,8 +61,6 @@ To install dependencies for all sources:
     
 If you encounter any errors installing these packages using Homebrew, it could be due to [a curent known issue in upgrading to  pip3](https://github.com/Homebrew/homebrew/issues/25752). In this case, first force reinstall pip2 (````pip2 install --upgrade --force-reinstall pip````) and then install the package using pip3 (eg. ````pip3 install psycopg2````.)
 
-* The OMIM source requires the 'compress' and 'uncompress' system commands to be available, for LZW decompression.  
-(This may be a problem for windows users.) 
 
 * Some of the parsers require login and/or connection credentials with the remote system.  In those cases
  you will need to add the credentials to a conf.json file.  Please see individual parsers for details.   
@@ -140,7 +138,7 @@ Furthermore, we wanted to provide the bioinformatics community with a set of scr
 get started transforming these standard data sources. 
 
 A manuscript is in preparation.  In the mean time, if you use any of our code or derived data, please cite 
-this repository and the [Monarch Initiative](http://www.monarchinitiative.org).
+this repository and the [Monarch Initiative](https://monarchinitiative.org).
 
 ## Identifiers
 Throughout the Monarch web application, we display external entities using their human-friendly labels
