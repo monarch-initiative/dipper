@@ -190,7 +190,7 @@ class OMIM(Source):
                     omimredact.append(OMIM)
                 elif MIMType == 'gene/phenotype':
                     omimgenepheno.append(OMIM)
-
+        # TODO: having the omim IDs typed like this should be used later. 
         logger.info("Done. found %d omim ids", omimids.__len__())
         logger.info("Found %d gene omim ids", omimgene.__len__())
         logger.info("Found %d phenotype omim ids", omimpheno.__len__())
@@ -570,7 +570,7 @@ class OMIM(Source):
 
             self._get_pubs(e['entry'], g)
 
-            # self._get_process_allelic_variants(e['entry'], g)  # temp gag
+            self._get_process_allelic_variants(e['entry'], g)  # temp gag
 
         return
 
@@ -794,7 +794,6 @@ class OMIM(Source):
     def _get_process_allelic_variants(self, entry, g):
         gu = GraphUtils(curie_map.get())
         geno = Genotype(g)
-        # du = DipperUtil() # TODO PYLINT unused du
         if entry is not None:
             # to hold the entry-specific publication mentions
             # for the allelic variants
@@ -819,18 +818,18 @@ class OMIM(Source):
                             al_description = al['allelicVariant']['text']
                             m = re.findall(r'\{(\d+)\:', al_description)
                             publist[al_id] = set(m)
-                        geno.addAllele(al_id, al_label,
-                                       geno.genoparts['variant_locus'],
-                                       al_description)
+                        geno.addAllele(
+                            al_id, al_label, geno.genoparts['variant_locus'],
+                            al_description)
                         geno.addAlleleOfGene(
                             al_id, 'OMIM:'+str(entry_num),
                             geno.object_properties[
                                 'is_sequence_variant_instance_of'])
                         for r in publist[al_id]:
                             pmid = ref_to_pmid[int(r)]
-                            gu.addTriple(g, pmid,
-                                         gu.object_properties['is_about'],
-                                         al_id)
+                            gu.addTriple(
+                                g, pmid, gu.object_properties['is_about'],
+                                al_id)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
                             dbsnp_ids = \
@@ -841,13 +840,13 @@ class OMIM(Source):
                                 gu.addSameIndividual(g, al_id, did)
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
-                            # each like RCV000020059;;;
+                            # each >1 like RCV000020059;;;
                             rcv_ids = \
                                 re.split(
                                     r';;;',
                                     al['allelicVariant']['clinvarAccessions'])
                             rcv_ids = [
-                                (re.match(r'(RCV\d+)\;{3}', r)).group(1)
+                                (re.match(r'(RCV\d+);*', r)).group(1)
                                 for r in rcv_ids]
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:'+rnum
