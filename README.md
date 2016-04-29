@@ -156,3 +156,7 @@ For more information regarding identifiers terminology and notation, see McMurry
 
 More detailed identifier documentation for Monarch is a work in progress, available [here:](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit)
 Please feel free to pose any questions or concerns to info@monarchinitiative.org.
+
+
+![in action](https://github.com/monarch-initiative/dipper/blob/master/docs/curies-and-uris-in-action.png)
+
