@@ -157,9 +157,9 @@
 'HPRD' : 'http://www.hprd.org/protein/'
 'NCBIProtein' : 'http://www.ncbi.nlm.nih.gov/protein/'
 'PDB' : 'http://identifiers.org/PDB:'
-'SwissProt' : 'http://identifiers.org/SwissProt:'
-'TrEMBL' : 'http://www.uniprot.org/uniprot/'
-'UniProtKB' : 'http://identifiers.org/uniprot/'
+'SwissProt' : 'http://purl.uniprot.org/uniprot/'
+'TrEMBL' : 'http://purl.uniprot.org/uniprot/'
+'UniProtKB' : 'http://purl.uniprot.org/uniprot/'
 
 #chemicals
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
