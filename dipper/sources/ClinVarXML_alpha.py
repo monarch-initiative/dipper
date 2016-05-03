@@ -13,6 +13,8 @@ import sys
 import gzip
 import xml.etree.ElementTree as ET
 
+# import Requests
+
 # from dipper import curie_map  # not there yet
 # from dipper import CurieUtils
 
@@ -272,8 +274,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             scv_updated = ClinVarAccession.get('DateUpdated')
 
             # blank node identifiers
-            _evidence_id = '_' + monarch_assoc + '|evidence'
-            _provenance_id = '_' + monarch_assoc + '|provenance'
+            _evidence_id = '_:' + monarch_id + '|evidence'
+            _provenance_id = '_:' + monarch_id + '|provenance'
             _assertion_id = _provenance_id + '|assertion'
 
             # TRIPLES
@@ -285,7 +287,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(
                 monarch_assoc,
                 'OBAN:association_has_subject',
-                'ClinVarVariant:rcv_variant_id')
+                'ClinVarVariant:' + rcv_variant_id)
             # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv_variant_label>  .
             write_spo(
                 'ClinVarVariant:' + rcv_variant_id,
