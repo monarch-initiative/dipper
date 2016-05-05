@@ -164,3 +164,8 @@
 #chemicals
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
+
+#Procedures/protocols
+'IMPRESS-procedure' : 'https://www.mousephenotype.org/impress/procedures/'
+'IMPRESS-protocol' : 'https://www.mousephenotype.org/impress/protocol/'
+
