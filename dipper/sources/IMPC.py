@@ -477,6 +477,12 @@ class IMPC(Source):
                 gu.addDescription(g, assoc_id, description)
 
                 # TODO add provenance information
+                # self._add_evidence_provenance(assoc_id, project_name,
+                # project_fullname, pipeline_name, pipeline_stable_id,
+                # procedure_stable_id, procedure_name, parameter_stable_id,
+                # parameter_name, top_level_mp_term_id, top_level_mp_term_name,
+                # mp_term_id, mp_term_name, p_value, percentage_change,
+                # effect_size, statistical_method, resource_name)
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
 

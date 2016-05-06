@@ -31,7 +31,7 @@ def main():
     with urllib.request.urlopen(ftp) as response:
         buf = io.BytesIO(response.read())
         f = gzip.GzipFile(fileobj=buf)
-        data = f.read()
+        data = f.read().decode()
 
     reader = csv.reader(data.split('\n'), delimiter=',', quotechar='\"')
     for row in reader:
