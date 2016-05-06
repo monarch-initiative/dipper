@@ -3,6 +3,8 @@ import gzip
 import re
 import logging
 import os
+import json
+import yaml
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
@@ -76,6 +78,15 @@ class IMPC(Source):
         'checksum': {
             'file': 'checksum.md5',
             'url': IMPCDL + '/checksum.md5'},
+    }
+
+    # Files that map IMPC codes to their IRIs, either generated manually
+    # or by web crawling, see /scripts/README.md
+    map_files = {
+        # Procedures
+        'procedure_map': '../../resources/impc_procedures.json',
+        # All other codes
+        'impc_code_map': '../../resources/impc_mappings.yaml'
     }
 
     # TODO move these into the conf.json
@@ -152,6 +163,9 @@ class IMPC(Source):
         line_counter = 0
         gu.loadAllProperties(g)
         gu.loadObjectProperties(g, geno.object_properties)
+
+        impc_map = self._get_impc_mappings()
+        procedure_map = self._get_procedure_mappings()
 
         # Add the taxon as a class
         taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
@@ -510,6 +524,44 @@ class IMPC(Source):
         else:
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
+
+    def _add_evidence_provenance(self):
+        self._get_impc_mappings()
+        return
+
+    def _get_impc_mappings(self):
+        """
+        Opens impc mapping file and returns dict of mappings
+        :return: dict
+        """
+        impc_mappings = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__),
+                                       self.map_files['impc_code_map'])):
+            map_file = open(os.path.join(
+                os.path.dirname(__file__), self.map_files['impc_code_map']), 'r')
+            impc_mappings = yaml.load(map_file)
+            map_file.close()
+        else:
+            logger.warn("IMPC map file not found")
+
+        return impc_mappings
+
+    def _get_procedure_mappings(self):
+        """
+        Opens impc procedure map file and returns dict of mappings
+        :return: dict
+        """
+        procedure_mappings = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__),
+                                       self.map_files['procedure_map'])):
+            map_file = open(os.path.join(
+                os.path.dirname(__file__), self.map_files['procedure_map']), 'r')
+            procedure_mappings = json.load(map_file)
+            map_file.close()
+        else:
+            logger.warn("IMPC map file not found")
+
+        return procedure_mappings
 
     def parse_checksum_file(self, file):
         """

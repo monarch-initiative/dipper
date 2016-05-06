@@ -1,10 +1,7 @@
 import logging
-import re
 from datetime import datetime
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-
-__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
