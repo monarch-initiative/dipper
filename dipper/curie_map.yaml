@@ -135,7 +135,7 @@
 'dictyBase' : 'http://dictybase.org/gene/'
 'EcoGene' : 'http://ecogene.org/gene/'
 'ENSEMBL' : 'http://identifiers.org/ensembl/'
-'FlyBase' : 'http://identifiers.org/FB:'  # also variants, pubs, genotypes, strains
+'FlyBase' : 'http://flybase.org/reports/'  # also variants, pubs, genotypes, strains
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
 'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  # FIXME
