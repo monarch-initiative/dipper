@@ -1859,7 +1859,7 @@ class FlyBase(PostgreSQLSource):
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             for line in filereader:
 
-                (organism_dbxref_id, organism_id, dbxref_id) = line
+                (organism_dbxref_id, organism_id, dbxref_id, is_current) = line
 
                 if self.testMode and\
                         int(organism_id) not in self.test_keys['organism']:
