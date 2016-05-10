@@ -29,13 +29,13 @@ class FlyBaseTestCase(SourceTestCase):
         :return:
         """
         cvterm_list = {
-            131502: 'derived_sf_assoc_alleles',
-            131495: 'derived_tp_assoc_alleles',
+            132223: 'derived_sf_assoc_alleles',
+            132216: 'derived_tp_assoc_alleles',
             59983: 'associated_with',
             27: 'producedby',
             60095: 'gets_expression_data_from',
             60384: 'alleleof',
-            131520: 'linked_image'
+            132241: 'linked_image'
         }
 
         # TODO check if cvterm file is there first
