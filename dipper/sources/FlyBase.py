@@ -1520,13 +1520,13 @@ class FlyBase(PostgreSQLSource):
                 (feature_relationship_id, subject_id, object_id, type_id, rank,
                  value) = line
 
-                if int(type_id) in [131495, 129784]:
+                if int(type_id) in [132216, 129784]:
                     # derived_tp_assoc_alleles
                     self.feature_types[subject_id] = \
                         Genotype.genoparts['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
                     gu.addType(g, sid, self.feature_types[subject_id])
-                elif int(type_id) in [131502, 129791]:
+                elif int(type_id) in [132223, 129791]:
                     # only take the derived_sf_assoc_alleles
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
@@ -1677,9 +1677,9 @@ class FlyBase(PostgreSQLSource):
                             reagent_id)
 
                 # derived_tp_assoc_alleles
-                elif int(type_id) == 131495 or int(type_id) == 129784:
+                elif int(type_id) == 132216 or int(type_id) == 129784:
                     # note that the internal type id changed
-                    # from 129784 --> 131495 around 02.2016
+                    # from 129784 --> 132216 around 02.2016
                     # note that this relationship is only specified between
                     # an allele and a tp. therefore we know the FBal should be
                     # a transgenic_insertion
@@ -1696,9 +1696,9 @@ class FlyBase(PostgreSQLSource):
                     gu.addComment(g, allele_id, tp_id)
 
                 # derived_sf_assoc_alleles
-                elif int(type_id) == 131502 or int(type_id) == 129791:
+                elif int(type_id) == 132223 or int(type_id) == 129791:
                     # note the internal type_id changed
-                    # from 129791 --> 131502 around 02.2016
+                    # from 129791 --> 132223 around 02.2016
                     # the relationship between
                     #   a reagent-feature and the allele it targets
                     # the relationship between
@@ -2000,7 +2000,7 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 131520 and re.match(r'FBim', value):
+                if int(type_id) == 132241 and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'
