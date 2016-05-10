@@ -47,8 +47,8 @@ def write_spo(sub, prd, obj):
     print('<' + sub + '> <' + prd + '> ' + obj + ' .')
     return
 
-# Edge labels done once at the beginning
-# TRIPLES
+# CONSTANTS done once at the beginning (or better not at all)
+#                   TRIPLES 
 # <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
 write_spo('SEPIO:0000007', 'rdfs:label', 'has_supporting_evidence')
 # <SEPIO:0000011><rdfs:label><'has_provenance'>  .
@@ -59,6 +59,18 @@ write_spo('SEPIO:0000001', 'rdfs:label', 'has_agent')
 write_spo('SEPIO:0000095', 'rdfs:label', 'before_date')
 # <SEPIO:0000041><rdfs:label><'specified_by'>  .
 write_spo('SEPIO:0000041', 'rdfs:label', 'specified_by')
+
+# tec check if thes or others exist
+write_spo('OBAN:association_has_subject', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBAN:association_has_predicate', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBAN:association_has_object', 'rdf:type', 'owl:ObjectProperty')
+write_spo(
+    'OBAN:association_has_object_property', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBO:RO_0002085', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBO:RO_0002162', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBO:RO_0003303', 'rdf:type', 'owl:ObjectProperty')
+write_spo('OBO:GENO_0000418', 'rdf:type', 'owl:ObjectProperty')
+
 
 # larval stage term mapping file
 # will want namespace I expect.
