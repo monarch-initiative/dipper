@@ -1,0 +1,49 @@
+# Mappings from Facebase wordage to ontology CURI
+
+# Life cycle stages for Mus Musculus 
+# http://purl.obolibrary.org/obo/MmusDv_
+
+TS17/E10.5		MmusDv:0000024
+E11.5			MmusDv:0000026
+TS19/E11.5		MmusDv:0000026
+E12.5			MmusDv:0000028
+TS21/E12.5		MmusDv:0000028
+E13.5			MmusDv:0000029
+E14.5			MmusDv:0000032
+E15.5			MmusDv:0000032
+TS23/E14.5		MmusDv:0000032
+E16.5			MmusDv:0000033
+TS25/E16.5		MmusDv:0000033
+E17.5			MmusDv:0000034
+E18.5			MmusDv:0000035
+P0				MmusDv:0000043
+
+# NCBIgene
+# http://www.ncbi.nlm.nih.gov/gene/
+
+CTGF			NCBIGene:14219
+Tgfbr2			NCBIGene:21813
+MSX1			NCBIGene:17701
+Smad4			NCBIGene:17128
+Alk5			NCBIGene:21812
+Erk2			NCBIGene:26413
+Fgfr2			NCBIGene:14183
+
+
+# Mammalian phenotype
+# http://purl.obolibrary.org/obo/MP_
+
+Submucosal cleft	MP:0011615
+Cleft soft palate	MP:0013546
+Microglossia		MP:0009907
+Tooth defects		MP:0002100
+Micrognathia		MP:0002639
+Cleft palate		MP:0000111
+Calvarial defect	MP:0000074
+Tooth agenesis		MP:0000118
+Small maxilla		MP:0004540
+Small maxilla		MP:0004540
+Muscle defects		MP:0005369
+Craniosynostosis	MP:0000081
+Normal				MP:0002873
+Normative			MP:0002873
