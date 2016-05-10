@@ -1,7 +1,9 @@
 [![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
 [![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
+[![Join the chat at https://gitter.im/monarch-initiative/dipper](https://badges.gitter.im/monarch-initiative/dipper.svg)](https://gitter.im/monarch-initiative/dipper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # DIPPER
+
 Dipper is a pure Python package to generate RDF triples from common scientific resources.
 Dipper includes subpackages and modules to create graphical models of this data, including:
 
@@ -154,3 +156,7 @@ For more information regarding identifiers terminology and notation, see McMurry
 
 More detailed identifier documentation for Monarch is a work in progress, available [here:](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit)
 Please feel free to pose any questions or concerns to info@monarchinitiative.org.
+
+
+![in action](https://github.com/monarch-initiative/dipper/blob/master/docs/curies-and-uris-in-action.png)
+
