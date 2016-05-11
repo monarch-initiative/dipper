@@ -1589,7 +1589,8 @@ class FlyBase(PostgreSQLSource):
                     # subject to type_id = 219,33 object type_id  219  #??? TEC
                     # subject = variation
                     # object = gene
-                    allele_id = gene_id = None
+                    allele_id = None
+                    gene_id = None
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
                     if object_id in self.idhash['gene']:
@@ -1634,7 +1635,10 @@ class FlyBase(PostgreSQLSource):
                                 "this thing %s is not a gene", feature_id)
                 elif int(type_id) == 59983:  # associated_with
 
-                    allele_id = gene_id = reagent_id = ti_id = None
+                    allele_id = None
+                    gene_id = None
+                    reagent_id = None
+                    ti_id = None
 
                     if object_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][object_id]
@@ -1683,7 +1687,7 @@ class FlyBase(PostgreSQLSource):
                     # note that this relationship is only specified between
                     # an allele and a tp. therefore we know the FBal should be
                     # a transgenic_insertion
-                    allele_id = tp_id = None
+                    allele_id = None
 
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
@@ -1705,7 +1709,8 @@ class FlyBase(PostgreSQLSource):
                     #   a reagent-targeted-gene (FBal) and
                     #   the reagent that targetes it (FBsf)
 
-                    allele_id = reagent_id = None
+                    allele_id = None
+                    reagent_id = None
 
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
@@ -1722,7 +1727,8 @@ class FlyBase(PostgreSQLSource):
                 elif int(type_id) == 27:
                     # i'm looking just for the relationships between
                     # ti and tp features... so doing a bit of a hack
-                    ti_id = tp_id = None
+                    ti_id = None
+                    tp_id = None
                     if subject_id in self.idhash['feature']:
                         ti_id = self.idhash['feature'][subject_id]
                         if not re.search(r'FBti', ti_id):
