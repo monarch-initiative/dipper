@@ -10,6 +10,8 @@ from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.Evidence import Evidence
+from dipper.models.Provenance import Provenance
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -84,7 +86,7 @@ class IMPC(Source):
     # or by web crawling, see /scripts/README.md
     map_files = {
         # Procedures
-        'procedure_map': '../../resources/impc_procedures.json',
+        'parameter_map': '../../resources/impc_parameters.json',
         # All other codes
         'impc_code_map': '../../resources/impc_mappings.yaml'
     }
@@ -165,7 +167,7 @@ class IMPC(Source):
         gu.loadObjectProperties(g, geno.object_properties)
 
         impc_map = self._get_impc_mappings()
-        procedure_map = self._get_procedure_mappings()
+        parameter_map = self._get_parameter_mappings()
 
         # Add the taxon as a class
         taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
@@ -490,13 +492,14 @@ class IMPC(Source):
 
                 gu.addDescription(g, assoc_id, description)
 
-                # TODO add provenance information
-                # self._add_evidence_provenance(assoc_id, project_name,
-                # project_fullname, pipeline_name, pipeline_stable_id,
-                # procedure_stable_id, procedure_name, parameter_stable_id,
-                # parameter_name, top_level_mp_term_id, top_level_mp_term_name,
-                # mp_term_id, mp_term_name, p_value, percentage_change,
-                # effect_size, statistical_method, resource_name)
+                self._add_evidence_provenance(
+                    assoc_id, eco_id, impc_map, parameter_map, phenotyping_center,
+                    colony, project_fullname, pipeline_name,
+                    pipeline_stable_id, procedure_stable_id, procedure_name,
+                    parameter_stable_id, parameter_name, p_value,
+                    percentage_change, effect_size, statistical_method,
+                    resource_name)
+
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
 
@@ -525,8 +528,89 @@ class IMPC(Source):
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
 
-    def _add_evidence_provenance(self):
-        self._get_impc_mappings()
+    def _add_evidence_provenance(self, assoc_id, eco_id, impc_map,
+                                 parameter_map,  phenotyping_center,
+                                 colony, project_fullname, pipeline_name,
+                                 pipeline_stable_id, procedure_stable_id,
+                                 procedure_name, parameter_stable_id,
+                                 parameter_name, p_value, percentage_change,
+                                 effect_size, statistical_method,
+                                 resource_name):
+
+        evidence_model = Evidence(self.graph)
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+
+        # Add line of evidence
+        evidence_line_bnode = self.make_id("{0}{1}".format(assoc_id, eco_id), '_')
+        evidence_model.add_supporting_evidence(assoc_id, evidence_line_bnode)
+
+        # Add supporting measurements to line of evidence
+        measurements = {}
+        if p_value is not None or p_value != "":
+            p_value_bnode = self.make_id("{0}{1}{2}"
+                                         .format(evidence_line_bnode,
+                                                 'p_value', p_value), '_')
+            graph_utils.addIndividualToGraph(self.graph, p_value_bnode, None,
+                                             impc_map['measurements']
+                                             ['p_value'])
+            measurements[p_value_bnode] = float(p_value)
+        if percentage_change is not None or percentage_change != "":
+            fold_change_bnode = self.make_id("{0}{1}{2}"
+                                             .format(evidence_line_bnode,
+                                                     'percentage_change',
+                                                     percentage_change), '_')
+            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
+                                             impc_map['measurements']
+                                             ['percentage_change'])
+            measurements[fold_change_bnode] = percentage_change
+        if effect_size is not None or effect_size != "":
+            fold_change_bnode = self.make_id("{0}{1}{2}"
+                                             .format(evidence_line_bnode,
+                                                     'effect_size',
+                                                     effect_size), '_')
+            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
+                                             impc_map['measurements']
+                                             ['effect_size'])
+            measurements[fold_change_bnode] = effect_size
+
+        evidence_model.add_supporting_data(evidence_line_bnode, measurements)
+
+        # Add provenance
+        # A study is a blank node equal to its parts
+        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
+            phenotyping_center, colony, project_fullname, pipeline_stable_id,
+            procedure_stable_id, parameter_stable_id, statistical_method,
+            resource_name), '_')
+
+        graph_utils.addIndividualToGraph(self.graph, study_bnode, None,
+                                         provenance_model.provenance_types['study'])
+
+        provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
+
+        # List of nodes linked to study with has_part property
+        study_parts = []
+
+        # Add study parts
+        graph_utils.addIndividualToGraph(self.graph, impc_map['procedures'][procedure_stable_id],
+                                         procedure_name)
+        study_parts.append(impc_map['procedures'][procedure_stable_id])
+
+        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
+                                         pipeline_name)
+
+        study_parts.append(impc_map[pipeline_stable_id])
+        study_parts.append(impc_map[statistical_method])
+
+        provenance_model.add_study_parts(study_bnode, study_parts)
+
+        # Add measures
+        graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
+                                         parameter_name)
+        provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
+
+
+
         return
 
     def _get_impc_mappings(self):
@@ -546,22 +630,22 @@ class IMPC(Source):
 
         return impc_mappings
 
-    def _get_procedure_mappings(self):
+    def _get_parameter_mappings(self):
         """
         Opens impc procedure map file and returns dict of mappings
         :return: dict
         """
-        procedure_mappings = {}
+        parameter_mappings = {}
         if os.path.exists(os.path.join(os.path.dirname(__file__),
-                                       self.map_files['procedure_map'])):
+                                       self.map_files['parameter_map'])):
             map_file = open(os.path.join(
-                os.path.dirname(__file__), self.map_files['procedure_map']), 'r')
-            procedure_mappings = json.load(map_file)
+                os.path.dirname(__file__), self.map_files['parameter_map']), 'r')
+            parameter_mappings = json.load(map_file)
             map_file.close()
         else:
             logger.warn("IMPC map file not found")
 
-        return procedure_mappings
+        return parameter_mappings
 
     def parse_checksum_file(self, file):
         """

@@ -401,6 +401,7 @@ class GraphUtils:
         if materialize_bnode is True,
         it will add any nodes that would have been blank into the BASE space.
         This will return None if it can't map the node properly.
+        TODO make this smart enough to also accept URIRef, or IRI formmated strings
         :param id:
         :return:
         """

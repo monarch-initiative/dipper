@@ -140,3 +140,8 @@ statistical_method:
     Unknown: 'STATO_0000107'
     Wilcoxon rank sum test with continuity correction: 'STATO:0000076'
 
+measurements:
+    'p_value': 'OBI:0000175'
+    'effect_size': 'STATO:0000085'
+    'percentage_change': 'STATO:0000169'
+

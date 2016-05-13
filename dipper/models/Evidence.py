@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
+from rdflib import Literal, URIRef, BNode
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ class Evidence:
     object_properties = {
         'has_evidence': 'SEPIO:0000006',
         'has_supporting_evidence': 'SEPIO:0000007',
+        'has_supporting_data': 'SEPIO:0000084',
         'is_evidence_for': 'SEPIO:0000031',
         'is_refuting_evidence_for': 'SEPIO:0000033',
         'is_supporting_evidence_for': 'SEPIO:0000032',
@@ -49,6 +52,47 @@ class Evidence:
 
         self.graph = graph
         self.graph_utils = GraphUtils(curie_map.get())
+
+        return
+
+    def add_supporting_evidence(self, assoc_id, evidence_line, type=None, label=None):
+        """
+        Add supporting line of evidence blank node to association id
+
+        :param assoc_id: curie or iri, association id
+        :param evidence_line: curie or iri, evidence line (should be
+        blank node)
+        :return: None
+        """
+        self.graph_utils.addTriple(self.graph, assoc_id,
+                                   self.object_properties['has_supporting_evidence'],
+                                   evidence_line)
+        if type is not None:
+            self.graph_utils.addIndividualToGraph(self.graph, evidence_line,
+                                                  label, type)
+        return
+
+    def add_supporting_data(self, evidence_line, measurement_dict):
+        """
+        Add supporting data
+        :param evidence_line:
+        :param data_object: dict, where keys are curies or iris
+        and values are measurement values for example:
+            {
+              "_:1234" : "1.53E07"
+              "_:4567": "20.25"
+            }
+        Note: assumes measurements are RDF:Type 'ed elsewhere
+        :return: None
+        """
+        for measurement in measurement_dict:
+            self.graph_utils.addTriple(self.graph, evidence_line,
+                                       self.object_properties['has_supporting_data'],
+                                       measurement)
+
+            self.graph_utils.addTriple(self.graph, measurement,
+                                       self.data_property['has_value'],
+                                       measurement_dict[measurement], True)
 
         return
 

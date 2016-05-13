@@ -24,7 +24,7 @@ class Provenance:
         'statistical_hypothesis_test': 'OBI:0000673',
         'mixed_model': 'STATO:0000189',
         'project': 'VIVO:Project',
-        'study': 'OBI:000471',
+        'study': 'OBI:0000471',
         'variant_classification_guideline': 'SEPIO:0000037',
         'assertion_process': 'SEPIO:0000003',
         'xref': 'OIO:hasdbxref'
@@ -39,7 +39,8 @@ class Provenance:
         'output_of': 'RO:0002353',
         'specified_by': 'SEPIO:0000041',
         'created_at_location': 'SEPIO:0000019',
-        'created_with_resource': 'SEPIO:0000022'
+        'created_with_resource': 'SEPIO:0000022',
+        'measures': 'SEPIO:measures'
     }
 
     def __init__(self, graph):
@@ -49,7 +50,25 @@ class Provenance:
 
         return
 
+    def add_study_parts(self, study, study_parts):
+        for part in study_parts:
+            self.graph_utils.addTriple(self.graph, study,
+                                       self.graph_utils.object_properties['part_of'],
+                                       part)
+        return
 
+    def add_study_to_measurements(self, study, measurements):
+        for measurement in measurements:
+            self.graph_utils.addTriple(self.graph, measurement,
+                                       self.object_properties['output_of'],
+                                       study)
+        return
+
+    def add_study_measure(self, study, measure):
+        self.graph_utils.addTriple(self.graph, study,
+                                   self.object_properties['measures'],
+                                   measure)
+        return
     def add_agent_to_graph(self, agent_id, agent_label, agent_type=None,
                            agent_description=None):
 

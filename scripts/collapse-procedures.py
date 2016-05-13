@@ -19,13 +19,13 @@ def main():
     output_fh = open(args.output, 'w')
     procedure_list = json.load(open(args.input, 'r'))
 
-    proc_set = set()
-    tmp_proc_map = {}
-    proc_map = {}
+    param_set = set()
+    tmp_param_map = {}
+    param_map = {}
 
     for mp in procedure_list:
         for code in mp:
-            tmp_proc_map[code] = mp[code]
+            tmp_param_map[code] = mp[code]
 
     ftp = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv/ALL_genotype_phenotype.csv.gz'
     with urllib.request.urlopen(ftp) as response:
@@ -38,12 +38,12 @@ def main():
         if not row or row[0] == 'marker_accession_id':
             continue
         else:
-            proc_set.add(row[17])
+            param_set.add(row[17])
 
-    for procedure in proc_set:
-        proc_map[procedure] = tmp_proc_map[procedure]
+    for param in param_set:
+        param_map[param] = tmp_param_map[param]
 
-    json.dump(proc_map, output_fh)
+    json.dump(param_map, output_fh)
 
     output_fh.close()
 
