@@ -95,6 +95,7 @@ class GraphUtils:
         self.curie_map = curie_map
         self.cu = CurieUtil(curie_map)         # TEC: what is cu really?
         self.nobnodes = materialize_bnodes
+
         return
 
     def addClassToGraph(self, g, id, label, type=None, description=None):
@@ -393,7 +394,7 @@ class GraphUtils:
 
         return
 
-    def _getNode(self, id, materialize_bnode):
+    def _getNode(self, curie, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.
         If an id starts with an underscore, it assigns it to a BNode, otherwise
@@ -401,42 +402,45 @@ class GraphUtils:
         if materialize_bnode is True,
         it will add any nodes that would have been blank into the BASE space.
         This will return None if it can't map the node properly.
-        TODO make this smart enough to also accept URIRef, or IRI formmated strings
         :param id:
         :return:
         """
         base = Namespace(self.curie_map.get(''))
-        n = None
-        if id is not None and re.match(r'^_', id):
+        node = None
+        if curie is not None and re.match(r'^_', curie):
             if materialize_bnode is True:
-                n = base[id]
+                node = base[curie]
             else:  # replace the leading underscore to make it cleaner
-                n = BNode(re.sub(r'_', '', id, 1))
-        elif re.match(r'^\:', id):  # do we need to remove embedded ID colons?
-            n = base[re.sub(r':', '', id, 1)]
+                node = BNode(re.sub(r'_', '', curie, 1))
+        elif re.match(r'^\:', curie):  # do we need to remove embedded ID colons?
+            node = base[re.sub(r':', '', curie, 1)]
+        # Check if curie actually an IRI
+        elif re.match(r'^http', curie):
+            node = URIRef(curie)
         else:
-            u = self.cu.get_uri(id)
-            if u is not None:
-                n = URIRef(self.cu.get_uri(id))
+            iri = self.cu.get_uri(curie)
+            if iri is not None:
+                node = URIRef(self.cu.get_uri(curie))
             else:
-                logger.error("couldn't make URI for %s", id)
-        return n
+                logger.error("couldn't make URI for %s", curie)
+        return node
 
     def getNode(self, id, materialize_bnode=False):
 
         return self._getNode(id, materialize_bnode)
 
     def addTriple(
-            self, graph, subject_id, predicate_id, object,
+            self, graph, subject_id, predicate_id, object_id,
             object_is_literal=False):
+
         if object_is_literal is True:
             graph.add(
                 (self.getNode(subject_id), self.getNode(predicate_id),
-                 Literal(object)))
+                 Literal(object_id)))
         else:
             graph.add(
                 (self.getNode(subject_id), self.getNode(predicate_id),
-                 self.getNode(object)))
+                 self.getNode(object_id)))
         return
 
     def loadObjectProperties(self, graph, op):

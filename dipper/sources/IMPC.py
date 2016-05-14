@@ -136,6 +136,7 @@ class IMPC(Source):
             logger.info("Only parsing first %s rows fo each file", str(limit))
 
         logger.info("Parsing files...")
+        self.load_bindings()
 
         if self.testOnly:
             self.testMode = True
@@ -146,8 +147,6 @@ class IMPC(Source):
             self._process_data(file, limit)
 
         logger.info("Finished parsing")
-
-        self.load_bindings()
 
         logger.info("Found %d nodes", len(self.graph))
         return
@@ -599,8 +598,8 @@ class IMPC(Source):
         graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
                                          pipeline_name)
 
-        study_parts.append(impc_map[pipeline_stable_id])
-        study_parts.append(impc_map[statistical_method])
+        study_parts.append(impc_map['pipelines'][pipeline_stable_id])
+        study_parts.append(impc_map['statistical_method'][statistical_method])
 
         provenance_model.add_study_parts(study_bnode, study_parts)
 

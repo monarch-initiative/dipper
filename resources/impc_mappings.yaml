@@ -136,8 +136,8 @@ project:
 statistical_method:
     "Fisher's exact test": 'STATO:0000073'
     "Mixed Model framework, generalized least squares, equation withoutWeight": 'STATO:0000372'
-    "Mixed Model framework, linear mixed-effects model, equation withoutWeight": 'STATO_0000107'
-    Unknown: 'STATO_0000107'
+    "Mixed Model framework, linear mixed-effects model, equation withoutWeight": 'STATO:0000107'
+    Unknown: 'STATO:0000107'
     Wilcoxon rank sum test with continuity correction: 'STATO:0000076'
 
 measurements:
