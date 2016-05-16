@@ -135,7 +135,7 @@
 'dictyBase' : 'http://dictybase.org/gene/'
 'EcoGene' : 'http://ecogene.org/gene/'
 'ENSEMBL' : 'http://identifiers.org/ensembl/'
-'FlyBase' : 'http://identifiers.org/FB:'  # also variants, pubs, genotypes, strains
+'FlyBase' : 'http://flybase.org/reports/'  # also variants, pubs, genotypes, strains
 'GenBank' : 'http://www.ncbi.nlm.nih.gov/nuccore/'
 'HGNC' : 'http://identifiers.org/hgnc/HGNC:'
 'IMPC' : 'http://www.mousephenotype.org/data/genes/'  # FIXME
@@ -157,9 +157,9 @@
 'HPRD' : 'http://www.hprd.org/protein/'
 'NCBIProtein' : 'http://www.ncbi.nlm.nih.gov/protein/'
 'PDB' : 'http://identifiers.org/PDB:'
-'SwissProt' : 'http://purl.uniprot.org/uniprot/'
-'TrEMBL' : 'http://purl.uniprot.org/uniprot/'
-'UniProtKB' : 'http://purl.uniprot.org/uniprot/'
+'SwissProt' : 'http://identifiers.org/SwissProt:'
+'TrEMBL' : 'http://www.uniprot.org/uniprot/'
+'UniProtKB' : 'http://identifiers.org/uniprot/'
 
 #chemicals
 'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'

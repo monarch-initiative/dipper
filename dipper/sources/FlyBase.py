@@ -1520,13 +1520,13 @@ class FlyBase(PostgreSQLSource):
                 (feature_relationship_id, subject_id, object_id, type_id, rank,
                  value) = line
 
-                if int(type_id) in [131495, 129784]:
+                if int(type_id) in [132216, 129784]:
                     # derived_tp_assoc_alleles
                     self.feature_types[subject_id] = \
                         Genotype.genoparts['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
                     gu.addType(g, sid, self.feature_types[subject_id])
-                elif int(type_id) in [131502, 129791]:
+                elif int(type_id) in [132223, 129791]:
                     # only take the derived_sf_assoc_alleles
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
@@ -1589,7 +1589,8 @@ class FlyBase(PostgreSQLSource):
                     # subject to type_id = 219,33 object type_id  219  #??? TEC
                     # subject = variation
                     # object = gene
-                    allele_id = gene_id = None
+                    allele_id = None
+                    gene_id = None
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
                     if object_id in self.idhash['gene']:
@@ -1634,7 +1635,10 @@ class FlyBase(PostgreSQLSource):
                                 "this thing %s is not a gene", feature_id)
                 elif int(type_id) == 59983:  # associated_with
 
-                    allele_id = gene_id = reagent_id = ti_id = None
+                    allele_id = None
+                    gene_id = None
+                    reagent_id = None
+                    ti_id = None
 
                     if object_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][object_id]
@@ -1677,13 +1681,13 @@ class FlyBase(PostgreSQLSource):
                             reagent_id)
 
                 # derived_tp_assoc_alleles
-                elif int(type_id) == 131495 or int(type_id) == 129784:
+                elif int(type_id) == 132216 or int(type_id) == 129784:
                     # note that the internal type id changed
-                    # from 129784 --> 131495 around 02.2016
+                    # from 129784 --> 132216 around 02.2016
                     # note that this relationship is only specified between
                     # an allele and a tp. therefore we know the FBal should be
                     # a transgenic_insertion
-                    allele_id = tp_id = None
+                    allele_id = None
 
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
@@ -1696,16 +1700,17 @@ class FlyBase(PostgreSQLSource):
                     gu.addComment(g, allele_id, tp_id)
 
                 # derived_sf_assoc_alleles
-                elif int(type_id) == 131502 or int(type_id) == 129791:
+                elif int(type_id) == 132223 or int(type_id) == 129791:
                     # note the internal type_id changed
-                    # from 129791 --> 131502 around 02.2016
+                    # from 129791 --> 132223 around 02.2016
                     # the relationship between
                     #   a reagent-feature and the allele it targets
                     # the relationship between
                     #   a reagent-targeted-gene (FBal) and
                     #   the reagent that targetes it (FBsf)
 
-                    allele_id = reagent_id = None
+                    allele_id = None
+                    reagent_id = None
 
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
@@ -1722,7 +1727,8 @@ class FlyBase(PostgreSQLSource):
                 elif int(type_id) == 27:
                     # i'm looking just for the relationships between
                     # ti and tp features... so doing a bit of a hack
-                    ti_id = tp_id = None
+                    ti_id = None
+                    tp_id = None
                     if subject_id in self.idhash['feature']:
                         ti_id = self.idhash['feature'][subject_id]
                         if not re.search(r'FBti', ti_id):
@@ -1859,7 +1865,7 @@ class FlyBase(PostgreSQLSource):
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             for line in filereader:
 
-                (organism_dbxref_id, organism_id, dbxref_id) = line
+                (organism_dbxref_id, organism_id, dbxref_id, is_current) = line
 
                 if self.testMode and\
                         int(organism_id) not in self.test_keys['organism']:
@@ -2000,7 +2006,7 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 131520 and re.match(r'FBim', value):
+                if int(type_id) == 132241 and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'
