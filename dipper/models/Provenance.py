@@ -40,7 +40,7 @@ class Provenance:
         'specified_by': 'SEPIO:0000041',
         'created_at_location': 'SEPIO:0000019',
         'created_with_resource': 'SEPIO:0000022',
-        'measures': 'SEPIO:measures'
+        'measures': 'BFO:0000051'  # Make has_part for now
     }
 
     def __init__(self, graph):
@@ -69,6 +69,7 @@ class Provenance:
                                    self.object_properties['measures'],
                                    measure)
         return
+
     def add_agent_to_graph(self, agent_id, agent_label, agent_type=None,
                            agent_description=None):
 

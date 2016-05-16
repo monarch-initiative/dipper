@@ -491,13 +491,19 @@ class IMPC(Source):
 
                 gu.addDescription(g, assoc_id, description)
 
-                self._add_evidence_provenance(
-                    assoc_id, eco_id, impc_map, parameter_map, phenotyping_center,
-                    colony, project_fullname, pipeline_name,
-                    pipeline_stable_id, procedure_stable_id, procedure_name,
-                    parameter_stable_id, parameter_name, p_value,
-                    percentage_change, effect_size, statistical_method,
-                    resource_name)
+                study_bnode = \
+                    self._add_study_provenance(impc_map, parameter_map,
+                                               phenotyping_center, colony,
+                                               project_fullname, pipeline_name,
+                                               pipeline_stable_id, procedure_stable_id,
+                                               procedure_name, parameter_stable_id,
+                                               parameter_name, statistical_method,
+                                               resource_name)
+
+                self._add_evidence(assoc_id, eco_id, impc_map, p_value,
+                                   percentage_change, effect_size, study_bnode,
+                                   phenotyping_center)
+
 
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
@@ -527,14 +533,75 @@ class IMPC(Source):
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
 
-    def _add_evidence_provenance(self, assoc_id, eco_id, impc_map,
-                                 parameter_map,  phenotyping_center,
-                                 colony, project_fullname, pipeline_name,
-                                 pipeline_stable_id, procedure_stable_id,
-                                 procedure_name, parameter_stable_id,
-                                 parameter_name, p_value, percentage_change,
-                                 effect_size, statistical_method,
-                                 resource_name):
+    def _add_study_provenance(self, impc_map, parameter_map,
+                              phenotyping_center, colony, project_fullname,
+                              pipeline_name, pipeline_stable_id,
+                              procedure_stable_id, procedure_name,
+                              parameter_stable_id, parameter_name,
+                              statistical_method, resource_name):
+
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+
+        # Add provenance
+        # A study is a blank node equal to its parts
+        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
+            phenotyping_center, colony, project_fullname, pipeline_stable_id,
+            procedure_stable_id, parameter_stable_id, statistical_method,
+            resource_name), '_')
+
+        graph_utils.addIndividualToGraph(self.graph, study_bnode, None,
+                                         provenance_model.provenance_types['study'])
+
+        # List of nodes linked to study with has_part property
+        study_parts = []
+
+        # Add study parts
+        graph_utils.addIndividualToGraph(self.graph, impc_map['procedures'][procedure_stable_id],
+                                         procedure_name)
+        study_parts.append(impc_map['procedures'][procedure_stable_id])
+
+        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
+                                         pipeline_name)
+
+        study_parts.append(impc_map['pipelines'][pipeline_stable_id])
+        study_parts.append(impc_map['statistical_method'][statistical_method])
+
+        # Add parameter/measure statement: study measures parameter
+        graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
+                                         parameter_name)
+        provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
+
+        # Add participants
+        # Colony
+        colony_bnode = self.make_id("{0}".format(colony), '_')
+        graph_utils.addIndividualToGraph(self.graph, colony_bnode, colony)
+        graph_utils.addTriple(
+            self.graph, study_bnode,
+            provenance_model.object_properties['has_participant'], colony_bnode)
+
+        # Add study agent
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['phenotyping_center'][phenotyping_center],
+            phenotyping_center, provenance_model.provenance_types['organization'])
+        graph_utils.addTriple(
+            self.graph, study_bnode,
+            provenance_model.object_properties['has_agent'],
+            impc_map['phenotyping_center'][phenotyping_center])
+
+        # add project
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['project'][project_fullname],
+            project_fullname, provenance_model.provenance_types['project'])
+        graph_utils.addTriple(
+            self.graph, study_bnode, graph_utils.object_properties['has_part'],
+            impc_map['project'][project_fullname])
+
+        return study_bnode
+
+    def _add_evidence(self, assoc_id, eco_id, impc_map, p_value,
+                      percentage_change, effect_size, study_bnode,
+                      phenotyping_center):
 
         evidence_model = Evidence(self.graph)
         provenance_model = Provenance(self.graph)
@@ -554,7 +621,8 @@ class IMPC(Source):
                                              impc_map['measurements']
                                              ['p_value'])
             measurements[p_value_bnode] = float(p_value)
-        if percentage_change is not None or percentage_change != "":
+        if percentage_change is not None and percentage_change != '':
+
             fold_change_bnode = self.make_id("{0}{1}{2}"
                                              .format(evidence_line_bnode,
                                                      'percentage_change',
@@ -575,40 +643,17 @@ class IMPC(Source):
 
         evidence_model.add_supporting_data(evidence_line_bnode, measurements)
 
-        # Add provenance
-        # A study is a blank node equal to its parts
-        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
-            phenotyping_center, colony, project_fullname, pipeline_stable_id,
-            procedure_stable_id, parameter_stable_id, statistical_method,
-            resource_name), '_')
-
-        graph_utils.addIndividualToGraph(self.graph, study_bnode, None,
-                                         provenance_model.provenance_types['study'])
-
+        # Link evidence to provenance by connecting to study node
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
+        graph_utils.addTriple(
+            self.graph, evidence_line_bnode,
+            provenance_model.object_properties['has_information_provenance'],
+            study_bnode)
 
-        # List of nodes linked to study with has_part property
-        study_parts = []
-
-        # Add study parts
-        graph_utils.addIndividualToGraph(self.graph, impc_map['procedures'][procedure_stable_id],
-                                         procedure_name)
-        study_parts.append(impc_map['procedures'][procedure_stable_id])
-
-        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
-                                         pipeline_name)
-
-        study_parts.append(impc_map['pipelines'][pipeline_stable_id])
-        study_parts.append(impc_map['statistical_method'][statistical_method])
-
-        provenance_model.add_study_parts(study_bnode, study_parts)
-
-        # Add measures
-        graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
-                                         parameter_name)
-        provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
-
-
+        graph_utils.addTriple(
+            self.graph, evidence_line_bnode,
+            provenance_model.object_properties['created_by_agent'],
+            impc_map['phenotyping_center'][phenotyping_center])
 
         return
 

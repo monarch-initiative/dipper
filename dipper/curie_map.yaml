@@ -32,8 +32,7 @@
 'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'  # FBbt: flybase anatomy
 'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'  # FBdv: flybase developmental stages
 'GENO': 'http://purl.obolibrary.org/obo/GENO_'  # GENO: Genotype Partonomy Ontology [y]
-'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'  # SEPIO: Scientific Evidence and Provenance Information Ontology [y]
-'GO' : 'http://purl.obolibrary.org/obo/GO_'  # GO: Gene Ontology [y] 
+'GO' : 'http://purl.obolibrary.org/obo/GO_'  # GO: Gene Ontology [y]
 'HP': 'http://purl.obolibrary.org/obo/HP_'  # HP: Human Phenotype Ontology [y] 
 'IAO': 'http://purl.obolibrary.org/obo/IAO_'  # IAO: Information Artifact Ontology [y] 
 'KEGG-ds' : 'http://purl.obolibrary.org/KEGG-ds_'  # KEGG-ds: KEGG Disease Ontology
@@ -170,4 +169,8 @@
 'IMPRESS-procedure' : 'https://www.mousephenotype.org/impress/procedures/'
 'IMPRESS-protocol' : 'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter' : 'https://www.mousephenotype.org/impress/parameterontologies/'
+
+# Provenance
+'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'  # SEPIO: Scientific Evidence and Provenance Information Ontology
+'VIVO': 'http://vivoweb.org/ontology/core#'
 

@@ -133,6 +133,19 @@ project:
     RIKEN BioResource Center: 'http://en.brc.riken.jp/'
     Wellcome Trust Sanger Institute Mouse Genetics Project: 'http://www.sanger.ac.uk/science/data/mouse-genomes-project'
 
+phenotyping_center:
+    BCM: 'https://www.bcm.edu/'
+    CMHD: 'http://www.cmhd.ca/'
+    HMGU: 'https://www.helmholtz-muenchen.de/en/'
+    ICS: 'http://www.ics-mci.fr/en/departments/phenotyping/'
+    JAX: 'https://www.jax.org/'
+    MRC Harwell: 'https://www.har.mrc.ac.uk/'
+    NING: 'http://www.en.nicemice.cn/'
+    RBRC: 'http://en.brc.riken.jp/'
+    TCP: 'http://www.phenogenomics.ca/'
+    UC Davis: 'https://mbp.mousebiology.org/'
+    WTSI: 'http://www.sanger.ac.uk/'
+
 statistical_method:
     "Fisher's exact test": 'STATO:0000073'
     "Mixed Model framework, generalized least squares, equation withoutWeight": 'STATO:0000372'
