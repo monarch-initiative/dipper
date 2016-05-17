@@ -33,5 +33,20 @@ class IMPCTestCase(SourceTestCase):
     #    return
 
 
+class EvidenceProvenanceTestCase():
+
+    def setUp(self):
+        return
+
+    def tearDown(self):
+        return
+
+    # @unittest.skip('test not yet defined')
+    # def test_hpotest(self):
+    #    logger.info("An IMPC-specific test")
+    #
+    #    return
+
+
 if __name__ == '__main__':
     unittest.main()

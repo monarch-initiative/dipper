@@ -411,7 +411,9 @@ class GraphUtils:
             if materialize_bnode is True:
                 node = base[curie]
             else:  # replace the leading underscore to make it cleaner
-                node = BNode(re.sub(r'_', '', curie, 1))
+                node = BNode(re.sub(r'^_', '', curie, 1))
+                # If theres also a colon
+                node = BNode(re.sub(r'^:', '', node, 1))
         elif re.match(r'^\:', curie):  # do we need to remove embedded ID colons?
             node = base[re.sub(r':', '', curie, 1)]
         # Check if curie actually an IRI

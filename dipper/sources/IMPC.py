@@ -489,21 +489,20 @@ class IMPC(Source):
                               str(round(float(effect_size), 5)),
                               '(p =', "{:.4e}".format(float(p_value)), ').'))
 
-                gu.addDescription(g, assoc_id, description)
-
                 study_bnode = \
-                    self._add_study_provenance(impc_map, parameter_map,
-                                               phenotyping_center, colony,
-                                               project_fullname, pipeline_name,
-                                               pipeline_stable_id, procedure_stable_id,
-                                               procedure_name, parameter_stable_id,
-                                               parameter_name, statistical_method,
-                                               resource_name)
+                    self._add_study_provenance(
+                        impc_map, parameter_map, phenotyping_center, colony,
+                        project_fullname, pipeline_name, pipeline_stable_id,
+                        procedure_stable_id, procedure_name,
+                        parameter_stable_id, parameter_name,
+                        statistical_method, resource_name)
 
-                self._add_evidence(assoc_id, eco_id, impc_map, p_value,
-                                   percentage_change, effect_size, study_bnode,
-                                   phenotyping_center)
+                evidence_line_bnode = \
+                    self._add_evidence(assoc_id, eco_id, impc_map, p_value,
+                                       percentage_change, effect_size, study_bnode,
+                                       phenotyping_center)
 
+                gu.addDescription(g, evidence_line_bnode, description)
 
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
@@ -608,7 +607,7 @@ class IMPC(Source):
         graph_utils = GraphUtils(curie_map.get())
 
         # Add line of evidence
-        evidence_line_bnode = self.make_id("{0}{1}".format(assoc_id, eco_id), '_')
+        evidence_line_bnode = self.make_id("{0}{1}".format(assoc_id, study_bnode), '_')
         evidence_model.add_supporting_evidence(assoc_id, evidence_line_bnode)
 
         # Add supporting measurements to line of evidence
@@ -655,7 +654,7 @@ class IMPC(Source):
             provenance_model.object_properties['created_by_agent'],
             impc_map['phenotyping_center'][phenotyping_center])
 
-        return
+        return evidence_line_bnode
 
     def _get_impc_mappings(self):
         """
