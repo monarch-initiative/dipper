@@ -1476,10 +1476,10 @@ class FlyBase(PostgreSQLSource):
                                 # these are only omim diseases, not genes;
                                 # we shouldn't be adding these here anyway
                                 gu.addClassToGraph(g, did, dlabel)
-                                gu.addEquivalentClass(g, feature_id, did)
+                                gu.addXref(g, feature_id, did)
                         else:
                             gu.addIndividualToGraph(g, did, dlabel)
-                            gu.addSameIndividual(g, feature_id, did)
+                            gu.addXref(g, feature_id, did)
                         line_counter += 1
 
                 if not self.testMode \
