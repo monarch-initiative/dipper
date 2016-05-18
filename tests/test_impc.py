@@ -151,7 +151,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                               OBO:BFO_0000051 OBO:STATO_0000076 ;
                               OBO:BFO_0000051 <https://www.mousephenotype.org/impress/procedures/15> ;
                               OBO:BFO_0000051 <https://www.mousephenotype.org/impress/protocol/175/15> ;
-                              OBO:BFO_0000051 <https://www.mousephenotype.org/impress/parameterontologies/1867/175> ;
+                              OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/175> ;
                               OBO:BFO_0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
                               OBO:RO_0000057 ?colony ;
                               OBO:SEPIO_0000017 <http://www.sanger.ac.uk/> .
