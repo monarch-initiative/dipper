@@ -53,7 +53,7 @@ class Provenance:
     def add_study_parts(self, study, study_parts):
         for part in study_parts:
             self.graph_utils.addTriple(self.graph, study,
-                                       self.graph_utils.object_properties['part_of'],
+                                       self.graph_utils.object_properties['has_part'],
                                        part)
         return
 

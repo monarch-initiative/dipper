@@ -197,7 +197,7 @@ class Source:
         return
 
     @staticmethod
-    def make_id(long_string, prefix=None):
+    def make_id(long_string, prefix='MONARCH'):
         """
         a method to create unique identifiers based on very long strings
         currently implemented with md5
@@ -209,8 +209,6 @@ class Source:
         # probably not the best long-term solution
         # note others available:
         # sha1(), sha224(), sha256(), sha384(), and sha512()
-        if prefix is None:
-            prefix = 'MONARCH'
 
         byte_string = long_string.encode("utf-8")
 
