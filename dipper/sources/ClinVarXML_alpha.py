@@ -12,9 +12,13 @@ import re
 import sys
 import gzip
 import hashlib
+import logging
 import argparse
 import xml.etree.ElementTree as ET
 # import Requests
+
+
+logger = logging.getLogger(__name__)
 
 # from dipper import curie_map  # hangs on to stale data?
 
@@ -27,15 +31,15 @@ import xml.etree.ElementTree as ET
 
 # The name of the ingest we are doing
 IPATH = re.split(r'/', os.path.realpath(__file__))
-(INAME, dotpy) = re.split(r'\.', IPATH[-1].lower())
+(INAME, DOTPY) = re.split(r'\.', IPATH[-1].lower())
 RPATH = '/' + '/'.join(IPATH[1:-3])
 FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 
 # I am not positive allowing the slash is ligit
 CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_./]*[A-Za-z0-9_]$')
 
-
-ENIGMA = 'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
+ENIGMA = \
+    'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
 
 # handle arguments for IO
 argparser = argparse.ArgumentParser()
@@ -82,7 +86,7 @@ CURIEMAP = {
     'foaf': 'http://xmlns.com/foaf/0.1/',
     '_':	'https://monarchinitiave.org/.well-known/genid/',
     'BFO': 'http://purl.obolibrary.org/obo/BFO_',
-    'ERO' : 'http://purl.obolibrary.org/obo/ERO_',
+    'ERO': 'http://purl.obolibrary.org/obo/ERO_',
     'GENO':	'http://purl.obolibrary.org/obo/GENO_',
     'GO':	'http://purl.obolibrary.org/obo/GO_',
     'RO':	'http://purl.obolibrary.org/obo/RO_',
@@ -93,9 +97,9 @@ CURIEMAP = {
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
     'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
-    'OBAN':     'http://purl.org/oban/',
     'owl':      'http://www.w3.org/2002/07/owl#',
     'OBO':      'http://purl.obolibrary.org/obo/',
+    'OIO': 'http://www.geneontology.org/formats/oboInOwl#',
     'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_',
     'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/',
     'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
@@ -128,7 +132,7 @@ def make_spo(sub, prd, obj):
 
     if match is not None and objcuri in CURIEMAP:
         objt = '<' + CURIEMAP[objcuri] + objid + '>'
-    elif(obj.isnumeric()):
+    elif obj.isnumeric():
         objt = obj
     else:
         objt = '"' + obj.strip('"') + '"'
@@ -140,7 +144,7 @@ def make_spo(sub, prd, obj):
 def scv_link(scv_sig):
     '''
     Creates links between SCV based on their pathonnicty significancce
-     
+
     # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
     # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
     # GENO:0000843 - GENO:0000843 --> equivalent_to SEPIO:0000098
@@ -158,6 +162,7 @@ def scv_link(scv_sig):
         'GENO:0000841': 2,  # likely pathogenic
         'GENO:0000844': 4,  # likely benign
         'GENO:0000843': 8}  # benign
+
     lnk = {
         0: 'SEPIO:0000098',
         1: 'SEPIO:0000099',
@@ -166,14 +171,15 @@ def scv_link(scv_sig):
         4: 'SEPIO:0000099',
         6: 'SEPIO:0000101',
         7: 'SEPIO:0000100'}
-
-    for scv_a in scv_sig.keys():
-        scv_av = scv_sig[scv_a]
-        scv_sig.remove(scv_a)
+    keys = sorted(scv_sig.keys())
+    for scv_a in keys:
+        scv_av = scv_sig.pop(scv_a)
         for scv_b in scv_sig.keys():
-            link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
-            print(make_spo(scv_a, link, scv_b))
-            print(make_spo(scv_b, link, scv_a))
+            if scv_av in sig and scv_sig[scv_b] in sig:
+                link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
+                print(make_spo(scv_a, link, scv_b))
+                print(make_spo(scv_b, link, scv_a))
+
 
 ################################################################
 # CONSTANTS once at the beginning (would be better not at all).
@@ -208,7 +214,6 @@ print(make_spo('OBO:RO_0002162', 'rdf:type', 'owl:ObjectProperty'))
 print(make_spo('OBO:RO_0003303', 'rdf:type', 'owl:ObjectProperty'))
 print(make_spo('OBO:GENO_0000418', 'rdf:type', 'owl:ObjectProperty'))
 
-
 # larval stage term mapping file
 # will want namespace I expect.
 # strips comments and blank lines
@@ -227,19 +232,18 @@ with gzip.open(FILENAME, 'rt') as fh:
     TREE = ET.parse(fh)
     ReleaseSet = TREE.getroot()
     if ReleaseSet.get('Type') != 'full':
-        print("Not a full release", file=sys.stderr)
+        logger.warning('Not a full release')
         sys.exit(-1)
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
-            print(
-                ClinVarSet.get('ID') + " <is not current as of> " +
-                rs_dated + '  .', file=sys.stderr)
+            logger.warning(
+                ClinVarSet.get('ID') + " is not current as of " + rs_dated)
             continue  # or break?
 
-        # collect svc significance calls
+        # collect svc significance calls within a rcv
         pathocalls = {}
 
         # There is only one RCV per ClinVarSet
@@ -257,8 +261,9 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         # I do not expect we care as we shouldn't keep the RCV.
         if RCVAssertion.find('RecordStatus').text != 'current':
-            print(
-                rcv_acc + " <is not current on> " + rs_dated, file=sys.stderr)
+            logger.warning(
+                rcv_acc + " <is not current on> " + rs_dated)
+            continue
 
         # Child elements
         #
@@ -288,9 +293,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                 RCV_MeasureSet.findall('Measure'):
             rcv_variant_type = TT.get(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
-                print(
+                logger.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
-                    RCV_Measure.get('Type').text, file=sys.stderr)
+                    RCV_Measure.get('Type').text)
                 continue
 
             RCV_VariantName = RCV_Measure.find(
@@ -298,8 +303,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             if RCV_VariantName is not None:
                 rcv_variant_label = RCV_VariantName.text
             else:
-                print(
-                    rcv_acc + " VARIANT MISSING LABEL", file=sys.stderr)
+                logger.warning(
+                    rcv_acc + " VARIANT MISSING LABEL")
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
         #######################################################################
@@ -327,7 +332,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 rcv_disease_label = RCV_TraitName.text
                 # print(rcv_acc + ' ' + rcv_disease_label)
             else:
-                print(rcv_acc + " MISSING DISEASE NAME ", file=sys.stderr)
+                logger.warning(rcv_acc + " MISSING DISEASE NAME")
 
             # Prioritize OMIM
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
@@ -368,10 +373,10 @@ with gzip.open(FILENAME, 'rt') as fh:
                 for RCV_Trait in\
                         RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                     for RCV_TraitXRef in RCV_Trait.findall('XRef'):
-                        print(
+                        logger.warning(
                             rcv_acc + " UNKNOWN DISEASE DB:\t" +
                             RCV_TraitXRef.get('DB') + ":" +
-                            RCV_TraitXRef.get('ID'), file=sys.stderr)
+                            RCV_TraitXRef.get('ID'))
                         # 82372 MedGen
                         #    58 EFO
                         #     1 Human Phenotype Ontology
@@ -382,7 +387,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            print(rcv_acc + " RCV IS WONKY, BYEBYE", file=sys.stderr)
+            logger.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
             continue
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
@@ -391,11 +396,9 @@ with gzip.open(FILENAME, 'rt') as fh:
         # Descend into each SCV grouped with the current RCV
         #######################################################################
 
-        # keep a collection of an RCV's associations and their patho call
-        # when the collection is complete, i.e when pathocalls isn't empty here
+        # keep a collection of a SCV's associations and patho significance call
+        # when the collection is complete,
         # interlink based on patho call
-        if len(pathocalls) > 0:
-            link_scv(pathocalls)
 
         pathocalls = {}
 
@@ -518,14 +521,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'AttributeSet/Attribute[@Type="AssertionMethod"]')
             if SCV_Attribute is not None:
                 scv_assert_method = SCV_Attribute.text
-                # this string needs to be mapped to a <sepio:100...n> class curie
+                # this string needs to be mapped to a <sepio:100...n> curie
                 if scv_assert_method in TT:
                     scv_assert_id = TT[scv_assert_method]
                     # TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><scv_att_id>
                     print(make_spo(
                         _assertion_id, 'SEPIO:0000041', scv_assert_id))
-                   # <scv_assert_id> <class?> <SEPIO:0000037>
+                    # <scv_assert_id> <class?> <SEPIO:0000037>
 
                     # <scv_att_id><rdf:type><SEPIO:1000001>
                     print(make_spo(
@@ -546,7 +549,6 @@ with gzip.open(FILENAME, 'rt') as fh:
             # SCV_ReviewStatus = ClinicalSignificance.find('ReviewStatus')
             # if SCV_ReviewStatus is not None:
             #    scv_review = SCV_ReviewStatus.text
-            SCV_Description = ClinicalSignificance.find('Description')
 
             SCV_Citation = \
                 ClinicalSignificance.find('Citation/ID[@Source="PubMed"]')
@@ -565,7 +567,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'literature-based study'))
 
             scv_significance = scv_geno = None
-            if SCV_Description:
+            SCV_Description = ClinicalSignificance.find('Description')
+            if SCV_Description is not None:
                 scv_significance = SCV_Description.text
                 scv_geno = TT[scv_significance]
                 if scv_geno is not None:
@@ -576,13 +579,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                         monarch_assoc,
                         'OBAN:association_has_predicate',
                         scv_geno))
-                    # store association's significance to compare w/sibs
-                    pathocalls.update((monarch_assoc, scv_geno))
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
-                    print(make_spo(rcv_variant_id, scv_geno, rcv_disease_curi))
+                    print(make_spo('ClinVarVariant:' + rcv_variant_id, scv_geno, rcv_disease_curi))
                     # <monarch_assoc><OIO:hasdbxref><ClinVar:rcv_acc>  .
                     print(make_spo(
                         monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc))
+
+                    # store association's significance to compare w/sibs
+                    pathocalls[monarch_assoc] = scv_geno
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
@@ -615,7 +619,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # blank node
                         _provenance_id = \
                             '_:' + \
-                            hashlib.md5((_evidence_id + scv_evidence_type).encode('utf-8')).hexdigest()[1:17]
+                            hashlib.md5(
+                                (_evidence_id + scv_evidence_type).
+                                encode('utf-8')).hexdigest()[1:17]
                         # TRIPLES
                         # has_provenance
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
@@ -688,9 +694,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                             SCV_NCBI = SCV_Measure.find('XRef[@DB="Gene"]')
                             if SCV_NCBI is not None:
-                                scv_ncbigene_id = '\
-                                    NCBIGene:' + SCV_NCBI.get('ID')
-
+                                scv_ncbigene_id = 'NCBIGene:' + SCV_NCBI.get('ID')
                                 # TRIPLES
                                 # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
                                 print(make_spo(
@@ -713,3 +717,5 @@ with gzip.open(FILENAME, 'rt') as fh:
             #    if SCV_CiteId:
             #        scv_citesource = SCV_CiteId.get('Source')
             #        scv_citeid = SCV_CiteId.text
+        # print("write out any scv links for ", pathocalls)
+        scv_link(pathocalls)
