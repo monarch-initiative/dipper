@@ -1,0 +1,70 @@
+# Format:
+# the string to match, some tabs, the ontology identifier to return.
+# post octothorp comments and empty lines are ignored
+
+
+# Variant (Subject) Sequence Types  
+single nucleotide variant	SO:0001483
+Deletion					SO:0000159
+copy number gain			SO:0001742
+copy number loss			SO:0001743
+Duplication					SO:1000035
+Insertion					SO:0000667
+Indel						SO:1000032
+Variation					SO:0001059
+Microsatellite				GENO:0000847
+protein only				GENO:0000848
+inversion					SO:1000036
+Translocation				SO:0000199
+Tandem duplication			SO:1000173
+Complex						SO:0001784 
+fusion						SO:0001882
+Structural variant 			SO:0001785
+NT expansion				SO:1000039
+short repeat  				GENO:0000846
+undetermined variant  		SO:0001059
+
+# Association types
+benign								GENO:0000843  # benign
+Benign								GENO:0000843  # benign
+conflicting data from submitters	GENO:0000845  # uncertain significance
+Likely benign						GENO:0000844  # likely benign
+likely pathogenic					GENO:0000841  # likely pathogenic
+Likely pathogenic					GENO:0000841  # likely pathogenic
+no known pathogenicity				GENO:0000845  # uncertain significance
+non-pathogenic						GENO:0000845  # uncertain significance
+pathogenic							GENO:0000840  # pathogenic
+Pathogenic							GENO:0000840  # pathogenic
+Pathogenic/Likely pathogenic		GENO:0000840  # pathogenic
+pathologic							GENO:0000840  # pathogenic
+probable-non-pathogenic				GENO:0000844  # likely benign
+probable-pathogenic					GENO:0000841  # likely pathogenic
+probably not pathogenic				GENO:0000844  # likely benign
+Suspected Benign					GENO:0000844  # likely benign
+uncertain							GENO:0000845  # uncertain significance
+Uncertain significance				GENO:0000845  # uncertain significance
+unknown								GENO:0000845  # uncertain significance
+Unknown								GENO:0000845  # uncertain significance
+variant of unknown significance		GENO:0000845  # uncertain significance
+MUT									GENO:0000845  # uncertain significance 
+likely pathogenic - adrenal pheochromocytoma	GENO:0000841  # likely pathogenic
+
+# punting to RCV on disease for now
+# (would be a little under 10,000 terms to map here
+# maybe down to 3,500 if clustered)
+
+
+# evidence & provenance
+# SEPIO
+clinical testing					SEPIO:0000067
+literature only						SEPIO:0000080
+reference population 				SEPIO:0000102
+research							SEPIO:0000066
+curation							SEPIO:0000081
+in vitro							SEPIO:0000073
+in vivo								SEPIO:0000074
+case-control						SEPIO:0000071
+
+# provence
+ENIGMA BRCA1/2 Classification Criteria (2015)						SEPIO:1000001
+Counsyl Autosomal Dominant Disease Classification criteria (2015)	SEPIO:1000002
