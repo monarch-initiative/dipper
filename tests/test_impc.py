@@ -10,7 +10,6 @@ from dipper.sources.IMPC import IMPC
 from rdflib.namespace import URIRef
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
-from dipper.utils.TestUtils import TestUtils
 
 
 logging.basicConfig(level=logging.WARNING)
@@ -72,7 +71,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        test_env = TestUtils(impc.graph)
         impc_map = impc._get_impc_mappings()
 
         (p_value, percentage_change, effect_size) = self.test_set_1[24:27]
@@ -90,7 +88,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                                 OBO:SEPIO_0000018 <http://www.sanger.ac.uk/> ;
                                 OBO:SEPIO_0000084 ?measure1 ;
                                 OBO:SEPIO_0000084 ?measure2 ;
-                                OBO:SEPIO_0000106 _:study  .
+                                OBO:SEPIO_0000011 _:study  .
 
                             ?measure1 a OBO:OBI_0000175 ;
                                 OBO:RO_0002353 _:study ;
@@ -102,9 +100,10 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
                       }
                       """
-        sparql_output = test_env.query_graph(sparql_query)
-        expected_results = [[self.assoc_iri]]
-        self.assertEqual(sparql_output, expected_results)
+        sparql_output = impc.graph.query(sparql_query)
+        expected_results = [(self.assoc_iri,)]
+
+        self.assertEqual(list(sparql_output), expected_results)
 
     def test_provenance_model(self):
         """
@@ -112,7 +111,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        test_env = TestUtils(impc.graph)
         impc_map = impc._get_impc_mappings()
         parameter_map = impc._get_parameter_mappings()
 
@@ -153,7 +151,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                               OBO:BFO_0000051 <https://www.mousephenotype.org/impress/protocol/175/15> ;
                               OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/175> ;
                               OBO:BFO_0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-                              OBO:RO_0000057 ?colony ;
+                              OBO:RO_0002233 ?colony ;
                               OBO:SEPIO_0000017 <http://www.sanger.ac.uk/> .
 
                           ?colony a owl:NamedIndividual ;
@@ -161,13 +159,13 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                       }
                       """
 
-        sparql_output = test_env.query_graph(sparql_query)
+        sparql_output = impc.graph.query(sparql_query)
         # Should output a single row for ?study and ?colony
         # print(sparql_output)
         # >> [[rdflib.term.BNode('f3015fe2476ce825a8c6978af6222d87'),
         #      rdflib.term.BNode('9328ff6b6455b01254a5548c3cfcc8c4')]]
 
-        self.assertEqual(len(sparql_output[0]), 2)
+        self.assertEqual(len(list(sparql_output)[0]), 2)
 
     def tearDown(self):
         return

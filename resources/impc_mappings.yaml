@@ -158,3 +158,6 @@ measurements:
     'effect_size': 'STATO:0000085'
     'percentage_change': 'STATO:0000169'
 
+asserted_by:
+    'IMPC': 'http://www.mousephenotype.org/'
+

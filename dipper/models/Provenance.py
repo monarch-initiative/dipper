@@ -18,6 +18,7 @@ class Provenance:
 
     """
     provenance_types = {
+        'assertion': 'SEPIO:0000001',
         'assay': 'OBI:0000070',
         'organization': 'foaf:organization',
         'person': GraphUtils.PERSON,
@@ -31,11 +32,14 @@ class Provenance:
     }
 
     object_properties = {
-        'has_information_provenance': 'SEPIO:0000106',
+        'has_provenance': 'SEPIO:0000011',
         'has_participant': 'RO:0000057',
+        'has_input': 'RO:0002233',
         'has_agent': 'SEPIO:0000017',
-        'created_by_agent': 'SEPIO:0000018',
-        'is_expressed_in': 'SEPIO:0000015',
+        'created_by': 'SEPIO:0000018',
+        'date_created': 'SEPIO:0000021',
+        'is_assertion_supported_by': 'SEPIO:0000111',
+        'is_asserted_in': 'SEPIO:0000015',
         'output_of': 'RO:0002353',
         'specified_by': 'SEPIO:0000041',
         'created_at_location': 'SEPIO:0000019',
@@ -68,6 +72,31 @@ class Provenance:
         self.graph_utils.addTriple(self.graph, study,
                                    self.object_properties['measures'],
                                    measure)
+        return
+
+    def add_assertion(self, assertion, agent, agent_label, date=None):
+        """
+        Add assertion to graph
+        :param assertion:
+        :param agent:
+        :param evidence_line:
+        :param date:
+        :return: None
+        """
+        self.graph_utils.addIndividualToGraph(
+            self.graph, assertion, None, self.provenance_types['assertion'])
+
+        self.add_agent_to_graph(agent, agent_label,
+                                self.provenance_types['organization'])
+
+        self.graph_utils.addTriple(
+            self.graph, assertion, self.object_properties['created_by'], agent)
+
+        if date is not None:
+            self.graph_utils.addTriple(
+                self.graph, assertion,
+                self.object_properties['date_created'], date)
+
         return
 
     def add_agent_to_graph(self, agent_id, agent_label, agent_type=None,

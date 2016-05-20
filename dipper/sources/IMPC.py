@@ -502,6 +502,9 @@ class IMPC(Source):
                                        percentage_change, effect_size, study_bnode,
                                        phenotyping_center)
 
+                self._add_assertion_provenance(assoc_id,
+                                               evidence_line_bnode, impc_map)
+
                 gu.addDescription(g, evidence_line_bnode, description)
 
                 # resource_id = resource_name
@@ -531,6 +534,37 @@ class IMPC(Source):
         else:
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
+
+    def _add_assertion_provenance(self, assoc_id, evidence_line_bnode, impc_map):
+        """
+        Add assertion level provenance, currently always IMPC
+        :param assoc_id:
+        :param evidence_line_bnode:
+        :return:
+        """
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+        assertion_bnode = self.make_id("assertion{0}{1}".format(
+            assoc_id, evidence_line_bnode), '_')
+
+        graph_utils.addIndividualToGraph(self.graph, assertion_bnode, None,
+                                         provenance_model.provenance_types['assertion'])
+
+        provenance_model.add_assertion(
+            assertion_bnode, impc_map['asserted_by']['IMPC'],
+            'International Mouse Phenotyping Consortium')
+
+        graph_utils.addTriple(
+            self.graph, assoc_id,
+            provenance_model.object_properties['is_asserted_in'],
+            assertion_bnode)
+
+        graph_utils.addTriple(
+            self.graph, assertion_bnode,
+            provenance_model.object_properties['is_assertion_supported_by'],
+            evidence_line_bnode)
+
+        return
 
     def _add_study_provenance(self, impc_map, parameter_map,
                               phenotyping_center, colony, project_fullname,
@@ -590,13 +624,12 @@ class IMPC(Source):
                                          parameter_name)
         provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
 
-        # Add participants
-        # Colony
+        # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
         graph_utils.addIndividualToGraph(self.graph, colony_bnode, colony)
         graph_utils.addTriple(
             self.graph, study_bnode,
-            provenance_model.object_properties['has_participant'], colony_bnode)
+            provenance_model.object_properties['has_input'], colony_bnode)
 
         # Add study agent
         graph_utils.addIndividualToGraph(
@@ -680,12 +713,12 @@ class IMPC(Source):
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         graph_utils.addTriple(
             self.graph, evidence_line_bnode,
-            provenance_model.object_properties['has_information_provenance'],
+            provenance_model.object_properties['has_provenance'],
             study_bnode)
 
         graph_utils.addTriple(
             self.graph, evidence_line_bnode,
-            provenance_model.object_properties['created_by_agent'],
+            provenance_model.object_properties['has_agent'],
             impc_map['phenotyping_center'][phenotyping_center])
 
         return evidence_line_bnode
