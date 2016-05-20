@@ -60,7 +60,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         # IRIs for testing sparql output
         curie_dict = curie_map.get()
-        curie_util= CurieUtil(curie_dict)
+        curie_util = CurieUtil(curie_dict)
         self.assoc_iri = URIRef(curie_util.get_uri(self.assoc_curie))
 
         return
@@ -85,9 +85,8 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                       WHERE {
                             ?assoc OBO:SEPIO_0000007 ?evidenceline .
                             ?evidenceline a OBO:ECO_0000059 ;
-                                OBO:SEPIO_0000018 <http://www.sanger.ac.uk/> ;
-                                OBO:SEPIO_0000084 ?measure1 ;
-                                OBO:SEPIO_0000084 ?measure2 ;
+                                OBO:BFO_0000051 ?measure1 ;
+                                OBO:BFO_0000051 ?measure2 ;
                                 OBO:SEPIO_0000011 _:study  .
 
                             ?measure1 a OBO:OBI_0000175 ;

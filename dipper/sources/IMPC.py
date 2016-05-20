@@ -716,11 +716,6 @@ class IMPC(Source):
             provenance_model.object_properties['has_provenance'],
             study_bnode)
 
-        graph_utils.addTriple(
-            self.graph, evidence_line_bnode,
-            provenance_model.object_properties['has_agent'],
-            impc_map['phenotyping_center'][phenotyping_center])
-
         return evidence_line_bnode
 
     def _get_impc_mappings(self):

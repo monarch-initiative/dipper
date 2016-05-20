@@ -87,7 +87,7 @@ class Evidence:
         """
         for measurement in measurement_dict:
             self.graph_utils.addTriple(self.graph, evidence_line,
-                                       self.object_properties['has_supporting_data'],
+                                       self.graph_utils.object_properties['has_part'],
                                        measurement)
 
             self.graph_utils.addTriple(self.graph, measurement,
