@@ -180,6 +180,7 @@ def scv_link(scv_sig):
     for scv_a in keys:
         scv_av = scv_sig.pop(scv_a)
         for scv_b in scv_sig.keys():
+            # TODO it would be better not to put them in than filter them out
             if scv_av in sig and scv_sig[scv_b] in sig:
                 link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
                 print(make_spo(scv_a, link, scv_b))
