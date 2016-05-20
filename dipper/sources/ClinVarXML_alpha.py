@@ -94,12 +94,14 @@ CURIEMAP = {
     'OBAN':	'http://purl.org/oban/',
     'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
+    'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/' ,
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
     'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
     'owl':      'http://www.w3.org/2002/07/owl#',
     'OBO':      'http://purl.obolibrary.org/obo/',
     'OIO': 'http://www.geneontology.org/formats/oboInOwl#',
+    'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_',
     'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_',
     'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/',
     'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
@@ -127,9 +129,12 @@ def make_spo(sub, prd, obj):
 
     # obj  is a curie or literal [string|number]
     match = re.match(CURIERE, obj)
+    objcuri = None
     if match is not None:
-        (objcuri, objid) = re.split(r':', obj,)
-
+        try:
+            (objcuri, objid) = re.split(r':', obj,)
+        except ValueError:
+            match = None
     if match is not None and objcuri in CURIEMAP:
         objt = '<' + CURIEMAP[objcuri] + objid + '>'
     elif obj.isnumeric():
@@ -570,7 +575,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
-                scv_geno = TT[scv_significance]
+                if scv_significance in TT:
+                    scv_geno = TT[scv_significance]
                 if scv_geno is not None:
                     # we have the association's (SCV) pathnogicty call
                     # TRIPLES
