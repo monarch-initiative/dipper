@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 # import Requests
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 # from dipper import curie_map  # hangs on to stale data?
 
@@ -35,8 +35,9 @@ IPATH = re.split(r'/', os.path.realpath(__file__))
 RPATH = '/' + '/'.join(IPATH[1:-3])
 FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 
-# I am not positive allowing the slash is ligit
-CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_./]*[A-Za-z0-9_]$')
+# regular expression to limit what is found in the CURIE identifier
+# it is ascii centric and will not pass valid utf8 curies
+CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]$')
 
 ENIGMA = \
     'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
@@ -86,6 +87,7 @@ CURIEMAP = {
     'foaf': 'http://xmlns.com/foaf/0.1/',
     '_':	'https://monarchinitiave.org/.well-known/genid/',
     'BFO': 'http://purl.obolibrary.org/obo/BFO_',
+    'ECO': 'http://purl.obolibrary.org/obo/ECO_',
     'ERO': 'http://purl.obolibrary.org/obo/ERO_',
     'GENO':	'http://purl.obolibrary.org/obo/GENO_',
     'GO':	'http://purl.obolibrary.org/obo/GO_',
@@ -94,21 +96,20 @@ CURIEMAP = {
     'OBAN':	'http://purl.org/oban/',
     'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
-    'MedGen' : 'http://www.ncbi.nlm.nih.gov/medgen/' ,
+    'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
     'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
     'owl':      'http://www.w3.org/2002/07/owl#',
     'OBO':      'http://purl.obolibrary.org/obo/',
     'OIO': 'http://www.geneontology.org/formats/oboInOwl#',
-    'Orphanet' : 'http://www.orpha.net/ORDO/Orphanet_',
+    'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_',
+    'SO': 'http://purl.obolibrary.org/obo/SO_',
+    'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/',
     'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/',
     'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
-    'SO': 'http://purl.obolibrary.org/obo/SO_',
-    'ECO': 'http://purl.obolibrary.org/obo/ECO_',
-    'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/',
-    'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
+    'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/',
 }
 
 
@@ -180,11 +181,9 @@ def scv_link(scv_sig):
     for scv_a in keys:
         scv_av = scv_sig.pop(scv_a)
         for scv_b in scv_sig.keys():
-            # TODO it would be better not to put them in than filter them out
-            if scv_av in sig and scv_sig[scv_b] in sig:
-                link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
-                print(make_spo(scv_a, link, scv_b))
-                print(make_spo(scv_b, link, scv_a))
+            link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
+            print(make_spo(scv_a, link, scv_b))
+            print(make_spo(scv_b, link, scv_a))
 
 
 ################################################################
@@ -238,14 +237,14 @@ with gzip.open(FILENAME, 'rt') as fh:
     TREE = ET.parse(fh)
     ReleaseSet = TREE.getroot()
     if ReleaseSet.get('Type') != 'full':
-        logger.warning('Not a full release')
+        LOG.warning('Not a full release')
         sys.exit(-1)
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
-            logger.warning(
+            LOG.warning(
                 ClinVarSet.get('ID') + " is not current as of " + rs_dated)
             continue  # or break?
 
@@ -267,7 +266,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         # I do not expect we care as we shouldn't keep the RCV.
         if RCVAssertion.find('RecordStatus').text != 'current':
-            logger.warning(
+            LOG.warning(
                 rcv_acc + " <is not current on> " + rs_dated)
             continue
 
@@ -299,7 +298,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 RCV_MeasureSet.findall('Measure'):
             rcv_variant_type = TT.get(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
-                logger.warning(
+                LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
                     RCV_Measure.get('Type').text)
                 continue
@@ -309,7 +308,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             if RCV_VariantName is not None:
                 rcv_variant_label = RCV_VariantName.text
             else:
-                logger.warning(
+                LOG.warning(
                     rcv_acc + " VARIANT MISSING LABEL")
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
@@ -338,7 +337,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 rcv_disease_label = RCV_TraitName.text
                 # print(rcv_acc + ' ' + rcv_disease_label)
             else:
-                logger.warning(rcv_acc + " MISSING DISEASE NAME")
+                LOG.warning(rcv_acc + " MISSING DISEASE NAME")
 
             # Prioritize OMIM
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
@@ -379,7 +378,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 for RCV_Trait in\
                         RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                     for RCV_TraitXRef in RCV_Trait.findall('XRef'):
-                        logger.warning(
+                        LOG.warning(
                             rcv_acc + " UNKNOWN DISEASE DB:\t" +
                             RCV_TraitXRef.get('DB') + ":" +
                             RCV_TraitXRef.get('ID'))
@@ -393,7 +392,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            logger.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
+            LOG.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
             continue
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
@@ -403,8 +402,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         #######################################################################
 
         # keep a collection of a SCV's associations and patho significance call
-        # when the collection is complete,
-        # interlink based on patho call
+        # when this RCV's set is complete, interlink based on patho call
 
         pathocalls = {}
 
@@ -507,14 +505,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                 _assertion_id,
                 'dc:identifier',
                 scv_acc + '.' + scv_accver))
-            # <:_assertion_id><SEPIO:0000018><ClinVar:submitters/scv_orgid>  .
+            # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
             print(make_spo(
                 _assertion_id,
                 'SEPIO:0000018',
-                'ClinVar:submitters/' + scv_orgid))
-            # <ClinVar:submitters/scv_orgid><rdf:type><foaf:organization>  .
+                'ClinVarSubmitters:' + scv_orgid))
+            # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
             print(make_spo(
-                'ClinVar:submitters/' + scv_orgid,
+                'ClinVarSubmitters:' + scv_orgid,
                 'rdf:type',
                 'foaf:organization'))
             # <:_assertion_id><SEPIO:0000105><scv_updated>  .
@@ -587,13 +585,18 @@ with gzip.open(FILENAME, 'rt') as fh:
                         'OBAN:association_has_predicate',
                         scv_geno))
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
-                    print(make_spo('ClinVarVariant:' + rcv_variant_id, scv_geno, rcv_disease_curi))
+                    print(make_spo(
+                        'ClinVarVariant:' + rcv_variant_id, scv_geno,
+                        rcv_disease_curi))
                     # <monarch_assoc><OIO:hasdbxref><ClinVar:rcv_acc>  .
                     print(make_spo(
                         monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc))
 
                     # store association's significance to compare w/sibs
-                    pathocalls[monarch_assoc] = scv_geno
+                    if scv_geno in (
+                            'GENO:0000840', 'GENO:0000841',
+                            'GENO:0000844', 'GENO:0000843'):
+                        pathocalls[monarch_assoc] = scv_geno
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
