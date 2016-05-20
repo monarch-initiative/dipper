@@ -1,6 +1,6 @@
 # Monarch-specific
-'': 'http://www.monarchinitiative.org/'
-'MONARCH': 'http://www.monarchinitiative.org/MONARCH_'
+'': 'https://monarchinitiative.org/'
+'MONARCH': 'https://monarchinitiative.org/MONARCH_'
 'MonarchData': 'http://data.monarchinitiative.org/ttl/'
 'MonarchArchive': 'http://archive.monarchinitiative.org/ttl/'
 
