@@ -28,7 +28,8 @@ def make_property_graph():
                 }
             """
     query_result = graph.query(query)
-    output_graph = add_to_graph(query_result, output_graph)
+    output_graph = add_property_to_graph(
+        query_result, output_graph, OWL['ObjectProperty'])
 
     # Get annotation properties
     query = """
@@ -38,7 +39,8 @@ def make_property_graph():
                 }
             """
     query_result = graph.query(query)
-    output_graph = add_to_graph(query_result, output_graph)
+    output_graph = add_property_to_graph(
+        query_result, output_graph, OWL['AnnotationProperty'])
 
     # Get data properties
     query = """
@@ -48,15 +50,16 @@ def make_property_graph():
                 }
             """
     query_result = graph.query(query)
-    output_graph = add_to_graph(query_result, output_graph)
+    output_graph = add_property_to_graph(
+        query_result, output_graph, OWL['DatatypeProperty'])
     output_graph.serialize('property-graph.ttl', format="turtle")
 
     return
 
 
-def add_to_graph(results, graph):
+def add_property_to_graph(results, graph, property):
     for row in results:
-        graph.add((row[0], RDF['type'], OWL['ObjectProperty']))
+        graph.add((row[0], RDF['type'], property))
     return graph
 
 
