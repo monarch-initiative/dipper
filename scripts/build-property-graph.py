@@ -17,7 +17,7 @@ def make_property_graph():
     ]
 
     for ontology in ontologies:
-        print(ontology)
+        print("parsing: " + ontology)
         graph.parse(ontology, format='xml')
 
     # Get object properties
@@ -57,9 +57,9 @@ def make_property_graph():
     return
 
 
-def add_property_to_graph(results, graph, property):
+def add_property_to_graph(results, graph, property_type):
     for row in results:
-        graph.add((row[0], RDF['type'], property))
+        graph.add((row[0], RDF['type'], property_type))
     return graph
 
 
