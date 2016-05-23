@@ -48,7 +48,8 @@ def main():
         'mpd': 'MPD',
         'gwascatalog': 'GWASCatalog',
         # 'monarch': Monarch,
-        'go': 'GeneOntology'
+        'go': 'GeneOntology',
+        'reactome': 'Reactome'
     }
 
     logger = logging.getLogger(__name__)

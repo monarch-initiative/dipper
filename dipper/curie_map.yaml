@@ -127,7 +127,7 @@
 
 # pathways
 'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
-'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
+'REACT' : 'http://www.reactome.org/PathwayBrowser/#/'
 
 # genes (and RNAs and transcripts)
 'BIOGRID' : 'http://thebiogrid.org/'  # also interactions
