@@ -679,8 +679,8 @@ class NCBIGene(Source):
         dependency (even though we're querying mondo.owl through scigraph)
 
         :param graph: rdfLib graph object
-        :param omim_id: omim id as curie
         :param gene_id: ncbi gene id as curie
+        :param omim_id: omim id as curie
         :return: None
         """
         SCIGRAPH_BASE = 'https://scigraph-data.monarchinitiative.org/scigraph/graph/'
