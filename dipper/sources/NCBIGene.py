@@ -3,6 +3,7 @@ import gzip
 import logging
 import csv
 import io
+import requests
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -251,8 +252,11 @@ class NCBIGene(Source):
                                         gu.addEquivalentClass(
                                             g, gene_id, fixedr)
                                     else:
-                                        gu.addSameIndividual(
-                                            g, gene_id, fixedr)
+                                        if re.match(r'^OMIM', fixedr):
+                                            self._process_omim_equivalencies(g, gene_id, fixedr)
+                                        else:
+                                            gu.addSameIndividual(
+                                                g, gene_id, fixedr)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -665,4 +669,34 @@ class NCBIGene(Source):
         logger.info(
             "Made %d orthology relationships for %d genes",
             found_counter, len(gene_ids))
+        return
+
+    def _process_omim_equivalencies(self, graph, gene_id, omim_id):
+        """
+        Process omim equivalencies by examining the monarch ontology scigraph
+        As an alternative we could examine mondo.owl, since the ontology
+        scigraph imports the output of this script which creates an odd circular
+        dependency (even though we're querying mondo.owl through scigraph)
+
+        :param graph: rdfLib graph object
+        :param omim_id: omim id as curie
+        :param gene_id: ncbi gene id as curie
+        :return: None
+        """
+        SCIGRAPH_BASE = 'https://scigraph-data.monarchinitiative.org/scigraph/graph/'
+        graph_utils = GraphUtils(curie_map.get())
+        url = SCIGRAPH_BASE + omim_id + '.json'
+        response = requests.get(url)
+        try:
+            results = response.json()
+            if 'nodes' in results and len(results['nodes']) > 0:
+                if 'meta' in results['nodes'][0] \
+                        and 'category' in results['nodes'][0]['meta'] \
+                        and 'disease' in results['nodes'][0]['meta']['category']:
+                    logger.info("{0} is a disease, skipping".format(omim_id))
+                else:
+                    graph_utils.addSameIndividual(graph, gene_id, omim_id)
+        except ValueError:
+            graph_utils.addSameIndividual(graph, gene_id, omim_id)
+
         return
