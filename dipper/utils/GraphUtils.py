@@ -1,6 +1,6 @@
 import re
 import logging
-from rdflib import Literal, URIRef, BNode, Namespace
+from rdflib import Literal, URIRef, BNode, Namespace, ConjunctiveGraph
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 
 from dipper.utils.CurieUtil import CurieUtil
@@ -461,6 +461,9 @@ class GraphUtils:
 
     def loadProperties(self, graph, op, property_type):
         """
+        DEPRECATED, commenting out until all references can
+        be removed
+
         Given a graph, it will load the supplied object properties
         as the given property_type.
         :param graph: a graph
@@ -470,13 +473,13 @@ class GraphUtils:
 
         """
 
-        if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error(
-                "bad property type assigned: %s, %s", property_type, op)
-        else:
-            for k in op:
-                graph.add(
-                    (self.getNode(op[k]), RDF['type'], property_type))
+        #if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
+        #    logger.error(
+        #        "bad property type assigned: %s, %s", property_type, op)
+        #else:
+        #    for k in op:
+        #        graph.add(
+        #            (self.getNode(op[k]), RDF['type'], property_type))
         return
 
     def loadAllProperties(self, graph):
@@ -524,3 +527,88 @@ class GraphUtils:
             graph, node_id, self.annotation_properties['clique_leader'],
             Literal(True, datatype=XSD[bool]), True)
         return
+
+    @staticmethod
+    def get_properties_from_graph(graph):
+
+        query = """
+                    SELECT ?property
+                    WHERE {
+                        ?subject ?property ?object .
+                    }
+                """
+        query_result = graph.query(query)
+        # collapse to single list
+        property_list = []
+        for row in query_result:
+            property_list.append(row[0])
+
+        return property_list
+
+    @staticmethod
+    def add_property_axioms(graph, properties):
+        ontology_graph = ConjunctiveGraph()
+
+        ontologies = [
+            'https://raw.githubusercontent.com/monarch-initiative/SEPIO-ontology/master/src/ontology/sepio.owl',
+            'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
+            'https://raw.githubusercontent.com/oborel/obo-relations/master/ro.owl',
+            'http://purl.obolibrary.org/obo/iao.owl',
+            'http://data.monarchinitiative.org/owl/ero.owl',
+            'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
+            'http://purl.obolibrary.org/obo/pco.owl',
+            'http://purl.obolibrary.org/obo/xco.owl'
+        ]
+
+        for ontology in ontologies:
+            logger.info("parsing: " + ontology)
+            if re.search(r'\.owl', ontology):
+                ontology_graph.parse(ontology, format='xml')
+            elif re.search(r'\.ttl', ontology):
+                ontology_graph.parse(ontology, format='turtle')
+            else:
+                ontology_graph.parse(ontology)
+
+        # Get object properties
+        query = """
+                    SELECT ?property
+                    WHERE {
+                        ?property a owl:ObjectProperty .
+                    }
+                """
+        query_result = ontology_graph.query(query)
+        graph = GraphUtils.add_property_to_graph(
+            query_result, graph, OWL['ObjectProperty'], properties)
+
+        # Get annotation properties
+        query = """
+                   SELECT ?property
+                   WHERE {
+                        ?property a owl:AnnotationProperty .
+                    }
+                """
+        query_result = ontology_graph.query(query)
+        graph = GraphUtils.add_property_to_graph(
+            query_result, graph, OWL['AnnotationProperty'], properties)
+
+        # Get data properties
+        query = """
+                    SELECT ?property
+                    WHERE {
+                        ?property a owl:DatatypeProperty .
+                    }
+                """
+        query_result = ontology_graph.query(query)
+        graph = GraphUtils.add_property_to_graph(
+            query_result, graph, OWL['DatatypeProperty'], properties)
+
+        return graph
+
+    @staticmethod
+    def add_property_to_graph(results, graph, property_type, property_list):
+        for row in results:
+            if row[0] in property_list:
+                graph.add((row[0], RDF['type'], property_type))
+        return graph
+        property_list = get_properties_from_input(args.input)
+

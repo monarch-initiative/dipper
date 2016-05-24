@@ -97,7 +97,6 @@ def make_property_graph(properties):
     query_result = graph.query(query)
     output_graph = add_property_to_graph(
         query_result, output_graph, OWL['DatatypeProperty'], properties)
-    output_graph.serialize('property-graph.ttl', format="turtle")
 
     return output_graph
 
