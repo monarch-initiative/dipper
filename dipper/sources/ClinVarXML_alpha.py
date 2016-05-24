@@ -36,42 +36,42 @@ RPATH = '/' + '/'.join(IPATH[1:-3])
 FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 
 # regular expression to limit what is found in the CURIE identifier
-# it is ascii centric and will not pass valid utf8 curies
+# it is ascii centric and may(will) not pass valid utf8 curies
 CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]$')
 
 ENIGMA = \
     'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
 
 # handle arguments for IO
-argparser = argparse.ArgumentParser()
+ARGPARSER = argparse.ArgumentParser()
 
 # INPUT
-argparser.add_argument(
+ARGPARSER.add_argument(
     '-f', '--filename', default=FILES['f1'],
     help="path to '" + FILES['f1'] + "'")
 
-argparser.add_argument(
+ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
     help="path to '" + FILES['f1'] + "'")
 
-argparser.add_argument(
+ARGPARSER.add_argument(
     '-t', "--transtab",
     default=RPATH + '/translationtable/' + INAME + '.tt',
     help="'pOtatoe'\t'potAtoe'")
 
 # OUTPUT '/dev/stdout' would be my first choice
-argparser.add_argument(
+ARGPARSER.add_argument(
     '-d', "--destination", default=RPATH + '/out',
     help='directory to write into')
 
-argparser.add_argument(
+ARGPARSER.add_argument(
     '-o', "--output", default=INAME + '.nt',
     help='file name to write to')
 
 # TODO validate IO arguments
-args = argparser.parse_args()
+ARGS = ARGPARSER.parse_args()
 
-FILENAME = args.inputdir + '/' + args.filename
+FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
 # CURIEMAP = curie_map.get()
 # this still fails miserably and returns a copy
@@ -82,34 +82,34 @@ FILENAME = args.inputdir + '/' + args.filename
 # hardcoding this while loading from curie_map.yaml is wonky
 CURIEMAP = {
     'dc': 'http://purl.org/dc/elements/1.1/',
-    'rdf':	'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    'rdfs':	'http://www.w3.org/2000/01/rdf-schema#',
+    'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
     'foaf': 'http://xmlns.com/foaf/0.1/',
-    '_':	'https://monarchinitiave.org/.well-known/genid/',
-    'BFO': 'http://purl.obolibrary.org/obo/BFO_',
-    'ECO': 'http://purl.obolibrary.org/obo/ECO_',
-    'ERO': 'http://purl.obolibrary.org/obo/ERO_',
-    'GENO':	'http://purl.obolibrary.org/obo/GENO_',
-    'GO':	'http://purl.obolibrary.org/obo/GO_',
-    'RO':	'http://purl.obolibrary.org/obo/RO_',
-    'MP':	'http://purl.obolibrary.org/obo/MP_',
-    'OBAN':	'http://purl.org/oban/',
+    '_':    'https://monarchinitiave.org/.well-known/genid/',
+    'BFO':  'http://purl.obolibrary.org/obo/BFO_',
+    'ECO':  'http://purl.obolibrary.org/obo/ECO_',
+    'ERO':  'http://purl.obolibrary.org/obo/ERO_',
+    'GENO': 'http://purl.obolibrary.org/obo/GENO_',
+    'GO':   'http://purl.obolibrary.org/obo/GO_',
+    'RO':   'http://purl.obolibrary.org/obo/RO_',
+    'MP':   'http://purl.obolibrary.org/obo/MP_',
+    'OBAN': 'http://purl.org/oban/',
     'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
+    'owl':  'http://www.w3.org/2002/07/owl#',
+    'OBO':  'http://purl.obolibrary.org/obo/',
+    'OIO':  'http://www.geneontology.org/formats/oboInOwl#',
+    'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
-    'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/',
+    'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
     'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
-    'owl':      'http://www.w3.org/2002/07/owl#',
-    'OBO':      'http://purl.obolibrary.org/obo/',
-    'OIO': 'http://www.geneontology.org/formats/oboInOwl#',
-    'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
-    'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_',
-    'SO': 'http://purl.obolibrary.org/obo/SO_',
+    'SEPIO':    'http://purl.obolibrary.org/obo/SEPIO_',
+    'SO':   'http://purl.obolibrary.org/obo/SO_',
     'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/',
-    'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/',
-    'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
     'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/',
+    'ClinVarVariant':    'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
+    'ClinVar':           'http://www.ncbi.nlm.nih.gov/clinvar/',
 }
 
 
@@ -224,7 +224,7 @@ print(make_spo('OBO:GENO_0000418', 'rdf:type', 'owl:ObjectProperty'))
 # strips comments and blank lines
 # ... OR convert to YAML see: curi_map.yaml
 TT = {}
-with open(args.transtab) as f:
+with open(ARGS.transtab) as f:
     for line in f:
         line = line.partition('#')[0].strip()
         if line != "":
@@ -444,12 +444,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             _evidence_id = '_:' + monarch_id + '_evidence'
             _assertion_id = '_:' + monarch_id + '_assertion'
 
-            # make what was provanance an assertion
-            # move everything to back up to provanance
-            # remove assertion
-            # _assertion_id = _provenance_id + '_assertion'
-
-            # TRIPLES
+            #                   TRIPLES
             # <monarch_assoc><rdf:type><OBAN:association>  .
             print(make_spo(monarch_assoc, 'rdf:type', 'OBAN:association'))
             # <monarch_assoc>
@@ -468,6 +463,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'ClinVarVariant:' + rcv_variant_id,
                 'rdf:type',
                 rcv_variant_type))
+
+            # <ClinVarVariant:rcv_variant_id><GENO:0000418>
             # <ClinVarVariant:rcv_variant_id><rdf:type><owl:Class> TODO ???
 
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
@@ -486,15 +483,15 @@ with gzip.open(FILENAME, 'rt') as fh:
                     monarch_assoc, 'SEPIO:0000015', _assertion_id))
 
             # <:_evidence_id><rdf:type><SEPIO:0000000> .
-            print(make_spo(_evidence_id, 'rdf:type', 'SEPIO:0000000'))
-            # <:_evidence_id><rdfs:label><'evidence line'> .
-            print(make_spo(_evidence_id, 'rdfs:label', 'evidence line'))
+            print(make_spo(_evidence_id, 'rdf:type', 'ECO:0000000'))
+            # <:_evidence_id><rdfs:label><'evidence line'> .  # nope
+            # print(make_spo(_evidence_id, 'rdfs:label', 'evidence line'))
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
             print(make_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001'))
             # <:_assertion_id><rdfs:label><'assertion'>  .
             print(
                 make_spo(
-                    _assertion_id, 'rdfs:label', 'assertion'))
+                    _assertion_id, 'rdfs:label', scv_id))
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>  is_ass_supprt_by
             print(
                 make_spo(
@@ -515,14 +512,19 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'ClinVarSubmitters:' + scv_orgid,
                 'rdf:type',
                 'foaf:organization'))
-            # <:_assertion_id><SEPIO:0000105><scv_updated>  .
-            print(
-                make_spo(_assertion_id, 'SEPIO:0000105', scv_updated))
 
             # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
             SCV_Attribute = \
                 SCV_Assertion.find(
                     'AttributeSet/Attribute[@Type="AssertionMethod"]')
+
+            ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
+            scv_eval_date = ClinicalSignificance.get('DateLastEvaluated')
+
+            # changed from SEPIO:0000105 -> SEPIO:0000105 -> SEPIO:0000021
+            # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
+            print(
+                make_spo(_assertion_id, 'SEPIO:0000021', str(scv_eval_date)))
             if SCV_Attribute is not None:
                 scv_assert_method = SCV_Attribute.text
                 # this string needs to be mapped to a <sepio:100...n> curie
@@ -548,15 +550,12 @@ with gzip.open(FILENAME, 'rt') as fh:
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
             # RecordStatus                             # assert =='current' ?
 
-            ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
-            # scv_eval_date = ClinicalSignificance.get('DateLastEvaluated')
             # SCV_ReviewStatus = ClinicalSignificance.find('ReviewStatus')
             # if SCV_ReviewStatus is not None:
             #    scv_review = SCV_ReviewStatus.text
 
-            SCV_Citation = \
-                ClinicalSignificance.find('Citation/ID[@Source="PubMed"]')
-            if SCV_Citation is not None:
+            for SCV_Citation in \
+                    ClinicalSignificance.findall('Citation/ID[@Source="PubMed"]'):
                 scv_citation_id = SCV_Citation.text
                 # TRIPLES
                 # <:_evidence_id><BFO:0000051><PMID:scv_citation_id>  .
@@ -701,21 +700,21 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 'Symbol/ElementName[@Type="Preferred"]')
                             if SCV_Symbol is not None:
                                 scv_gene_symbol = SCV_Symbol.text
-
-                            SCV_NCBI = SCV_Measure.find('XRef[@DB="Gene"]')
-                            if SCV_NCBI is not None:
-                                scv_ncbigene_id = 'NCBIGene:' + SCV_NCBI.get('ID')
-                                # TRIPLES
-                                # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-                                print(make_spo(
-                                    rcv_variant_id,
-                                    'GENO:0000418',
-                                    scv_ncbigene_id))
-                                # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-                                print(make_spo(
-                                    scv_ncbigene_id,
-                                    'rdfs:label',
-                                    scv_gene_symbol))
+                        # XRef[@DB="Gene"]/@ID
+                        SCV_NCBI = SCV_Measure.find('XRef[@DB="Gene"]')
+                        if SCV_NCBI is not None:
+                            scv_ncbigene_id = 'NCBIGene:' + SCV_NCBI.get('ID')
+                            # TRIPLES
+                            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
+                            print(make_spo(
+                                rcv_variant_id,
+                                'GENO:0000418',
+                                scv_ncbigene_id))
+                            # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
+                            print(make_spo(
+                                scv_ncbigene_id,
+                                'rdfs:label',
+                                scv_gene_symbol))
 
             # for SCV_Citation in SCV_Assertion.findall('Citation'):
             #    # init
