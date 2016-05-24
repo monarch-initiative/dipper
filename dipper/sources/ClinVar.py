@@ -384,6 +384,8 @@ class ClinVar(Source):
                         m = re.match(r"(Orphanet:ORPHA(?:\s*ORPHA)?)", p)
                         if m is not None and len(m.groups()) > 0:
                             p = re.sub(m.group(1), 'Orphanet:', p.strip())
+                        elif re.match(r'ORPHA:\d+', p):
+                            p = re.sub(r'^ORPHA', 'Orphanet', p.strip())
                         elif re.match(r'SNOMED CT', p):
                             p = re.sub(r'SNOMED CT', 'SNOMED', p.strip())
 
