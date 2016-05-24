@@ -120,6 +120,7 @@
 'CGD' : 'http://ohsu.edu/cgd/'  # diseases, variant instances
 'ClinVar' : 'http://www.ncbi.nlm.nih.gov/clinvar/'  # variant+condition
 'ClinVarVariant' : 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
+'ClinVarSubmitters' : 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'HGMD' : 'http://identifiers.org/hgmd/'
 'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
