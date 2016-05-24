@@ -386,6 +386,8 @@ class ClinVar(Source):
                             p = re.sub(m.group(1), 'Orphanet:', p.strip())
                         elif re.match(r'ORPHA:\d+', p):
                             p = re.sub(r'^ORPHA', 'Orphanet', p.strip())
+                        elif re.match(r'Human Phenotype Ontology', p):
+                            p = re.sub(r'^Human Phenotype Ontology', '', p.strip())
                         elif re.match(r'SNOMED CT', p):
                             p = re.sub(r'SNOMED CT', 'SNOMED', p.strip())
 
