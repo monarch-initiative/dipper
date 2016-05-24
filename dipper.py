@@ -216,9 +216,9 @@ def main():
 
             properties = GraphUtils.get_properties_from_graph(mysource.graph)
             GraphUtils.add_property_axioms(mysource.graph, properties)
-            end_axiom_exp = time.clock
+            end_axiom_exp = time.clock()
             logger.info("Property axioms added: %d sec",
-                        start_axiom_exp-end_axiom_exp)
+                        end_axiom_exp-start_axiom_exp)
 
             start_write = time.clock()
             mysource.write(format=args.format)
