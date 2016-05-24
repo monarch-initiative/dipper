@@ -27,18 +27,18 @@ def get_properties_from_input(file):
     input_graph.parse(file, format="turtle")
 
     query = """
-                SELECT ?property
+                SELECT DISTINCT ?property
                 WHERE {
                     ?subject ?property ?object .
                 }
             """
     query_result = input_graph.query(query)
     # collapse to single list
-    property_list = []
+    property_set = set()
     for row in query_result:
-        property_list.append(row[0])
+        property_set.add(row[0])
 
-    return property_list
+    return property_set
 
 
 def make_property_graph(properties):
