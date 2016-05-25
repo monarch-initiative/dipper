@@ -554,7 +554,8 @@ class GraphUtils:
             'http://data.monarchinitiative.org/owl/ero.owl',
             'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
             'http://purl.obolibrary.org/obo/pco.owl',
-            'http://purl.obolibrary.org/obo/xco.owl'
+            'http://purl.obolibrary.org/obo/xco.owl',
+            'http://purl.obolibrary.org/obo/stato.owl'
         ]
 
         for ontology in ontologies:

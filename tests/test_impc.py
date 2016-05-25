@@ -39,7 +39,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
     def setUp(self):
         self.assoc_curie = 'MONARCH:test_association'
-        self.eco_id = 'ECO:0000059'
+        self.eco_id = 'ECO:0000015'
 
         self.test_set_1 = ('MGI:1920145', 'Setd5', 'WTSI', 'MEFW', 'male',
                            'heterozygote', 'MGI:4432631', 'Setd5<tm1a(EUCOMM)Wtsi>',
@@ -73,20 +73,18 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         impc_map = impc._get_impc_mappings()
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
-        phenotyping_center = self.test_set_1[2]
 
         impc._add_evidence(self.assoc_curie, self.eco_id, impc_map, p_value,
-                           percentage_change, effect_size, self.study_curie,
-                           phenotyping_center)
+                           percentage_change, effect_size, self.study_curie)
 
         sparql_query = """
                       SELECT ?assoc
                       WHERE {
                             ?assoc OBO:SEPIO_0000007 ?evidenceline .
-                            ?evidenceline a OBO:ECO_0000059 ;
-                                OBO:BFO_0000051 ?measure1 ;
-                                OBO:BFO_0000051 ?measure2 ;
-                                OBO:SEPIO_0000011 _:study  .
+                            ?evidenceline a OBO:ECO_0000015 ;
+                                OBO:SEPIO_0000084 ?measure1 ;
+                                OBO:SEPIO_0000084 ?measure2 ;
+                                OBO:SEPIO_0000085 _:study  .
 
                             ?measure1 a OBO:OBI_0000175 ;
                                 OBO:RO_0002353 _:study ;
@@ -126,7 +124,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             statistical_method, resource_name)
 
         sparql_query = """
-                      SELECT ?study ?colony
+                      SELECT ?study
                       WHERE {
                           <https://www.mousephenotype.org/impress/procedures/15> a owl:NamedIndividual ;
                               rdfs:label "MGP Select Pipeline" .
@@ -141,15 +139,14 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                               rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
 
                           <https://www.mousephenotype.org/impress/parameterontologies/1867/175> a owl:NamedIndividual ;
-                              rdfs:label "Number of ribs right" .
+                              rdfs:label "Number of ribs right (MGP Select Pipeline)" .
 
                           ?study a OBO:OBI_0000471 ;
                               OBO:BFO_0000051 OBO:STATO_0000076 ;
-                              OBO:BFO_0000051 <https://www.mousephenotype.org/impress/procedures/15> ;
+                              OBO:BFO_0000050 <https://www.mousephenotype.org/impress/procedures/15> ;
                               OBO:BFO_0000051 <https://www.mousephenotype.org/impress/protocol/175/15> ;
                               OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/175> ;
                               OBO:BFO_0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-                              OBO:RO_0002233 ?colony ;
                               OBO:SEPIO_0000017 <http://www.sanger.ac.uk/> .
 
                           ?colony a owl:NamedIndividual ;
@@ -163,8 +160,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # making blank node iris, it might be better
         # to check the length of the output (see test_provenance_mode)
         study = BNode('9328ff6b6455b01254a5548c3cfcc8c4')
-        colony = BNode('f3015fe2476ce825a8c6978af6222d87')
-        expected_output = [(study, colony)]
+        expected_output = [(study,)]
 
         self.assertEqual(list(sparql_output), expected_output)
 
@@ -233,8 +229,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
 
         impc._add_evidence(self.assoc_curie, self.eco_id, impc_map, p_value,
-                           percentage_change, effect_size, self.study_curie,
-                           phenotyping_center)
+                           percentage_change, effect_size, self.study_curie)
 
         impc._add_study_provenance(
             impc_map, parameter_map, phenotyping_center, colony,
@@ -243,17 +238,18 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             parameter_stable_id, parameter_name,
             statistical_method, resource_name)
 
+        # Note that this doesn't test much since we're dealing with
+        # multiple part_of  and has_part links to individuals
+        # which results in ambiguity = hard to test
         sparql_query = """
                       SELECT *
                       WHERE {
                           ?assoc OBO:SEPIO_0000007 ?evidenceline .
-                          ?evidenceline a OBO:ECO_0000059 ;
-                              OBO:SEPIO_0000011 _:study  .
+                          ?evidenceline a OBO:ECO_0000015 ;
+                              OBO:SEPIO_0000085 _:study  .
 
                           ?study a OBO:OBI_0000471 ;
                               OBO:SEPIO_0000114 ?param ;
-                              OBO:BFO_0000050 ?project ;
-                              OBO:RO_0002233 ?colony ;
                               OBO:SEPIO_0000017 ?agent .
                       }
                       """

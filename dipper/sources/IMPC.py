@@ -389,7 +389,7 @@ class IMPC(Source):
                     # make a phenotyping-center-specific strain
                     # to use as the background
                     pheno_center_strain_label = \
-                        strain_name + '/' + phenotyping_center
+                        strain_name + '-' + phenotyping_center + '-' + colony
                     pheno_center_strain_id = \
                         '-'.join((re.sub(r':', '', genomic_background_id),
                                   re.sub(r'\s', '_', phenotyping_center)))
@@ -414,7 +414,6 @@ class IMPC(Source):
                     geno.addTaxon(pheno_center_strain_id, taxon_id)
                 # this is redundant, but i'll keep in in for now
                 geno.addSequenceDerivesFrom(genotype_id, colony_id)
-                genotype_name += '['+colony+']'
                 geno.addGenotype(genotype_id, genotype_name)
 
                 # Make the sex-qualified genotype,
@@ -460,8 +459,8 @@ class IMPC(Source):
                         "No phenotype id specified for row %d: %s",
                         line_counter, str(row))
                     continue
-                # experimental_phenotypic_evidence This was used in ZFIN
-                eco_id = "ECO:0000059"
+                # hard coded ECO code
+                eco_id = "ECO:0000015"
 
                 # the association comes as a result of a g2p from
                 # a procedure in a pipeline at a center and parameter tested
@@ -499,8 +498,7 @@ class IMPC(Source):
 
                 evidence_line_bnode = \
                     self._add_evidence(assoc_id, eco_id, impc_map, p_value,
-                                       percentage_change, effect_size, study_bnode,
-                                       phenotyping_center)
+                                       percentage_change, effect_size, study_bnode)
 
                 self._add_assertion_provenance(assoc_id,
                                                evidence_line_bnode, impc_map)
@@ -545,7 +543,7 @@ class IMPC(Source):
         provenance_model = Provenance(self.graph)
         graph_utils = GraphUtils(curie_map.get())
         assertion_bnode = self.make_id("assertion{0}{1}".format(
-            assoc_id, evidence_line_bnode), '_')
+            assoc_id, impc_map['asserted_by']['IMPC']),  '_')
 
         graph_utils.addIndividualToGraph(self.graph, assertion_bnode, None,
                                          provenance_model.provenance_types['assertion'])
@@ -612,24 +610,19 @@ class IMPC(Source):
                                          procedure_name)
         study_parts.append(impc_map['procedures'][procedure_stable_id])
 
-        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
-                                         pipeline_name)
 
-        study_parts.append(impc_map['pipelines'][pipeline_stable_id])
         study_parts.append(impc_map['statistical_method'][statistical_method])
         provenance_model.add_study_parts(study_bnode, study_parts)
 
         # Add parameter/measure statement: study measures parameter
+        parameter_label = "{0} ({1})".format(parameter_name, pipeline_name)
         graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
-                                         parameter_name)
+                                         parameter_label)
         provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
         graph_utils.addIndividualToGraph(self.graph, colony_bnode, colony)
-        graph_utils.addTriple(
-            self.graph, study_bnode,
-            provenance_model.object_properties['has_input'], colony_bnode)
 
         # Add study agent
         graph_utils.addIndividualToGraph(
@@ -640,7 +633,14 @@ class IMPC(Source):
             provenance_model.object_properties['has_agent'],
             impc_map['phenotyping_center'][phenotyping_center])
 
-        # add project
+        # add pipeline and project
+        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
+                                         pipeline_name)
+
+        graph_utils.addTriple(
+            self.graph, study_bnode, graph_utils.object_properties['part_of'],
+            impc_map['pipelines'][pipeline_stable_id])
+
         graph_utils.addIndividualToGraph(
             self.graph, impc_map['project'][project_fullname],
             project_fullname, provenance_model.provenance_types['project'])
@@ -651,8 +651,7 @@ class IMPC(Source):
         return study_bnode
 
     def _add_evidence(self, assoc_id, eco_id, impc_map, p_value,
-                      percentage_change, effect_size, study_bnode,
-                      phenotyping_center):
+                      percentage_change, effect_size, study_bnode):
         """
         :param assoc_id: assoc curie used to reify a
         genotype to phenotype association, generated in _process_data()
@@ -713,7 +712,7 @@ class IMPC(Source):
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         graph_utils.addTriple(
             self.graph, evidence_line_bnode,
-            provenance_model.object_properties['has_provenance'],
+            provenance_model.object_properties['has_supporting_study'],
             study_bnode)
 
         return evidence_line_bnode

@@ -40,7 +40,8 @@ class Evidence:
         'is_supporting_evidence_for': 'SEPIO:0000032',
         'is_evidence_supported_by': 'SEPIO:000010',
         'is_evidence_with_support_from': 'SEPIO:0000059',
-        'has_significance': 'STATO:has_significance'
+        'has_significance': 'STATO:has_significance',
+        'has_supporting_data': 'SEPIO:0000084'
     }
 
     data_property = {
@@ -87,7 +88,7 @@ class Evidence:
         """
         for measurement in measurement_dict:
             self.graph_utils.addTriple(self.graph, evidence_line,
-                                       self.graph_utils.object_properties['has_part'],
+                                       self.object_properties['has_supporting_data'],
                                        measurement)
 
             self.graph_utils.addTriple(self.graph, measurement,
