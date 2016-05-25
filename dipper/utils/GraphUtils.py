@@ -530,18 +530,15 @@ class GraphUtils:
 
     @staticmethod
     def get_properties_from_graph(graph):
-
-        query = """
-                    SELECT DISTINCT ?property
-                    WHERE {
-                        ?subject ?property ?object .
-                    }
-                """
-        query_result = graph.query(query)
+        """
+        Wrapper for RDFLib.graph.predicates() that returns a unique set
+        :param graph: RDFLib.graph
+        :return: set, set of properties
+        """
         # collapse to single list
         property_set = set()
-        for row in query_result:
-            property_set.add(row[0])
+        for row in graph.predicates():
+            property_set.add(row)
 
         return property_set
 
@@ -570,43 +567,25 @@ class GraphUtils:
                 ontology_graph.parse(ontology)
 
         # Get object properties
-        query = """
-                    SELECT ?property
-                    WHERE {
-                        ?property a owl:ObjectProperty .
-                    }
-                """
-        query_result = ontology_graph.query(query)
         graph = GraphUtils.add_property_to_graph(
-            query_result, graph, OWL['ObjectProperty'], properties)
+            ontology_graph.subjects(RDF['type'], OWL['ObjectProperty']),
+            graph, OWL['ObjectProperty'], properties)
 
         # Get annotation properties
-        query = """
-                   SELECT ?property
-                   WHERE {
-                        ?property a owl:AnnotationProperty .
-                    }
-                """
-        query_result = ontology_graph.query(query)
         graph = GraphUtils.add_property_to_graph(
-            query_result, graph, OWL['AnnotationProperty'], properties)
+            ontology_graph.subjects(RDF['type'], OWL['AnnotationProperty']),
+            graph, OWL['AnnotationProperty'], properties)
 
         # Get data properties
-        query = """
-                    SELECT ?property
-                    WHERE {
-                        ?property a owl:DatatypeProperty .
-                    }
-                """
-        query_result = ontology_graph.query(query)
         graph = GraphUtils.add_property_to_graph(
-            query_result, graph, OWL['DatatypeProperty'], properties)
+            ontology_graph.subjects(RDF['type'], OWL['DatatypeProperty']),
+            graph, OWL['DatatypeProperty'], properties)
 
         return graph
 
     @staticmethod
     def add_property_to_graph(results, graph, property_type, property_list):
         for row in results:
-            if row[0] in property_list:
-                graph.add((row[0], RDF['type'], property_type))
+            if row in property_list:
+                graph.add((row, RDF['type'], property_type))
         return graph

@@ -12,8 +12,10 @@ def main():
                         help='Location of input file')
     parser.add_argument('--output', '-o', type=str, required=True,
                         help='Location of output file')
+    parser.add_argument('--format', '-f', type=str, default="turtle",
+                        help='format of rdf file (turtle, n3, rdf/xml)')
     args = parser.parse_args()
-    property_list = get_properties_from_input(args.input)
+    property_list = get_properties_from_input(args.input, args.format)
     merged_graph = make_property_graph(property_list)
 
     # merge graphs
@@ -22,20 +24,13 @@ def main():
     merged_graph.serialize(args.output, format="turtle")
 
 
-def get_properties_from_input(file):
+def get_properties_from_input(file, format):
     input_graph = ConjunctiveGraph()
-    input_graph.parse(file, format="turtle")
+    input_graph.parse(file, format=format)
 
-    query = """
-                SELECT DISTINCT ?property
-                WHERE {
-                    ?subject ?property ?object .
-                }
-            """
-    query_result = input_graph.query(query)
     # collapse to single list
     property_set = set()
-    for row in query_result:
+    for row in input_graph.predicates():
         property_set.add(row[0])
 
     return property_set
@@ -66,45 +61,27 @@ def make_property_graph(properties):
             graph.parse(ontology)
 
     # Get object properties
-    query = """
-                SELECT ?property
-                WHERE {
-                    ?property a owl:ObjectProperty .
-                }
-            """
-    query_result = graph.query(query)
     output_graph = add_property_to_graph(
-        query_result, output_graph, OWL['ObjectProperty'], properties)
+        graph.subjects(RDF['type'], OWL['ObjectProperty']),
+        output_graph, OWL['ObjectProperty'], properties)
 
     # Get annotation properties
-    query = """
-               SELECT ?property
-               WHERE {
-                    ?property a owl:AnnotationProperty .
-                }
-            """
-    query_result = graph.query(query)
     output_graph = add_property_to_graph(
-        query_result, output_graph, OWL['AnnotationProperty'], properties)
+        graph.subjects(RDF['type'], OWL['AnnotationProperty']),
+        output_graph, OWL['AnnotationProperty'], properties)
 
     # Get data properties
-    query = """
-                SELECT ?property
-                WHERE {
-                    ?property a owl:DatatypeProperty .
-                }
-            """
-    query_result = graph.query(query)
     output_graph = add_property_to_graph(
-        query_result, output_graph, OWL['DatatypeProperty'], properties)
+        graph.subjects(RDF['type'], OWL['DatatypeProperty']),
+        output_graph, OWL['DatatypeProperty'], properties)
 
     return output_graph
 
 
 def add_property_to_graph(results, graph, property_type, property_list):
     for row in results:
-        if row[0] in property_list:
-            graph.add((row[0], RDF['type'], property_type))
+        if row in property_list:
+            graph.add((row, RDF['type'], property_type))
     return graph
 
 
