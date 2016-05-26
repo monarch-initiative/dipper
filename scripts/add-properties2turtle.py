@@ -31,7 +31,7 @@ def get_properties_from_input(file, format):
     # collapse to single list
     property_set = set()
     for row in input_graph.predicates():
-        property_set.add(row[0])
+        property_set.add(row)
 
     return property_set
 

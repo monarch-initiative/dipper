@@ -392,7 +392,8 @@ class IMPC(Source):
                         strain_name + '-' + phenotyping_center + '-' + colony
                     pheno_center_strain_id = \
                         '-'.join((re.sub(r':', '', genomic_background_id),
-                                  re.sub(r'\s', '_', phenotyping_center)))
+                                  re.sub(r'\s', '_', phenotyping_center),
+                                  colony))
                     if not re.match(r'^_', pheno_center_strain_id):
                         pheno_center_strain_id = '_'+pheno_center_strain_id
                     if self.nobnodes:
@@ -615,7 +616,7 @@ class IMPC(Source):
         provenance_model.add_study_parts(study_bnode, study_parts)
 
         # Add parameter/measure statement: study measures parameter
-        parameter_label = "{0} ({1})".format(parameter_name, pipeline_name)
+        parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
         graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
                                          parameter_label)
         provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
