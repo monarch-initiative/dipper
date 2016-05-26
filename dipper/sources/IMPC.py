@@ -393,7 +393,7 @@ class IMPC(Source):
                     pheno_center_strain_id = \
                         '-'.join((re.sub(r':', '', genomic_background_id),
                                   re.sub(r'\s', '_', phenotyping_center),
-                                  colony))
+                                  re.sub(r'[\s_<>]', '', colony)))
                     if not re.match(r'^_', pheno_center_strain_id):
                         pheno_center_strain_id = '_'+pheno_center_strain_id
                     if self.nobnodes:
