@@ -37,7 +37,7 @@ FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 
 # regular expression to limit what is found in the CURIE identifier
 # it is ascii centric and may(will) not pass valid utf8 curies
-CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]$')
+CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
 
 ENIGMA = \
     'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
@@ -149,7 +149,7 @@ def make_spo(sub, prd, obj):
 
 def scv_link(scv_sig):
     '''
-    Creates links between SCV based on their pathonnicty significancce
+    Creates links between SCV based on their pathonnicty/significancce
 
     # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
     # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
@@ -163,18 +163,18 @@ def scv_link(scv_sig):
     # GENO:0000840 - GENO:0000843 --> contradicts SEPIO:0000100
     '''
 
-    sig = {
+    sig = {  # 'arbitrary scoring scheme'
         'GENO:0000840': 1,  # pathogenic
         'GENO:0000841': 2,  # likely pathogenic
         'GENO:0000844': 4,  # likely benign
         'GENO:0000843': 8}  # benign
 
-    lnk = {
+    lnk = {  # specific result from diff in 'arbitrary scoring scheme'
         0: 'SEPIO:0000098',
         1: 'SEPIO:0000099',
         2: 'SEPIO:0000101',
         3: 'SEPIO:0000101',
-        4: 'SEPIO:0000099',
+        4: 'SEPIO:0000099',  # no five
         6: 'SEPIO:0000101',
         7: 'SEPIO:0000100'}
     keys = sorted(scv_sig.keys())
@@ -185,48 +185,10 @@ def scv_link(scv_sig):
             print(make_spo(scv_a, link, scv_b))
             print(make_spo(scv_b, link, scv_a))
 
-
-################################################################
-# CONSTANTS once at the beginning (would be better not at all).
-
-#                   TRIPLES
-# <SEPIO:0000007><rdfs:label><'has_supporting_evidence'>  .
-print(make_spo('SEPIO:0000007', 'rdfs:label', 'has_supporting_evidence'))
-# <SEPIO:0000011><rdfs:label><'has_provenance'>  .
-print(make_spo('SEPIO:0000011', 'rdfs:label', 'has_provenance'))
-# <SEPIO:000001><rdfs:label><'has_agent'>  .
-print(make_spo('SEPIO:0000001', 'rdfs:label', 'has_agent'))
-# <SEPIO:0000095><rdfs:label><'before_date'>  .
-print(make_spo('SEPIO:0000095', 'rdfs:label', 'before_date'))
-# <SEPIO:0000041><rdfs:label><'specified_by'>  .
-print(make_spo('SEPIO:0000041', 'rdfs:label', 'specified_by'))
-
-# tec check if these or others exist
-print(
-    make_spo(
-        'OBAN:association_has_subject', 'rdf:type', 'owl:ObjectProperty'))
-print(
-    make_spo(
-        'OBAN:association_has_predicate', 'rdf:type', 'owl:ObjectProperty'))
-print(
-    make_spo('OBAN:association_has_object', 'rdf:type', 'owl:ObjectProperty'))
-print(
-    make_spo(
-        'OBAN:association_has_object_property',
-        'rdf:type', 'owl:ObjectProperty'))
-print(make_spo('OBO:RO_0002085', 'rdf:type', 'owl:ObjectProperty'))
-print(make_spo('OBO:RO_0002162', 'rdf:type', 'owl:ObjectProperty'))
-print(make_spo('OBO:RO_0003303', 'rdf:type', 'owl:ObjectProperty'))
-print(make_spo('OBO:GENO_0000418', 'rdf:type', 'owl:ObjectProperty'))
-
-# larval stage term mapping file
-# will want namespace I expect.
-# strips comments and blank lines
-# ... OR convert to YAML see: curi_map.yaml
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
-        line = line.partition('#')[0].strip()
+        line = line.partition('#')[0].strip()  # no comment
         if line != "":
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
@@ -254,7 +216,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # There is only one RCV per ClinVarSet
         rcv_variant_id = rcv_variant_type = rcv_variant_label = None
         rcv_disease_db = rcv_disease_id = rcv_disease_label = None
-        rcv_disease_curi = None
+        rcv_disease_curi = rcv_ncbigene_id = rcv_gene_symbol = None
 
         RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
         rcv_created = RCVAssertion.get('DateCreated')
@@ -270,7 +232,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 rcv_acc + " <is not current on> " + rs_dated)
             continue
 
-        # Child elements
+        # # # Child elements
         #
         # /RCV/Assertion
         # /RCV/AttributeSet
@@ -312,6 +274,27 @@ with gzip.open(FILENAME, 'rt') as fh:
                     rcv_acc + " VARIANT MISSING LABEL")
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
+
+        # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
+
+        RCV_Variant = RCV_Measure.find(
+                'MeasureRelationship[@Type="variant in gene"]')
+        if RCV_Variant is not None:
+            # XRef[@DB="Gene"]/@ID
+            RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
+            if rcv_ncbigene_id is None and RCV_Gene is not None:
+                rcv_ncbigene_id = RCV_Gene.get('ID')
+            elif rcv_ncbigene_id is None:
+                LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
+
+            # Symbol/ElementValue[@Type="Preferred"]
+            RCV_Symbol = RCV_Variant.find(
+                'Symbol/ElementValue[@Type="Preferred"]')
+            if rcv_gene_symbol is None and RCV_Symbol is not None:
+                rcv_gene_symbol = RCV_Symbol.text
+            elif rcv_ncbigene_id is None:
+                LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
+
         #######################################################################
         # the Object is the Disease, here is called a "trait"
         # reluctantly starting with the RCV disease
@@ -397,6 +380,15 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
 
+        rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
+        rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
+
+        #           RCV only TRIPLES
+        # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
+        print(make_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_id))
+        # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
+        print(make_spo(rcv_ncbigene_id, 'rdfs:label', rcv_gene_symbol))
+
         #######################################################################
         # Descend into each SCV grouped with the current RCV
         #######################################################################
@@ -439,6 +431,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             scv_accver = ClinVarAccession.get('Version')
             scv_orgid = ClinVarAccession.get('OrgID')
             scv_updated = ClinVarAccession.get('DateUpdated')
+            SCV_SubmissionID = SCV_Assertion.find('ClinVarSubmissionID')
+            if SCV_SubmissionID is not None:
+                scv_submitter = SCV_SubmissionID.get('submitter')
 
             # blank node identifiers
             _evidence_id = '_:' + monarch_id + '_evidence'
@@ -451,18 +446,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             #   <OBAN:association_has_subject>
             #       <ClinVarVariant:rcv_variant_id>
             print(make_spo(
-                monarch_assoc,
-                'OBAN:association_has_subject',
-                'ClinVarVariant:' + rcv_variant_id))
+                monarch_assoc, 'OBAN:association_has_subject', rcv_variant_id))
             # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv_variant_label>  .
-            print(make_spo(
-                'ClinVarVariant:' + rcv_variant_id,
-                'rdfs:label', rcv_variant_label))
+            print(make_spo(rcv_variant_id, 'rdfs:label', rcv_variant_label))
             # <ClinVarVariant:rcv_variant_id><rdf:type><rcv_variant_type>  .
-            print(make_spo(
-                'ClinVarVariant:' + rcv_variant_id,
-                'rdf:type',
-                rcv_variant_type))
+            print(make_spo(rcv_variant_id, 'rdf:type', rcv_variant_type))
 
             # <ClinVarVariant:rcv_variant_id><GENO:0000418>
             # <ClinVarVariant:rcv_variant_id><rdf:type><owl:Class> TODO ???
@@ -491,7 +479,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # <:_assertion_id><rdfs:label><'assertion'>  .
             print(
                 make_spo(
-                    _assertion_id, 'rdfs:label', scv_id))
+                    _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id))
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>  is_ass_supprt_by
             print(
                 make_spo(
@@ -512,6 +500,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'ClinVarSubmitters:' + scv_orgid,
                 'rdf:type',
                 'foaf:organization'))
+            # <ClinVarSubmitters:scv_orgid><rdfs:label><scv_submitter>  .
+            print(make_spo(
+                'ClinVarSubmitters:' + scv_orgid,
+                'rdfs:label',
+                scv_submitter))
 
             # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
             SCV_Attribute = \
@@ -555,19 +548,27 @@ with gzip.open(FILENAME, 'rt') as fh:
             #    scv_review = SCV_ReviewStatus.text
 
             for SCV_Citation in \
-                    ClinicalSignificance.findall('Citation/ID[@Source="PubMed"]'):
+                    ClinicalSignificance.findall(
+                        'Citation/ID[@Source="PubMed"]'):
                 scv_citation_id = SCV_Citation.text
                 # TRIPLES
-                # <:_evidence_id><BFO:0000051><PMID:scv_citation_id>  .
+                # has_part -> has_supporting_reference
+                # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 print(make_spo(
                     _evidence_id,
-                    'BFO:0000051',
+                    'SEPIO:0000124',
                     'PMID:' + scv_citation_id))
-                # <PMID:scv_citation_id><rdfs:label><'literature-based study'>
+                # <PMID:scv_citation_id><rdfs:label><'journal article'>
                 print(make_spo(
                     'PMID:' + scv_citation_id,
                     'rdfs:label',
-                    'literature-based study'))
+                    'journal article'))
+                # <PMID:scv_citation_id><rdf:type><IAO:0000013>
+                print(make_spo(
+                    'PMID:' + scv_citation_id,
+                    'rdf:type',
+                    'IAO:0000013'))
+                # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
             scv_significance = scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
@@ -584,9 +585,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         'OBAN:association_has_predicate',
                         scv_geno))
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
-                    print(make_spo(
-                        'ClinVarVariant:' + rcv_variant_id, scv_geno,
-                        rcv_disease_curi))
+                    print(make_spo(rcv_variant_id, scv_geno, rcv_disease_curi))
                     # <monarch_assoc><OIO:hasdbxref><ClinVar:rcv_acc>  .
                     print(make_spo(
                         monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc))
@@ -632,10 +631,10 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 (_evidence_id + scv_evidence_type).
                                 encode('utf-8')).hexdigest()[1:17]
                         # TRIPLES
-                        # has_provenance
+                        # has_provenance -> has_supporting_study
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         print(make_spo(
-                            _evidence_id, 'SEPIO:0000011', _provenance_id))
+                            _evidence_id, 'SEPIO:0000085', _provenance_id))
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         print(make_spo(
@@ -646,85 +645,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                             _provenance_id, 'rdfs:label',
                             _evidence_id + ' ' + SCV_OIMT.text))
 
-                # /SCV/ObservedIn/ObservedData/Attribute@Type
-                # /SCV/ObservedIn/ObservedData/Attribute@integerValue
-
-                # Trait being taken from RCV instead (,for now)
-                # for SCV_TraitSet in SCV_ObsIn.findall('TraitSet'):
-
-                    # /SCV/ObservedIn/TraitSet/Comment
-                    # /SCV/ObservedIn/TraitSet/Trait
-                    # for SCV_Trait in SCV_TraitSet.findall('Trait'):
-                    #   # /SCV/ObservedIn/TraitSet/Trait/Name
-                    #   # /SCV/ObservedIn/TraitSet/Trait/Symbol
-                    #   # /SCV/ObservedIn/TraitSet/Trait/TraitRelationship
-                    #   # /SCV/ObservedIn/TraitSet/Trait/XRef
-
-                    #   # init
-                    #   scv_traitname = scv_xref = scv_db = None
-
-                    #   scv_finding = SCV_TraitSet.find('Trait').get('Type')
-                    #   SCV_TraitName = SCV_Trait.find('Name')
-                    #   if SCV_TraitName is None:
-                    #       # continue
-                    #        break
-                    #    SCV_TraitNameEV = SCV_TraitName.find('ElementValue')
-                    #    if SCV_TraitNameEV is None:
-                    #        # continue
-                    #        break
-                    #        # if 'Preferred' == SCV_TraitName.get('Type');
-                    #    scv_traitname = SCV_TraitNameEV.text
-
-                    #    SCV_XRef = SCV_Trait.find('XRef')
-                    #    if SCV_XRef:
-                    #        scv_xref = SCV_XRef.get('ID')
-                    #        scv_db = SCV_XRef.get('DB')
-                    #    # write out
-
-            for SCV_MeasureSet in SCV_Assertion.findall('MeasureSet'):
-                for SCV_Measure in SCV_MeasureSet:
-                    for SCV_AttributeSet in\
-                            SCV_Measure.findall('AttributeSet'):
-                        for SCV_Attribute in\
-                                SCV_AttributeSet.findall('Attribute'):
-                            scv_atttype = SCV_Attribute.get('Type')
-                            scv_att = SCV_Attribute.text
-
-                    for SCV_MeasureRelationship in \
-                            SCV_Measure.findall('MeasureRelationship'):
-                        if SCV_MeasureRelationship.get('Type') == \
-                                'variant in gene':
-                            # 136,850  all only 'variant in gene'
-                            # we can look for what gene
-                            SCV_Symbol = SCV_MeasureRelationship.find(
-                                'Symbol/ElementName[@Type="Preferred"]')
-                            if SCV_Symbol is not None:
-                                scv_gene_symbol = SCV_Symbol.text
-                        # XRef[@DB="Gene"]/@ID
-                        SCV_NCBI = SCV_Measure.find('XRef[@DB="Gene"]')
-                        if SCV_NCBI is not None:
-                            scv_ncbigene_id = 'NCBIGene:' + SCV_NCBI.get('ID')
-                            # TRIPLES
-                            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-                            print(make_spo(
-                                rcv_variant_id,
-                                'GENO:0000418',
-                                scv_ncbigene_id))
-                            # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-                            print(make_spo(
-                                scv_ncbigene_id,
-                                'rdfs:label',
-                                scv_gene_symbol))
-
-            # for SCV_Citation in SCV_Assertion.findall('Citation'):
-            #    # init
-            #    scv_citesource = scv_citeid = None
-            #    scv_citeabbrev = SCV_Citation.get('Abbrev')
-            #    scv_citetype = SCV_Citation.get('Type')
-            #    scv_citeabbrev = SCV_Citation.get('Abbrev')
-            #    SCV_CiteId = SCV_Citation.find('ID')
-            #    if SCV_CiteId:
-            #        scv_citesource = SCV_CiteId.get('Source')
-            #        scv_citeid = SCV_CiteId.text
-        # print("write out any scv links for ", pathocalls)
+        # End of the ClinVarSet.
+        # Output items that only are known after processing sibling records
         scv_link(pathocalls)
+
+        # any clean up?
