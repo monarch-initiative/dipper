@@ -51,7 +51,7 @@ class CTD(Source):
     uniquely over MESH.  Otherwise, we use MESH ids.
 
     Note that we scrub the following identifiers and their associated data:
-    * REACT:116125 - generic disease class
+    * REACT:REACT_116125 - generic disease class
     * MESH:D004283 - dog diseases
     * MESH:D004195 - disease models, animal
     * MESH:D030342 - genetic diseases, inborn
@@ -234,10 +234,10 @@ class CTD(Source):
         entrez_id = 'NCBIGene:' + gene_id
 
         pathways_to_scrub = [
-            'REACT:116125',  # disease
-            "REACT:111045",  # developmental biology
-            "REACT:200794",  # Mus musculus biological processes
-            "REACT:13685"]   # neuronal system ?
+            'REACT:REACT_116125',  # disease
+            "REACT:REACT_111045",  # developmental biology
+            "REACT:REACT_200794",  # Mus musculus biological processes
+            "REACT:REACT_13685"]   # neuronal system ?
 
         if pathway_id in pathways_to_scrub:
             # these are lame "pathways" like generic

@@ -373,22 +373,29 @@ class MPD(Source):
                             #   "Score passing threshold: %s | %s | %s",
                             #   strain_id, assay_id, zscore)
                             # add the G2P assoc
-                            prov = Provenance()
-                            assay_label = self.assayhash[m]['assay_label']
+                            prov = Provenance(self.graph)
+                            try:
+                                assay_label = self.assayhash[m]['assay_label']
+                                assay_description = \
+                                    self.assayhash[m]['description']
+                                ont_term_ids = self.assayhash[m].get('ont_terms')
+                                comment = ' '.join((assay_label,
+                                                   '(zscore='+str(zscore)+')'))
+                            except KeyError:
+                                assay_label = None
+                                assay_description = None
+                                ont_term_ids = None
                             if assay_label is not None:
                                 assay_label += ' ('+str(m)+')'
                             # TODO unused
                             # assay_type = self.assayhash[m]['assay_type']
-                            assay_description = \
-                                self.assayhash[m]['description']
-                            assay_type_id = Provenance.prov_types['assay']
-                            comment = ' '.join((assay_label,
-                                                '(zscore='+str(zscore)+')'))
-                            ont_term_ids = self.assayhash[m].get('ont_terms')
+
+                            assay_type_id = Provenance.provenance_types['assay']
+
                             if ont_term_ids is not None:
                                 scores_passing_threshold_with_ontologies_count += 1
                                 prov.add_assay_to_graph(
-                                    g, assay_id, assay_label, assay_type_id,
+                                    assay_id, assay_label, assay_type_id,
                                     assay_description)
                                 self._add_g2p_assoc(
                                     g, strain_id, sex, assay_id, ont_term_ids,

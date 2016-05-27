@@ -73,7 +73,9 @@ class Assoc:
 
         # core parts of the association
         self.definedby = definedby
-        self.sub = self.obj = self.rel = None
+        self.sub = None
+        self.obj = None
+        self.rel = None
         self.assoc_id = None
 
         self.description = None
@@ -186,6 +188,7 @@ class Assoc:
 
         return
 
+    # This isn't java, but if we must, prefer use of property decorator - @kshefchek
     def set_subject(self, identifier):
         self.sub = identifier
         return

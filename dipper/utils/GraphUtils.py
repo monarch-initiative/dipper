@@ -1,6 +1,6 @@
 import re
 import logging
-from rdflib import Literal, URIRef, BNode, Namespace
+from rdflib import Literal, URIRef, BNode, Namespace, ConjunctiveGraph
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
 
 from dipper.utils.CurieUtil import CurieUtil
@@ -95,6 +95,7 @@ class GraphUtils:
         self.curie_map = curie_map
         self.cu = CurieUtil(curie_map)         # TEC: what is cu really?
         self.nobnodes = materialize_bnodes
+
         return
 
     def addClassToGraph(self, g, id, label, type=None, description=None):
@@ -393,7 +394,7 @@ class GraphUtils:
 
         return
 
-    def _getNode(self, id, materialize_bnode):
+    def _getNode(self, curie, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.
         If an id starts with an underscore, it assigns it to a BNode, otherwise
@@ -405,37 +406,43 @@ class GraphUtils:
         :return:
         """
         base = Namespace(self.curie_map.get(''))
-        n = None
-        if id is not None and re.match(r'^_', id):
+        node = None
+        if curie is not None and re.match(r'^_', curie):
             if materialize_bnode is True:
-                n = base[id]
+                node = base[curie]
             else:  # replace the leading underscore to make it cleaner
-                n = BNode(re.sub(r'_', '', id, 1))
-        elif re.match(r'^\:', id):  # do we need to remove embedded ID colons?
-            n = base[re.sub(r':', '', id, 1)]
+                node = BNode(re.sub(r'^_', '', curie, 1))
+                # If theres also a colon
+                node = BNode(re.sub(r'^:', '', node, 1))
+        elif re.match(r'^\:', curie):  # do we need to remove embedded ID colons?
+            node = base[re.sub(r':', '', curie, 1)]
+        # Check if curie actually an IRI
+        elif re.match(r'^http', curie):
+            node = URIRef(curie)
         else:
-            u = self.cu.get_uri(id)
-            if u is not None:
-                n = URIRef(self.cu.get_uri(id))
+            iri = self.cu.get_uri(curie)
+            if iri is not None:
+                node = URIRef(self.cu.get_uri(curie))
             else:
-                logger.error("couldn't make URI for %s", id)
-        return n
+                logger.error("couldn't make URI for %s", curie)
+        return node
 
     def getNode(self, id, materialize_bnode=False):
 
         return self._getNode(id, materialize_bnode)
 
     def addTriple(
-            self, graph, subject_id, predicate_id, object,
+            self, graph, subject_id, predicate_id, object_id,
             object_is_literal=False):
+
         if object_is_literal is True:
             graph.add(
                 (self.getNode(subject_id), self.getNode(predicate_id),
-                 Literal(object)))
+                 Literal(object_id)))
         else:
             graph.add(
                 (self.getNode(subject_id), self.getNode(predicate_id),
-                 self.getNode(object)))
+                 self.getNode(object_id)))
         return
 
     def loadObjectProperties(self, graph, op):
@@ -454,6 +461,9 @@ class GraphUtils:
 
     def loadProperties(self, graph, op, property_type):
         """
+        DEPRECATED, commenting out until all references can
+        be removed
+
         Given a graph, it will load the supplied object properties
         as the given property_type.
         :param graph: a graph
@@ -463,13 +473,13 @@ class GraphUtils:
 
         """
 
-        if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error(
-                "bad property type assigned: %s, %s", property_type, op)
-        else:
-            for k in op:
-                graph.add(
-                    (self.getNode(op[k]), RDF['type'], property_type))
+        #if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
+        #    logger.error(
+        #        "bad property type assigned: %s, %s", property_type, op)
+        #else:
+        #    for k in op:
+        #        graph.add(
+        #            (self.getNode(op[k]), RDF['type'], property_type))
         return
 
     def loadAllProperties(self, graph):
@@ -517,3 +527,65 @@ class GraphUtils:
             graph, node_id, self.annotation_properties['clique_leader'],
             Literal(True, datatype=XSD[bool]), True)
         return
+
+    @staticmethod
+    def get_properties_from_graph(graph):
+        """
+        Wrapper for RDFLib.graph.predicates() that returns a unique set
+        :param graph: RDFLib.graph
+        :return: set, set of properties
+        """
+        # collapse to single list
+        property_set = set()
+        for row in graph.predicates():
+            property_set.add(row)
+
+        return property_set
+
+    @staticmethod
+    def add_property_axioms(graph, properties):
+        ontology_graph = ConjunctiveGraph()
+
+        ontologies = [
+            'https://raw.githubusercontent.com/monarch-initiative/SEPIO-ontology/master/src/ontology/sepio.owl',
+            'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
+            'https://raw.githubusercontent.com/oborel/obo-relations/master/ro.owl',
+            'http://purl.obolibrary.org/obo/iao.owl',
+            'http://data.monarchinitiative.org/owl/ero.owl',
+            'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
+            'http://purl.obolibrary.org/obo/pco.owl',
+            'http://purl.obolibrary.org/obo/xco.owl'
+        ]
+
+        for ontology in ontologies:
+            logger.info("parsing: " + ontology)
+            if re.search(r'\.owl', ontology):
+                ontology_graph.parse(ontology, format='xml')
+            elif re.search(r'\.ttl', ontology):
+                ontology_graph.parse(ontology, format='turtle')
+            else:
+                ontology_graph.parse(ontology)
+
+        # Get object properties
+        graph = GraphUtils.add_property_to_graph(
+            ontology_graph.subjects(RDF['type'], OWL['ObjectProperty']),
+            graph, OWL['ObjectProperty'], properties)
+
+        # Get annotation properties
+        graph = GraphUtils.add_property_to_graph(
+            ontology_graph.subjects(RDF['type'], OWL['AnnotationProperty']),
+            graph, OWL['AnnotationProperty'], properties)
+
+        # Get data properties
+        graph = GraphUtils.add_property_to_graph(
+            ontology_graph.subjects(RDF['type'], OWL['DatatypeProperty']),
+            graph, OWL['DatatypeProperty'], properties)
+
+        return graph
+
+    @staticmethod
+    def add_property_to_graph(results, graph, property_type, property_list):
+        for row in results:
+            if row in property_list:
+                graph.add((row, RDF['type'], property_type))
+        return graph

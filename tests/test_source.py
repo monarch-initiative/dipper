@@ -6,6 +6,7 @@ import os
 import json
 from tests import test_general
 from tests import test_dataset
+from dipper.utils.GraphUtils import GraphUtils
 # from dipper.sources.Source import Source
 
 logging.basicConfig(level=logging.WARNING)
@@ -35,6 +36,8 @@ class SourceTestCase(unittest.TestCase):
                 logger.error(ParseException)
                 self.assertFalse(True, "Parsing failed")
             try:
+                properties = GraphUtils.get_properties_from_graph(self.source.graph)
+                GraphUtils.add_property_axioms(self.source.graph, properties)
                 self.source.write(format='turtle')
             except Exception as WriteException:
                 logger.error(WriteException)
@@ -52,7 +55,7 @@ class SourceTestCase(unittest.TestCase):
 
         return
 
-    # @unittest.skip
+    @unittest.skip
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
