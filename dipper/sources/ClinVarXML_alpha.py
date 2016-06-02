@@ -150,7 +150,7 @@ def make_spo(sub, prd, obj):
 
 def scv_link(scv_sig):
     '''
-    Creates links between SCV based on their pathonnicty/significancce
+    Creates links between SCV based on their pathonicty/significancce
 
     # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
     # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
@@ -168,7 +168,9 @@ def scv_link(scv_sig):
         'GENO:0000840': 1,  # pathogenic
         'GENO:0000841': 2,  # likely pathogenic
         'GENO:0000844': 4,  # likely benign
-        'GENO:0000843': 8}  # benign
+        'GENO:0000843': 8,   # benign
+        'GENO:0000845': 16,  # uncertain significance
+    }
 
     lnk = {  # specific result from diff in 'arbitrary scoring scheme'
         0: 'SEPIO:0000098',
@@ -177,7 +179,12 @@ def scv_link(scv_sig):
         3: 'SEPIO:0000101',
         4: 'SEPIO:0000099',  # no five
         6: 'SEPIO:0000101',
-        7: 'SEPIO:0000100'}
+        7: 'SEPIO:0000100',
+        8: 'SEPIO:0000126',
+        12: 'SEPIO:0000126',
+        14: 'SEPIO:0000126',
+        15: 'SEPIO:0000126',
+    }
     keys = sorted(scv_sig.keys())
     for scv_a in keys:
         scv_av = scv_sig.pop(scv_a)
