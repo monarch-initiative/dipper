@@ -98,6 +98,7 @@ CURIEMAP = {
     'owl':  'http://www.w3.org/2002/07/owl#',
     'OBO':  'http://purl.obolibrary.org/obo/',
     'OIO':  'http://www.geneontology.org/formats/oboInOwl#',
+    'IAO':  'http://purl.obolibrary.org/obo/IAO_',
     'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
     'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
@@ -381,6 +382,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
 
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
+        try:
         rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
 
         #           RCV only TRIPLES
@@ -389,6 +391,8 @@ with gzip.open(FILENAME, 'rt') as fh:
         # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
         print(make_spo(rcv_ncbigene_id, 'rdfs:label', rcv_gene_symbol))
 
+        except TypeError:
+            LOG.warning("foo")
         #######################################################################
         # Descend into each SCV grouped with the current RCV
         #######################################################################
@@ -558,11 +562,6 @@ with gzip.open(FILENAME, 'rt') as fh:
                     _evidence_id,
                     'SEPIO:0000124',
                     'PMID:' + scv_citation_id))
-                # <PMID:scv_citation_id><rdfs:label><'journal article'>
-                print(make_spo(
-                    'PMID:' + scv_citation_id,
-                    'rdfs:label',
-                    'journal article'))
                 # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                 print(make_spo(
                     'PMID:' + scv_citation_id,
@@ -593,7 +592,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # store association's significance to compare w/sibs
                     if scv_geno in (
                             'GENO:0000840', 'GENO:0000841',
-                            'GENO:0000844', 'GENO:0000843'):
+                            'GENO:0000844', 'GENO:0000843',
+                            'GENO:0000845'):
                         pathocalls[monarch_assoc] = scv_geno
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
