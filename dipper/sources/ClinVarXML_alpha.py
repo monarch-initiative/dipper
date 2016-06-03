@@ -36,7 +36,7 @@ RPATH = '/' + '/'.join(IPATH[1:-3])
 FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 
 # regular expression to limit what is found in the CURIE identifier
-# it is ascii centric and may(will) not pass valid utf8 curies
+# it is ascii centric and may(will) not pass some valid utf8 curies
 CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
 
 ENIGMA = \
@@ -165,9 +165,9 @@ def scv_link(scv_sig):
     '''
 
     sig = {  # 'arbitrary scoring scheme'
-        'GENO:0000840': 1,  # pathogenic
-        'GENO:0000841': 2,  # likely pathogenic
-        'GENO:0000844': 4,  # likely benign
+        'GENO:0000840': 1,   # pathogenic
+        'GENO:0000841': 2,   # likely pathogenic
+        'GENO:0000844': 4,   # likely benign
         'GENO:0000843': 8,   # benign
         'GENO:0000845': 16,  # uncertain significance
     }
@@ -177,7 +177,7 @@ def scv_link(scv_sig):
         1: 'SEPIO:0000099',
         2: 'SEPIO:0000101',
         3: 'SEPIO:0000101',
-        4: 'SEPIO:0000099',  # no five
+        4: 'SEPIO:0000099',
         6: 'SEPIO:0000101',
         7: 'SEPIO:0000100',
         8: 'SEPIO:0000126',
@@ -390,14 +390,12 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
         try:
-        rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
-
-        #           RCV only TRIPLES
-        # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-        print(make_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_id))
-        # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-        print(make_spo(rcv_ncbigene_id, 'rdfs:label', rcv_gene_symbol))
-
+            rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
+            #           RCV only TRIPLES
+            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
+            print(make_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_id))
+            # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
+            print(make_spo(rcv_ncbigene_id, 'rdfs:label', rcv_gene_symbol))
         except TypeError:
             LOG.warning("foo")
         #######################################################################
@@ -525,7 +523,6 @@ with gzip.open(FILENAME, 'rt') as fh:
             ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
             scv_eval_date = ClinicalSignificance.get('DateLastEvaluated')
 
-            # changed from SEPIO:0000105 -> SEPIO:0000105 -> SEPIO:0000021
             # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
             print(
                 make_spo(_assertion_id, 'SEPIO:0000021', str(scv_eval_date)))
@@ -611,6 +608,30 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Sample
                 # /SCV/ObservedIn/Method
                 # /SCV/ObservedIn/ObservedData
+                for SCV_ObsData in SCV_ObsIn.findall('ObservedData'):
+                    for SCV_Citation in SCV_ObsData.findall('Citation'):
+                        for scv_citation_id in \
+                                SCV_Citation.find('ID[@Source="PubMed"]'):
+                            # has_supporting_reference
+                            # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
+                            print(make_spo(
+                                _evidence_id,
+                                'SEPIO:0000124',
+                                'PMID:' + scv_citation_id))
+                            # <PMID:scv_citation_id><rdf:type><IAO:0000013>
+                            print(make_spo(
+                                'PMID:' + scv_citation_id,
+                                'rdf:type',
+                                'IAO:0000013'))
+                        for scv_pub_comment in \
+                                SCV_Citation.findall(
+                                    'Attribute[@Type="Description"]'):
+                            # <PMID:scv_citation_id><rdf:comment><scv_pub_comment>
+                            print(make_spo(
+                                'PMID:' + scv_citation_id,
+                                'rdf:comment',
+                                scv_pub_comment))
+
                 # /SCV/ObservedIn/TraitSet
                 # /SCV/ObservedIn/Citation
                 # /SCV/ObservedIn/Co-occurrenceSet
