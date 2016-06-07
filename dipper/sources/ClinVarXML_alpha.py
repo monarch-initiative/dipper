@@ -16,18 +16,9 @@ import logging
 import argparse
 import xml.etree.ElementTree as ET
 # import Requests
-
-
-LOG = logging.getLogger(__name__)
-
 # from dipper import curie_map  # hangs on to stale data?
 
-
-# http://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/sample_xml/RCV000077146.xml
-# I'm running in another dir so you will have to also,
-# be sure to have the xml and the mapping file there too
-# FILENAME = 'BRCA_ClinVarSet.xml.gz'
-# FILENAME = 'ClinVarFullRelease_00-latest.xml.gz'
+LOG = logging.getLogger(__name__)
 
 # The name of the ingest we are doing
 IPATH = re.split(r'/', os.path.realpath(__file__))
@@ -38,9 +29,6 @@ FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
 # regular expression to limit what is found in the CURIE identifier
 # it is ascii centric and may(will) not pass some valid utf8 curies
 CURIERE = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
-
-ENIGMA = \
-    'https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf'
 
 # handle arguments for IO
 ARGPARSER = argparse.ArgumentParser()
@@ -119,7 +107,7 @@ def make_spo(sub, prd, obj):
     Decorates the three given strings as a line of ntriples
 
     '''
-    # To expand we could use utils/CuriUtil.get_uri(curi)
+    # To establish string as a curi and expand we use a global curie_map(.yaml)
     # sub & prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
     if prd == 'a':
@@ -164,7 +152,7 @@ def scv_link(scv_sig):
     # GENO:0000840 - GENO:0000843 --> contradicts SEPIO:0000100
     '''
 
-    sig = {  # 'arbitrary scoring scheme'
+    sig = {  # 'arbitrary scoring scheme increments as powers of two'
         'GENO:0000840': 1,   # pathogenic
         'GENO:0000841': 2,   # likely pathogenic
         'GENO:0000844': 4,   # likely benign
@@ -515,38 +503,53 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'rdfs:label',
                 scv_submitter))
 
-            # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
-            SCV_Attribute = \
-                SCV_Assertion.find(
-                    'AttributeSet/Attribute[@Type="AssertionMethod"]')
-
             ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
-            scv_eval_date = ClinicalSignificance.get('DateLastEvaluated')
+            if ClinicalSignificance is not None:
+                scv_eval_date = str(
+                    ClinicalSignificance.get('DateLastEvaluated'))
 
-            # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
-            print(
-                make_spo(_assertion_id, 'SEPIO:0000021', str(scv_eval_date)))
-            if SCV_Attribute is not None:
-                scv_assert_method = SCV_Attribute.text
-                # this string needs to be mapped to a <sepio:100...n> curie
-                if scv_assert_method in TT:
-                    scv_assert_id = TT[scv_assert_method]
-                    # TRIPLES   specified_by
-                    # <:_assertion_id><SEPIO:0000041><scv_att_id>
-                    print(make_spo(
-                        _assertion_id, 'SEPIO:0000041', scv_assert_id))
-                    # <scv_assert_id> <class?> <SEPIO:0000037>
+            # bummer. cannot specify xpath parent '..' targeting above .find()
+            for SCV_AttributeSet in SCV_Assertion.findall('AttributeSet'):
+                # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
+                SCV_Attribute = SCV_AttributeSet.find(
+                    'Attribute[@Type="AssertionMethod"]')
+                if SCV_Attribute is not None:
+                    SCV_Citation = SCV_AttributeSet.find(
+                        'Citation')
 
-                    # <scv_att_id><rdf:type><SEPIO:1000001>
+                    # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
+                    if scv_eval_date != "None":
+                        print(make_spo(
+                            _assertion_id, 'SEPIO:0000021', scv_eval_date))
+
+                    scv_assert_method = SCV_Attribute.text
+                    #  need to be mapped to a <sepio:100...n> curie ????
+                    # if scv_assert_method in TT:
+                    # scv_assert_id = TT[scv_assert_method]
+                    _assertion_method_id = '_:' + monarch_id + \
+                        '_assertionmethod_' + hashlib.md5(
+                            (scv_assert_method).encode(
+                                'utf-8')).hexdigest()[1:17]
+                    #       TRIPLES   specified_by
+                    # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
                     print(make_spo(
-                        scv_assert_id, 'rdf:type', 'SEPIO:1000001'))
-                    # <scv_att_id><rdfs:label><scv_assert_method>
+                        _assertion_id, 'SEPIO:0000041', _assertion_method_id))
+                    # <_assertion_method_id><refs:type><SEPIO:0000037>
                     print(make_spo(
-                        scv_assert_id, 'rdfs:label', scv_assert_method))
-                    # has_url
-                    # <scv_att_id><ERO:0000480><ENIGMA>
+                        _assertion_method_id, 'rdfs:type', 'SEPIO:0000037'))
+
+                    # <_assertion_method_id><rdf:label><scv_assert_method>
                     print(make_spo(
-                        scv_assert_id, 'ERO:0000480', ENIGMA))
+                        _assertion_method_id, 'rdf:label', scv_assert_method))
+
+                    # <_assertion_method_id><ERO:0000480><scv_citation_url>
+                    if SCV_Citation is not None:
+                        SCV_Citation_URL = SCV_Citation.find('URL')
+                        if SCV_Citation_URL is not None:
+                            print(make_spo(
+                                _assertion_method_id,
+                                'ERO:0000480',
+                                SCV_Citation_URL.text))
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
             # RecordStatus                             # assert =='current' ?
@@ -559,7 +562,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     ClinicalSignificance.findall(
                         'Citation/ID[@Source="PubMed"]'):
                 scv_citation_id = SCV_Citation.text
-                # TRIPLES
+                #           TRIPLES
                 # has_part -> has_supporting_reference
                 # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 print(make_spo(
@@ -674,7 +677,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                             _evidence_id + ' ' + SCV_OIMT.text))
 
         # End of the ClinVarSet.
-        # Output items that only are known after processing sibling records
+        # Output triples that only are known after processing sibbling records
         scv_link(pathocalls)
 
         # any clean up?
