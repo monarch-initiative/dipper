@@ -42,7 +42,7 @@ class Assoc:
         'towards': 'RO:0002503',
         'has_subject': 'OBAN:association_has_subject',
         'has_object': 'OBAN:association_has_object',
-        'has_predicate': 'OBAN:association_has_predicate',
+        'has_predicate': 'OBAN:association_has_object_property',
         'is_about': 'IAO:00000136',
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source',
