@@ -65,6 +65,6 @@ in vitro							SEPIO:0000073
 in vivo								SEPIO:0000074
 case-control						SEPIO:0000071
 
-# provence
-ENIGMA BRCA1/2 Classification Criteria (2015)						SEPIO:1000001
-Counsyl Autosomal Dominant Disease Classification criteria (2015)	SEPIO:1000002
+# provenance  unused now?(20160603)
+# ENIGMA BRCA1/2 Classification Criteria (2015)						SEPIO:1000001
+# Counsyl Autosomal Dominant Disease Classification criteria (2015)	SEPIO:1000002
