@@ -1,11 +1,7 @@
 # Monarch-specific
-<<<<<<< HEAD
-'': 'http://monarchinitiative.org/'
-'MONARCH': 'http://monarchinitiative.org/MONARCH_'
-=======
 '': 'https://monarchinitiative.org/'
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'
->>>>>>> 536333084b6339766e34a19f6545bd4ecf289a4a
+
 'MonarchData': 'http://data.monarchinitiative.org/ttl/'
 'MonarchArchive': 'http://archive.monarchinitiative.org/ttl/'
 
