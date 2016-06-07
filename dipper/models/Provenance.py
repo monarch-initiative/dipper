@@ -1,10 +1,6 @@
 import logging
-import re
-from datetime import datetime
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-
-__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
@@ -12,217 +8,115 @@ logger = logging.getLogger(__name__)
 class Provenance:
     """
     To model provenance as the basis for an association.
-    This encompases:
-        * measurements taken from the lab, and their significance.
-            these can be derived from papers or other agents.
-        * papers
-    >1 measurement may result from an assay,
-        each of which may have it's own significance
+    This encompasses:
+        * Process history leading to a claim being made,
+          including processes through which evidence is evaluated
+        * Processes through which information used as evidence is created.
 
-
-    Status:  IN PROGRESS  (as observed from the incomplete identifiers
-
-    TODO: add in
+    Provenance metadata includes accounts of who conducted these processes,
+     what entities participated in them, and when/where they occurred.
 
     """
-    prov_types = {
-        'measurement datum': 'IAO:0000109',
-        'zscore': 'STATO:0000104',
-        'pvalue': 'OBI:0000175',
+    provenance_types = {
+        'assertion': 'SEPIO:0000001',
         'assay': 'OBI:0000070',
-        'agent': 'IAO:xxxxxxx',
         'organization': 'foaf:organization',
         'person': GraphUtils.PERSON,
-        'statistical_hypothesis_test': 'OBI:0000673'
+        'statistical_hypothesis_test': 'OBI:0000673',
+        'mixed_model': 'STATO:0000189',
+        'project': 'VIVO:Project',
+        'study': 'OBI:0000471',
+        'variant_classification_guideline': 'SEPIO:0000037',
+        'assertion_process': 'SEPIO:0000003',
+        'xref': 'OIO:hasdbxref'
     }
 
-    rel_properties = {
-        # FIXME using has_specified_output
-        'has_significance': 'STATO:has_significance',
-        'has_agent': 'RO:has_agent'  # FIXME
-
+    object_properties = {
+        'has_provenance': 'SEPIO:0000011',
+        'has_participant': 'RO:0000057',
+        'has_input': 'RO:0002233',
+        'has_agent': 'SEPIO:0000017',
+        'created_by': 'SEPIO:0000018',
+        'date_created': 'SEPIO:0000021',
+        'is_assertion_supported_by': 'SEPIO:0000111',
+        'is_asserted_in': 'SEPIO:0000015',
+        'output_of': 'RO:0002353',
+        'specified_by': 'SEPIO:0000041',
+        'created_at_location': 'SEPIO:0000019',
+        'created_with_resource': 'SEPIO:0000022',
+        'measures': 'SEPIO:0000114',
+        'has_supporting_study': 'SEPIO:0000085'
     }
 
-    data_property = {
-        # FIXME should this be in RO?
-        'has_value': 'STATO:0000129',
-        'has_measurement': 'IAO:0000004'
-    }
+    def __init__(self, graph):
 
-    def __init__(self, prov_type=None):
-
-        if prov_type is None:
-            self.prov_type = 'OBAN:provenance'
-        self.prov_id = None
-        self.measurement_datums = {}
-        self.agent = None
-        self.reference = None  # TODO this will be papers in the future
-        self.gu = GraphUtils(curie_map.get())
+        self.graph = graph
+        self.graph_utils = GraphUtils(curie_map.get())
 
         return
 
-    def set_prov_id(self, prov_id):
-        self.prov_id = prov_id
+    def add_study_parts(self, study, study_parts):
+        for part in study_parts:
+            self.graph_utils.addTriple(self.graph, study,
+                                       self.graph_utils.object_properties['has_part'],
+                                       part)
         return
 
-    def get_prov_id(self):
+    def add_study_to_measurements(self, study, measurements):
+        for measurement in measurements:
+            self.graph_utils.addTriple(self.graph, measurement,
+                                       self.object_properties['output_of'],
+                                       study)
+        return
 
-        return self.prov_id
+    def add_study_measure(self, study, measure):
+        self.graph_utils.addTriple(self.graph, study,
+                                   self.object_properties['measures'],
+                                   measure)
+        return
 
-    def add_measurement_data(self, assay_id, measurement_unit,
-                             significance=None):
+    def add_assertion(self, assertion, agent, agent_label, date=None):
         """
-        Adds an object to measurement_datums like:
-        assay_id : {
-            # MB says each assay should be an instance of OBI Assay
-            type: OBI:0000070
-            label: appmeth
-            unit: unit id or literal?
-            significance: {
-                  type:  significance class id
-                  value: ####
-                  unit:  unit id (optional)
-              } (optional)
-        }
-
-        :param assay_id:
-        :param measurement_value:
-        :param measurement_unit:
-        :param significance:
-        :return:
+        Add assertion to graph
+        :param assertion:
+        :param agent:
+        :param evidence_line:
+        :param date:
+        :return: None
         """
+        self.graph_utils.addIndividualToGraph(
+            self.graph, assertion, None, self.provenance_types['assertion'])
 
-        if assay_id not in self.measurement_datums:
-            # @N @M This needs to be a list, not a set,
-            # because multiple values may be possible for a given assay?
-            self.measurement_datums[assay_id] = list()
+        self.add_agent_to_graph(agent, agent_label,
+                                self.provenance_types['organization'])
 
-        ms = self.get_score(self.prov_types['measurement datum'],
-                            measurement_unit)
-        if significance is not None:
-            ms['significance'] = significance
+        self.graph_utils.addTriple(
+            self.graph, assertion, self.object_properties['created_by'], agent)
 
-        self.measurement_datums[assay_id].append(ms)
-
-        # as a convenience, we return the measurement data
-        return ms
-
-    def get_zscore(self, zscore_value):
-        """
-        This will get you a significance scoring object
-        :param zscore_value:
-        :return:
-        """
-
-        s = self.get_score(self.prov_types['zscore'], zscore_value)
-        return s
-
-    def get_score_id(self, score_type, score_value, score_unit=None):
-        s = '-'.join((re.sub(r':', '', score_type), str(score_value),
-                      str(score_unit)))
-
-        return s
-
-    def get_score(self, score_type, score_value, score_unit=None):
-
-        # TODO if score_type or score_value is None, then throw error
-
-        score = {
-            'value': score_value,
-            'type': score_type
-        }
-
-        if score_unit is not None:
-            score['unit'] = score_unit
-
-        return score
-
-    def add_provenance_to_graph(self, graph):
-
-        # we make the assumption that the agent
-        # has already been added to the graph, ok?
-        self.add_measurement_data_to_graph(graph, self.measurement_datums)
+        if date is not None:
+            self.graph_utils.addTriple(
+                self.graph, assertion,
+                self.object_properties['date_created'], date)
 
         return
 
-    def add_agent_to_graph(self, graph, agent_id, agent_label, agent_type=None,
+    def add_agent_to_graph(self, agent_id, agent_label, agent_type=None,
                            agent_description=None):
 
         if agent_type is None:
-            agent_type = self.prov_types['agent']
-        self.gu.addIndividualToGraph(graph, agent_id, agent_label, agent_type,
-                                     agent_description)
-        self.agent = agent_id
+            agent_type = self.provenance_types['organization']
+        self.graph_utils.addIndividualToGraph(self.graph, agent_id,
+                                              agent_label, agent_type,
+                                              agent_description)
 
         return
 
-    def add_measurement_data_to_graph(self, graph, measurement_data):
-
-        # assay_id : {
-        #     type: "measurement datum" class
-        #     value: #####,
-        #     unit: unit id or literal?
-        #     significance: {
-        #           type:  significance class id
-        #           value: ####
-        #           unit:  unit id (optional)
-        #       } (optional)
-        # }
-
-        # if no prov_id, then make it a random blank node
-        if self.prov_id is None:
-            t = datetime.now()
-            t_string = t.strftime("%Y-%m-%d-%H-%M")
-            self.prov_id = '_'+str(self.agent)+t_string
-
-        # # TODO deal with units
-        # for m in measurement_data:
-        #     s = measurement_data[m]
-        #     # we assume that the assay has already been added
-        #     # as an Individual
-        #       with properties elsewhere
-        #
-        #     for i in s:
-        #
-        #         logger.debug("\tTYPE: "+str(i.get('type'))+"\tVALUE: "+
-        #                      str(i.get('value'))+"\tUNIT: "+
-        #                      str(i.get('unit'))+" TYPE: None\tDESCRIPTION:"+
-        #                      str(i.get('description')))
-        #         mid = self.get_score_id(i.get('type'), i.get('value'),
-        #                                 i.get('unit'))
-        #
-        #         self.gu.addIndividualToGraph(graph, mid, None,
-        #                                       i.get('description'))
-        #         self.gu.addTriple(
-        #           graph, mid, self.data_property['has_value'],
-        #                           i.get('value'))
-        #         sig = i.get('significance')
-        #         if sig is not None:
-        #             sid = self.get_score_id(i.get('type'), i.get('value'),
-        #                                     i.get('unit'))
-        #             self.gu.addIndividualToGraph(graph, sid, None,
-        #                                          s.get('type'))
-        #             self.gu.addTriple(graph, mid,
-        #                               self.rel_properties['has_significance'],
-        #                               sid)
-        #             self.gu.addTriple(graph, sid,
-        #                               self.data_property['has_value'],
-        #                               sig.get('value'))
-        #         # add the measurement as part of this provenance
-        #         self.gu.addTriple(graph, self.prov_id,
-        #                           # TODO should this be "has_measurement"?
-        #                           self.gu.object_properties['has_part'], mid)
-        #         self.gu.addTriple(graph, self.prov_id,
-        #                           self.gu.object_properties['has_agent'],
-        #                           self.agent)
-
-        return
-
-    def add_assay_to_graph(self, graph, assay_id, assay_label, assay_type=None,
+    def add_assay_to_graph(self, assay_id, assay_label, assay_type=None,
                            assay_description=None):
         if assay_type is None:
-            assay_type = self.prov_types['assay']
-        self.gu.addIndividualToGraph(graph, assay_id, assay_label, assay_type,
-                                     assay_description)
+            assay_type = self.provenance_types['assay']
+        self.graph_utils.addIndividualToGraph(self.graph, assay_id,
+                                              assay_label, assay_type,
+                                              assay_description)
 
         return

@@ -3,11 +3,15 @@ import gzip
 import re
 import logging
 import os
+import json
+import yaml
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.Evidence import Evidence
+from dipper.models.Provenance import Provenance
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 
@@ -78,6 +82,15 @@ class IMPC(Source):
             'url': IMPCDL + '/checksum.md5'},
     }
 
+    # Files that map IMPC codes to their IRIs, either generated manually
+    # or by web crawling, see /scripts/README.md
+    map_files = {
+        # Procedures
+        'parameter_map': '../../resources/impc_parameters.json',
+        # All other codes
+        'impc_code_map': '../../resources/impc_mappings.yaml'
+    }
+
     # TODO move these into the conf.json
     # the following are gene ids for testing
     test_ids = [
@@ -123,6 +136,7 @@ class IMPC(Source):
             logger.info("Only parsing first %s rows fo each file", str(limit))
 
         logger.info("Parsing files...")
+        self.load_bindings()
 
         if self.testOnly:
             self.testMode = True
@@ -133,8 +147,6 @@ class IMPC(Source):
             self._process_data(file, limit)
 
         logger.info("Finished parsing")
-
-        self.load_bindings()
 
         logger.info("Found %d nodes", len(self.graph))
         return
@@ -152,6 +164,9 @@ class IMPC(Source):
         line_counter = 0
         gu.loadAllProperties(g)
         gu.loadObjectProperties(g, geno.object_properties)
+
+        impc_map = self._get_impc_mappings()
+        parameter_map = self._get_parameter_mappings()
 
         # Add the taxon as a class
         taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
@@ -374,10 +389,11 @@ class IMPC(Source):
                     # make a phenotyping-center-specific strain
                     # to use as the background
                     pheno_center_strain_label = \
-                        strain_name + '/' + phenotyping_center
+                        strain_name + '-' + phenotyping_center + '-' + colony
                     pheno_center_strain_id = \
                         '-'.join((re.sub(r':', '', genomic_background_id),
-                                  re.sub(r'\s', '_', phenotyping_center)))
+                                  re.sub(r'\s', '_', phenotyping_center),
+                                  re.sub(r'\W+', '', colony)))
                     if not re.match(r'^_', pheno_center_strain_id):
                         pheno_center_strain_id = '_'+pheno_center_strain_id
                     if self.nobnodes:
@@ -399,7 +415,6 @@ class IMPC(Source):
                     geno.addTaxon(pheno_center_strain_id, taxon_id)
                 # this is redundant, but i'll keep in in for now
                 geno.addSequenceDerivesFrom(genotype_id, colony_id)
-                genotype_name += '['+colony+']'
                 geno.addGenotype(genotype_id, genotype_name)
 
                 # Make the sex-qualified genotype,
@@ -445,8 +460,8 @@ class IMPC(Source):
                         "No phenotype id specified for row %d: %s",
                         line_counter, str(row))
                     continue
-                # experimental_phenotypic_evidence This was used in ZFIN
-                eco_id = "ECO:0000059"
+                # hard coded ECO code
+                eco_id = "ECO:0000015"
 
                 # the association comes as a result of a g2p from
                 # a procedure in a pipeline at a center and parameter tested
@@ -474,9 +489,23 @@ class IMPC(Source):
                               str(round(float(effect_size), 5)),
                               '(p =', "{:.4e}".format(float(p_value)), ').'))
 
-                gu.addDescription(g, assoc_id, description)
+                study_bnode = \
+                    self._add_study_provenance(
+                        impc_map, parameter_map, phenotyping_center, colony,
+                        project_fullname, pipeline_name, pipeline_stable_id,
+                        procedure_stable_id, procedure_name,
+                        parameter_stable_id, parameter_name,
+                        statistical_method, resource_name)
 
-                # TODO add provenance information
+                evidence_line_bnode = \
+                    self._add_evidence(assoc_id, eco_id, impc_map, p_value,
+                                       percentage_change, effect_size, study_bnode)
+
+                self._add_assertion_provenance(assoc_id,
+                                               evidence_line_bnode, impc_map)
+
+                gu.addDescription(g, evidence_line_bnode, description)
+
                 # resource_id = resource_name
                 # assoc.addSource(g, assoc_id, resource_id)
 
@@ -504,6 +533,232 @@ class IMPC(Source):
         else:
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
+
+    def _add_assertion_provenance(self, assoc_id, evidence_line_bnode, impc_map):
+        """
+        Add assertion level provenance, currently always IMPC
+        :param assoc_id:
+        :param evidence_line_bnode:
+        :return:
+        """
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+        assertion_bnode = self.make_id("assertion{0}{1}".format(
+            assoc_id, impc_map['asserted_by']['IMPC']),  '_')
+
+        graph_utils.addIndividualToGraph(self.graph, assertion_bnode, None,
+                                         provenance_model.provenance_types['assertion'])
+
+        provenance_model.add_assertion(
+            assertion_bnode, impc_map['asserted_by']['IMPC'],
+            'International Mouse Phenotyping Consortium')
+
+        graph_utils.addTriple(
+            self.graph, assoc_id,
+            provenance_model.object_properties['is_asserted_in'],
+            assertion_bnode)
+
+        graph_utils.addTriple(
+            self.graph, assertion_bnode,
+            provenance_model.object_properties['is_assertion_supported_by'],
+            evidence_line_bnode)
+
+        return
+
+    def _add_study_provenance(self, impc_map, parameter_map,
+                              phenotyping_center, colony, project_fullname,
+                              pipeline_name, pipeline_stable_id,
+                              procedure_stable_id, procedure_name,
+                              parameter_stable_id, parameter_name,
+                              statistical_method, resource_name):
+        """
+        :param impc_map: dict, generated from map file
+        see self._get_impc_mappings() docstring
+        :param parameter_map: dict, generated from map file
+        see _get_parameter_mappings() docstring
+        :param phenotyping_center: str, from self.files['all']
+        :param colony: str, from self.files['all']
+        :param project_fullname: str, from self.files['all']
+        :param pipeline_name: str, from self.files['all']
+        :param pipeline_stable_id: str, from self.files['all']
+        :param procedure_stable_id: str, from self.files['all']
+        :param procedure_name: str, from self.files['all']
+        :param parameter_stable_id: str, from self.files['all']
+        :param parameter_name: str, from self.files['all']
+        :param statistical_method: str, from self.files['all']
+        :param resource_name: str, from self.files['all']
+        :return: study bnode
+        """
+
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+
+        # Add provenance
+        # A study is a blank node equal to its parts
+        study_bnode = self.make_id("{0}{1}{2}{3}{4}{5}{6}{7}".format(
+            phenotyping_center, colony, project_fullname, pipeline_stable_id,
+            procedure_stable_id, parameter_stable_id, statistical_method,
+            resource_name), '_')
+
+        graph_utils.addIndividualToGraph(self.graph, study_bnode, None,
+                                         provenance_model.provenance_types['study'])
+
+        # List of nodes linked to study with has_part property
+        study_parts = []
+
+        # Add study parts
+        graph_utils.addIndividualToGraph(self.graph, impc_map['procedures'][procedure_stable_id],
+                                         procedure_name)
+        study_parts.append(impc_map['procedures'][procedure_stable_id])
+
+
+        study_parts.append(impc_map['statistical_method'][statistical_method])
+        provenance_model.add_study_parts(study_bnode, study_parts)
+
+        # Add parameter/measure statement: study measures parameter
+        parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
+        graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
+                                         parameter_label)
+        provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
+
+        # Add Colony
+        colony_bnode = self.make_id("{0}".format(colony), '_')
+        graph_utils.addIndividualToGraph(self.graph, colony_bnode, colony)
+
+        # Add study agent
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['phenotyping_center'][phenotyping_center],
+            phenotyping_center, provenance_model.provenance_types['organization'])
+        graph_utils.addTriple(
+            self.graph, study_bnode,
+            provenance_model.object_properties['has_agent'],
+            impc_map['phenotyping_center'][phenotyping_center])
+
+        # add pipeline and project
+        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
+                                         pipeline_name)
+
+        graph_utils.addTriple(
+            self.graph, study_bnode, graph_utils.object_properties['part_of'],
+            impc_map['pipelines'][pipeline_stable_id])
+
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['project'][project_fullname],
+            project_fullname, provenance_model.provenance_types['project'])
+        graph_utils.addTriple(
+            self.graph, study_bnode, graph_utils.object_properties['part_of'],
+            impc_map['project'][project_fullname])
+
+        return study_bnode
+
+    def _add_evidence(self, assoc_id, eco_id, impc_map, p_value,
+                      percentage_change, effect_size, study_bnode):
+        """
+        :param assoc_id: assoc curie used to reify a
+        genotype to phenotype association, generated in _process_data()
+        :param eco_id: eco_id as curie, hardcoded in _process_data()
+        :param impc_map: dict, generated from map file
+        see self._get_impc_mappings() docstring
+        :param p_value: str, from self.files['all']
+        :param percentage_change: str, from self.files['all']
+        :param effect_size: str, from self.files['all']
+        :param study_bnode: str, from self.files['all']
+        :param phenotyping_center: str, from self.files['all']
+        :return: str, evidence_line_bnode as curie
+        """
+
+        evidence_model = Evidence(self.graph)
+        provenance_model = Provenance(self.graph)
+        graph_utils = GraphUtils(curie_map.get())
+
+        # Add line of evidence
+        evidence_line_bnode = self.make_id("{0}{1}".format(assoc_id, study_bnode), '_')
+        evidence_model.add_supporting_evidence(assoc_id, evidence_line_bnode)
+        graph_utils.addIndividualToGraph(self.graph, evidence_line_bnode, None,
+                                         eco_id)
+
+        # Add supporting measurements to line of evidence
+        measurements = {}
+        if p_value is not None or p_value != "":
+            p_value_bnode = self.make_id("{0}{1}{2}"
+                                         .format(evidence_line_bnode,
+                                                 'p_value', p_value), '_')
+            graph_utils.addIndividualToGraph(self.graph, p_value_bnode, None,
+                                             impc_map['measurements']
+                                             ['p_value'])
+            measurements[p_value_bnode] = float(p_value)
+        if percentage_change is not None and percentage_change != '':
+
+            fold_change_bnode = self.make_id("{0}{1}{2}"
+                                             .format(evidence_line_bnode,
+                                                     'percentage_change',
+                                                     percentage_change), '_')
+            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
+                                             impc_map['measurements']
+                                             ['percentage_change'])
+            measurements[fold_change_bnode] = percentage_change
+        if effect_size is not None or effect_size != "":
+            fold_change_bnode = self.make_id("{0}{1}{2}"
+                                             .format(evidence_line_bnode,
+                                                     'effect_size',
+                                                     effect_size), '_')
+            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
+                                             impc_map['measurements']
+                                             ['effect_size'])
+            measurements[fold_change_bnode] = effect_size
+
+        evidence_model.add_supporting_data(evidence_line_bnode, measurements)
+
+        # Link evidence to provenance by connecting to study node
+        provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
+        graph_utils.addTriple(
+            self.graph, evidence_line_bnode,
+            provenance_model.object_properties['has_supporting_study'],
+            study_bnode)
+
+        return evidence_line_bnode
+
+    def _get_impc_mappings(self):
+        """
+        Opens impc mapping file stored in self.map_files['impc_code_map']
+        nd returns dict of mappings
+
+        This file is generated by manually curating codes and free text to
+        their IRI counterpart
+        :return: dict, where [code] = iri
+        """
+        impc_mappings = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__),
+                                       self.map_files['impc_code_map'])):
+            map_file = open(os.path.join(
+                os.path.dirname(__file__), self.map_files['impc_code_map']), 'r')
+            impc_mappings = yaml.load(map_file)
+            map_file.close()
+        else:
+            logger.warn("IMPC map file not found")
+
+        return impc_mappings
+
+    def _get_parameter_mappings(self):
+        """
+        Opens impc procedure map file stored in self.map_files['parameter_map']
+        and returns dict of mappings
+
+        This file is generated by running a series of scripts in
+        the scripts directory, see scripts/README.md
+        :return: dict, where [code] = iri
+        """
+        parameter_mappings = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__),
+                                       self.map_files['parameter_map'])):
+            map_file = open(os.path.join(
+                os.path.dirname(__file__), self.map_files['parameter_map']), 'r')
+            parameter_mappings = json.load(map_file)
+            map_file.close()
+        else:
+            logger.warn("IMPC map file not found")
+
+        return parameter_mappings
 
     def parse_checksum_file(self, file):
         """

@@ -196,7 +196,8 @@ class Source:
         logger.info("I am %s", self.name)
         return
 
-    def make_id(self, long_string):
+    @staticmethod
+    def make_id(long_string, prefix='MONARCH'):
         """
         a method to create unique identifiers based on very long strings
         currently implemented with md5
@@ -211,7 +212,7 @@ class Source:
 
         byte_string = long_string.encode("utf-8")
 
-        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
+        return ':'.join((prefix, hashlib.md5(byte_string).hexdigest()))
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """

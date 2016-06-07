@@ -73,7 +73,7 @@ class ZFIN(Source):
             'url': ZFDL + '/zfinpubs.txt'},
         'zpmap': {
             'file': 'zp-mapping.txt',
-            'url': 'http://compbio.charite.de/hudson/job/zp-owl/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
+            'url': 'http://compbio.charite.de/hudson/job/zp-owl-new/lastSuccessfulBuild/artifact/zp.annot_sourceinfo'},
         'morph': {
             'file': 'Morpholinos.txt',
             'url': ZFDL + '/Morpholinos.txt'},
@@ -2016,9 +2016,15 @@ class ZFIN(Source):
                 line_counter += 1
 
                 if reagent_type in ['morph', 'crispr']:
-                    (gene_num, gene_so_id, gene_symbol, reagent_num,
+                    try:
+                        (gene_num, gene_so_id, gene_symbol, reagent_num,
                      reagent_so_id, reagent_symbol, reagent_sequence,
                      publication, note) = row
+                    except ValueError:
+                        # Catch lines without publication or note
+                        (gene_num, gene_so_id, gene_symbol, reagent_num,
+                         reagent_so_id, reagent_symbol, reagent_sequence,
+                         publication) = row
                 elif reagent_type == 'talen':
                     (gene_num, gene_so_id, gene_symbol, reagent_num,
                      reagent_so_id, reagent_symbol, reagent_sequence,

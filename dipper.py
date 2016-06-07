@@ -12,6 +12,7 @@ import time
 # Invalid constant name "test_suite"
 from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
+from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
@@ -50,7 +51,8 @@ def main():
         'mpd': 'MPD',
         'gwascatalog': 'GWASCatalog',
         # 'monarch': Monarch,
-        'go': 'GeneOntology'
+        'go': 'GeneOntology',
+        'reactome': 'Reactome'
     }
 
     logger = logging.getLogger(__name__)
@@ -210,6 +212,16 @@ def main():
             mysource.parse(args.limit)
             end_parse = time.clock()
             logger.info("Parsing time: %d sec", end_parse-start_parse)
+            # Add property axioms
+            start_axiom_exp = time.clock()
+            logger.info("Adding property axioms")
+
+            properties = GraphUtils.get_properties_from_graph(mysource.graph)
+            GraphUtils.add_property_axioms(mysource.graph, properties)
+            end_axiom_exp = time.clock()
+            logger.info("Property axioms added: %d sec",
+                        end_axiom_exp-start_axiom_exp)
+
             start_write = time.clock()
             mysource.write(format=args.format)
             end_write = time.clock()

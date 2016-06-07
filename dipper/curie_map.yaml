@@ -1,6 +1,11 @@
 # Monarch-specific
+<<<<<<< HEAD
 '': 'http://monarchinitiative.org/'
 'MONARCH': 'http://monarchinitiative.org/MONARCH_'
+=======
+'': 'https://monarchinitiative.org/'
+'MONARCH': 'https://monarchinitiative.org/MONARCH_'
+>>>>>>> 536333084b6339766e34a19f6545bd4ecf289a4a
 'MonarchData': 'http://data.monarchinitiative.org/ttl/'
 'MonarchArchive': 'http://archive.monarchinitiative.org/ttl/'
 
@@ -128,7 +133,7 @@
 
 # pathways
 'KEGG-path' : 'http://www.kegg.jp/dbget-bin/www_bget?path:'
-'REACT' : 'http://www.reactome.org/PathwayBrowser/#REACT_'
+'REACT' : 'http://www.reactome.org/PathwayBrowser/#/'
 
 # genes (and RNAs and transcripts)
 'BIOGRID' : 'http://thebiogrid.org/'  # also interactions
@@ -167,5 +172,10 @@
 'DrugBank' : 'http://www.drugbank.ca/drugs/'
 
 # SEPIO: Scientific Evidence and Provenance Information Ontology
-'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'  
+'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'
 'VIVO': 'http://vivoweb.org/ontology/core#'
+
+#Procedures/protocols
+'IMPRESS-procedure' : 'https://www.mousephenotype.org/impress/procedures/'
+'IMPRESS-protocol' : 'https://www.mousephenotype.org/impress/protocol/'
+'IMPRESS-parameter' : 'https://www.mousephenotype.org/impress/parameterontologies/'
