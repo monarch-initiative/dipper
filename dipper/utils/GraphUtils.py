@@ -274,14 +274,19 @@ class GraphUtils:
 
         """
         n = self.getNode(cid)
+        if n is None:
+            logger.warning("GU.addSynonym() unable to anchor with %s", cid)
+            return
         if synonym_type is None:
             # default
             synonym_type = URIRef(
                 self.cu.get_uri(self.properties['hasExactSynonym']))
         else:
             synonym_type = URIRef(self.cu.get_uri(synonym_type))
-
-        g.add((n, synonym_type, Literal(synonym)))
+        if synonym is not None:
+            g.add((n, synonym_type, Literal(synonym)))
+        else:
+            logger.warning("GU.addSynonym() will not add a None for  %s", cid)
         return
 
     def addDefinition(self, g, cid, definition):

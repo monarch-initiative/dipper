@@ -109,7 +109,7 @@ class Coriell(Source):
             'that it is a Human-derived cell line')
         logger.warning(
             'We map all omim ids as a disease/phenotype entity, '
-            'but should be fixed in the future')
+            'but should be fixed in the future')  # TODO
 
         # check if config exists; if it doesn't, error out and let user know
         if 'dbauth' not in config.get_config() or \

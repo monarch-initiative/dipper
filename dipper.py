@@ -21,6 +21,7 @@ test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 
 def main():
     source_to_class_map = {
+        # 'facebase_alpha': 'FaceBase_alpha',
         'hpoa': 'HPOAnnotations',   # ~3 min
         'zfin': 'ZFIN',
         'omim': 'OMIM',  # full file takes ~15 min, due to required throttling
@@ -36,6 +37,7 @@ def main():
         'eom': 'EOM',  # Takes about 5 seconds.
         'coriell': 'Coriell',
         'clinvar': 'ClinVar',
+        # 'clinvarxml_alpha': 'ClinVarXML_alpha',
         'monochrom': 'Monochrom',
         'kegg': 'KEGG',
         'animalqtldb': 'AnimalQTLdb',

@@ -286,7 +286,10 @@ class ClinVar(Source):
 
                 # they use -1 to indicate unknown gene
                 if str(gene_num) != '-1' and str(gene_num) != 'more than 10':
-                    gene_id = ':'.join(('NCBIGene', str(gene_num)))
+                    if re.match(r'^Gene:', gene_num):
+                        gene_num = "NCBI" + gene_num
+                    else:
+                        gene_id = ':'.join(('NCBIGene', str(gene_num)))
 
                 # FIXME there are some "variants" that are actually haplotypes
                 # probably will get taken care of when we switch to processing
@@ -381,19 +384,26 @@ class ClinVar(Source):
                 # Orphanet:ORPHA ORPHA319705,SNOMED CT:49049000
                 if phenotype_ids != '-':
                     for phenotype in pheno_list:
-                        m = re.match(r"(Orphanet:ORPHA(?:\s*ORPHA)?)", phenotype)
+                        m = re.match(
+                            r"(Orphanet:ORPHA(?:\s*ORPHA)?)", phenotype)
                         if m is not None and len(m.groups()) > 0:
-                            phenotype = re.sub(m.group(1), 'Orphanet:', phenotype.strip())
+                            phenotype = re.sub(
+                                m.group(1), 'Orphanet:', phenotype.strip())
                         elif re.match(r'ORPHA:\d+', phenotype):
-                            phenotype = re.sub(r'^ORPHA', 'Orphanet', phenotype.strip())
+                            phenotype = re.sub(
+                                r'^ORPHA', 'Orphanet', phenotype.strip())
                         elif re.match(r'Human Phenotype Ontology', phenotype):
-                            phenotype = re.sub(r'^Human Phenotype Ontology', '', phenotype.strip())
+                            phenotype = re.sub(
+                                r'^Human Phenotype Ontology', '',
+                                phenotype.strip())
                         elif re.match(r'SNOMED CT:\s?', phenotype):
-                            phenotype = re.sub(r'SNOMED CT:\s?', 'SNOMED:', phenotype.strip())
+                            phenotype = re.sub(
+                                r'SNOMED CT:\s?', 'SNOMED:', phenotype.strip())
                         elif re.match(r'^Gene:', phenotype):
                             continue
 
-                        assoc = G2PAssoc(self.name, seqalt_id, phenotype.strip())
+                        assoc = G2PAssoc(
+                            self.name, seqalt_id, phenotype.strip())
                         assoc.add_association_to_graph(g)
 
                 if other_ids != '-':
