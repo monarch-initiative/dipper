@@ -327,6 +327,8 @@ class GWASCatalog(Source):
                             # FIXME score should get added to provenance/study
                             # assoc.set_score(pvalue)
                             assoc.add_association_to_graph(g)
+                    else:
+                        print('foo')
 
                     if not self.testMode and\
                             (limit is not None and line_counter > limit):
@@ -346,19 +348,25 @@ class GWASCatalog(Source):
     def _map_variant_type(sample_type):
         ctype = None
         type_map = {
-            'STOP-GAIN': 'SO:0001587',      # stop-gain variant
-            'intron': 'SO:0001627',         # intron variant
-            'UTR-3': 'SO:0001624',          # 3'utr variant
-            'UTR-5': 'SO:0001623',          # 5'UTR variant
-            'cds-synon': 'SO:0001819',      # synonymous variant
-            'frameshift': 'SO:0001589',     # frameshift
-            'intergenic': 'SO:0001628',     # intergenic_variant
-            'ncRNA': 'SO:0001619',          # noncoding transcript variant
-            'splice-3': 'SO:0001574',       # splice acceptor variant
-            'splice-5': 'SO:0001575',       # splice donor variant
-            'missense': 'SO:0001583',       # missense variant
-            'nearGene-3': 'SO:0001634',     # 500B_downstream_variant
-            'nearGene-5': 'SO:0001636',     # 2KB_upstream_variant
+            'stop_gained': 'SO:0001587',       # stop-gain variant
+            'intron_variant': 'SO:0001627',  # intron variant
+            '3_prime_UTR_variant': 'SO:0001624',           # 3'utr variant
+            '5_prime_UTR_variant': 'SO:0001623',           # 5'UTR variant
+            'synonymous_variant': 'SO:0001819',       # synonymous variant
+            'frameshift_variant': 'SO:0001589',      # frameshift
+            'intergenic_variant': 'SO:0001628',     # intergenic_variant
+            'non_coding_transcript_exon_variant': 'SO:0001619', # noncoding transcript variant
+            'splice_acceptor_variant': 'SO:0001574',        # splice acceptor variant
+            'splice_donor_variant': 'SO:0001575',        # splice donor variant
+            'missense_variant': 'SO:0001583',       # missense variant
+            'downstream_gene_variant': 'SO:0001634',      # 500B_downstream_variant
+            'upstream_gene_variant': 'SO:0001636',      # 2KB_upstream_variant
+            'coding_sequence_variant': 'SO:0001580',  #coding_sequence_variant
+            'non_coding_exon_variant ': 'SO:0001792',
+            'regulatory_region_variant': 'SO:0001566',
+            'splice_region_variant': 'SO:0001630',
+            'stop_lost': 'SO:0001578',
+            'TF_binding_site_variant': 'SO:0001782'
         }
         if sample_type.strip() in type_map:
             ctype = type_map.get(sample_type)
