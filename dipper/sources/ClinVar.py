@@ -510,7 +510,7 @@ class ClinVar(Source):
                 # format the citation id:
                 ref_id = None
                 if citation_source == 'PubMed':
-                    ref_id = 'PMID:'+str(citation_id)
+                    ref_id = 'PMID:'+str(citation_id.replace(" ", ""))
                     gu.makeLeader(g, ref_id)
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
