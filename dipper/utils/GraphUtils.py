@@ -229,7 +229,7 @@ class GraphUtils:
         replaced_by = URIRef(self.cu.get_uri(self.properties['replaced_by']))
 
         n1 = URIRef(self.cu.get_uri(oldid))
-        g.add((n1, OWL['deprecated'], Literal(True, datatype=XSD[bool])))
+        g.add((n1, OWL['deprecated'], Literal(True, datatype=XSD['boolean'])))
 
         if newids is not None:
             if len(newids) == 1:
@@ -530,7 +530,7 @@ class GraphUtils:
         """
         self.addTriple(
             graph, node_id, self.annotation_properties['clique_leader'],
-            Literal(True, datatype=XSD[bool]), True)
+            Literal(True, datatype=XSD['boolean']), True)
         return
 
     @staticmethod
