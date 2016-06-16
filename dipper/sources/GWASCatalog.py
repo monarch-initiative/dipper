@@ -13,6 +13,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
+from rdflib import ConjunctiveGraph, RDFS, Namespace
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,14 @@ class GWASCatalog(Source):
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         logger.info("Processing Data from %s", raw)
         gu = GraphUtils(curie_map.get())
+        EFO_ontology = ConjunctiveGraph()
+        logger.info("Loading EFO ontology in separate rdf graph")
+        EFO_ontology.parse('http://www.ebi.ac.uk/efo/efo.owl', format='xml')
+        logger.info("Finished loading EFO ontology")
+        for curie in curie_map.get().keys():
+            ns = curie_map.get()[curie]
+            EFO_ontology.bind(curie, Namespace(ns))
+        EFO_ontology.bind("rdfs", RDFS)
 
         if self.testMode:      # set the graph to build
             g = self.testgraph
@@ -308,14 +317,40 @@ class GWASCatalog(Source):
 
                     # make associations to the EFO terms; there can be >1
                     if mapped_trait_uri.strip() != '':
-                        for t in re.split(r',', mapped_trait_uri):
-                            t = t.strip()
+                        for trait in re.split(r',', mapped_trait_uri):
+                            trait = trait.strip()
 
                             cu = CurieUtil(curie_map.get())
-                            tid = cu.get_curie(t)
+                            trait_id = cu.get_curie(trait)
+
+                            dis_query = """
+                                SELECT ?trait
+                                WHERE {{
+                                    {0} rdfs:subClassOf+ EFO:0000408 .
+                                    {0} rdfs:label ?trait .
+                                }}
+                            """.format(trait_id)
+
+                            query_result = EFO_ontology.query(dis_query)
+                            if len(list(query_result)) > 0:
+                                if re.match(r'^EFO', trait_id):
+                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'DOID:4')
+
+                            phenotype_query = """
+                                SELECT ?trait
+                                WHERE {{
+                                    {0} rdfs:subClassOf+ EFO:0000651 .
+                                    {0} rdfs:label ?trait .
+                                }}
+                            """.format(trait_id)
+
+                            query_result = EFO_ontology.query(phenotype_query)
+                            if len(list(query_result)) > 0:
+                                if re.match(r'^EFO', trait_id):
+                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'UPHENO:0001001')
 
                             assoc = G2PAssoc(
-                                self.name, rs_id, tid,
+                                self.name, rs_id, trait_id,
                                 gu.object_properties['contributes_to'])
                             assoc.add_source(pubmed_id)
                             # combinatorial evidence
@@ -327,8 +362,6 @@ class GWASCatalog(Source):
                             # FIXME score should get added to provenance/study
                             # assoc.set_score(pvalue)
                             assoc.add_association_to_graph(g)
-                    else:
-                        print('foo')
 
                     if not self.testMode and\
                             (limit is not None and line_counter > limit):
