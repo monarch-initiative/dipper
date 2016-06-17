@@ -125,7 +125,7 @@ def make_spo(sub, prd, obj):
     objcuri = None
     if match is not None:
         try:
-            (objcuri, objid) = re.split(r':', obj,)
+            (objcuri, objid) = re.split(r':', obj)
         except ValueError:
             match = None
     if match is not None and objcuri in CURIEMAP:
@@ -135,8 +135,14 @@ def make_spo(sub, prd, obj):
     else:
         objt = '"' + obj.strip('"') + '"'
 
-    return '<' + CURIEMAP[subcuri] + subid + '> ' + \
-           '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+    if subcuri is not None and subcuri in CURIEMAP and \
+            prdcuri is not None and prdcuri in CURIEMAP:
+
+        return '<' + CURIEMAP[subcuri] + subid + '> ' + \
+               '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+    else:
+        LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
+        return None
 
 
 def write_spo(sub, prd, obj):
@@ -392,7 +398,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         try:
             rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
         except TypeError:
-            LOG.warning(rcv_acc + ' has no NCBIGene ID')    
+            LOG.warning(rcv_acc + ' has no NCBIGene ID')
         if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
             #           RCV only TRIPLES
             # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
@@ -530,17 +536,24 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #  need to be mapped to a <sepio:100...n> curie ????
                     # if scv_assert_method in TT:
                     # scv_assert_id = TT[scv_assert_method]
-                    _assertion_method_id = '_:' + monarch_id + \
-                        '_assertionmethod_' + hashlib.md5(
-                            (scv_assert_method).encode(
-                                'utf-8')).hexdigest()[1:17]
+                    # _assertion_method_id = '_:' + monarch_id + \
+                    #    '_assertionmethod_' + hashlib.md5(
+                    #        (scv_assert_method).encode(
+                    #            'utf-8')).hexdigest()[1:17]
+                    #
+                    # changing to not include context till we have IRI
+                    _assertion_method_id = '_:' + hashlib.md5(
+                        (scv_assert_method).encode(
+                            'utf-8')).hexdigest()[1:17] + '_assertionmethod'
+
                     #       TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
                     write_spo(
                         _assertion_id, 'SEPIO:0000041', _assertion_method_id)
-                    # <_assertion_method_id><refs:type><SEPIO:0000037>
+
+                    # <_assertion_method_id><rdf:type><SEPIO:0000037>
                     write_spo(
-                        _assertion_method_id, 'rdfs:type', 'SEPIO:0000037')
+                        _assertion_method_id, 'rdf:type', 'SEPIO:0000037')
 
                     # <_assertion_method_id><rdf:label><scv_assert_method>
                     write_spo(
@@ -562,6 +575,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # if SCV_ReviewStatus is not None:
             #    scv_review = SCV_ReviewStatus.text
 
+            # /ClinVarSet/ClinVarAssertion/ClinicalSignificance/Citation/ID
             for SCV_Citation in \
                     ClinicalSignificance.findall(
                         'Citation/ID[@Source="PubMed"]'):
@@ -615,7 +629,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method
                 for SCV_ObsData in SCV_ObsIn.findall('ObservedData'):
                     for SCV_Citation in SCV_ObsData.findall('Citation'):
-                        
+
                         for scv_citation_id in \
                                 SCV_Citation.findall('ID[@Source="PubMed"]'):
                             # has_supporting_reference
@@ -637,6 +651,16 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 'PMID:' + scv_citation_id.text,
                                 'rdf:comment',
                                 scv_pub_comment)
+                    # for SCV_Citation in SCV_ObsData.findall('Citation'):
+                    for SCV_Description in \
+                            SCV_ObsData.findall(
+                                'Attribute[@Type="Description"]'):
+                        # <_evidence_id> <dc:description> "description"
+                        if SCV_Description.text != 'not provided':
+                            write_spo(
+                                _evidence_id,
+                                'dc:description',
+                                SCV_Description.text)
 
                 # /SCV/ObservedIn/TraitSet
                 # /SCV/ObservedIn/Citation
