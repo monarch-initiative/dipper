@@ -52,9 +52,9 @@ class WormBase(Source):
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
             'url': wbftp +
             '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
-        'gene_desc': {
-            'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-            'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        # 'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
+        #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
+        #    'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
             'url': wbftp + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
@@ -205,7 +205,7 @@ class WormBase(Source):
         self.rnai_gene_map = {}
 
         self.process_gene_ids(limit)
-        self.process_gene_desc(limit)
+        # self.process_gene_desc(limit)   #TEC imput file is mia 2016-Mar-03
         self.process_allele_phenotype(limit)
         self.process_rnai_phenotypes(limit)
         self.process_pub_xrefs(limit)
