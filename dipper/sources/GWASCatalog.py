@@ -13,6 +13,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
+from rdflib import ConjunctiveGraph, RDFS, Namespace
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,14 @@ class GWASCatalog(Source):
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         logger.info("Processing Data from %s", raw)
         gu = GraphUtils(curie_map.get())
+        EFO_ontology = ConjunctiveGraph()
+        logger.info("Loading EFO ontology in separate rdf graph")
+        EFO_ontology.parse('http://www.ebi.ac.uk/efo/efo.owl', format='xml')
+        logger.info("Finished loading EFO ontology")
+        for curie in curie_map.get().keys():
+            ns = curie_map.get()[curie]
+            EFO_ontology.bind(curie, Namespace(ns))
+        EFO_ontology.bind("rdfs", RDFS)
 
         if self.testMode:      # set the graph to build
             g = self.testgraph
@@ -308,14 +317,40 @@ class GWASCatalog(Source):
 
                     # make associations to the EFO terms; there can be >1
                     if mapped_trait_uri.strip() != '':
-                        for t in re.split(r',', mapped_trait_uri):
-                            t = t.strip()
+                        for trait in re.split(r',', mapped_trait_uri):
+                            trait = trait.strip()
 
                             cu = CurieUtil(curie_map.get())
-                            tid = cu.get_curie(t)
+                            trait_id = cu.get_curie(trait)
+
+                            dis_query = """
+                                SELECT ?trait
+                                WHERE {{
+                                    {0} rdfs:subClassOf+ EFO:0000408 .
+                                    {0} rdfs:label ?trait .
+                                }}
+                            """.format(trait_id)
+
+                            query_result = EFO_ontology.query(dis_query)
+                            if len(list(query_result)) > 0:
+                                if re.match(r'^EFO', trait_id):
+                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'DOID:4')
+
+                            phenotype_query = """
+                                SELECT ?trait
+                                WHERE {{
+                                    {0} rdfs:subClassOf+ EFO:0000651 .
+                                    {0} rdfs:label ?trait .
+                                }}
+                            """.format(trait_id)
+
+                            query_result = EFO_ontology.query(phenotype_query)
+                            if len(list(query_result)) > 0:
+                                if re.match(r'^EFO', trait_id):
+                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'UPHENO:0001001')
 
                             assoc = G2PAssoc(
-                                self.name, rs_id, tid,
+                                self.name, rs_id, trait_id,
                                 gu.object_properties['contributes_to'])
                             assoc.add_source(pubmed_id)
                             # combinatorial evidence
@@ -346,19 +381,25 @@ class GWASCatalog(Source):
     def _map_variant_type(sample_type):
         ctype = None
         type_map = {
-            'STOP-GAIN': 'SO:0001587',      # stop-gain variant
-            'intron': 'SO:0001627',         # intron variant
-            'UTR-3': 'SO:0001624',          # 3'utr variant
-            'UTR-5': 'SO:0001623',          # 5'UTR variant
-            'cds-synon': 'SO:0001819',      # synonymous variant
-            'frameshift': 'SO:0001589',     # frameshift
-            'intergenic': 'SO:0001628',     # intergenic_variant
-            'ncRNA': 'SO:0001619',          # noncoding transcript variant
-            'splice-3': 'SO:0001574',       # splice acceptor variant
-            'splice-5': 'SO:0001575',       # splice donor variant
-            'missense': 'SO:0001583',       # missense variant
-            'nearGene-3': 'SO:0001634',     # 500B_downstream_variant
-            'nearGene-5': 'SO:0001636',     # 2KB_upstream_variant
+            'stop_gained': 'SO:0001587',       # stop-gain variant
+            'intron_variant': 'SO:0001627',  # intron variant
+            '3_prime_UTR_variant': 'SO:0001624',           # 3'utr variant
+            '5_prime_UTR_variant': 'SO:0001623',           # 5'UTR variant
+            'synonymous_variant': 'SO:0001819',       # synonymous variant
+            'frameshift_variant': 'SO:0001589',      # frameshift
+            'intergenic_variant': 'SO:0001628',     # intergenic_variant
+            'non_coding_transcript_exon_variant': 'SO:0001619', # noncoding transcript variant
+            'splice_acceptor_variant': 'SO:0001574',        # splice acceptor variant
+            'splice_donor_variant': 'SO:0001575',        # splice donor variant
+            'missense_variant': 'SO:0001583',       # missense variant
+            'downstream_gene_variant': 'SO:0001634',      # 500B_downstream_variant
+            'upstream_gene_variant': 'SO:0001636',      # 2KB_upstream_variant
+            'coding_sequence_variant': 'SO:0001580',  #coding_sequence_variant
+            'non_coding_exon_variant ': 'SO:0001792',
+            'regulatory_region_variant': 'SO:0001566',
+            'splice_region_variant': 'SO:0001630',
+            'stop_lost': 'SO:0001578',
+            'TF_binding_site_variant': 'SO:0001782'
         }
         if sample_type.strip() in type_map:
             ctype = type_map.get(sample_type)
