@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
 
 '''
     First pass at converting ClinVar XML into
@@ -393,18 +393,15 @@ with gzip.open(FILENAME, 'rt') as fh:
             continue
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
-
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
-        try:
-            rcv_ncbigene_id = 'NCBIGene:' + rcv_ncbigene_id
-        except TypeError:
-            LOG.warning(rcv_acc + ' has no NCBIGene ID')
+
         if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
+            rcv_ncbigene_curi = 'NCBIGene:' + rcv_ncbigene_id
             #           RCV only TRIPLES
             # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-            write_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_id)
+            write_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_curi)
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-            write_spo(rcv_ncbigene_id, 'rdfs:label', rcv_gene_symbol)
+            write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV
