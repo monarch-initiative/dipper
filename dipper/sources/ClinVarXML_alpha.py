@@ -80,6 +80,7 @@ CURIEMAP = {
     'BFO':  'http://purl.obolibrary.org/obo/BFO_',
     'ECO':  'http://purl.obolibrary.org/obo/ECO_',
     'ERO':  'http://purl.obolibrary.org/obo/ERO_',
+    'dbSNP': 'http://identifiers.org/dbSNP_',  # does not resolve
     'GENO': 'http://purl.obolibrary.org/obo/GENO_',
     'GO':   'http://purl.obolibrary.org/obo/GO_',
     'RO':   'http://purl.obolibrary.org/obo/RO_',
@@ -227,6 +228,9 @@ with gzip.open(FILENAME, 'rt') as fh:
         # collect svc significance calls within a rcv
         pathocalls = {}
 
+        # collect a list of othernames for this variant
+        rcv_synonyms = []
+
         # There is only one RCV per ClinVarSet
         rcv_variant_id = rcv_variant_type = rcv_variant_label = None
         rcv_disease_db = rcv_disease_id = rcv_disease_label = None
@@ -286,6 +290,20 @@ with gzip.open(FILENAME, 'rt') as fh:
             else:
                 LOG.warning(
                     rcv_acc + " VARIANT MISSING LABEL")
+
+            # AttributeSet/XRef[@DB="dbSNP"]/@ID
+            rcv_variant_dbsnp_id = RCV_Measure.get(
+                'AttributeSet/XRef[@DB="dbSNP"]/@ID')
+
+            # this xpath works but is not supported by ElementTree.
+            # ./AttributeSet/Attribute[starts-with(@Type, "HGVS")]
+            for RCV_Synonym in \
+                    RCV_Measure.findall('AttributeSet/Attribute[@Type]'):
+                if RCV_Synonym.get('Type') is not None and \
+                        RCV_Synonym.text is not None and \
+                        re.match(r'^HGVS', RCV_Synonym.get('Type')):
+                    rcv_synonyms.append(RCV_Synonym.text)
+                    # print(rcv_synonyms)
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
 
@@ -468,6 +486,17 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # <ClinVarVariant:rcv_variant_id><GENO:0000418>
             # <ClinVarVariant:rcv_variant_id><rdf:type><owl:Class> TODO ???
+
+            # RCV/MeasureSet/Measure/AttributeSet/XRef[@DB="dbSNP"]/@ID
+            # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
+            if rcv_variant_dbsnp_id is not None:
+                write_spo(rcv_variant_id, 'owl:sameAs', rcv_variant_dbsnp_id)
+            # <ClinVarVariant:rcv_variant_id><in_taxon><human>
+            write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
+
+            # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
+            for syn in rcv_synonyms:
+                write_spo(rcv_variant_id, 'OIO:hasExactSynonym', syn)
 
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
