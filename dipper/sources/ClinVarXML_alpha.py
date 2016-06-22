@@ -230,6 +230,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         # collect a list of othernames for this variant
         rcv_synonyms = []
+        rcv_dbsnps = []
 
         # There is only one RCV per ClinVarSet
         rcv_variant_id = rcv_variant_type = rcv_variant_label = None
@@ -291,9 +292,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                 LOG.warning(
                     rcv_acc + " VARIANT MISSING LABEL")
 
-            # AttributeSet/XRef[@DB="dbSNP"]/@ID
-            rcv_variant_dbsnp_id = RCV_Measure.get(
-                'AttributeSet/XRef[@DB="dbSNP"]/@ID')
+            # XRef[@DB="dbSNP"]/@ID
+            for RCV_dbSNP in \
+                    RCV_Measure.findall('XRef[@DB="dbSNP"]'):
+                rcv_dbsnps.
+
+
+                append(RCV_dbSNP.get('ID'))
 
             # this xpath works but is not supported by ElementTree.
             # ./AttributeSet/Attribute[starts-with(@Type, "HGVS")]
@@ -489,15 +494,16 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # RCV/MeasureSet/Measure/AttributeSet/XRef[@DB="dbSNP"]/@ID
             # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
-            if rcv_variant_dbsnp_id is not None:
+            for rcv_variant_dbsnp_id in rcv_dbsnps:
                 write_spo(rcv_variant_id, 'owl:sameAs', rcv_variant_dbsnp_id)
+            rcv_dbsnps=[]
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
             write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
                 write_spo(rcv_variant_id, 'OIO:hasExactSynonym', syn)
-
+            rcv_synonyms = []
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
                     monarch_assoc,
