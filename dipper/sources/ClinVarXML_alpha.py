@@ -492,7 +492,10 @@ with gzip.open(FILENAME, 'rt') as fh:
             # RCV/MeasureSet/Measure/AttributeSet/XRef[@DB="dbSNP"]/@ID
             # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
             for rcv_variant_dbsnp_id in rcv_dbsnps:
-                write_spo(rcv_variant_id, 'owl:sameAs', rcv_variant_dbsnp_id)
+                write_spo(
+                    rcv_variant_id,
+                    'owl:sameAs',
+                    'dbSNP:' + rcv_variant_dbsnp_id)
             rcv_dbsnps=[]
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
             write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
