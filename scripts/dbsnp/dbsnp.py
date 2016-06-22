@@ -4,6 +4,24 @@ import requests
 import xml.etree.ElementTree as ET
 
 
+"""
+Input example, whitespace separated file of chromosome, location, rsid
+1 100343254 141043166
+1 103355059 55821405
+1 103471457 565657269
+1 103471457 71752747
+1 103471457 763506645
+
+
+Output: tab delimited file with additional columns variant type, and observed alleles
+1       100343254       141043166       snp     A/C/G
+1       103355059       55821405        snp     G/T
+1       103471457       565657269       in-del  -/CATCAT
+1       103471457       71752747        in-del  -/CAT
+1       103471457       763506645       in-del  -/CATCATCAT
+"""
+
+
 def main():
 
     EFETCH_BASE = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"

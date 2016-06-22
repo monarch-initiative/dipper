@@ -7,4 +7,4 @@ Manually curated mappings of fields (codes, labels) to IRIs
 Generated from web scraping impc, see scripts
 
 ###eco_map.yaml
-Evidence Code to ECO curie map
+Evidence Code to ECO curie map, manually generated
