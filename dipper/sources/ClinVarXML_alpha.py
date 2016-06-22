@@ -295,10 +295,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # XRef[@DB="dbSNP"]/@ID
             for RCV_dbSNP in \
                     RCV_Measure.findall('XRef[@DB="dbSNP"]'):
-                rcv_dbsnps.
-
-
-                append(RCV_dbSNP.get('ID'))
+                rcv_dbsnps.append(RCV_dbSNP.get('ID'))
 
             # this xpath works but is not supported by ElementTree.
             # ./AttributeSet/Attribute[starts-with(@Type, "HGVS")]
