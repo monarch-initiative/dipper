@@ -80,7 +80,8 @@ CURIEMAP = {
     'BFO':  'http://purl.obolibrary.org/obo/BFO_',
     'ECO':  'http://purl.obolibrary.org/obo/ECO_',
     'ERO':  'http://purl.obolibrary.org/obo/ERO_',
-    'dbSNP': 'http://identifiers.org/dbSNP_',  # does not resolve
+    # 'dbSNP': 'http://identifiers.org/dbSNP_',  # does not resolve
+    'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=',
     'GENO': 'http://purl.obolibrary.org/obo/GENO_',
     'GO':   'http://purl.obolibrary.org/obo/GO_',
     'RO':   'http://purl.obolibrary.org/obo/RO_',
