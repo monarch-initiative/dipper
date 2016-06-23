@@ -80,7 +80,7 @@ class GraphUtils:
         'dc:evidence': 'dc:evidence',
         'has_evidence': 'RO:0002558',
         'causally_upstream_of_or_within': 'RO:0002418',
-        'causally influences': 'RO:0002566'
+        'causally_influences': 'RO:0002566'
     }
 
     datatype_properties = {
