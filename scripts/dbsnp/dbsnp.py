@@ -30,7 +30,7 @@ def main():
     parser = argparse.ArgumentParser(description='description')
     parser.add_argument('--input', '-i', type=str, required=True,
                         help='Location of input file')
-    parser.add_argument('--output', '-o', type=str,
+    parser.add_argument('--output', '-o', type=str, required=True,
                         help='Location of output file')
 
     args = parser.parse_args()
