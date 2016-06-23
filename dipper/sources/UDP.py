@@ -112,6 +112,10 @@ class UDP(Source):
                                           genotype_label,
                                           genotype_util.genoparts['intrinsic_genotype'])
 
+                graph_util.addTriple(self.graph, patient_curie,
+                                     genotype_util.object_properties['has_genotype'],
+                                     intrinsic_geno_bnode)
+
                 disease_bnode = self.make_id("{0}-disease".format(patient_id), "_")
                 disease_label = "{0} disease".format(patient_id)
                 graph_util.addIndividualToGraph(self.graph, disease_bnode, disease_label, "DOID:4")
