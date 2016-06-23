@@ -494,9 +494,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             for rcv_variant_dbsnp_id in rcv_dbsnps:
                 write_spo(
                     rcv_variant_id,
-                    'owl:sameAs',
+                    'OIO:hasdbxref',
                     'dbSNP:' + rcv_variant_dbsnp_id)
-            rcv_dbsnps=[]
+            rcv_dbsnps = []
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
             write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
 
@@ -607,7 +607,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             # if SCV_ReviewStatus is not None:
             #    scv_review = SCV_ReviewStatus.text
 
-            # /ClinVarSet/ClinVarAssertion/ClinicalSignificance/Citation/ID
+            # SCV/ClinicalSignificance/Citation/ID
+            # see also:
+            # SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
             for SCV_Citation in \
                     ClinicalSignificance.findall(
                         'Citation/ID[@Source="PubMed"]'):
@@ -624,7 +626,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     monarch_assoc,
                     'dc:source',
                     'PMID:' + scv_citation_id)
-                   
+
                 # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                 write_spo(
                     'PMID:' + scv_citation_id,
@@ -661,7 +663,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
-
+            # /SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
             for SCV_ObsIn in SCV_Assertion.findall('ObservedIn'):
                 # /SCV/ObservedIn/Sample
                 # /SCV/ObservedIn/Method
@@ -671,6 +673,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         for scv_citation_id in \
                                 SCV_Citation.findall('ID[@Source="PubMed"]'):
                             # has_supporting_reference
+                            # see also: SCV/ClinicalSignificance/Citation/ID
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                             write_spo(
                                 _evidence_id,
@@ -681,6 +684,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 'PMID:' + scv_citation_id.text,
                                 'rdf:type',
                                 'IAO:0000013')
+
+                            # <:monarch_assoc><dc:source><PMID:scv_citation_id>
+                            write_spo(
+                                monarch_assoc,
+                                'dc:source',
+                                'PMID:' + scv_citation_id.text)
                         for scv_pub_comment in \
                                 SCV_Citation.findall(
                                     'Attribute[@Type="Description"]'):
