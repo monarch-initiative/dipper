@@ -52,7 +52,8 @@ def main():
         'gwascatalog': 'GWASCatalog',
         # 'monarch': Monarch,
         'go': 'GeneOntology',
-        'reactome': 'Reactome'
+        'reactome': 'Reactome',
+        'udp': 'UDP'
     }
 
     logger = logging.getLogger(__name__)
