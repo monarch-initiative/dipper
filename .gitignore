@@ -116,3 +116,8 @@ crashlytics-build.properties
 
 tests/out
 tests/raw
+
+# cmap files
+docs/*/*.cmapthumbs
+docs/*/Old
+project.idx
