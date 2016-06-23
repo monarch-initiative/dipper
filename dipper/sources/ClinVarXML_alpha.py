@@ -619,6 +619,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                     _evidence_id,
                     'SEPIO:0000124',
                     'PMID:' + scv_citation_id)
+                # <:monarch_assoc><dc:source><PMID:scv_citation_id>
+                write_spo(
+                    monarch_assoc,
+                    'dc:source',
+                    'PMID:' + scv_citation_id)
+                   
                 # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                 write_spo(
                     'PMID:' + scv_citation_id,
