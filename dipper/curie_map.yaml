@@ -124,7 +124,7 @@
 'ClinVarSubmitters' : 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'
 'COSMIC' : 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
 'HGMD' : 'http://identifiers.org/hgmd/'
-'dbSNP' : 'http://www.ncbi.nlm.nih.gov/SNP/'
+'dbSNP' : 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
 'dbVar' : 'http://www.ncbi.nlm.nih.gov/dbvar/'
 
 # pathways
