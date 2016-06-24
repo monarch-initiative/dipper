@@ -1,8 +1,8 @@
 from dipper.sources.Source import Source
-from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Dataset import Dataset
+from dipper import curie_map
 from rdflib import RDFS, BNode
 import logging
 import csv
@@ -148,8 +148,10 @@ class UDP(Source):
                     variant_label = 'variant of interest in patient {0}'.format(patient)
 
                 genotype_util.addSequenceAlteration(variant_bnode, None)
-                # check if it has label
-                labels = self.graph.objects(BNode(re.sub(r'^_:', '', variant_bnode, 1)), RDFS['label'])
+                # check if it we have built the label
+                # in _add_variant_gene_relationship()
+                labels = self.graph.objects(
+                    BNode(re.sub(r'^_:', '', variant_bnode, 1)), RDFS['label'])
 
                 label_list = list(labels)
 
@@ -244,7 +246,8 @@ class UDP(Source):
                             ref_gene[0]['symbol'], variant_bnode, gene_id_map,
                             genotype_util.object_properties['feature_to_gene_relation'])
 
-                        gene_list = [ref_gene[0]['symbol']]  # build label expects list
+                        # build label function expects list
+                        gene_list = [ref_gene[0]['symbol']]
                         variant_label = self._build_variant_label(
                             variant['build'], variant['chromosome'],
                             variant['position'], variant['reference_allele'],
@@ -391,7 +394,6 @@ class UDP(Source):
         :param limit: limit (int, optional) limit the number of rows processed
         :return:
         """
-        genotype_util = Genotype(self.graph)
         graph_util = GraphUtils(curie_map.get())
         line_counter = 0
         with open(file, 'r') as tsvfile:
@@ -594,6 +596,3 @@ class UDP(Source):
         else:
             logger.warn("type: {0} unsupported".format(type))
         return rs_id
-
-
-
