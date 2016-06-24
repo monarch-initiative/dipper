@@ -108,6 +108,43 @@ class UDP(Source):
             graph_util.addTriple(self.graph, patient_curie,
                                  genotype_util.object_properties['has_genotype'],
                                  intrinsic_geno_bnode)
+            for variant in patient_var_map[patient]:
+                build = patient_var_map[patient][variant]['build']
+                chromosome = patient_var_map[patient][variant]['chromosome']
+                position = patient_var_map[patient][variant]['position']
+                reference_allele = patient_var_map[patient][variant]['reference_allele']
+                variant_allele = patient_var_map[patient][variant]['variant_allele']
+                genes_of_interest = patient_var_map[patient][variant]['genes_of_interest']
+
+                variant_label = ''
+                variant_bnode\
+                    = self.make_id("{0}".format(variant), "_")
+
+                # maybe should have these look like the elif statements below
+                if position and reference_allele and variant_allele:
+                    variant_label = \
+                        self._build_variant_label(build, chromosome,
+                                                  position, reference_allele,
+                                                  variant_allele)
+                elif not position and reference_allele and variant_allele \
+                        and len(genes_of_interest) == 1:
+
+                        variant_label = \
+                            self._build_variant_label(build, chromosome,
+                                                      position, reference_allele,
+                                                      variant_allele, genes_of_interest[0])
+                elif position and (not reference_allele or not variant_allele) \
+                        and len(genes_of_interest) == 1:
+
+                        variant_label = "{0}{1}({2}):g.{3}".format(
+                            build, chromosome, genes_of_interest[0], position)
+                else:
+                    variant_label = 'variant of interest in patient {0}'.format(patient)
+
+                genotype_util.addSequenceAlteration(variant_bnode, variant_label)
+                graph_util.addTriple(self.graph, intrinsic_geno_bnode,
+                                     genotype_util.object_properties['has_alternate_part'],
+                                     variant_bnode)
 
         return
 
@@ -139,6 +176,7 @@ class UDP(Source):
                     'chromosome': 'chr7',
                     'reference_allele': 'A',
                     'variant_allele': 'G',
+                    'position': '1234'
                     'rs_id' : 'RS1234',
                     'type': 'SNV",
                     'genes_of_interest' : [SHH, BRCA1]
@@ -162,6 +200,9 @@ class UDP(Source):
         with open(file, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
+                if line_num == 0:
+                    line_num += 1
+                    continue
 
                 (patient, family, chromosome, build, position,
                  reference_allele, variant_allele, parent_of_origin,
@@ -213,6 +254,7 @@ class UDP(Source):
                 else:
                     patient_variant_map[patient][variant_id] = {
                         'build': formatted_build,
+                        'position': position,
                         'chromosome': formatted_chr,
                         'reference_allele': ref_base,
                         'variant_allele': var_base,
@@ -276,3 +318,42 @@ class UDP(Source):
                         'build': build
                     }
         return id_map
+
+    @staticmethod
+    def _build_variant_label(build, chromosome, position,
+                             reference_allele, variant_allele,
+                             genes_of_interest=None):
+        """
+        Function to build HGVS variant labels
+        :param build:
+        :param chromosome:
+        :param position:
+        :param reference_allele:
+        :param variant_allele:
+        :param genes_of_interest:
+        :return: {str} variant label
+        """
+        variant_label = ''
+        if genes_of_interest and reference_allele == '-':
+            variant_label = "{0}{1}({2}):g.{3}ins{4}".format(
+                            build, chromosome, genes_of_interest,
+                            position, variant_allele)
+        elif genes_of_interest and variant_allele == '-':
+            variant_label = "{0}{1}({2}):g.{3}del{4}".format(
+                            build, chromosome, genes_of_interest,
+                            position, reference_allele)
+        elif genes_of_interest:
+            variant_label = "{0}{1}({2}):g.{3}{4}>{5}".format(
+                            build, chromosome,
+                            genes_of_interest,
+                            position, reference_allele, variant_allele)
+        elif reference_allele == '-':
+            variant_label = "{0}{1}:g.{2}ins{3}".format(
+                build, chromosome, position, variant_allele)
+        elif variant_allele == '-':
+            variant_label = "{0}{1}:g.{2}del{3}".format(
+                build, chromosome, position, reference_allele)
+        else:
+            variant_label = "{0}{1}:g.{2}{3}>{4}".format(
+                build, chromosome, position, reference_allele, variant_allele)
+        return variant_label
