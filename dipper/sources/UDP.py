@@ -125,19 +125,19 @@ class UDP(Source):
                     variant_label = \
                         self._build_variant_label(build, chromosome,
                                                   position, reference_allele,
-                                                  variant_allele)
+                                                  variant_allele, genes_of_interest)
                 elif not position and reference_allele and variant_allele \
                         and len(genes_of_interest) == 1:
 
                         variant_label = \
                             self._build_variant_label(build, chromosome,
                                                       position, reference_allele,
-                                                      variant_allele, genes_of_interest[0])
+                                                      variant_allele, genes_of_interest)
                 elif position and (not reference_allele or not variant_allele) \
                         and len(genes_of_interest) == 1:
 
                         variant_label = "{0}{1}({2}):g.{3}".format(
-                            build, chromosome, genes_of_interest[0], position)
+                            build, chromosome, genes_of_interest, position)
                 else:
                     variant_label = 'variant of interest in patient {0}'.format(patient)
 
@@ -186,36 +186,65 @@ class UDP(Source):
                     # Attempt to disambiguate
                     ref_gene = []
                     up_down_gene = []
+                    unmatched_genes = []
                     for gene in patient_var_map[patient][variant]['genes_of_interest']:
                         if gene in gene_id_map \
                                 and gene_id_map[gene] != '' \
                                 and gene_id_map[gene] in gene_coordinate_map:
                             ncbi_id = gene_id_map[gene]
-                            if gene_coordinate_map[ncbi_id]['strand'] == 'plus' \
-                                    and gene_coordinate_map[ncbi_id]['start'] \
+                            if gene_coordinate_map[ncbi_id]['start'] \
                                     <= patient_var_map[patient][variant]['position']\
                                     <= gene_coordinate_map[ncbi_id]['end']:
-                                ref_gene.append(gene)
-                            elif gene_coordinate_map[ncbi_id]['strand'] == 'minus' \
-                                    and gene_coordinate_map[ncbi_id]['end']\
-                                    <= patient_var_map[patient][variant]['position']\
-                                    <= gene_coordinate_map[ncbi_id]['start']:
-                                ref_gene.append(gene)
+                                gene_info = {
+                                    'symbol': gene,
+                                    'strand': gene_coordinate_map[ncbi_id]['strand']
+                                }
+                                ref_gene.append(gene_info)
                             else:
                                 up_down_gene.append(gene)
+                        else:
+                            unmatched_genes.append(gene)
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
-                            ref_gene[0], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
                             genotype_util.object_properties['feature_to_gene_relation'])
+
                     # In some cases there are multiple instances
                     # of same gene from dupe rows in the source
+                    # Credit http://stackoverflow.com/a/3844832
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
-                            ref_gene[0], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
                             genotype_util.object_properties['feature_to_gene_relation'])
+                    # Check if reference genes are on different strands
+                    elif len(ref_gene) == 2:
+                        strands = [st['strand'] for st in ref_gene]
+                        if "minus" in strands and "plus" in strands:
+                            for r_gene in ref_gene:
+                                self._add_gene_to_graph(
+                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    genotype_util.object_properties['feature_to_gene_relation'])
+                        else:
+                            logger.warn("unable to map intron variant"
+                                    " to gene coordinates: {0}"
+                                    .format(patient_var_map[patient][variant]))
+                            for r_gene in ref_gene:
+                                self._add_gene_to_graph(
+                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    graph_util.object_properties['causally_influences'])
+                    elif re.search(r'intron', patient_var_map[patient][variant]['type'], flags=re.I):
+                        logger.warn("unable to map intron variant"
+                                    " to gene coordinates: {0}"
+                                    .format(patient_var_map[patient][variant]))
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
                             neighbor, variant_bnode, gene_id_map,
+                            graph_util.object_properties['causally_influences'])
+                    # Unmatched genes are likely because we cannot map to an NCBIGene
+                    # or we do not have coordinate information
+                    for unmatched_gene in unmatched_genes:
+                        self._add_gene_to_graph(
+                            unmatched_gene, variant_bnode, gene_id_map,
                             graph_util.object_properties['causally_influences'])
 
         return
@@ -378,9 +407,34 @@ class UDP(Source):
         return id_map
 
     @staticmethod
+    def _parse_rs_map_file(file):
+        """
+        Parses rsID mapping file from dbSNP
+        Outputs dict where keys are coordinates in the format
+        {chromsome}-{position}
+
+        :param file: file path
+        :param limit: limit (int, optional) limit the number of rows processed
+        :return: dict
+        """
+        id_map = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
+            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+                reader = csv.reader(tsvfile, delimiter="\t")
+                for row in reader:
+                    (gene_curie, start, end, strand, build) = row
+                    id_map[gene_curie] = {
+                        'start': start,
+                        'end': end,
+                        'strand': strand,
+                        'build': build
+                    }
+        return
+
+    @staticmethod
     def _build_variant_label(build, chromosome, position,
                              reference_allele, variant_allele,
-                             gene_symbol=None):
+                             gene_symbols=None):
         """
         Function to build HGVS variant labels
         :param build: {str} build id
@@ -392,28 +446,26 @@ class UDP(Source):
         :return: {str} variant label
         """
         variant_label = ''
-        if gene_symbol and reference_allele == '-':
-            variant_label = "{0}{1}({2}):g.{3}ins{4}".format(
-                            build, chromosome, gene_symbol,
-                            position, variant_allele)
-        elif gene_symbol and variant_allele == '-':
-            variant_label = "{0}{1}({2}):g.{3}del{4}".format(
-                            build, chromosome, gene_symbol,
-                            position, reference_allele)
-        elif gene_symbol:
-            variant_label = "{0}{1}({2}):g.{3}{4}>{5}".format(
-                            build, chromosome,
-                            gene_symbol,
-                            position, reference_allele, variant_allele)
-        elif reference_allele == '-':
-            variant_label = "{0}{1}:g.{2}ins{3}".format(
-                build, chromosome, position, variant_allele)
-        elif variant_allele == '-':
-            variant_label = "{0}{1}:g.{2}del{3}".format(
-                build, chromosome, position, reference_allele)
+        prefix = ''
+        if gene_symbols and len(gene_symbols) == 1:
+            prefix = "{0}{1}({2})".format(build, chromosome, gene_symbols[0])
         else:
-            variant_label = "{0}{1}:g.{2}{3}>{4}".format(
-                build, chromosome, position, reference_allele, variant_allele)
+            prefix = "{0}{1}".format(build, chromosome)
+        if reference_allele == '-':
+            variant_label = "{0}:g.{1}ins{2}".format(
+                            prefix, position, variant_allele)
+        elif variant_allele == '-':
+            variant_label = "{0}:g.{1}del{2}".format(
+                            prefix, position, reference_allele)
+        elif reference_allele == '-':
+            variant_label = "{0}:g.{1}ins{2}".format(
+                prefix, position, variant_allele)
+        elif variant_allele == '-':
+            variant_label = "{0}:g.{1}del{2}".format(
+                prefix, position, reference_allele)
+        else:
+            variant_label = "{0}:g.{1}{2}>{3}".format(
+                prefix, position, reference_allele, variant_allele)
         return variant_label
 
     def _add_gene_to_graph(self, gene, variant_bnode, gene_id_map, relation):
