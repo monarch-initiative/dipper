@@ -22,7 +22,7 @@ class UDP(Source):
     Data is available by request for access via the NHGRI collaboration server:
     https://udplims-collab.nhgri.nih.gov/api
 
-    Note this source class does not include a fetch method since the data is private
+    Note this source class does not include a fetch method because the data is private
     The parser works generically when two tsv files are present in the raw directory
     /raw/udp with the structure
 
@@ -146,9 +146,10 @@ class UDP(Source):
                                      genotype_util.object_properties['has_alternate_part'],
                                      variant_bnode)
 
+        self._add_variant_gene_relationship(patient_var_map, gene_id_map, gene_coordinate_map)
         return
 
-    def _add_variant_gene_relationship(self, ):
+    def _add_variant_gene_relationship(self, patient_var_map, gene_id_map, gene_coordinate_map):
         """
         Right now it is unclear the best approach on how to connect
         variants to genes.  In most cases has_affected_locus/GENO:0000418
@@ -162,8 +163,61 @@ class UDP(Source):
         if mutation type contains downstream/upstream and more than one
         gene of interest, investigate coordinates of all genes to
         see if we can disambiguate which genes are which
-        :return:
+        :return: None
         """
+        genotype_util = Genotype(self.graph)
+        graph_util = GraphUtils(curie_map.get())
+        for patient in patient_var_map:
+            for variant in patient_var_map[patient]:
+                variant_bnode\
+                    = self.make_id("{0}".format(variant), "_")
+                genes_of_interest = \
+                    patient_var_map[patient][variant]['genes_of_interest']
+                if len(genes_of_interest) == 1:
+                    # Assume variant is variant allele of gene
+                    gene = genes_of_interest[0]
+                    self._add_gene_to_graph(
+                        gene, variant_bnode, gene_id_map,
+                        genotype_util.object_properties['feature_to_gene_relation'])
+
+                elif re.search(r'upstream|downstream',
+                               patient_var_map[patient][variant]['type'],
+                               flags=re.I):
+                    # Attempt to disambiguate
+                    ref_gene = []
+                    up_down_gene = []
+                    for gene in patient_var_map[patient][variant]['genes_of_interest']:
+                        if gene in gene_id_map \
+                                and gene_id_map[gene] != '' \
+                                and gene_id_map[gene] in gene_coordinate_map:
+                            ncbi_id = gene_id_map[gene]
+                            if gene_coordinate_map[ncbi_id]['strand'] == 'plus' \
+                                    and gene_coordinate_map[ncbi_id]['start'] \
+                                    <= patient_var_map[patient][variant]['position']\
+                                    <= gene_coordinate_map[ncbi_id]['end']:
+                                ref_gene.append(gene)
+                            elif gene_coordinate_map[ncbi_id]['strand'] == 'minus' \
+                                    and gene_coordinate_map[ncbi_id]['end']\
+                                    <= patient_var_map[patient][variant]['position']\
+                                    <= gene_coordinate_map[ncbi_id]['start']:
+                                ref_gene.append(gene)
+                            else:
+                                up_down_gene.append(gene)
+                    if len(ref_gene) == 1:
+                        self._add_gene_to_graph(
+                            ref_gene[0], variant_bnode, gene_id_map,
+                            genotype_util.object_properties['feature_to_gene_relation'])
+                    # In some cases there are multiple instances
+                    # of same gene from dupe rows in the source
+                    elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
+                        self._add_gene_to_graph(
+                            ref_gene[0], variant_bnode, gene_id_map,
+                            genotype_util.object_properties['feature_to_gene_relation'])
+                    for neighbor in up_down_gene:
+                        self._add_gene_to_graph(
+                            neighbor, variant_bnode, gene_id_map,
+                            graph_util.object_properties['causally_influences'])
+
         return
 
     def _convert_variant_file_to_dict(self, file):
@@ -283,6 +337,10 @@ class UDP(Source):
             for row in reader:
                 (patient_id, hpo_curie, present) = row
                 patient_curie = ':{0}'.format(patient_id)
+                if line_counter == 0:
+                    line_counter += 1
+                    continue
+
                 graph_util.addPerson(self.graph, patient_curie, patient_id)
 
                 graph_util.addTriple(self.graph, patient_curie,
@@ -322,30 +380,30 @@ class UDP(Source):
     @staticmethod
     def _build_variant_label(build, chromosome, position,
                              reference_allele, variant_allele,
-                             genes_of_interest=None):
+                             gene_symbol=None):
         """
         Function to build HGVS variant labels
-        :param build:
-        :param chromosome:
-        :param position:
-        :param reference_allele:
-        :param variant_allele:
-        :param genes_of_interest:
+        :param build: {str} build id
+        :param chromosome: {str} chromosome
+        :param position: {str} variation position as string or int
+        :param reference_allele: {str} single letter ref bp
+        :param variant_allele: {str} single letter bp change
+        :param gene_symbol: {str} gene symbol (hgvs)
         :return: {str} variant label
         """
         variant_label = ''
-        if genes_of_interest and reference_allele == '-':
+        if gene_symbol and reference_allele == '-':
             variant_label = "{0}{1}({2}):g.{3}ins{4}".format(
-                            build, chromosome, genes_of_interest,
+                            build, chromosome, gene_symbol,
                             position, variant_allele)
-        elif genes_of_interest and variant_allele == '-':
+        elif gene_symbol and variant_allele == '-':
             variant_label = "{0}{1}({2}):g.{3}del{4}".format(
-                            build, chromosome, genes_of_interest,
+                            build, chromosome, gene_symbol,
                             position, reference_allele)
-        elif genes_of_interest:
+        elif gene_symbol:
             variant_label = "{0}{1}({2}):g.{3}{4}>{5}".format(
                             build, chromosome,
-                            genes_of_interest,
+                            gene_symbol,
                             position, reference_allele, variant_allele)
         elif reference_allele == '-':
             variant_label = "{0}{1}:g.{2}ins{3}".format(
@@ -357,3 +415,29 @@ class UDP(Source):
             variant_label = "{0}{1}:g.{2}{3}>{4}".format(
                 build, chromosome, position, reference_allele, variant_allele)
         return variant_label
+
+    def _add_gene_to_graph(self, gene, variant_bnode, gene_id_map, relation):
+        """
+        :param gene:
+        :param variant_bnode:
+        :return:
+        """
+        genotype_util = Genotype(self.graph)
+        graph_util = GraphUtils(curie_map.get())
+        if gene in gene_id_map and gene_id_map[gene] != '':
+            ncbi_curie = gene_id_map[gene]
+            graph_util.addTriple(self.graph, variant_bnode, relation, ncbi_curie)
+            graph_util.addTriple(self.graph, ncbi_curie,
+                                 graph_util.object_properties['in_taxon'],
+                                'NCBITaxon:9606')
+        elif gene:
+            logger.info("gene {0} not mapped to NCBI gene,"
+                        " making blank node".format(gene))
+            gene_bnode = self.make_id("{0}".format(gene), "_")
+            graph_util.addIndividualToGraph(self.graph, gene_bnode,
+                                            gene, genotype_util.genoparts['gene'])
+            graph_util.addTriple(self.graph, variant_bnode, relation, gene_bnode)
+            graph_util.addTriple(self.graph, gene_bnode,
+                                 graph_util.object_properties['in_taxon'],
+                                 'NCBITaxon:9606')
+

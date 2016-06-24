@@ -62,9 +62,13 @@ def main():
             snp_id = info[2]
 
             rs = root.find(".//"+NS+"Rs[@rsId='"+snp_id+"']")
-            snp_class = rs.attrib['snpClass']
-            sequence = rs.find(NS+'Sequence')
-            allele_diff = sequence.find(NS+'Observed').text
+            try:
+                snp_class = rs.attrib['snpClass']
+                sequence = rs.find(NS+'Sequence')
+                allele_diff = sequence.find(NS+'Observed').text
+            except AttributeError:
+                snp_class = ''
+                allele_diff = ''
             output_file.write("{0}\t{1}\t{2}\t{3}\t{4}\n".format(
                 chromosome, coordinate, snp_id, snp_class, allele_diff))
 
