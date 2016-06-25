@@ -558,7 +558,14 @@ class UDP(Source):
                             or re.fullmatch(r'\-', variant_allele):
                         rs_id = self._get_rs_id(variant, rs_map, 'indel')
                         if rs_id is not None:
-                            pass
+                            dbsnp_curie = 'dbSNP:rs{0}'.format(rs_id)
+                            graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
+                    else:
+                        rs_id = self.\
+                            _get_rs_id(variant, rs_map, 'indel')
+                        if rs_id is not None:
+                            dbsnp_curie = 'dbSNP:rs{0}'.format(rs_id)
+                            graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
         return
 
     def _get_rs_id(self, variant, rs_map, type):
@@ -593,6 +600,10 @@ class UDP(Source):
                 elif len(rs_candidates) > 1:
                     logger.info("ambiguous rs mapping for:"
                                 " {0}\n candidate ids: {1}".format(variant, rs_candidates))
+                else:
+                    logger.info("rs at coordinate but no match found"
+                                " for variant {0}\n candidate ids: {1}".format
+                                (variant, rs_map[variant_key]))
         else:
             logger.warn("type: {0} unsupported".format(type))
         return rs_id
