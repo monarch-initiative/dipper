@@ -2,3 +2,4 @@ rdflib
 isodate
 roman
 pyyaml
+requests
