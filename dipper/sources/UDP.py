@@ -304,6 +304,27 @@ class UDP(Source):
                 }
             }
         }
+        TODO the above structure can be simplified as it results
+             in duplicated variant dicts, the join-by-id approach
+             below would be an improvement:
+        {
+            'patient_1': {
+                'variants': [variant-id1,variant-id2, 3, 4]
+            }
+            'variants : [
+               'variant-id1': {
+                    'build': hg19
+                    'chromosome': 'chr7',
+                    'reference_allele': 'A',
+                    'variant_allele': 'G',
+                    'position': '1234'
+                    'rs_id' : 'RS1234',
+                    'type': 'SNV",
+                    'genes_of_interest' : [SHH, BRCA1]
+                }
+            ]
+        }
+
         If any part of the core variant information is missing
         (build, chr, bp change(s), the line number will be used
         to make the variant unique
@@ -571,6 +592,13 @@ class UDP(Source):
     def _get_rs_id(self, variant, rs_map, type):
         """
         Given a variant dict, return unambiguous RS ID
+        TODO
+        Some sequence alterations appear to have mappings to dbsnp's notation
+        for example,
+        reference allele: TTTTTTTTTTTTTT
+        variant allele:   TTTTTTTTTTTTTTT
+        Is theoretically the same as -/T, we should clarify with UDP and then add
+        functionality to map this notation to the more common -/T
         :param variant:
         :param rs_map:
         :param type: snp or indel
