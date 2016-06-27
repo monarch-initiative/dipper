@@ -4,6 +4,7 @@ import os
 import time
 import logging
 import urllib       # TODO tec look @ import requests
+import csv
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import ConjunctiveGraph, Namespace
@@ -571,3 +572,21 @@ class Source:
             f.write(contents)
 
         return
+
+    @staticmethod
+    def parse_mapping_file(file):
+        """
+        :param file: String, path to file containing label-id mappings in
+                             the first two columns of each row
+        :return: dict where keys are labels and values are ids
+        """
+        id_map = {}
+        if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
+            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+                reader = csv.reader(tsvfile, delimiter="\t")
+                for row in reader:
+                    label = row[0]
+                    id = row[1]
+                    id_map[label] = id
+
+        return id_map

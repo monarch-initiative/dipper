@@ -119,6 +119,13 @@ procedures:
     MGP_BCI_001: 'https://www.mousephenotype.org/impress/protocol/215/15'
     MGP_PBI_001: 'https://www.mousephenotype.org/impress/protocol/216/15'
     MGP_XRY_001: 'https://www.mousephenotype.org/impress/protocol/175/15'
+    IMPC_PAT_001: 'https://www.mousephenotype.org/impress/protocol/99/7'
+    IMPC_PAT_002: 'https://www.mousephenotype.org/impress/protocol/181/7'
+    MGP_IMM_001: 'https://www.mousephenotype.org/impress/protocol/229/15'
+    IMPC_GPO_001: 'https://www.mousephenotype.org/impress/protocol/195/7'
+    MGP_BMI_001: 'https://www.mousephenotype.org/impress/protocol/220/15'
+    MGP_EEI_001: 'https://www.mousephenotype.org/impress/protocol/219/15'
+    MGP_MLN_001: 'https://www.mousephenotype.org/impress/protocol/223/15'
 
 project:
     DTCC consortium: 'http://www.criver.com/promo/dtcc'

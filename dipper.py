@@ -50,9 +50,10 @@ def main():
         'wormbase': 'WormBase',
         'mpd': 'MPD',
         'gwascatalog': 'GWASCatalog',
-        # 'monarch': Monarch,
+        'monarch': 'Monarch',
         'go': 'GeneOntology',
-        'reactome': 'Reactome'
+        'reactome': 'Reactome',
+        'udp': 'UDP'
     }
 
     logger = logging.getLogger(__name__)
