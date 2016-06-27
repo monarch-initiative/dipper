@@ -53,7 +53,8 @@ def main():
         'monarch': 'Monarch',
         'go': 'GeneOntology',
         'reactome': 'Reactome',
-        'udp': 'UDP'
+        'udp': 'UDP',
+        'mgi-slim': 'MGISlim'
     }
 
     logger = logging.getLogger(__name__)
