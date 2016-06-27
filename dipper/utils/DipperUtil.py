@@ -24,7 +24,7 @@ class DipperUtil:
 
         """
         domain = 'http://eutils.ncbi.nlm.nih.gov'
-        path = 'entrez/eutils/esearch.fcgi'
+        path = '/entrez/eutils/esearch.fcgi'
         req = {
             'db': 'taxonomy',
             'retmode': 'json',
