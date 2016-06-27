@@ -1,5 +1,5 @@
 from rdflib.graph import ConjunctiveGraph
-from rdflib.namespace import RDF, OWL
+from rdflib.namespace import RDF, OWL, DC
 import argparse
 import re
 
@@ -49,7 +49,6 @@ def make_property_graph(properties):
         'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
         'http://purl.obolibrary.org/obo/pco.owl',
         'http://purl.obolibrary.org/obo/xco.owl'
-
     ]
 
     for ontology in ontologies:
@@ -75,6 +74,8 @@ def make_property_graph(properties):
     output_graph = add_property_to_graph(
         graph.subjects(RDF['type'], OWL['DatatypeProperty']),
         output_graph, OWL['DatatypeProperty'], properties)
+
+    output_graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
     return output_graph
 

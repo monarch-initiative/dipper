@@ -332,7 +332,8 @@ class ZFIN(Source):
             logger.info("Only parsing first %s rows of each file", limit)
         logger.info("Parsing files...")
 
-        self._load_zp_mappings()
+        zp_file = '/'.join((self.rawdir, self.files['zpmap']['file']))
+        self.zp_map = self._load_zp_mappings(zp_file)
 
         if self.testOnly:
             self.testMode = True
@@ -2602,7 +2603,7 @@ class ZFIN(Source):
 
         return zp_id
 
-    def _load_zp_mappings(self):
+    def _load_zp_mappings(self, file):
         """
         Given a file that defines the mapping between
         ZFIN-specific EQ definitions and the automatically derived ZP ids,
@@ -2611,10 +2612,9 @@ class ZFIN(Source):
         :return:
 
         """
-        self.zp_map = {}
+        zp_map = {}
         logger.info("Loading ZP-to-EQ mappings")
         line_counter = 0
-        file = '/'.join((self.rawdir, self.files['zpmap']['file']))
         with open(file, 'r', encoding="utf-8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -2623,7 +2623,7 @@ class ZFIN(Source):
                  modifier, superterm2_id, subterm2_id) = row
                 key = self._make_zpkey(superterm1_id, subterm1_id, quality_id,
                                        superterm2_id, subterm2_id, modifier)
-                self.zp_map[key] = {
+                zp_map[key] = {
                     'zp_id': zp_id,
                     'label': zp_label,
                     'superterm1_id': superterm1_id,
@@ -2633,9 +2633,9 @@ class ZFIN(Source):
                     'superterm2_id': superterm2_id,
                     'subterm2_id': subterm2_id,
                 }
-        logger.info("Loaded %s zp terms", self.zp_map.__len__())
+        logger.info("Loaded %s zp terms", zp_map.__len__())
 
-        return
+        return zp_map
 
     def _make_zpkey(self, superterm1_id, subterm1_id, quality_id,
                     superterm2_id, subterm2_id, modifier):

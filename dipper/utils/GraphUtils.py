@@ -479,13 +479,13 @@ class GraphUtils:
 
         """
 
-        #if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-        #    logger.error(
-        #        "bad property type assigned: %s, %s", property_type, op)
-        #else:
-        #    for k in op:
-        #        graph.add(
-        #            (self.getNode(op[k]), RDF['type'], property_type))
+        if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
+            logger.error(
+                "bad property type assigned: %s, %s", property_type, op)
+        else:
+            for k in op:
+                graph.add(
+                    (self.getNode(op[k]), RDF['type'], property_type))
         return
 
     def loadAllProperties(self, graph):
@@ -586,6 +586,8 @@ class GraphUtils:
         graph = GraphUtils.add_property_to_graph(
             ontology_graph.subjects(RDF['type'], OWL['DatatypeProperty']),
             graph, OWL['DatatypeProperty'], properties)
+
+        graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
         return graph
 

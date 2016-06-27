@@ -54,7 +54,8 @@ def main():
         'go': 'GeneOntology',
         'reactome': 'Reactome',
         'udp': 'UDP',
-        'mgi-slim': 'MGISlim'
+        'mgi-slim': 'MGISlim',
+        'zfin-slim': 'ZFINSlim'
     }
 
     logger = logging.getLogger(__name__)

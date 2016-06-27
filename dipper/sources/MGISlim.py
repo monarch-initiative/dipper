@@ -2,6 +2,7 @@ from intermine.webservice import Service
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.Reference import Reference
 import logging
 import datetime
 
@@ -57,11 +58,12 @@ class MGISlim(Source):
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
                 assoc = G2PAssoc(self.name, mgi_curie, mp_curie)
                 if row["evidence.publications.pubMedId"]:
+                    reference = Reference(pub_curie,
+                                          Reference.ref_types['publication'])
+                    reference.addRefToGraph(self.graph)
                     assoc.add_source(pub_curie)
-                    assoc.add_evidence('ECO:0000304')
-                else:
-                    assoc.add_evidence('ECO:0000059')
 
+                assoc.add_evidence('ECO:0000059')
                 assoc.add_association_to_graph(self.graph)
 
             if not count % 10 and count != 0:
