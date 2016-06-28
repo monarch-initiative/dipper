@@ -1,3 +1,7 @@
+'''
+    TODO document me
+'''
+
 import csv
 import logging
 import re
@@ -205,12 +209,36 @@ class AnimalQTLdb(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (qtl_id, qtl_symbol, trait_name, assotype, empty, chromosome,
-                 position_cm, range_cm, flankmark_a2, flankmark_a1, peak_mark,
-                 flankmark_b1, flankmark_b2, exp_id, model, test_base,
-                 sig_level, lod_score, ls_mean, p_values, f_statistics,
-                 variance, bayes_value, likelihood_ratio, trait_id, dom_effect,
-                 add_effect, pubmed_id, gene_id, gene_id_src, gene_id_type,
+                (qtl_id,
+                 qtl_symbol,
+                 trait_name,
+                 assotype,
+                 empty,
+                 chromosome,
+                 position_cm,
+                 range_cm,
+                 flankmark_a2,
+                 flankmark_a1,
+                 peak_mark,
+                 flankmark_b1,
+                 flankmark_b2,
+                 exp_id,
+                 model,
+                 test_base,
+                 sig_level,
+                 lod_score,
+                 ls_mean,
+                 p_values,
+                 f_statistics,
+                 variance,
+                 bayes_value,
+                 likelihood_ratio,
+                 trait_id, dom_effect,
+                 add_effect,
+                 pubmed_id,
+                 gene_id,
+                 gene_id_src,
+                 gene_id_type,
                  empty2) = row
 
                 if self.testMode and int(qtl_id) not in self.test_ids:
@@ -275,10 +303,13 @@ class AnimalQTLdb(Source):
                         geno.genoparts['sequence_alteration'])
                     gu.addXref(g, qtl_id, dbsnp_id)
 
-                if gene_id is not None and gene_id != '' and gene_id != '.':
+                gene_id = gene_id.replace('uncharacterized ', '')
+                if gene_id is not None and gene_id != '' and gene_id != '.'\
+                        and re.fullmatch(r'[^ ]*', gene_id) is not None:
+
                     # we assume if no src is provided, it's NCBI
                     if gene_id_src == 'NCBIgene' or gene_id_src == '':
-                        gene_id = 'NCBIGene:'+gene_id.strip()
+                        gene_id = 'NCBIGene:' + gene_id.strip()
                         # we will expect that these labels provided elsewhere
                         geno.addGene(gene_id, None)
                         # FIXME what is the right relationship here?
@@ -333,8 +364,9 @@ class AnimalQTLdb(Source):
                 if p_values != '':
                     s = re.sub(r'<', '', p_values)
                     s = re.sub(r',', '.', s)  # international notation
-                    score = float(s)
-                    assoc.set_score(score)  # todo add score type
+                    if s.isnumeric():
+                        score = float(s)
+                        assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
                 assoc.add_association_to_graph(g)
 
@@ -359,8 +391,9 @@ class AnimalQTLdb(Source):
                     if p_values != '':
                         s = re.sub(r'<', '', p_values)
                         s = re.sub(r',', '.', s)
-                        score = float(s)
-                        assoc.set_score(score)  # todo add score type
+                        if s.isnumeric():
+                            score = float(s)
+                            assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
 
                     assoc.add_association_to_graph(g)
@@ -471,8 +504,9 @@ class AnimalQTLdb(Source):
                     s = re.sub(r'<', '', attribute_dict.get('P-value'))
                     if ',' in s:
                         s = re.sub(r',', '.', s)
-                    score = float(s)
-                    assoc.set_score(score)
+                    if s.isnumeric():
+                        score = float(s)
+                        assoc.set_score(score)
 
                 assoc.add_association_to_graph(g)
                 # TODO make association to breed
@@ -643,17 +677,16 @@ class AnimalQTLdb(Source):
 
         """
 
-        # TODO  (I think) this hash is unreachable
-        tax_map = {
-            'chicken': 'Wageningen-chicken',    # PMID:10645958
-            'cattle': 'USDA-MARC',              # PMID:9074927
-            'pig': 'USDA-MARC',                 # PMID:8743988
-            # -- this is an assumption
-            'sheep': 'Wageningen-sheep',        # PMID:11435411
-            'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
-            'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344
-
-        return
+        # TODO this hash is unused and would be an external translation table
+        # tax_map = {
+            # 'chicken': 'Wageningen-chicken',    # PMID:10645958
+            # 'cattle': 'USDA-MARC',              # PMID:9074927
+            # 'pig': 'USDA-MARC',                 # PMID:8743988
+            # # -- this is an assumption
+            # 'sheep': 'Wageningen-sheep',        # PMID:11435411
+            # 'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
+            # 'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344
+        # return
 
     def getTestSuite(self):
         import unittest
