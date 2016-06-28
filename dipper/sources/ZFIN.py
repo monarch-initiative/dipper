@@ -1615,7 +1615,7 @@ class ZFIN(Source):
                 line_counter += 1
                 (genomic_feature_id, feature_so_id,
                  genomic_feature_abbreviation, gene_symbol, gene_id,
-                 gene_so_id, genomic_feature_marker_relationship, empty) = row[0:7]
+                 gene_so_id, genomic_feature_marker_relationship) = row[0:7]
 
                 # Sequence alteration types present in file:
                 # SO:0000159 - deletion,
