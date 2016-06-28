@@ -45,7 +45,7 @@ class EOM(PostgreSQLSource):
     files = {
         'map': {
             'file': 'hp-to-eom-mapping.tsv',
-            'url': 'https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/mappings/hp-to-eom-mapping.tsv'
+            'url': 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
         }
     }
 
@@ -162,7 +162,7 @@ class EOM(PostgreSQLSource):
                  subcategory, objective_definition, subjective_definition,
                  comments, synonyms, replaces, small_figure_url,
                  large_figure_url, e_uid, v_uid, v_uuid,
-                 v_last_modified) = line
+                 v_last_modified,v_status, v_lastmodified_epoch) = line
 
                 # note:
                 # e_uid v_uuid v_last_modified terminology_category_url
