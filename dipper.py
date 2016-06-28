@@ -53,7 +53,9 @@ def main():
         'monarch': 'Monarch',
         'go': 'GeneOntology',
         'reactome': 'Reactome',
-        'udp': 'UDP'
+        'udp': 'UDP',
+        'mgi-slim': 'MGISlim',
+        'zfin-slim': 'ZFINSlim'
     }
 
     logger = logging.getLogger(__name__)
