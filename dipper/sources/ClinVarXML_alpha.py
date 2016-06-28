@@ -133,9 +133,11 @@ def make_spo(sub, prd, obj):
     if match is not None and objcuri in CURIEMAP:
         objt = '<' + CURIEMAP[objcuri] + objid + '>'
     elif obj.isnumeric():
-        objt = obj
+        objt = '"' + obj + '"'
     else:
-        objt = '"' + obj.strip('"') + '"'
+        # Literals may not contain the characters ", LF, CR '\'
+        # except in their escaped forms.
+        objt = '"' + obj.strip('"').replace('\n', '\\n') + '"'
 
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
