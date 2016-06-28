@@ -26,7 +26,7 @@ class ZFINSlim(Source):
     }
 
     def __init__(self):
-        super().__init__('zfin-slim')
+        super().__init__('zfin_slim')
         self.dataset = Dataset(
             'zfin_slim', 'ZFINSlim', 'http://zfin.org/')
 
