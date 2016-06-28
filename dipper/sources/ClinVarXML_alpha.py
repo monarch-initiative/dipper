@@ -648,10 +648,10 @@ with gzip.open(FILENAME, 'rt') as fh:
                 if scv_geno is not None:
                     # we have the association's (SCV) pathnogicty call
                     # TRIPLES
-                    # <monarch_assoc><OBAN:association_has_predicate><scv_geno>
+                    # <monarch_assoc><OBAN:association_has_object_property><scv_geno>
                     write_spo(
                         monarch_assoc,
-                        'OBAN:association_has_predicate',
+                        'OBAN:association_has_object_property',
                         scv_geno)
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                     write_spo(rcv_variant_id, scv_geno, rcv_disease_curi)
