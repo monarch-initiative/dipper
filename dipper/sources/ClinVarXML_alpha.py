@@ -136,8 +136,10 @@ def make_spo(sub, prd, obj):
         objt = '"' + obj + '"'
     else:
         # Literals may not contain the characters ", LF, CR '\'
-        # except in their escaped forms.
-        objt = '"' + obj.strip('"').replace('\n', '\\n') + '"'
+        # except in their escaped forms. internal quotes as well.
+        obj = obj.strip('"').replace('\\', '\\\\').replace('"', '\'')
+        obj = obj.replace('\n', '\\n').replace('\r', '\\r')
+        objt = '"' + obj + '"'
 
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
