@@ -75,6 +75,10 @@ def make_property_graph(properties):
         graph.subjects(RDF['type'], OWL['DatatypeProperty']),
         output_graph, OWL['DatatypeProperty'], properties)
 
+    for row in output_graph.predicates(DC['source'], OWL['AnnotationProperty']):
+        if row == RDF['type']:
+            output_graph.remove((DC['source'], RDF['type'], OWL['AnnotationProperty']))
+
     output_graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
     return output_graph

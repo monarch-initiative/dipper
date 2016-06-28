@@ -587,6 +587,9 @@ class GraphUtils:
             ontology_graph.subjects(RDF['type'], OWL['DatatypeProperty']),
             graph, OWL['DatatypeProperty'], properties)
 
+        for row in graph.predicates(DC['source'], OWL['AnnotationProperty']):
+            if row == RDF['type']:
+                graph.remove((DC['source'], RDF['type'], OWL['AnnotationProperty']))
         graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
         return graph
