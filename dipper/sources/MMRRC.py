@@ -142,7 +142,8 @@ class MMRRC(Source):
                  mgi_gene_name, sds_url, accepted_date, mp_ids, pubmed_nums,
                  research_areas) = row
 
-                if self.testMode and (strain_id not in self.test_ids):
+                if self.testMode and (strain_id not in self.test_ids) \
+                        or mgi_gene_name == 'withdrawn':
                     continue
 
                 # strip off stuff after the dash -
