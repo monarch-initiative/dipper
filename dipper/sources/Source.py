@@ -236,6 +236,8 @@ class Source:
         if not os.path.exists(local):
             logger.info("File does not exist locally")
             return True
+        else:
+            logger.info("File does exist locally")
         # get remote file details
         if headers is not None:
             req = urllib.request.Request(remote, headers=headers)
@@ -291,15 +293,15 @@ class Source:
         """
 
         st = None
-        for f in self.files.keys():
-            logger.info("Getting %s", f)
-            file = self.files.get(f)
+        for fname in self.files.keys():
+            logger.info("Getting %s", fname)
+            filesource = self.files.get(fname)
             self.fetch_from_url(
-                file['url'], '/'.join((self.rawdir, file['file'])),
-                is_dl_forced, file.get('headers'))
-            self.dataset.setFileAccessUrl(file['url'])
+                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
+                is_dl_forced, filesource.get('headers'))
+            self.dataset.setFileAccessUrl(filesource['url'])
 
-            st = os.stat('/'.join((self.rawdir, file['file'])))
+            st = os.stat('/'.join((self.rawdir, filesource['file'])))
 
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
 
