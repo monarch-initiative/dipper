@@ -1671,7 +1671,7 @@ class MGI(PostgreSQLSource):
                  logicaldb) = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
-                accid = re.sub(r'`', '', accid)
+                accid = re.sub(r'`', '', accid).strip()
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
@@ -1725,7 +1725,7 @@ class MGI(PostgreSQLSource):
                  logicaldb) = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
-                accid = re.sub(r'`', '', accid)
+                accid = re.sub(r'`', '', accid).strip()
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
@@ -1742,7 +1742,7 @@ class MGI(PostgreSQLSource):
                     if logicaldb_key == '22':  # JAX
                         # scrub out the backticks from accids
                         # TODO notify the source upstream
-                        accid = re.sub(r'`', '', accid)
+                        accid = re.sub(r'`', '', accid).strip()
                         strain_id = 'JAX:' + accid
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
