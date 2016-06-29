@@ -244,8 +244,9 @@ class MGI(PostgreSQLSource):
                 ver = ver.replace('MGI ', '')  # MGI 5.20 --> 5.20
                 # MGI has a datestamp for the data within the database;
                 # use it instead of the download date
-                # datestamp in the table: 2014-12-23 00:14:20
-                d = cols[7].strip()  # modification date
+                # datestamp in the table: 2014-12-23 00:14:20[.12345]
+                # modification date without micro seconds
+                (d, ms) = cols[7].strip().split('.')
                 datestamp = \
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
@@ -489,7 +490,8 @@ class MGI(PostgreSQLSource):
                 (accession_key, accid, prefixpart, numericpart, logicaldb_key,
                  object_key, mgitype_key, private, preferred, createdby_key,
                  modifiedby_key, creation_date, modification_date, mgiid,
-                 subtype, description, short_description) = line.split('\t')
+                 subtype, description, short_description,
+                 logicaldb) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('genotype'):
@@ -1667,7 +1669,9 @@ class MGI(PostgreSQLSource):
                  object_key, mgitype_key, private, preferred, createdby_key,
                  modifiedby_key, creation_date, modification_date,
                  logicaldb) = line.split('\t')
-
+                # scrub out the backticks from accids
+                # TODO notify the source upstream
+                accid = re.sub(r'`', '', accid).strip()
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
@@ -1719,7 +1723,9 @@ class MGI(PostgreSQLSource):
                  object_key, mgitype_key, private, preferred, createdby_key,
                  modifiedby_key, creation_date, modification_date,
                  logicaldb) = line.split('\t')
-
+                # scrub out the backticks from accids
+                # TODO notify the source upstream
+                accid = re.sub(r'`', '', accid).strip()
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
@@ -1736,7 +1742,7 @@ class MGI(PostgreSQLSource):
                     if logicaldb_key == '22':  # JAX
                         # scrub out the backticks from accids
                         # TODO notify the source upstream
-                        accid = re.sub(r'`', '', accid)
+                        accid = re.sub(r'`', '', accid).strip()
                         strain_id = 'JAX:' + accid
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
