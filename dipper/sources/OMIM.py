@@ -125,11 +125,12 @@ class OMIM(Source):
 
         return
 
-    def fetch(self, is_dl_forced=False):
+    def fetch(self, is_dl_forced=True):
         """
         Get the preconfigured static files.
         This DOES NOT fetch the individual records via REST...that is handled
         in the parsing function.  (To be refactored.)
+        over riding Source.fetch()  calling Source.get_files()
         :param is_dl_forced:
         :return:
 
@@ -174,6 +175,8 @@ class OMIM(Source):
         with open(omimfile, "r") as f:
             f.readline()            # copyright
             line = f.readline()     # Generated: YYYY-MM-DD
+            f.readline()            # discription
+            f.readline()            # disclaimer
             f.readline()            # column headers
             for line in f:
                 line_counter += 1
@@ -189,7 +192,7 @@ class OMIM(Source):
                     omimredact.append(OMIM)
                 elif MIMType == 'gene/phenotype':
                     omimgenepheno.append(OMIM)
-        # TODO: having the omim IDs typed like this should be used later. 
+        # TODO: having the omim IDs typed like this should be used later.
         logger.info("Done. found %d omim ids", omimids.__len__())
         logger.info("Found %d gene omim ids", omimgene.__len__())
         logger.info("Found %d phenotype omim ids", omimpheno.__len__())
