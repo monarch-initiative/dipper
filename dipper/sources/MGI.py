@@ -1723,7 +1723,9 @@ class MGI(PostgreSQLSource):
                  object_key, mgitype_key, private, preferred, createdby_key,
                  modifiedby_key, creation_date, modification_date,
                  logicaldb) = line.split('\t')
-
+                # scrub out the backticks from accids
+                # TODO notify the source upstream
+                accid = re.sub(r'`', '', accid)
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
