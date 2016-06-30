@@ -57,7 +57,7 @@ class Ensembl(Source):
         self.load_bindings()
 
         self.dataset = Dataset(
-            'ensembl', 'ENSEMBL', 'http://www.ensembl.org', None)
+            'ensembl', 'ENSEMBL', 'http://uswest.ensembl.org', None)
 
         # Defaults
         if self.tax_ids is None:
@@ -84,7 +84,7 @@ class Ensembl(Source):
             # todo move into util?
             params = urllib.parse.urlencode(
                 {'query': self._build_biomart_gene_query(str(t))})
-            conn = http.client.HTTPConnection('www.ensembl.org')
+            conn = http.client.HTTPConnection('uswest.ensembl.org')
             conn.request("GET", '/biomart/martservice?'+params)
             resp = conn.getresponse()
             with open(loc_file, 'wb') as f:
@@ -118,7 +118,7 @@ class Ensembl(Source):
         """
         Building url to fetch equivalent identifiers via Biomart Restful API.
         Documentation at
-        http://www.ensembl.org/info/data/biomart/biomart_restful.html
+        http://uswest.ensembl.org/info/data/biomart/biomart_restful.html
         :param taxid:
         :return:
 
