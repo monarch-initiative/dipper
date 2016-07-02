@@ -94,6 +94,7 @@ CURIEMAP = {
     'IAO':  'http://purl.obolibrary.org/obo/IAO_',
     'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
+    'MonarchData': 'http://data.monarchinitiative.org/ttl/',
     'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
@@ -116,13 +117,13 @@ def make_spo(sub, prd, obj):
     # sub & prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
     if prd == 'a':
-        prd = 'rdf:type'
+        prd = 'rdfs:type'
 
     (subcuri, subid) = re.split(r':', sub)
     (prdcuri, prdid) = re.split(r':', prd)
     objt = ''
 
-    # obj  is a curie or literal [string|number]
+    # object is a curie or bnode or literal [string|number]
     match = re.match(CURIERE, obj)
     objcuri = None
     if match is not None:
@@ -131,7 +132,10 @@ def make_spo(sub, prd, obj):
         except ValueError:
             match = None
     if match is not None and objcuri in CURIEMAP:
-        objt = '<' + CURIEMAP[objcuri] + objid + '>'
+        objt = CURIEMAP[objcuri] + objid
+        # allow unexpanded bnodes in object
+        if CURIEMAP[objcuri] != '_:':
+            objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
     else:
@@ -140,12 +144,15 @@ def make_spo(sub, prd, obj):
         obj = obj.strip('"').replace('\\', '\\\\').replace('"', '\'')
         obj = obj.replace('\n', '\\n').replace('\r', '\\r')
         objt = '"' + obj + '"'
-
+        
+    # allow unexpanded bnodes in subject
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
-
-        return '<' + CURIEMAP[subcuri] + subid + '> ' + \
-               '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+        subjt = CURIEMAP[subcuri] + subid         
+        if CURIEMAP[subcuri] != '_:':
+            subjt = '<' + subjt + '> '
+             
+        return subjt + '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
         return None
@@ -213,6 +220,10 @@ with open(ARGS.transtab) as f:
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
 
+
+if ARG.bnode is None:
+    CURIMAP['_'] = '_:'
+
 #######################################################
 # main loop over xml
 with gzip.open(FILENAME, 'rt') as fh:
@@ -223,6 +234,10 @@ with gzip.open(FILENAME, 'rt') as fh:
         sys.exit(-1)
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
+    
+    # @prefix MonarchData: <http://data.monarchinitiative.org/ttl/> .
+    # <MonarchData: + ARGS.output> <a> <owl:Ontology>
+    
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
@@ -592,9 +607,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                     write_spo(
                         _assertion_method_id, 'rdf:type', 'SEPIO:0000037')
 
-                    # <_assertion_method_id><rdf:label><scv_assert_method>
+                    # <_assertion_method_id><rdfs:label><scv_assert_method>
                     write_spo(
-                        _assertion_method_id, 'rdf:label', scv_assert_method)
+                        _assertion_method_id, 'rdfs:label', scv_assert_method)
 
                     # <_assertion_method_id><ERO:0000480><scv_citation_url>
                     if SCV_Citation is not None:
