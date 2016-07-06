@@ -56,6 +56,10 @@ ARGPARSER.add_argument(
     '-o', "--output", default=INAME + '.nt',
     help='file name to write to')
 
+ARGPARSER.add_argument(
+    '-b', '--blanknode', default=True,
+    help='True have blank nodes False materialize blank nodes')
+
 # TODO validate IO arguments
 ARGS = ARGPARSER.parse_args()
 
@@ -144,14 +148,14 @@ def make_spo(sub, prd, obj):
         obj = obj.strip('"').replace('\\', '\\\\').replace('"', '\'')
         obj = obj.replace('\n', '\\n').replace('\r', '\\r')
         objt = '"' + obj + '"'
-        
+
     # allow unexpanded bnodes in subject
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
-        subjt = CURIEMAP[subcuri] + subid         
+        subjt = CURIEMAP[subcuri] + subid
         if CURIEMAP[subcuri] != '_:':
             subjt = '<' + subjt + '> '
-             
+
         return subjt + '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
@@ -212,6 +216,8 @@ def scv_link(scv_sig):
             write_spo(scv_b, link, scv_a)
     return
 
+# Translate airbratary strings found in datasets
+# to specific things found in ontologies
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
@@ -220,9 +226,10 @@ with open(ARGS.transtab) as f:
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
 
-
-if ARG.bnode is None:
-    CURIMAP['_'] = '_:'
+# Overide the given Skolem IRI for our blank nodes
+# with an unresovable alternative.
+if ARGS.blanknode is True:
+    CURIEMAP['_'] = '_:'
 
 #######################################################
 # main loop over xml
@@ -234,10 +241,9 @@ with gzip.open(FILENAME, 'rt') as fh:
         sys.exit(-1)
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
-    
+
     # @prefix MonarchData: <http://data.monarchinitiative.org/ttl/> .
     # <MonarchData: + ARGS.output> <a> <owl:Ontology>
-    
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
@@ -654,12 +660,17 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'IAO:0000013')
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
-            scv_significance = scv_geno = None
+            scv_significance = None; scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
-                if scv_significance in TT:
+                if scv_significance is not None \
+                        and scv_significance in TT \
+                        and re.match(r'GENO:000084', TT[scv_significance]):
                     scv_geno = TT[scv_significance]
+                else:
+                    scv_geno = None
+
                 if scv_geno is not None:
                     # we have the association's (SCV) pathnogicty call
                     # TRIPLES
@@ -680,6 +691,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                             'GENO:0000844', 'GENO:0000843',
                             'GENO:0000845'):
                         pathocalls[monarch_assoc] = scv_geno
+
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
