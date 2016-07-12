@@ -6,6 +6,15 @@
     These triples comform to the core of the
     SEPIO Evidence & Provenance model 2016 Apr
 
+    creating a test set.
+        get a full dataset   default ClinVarFullRelease_00-latest.xml.gz
+        get a list of RCV    default CV_test_RCV.txt
+        put the input files the raw directory
+        write the test set back to the raw directory
+        ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
+    calling on a test set producing blank nodes
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+
 '''
 import os
 import re
@@ -36,21 +45,22 @@ ARGPARSER = argparse.ArgumentParser()
 # INPUT
 ARGPARSER.add_argument(
     '-f', '--filename', default=FILES['f1'],
-    help="path to '" + FILES['f1'] + "'")
+    help="input filename. default: '" + FILES['f1'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
-    help="path to '" + FILES['f1'] + "'")
+    help="path to input file. default: '" + RPATH + '/raw/' + INAME + "'")
 
 ARGPARSER.add_argument(
     '-t', "--transtab",
     default=RPATH + '/translationtable/' + INAME + '.tt',
-    help="'pOtatoe'\t'potAtoe'")
+    help="'pOtatoe'\t'PREFIX:p123'   default: " +
+    RPATH + '/translationtable/' + INAME + '.tt')
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(
     '-d', "--destination", default=RPATH + '/out',
-    help='directory to write into')
+    help='directory to write into. default: "' + RPATH + '/out"')
 
 ARGPARSER.add_argument(
     '-o', "--output", default=INAME + '.nt',
@@ -58,7 +68,7 @@ ARGPARSER.add_argument(
 
 ARGPARSER.add_argument(
     '-b', '--blanknode', default=True,
-    help='True have blank nodes False materialize blank nodes')
+    help='default: True. have blank nodes. False to materialize blank nodes')
 
 # TODO validate IO arguments
 ARGS = ARGPARSER.parse_args()
@@ -121,7 +131,7 @@ def make_spo(sub, prd, obj):
     # sub & prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
     if prd == 'a':
-        prd = 'rdfs:type'
+        prd = 'rdf:type'
 
     (subcuri, subid) = re.split(r':', sub)
     (prdcuri, prdid) = re.split(r':', prd)
@@ -244,6 +254,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
     # @prefix MonarchData: <http://data.monarchinitiative.org/ttl/> .
     # <MonarchData: + ARGS.output> <a> <owl:Ontology>
+    write_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology')
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
