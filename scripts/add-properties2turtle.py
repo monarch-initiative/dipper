@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--output', '-o', type=str, required=True,
                         help='Location of output file')
     parser.add_argument('--format', '-f', type=str, default="turtle",
-                        help='format of rdf file (turtle, n3, rdf/xml)')
+                        help='format of rdf file (turtle, nt, rdf/xml)')
     args = parser.parse_args()
     property_list = get_properties_from_input(args.input, args.format)
     merged_graph = make_property_graph(property_list)
