@@ -11,9 +11,18 @@
         get a list of RCV    default CV_test_RCV.txt
         put the input files the raw directory
         write the test set back to the raw directory
-        ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
-    calling on a test set producing blank nodes
+    ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
+
+    parsing a test set  (producing blank nodes)
     ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+
+    parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -bnode=False
+
+    For while we are still required to redundantly conflate the owl properties
+    in with the data files.
+
+    python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 '''
 import os
