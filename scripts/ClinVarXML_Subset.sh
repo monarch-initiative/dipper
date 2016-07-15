@@ -2,15 +2,15 @@
 
 # extract ClinVarSets containing specific RCV
 # not at all efficent, but does not need to be.
-# give a list of RCV identifiers
+# give a list of RCV identifiers and a dataset to find them in
 #
 # Usage:
 # ClinVarXML_Subset.sh	 [<rcvlist> <cvxml>] > ClinVarTestSet.xml
 # e.g.
 # ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
 
-# Defaults if not given
 RPTH='raw/clinvarxml_alpha'
+# Defaults if not given
 TEST=${1:-"${RPTH}/CV_test_RCV.txt"}
 CXML=${2:-"${RPTH}/ClinVarFullRelease_00-latest.xml.gz"}
 
@@ -28,7 +28,6 @@ fi
 for rcv in `< "${TEST}"`; do
     xmlstarlet sel -t -c "${CVSET}[${RCV}=\"${rcv}\"]" -n "${CXML}"
 done
-
 
 ### footer
 if [ 'gz' == "${CXML##*.}" ] ; then
