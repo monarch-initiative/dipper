@@ -99,7 +99,7 @@ CURIEMAP = {
     'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
     'foaf': 'http://xmlns.com/foaf/0.1/',
-    '_':    'https://monarchinitiave.org/.well-known/genid/',
+    '_':    'https://monarchinitiave.org/.well-known/genid/BN',
     'BFO':  'http://purl.obolibrary.org/obo/BFO_',
     'ECO':  'http://purl.obolibrary.org/obo/ECO_',
     'ERO':  'http://purl.obolibrary.org/obo/ERO_',
@@ -248,7 +248,7 @@ with open(ARGS.transtab) as f:
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
 if ARGS.blanknode is True:
-    CURIEMAP['_'] = '_:'
+    CURIEMAP['_'] = '_:BN'
 
 #######################################################
 # main loop over xml
@@ -327,7 +327,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             if rcv_variant_type is None:
                 LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
-                    RCV_Measure.get('Type').text)
+                    RCV_Measure.get('Type'))
                 continue
 
             RCV_VariantName = RCV_Measure.find(
@@ -563,14 +563,13 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # <:_evidence_id><rdf:type><SEPIO:0000000> .
             write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
-            # <:_evidence_id><rdfs:label><'evidence line'> .  # nope
-            # write_spo(_evidence_id, 'rdfs:label', 'evidence line')
+
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
             write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(
                     _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
-            # <:_assertion_id><SEPIO_0000111><:_evidence_id>  is_ass_supprt_by
+            # <:_assertion_id><SEPIO_0000111><:_evidence_id>
             write_spo(_assertion_id, 'SEPIO:0000111', _evidence_id)
 
             # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
@@ -691,8 +690,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                 else:
                     scv_geno = None
 
-                if scv_geno is not None:
+
+                if scv_geno is not None and scv_geno in (
+                        'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
+                        'GENO:0000843', 'GENO:0000845'):
                     # we have the association's (SCV) pathnogicty call
+                    # and its significance is known
                     # TRIPLES
                     # <monarch_assoc><OBAN:association_has_object_property><scv_geno>
                     write_spo(
@@ -706,12 +709,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc)
 
                     # store association's significance to compare w/sibs
-                    if scv_geno in (
-                            'GENO:0000840', 'GENO:0000841',
-                            'GENO:0000844', 'GENO:0000843',
-                            'GENO:0000845'):
-                        pathocalls[monarch_assoc] = scv_geno
-
+                    pathocalls[monarch_assoc] = scv_geno
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
@@ -799,8 +797,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                         # <_:provenance_id><rdfs:label><SCV_OIMT.text>
                         write_spo(
-                            _provenance_id, 'rdfs:label',
-                            _evidence_id + ' ' + SCV_OIMT.text)
+                            _provenance_id, 'rdfs:label', SCV_OIMT.text)
 
         # End of the ClinVarSet.
         # Output triples that only are known after processing sibbling records
