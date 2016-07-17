@@ -23,6 +23,7 @@ function simplify(str){
 	return str
 }
 
+# if possible, find a shorter form for the input
 function contract(uri){
 	if(uri in prefix)
 		return prefix[uri]
@@ -32,18 +33,17 @@ function contract(uri){
 			if(0 < start)
 				return exception[substr(uri, start, RLENGTH)]
 		}
-	# else
 		return simplify(uri)
 }
 
-# get the final (identifier) portion of a slashed path
+# get the final (fragment identifier) portion of a slashed path
 function final(uri){
 	split(trim(uri),b,"/")
 	p = b[length(b)]
 	anchor = match(p, "#")
 	if(anchor > 0)
 		p = substr(p, anchor+1)
-	return
+	return p
 }
 
 BEGIN{
@@ -90,16 +90,13 @@ BEGIN{
 	nodelist[o " [shape=record];"]++
 }
 
+# output dot file, include edge counts
 END{
 	print "digraph {"
 	print "rankdir=LR;"
 	print "charset=\"utf-8\";"
-	for(edge in edgelist){
-		print edge " (" edgelist[edge] ")\"];"
-	}
-	for(node in nodelist){
-		print node
-	}
+	for(edge in edgelist) print edge " (" edgelist[edge] ")\"];"
+	for(node in nodelist) print node
 	print "}"
 }
 
