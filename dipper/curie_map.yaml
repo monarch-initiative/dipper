@@ -108,7 +108,7 @@
 'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
 'NCBIGenome' : 'http://www.ncbi.nlm.nih.gov/genome/'
 'NCBITaxon' : 'http://purl.obolibrary.org/obo/NCBITaxon_'
-'OMIA-breed': 'http://monarchinitiative.org/model/OMIA-breed:'
+'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'
 'UCSC' : 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
 
 # homology
