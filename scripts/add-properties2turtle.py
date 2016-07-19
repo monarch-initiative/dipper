@@ -13,15 +13,15 @@ def main():
     parser.add_argument('--output', '-o', type=str, required=True,
                         help='Location of output file')
     parser.add_argument('--format', '-f', type=str, default="turtle",
-                        help='format of rdf file (turtle, n3, rdf/xml)')
+                        help='format of rdf file (turtle, nt, rdf/xml)')
     args = parser.parse_args()
     property_list = get_properties_from_input(args.input, args.format)
     merged_graph = make_property_graph(property_list)
 
     # merge graphs
-    merged_graph.parse(args.input, format="turtle")
+    merged_graph.parse(args.input, format=args.format)
 
-    merged_graph.serialize(args.output, format="turtle")
+    merged_graph.serialize(args.output, format=args.format)
 
 
 def get_properties_from_input(file, format):
@@ -93,4 +93,3 @@ def add_property_to_graph(results, graph, property_type, property_list):
 
 if __name__ == "__main__":
     main()
-

@@ -6,6 +6,24 @@
     These triples comform to the core of the
     SEPIO Evidence & Provenance model 2016 Apr
 
+    creating a test set.
+        get a full dataset   default ClinVarFullRelease_00-latest.xml.gz
+        get a list of RCV    default CV_test_RCV.txt
+        put the input files the raw directory
+        write the test set back to the raw directory
+    ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
+
+    parsing a test set  (producing blank nodes)
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+
+    parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -bnode=False
+
+    For while we are still required to redundantly conflate the owl properties
+    in with the data files.
+
+    python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
+
 '''
 import os
 import re
@@ -36,25 +54,30 @@ ARGPARSER = argparse.ArgumentParser()
 # INPUT
 ARGPARSER.add_argument(
     '-f', '--filename', default=FILES['f1'],
-    help="path to '" + FILES['f1'] + "'")
+    help="input filename. default: '" + FILES['f1'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
-    help="path to '" + FILES['f1'] + "'")
+    help="path to input file. default: '" + RPATH + '/raw/' + INAME + "'")
 
 ARGPARSER.add_argument(
     '-t', "--transtab",
     default=RPATH + '/translationtable/' + INAME + '.tt',
-    help="'pOtatoe'\t'potAtoe'")
+    help="'pOtatoe'\t'PREFIX:p123'   default: " +
+    RPATH + '/translationtable/' + INAME + '.tt')
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(
     '-d', "--destination", default=RPATH + '/out',
-    help='directory to write into')
+    help='directory to write into. default: "' + RPATH + '/out"')
 
 ARGPARSER.add_argument(
     '-o', "--output", default=INAME + '.nt',
     help='file name to write to')
+
+ARGPARSER.add_argument(
+    '-b', '--blanknode', default=True,
+    help='default: True. have blank nodes. False to materialize blank nodes')
 
 # TODO validate IO arguments
 ARGS = ARGPARSER.parse_args()
@@ -76,7 +99,7 @@ CURIEMAP = {
     'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
     'foaf': 'http://xmlns.com/foaf/0.1/',
-    '_':    'https://monarchinitiave.org/.well-known/genid/',
+    '_':    'https://monarchinitiave.org/.well-known/genid/BN',
     'BFO':  'http://purl.obolibrary.org/obo/BFO_',
     'ECO':  'http://purl.obolibrary.org/obo/ECO_',
     'ERO':  'http://purl.obolibrary.org/obo/ERO_',
@@ -94,6 +117,7 @@ CURIEMAP = {
     'IAO':  'http://purl.obolibrary.org/obo/IAO_',
     'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'MONARCH':  'http://monarchinitiative.org/MONARCH_',
+    'MonarchData': 'http://data.monarchinitiative.org/ttl/',
     'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
@@ -122,7 +146,7 @@ def make_spo(sub, prd, obj):
     (prdcuri, prdid) = re.split(r':', prd)
     objt = ''
 
-    # obj  is a curie or literal [string|number]
+    # object is a curie or bnode or literal [string|number]
     match = re.match(CURIERE, obj)
     objcuri = None
     if match is not None:
@@ -131,7 +155,10 @@ def make_spo(sub, prd, obj):
         except ValueError:
             match = None
     if match is not None and objcuri in CURIEMAP:
-        objt = '<' + CURIEMAP[objcuri] + objid + '>'
+        objt = CURIEMAP[objcuri] + objid
+        # allow unexpanded bnodes in object
+        if CURIEMAP[objcuri] != '_:':
+            objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
     else:
@@ -141,11 +168,14 @@ def make_spo(sub, prd, obj):
         obj = obj.replace('\n', '\\n').replace('\r', '\\r')
         objt = '"' + obj + '"'
 
+    # allow unexpanded bnodes in subject
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
+        subjt = CURIEMAP[subcuri] + subid
+        if CURIEMAP[subcuri] != '_:':
+            subjt = '<' + subjt + '> '
 
-        return '<' + CURIEMAP[subcuri] + subid + '> ' + \
-               '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+        return subjt + '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
         return None
@@ -205,6 +235,8 @@ def scv_link(scv_sig):
             write_spo(scv_b, link, scv_a)
     return
 
+# Translate airbratary strings found in datasets
+# to specific things found in ontologies
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
@@ -212,6 +244,11 @@ with open(ARGS.transtab) as f:
         if line != "":
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
+
+# Overide the given Skolem IRI for our blank nodes
+# with an unresovable alternative.
+if ARGS.blanknode is True:
+    CURIEMAP['_'] = '_:BN'
 
 #######################################################
 # main loop over xml
@@ -223,6 +260,10 @@ with gzip.open(FILENAME, 'rt') as fh:
         sys.exit(-1)
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
+
+    # @prefix MonarchData: <http://data.monarchinitiative.org/ttl/> .
+    # <MonarchData: + ARGS.output> <a> <owl:Ontology>
+    write_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology')
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
@@ -286,7 +327,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             if rcv_variant_type is None:
                 LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
-                    RCV_Measure.get('Type').text)
+                    RCV_Measure.get('Type'))
                 continue
 
             RCV_VariantName = RCV_Measure.find(
@@ -522,14 +563,13 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # <:_evidence_id><rdf:type><SEPIO:0000000> .
             write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
-            # <:_evidence_id><rdfs:label><'evidence line'> .  # nope
-            # write_spo(_evidence_id, 'rdfs:label', 'evidence line')
+
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
             write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(
                     _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
-            # <:_assertion_id><SEPIO_0000111><:_evidence_id>  is_ass_supprt_by
+            # <:_assertion_id><SEPIO_0000111><:_evidence_id>
             write_spo(_assertion_id, 'SEPIO:0000111', _evidence_id)
 
             # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
@@ -592,9 +632,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                     write_spo(
                         _assertion_method_id, 'rdf:type', 'SEPIO:0000037')
 
-                    # <_assertion_method_id><rdf:label><scv_assert_method>
+                    # <_assertion_method_id><rdfs:label><scv_assert_method>
                     write_spo(
-                        _assertion_method_id, 'rdf:label', scv_assert_method)
+                        _assertion_method_id, 'rdfs:label', scv_assert_method)
 
                     # <_assertion_method_id><ERO:0000480><scv_citation_url>
                     if SCV_Citation is not None:
@@ -639,14 +679,23 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'IAO:0000013')
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
-            scv_significance = scv_geno = None
+            scv_significance = None; scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
-                if scv_significance in TT:
+                if scv_significance is not None \
+                        and scv_significance in TT \
+                        and re.match(r'GENO:000084', TT[scv_significance]):
                     scv_geno = TT[scv_significance]
-                if scv_geno is not None:
+                else:
+                    scv_geno = None
+
+
+                if scv_geno is not None and scv_geno in (
+                        'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
+                        'GENO:0000843', 'GENO:0000845'):
                     # we have the association's (SCV) pathnogicty call
+                    # and its significance is known
                     # TRIPLES
                     # <monarch_assoc><OBAN:association_has_object_property><scv_geno>
                     write_spo(
@@ -660,11 +709,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         monarch_assoc, 'OIO:hasdbxref', 'ClinVar:' + rcv_acc)
 
                     # store association's significance to compare w/sibs
-                    if scv_geno in (
-                            'GENO:0000840', 'GENO:0000841',
-                            'GENO:0000844', 'GENO:0000843',
-                            'GENO:0000845'):
-                        pathocalls[monarch_assoc] = scv_geno
+                    pathocalls[monarch_assoc] = scv_geno
 
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
@@ -752,8 +797,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                         # <_:provenance_id><rdfs:label><SCV_OIMT.text>
                         write_spo(
-                            _provenance_id, 'rdfs:label',
-                            _evidence_id + ' ' + SCV_OIMT.text)
+                            _provenance_id, 'rdfs:label', SCV_OIMT.text)
 
         # End of the ClinVarSet.
         # Output triples that only are known after processing sibbling records
