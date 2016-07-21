@@ -13,28 +13,46 @@
 # which may belong to a "structural" ontology as opposed to
 # a data uri.
 
-#  Perhaps an improvement would be to to also
+#  Perhaps an improvement would be to also
 # express subject and objects as individual curies (ala predicates)
 # iff their namespace is also used by a predicate.
 
 ##########################################################
-# remove first and last chars from input
+# remove first and last chars from input string <>
 function trim(str){ 
 	return substr(str,2,length(str)-2)
 }
 
-# remove final element in slashed path
-# this leaves the namespace of the removed identifier
+########################################################
+# remove final(ish) element in paths with various delimiters
+# this leaves the namespace of a removed identifier
+
+# this may need to be called more than once since 
+# some identifiers may have embedded delimiters
 function stripid(uri){
-	l = match(uri,/.*\//)  # side effect is RLENGTH
-	if(l<=0)
+	# <_:blanknode> are not allowed in ntriples (but may happen anyway)
+	if(1 == match(uri, /^_:/))
+		return "BNODE"
+	# perspective endpoints, choose the longest
+	delim["_"]=0; delim["/"]=0;
+	delim["="]=0; delim[":"]=0; delim["#"]=0;
+	char=""; max=-1;
+	for(c in delim){
+		l = match(uri, char)  # side effect is RLENGTH
+		if(l > max){
+			char = c;
+			delim[char] = RLENGTH
+		}
+	}
+	if(max<=0) # we don't know what it is, a literal perhaps or uri fragment
 		return uri
 	else 
-		return substr(uri,1,RLENGTH-1)
+		return substr(uri,1,delim[char])  # the probably truncated uri
 }
 
 # keep underscore, letters & numbers 
 # change the rest to (a single) underscore sans leading & trailing
+# this passes valid node labels from dot's perspective
 function simplify(str){
 	gsub(/[^[:alpha:][:digit:]_]+/,"_",str)
 	gsub(/^_+|_+$/, "",str)
@@ -44,15 +62,19 @@ function simplify(str){
 
 # if possible, find a shorter form for the input
 function contract(uri){
-	if(uri in prefix)
-		return prefix[uri]
+	u = uri
+	# shorten till longest uri in curi map is found (or not)
+	while(!(u in prefix) && (0 < length(u)))
+		u = stripid(substr(u,1,length(u)-1))
+
+	if(u in prefix)
+		return prefix[u]
 	else 
 		for(ex in exception){
-			start = match(uri, ex)
-			if(0 < start)
-				return exception[substr(uri, start, RLENGTH)]
+			if(0 < match(uri, ex))
+				return exception[substr(uri, 1, RLENGTH)]
 		}
-		return simplify(uri)
+		return "___" simplify(uri) 
 }
 
 # get the final (incl fragment identifier) portion of a slashed path
@@ -66,16 +88,13 @@ function final(uri){
 }
 
 BEGIN{
-	# Monarchinitiave's dipper ingest files have cases 
-	# which escape the general rules
-	# in everything
-	exception["http://www.w3.org/2002/07"]="OWL_"
-	exception["http://www.w3.org/1999/02"]="RDF"
-	exception["http://www.w3.org/2000/01"]="RDFS"
-	# in go,mgi,wormbase
-	exception["http://dx.doi.org"]="DOI"
+	prefix["BNODE"] = "BNODE"  # is a fixed point
+	# revisit if exceptions are still necessary
+	exception["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
+	exception["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
+	exception["http://www.w3.org/2002/07/owl#"]="owl"
 	# in mgi
-	exception["https://www.mousephenotype.org"]="IMPC_"
+	exception["https://www.mousephenotype.org"]="IMPC"
 	# in panther
 	exception["http://identifiers.org/wormbase"]="WormBase"
 	# just until skolemized bnodes get in the curie map?
@@ -85,10 +104,13 @@ BEGIN{
 }
 
 # main loop
-# parse and stash the curie file (first file)
-(FNR == NR) && /^'[^']*' *: 'http[^']*'.*/ {
-	split($0,a,"'")
-	prefix[stripid(a[4])]=a[2]
+# parse and stash the curie yaml file (first file)
+# YAML format is tic delimited word (the curi prefix)
+# optional whitespace, a colon, then a tic delimited url
+# (FNR == NR) && /^'[^']*' *: 'http[^']*'.*/ { # loosing some?
+(FNR == NR) && /^'.*/ {
+	split($0, arr, "'")
+	prefix[arr[4]]=arr[2]
 }
 # process the ntriple file(s)  which are not the first file
 ### case when subject predicate and object are all uri
@@ -96,22 +118,22 @@ BEGIN{
 	### Subject (uri)
 	s = contract(stripid(trim($1)))
 	### Predicate (uri)
-	q = final(trim($2))
-	p = contract(stripid(trim($2)))
+	p =  final(trim($2))
+	ns = contract(stripid(trim($2)))
 	### Object (like subject)
 	o = contract(stripid(trim($3)))
-	edgelist[s " -> " o " [label=\"" p ":" q]++
+	edgelist[s,ns ":" p,o]++
 }
 ### case when the object is a literal
 (FNR != NR) && /^<[^>]*> <[^>]*> "[^"]*" \.$/ {
 	### Subject (uri)
 	s = contract(stripid(trim($1)))
 	### Predicate (uri)
-	q = final(trim($2))
-	p = contract(stripid(trim($2)))
+	p = final(trim($2))
+	ns = contract(stripid(trim($2)))
 	### not a uri
 	o = "LITERAL"
-	edgelist[s " -> " o " [label=\"" p":"q ]++
+	edgelist[s, ns ":" p, o]++
 	nodelist[o " [shape=record];"]++
 }
 
@@ -120,14 +142,17 @@ END{
 	print "digraph {"
 	print "rankdir=LR;"
 	print "charset=\"utf-8\";"
-	for(edge in edgelist) print edge " (" edgelist[edge] ")\"];"
+	for(edge in edgelist){
+		split(edge ,spo, SUBSEP);
+		print simplify(spo[1]) " -> " simplify(spo[3]) \
+		" [label=\"" spo[2] " (" edgelist[edge] ")\"];"
+	}
 	for(node in nodelist) print node
 	print "labelloc=\"t\";"
 	title = final(FILENAME)
-	now = systime()
-	# return date(1)-style output
-	datestamp = strftime("%Y%m%d", now)
+	datestamp = strftime("%Y%m%d", systime())
 	print "label=\"" substr(title,1,length(title)-3) " (" datestamp ")\";"
 	print "}"
+
 }
 
