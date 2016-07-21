@@ -19,7 +19,7 @@
 
 ##########################################################
 # remove first and last chars from input string <>
-function trim(str){ 
+function trim(str){
 	return substr(str,2,length(str)-2)
 }
 
@@ -27,7 +27,7 @@ function trim(str){
 # remove final(ish) element in paths with various delimiters
 # this leaves the namespace of a removed identifier
 
-# this may need to be called more than once since 
+# this may need to be called more than once since
 # some identifiers may have embedded delimiters
 function stripid(uri){
 	# <_:blanknode> are not allowed in ntriples (but may happen anyway)
@@ -44,13 +44,14 @@ function stripid(uri){
 			delim[char] = RLENGTH
 		}
 	}
-	if(max<=0) # we don't know what it is, a literal perhaps or uri fragment
+	if(max<=0 || char=="")
+		# we don't know what it is, a literal perhaps or uri fragment
 		return uri
-	else 
+	else
 		return substr(uri,1,delim[char])  # the probably truncated uri
 }
 
-# keep underscore, letters & numbers 
+# keep underscore, letters & numbers
 # change the rest to (a single) underscore sans leading & trailing
 # this passes valid node labels from dot's perspective
 function simplify(str){
@@ -66,15 +67,14 @@ function contract(uri){
 	# shorten till longest uri in curi map is found (or not)
 	while(!(u in prefix) && (0 < length(u)))
 		u = stripid(substr(u,1,length(u)-1))
-
 	if(u in prefix)
 		return prefix[u]
-	else 
+	else
 		for(ex in exception){
-			if(0 < match(uri, ex))
-				return exception[substr(uri, 1, RLENGTH)]
+			if((0 < match(uri, ex)) && exception[substr(uri,1,RLENGTH)])
+				return exception[substr(uri,1,RLENGTH)]
 		}
-		return "___" simplify(uri) 
+		return "___" simplify(uri)
 }
 
 # get the final (incl fragment identifier) portion of a slashed path
@@ -88,7 +88,10 @@ function final(uri){
 }
 
 BEGIN{
-	prefix["BNODE"] = "BNODE"  # is a fixed point
+	prefix["BNODE"]="BNODE"  # is a fixed point
+	prefix["https://monarchinitiative.org/_"]="BNODE"
+	# just until skolemized bnodes get in the curie map?
+	exception["https://monarchinitiative.org/.well-known/genid"]="BNODE"
 	# revisit if exceptions are still necessary
 	exception["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
 	exception["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
@@ -97,10 +100,9 @@ BEGIN{
 	exception["https://www.mousephenotype.org"]="IMPC"
 	# in panther
 	exception["http://identifiers.org/wormbase"]="WormBase"
-	# just until skolemized bnodes get in the curie map?
-	exception["https://monarchinitiave.org/.well-known/genid"]="BNODE"
 	# till all non httpS: are purged
-	exception["http://monarchinitiave.org"]="MONARCH"
+	exception["http://monarchinitiative.org/"]="BASE"
+	exception["https://monarchinitiative.org/MONARCH_"]="MONARCH"
 }
 
 # main loop
@@ -110,6 +112,8 @@ BEGIN{
 # (FNR == NR) && /^'[^']*' *: 'http[^']*'.*/ { # loosing some?
 (FNR == NR) && /^'.*/ {
 	split($0, arr, "'")
+	if(arr[2]=="")
+		arr[2]="BASE"
 	prefix[arr[4]]=arr[2]
 }
 # process the ntriple file(s)  which are not the first file
@@ -153,6 +157,5 @@ END{
 	datestamp = strftime("%Y%m%d", systime())
 	print "label=\"" substr(title,1,length(title)-3) " (" datestamp ")\";"
 	print "}"
-
 }
 
