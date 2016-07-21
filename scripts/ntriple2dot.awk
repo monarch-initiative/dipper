@@ -99,7 +99,9 @@ BEGIN{
 	prefix["http://identifiers.org/wormbase"]="WormBase"
 	# till all non httpS: are purged
 	prefix["http://monarchinitiative.org/"]="BASE"
+	prefix["http://www.monarchinitiative.org/"]="BASE"
 	prefix["http://monarchinitiative.org/MONARCH_"]="MONARCH"
+	prefix["http://www.monarchinitiative.org/MONARCH_"]="MONARCH"
 }
 
 # main loop
