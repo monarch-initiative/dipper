@@ -65,16 +65,12 @@ function simplify(str){
 function contract(uri){
 	u = uri
 	# shorten till longest uri in curi map is found (or not)
-	while(!(u in prefix) && (0 < length(u)))
+	while(!(u in prefix))
 		u = stripid(substr(u,1,length(u)-1))
 	if(u in prefix)
 		return prefix[u]
 	else
-		for(ex in exception){
-			if((0 < match(uri, ex)) && exception[substr(uri,1,RLENGTH)])
-				return exception[substr(uri,1,RLENGTH)]
-		}
-		return "___" simplify(uri)
+		return simplify(uri)
 }
 
 # get the final (incl fragment identifier) portion of a slashed path
@@ -88,21 +84,22 @@ function final(uri){
 }
 
 BEGIN{
+	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/_"]="BNODE"
 	# just until skolemized bnodes get in the curie map?
-	exception["https://monarchinitiative.org/.well-known/genid"]="BNODE"
+	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
 	# revisit if exceptions are still necessary
-	exception["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
-	exception["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
-	exception["http://www.w3.org/2002/07/owl#"]="owl"
+	prefix["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
+	prefix["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
+	prefix["http://www.w3.org/2002/07/owl#"]="owl"
 	# in mgi
-	exception["https://www.mousephenotype.org"]="IMPC"
+	prefix["https://www.mousephenotype.org"]="IMPC"
 	# in panther
-	exception["http://identifiers.org/wormbase"]="WormBase"
+	prefix["http://identifiers.org/wormbase"]="WormBase"
 	# till all non httpS: are purged
-	exception["http://monarchinitiative.org/"]="BASE"
-	exception["https://monarchinitiative.org/MONARCH_"]="MONARCH"
+	prefix["http://monarchinitiative.org/"]="BASE"
+	prefix["http://monarchinitiative.org/MONARCH_"]="MONARCH"
 }
 
 # main loop
