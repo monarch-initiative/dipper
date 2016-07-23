@@ -28,10 +28,10 @@ function trim(str){
 # this leaves the namespace of a removed identifier
 
 # this may need to be called more than once since
-# some identifiers may have embedded delimiters
+# some identifiers may have embedded delimiters other uri use differently
 function stripid(uri){
 	# <_:blanknode> are not allowed in ntriples (but may happen anyway)
-	if(1 == match(uri, /^_:/))
+	if(0 < match(uri, /^_:/))
 		return "BNODE"
 	# perspective endpoints, choose the longest
 	delim["_"]=0; delim["/"]=0;
@@ -65,12 +65,14 @@ function simplify(str){
 function contract(uri){
 	u = uri
 	# shorten till longest uri in curi map is found (or not)
-	while(!(u in prefix))
+	while(!(u in prefix) &&  length(u))
 		u = stripid(substr(u,1,length(u)-1))
 	if(u in prefix)
 		return prefix[u]
-	else
+	else{
+		# printf("WARN  %s\n", uri) > "/dev/stderr"
 		return simplify(uri)
+	}
 }
 
 # get the final (incl fragment identifier) portion of a slashed path
@@ -89,7 +91,9 @@ BEGIN{
 	prefix["https://monarchinitiative.org/_"]="BNODE"
 	# just until skolemized bnodes get in the curie map?
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
-	# revisit if exceptions are still necessary
+	############################################################
+	# revisit whether these exceptions are still necessary often
+	# they may have been moved into the  prefix mapping file
 	prefix["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
 	prefix["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
 	prefix["http://www.w3.org/2002/07/owl#"]="owl"
@@ -97,17 +101,25 @@ BEGIN{
 	prefix["https://www.mousephenotype.org"]="IMPC"
 	# in panther
 	prefix["http://identifiers.org/wormbase"]="WormBase"
+	# in IMPC
+	prefix["http://www.mousephenotype.org"]="IMPC"
+	# in GWAScatalog
+	prefix["http://www.ncbi.nlm.nih.gov/SNP/"]="dbSNP"
 	# till all non httpS: are purged
 	prefix["http://monarchinitiative.org/"]="BASE"
 	prefix["http://www.monarchinitiative.org/"]="BASE"
 	prefix["http://monarchinitiative.org/MONARCH_"]="MONARCH"
+	prefix["http://www.monarchinitiative.org/MONARCH"]=""
 	prefix["http://www.monarchinitiative.org/MONARCH_"]="MONARCH"
+	prefix["http://data.monarchinitiative.org/ttl"]="MonarchData"
+	prefix["http://archive.monarchinitiative.org/ttl"]="MonarchArchive"
 }
 
 # main loop
 # parse and stash the curie yaml file (first file)
 # YAML format is tic delimited word (the curi prefix)
-# optional whitespace, a colon, then a tic delimited url
+# optional whitespace, a colon, optional whitespace
+# then a tic delimited url
 # (FNR == NR) && /^'[^']*' *: 'http[^']*'.*/ { # loosing some?
 (FNR == NR) && /^'.*/ {
 	split($0, arr, "'")
@@ -115,29 +127,67 @@ BEGIN{
 		arr[2]="BASE"
 	prefix[arr[4]]=arr[2]
 }
+
 # process the ntriple file(s)  which are not the first file
-### case when subject predicate and object are all uri
+
+### subject predicate and object are all uri
 (FNR != NR) && /^<[^>]*> <[^>]*> <[^>]*> \.$/ {
-	### Subject (uri)
 	s = contract(stripid(trim($1)))
-	### Predicate (uri)
+	p =  final(trim($2))
+	ns = contract(stripid(trim($2)))
+	o = contract(stripid(trim($3)))
+	edgelist[s,ns ":" p,o]++
+	done[NR]=1
+}
+### subject & predicate are uri but the object is a literal
+(FNR != NR) && /^<[^>]*> <[^>]*> "[^"]*".*\.$/ {
+	s = contract(stripid(trim($1)))
+	p = final(trim($2))
+	ns = contract(stripid(trim($2)))
+	edgelist[s, ns ":" p, "LITERAL"]++
+	done[NR]=1
+}
+### subject is a bare blank node, predicate and object are uri
+(FNR != NR) && /^_:[^ ]* <[^>]*> <[^>]*> \.$/ {
+	# once our bnode syntax is uniform we may want more info out of it
+	# s = contract(stripid($1))
 	p =  final(trim($2))
 	ns = contract(stripid(trim($2)))
 	### Object (like subject)
 	o = contract(stripid(trim($3)))
-	edgelist[s,ns ":" p,o]++
+	edgelist["BNODE",ns ":" p,o]++
+	done[NR]=1
 }
-### case when the object is a literal
-(FNR != NR) && /^<[^>]*> <[^>]*> "[^"]*" \.$/ {
-	### Subject (uri)
+### subject & predicate are uri & object is a bare blank node
+(FNR != NR) && /^<[^>]*> <[^>]*> _:[^ ]* \.$/ {
 	s = contract(stripid(trim($1)))
-	### Predicate (uri)
+	p =  final(trim($2))
+	ns = contract(stripid(trim($2)))
+	#o = contract(stripid($3))
+	edgelist[s,ns ":" p,"BNODE"]++
+	done[NR]=1
+}
+### subject and object are a bare blank nodes, predicate is a uri
+(FNR != NR) && /^_:[^ ]* <[^>]*> _:[^ ]* \.$/ {
+	# s = contract(stripid($1))
+	p =  final(trim($2))
+	ns = contract(stripid(trim($2)))
+	# o = contract(stripid($3))
+	edgelist["BNODE",ns ":" p,"BNODE"]++
+	done[NR]=1
+}
+### subject is a bare blank node, predicate is a uri & the object is a literal
+(FNR != NR) && /^_:[^ ]* <[^>]*> "[^"]*".*\.$/ {
+	# s = contract(stripid($1))
 	p = final(trim($2))
 	ns = contract(stripid(trim($2)))
-	### not a uri
-	o = "LITERAL"
-	edgelist[s, ns ":" p, o]++
-	nodelist[o " [shape=record];"]++
+	edgelist["BNODE", ns ":" p, "LITERAL"]++
+	done[NR]=1
+}
+
+# print anything else so it makes itself known
+(FNR != NR) && (done[NR]<1) && (NF>1){
+	printf("ERROR? line %i  %s", FNR, $0) > "/dev/stderr"
 }
 
 # output dot file, include edge counts
@@ -150,7 +200,7 @@ END{
 		print simplify(spo[1]) " -> " simplify(spo[3]) \
 		" [label=\"" spo[2] " (" edgelist[edge] ")\"];"
 	}
-	for(node in nodelist) print node
+	print "LITERAL [shape=record];"
 	print "labelloc=\"t\";"
 	title = final(FILENAME)
 	datestamp = strftime("%Y%m%d", systime())
