@@ -187,7 +187,7 @@ BEGIN{
 
 # print anything else so it makes itself known
 (FNR != NR) && (done[NR]<1) && (NF>1){
-	printf("ERROR? line %i  %s", FNR, $0) > "/dev/stderr"
+	printf("ERROR? in %s at line %i  %s",FILENAME,FNR,$0) > "/dev/stderr"
 }
 
 # output dot file, include edge counts
