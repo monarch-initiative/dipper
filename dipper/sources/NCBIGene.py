@@ -249,11 +249,19 @@ class NCBIGene(Source):
                                 if fixedr.split(':')[0] not in [
                                         'Vega', 'IMGT/GENE-DB']:
                                     if self.class_or_indiv.get(gene_id) == 'C':
-                                        gu.addEquivalentClass(
-                                            g, gene_id, fixedr)
+                                        if re.match(r'^OMIM', fixedr):
+                                            isOmimDisease = self._process_omim_equivalencies(fixedr)
+                                            if not isOmimDisease:
+                                                gu.addEquivalentClass(
+                                                    g, gene_id, fixedr)
+                                        else:
+                                            gu.addEquivalentClass(
+                                                g, gene_id, fixedr)
                                     else:
                                         if re.match(r'^OMIM', fixedr):
-                                            self._process_omim_equivalencies(g, gene_id, fixedr)
+                                            isOmimDisease = self._process_omim_equivalencies(fixedr)
+                                            if not isOmimDisease:
+                                                gu.addSameIndividual(g, gene_id, fixedr)
                                         else:
                                             gu.addSameIndividual(
                                                 g, gene_id, fixedr)
@@ -671,7 +679,8 @@ class NCBIGene(Source):
             found_counter, len(gene_ids))
         return
 
-    def _process_omim_equivalencies(self, graph, gene_id, omim_id):
+    @staticmethod
+    def _process_omim_equivalencies(omim_id):
         """
         Process omim equivalencies by examining the monarch ontology scigraph
         As an alternative we could examine mondo.owl, since the ontology
@@ -683,10 +692,17 @@ class NCBIGene(Source):
         :param omim_id: omim id as curie
         :return: None
         """
-        SCIGRAPH_BASE = 'https://scigraph-data.monarchinitiative.org/scigraph/graph/'
-        graph_utils = GraphUtils(curie_map.get())
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=10)
+        session.mount('https://', adapter)
+
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.ERROR)
+
+        SCIGRAPH_BASE = 'https://scigraph-ontology.monarchinitiative.org/scigraph/graph/'
+        isOmimDisease = False
         url = SCIGRAPH_BASE + omim_id + '.json'
-        response = requests.get(url)
+        response = session.get(url)
         try:
             results = response.json()
             if 'nodes' in results and len(results['nodes']) > 0:
@@ -694,9 +710,8 @@ class NCBIGene(Source):
                         and 'category' in results['nodes'][0]['meta'] \
                         and 'disease' in results['nodes'][0]['meta']['category']:
                     logger.info("{0} is a disease, skipping".format(omim_id))
-                else:
-                    graph_utils.addSameIndividual(graph, gene_id, omim_id)
+                    isOmimDisease = True
         except ValueError:
-            graph_utils.addSameIndividual(graph, gene_id, omim_id)
+            pass
 
-        return
+        return isOmimDisease
