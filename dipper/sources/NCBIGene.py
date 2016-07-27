@@ -250,7 +250,7 @@ class NCBIGene(Source):
                                         'Vega', 'IMGT/GENE-DB']:
                                     if self.class_or_indiv.get(gene_id) == 'C':
                                         if re.match(r'^OMIM', fixedr):
-                                            isOmimDisease = self._process_omim_equivalencies(fixedr)
+                                            isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
                                                 gu.addEquivalentClass(
                                                     g, gene_id, fixedr)
@@ -259,7 +259,7 @@ class NCBIGene(Source):
                                                 g, gene_id, fixedr)
                                     else:
                                         if re.match(r'^OMIM', fixedr):
-                                            isOmimDisease = self._process_omim_equivalencies(fixedr)
+                                            isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
                                                 gu.addSameIndividual(g, gene_id, fixedr)
                                         else:
@@ -680,7 +680,7 @@ class NCBIGene(Source):
         return
 
     @staticmethod
-    def _process_omim_equivalencies(omim_id):
+    def _check_if_disease(gene_id):
         """
         Process omim equivalencies by examining the monarch ontology scigraph
         As an alternative we could examine mondo.owl, since the ontology
@@ -701,7 +701,7 @@ class NCBIGene(Source):
 
         SCIGRAPH_BASE = 'https://scigraph-ontology.monarchinitiative.org/scigraph/graph/'
         isOmimDisease = False
-        url = SCIGRAPH_BASE + omim_id + '.json'
+        url = SCIGRAPH_BASE + gene_id + '.json'
         response = session.get(url)
         try:
             results = response.json()
@@ -709,7 +709,7 @@ class NCBIGene(Source):
                 if 'meta' in results['nodes'][0] \
                         and 'category' in results['nodes'][0]['meta'] \
                         and 'disease' in results['nodes'][0]['meta']['category']:
-                    logger.info("{0} is a disease, skipping".format(omim_id))
+                    logger.info("{0} is a disease, skipping".format(gene_id))
                     isOmimDisease = True
         except ValueError:
             pass
