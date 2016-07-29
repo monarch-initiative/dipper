@@ -286,7 +286,7 @@ class Source:
 
     def get_files(self, is_dl_forced):
         """
-        Given a set of files for this source, it will go fetch them, and add
+        Given a set of files for this source, it will go fetch them, and
         set a default version by date.  If you need to set the version number
         by another method, then it can be set again.
         :return:
