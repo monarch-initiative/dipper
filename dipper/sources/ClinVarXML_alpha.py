@@ -33,6 +33,7 @@ import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
+
 # import Requests
 # from dipper import curie_map  # hangs on to stale data?
 
@@ -42,7 +43,11 @@ LOG = logging.getLogger(__name__)
 IPATH = re.split(r'/', os.path.realpath(__file__))
 (INAME, DOTPY) = re.split(r'\.', IPATH[-1].lower())
 RPATH = '/' + '/'.join(IPATH[1:-3])
-FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
+files = {
+    'f1': {
+        'file': 'ClinVarFullRelease_00-latest.xml.gz',
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'}
+}
 
 # regular expression to limit what is found in the CURIE identifier
 # it is ascii centric and may(will) not pass some valid utf8 curies
@@ -53,8 +58,8 @@ ARGPARSER = argparse.ArgumentParser()
 
 # INPUT
 ARGPARSER.add_argument(
-    '-f', '--filename', default=FILES['f1'],
-    help="input filename. default: '" + FILES['f1'] + "'")
+    '-f', '--filename', default=files['f1']['file'],
+    help="input filename. default: '" + files['f1']['file'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
@@ -88,6 +93,7 @@ OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
 # default to /dev/stdout if anything amiss
 
 # CURIEMAP = curie_map.get()
+# print("\n".join(CURIEMAP))
 # this still fails miserably and returns a copy
 # other than the one in this tree that I am updating. i.e.
 # print(CURIEMAP['SEPIO']) -> key error
@@ -130,7 +136,10 @@ CURIEMAP = {
     'ClinVar':           'http://www.ncbi.nlm.nih.gov/clinvar/',
 }
 
-# a buffer to store the triples below a MONARCH_association"
+# def fetch():
+#    get_files()
+
+# Buffer to store the triples below a MONARCH_association"
 _triples = [None] * 1000
 
 
@@ -707,12 +716,15 @@ with gzip.open(FILENAME, 'rt') as fh:
                         'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
                         'GENO:0000843', 'GENO:0000845'):
                     # we have the association's (SCV) pathnogicty call
-                    # and its significance is known
+                    # and its significance is explicit
                     ##########################################################
-                    # 2016 july. it now seems we do not want any? of the
-                    # proceeding triples unless we get here (not clear on this)
+                    # 2016 july.
+                    # We do not want any of the proceeding triples
+                    # unless we get here (no implicit "unknown significance")
                     # TRIPLES
-                    # <monarch_assoc><OBAN:association_has_object_property><scv_geno>
+                    # <monarch_assoc>
+                    #   <OBAN:association_has_object_property>
+                    #       <scv_geno>
                     write_spo(
                         monarch_assoc,
                         'OBAN:association_has_object_property',
