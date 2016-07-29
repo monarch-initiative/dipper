@@ -33,6 +33,7 @@ import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
+
 # import Requests
 # from dipper import curie_map  # hangs on to stale data?
 
@@ -42,7 +43,11 @@ LOG = logging.getLogger(__name__)
 IPATH = re.split(r'/', os.path.realpath(__file__))
 (INAME, DOTPY) = re.split(r'\.', IPATH[-1].lower())
 RPATH = '/' + '/'.join(IPATH[1:-3])
-FILES = {'f1': 'ClinVarFullRelease_00-latest.xml.gz'}
+files = {
+    'f1': {
+        'file': 'ClinVarFullRelease_00-latest.xml.gz',
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'}
+}
 
 # regular expression to limit what is found in the CURIE identifier
 # it is ascii centric and may(will) not pass some valid utf8 curies
@@ -53,8 +58,8 @@ ARGPARSER = argparse.ArgumentParser()
 
 # INPUT
 ARGPARSER.add_argument(
-    '-f', '--filename', default=FILES['f1'],
-    help="input filename. default: '" + FILES['f1'] + "'")
+    '-f', '--filename', default=files['f1']['file'],
+    help="input filename. default: '" + files['f1']['file'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
@@ -88,6 +93,7 @@ OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
 # default to /dev/stdout if anything amiss
 
 # CURIEMAP = curie_map.get()
+# print("\n".join(CURIEMAP))
 # this still fails miserably and returns a copy
 # other than the one in this tree that I am updating. i.e.
 # print(CURIEMAP['SEPIO']) -> key error
@@ -95,15 +101,18 @@ OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
 
 # hardcoding this while my loading from curie_map.yaml is wonky
 CURIEMAP = {
-    'dc': 'http://purl.org/dc/elements/1.1/',
+    '':     'https://monarchinitiative.org',
+    '_':    'https://monarchinitiative.org/.well-known/genid/BN',
+    'MONARCH':  'https://monarchinitiative.org/MONARCH_',
+    'MonarchData': 'https://data.monarchinitiative.org/ttl/',
+    'dc':   'http://purl.org/dc/elements/1.1/',
     'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
     'foaf': 'http://xmlns.com/foaf/0.1/',
-    '_':    'https://monarchinitiave.org/.well-known/genid/BN',
+    'owl':  'http://www.w3.org/2002/07/owl#',
     'BFO':  'http://purl.obolibrary.org/obo/BFO_',
     'ECO':  'http://purl.obolibrary.org/obo/ECO_',
     'ERO':  'http://purl.obolibrary.org/obo/ERO_',
-    # 'dbSNP': 'http://identifiers.org/dbSNP_',  # does not resolve
     'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=',
     'GENO': 'http://purl.obolibrary.org/obo/GENO_',
     'GO':   'http://purl.obolibrary.org/obo/GO_',
@@ -111,13 +120,10 @@ CURIEMAP = {
     'MP':   'http://purl.obolibrary.org/obo/MP_',
     'OBAN': 'http://purl.org/oban/',
     'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
-    'owl':  'http://www.w3.org/2002/07/owl#',
     'OBO':  'http://purl.obolibrary.org/obo/',
     'OIO':  'http://www.geneontology.org/formats/oboInOwl#',
     'IAO':  'http://purl.obolibrary.org/obo/IAO_',
     'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
-    'MONARCH':  'http://monarchinitiative.org/MONARCH_',
-    'MonarchData': 'http://data.monarchinitiative.org/ttl/',
     'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
     'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
@@ -129,6 +135,12 @@ CURIEMAP = {
     'ClinVarVariant':    'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
     'ClinVar':           'http://www.ncbi.nlm.nih.gov/clinvar/',
 }
+
+# def fetch():
+#    get_files()
+
+# Buffer to store the triples below a MONARCH_association"
+_triples = [None] * 1000
 
 
 def make_spo(sub, prd, obj):
@@ -183,10 +195,17 @@ def make_spo(sub, prd, obj):
 
 def write_spo(sub, prd, obj):
     '''
+        write triples to a buffer incase we decide to drop them
+    '''
+    _triples.append(make_spo(sub, prd, obj))
+
+
+def write_triples():
+    '''
         output a triple to the previously specified location
     '''
-    ntriple = make_spo(sub, prd, obj)
-    print(ntriple, file=OUTPUT)
+    print('\n'.join(_triples), file=OUTPUT)
+    del _triples[:]
 
 
 def scv_link(scv_sig):
@@ -261,7 +280,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
 
-    # @prefix MonarchData: <http://data.monarchinitiative.org/ttl/> .
+    # @prefix MonarchData: <https://data.monarchinitiative.org/ttl/> .
     # <MonarchData: + ARGS.output> <a> <owl:Ontology>
     write_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology')
 
@@ -458,6 +477,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             LOG.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
             continue
 
+        # start anew
+        del _triples[:]
+
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
 
@@ -533,7 +555,6 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(rcv_variant_id, 'rdf:type', rcv_variant_type)
 
             # <ClinVarVariant:rcv_variant_id><GENO:0000418>
-            # <ClinVarVariant:rcv_variant_id><rdf:type><owl:Class> TODO ???
 
             # RCV/MeasureSet/Measure/AttributeSet/XRef[@DB="dbSNP"]/@ID
             # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
@@ -568,7 +589,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(
-                    _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
+                _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
+
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>
             write_spo(_assertion_id, 'SEPIO:0000111', _evidence_id)
 
@@ -589,7 +611,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'ClinVarSubmitters:' + scv_orgid,
                 'rdfs:label',
                 scv_submitter)
-
+            ################################################################
             ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
             if ClinicalSignificance is not None:
                 scv_eval_date = str(
@@ -679,7 +701,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'IAO:0000013')
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
-            scv_significance = None; scv_geno = None
+            scv_significance = scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
@@ -690,14 +712,19 @@ with gzip.open(FILENAME, 'rt') as fh:
                 else:
                     scv_geno = None
 
-
                 if scv_geno is not None and scv_geno in (
                         'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
                         'GENO:0000843', 'GENO:0000845'):
                     # we have the association's (SCV) pathnogicty call
-                    # and its significance is known
+                    # and its significance is explicit
+                    ##########################################################
+                    # 2016 july.
+                    # We do not want any of the proceeding triples
+                    # unless we get here (no implicit "unknown significance")
                     # TRIPLES
-                    # <monarch_assoc><OBAN:association_has_object_property><scv_geno>
+                    # <monarch_assoc>
+                    #   <OBAN:association_has_object_property>
+                    #       <scv_geno>
                     write_spo(
                         monarch_assoc,
                         'OBAN:association_has_object_property',
@@ -710,7 +737,13 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                     # store association's significance to compare w/sibs
                     pathocalls[monarch_assoc] = scv_geno
-
+                else:
+                    del _triples[:]
+                    continue
+            # if we have deleted the triples buffer then
+            # there is no point in continueing  (I don't think)
+            if len(_triples) == 0:
+                continue
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
             # /SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
@@ -798,7 +831,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # <_:provenance_id><rdfs:label><SCV_OIMT.text>
                         write_spo(
                             _provenance_id, 'rdfs:label', SCV_OIMT.text)
-
+            # End of a SCV (a.k.a. MONARCH association)
+            write_triples()
         # End of the ClinVarSet.
         # Output triples that only are known after processing sibbling records
         scv_link(pathocalls)

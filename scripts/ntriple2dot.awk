@@ -1,4 +1,4 @@
-#! /usr/bin/awk -f
+#! /usr/bin/gawk -f
 
 #  Reduce the subject and object of RDF triples (ntriples format)
 # down to their @prefix (or literal object class)
@@ -195,7 +195,10 @@ END{
 	print "digraph {"
 	print "rankdir=LR;"
 	print "charset=\"utf-8\";"
-	for(edge in edgelist){
+	# sort the edges to facilitate future inter dot comparisons
+	n=asorti(edgelist, sortlist)
+	for (i=1; i<=n; i++) {
+		edge=sortlist[i]
 		split(edge ,spo, SUBSEP);
 		print simplify(spo[1]) " -> " simplify(spo[3]) \
 		" [label=\"" spo[2] " (" edgelist[edge] ")\"];"
