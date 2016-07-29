@@ -1,3 +1,10 @@
+'''
+    Acroname central
+
+    Load the curie mapping file 'curie_map.yaml', if it exists.
+    it isn't required, but is necessary for most resources
+
+'''
 import os.path
 import logging
 import yaml
@@ -8,11 +15,6 @@ logger = logging.getLogger(__name__)
 
 # read configuration file
 curie_map = None
-
-'''
-    Load the curie mapping file'curie_map.yaml', if it exists.
-    it isn't required, but is necessary for most resources
-'''
 
 if os.path.exists(os.path.join(os.path.dirname(__file__), 'curie_map.yaml')):
     with open(os.path.join(os.path.dirname(__file__), 'curie_map.yaml')) \
