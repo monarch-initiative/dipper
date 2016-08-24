@@ -14,7 +14,10 @@ from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
 from dipper.utils.GraphUtils import GraphUtils
 
-__author__ = 'nlw'
+
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.ERROR)
+
 
 test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 

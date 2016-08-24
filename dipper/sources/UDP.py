@@ -3,7 +3,10 @@ from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Dataset import Dataset
 from dipper import curie_map
+from dipper.utils.DipperUtil import DipperUtil
 from rdflib import RDFS, BNode
+from dipper import config
+import requests
 import logging
 import csv
 import re
@@ -24,10 +27,18 @@ class UDP(Source):
     Data is available by request for access via the NHGRI collaboration server:
     https://udplims-collab.nhgri.nih.gov/api
 
-    Note this source class does not include a fetch method because the data is private
-    The parser works generically when two tsv files are present in the raw directory
-    /raw/udp with the structure
+    Note the fetcher requires credentials for the UDP collaboration server
+    Credentials are added via a config file, config.json, in the following format
+    {
+      "dbauth" : {
+        "udp": {
+          "user": "foo"
+          "password": "bar"
+      }
+    }
+    See dipper.config for more information
 
+    Output of fetcher:
     udp_variants.tsv
     'Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
     'Reference Allele', 'Variant Allele', 'Parent of origin',
@@ -55,15 +66,105 @@ class UDP(Source):
         }
     }
     map_files = {
-        'gene_map': '../../resources/udp/udp_gene_map.tsv',
+        'patient_ids': '../../resources/udp/patient_ids.yaml',
         'dbsnp_map': '../../resources/udp/udp_chr_rs.tsv',
         'gene_coord_map': '../../resources/udp/gene_coordinates.tsv'
     }
+
+    UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
     def __init__(self):
         super().__init__('udp')
         self.dataset = Dataset(
             'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
+
+    def fetch(self, is_dl_forced=True):
+        """
+        Fetches data from udp collaboration server,
+        see top level comments for class for more information
+        :return:
+        """
+
+        username = config.get_config()['dbauth']['udp']['user']
+        password = config.get_config()['dbauth']['udp']['password']
+
+        credentials = (username, password)
+
+        # Get patient map file:
+        patient_id_map = self.open_and_parse_yaml(self.map_files['patient_ids'])
+        udp_internal_ids = patient_id_map.keys()
+
+        phenotype_fields = ['Patient', 'HPID', 'Present']
+
+        # Get phenotype ids for each patient
+        phenotype_params = {'method': 'search_subjects',
+                            'subject_type': 'Phenotype',
+                            'search_mode': 'DEEP',
+                            'fields': 'Patient',
+                            'conditions': 'equals',
+                            'values': ','.join(udp_internal_ids),
+                            'user_fields': ','.join(phenotype_fields)
+                            }
+
+        prioritized_variants = ['Patient', 'Gene']
+
+        prioritized_params = {'method': 'search_subjects',
+                              'subject_type': 'Variant Prioritization',
+                              'search_mode': 'DEEP',
+                              'fields': 'Patient',
+                              'conditions': 'equals',
+                              'values': ','.join(udp_internal_ids),
+                              'user_fields': ','.join(prioritized_variants),
+                              'format': 'json'}
+
+        variant_fields = ['Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
+                          'Reference Allele', 'Variant Allele', 'Parent of origin',
+                          'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
+                          'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
+                          'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID', '1K Frequency',
+                          'Number of Alleles']
+
+        variant_params = {'method': 'search_subjects',
+                          'subject_type': 'Exome Analysis Results',
+                          'search_mode': 'DEEP',
+                          'fields': 'Patient',
+                          'conditions': 'equals',
+                          'user_fields': ','.join(variant_fields),
+                          'format': 'json'}
+
+        pheno_file = open('/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
+        variant_file = open('/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
+
+        pheno_file.write('{0}\n'.format('\t'.join(phenotype_fields)))
+        variant_file.write('{0}\n'.format('\t'.join(variant_fields)))
+
+        variant_gene = self._fetch_data_from_udp(
+            udp_internal_ids, prioritized_params, prioritized_variants, credentials)
+
+        variant_gene_map = dict()
+        for line in variant_gene:
+            variant_gene_map.setdefault(line[0], []).append(line[1])
+
+        variant_info = self._fetch_data_from_udp(
+            udp_internal_ids, variant_params, variant_fields, credentials)
+
+        for line in variant_info:
+            if line[10] in variant_gene_map[line[0]]:
+                line[0] = patient_id_map[line[0]]
+                line[4] = re.sub(r'\.0$', '', line[4])
+                variant_file.write('{0}\n'.format('\t'.join(line)))
+
+        phenotype_info = self._fetch_data_from_udp(
+            udp_internal_ids, phenotype_params, phenotype_fields, credentials)
+
+        for line in phenotype_info:
+            line[0] = patient_id_map[line[0]]
+            pheno_file.write('{0}\n'.format('\t'.join(line)))
+
+        variant_file.close()
+        pheno_file.close()
+
+        return
 
     def parse(self, limit=None):
         """
@@ -85,6 +186,29 @@ class UDP(Source):
 
         return
 
+    def _fetch_data_from_udp(self, patient_ids, params, fields, credentials):
+        data = []
+        for patient in patient_ids:
+            params['values'] = patient
+            result_count = 1
+            params['start'] = 0
+            params['limit'] = 100
+            while result_count > 0:
+
+                logger.debug("processing {0} lines starting at {1} for patient {2}"
+                             .format(params['limit'], params['start'], patient))
+
+                req = requests.get(self.UDP_SERVER, params=params, auth=credentials)
+                results = req.json()
+                result_count = len(results['Subjects'])
+                for res in results['Subjects']:
+                    line = [res[field] for field in fields]
+                    data.append(line)
+
+                params['start'] = params['start'] + params['limit']
+
+        return data
+
     def _parse_patient_variants(self, file, limit):
         """
         :param file: file path
@@ -92,14 +216,13 @@ class UDP(Source):
         :return:
         """
         patient_var_map = self._convert_variant_file_to_dict(file)
-        gene_id_map = self.parse_mapping_file(self.map_files['gene_map'])
         gene_coordinate_map = self._parse_gene_coordinates(self.map_files['gene_coord_map'])
         rs_map = self._parse_rs_map_file(self.map_files['dbsnp_map'])
 
         genotype_util = Genotype(self.graph)
         graph_util = GraphUtils(curie_map.get())
 
-        self._add_variant_gene_relationship(patient_var_map, gene_id_map, gene_coordinate_map)
+        self._add_variant_gene_relationship(patient_var_map, gene_coordinate_map)
 
         for patient in patient_var_map:
             patient_curie = ':{0}'.format(patient)
@@ -171,7 +294,7 @@ class UDP(Source):
         self._add_variant_sameas_relationships(patient_var_map, rs_map)
         return
 
-    def _add_variant_gene_relationship(self, patient_var_map, gene_id_map, gene_coordinate_map):
+    def _add_variant_gene_relationship(self, patient_var_map, gene_coordinate_map):
         """
         Right now it is unclear the best approach on how to connect
         variants to genes.  In most cases has_affected_locus/GENO:0000418
@@ -188,6 +311,7 @@ class UDP(Source):
         :return: None
         """
         genotype_util = Genotype(self.graph)
+        dipper_util = DipperUtil()
         graph_util = GraphUtils(curie_map.get())
         # Note this could be compressed in someway to remove one level of for looping
         for patient in patient_var_map:
@@ -197,8 +321,9 @@ class UDP(Source):
                 if len(genes_of_interest) == 1:
                     # Assume variant is variant allele of gene
                     gene = genes_of_interest[0]
+                    gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
-                        gene, variant_bnode, gene_id_map,
+                        gene, variant_bnode, gene_id,
                         genotype_util.object_properties['feature_to_gene_relation'])
 
                 elif re.search(r'upstream|downstream',
@@ -209,16 +334,15 @@ class UDP(Source):
                     up_down_gene = []
                     unmatched_genes = []
                     for gene in variant['genes_of_interest']:
-                        if gene in gene_id_map \
-                                and gene_id_map[gene] != '' \
-                                and gene_id_map[gene] in gene_coordinate_map:
-                            ncbi_id = gene_id_map[gene]
-                            if gene_coordinate_map[ncbi_id]['start'] \
+                        if gene_id \
+                                and gene_id != '' \
+                                and gene_id in gene_coordinate_map:
+                            if gene_coordinate_map[gene_id]['start'] \
                                     <= variant['position']\
-                                    <= gene_coordinate_map[ncbi_id]['end']:
+                                    <= gene_coordinate_map[gene_id]['end']:
                                 gene_info = {
                                     'symbol': gene,
-                                    'strand': gene_coordinate_map[ncbi_id]['strand']
+                                    'strand': gene_coordinate_map[gene_id]['strand']
                                 }
                                 ref_gene.append(gene_info)
                             else:
@@ -227,7 +351,7 @@ class UDP(Source):
                             unmatched_genes.append(gene)
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
-                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id,
                             genotype_util.object_properties['feature_to_gene_relation'])
 
                         # update label with gene
@@ -243,7 +367,7 @@ class UDP(Source):
                     # Credit http://stackoverflow.com/a/3844832
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
-                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id,
                             genotype_util.object_properties['feature_to_gene_relation'])
 
                         # build label function expects list
@@ -260,7 +384,7 @@ class UDP(Source):
                         if "minus" in strands and "plus" in strands:
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
-                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    r_gene['symbol'], variant_bnode, gene_id,
                                     genotype_util.object_properties['feature_to_gene_relation'])
                         else:
                             logger.warn("unable to map intron variant"
@@ -268,7 +392,7 @@ class UDP(Source):
                                         .format(variant))
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
-                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    r_gene['symbol'], variant_bnode, gene_id,
                                     graph_util.object_properties['causally_influences'])
                     elif re.search(r'intron', variant['type'], flags=re.I):
                         logger.warn("unable to map intron variant"
@@ -276,18 +400,19 @@ class UDP(Source):
                                     .format(variant))
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
-                            neighbor, variant_bnode, gene_id_map,
+                            neighbor, variant_bnode, gene_id,
                             graph_util.object_properties['causally_influences'])
                     # Unmatched genes are likely because we cannot map to an NCBIGene
                     # or we do not have coordinate information
                     for unmatched_gene in unmatched_genes:
                         self._add_gene_to_graph(
-                            unmatched_gene, variant_bnode, gene_id_map,
+                            unmatched_gene, variant_bnode, gene_id,
                             graph_util.object_properties['causally_influences'])
 
         return
 
-    def _convert_variant_file_to_dict(self, file):
+    @staticmethod
+    def _convert_variant_file_to_dict(file):
         """
         Converts tsv to dicts with this structure
         {
@@ -532,16 +657,15 @@ class UDP(Source):
                 prefix, position, reference_allele, variant_allele)
         return variant_label
 
-    def _add_gene_to_graph(self, gene, variant_bnode, gene_id_map, relation):
+    def _add_gene_to_graph(self, gene, variant_bnode, gene_id, relation):
         """
         :param gene:
         :param variant_bnode:
         :return:
         """
         graph_util = GraphUtils(curie_map.get())
-        if gene in gene_id_map and gene_id_map[gene] != '':
-            ncbi_curie = gene_id_map[gene]
-            graph_util.addTriple(self.graph, variant_bnode, relation, ncbi_curie)
+        if gene_id:
+            graph_util.addTriple(self.graph, variant_bnode, relation, gene_id)
         elif gene:
             logger.info("gene {0} not mapped to NCBI gene,"
                         " making blank node".format(gene))
