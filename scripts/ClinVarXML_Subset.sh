@@ -1,8 +1,8 @@
 #! /bin/bash
 
-# extract ClinVarSets containing specific RCV
+# extract ClinVarSets containing specific RCV|SCV
 # not at all efficent, but does not need to be.
-# give a list of RCV identifiers and a dataset to find them in
+# give a list of RCV|SCV identifiers and a dataset to find them in
 #
 # Usage:
 # ClinVarXML_Subset.sh	 [<rcvlist> <cvxml>] > ClinVarTestSet.xml
@@ -16,6 +16,7 @@ CXML=${2:-"${RPTH}/ClinVarFullRelease_00-latest.xml.gz"}
 
 CVSET='ReleaseSet/ClinVarSet'
 RCV='ReferenceClinVarAssertion/ClinVarAccession/@Acc'
+SCV='ClinVarAssertion/ClinVarAccession/@Acc'
 
 ### header
 if [ 'gz' == "${CXML##*.}" ] ; then
@@ -25,8 +26,14 @@ else
 fi
 
 ### body
-for rcv in `< "${TEST}"`; do
-    xmlstarlet sel -t -c "${CVSET}[${RCV}=\"${rcv}\"]" -n "${CXML}"
+for xcv in $(< "${TEST}"); do
+    if [ "RCV" == "${xcv:0:3}" ] ; then
+        xmlstarlet sel -t -c "${CVSET}[${RCV}=\"${xcv}\"]" -n "${CXML}"
+    elif [ "SCV" == "${xcv:0:3}" ] ; then
+        xmlstarlet sel -t -c "${CVSET}[${SCV}=\"${xcv}\"]" -n "${CXML}"
+    else
+        echo "${xcv}" >&2
+    fi
 done
 
 ### footer
