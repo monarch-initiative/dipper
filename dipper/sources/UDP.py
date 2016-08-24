@@ -106,7 +106,8 @@ class UDP(Source):
                             'user_fields': ','.join(phenotype_fields)
                             }
 
-        prioritized_variants = ['Patient', 'Gene']
+        prioritized_variants = ['Patient', 'Gene', 'Chromosome Position',
+                                'Variant Allele', 'Transcript']
 
         prioritized_params = {'method': 'search_subjects',
                               'subject_type': 'Variant Prioritization',
@@ -143,13 +144,17 @@ class UDP(Source):
 
         variant_gene_map = dict()
         for line in variant_gene:
-            variant_gene_map.setdefault(line[0], []).append(line[1])
+            variant_gene_map.setdefault(line[0], []).append(
+                # Try to make a unique value based on gene-pos-variantAlele-transcript
+                # TODO make this a dict for readability purposes
+                "{0}-{1}-{2}-{3}".format(line[1], line[2], line[3], line[4]))
 
         variant_info = self._fetch_data_from_udp(
             udp_internal_ids, variant_params, variant_fields, credentials)
 
         for line in variant_info:
-            if line[10] in variant_gene_map[line[0]]:
+            variant = "{0}-{1}-{2}-{3}".format(line[10], line[4], line[6], line[11])
+            if variant in variant_gene_map[line[0]]:
                 line[0] = patient_id_map[line[0]]
                 line[4] = re.sub(r'\.0$', '', line[4])
                 variant_file.write('{0}\n'.format('\t'.join(line)))
@@ -267,8 +272,13 @@ class UDP(Source):
 
                         variant_label = "{0}{1}({2}):g.{3}".format(
                             build, chromosome, genes_of_interest, position)
-                else:
-                    variant_label = 'variant of interest in patient {0}'.format(patient)
+                elif len(genes_of_interest) == 1:
+                    variant_label = 'variant of interest' \
+                                    ' in {0} gene of patient' \
+                                    ' {1}'.format(genes_of_interest[0], patient)
+                else :
+                    variant_label = 'variant of interest' \
+                                    ' in patient {0}'.format(patient)
 
                 genotype_util.addSequenceAlteration(variant_bnode, None)
                 # check if it we have built the label
