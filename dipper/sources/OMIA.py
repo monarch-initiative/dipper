@@ -173,6 +173,11 @@ class OMIA(Source):
         The XML file seems to have mixed-encoding;
         we scrub out the control characters
         from the file for processing.
+
+        i.e.?i
+        omia.xml:1555328.28: PCDATA invalid Char value 2
+		<field name="journal">Bulletin et Memoires de la Societe Centrale de Medic
+         
         :return:
 
         """
@@ -190,7 +195,10 @@ class OMIA(Source):
                 l = du.remove_control_characters(l) + '\n'
                 t.write(l.encode('utf-8'))
         t.close()
-
+        # TEC I do not like this at all. original data must be preserved as is.
+        # also may be heavy handed as chars which do not break the parser
+        # are stripped as well (i.e. tabs and newlines)
+        
         # move the temp file
         logger.info("Replacing the original data with the scrubbed file.")
         shutil.move(tmpfile, myfile)
