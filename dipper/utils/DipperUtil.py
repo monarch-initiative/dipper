@@ -42,11 +42,20 @@ class DipperUtil:
             'db': 'taxonomy',
             'retmode': 'json',
             'term': label}
+        eutils_url = domain + path
 
-        request = session.get(domain + path, params=req)
+        request = session.get(eutils_url + path, params=req)
         logger.info('fetching: %s', request.url)
         request.raise_for_status()
         result = request.json()['esearchresult']
+
+        # Occasionally eutils returns the json blob
+        # {'ERROR': 'Invalid db name specified: taxonomy'}
+        if 'ERROR' in result:
+            request = session.get(eutils_url + path, params=req)
+            logger.info('fetching: %s', request.url)
+            request.raise_for_status()
+            result = request.json()['esearchresult']
 
         tax_num = None
         if str(result['count']) == '1':
