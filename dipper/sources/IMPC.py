@@ -412,7 +412,7 @@ class IMPC(Source):
                         genotype_name+' ['+pheno_center_strain_label+']'
                     geno.addGenomicBackgroundToGenotype(
                         pheno_center_strain_id, genotype_id)
-                    geno.addTaxon(pheno_center_strain_id, taxon_id)
+                    geno.addTaxon(taxon_id, pheno_center_strain_id)
                 # this is redundant, but i'll keep in in for now
                 geno.addSequenceDerivesFrom(genotype_id, colony_id)
                 geno.addGenotype(genotype_id, genotype_name)
@@ -498,8 +498,9 @@ class IMPC(Source):
                         statistical_method, resource_name)
 
                 evidence_line_bnode = \
-                    self._add_evidence(assoc_id, eco_id, impc_map, p_value,
-                                       percentage_change, effect_size, study_bnode)
+                    self._add_evidence(
+                        assoc_id, eco_id, impc_map, p_value, percentage_change,
+                        effect_size, study_bnode)
 
                 self._add_assertion_provenance(assoc_id,
                                                evidence_line_bnode, impc_map)
@@ -534,7 +535,8 @@ class IMPC(Source):
             logger.warning("Zygosity type not mapped: %s", zygosity)
         return typeid
 
-    def _add_assertion_provenance(self, assoc_id, evidence_line_bnode, impc_map):
+    def _add_assertion_provenance(
+            self, assoc_id, evidence_line_bnode, impc_map):
         """
         Add assertion level provenance, currently always IMPC
         :param assoc_id:
@@ -546,8 +548,9 @@ class IMPC(Source):
         assertion_bnode = self.make_id("assertion{0}{1}".format(
             assoc_id, impc_map['asserted_by']['IMPC']),  '_')
 
-        graph_utils.addIndividualToGraph(self.graph, assertion_bnode, None,
-                                         provenance_model.provenance_types['assertion'])
+        graph_utils.addIndividualToGraph(
+            self.graph, assertion_bnode, None,
+            provenance_model.provenance_types['assertion'])
 
         provenance_model.add_assertion(
             assertion_bnode, impc_map['asserted_by']['IMPC'],
@@ -600,26 +603,29 @@ class IMPC(Source):
             procedure_stable_id, parameter_stable_id, statistical_method,
             resource_name), '_')
 
-        graph_utils.addIndividualToGraph(self.graph, study_bnode, None,
-                                         provenance_model.provenance_types['study'])
+        graph_utils.addIndividualToGraph(
+            self.graph, study_bnode, None,
+            provenance_model.provenance_types['study'])
 
         # List of nodes linked to study with has_part property
         study_parts = []
 
         # Add study parts
-        graph_utils.addIndividualToGraph(self.graph, impc_map['procedures'][procedure_stable_id],
-                                         procedure_name)
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['procedures'][procedure_stable_id],
+            procedure_name)
         study_parts.append(impc_map['procedures'][procedure_stable_id])
 
-
-        study_parts.append(impc_map['statistical_method'][statistical_method])
+        study_parts.append(
+            impc_map['statistical_method'][statistical_method])
         provenance_model.add_study_parts(study_bnode, study_parts)
 
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
-        graph_utils.addIndividualToGraph(self.graph, parameter_map[parameter_stable_id],
-                                         parameter_label)
-        provenance_model.add_study_measure(study_bnode, parameter_map[parameter_stable_id])
+        graph_utils.addIndividualToGraph(
+            self.graph, parameter_map[parameter_stable_id], parameter_label)
+        provenance_model.add_study_measure(
+            study_bnode, parameter_map[parameter_stable_id])
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
@@ -628,15 +634,17 @@ class IMPC(Source):
         # Add study agent
         graph_utils.addIndividualToGraph(
             self.graph, impc_map['phenotyping_center'][phenotyping_center],
-            phenotyping_center, provenance_model.provenance_types['organization'])
+            phenotyping_center,
+            provenance_model.provenance_types['organization'])
         graph_utils.addTriple(
             self.graph, study_bnode,
             provenance_model.object_properties['has_agent'],
             impc_map['phenotyping_center'][phenotyping_center])
 
         # add pipeline and project
-        graph_utils.addIndividualToGraph(self.graph, impc_map['pipelines'][pipeline_stable_id],
-                                         pipeline_name)
+        graph_utils.addIndividualToGraph(
+            self.graph, impc_map['pipelines'][pipeline_stable_id],
+            pipeline_name)
 
         graph_utils.addTriple(
             self.graph, study_bnode, graph_utils.object_properties['part_of'],
@@ -672,7 +680,8 @@ class IMPC(Source):
         graph_utils = GraphUtils(curie_map.get())
 
         # Add line of evidence
-        evidence_line_bnode = self.make_id("{0}{1}".format(assoc_id, study_bnode), '_')
+        evidence_line_bnode = self.make_id(
+            "{0}{1}".format(assoc_id, study_bnode), '_')
         evidence_model.add_supporting_evidence(assoc_id, evidence_line_bnode)
         graph_utils.addIndividualToGraph(self.graph, evidence_line_bnode, None,
                                          eco_id)
@@ -689,28 +698,28 @@ class IMPC(Source):
             measurements[p_value_bnode] = float(p_value)
         if percentage_change is not None and percentage_change != '':
 
-            fold_change_bnode = self.make_id("{0}{1}{2}"
-                                             .format(evidence_line_bnode,
-                                                     'percentage_change',
-                                                     percentage_change), '_')
-            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
-                                             impc_map['measurements']
-                                             ['percentage_change'])
+            fold_change_bnode = self.make_id(
+                "{0}{1}{2}".format(
+                    evidence_line_bnode, 'percentage_change',
+                    percentage_change), '_')
+            graph_utils.addIndividualToGraph(
+                self.graph, fold_change_bnode, None,
+                impc_map['measurements']['percentage_change'])
             measurements[fold_change_bnode] = percentage_change
         if effect_size is not None or effect_size != "":
-            fold_change_bnode = self.make_id("{0}{1}{2}"
-                                             .format(evidence_line_bnode,
-                                                     'effect_size',
-                                                     effect_size), '_')
-            graph_utils.addIndividualToGraph(self.graph, fold_change_bnode, None,
-                                             impc_map['measurements']
-                                             ['effect_size'])
+            fold_change_bnode = self.make_id(
+                "{0}{1}{2}".format(
+                    evidence_line_bnode, 'effect_size', effect_size), '_')
+            graph_utils.addIndividualToGraph(
+                self.graph, fold_change_bnode, None,
+                impc_map['measurements']['effect_size'])
             measurements[fold_change_bnode] = effect_size
 
         evidence_model.add_supporting_data(evidence_line_bnode, measurements)
 
         # Link evidence to provenance by connecting to study node
-        provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
+        provenance_model.add_study_to_measurements(
+            study_bnode, measurements.keys())
         graph_utils.addTriple(
             self.graph, evidence_line_bnode,
             provenance_model.object_properties['has_supporting_study'],
@@ -731,7 +740,8 @@ class IMPC(Source):
         if os.path.exists(os.path.join(os.path.dirname(__file__),
                                        self.map_files['impc_code_map'])):
             map_file = open(os.path.join(
-                os.path.dirname(__file__), self.map_files['impc_code_map']), 'r')
+                os.path.dirname(
+                    __file__), self.map_files['impc_code_map']), 'r')
             impc_mappings = yaml.load(map_file)
             map_file.close()
         else:
@@ -752,7 +762,8 @@ class IMPC(Source):
         if os.path.exists(os.path.join(os.path.dirname(__file__),
                                        self.map_files['parameter_map'])):
             map_file = open(os.path.join(
-                os.path.dirname(__file__), self.map_files['parameter_map']), 'r')
+                os.path.dirname(
+                    __file__), self.map_files['parameter_map']), 'r')
             parameter_mappings = json.load(map_file)
             map_file.close()
         else:

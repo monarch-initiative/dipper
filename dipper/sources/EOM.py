@@ -31,7 +31,7 @@ class EOM(PostgreSQLSource):
       }
 
     Monarch-curated data for the HP to EOM mapping is stored at
-        https://phenotype-ontologies.googlecode.com
+    https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv
 
     Since this resource is so small, the entirety of it is the "test" set.
 

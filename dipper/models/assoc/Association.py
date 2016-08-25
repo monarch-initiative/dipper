@@ -43,7 +43,7 @@ class Assoc:
         'has_subject': 'OBAN:association_has_subject',
         'has_object': 'OBAN:association_has_object',
         'has_predicate': 'OBAN:association_has_object_property',
-        'is_about': 'IAO:00000136',
+        'is_about': 'IAO:0000136',
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source',
         'has_provenance': 'OBAN:has_provenance'
@@ -120,12 +120,12 @@ class Assoc:
             logging.error(
                 "Unable to retrieve graph node for Subject %s ", self.sub)
             return
-                
+
         elif p is None:
             logging.error(
                 "Unable to retrieve graph node for Predicate %s ", self.rel)
             return
-                
+
         elif o is None:
             logging.error(
                 "Unable to retrieve graph node for Object %s ", self.obj)
@@ -188,7 +188,8 @@ class Assoc:
 
         return
 
-    # This isn't java, but if we must, prefer use of property decorator - @kshefchek
+    # This isn't java, but if we must,
+    # prefer use of property decorator - @kshefchek
     def set_subject(self, identifier):
         self.sub = identifier
         return

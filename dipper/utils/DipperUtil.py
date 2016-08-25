@@ -13,6 +13,14 @@ class DipperUtil:
     """
 
     def remove_control_characters(self, s):
+        '''
+        Filters out charcters in any of these unicode catagories
+        [Cc] 	Other, Control      ( 65 characters) \n,\t ...
+        [Cf] 	Other, Format       (151 characters)
+        [Cn] 	Other, Not Assigned (  0 characters -- none have this property)
+        [Co] 	Other, Private Use  (  6 characters)
+        [Cs] 	Other, Surrogate    (  6 characters)
+        '''
         return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
 
     @staticmethod
