@@ -47,26 +47,27 @@ class WormBase(Source):
     """
 
     wbftp = 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release'
+    wbprod = 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-production-release'
     files = {
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-            'url': wbftp +
+            'url': wbprod +
             '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
         #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #    'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
-            'url': wbftp + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
+            'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
         'rnai_pheno': {
             'file': 'rnai_phenotypes.wb',
-            'url': wbftp + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
+            'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
             'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-            'url': wbftp + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+            'url': wbprod + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
@@ -84,10 +85,10 @@ class WormBase(Source):
         #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-            'url': wbftp + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+            'url': wbprod + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         'letter': {
             'file': 'letter.WSNUMBER',
-            'url': wbftp + '/letter.WSNUMBER'},
+            'url': wbprod + '/letter.WSNUMBER'},
     }
 
     test_ids = {
@@ -119,7 +120,7 @@ class WormBase(Source):
         # then edit the file dict accordingly
         # connect to wormbase ftp
         current_dev_release_dir = \
-            'pub/wormbase/releases/current-development-release'
+            'pub/wormbase/releases/current-production-release'
         ftp = FTP('ftp.wormbase.org')
         ftp.login()
         ftp.cwd(current_dev_release_dir)

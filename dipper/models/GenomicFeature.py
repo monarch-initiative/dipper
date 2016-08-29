@@ -33,7 +33,7 @@ class Feature():
         'reference': 'faldo:reference',
         'gene_product_of': 'RO:0002204',
         'has_gene_product': 'RO:0002205',
-        'is_about': 'IAO:00000136',
+        'is_about': 'IAO:0000136',
         'has_subsequence': 'RO:0002524',
         'is_subsequence_of': 'RO:0002525',
         'has_staining_intensity': 'GENO:0000207',

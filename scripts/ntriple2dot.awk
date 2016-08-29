@@ -1,21 +1,24 @@
 #! /usr/bin/gawk -f
 
 #  Reduce the subject and object of RDF triples (ntriples format)
-# down to their @prefix (or literal object class)
-#  Reduce predicates to the specific identifier and
-# the ontology they are from.(curi form)
+#  down to their @prefix (or literal object class)
+#  Reduce predicates to the specific identifier
+#  and the ontology they are from.(curi form)
 #  Express the subject and object as nodes with a directed edge
-# labeled with the predicate in the graphviz dot format
+#  labeled with the predicate in the graphviz dot format
 #  Include a tally of each combination of nodes and edge
 
 #  This may over generalize in some cases because I do not have
-# a handy way to differentiate uri for subjects and objects
-# which may belong to a "structural" ontology as opposed to
+#  a handy way to differentiate uri for subjects and objects
+#  which may belong to a "structural" ontology as opposed to
 # a data uri.
 
 #  Perhaps an improvement would be to also
-# express subject and objects as individual curies (ala predicates)
-# iff their namespace is also used by a predicate.
+#  express subject and objects as individual curies (ala predicates)
+#  iff their namespace is also used by a predicate.
+
+#  Post processing to augment predicate identifiers
+#  with their labels seems to improve usefulness.
 
 ##########################################################
 # remove first and last chars from input string <>
@@ -210,4 +213,3 @@ END{
 	print "label=\"" substr(title,1,length(title)-3) " (" datestamp ")\";"
 	print "}"
 }
-
