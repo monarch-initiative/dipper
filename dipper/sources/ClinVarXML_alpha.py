@@ -185,7 +185,7 @@ def make_spo(sub, prd, obj):
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
-        if subcuri != '_' or CURIEMAP[subcuri] != :
+        if subcuri != '_' or CURIEMAP[subcuri] != '_:BN':
             subjt = '<' + subjt + '> '
 
         return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
