@@ -149,7 +149,8 @@ def make_spo(sub, prd, obj):
 
     '''
     # To establish string as a curi and expand we use a global curie_map(.yaml)
-    # sub & prd are allways uri (unless prd is 'a')
+    # sub are allways uri  (unless a bnode)
+    # prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
     if prd == 'a':
         prd = 'rdf:type'
@@ -169,7 +170,7 @@ def make_spo(sub, prd, obj):
     if match is not None and objcuri in CURIEMAP:
         objt = CURIEMAP[objcuri] + objid
         # allow unexpanded bnodes in object
-        if CURIEMAP[objcuri] != '_:':
+        if objcuri != '_' or CURIEMAP[objcuri] != '_:B':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
@@ -184,10 +185,10 @@ def make_spo(sub, prd, obj):
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
-        if CURIEMAP[subcuri] != '_:':
+        if subcuri != '_' or CURIEMAP[subcuri] != '_:B':
             subjt = '<' + subjt + '> '
 
-        return subjt + '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+        return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
         return None
@@ -267,7 +268,7 @@ with open(ARGS.transtab) as f:
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
 if ARGS.blanknode is True:
-    CURIEMAP['_'] = '_:BN'
+    CURIEMAP['_'] = '_:B'
 
 #######################################################
 # main loop over xml
@@ -582,7 +583,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # <monarch_assoc><SEPIO:0000015><:_assertion_id>  is asserted in
             write_spo(monarch_assoc, 'SEPIO:0000015', _assertion_id)
 
-            # <:_evidence_id><rdf:type><SEPIO:0000000> .
+            # <:_evidence_id><rdf:type><ECO:0000000> .
             write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
