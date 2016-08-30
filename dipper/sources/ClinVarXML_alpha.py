@@ -170,7 +170,7 @@ def make_spo(sub, prd, obj):
     if match is not None and objcuri in CURIEMAP:
         objt = CURIEMAP[objcuri] + objid
         # allow unexpanded bnodes in object
-        if objcuri != '_':
+        if objcuri != '_' or CURIEMAP[objcuri] != '_:BN':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
@@ -185,7 +185,7 @@ def make_spo(sub, prd, obj):
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
-        if subcuri != '_':
+        if subcuri != '_' or CURIEMAP[subcuri] != :
             subjt = '<' + subjt + '> '
 
         return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
