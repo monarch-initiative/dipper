@@ -582,7 +582,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # <monarch_assoc><SEPIO:0000015><:_assertion_id>  is asserted in
             write_spo(monarch_assoc, 'SEPIO:0000015', _assertion_id)
 
-            # <:_evidence_id><rdf:type><SEPIO:0000000> .
+            # <:_evidence_id><rdf:type><ECO:0000000> .
             write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
