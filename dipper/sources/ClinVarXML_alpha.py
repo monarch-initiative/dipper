@@ -170,7 +170,7 @@ def make_spo(sub, prd, obj):
     if match is not None and objcuri in CURIEMAP:
         objt = CURIEMAP[objcuri] + objid
         # allow unexpanded bnodes in object
-        if objcuri != '_' or CURIEMAP[objcuri] != '_:BN':
+        if objcuri != '_' or CURIEMAP[objcuri] != '_:B':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
@@ -185,7 +185,7 @@ def make_spo(sub, prd, obj):
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
-        if subcuri != '_' or CURIEMAP[subcuri] != '_:BN':
+        if subcuri != '_' or CURIEMAP[subcuri] != '_:B':
             subjt = '<' + subjt + '> '
 
         return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
@@ -268,7 +268,7 @@ with open(ARGS.transtab) as f:
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
 if ARGS.blanknode is True:
-    CURIEMAP['_'] = '_:BN'
+    CURIEMAP['_'] = '_:B'
 
 #######################################################
 # main loop over xml
