@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class Monarch(Source):
     """
     This is the parser for data curated by the
-    [Monarch Initiative](http://www.monarchinitiative.org).
+    [Monarch Initiative](http://monarchinitiative.org).
     Data is currently maintained in a private repository, soon to be released.
 
     """
@@ -27,7 +27,7 @@ class Monarch(Source):
         Source.__init__(self, 'monarch')
 
         self.dataset = Dataset(
-            'monarch', 'MonarchInitiative', 'http://www.monarchinitiative.org',
+            'monarch', 'MonarchInitiative', 'http://monarchinitiative.org',
             None, 'http://creativecommons.org/licenses/by/4.0/', None)
 
         return
