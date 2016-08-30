@@ -149,7 +149,8 @@ def make_spo(sub, prd, obj):
 
     '''
     # To establish string as a curi and expand we use a global curie_map(.yaml)
-    # sub & prd are allways uri (unless prd is 'a')
+    # sub are allways uri  (unless a bnode)
+    # prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
     if prd == 'a':
         prd = 'rdf:type'
@@ -169,7 +170,7 @@ def make_spo(sub, prd, obj):
     if match is not None and objcuri in CURIEMAP:
         objt = CURIEMAP[objcuri] + objid
         # allow unexpanded bnodes in object
-        if CURIEMAP[objcuri] != '_:':
+        if objcuri != '_':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
@@ -184,10 +185,10 @@ def make_spo(sub, prd, obj):
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
-        if CURIEMAP[subcuri] != '_:':
+        if subcuri != '_':
             subjt = '<' + subjt + '> '
 
-        return subjt + '<' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+        return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
         return None
