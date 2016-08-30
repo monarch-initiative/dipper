@@ -1871,8 +1871,15 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (pub_id, pubmed_id, authors, title, journal, year, vol, pages,
-                 empty) = row
+                try:
+                    (pub_id, pubmed_id, authors, title,
+                     journal, year, vol, pages) = row
+                except ValueError:
+                    try:
+                        (pub_id, pubmed_id, authors, title,
+                         journal, year, vol, pages, empty) = row
+                    except ValueError:
+                        logger.warn("Error parsing row {0}: ".format(row))
 
                 if self.testMode \
                         and ('ZFIN:' + pub_id not in self.test_ids['pub'] and

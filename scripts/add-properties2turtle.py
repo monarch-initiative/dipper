@@ -14,6 +14,8 @@ def main():
                         help='Location of output file')
     parser.add_argument('--format', '-f', type=str, default="turtle",
                         help='format of rdf file (turtle, nt, rdf/xml)')
+    parser.add_argument('--output_format', type=str, default="turtle",
+                        help='format of rdf file (turtle, nt, rdf/xml)')
     args = parser.parse_args()
     property_list = get_properties_from_input(args.input, args.format)
     merged_graph = make_property_graph(property_list)
@@ -21,7 +23,7 @@ def main():
     # merge graphs
     merged_graph.parse(args.input, format=args.format)
 
-    merged_graph.serialize(args.output, format=args.format)
+    merged_graph.serialize(args.output, format=args.output_format)
 
 
 def get_properties_from_input(file, format):

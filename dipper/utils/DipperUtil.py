@@ -5,6 +5,11 @@ import requests
 __author__ = ('nlw', 'tec')
 logger = logging.getLogger(__name__)
 
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(max_retries=10)
+session.mount('https://', adapter)
+session.mount('http://', adapter)
+
 
 class DipperUtil:
     """
@@ -37,11 +42,20 @@ class DipperUtil:
             'db': 'taxonomy',
             'retmode': 'json',
             'term': label}
+        eutils_url = domain + path
 
-        r = requests.get(domain + path, params=req)
-        logger.info('fetching: %s', r.url)
-        r.raise_for_status()
-        result = r.json()['esearchresult']
+        request = session.get(eutils_url + path, params=req)
+        logger.info('fetching: %s', request.url)
+        request.raise_for_status()
+        result = request.json()['esearchresult']
+
+        # Occasionally eutils returns the json blob
+        # {'ERROR': 'Invalid db name specified: taxonomy'}
+        if 'ERROR' in result:
+            request = session.get(eutils_url + path, params=req)
+            logger.info('fetching: %s', request.url)
+            request.raise_for_status()
+            result = request.json()['esearchresult']
 
         tax_num = None
         if str(result['count']) == '1':
@@ -75,11 +89,11 @@ class DipperUtil:
         hid = homologene_ids[0]
         # now, fetch the homologene record
         req = {'db': 'homologene', 'id': hid, 'retmode': 'json'}
-        r = requests.get(esummary, params=req)
-        j = r.json()
+        request = session.get(esummary, params=req)
+        data = request.json()
 
-        if 'result' in j and hid in j['result']:
-            homologs = j['result'][hid]
+        if 'result' in data and hid in data['result']:
+            homologs = data['result'][hid]
         else:
             homologs = None
 

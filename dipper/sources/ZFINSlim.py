@@ -3,6 +3,8 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
 from dipper.models.Dataset import Dataset
+from dipper.utils.GraphUtils import GraphUtils
+from dipper import curie_map
 import csv
 import logging
 
@@ -36,6 +38,7 @@ class ZFINSlim(Source):
     def parse(self, limit=None):
         self.load_bindings()
         zfin_parser = ZFIN()
+        graph_utils = GraphUtils(curie_map.get())
         zp_file = '/'.join((self.rawdir, self.files['zpmap']['file']))
         g2p_file = '/'.join((self.rawdir, self.files['g2p_clean']['file']))
         zfin_parser.zp_map = zfin_parser._load_zp_mappings(zp_file)
@@ -56,6 +59,7 @@ class ZFINSlim(Source):
                     subterm2_id, modifier)
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
+                graph_utils.makeLeader(self.graph, gene_curie)
                 pub_curie = "ZFIN:{0}".format(pub_id)
                 if zp_id:
                     assoc = G2PAssoc(self.name, gene_curie, zp_id)
