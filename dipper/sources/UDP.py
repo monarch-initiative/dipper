@@ -485,9 +485,6 @@ class UDP(Source):
         line_num = 0
         reader = csv.reader(file, delimiter="\t")
         for row in reader:
-            if line_num == 0:
-                line_num += 1
-                continue
 
             (patient, family, chromosome, build, position,
              reference_allele, variant_allele, parent_of_origin,
@@ -495,6 +492,10 @@ class UDP(Source):
              reference_aa, variant_aa, aa_change, segregates_with,
              locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
              num_of_alleles) = row
+
+            if patient == 'Patient':  # skip header
+                line_num += 1
+                continue
 
             if patient not in patient_variant_map:
                 patient_variant_map[patient] = {}
