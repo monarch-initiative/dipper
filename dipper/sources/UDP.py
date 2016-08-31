@@ -271,7 +271,7 @@ class UDP(Source):
                         and len(genes_of_interest) == 1:
 
                         variant_label = "{0}{1}({2}):g.{3}".format(
-                            build, chromosome, genes_of_interest, position)
+                            build, chromosome, genes_of_interest[0], position)
                 elif len(genes_of_interest) == 1:
                     variant_label = 'variant of interest' \
                                     ' in {0} gene of patient' \
@@ -313,6 +313,10 @@ class UDP(Source):
         upstream.  In these cases we must first disambiguate which gene
         is the affected locus, and which gene(s) are predicated to be
         causully influenced by (RO:0002566)
+
+        UPDATE 8-30: In the latest dataset we no longer have 1-many mappings
+        between variants and genes, but leaving this here in case we see
+        these in the future
 
         The logic followed here is:
         if mutation type contains downstream/upstream and more than one
@@ -428,13 +432,13 @@ class UDP(Source):
         {
             'patient_1': {
                 'variant-id': {
-                    'build': hg19
+                    'build': 'hg19'
                     'chromosome': 'chr7',
                     'reference_allele': 'A',
                     'variant_allele': 'G',
-                    'position': '1234'
+                    'position': '1234',
                     'rs_id' : 'RS1234',
-                    'type': 'SNV",
+                    'type': 'SNV',
                     'genes_of_interest' : [SHH, BRCA1]
                 }
             }
@@ -465,6 +469,9 @@ class UDP(Source):
         to make the variant unique
 
         Variant id will be used downstream to form blank nodes (checksumed)
+
+        See docstring for _add_variant_gene_relationship for explanation
+        on why there is a one to many mapping between variants and genes
 
         Values are normalized with these rules:
         1. Basepairs are upper case
@@ -723,7 +730,8 @@ class UDP(Source):
                             graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
         return
 
-    def _get_rs_id(self, variant, rs_map, type):
+    @staticmethod
+    def _get_rs_id(variant, rs_map, variant_type):
         """
         Given a variant dict, return unambiguous RS ID
         TODO
@@ -739,13 +747,13 @@ class UDP(Source):
         :return:
         """
         rs_id = None
-        if type == 'snp':
+        if variant_type == 'snp':
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
             if variant_key in rs_map:
                 snp_candidates = [rs_dict for rs_dict in rs_map[variant_key] if rs_dict['type'] == 'snp']
                 if len(snp_candidates) == 1:
                     rs_id = snp_candidates[0]["rs_id"]
-        elif type == 'indel':
+        elif variant_type == 'indel':
             rs_candidates = []
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
 
@@ -767,5 +775,5 @@ class UDP(Source):
                                 " for variant {0}\n candidate ids: {1}".format
                                 (variant, rs_map[variant_key]))
         else:
-            logger.warn("type: {0} unsupported".format(type))
+            logger.warn("type: {0} unsupported".format(variant_type))
         return rs_id
