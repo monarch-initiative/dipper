@@ -70,7 +70,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc._get_impc_mappings()
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
 
@@ -107,7 +107,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc._get_impc_mappings()
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
         parameter_map = impc._get_parameter_mappings()
 
         (phenotyping_center, colony) = self.test_set_1[2:4]
@@ -138,14 +138,14 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                           <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
                               rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
 
-                          <https://www.mousephenotype.org/impress/parameterontologies/1867/175> a owl:NamedIndividual ;
-                              rdfs:label "Number of ribs right (MGP Select Pipeline)" .
+                          <https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
+                              rdfs:label "Number of ribs right (X-ray)" .
 
                           ?study a OBO:OBI_0000471 ;
                               OBO:BFO_0000051 OBO:STATO_0000076 ;
                               OBO:BFO_0000050 <https://www.mousephenotype.org/impress/procedures/15> ;
                               OBO:BFO_0000051 <https://www.mousephenotype.org/impress/protocol/175/15> ;
-                              OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/175> ;
+                              OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
                               OBO:BFO_0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
                               OBO:SEPIO_0000017 <http://www.sanger.ac.uk/> .
 
@@ -170,7 +170,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc._get_impc_mappings()
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
 
         impc._add_assertion_provenance(self.assoc_curie,
                                        self.evidence_curie, impc_map)
@@ -204,7 +204,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # init impc (make this a function?)
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc._get_impc_mappings()
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
         parameter_map = impc._get_parameter_mappings()
 
         # fetch file
