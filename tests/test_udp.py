@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 
 import unittest
+from unittest.mock import mock_open
+from unittest.mock import MagicMock
 import logging
 from dipper.sources.UDP import UDP
-from rdflib import URIRef, BNode
-from dipper.utils.CurieUtil import CurieUtil
-from dipper import curie_map
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
 class UDPTestCase(unittest.TestCase):
+    """
+    Test UDP parser
+    """
 
     def setUp(self):
-
-        self.test_set_1 = ('')
         return
 
     def tearDown(self):
@@ -23,7 +23,7 @@ class UDPTestCase(unittest.TestCase):
 
     def test_dbsnp_indel_resolution(self):
         """
-        Functional test for _get_rs_id()
+        unit test for _get_rs_id()
         Test that we can resolve indels that
         have different insertion sequence(s)
         for one rsid
@@ -45,7 +45,7 @@ class UDPTestCase(unittest.TestCase):
 
     def test_dbsnp_snp_mapping(self):
         """
-        Functional test for _get_rs_id()
+        unit test for _get_rs_id()
         Test that we can resolve snps in dbsnp
         to rsids
         """
@@ -62,3 +62,31 @@ class UDPTestCase(unittest.TestCase):
         rsid = udp._get_rs_id(variant, rs_map, variant_type)
 
         self.assertEqual(rsid, '755532609')
+
+    def test_patient_phenotype_model(self):
+        """
+        functional test for _parse_patient_phenotypes()
+        """
+        mock_lines = [
+            'patient_1\tHP:000001\tyes',
+            'patient_1\tHP:000002\tno'
+        ]
+        mock_data = MagicMock()
+        mock_data.__iter__.return_value = iter(mock_lines)
+
+        mock_file = mock_open(mock=mock_data)
+        udp = UDP()
+        udp.load_bindings()
+        udp._parse_patient_phenotypes(mock_file)
+        sparql_query = """
+            SELECT *
+            WHERE {
+                :patient_1 a foaf:Person ;
+                    rdfs:label "patient_1" ;
+                    OBO:RO_0002200 OBO:DOID_4,
+                         OBO:HP_000001 .
+            }
+        """
+        sparql_output = udp.graph.query(sparql_query)
+        # Test that query passes and returns one row
+        self.assertEqual(len(list(sparql_output)), 1)

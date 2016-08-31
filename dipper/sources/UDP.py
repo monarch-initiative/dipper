@@ -186,8 +186,11 @@ class UDP(Source):
         phenotype_file = '/'.join((self.rawdir, self.files['patient_phenotypes']['file']))
         variant_file = '/'.join((self.rawdir, self.files['patient_variants']['file']))
 
-        self._parse_patient_phenotypes(phenotype_file, limit)
-        self._parse_patient_variants(variant_file, limit)
+        phenotype_file_handler = open(phenotype_file, 'r')
+        variant_file_handler = open(variant_file, 'r')
+
+        self._parse_patient_phenotypes(phenotype_file_handler, limit)
+        self._parse_patient_variants(variant_file_handler)
 
         return
 
@@ -214,10 +217,9 @@ class UDP(Source):
 
         return data
 
-    def _parse_patient_variants(self, file, limit):
+    def _parse_patient_variants(self, file):
         """
-        :param file: file path
-        :param limit: limit (int, optional) limit the number of rows processed (NOT IMPLEMENTED)
+        :param file: file handler
         :return:
         """
         patient_var_map = self._convert_variant_file_to_dict(file)
@@ -481,107 +483,105 @@ class UDP(Source):
         """
         patient_variant_map = {}
         line_num = 0
-        with open(file, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                if line_num == 0:
-                    line_num += 1
-                    continue
-
-                (patient, family, chromosome, build, position,
-                 reference_allele, variant_allele, parent_of_origin,
-                 allele_type, mutation_type, gene_symbol, transcript,
-                 reference_aa, variant_aa, aa_change, segregates_with,
-                 locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
-                 num_of_alleles) = row
-
-                if patient not in patient_variant_map:
-                    patient_variant_map[patient] = {}
-
-                formatted_chr = re.sub(r'^CHR', 'chr', chromosome, flags=re.I)
-
-                if re.fullmatch(r'[XY]|[0-9]{1,2}', chromosome, flags=re.I):
-                    formatted_chr = "chr{0}".format(chromosome.upper())
-
-                formatted_build = re.sub(r'^HG', 'hg', build, flags=re.I)
-                ref_base = reference_allele.upper()
-                var_base = variant_allele.upper()
-                rs_id = ''
-
-                # Catch misformatted data
-                if re.search(r'LEFT FLANK|NM_|EXON', ref_base):
-                    ref_base = ''
-
-                if re.search(r'LEFT FLANK|NM_|EXON', var_base):
-                    var_base = ''
-
-                if dbSNP_ID != '':
-                    match = re.fullmatch(r'^(rs\d+).*', dbSNP_ID)
-                    if match:
-                        rs_id = match.group(1)
-
-                # Format variant object
-                variant_info = [formatted_chr, formatted_build, position,
-                                ref_base, var_base]
-
-                if '' in variant_info:
-                    filt_list = [info for info in variant_info if info != '']
-                    variant_id = str(line_num) + '-' + '-'.join(filt_list)
-                else:
-                    variant_id = '-'.join(variant_info)
-
-                if variant_id in patient_variant_map[patient]:
-                    patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
-                else:
-                    patient_variant_map[patient][variant_id] = {
-                        'build': formatted_build,
-                        'position': position,
-                        'chromosome': formatted_chr,
-                        'reference_allele': ref_base,
-                        'variant_allele': var_base,
-                        'type': mutation_type,
-                        'rs_id': ''
-                    }
-                    if rs_id:
-                        patient_variant_map[patient][variant_id]['rs_id'] = rs_id
-
-                    patient_variant_map[patient][variant_id]['genes_of_interest'] = [gene_symbol]
-
+        reader = csv.reader(file, delimiter="\t")
+        for row in reader:
+            if line_num == 0:
                 line_num += 1
+                continue
+
+            (patient, family, chromosome, build, position,
+             reference_allele, variant_allele, parent_of_origin,
+             allele_type, mutation_type, gene_symbol, transcript,
+             reference_aa, variant_aa, aa_change, segregates_with,
+             locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
+             num_of_alleles) = row
+
+            if patient not in patient_variant_map:
+                patient_variant_map[patient] = {}
+
+            formatted_chr = re.sub(r'^CHR', 'chr', chromosome, flags=re.I)
+
+            if re.fullmatch(r'[XY]|[0-9]{1,2}', chromosome, flags=re.I):
+                formatted_chr = "chr{0}".format(chromosome.upper())
+
+            formatted_build = re.sub(r'^HG', 'hg', build, flags=re.I)
+            ref_base = reference_allele.upper()
+            var_base = variant_allele.upper()
+            rs_id = ''
+
+            # Catch misformatted data
+            if re.search(r'LEFT FLANK|NM_|EXON', ref_base):
+                ref_base = ''
+
+            if re.search(r'LEFT FLANK|NM_|EXON', var_base):
+                var_base = ''
+
+            if dbSNP_ID != '':
+                match = re.fullmatch(r'^(rs\d+).*', dbSNP_ID)
+                if match:
+                    rs_id = match.group(1)
+
+            # Format variant object
+            variant_info = [formatted_chr, formatted_build, position,
+                            ref_base, var_base]
+
+            if '' in variant_info:
+                filt_list = [info for info in variant_info if info != '']
+                variant_id = str(line_num) + '-' + '-'.join(filt_list)
+            else:
+                variant_id = '-'.join(variant_info)
+
+            if variant_id in patient_variant_map[patient]:
+                patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
+            else:
+                patient_variant_map[patient][variant_id] = {
+                    'build': formatted_build,
+                    'position': position,
+                    'chromosome': formatted_chr,
+                    'reference_allele': ref_base,
+                    'variant_allele': var_base,
+                    'type': mutation_type,
+                    'rs_id': ''
+                }
+                if rs_id:
+                    patient_variant_map[patient][variant_id]['rs_id'] = rs_id
+
+                patient_variant_map[patient][variant_id]['genes_of_interest'] = [gene_symbol]
+
+            line_num += 1
 
         return patient_variant_map
 
-    def _parse_patient_phenotypes(self, file, limit):
+    def _parse_patient_phenotypes(self, file, limit=None):
         """
-        :param file: file path
-        :param limit: limit (int, optional) limit the number of rows processed
+        :param file: file handler
+        :param limit: limit rows processed
         :return:
         """
         graph_util = GraphUtils(curie_map.get())
         line_counter = 0
-        with open(file, 'r') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                (patient_id, hpo_curie, present) = row
-                patient_curie = ':{0}'.format(patient_id)
-                if line_counter == 0:
-                    line_counter += 1
-                    continue
+        reader = csv.reader(file, delimiter="\t")
+        for row in reader:
+            (patient_id, hpo_curie, present) = row
+            patient_curie = ':{0}'.format(patient_id)
+            if patient_id == 'Patient':  # skip header
+                line_counter += 1
+                continue
 
-                graph_util.addPerson(self.graph, patient_curie, patient_id)
+            graph_util.addPerson(self.graph, patient_curie, patient_id)
 
+            graph_util.addTriple(self.graph, patient_curie,
+                                 graph_util.object_properties['has_phenotype'],
+                                 "DOID:4")
+            if present == 'yes':
                 graph_util.addTriple(self.graph, patient_curie,
                                      graph_util.object_properties['has_phenotype'],
-                                     "DOID:4")
-                if present == 'yes':
-                    graph_util.addTriple(self.graph, patient_curie,
-                                         graph_util.object_properties['has_phenotype'],
-                                         hpo_curie)
+                                     hpo_curie)
 
-                line_counter += 1
-                if not self.testMode and limit is not None \
-                        and line_counter >= limit:
-                    break
+            line_counter += 1
+            if not self.testMode and limit is not None \
+                    and line_counter >= limit:
+                break
 
     @staticmethod
     def _parse_gene_coordinates(file):
