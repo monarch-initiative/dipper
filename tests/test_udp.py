@@ -93,7 +93,7 @@ class UDPTestCase(unittest.TestCase):
 
     def test_variant_model(self):
         """
-        functional test for _parse_patient_phenotypes()
+        functional test for _parse_patient_variants()
         """
         data = ['patient_1', 'family_1', '1', 'HG19', '155230432',
                 'G', 'A', 'Maternal', 'Biallelic',
