@@ -1,4 +1,4 @@
-from rdflib.graph import ConjunctiveGraph
+from rdflib.graph import ConjunctiveGraph, URIRef
 from rdflib.namespace import RDF, OWL, DC
 import argparse
 import re
@@ -18,7 +18,7 @@ def main():
                         help='format of rdf file (turtle, nt, rdf/xml)')
     args = parser.parse_args()
     property_list = get_properties_from_input(args.input, args.format)
-    merged_graph = make_property_graph(property_list)
+    merged_graph = make_property_graph(property_list, args)
 
     # merge graphs
     merged_graph.parse(args.input, format=args.format)
@@ -38,7 +38,7 @@ def get_properties_from_input(file, format):
     return property_set
 
 
-def make_property_graph(properties):
+def make_property_graph(properties, args):
     graph = ConjunctiveGraph()
     output_graph = ConjunctiveGraph()
 
@@ -76,6 +76,18 @@ def make_property_graph(properties):
     output_graph = add_property_to_graph(
         graph.subjects(RDF['type'], OWL['DatatypeProperty']),
         output_graph, OWL['DatatypeProperty'], properties)
+
+    # Hardcoded properties
+    output_graph.add((URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
+                      RDF['type'], OWL['AnnotationProperty']))
+
+    # Check monarch data triple
+    data_url = "http://data.monarchinitiative.org/ttl/{0}".format(re.sub(r".*/", "", args.input))
+    new_url = "http://data.monarchinitiative.org/ttl/{0}".format(re.sub(r".*/", "", args.output))
+    if (URIRef(data_url), RDF.type, OWL['Ontology']) in output_graph:
+        output_graph.remove(URIRef(data_url), RDF.type, OWL['Ontology'])
+
+    output_graph.add((URIRef(new_url), RDF.type, OWL['Ontology']))
 
     for row in output_graph.predicates(DC['source'], OWL['AnnotationProperty']):
         if row == RDF['type']:

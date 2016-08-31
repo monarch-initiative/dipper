@@ -592,6 +592,10 @@ class GraphUtils:
                 graph.remove((DC['source'], RDF['type'], OWL['AnnotationProperty']))
         graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
+        # Hardcoded properties
+        graph.add((URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
+                  RDF['type'], OWL['AnnotationProperty']))
+
         return graph
 
     @staticmethod
