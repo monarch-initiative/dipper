@@ -98,3 +98,29 @@ class DipperUtil:
             homologs = None
 
         return homologs
+
+    @staticmethod
+    def get_ncbi_id_from_symbol(gene_symbol):
+        '''
+        Get ncbi gene id from symbol using monarch and mygene services
+        :param gene_symbol:
+        :return:
+        '''
+
+        MONARCH_URL = 'https://beta.monarchinitiative.org/search/'
+        gene_id = None
+        url = MONARCH_URL + gene_symbol + '.json'
+        try:
+            monarch_request = requests.get(url)
+            results = monarch_request.json()
+            for res in results['results']:
+                if res['taxon'] == 'Human' \
+                        and 'gene' in res['categories'] \
+                        and (gene_symbol in res['labels'] or gene_symbol in res['synonyms']):
+                    gene_id = res['id']
+                    break
+        except requests.ConnectionError:
+            print("error fetching {0}".format(url))
+
+        return gene_id
+

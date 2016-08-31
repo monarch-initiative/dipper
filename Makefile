@@ -9,8 +9,17 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: BioGrid-fetch BioGrid-test   \
+test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch BioGrid-test   \
 ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test
+
+UDP-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_udp.py
+
+IMPC-fetch:
+	$(DIPPER_BIN) --sources impc --no_verify --fetch_only
+
+IMPC-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_impc.py
 
 BioGrid-fetch:
 	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only

@@ -3,7 +3,10 @@ from dipper.models.Genotype import Genotype
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Dataset import Dataset
 from dipper import curie_map
+from dipper.utils.DipperUtil import DipperUtil
 from rdflib import RDFS, BNode
+from dipper import config
+import requests
 import logging
 import csv
 import re
@@ -24,10 +27,18 @@ class UDP(Source):
     Data is available by request for access via the NHGRI collaboration server:
     https://udplims-collab.nhgri.nih.gov/api
 
-    Note this source class does not include a fetch method because the data is private
-    The parser works generically when two tsv files are present in the raw directory
-    /raw/udp with the structure
+    Note the fetcher requires credentials for the UDP collaboration server
+    Credentials are added via a config file, config.json, in the following format
+    {
+      "dbauth" : {
+        "udp": {
+          "user": "foo"
+          "password": "bar"
+      }
+    }
+    See dipper.config for more information
 
+    Output of fetcher:
     udp_variants.tsv
     'Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
     'Reference Allele', 'Variant Allele', 'Parent of origin',
@@ -55,15 +66,110 @@ class UDP(Source):
         }
     }
     map_files = {
-        'gene_map': '../../resources/udp/udp_gene_map.tsv',
+        'patient_ids': '../../resources/udp/patient_ids.yaml',
         'dbsnp_map': '../../resources/udp/udp_chr_rs.tsv',
         'gene_coord_map': '../../resources/udp/gene_coordinates.tsv'
     }
+
+    UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
     def __init__(self):
         super().__init__('udp')
         self.dataset = Dataset(
             'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
+
+    def fetch(self, is_dl_forced=True):
+        """
+        Fetches data from udp collaboration server,
+        see top level comments for class for more information
+        :return:
+        """
+
+        username = config.get_config()['dbauth']['udp']['user']
+        password = config.get_config()['dbauth']['udp']['password']
+
+        credentials = (username, password)
+
+        # Get patient map file:
+        patient_id_map = self.open_and_parse_yaml(self.map_files['patient_ids'])
+        udp_internal_ids = patient_id_map.keys()
+
+        phenotype_fields = ['Patient', 'HPID', 'Present']
+
+        # Get phenotype ids for each patient
+        phenotype_params = {'method': 'search_subjects',
+                            'subject_type': 'Phenotype',
+                            'search_mode': 'DEEP',
+                            'fields': 'Patient',
+                            'conditions': 'equals',
+                            'values': ','.join(udp_internal_ids),
+                            'user_fields': ','.join(phenotype_fields)
+                            }
+
+        prioritized_variants = ['Patient', 'Gene', 'Chromosome Position',
+                                'Variant Allele', 'Transcript']
+
+        prioritized_params = {'method': 'search_subjects',
+                              'subject_type': 'Variant Prioritization',
+                              'search_mode': 'DEEP',
+                              'fields': 'Patient',
+                              'conditions': 'equals',
+                              'values': ','.join(udp_internal_ids),
+                              'user_fields': ','.join(prioritized_variants),
+                              'format': 'json'}
+
+        variant_fields = ['Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
+                          'Reference Allele', 'Variant Allele', 'Parent of origin',
+                          'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
+                          'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
+                          'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID', '1K Frequency',
+                          'Number of Alleles']
+
+        variant_params = {'method': 'search_subjects',
+                          'subject_type': 'Exome Analysis Results',
+                          'search_mode': 'DEEP',
+                          'fields': 'Patient',
+                          'conditions': 'equals',
+                          'user_fields': ','.join(variant_fields),
+                          'format': 'json'}
+
+        pheno_file = open('/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
+        variant_file = open('/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
+
+        pheno_file.write('{0}\n'.format('\t'.join(phenotype_fields)))
+        variant_file.write('{0}\n'.format('\t'.join(variant_fields)))
+
+        variant_gene = self._fetch_data_from_udp(
+            udp_internal_ids, prioritized_params, prioritized_variants, credentials)
+
+        variant_gene_map = dict()
+        for line in variant_gene:
+            variant_gene_map.setdefault(line[0], []).append(
+                # Try to make a unique value based on gene-pos-variantAlele-transcript
+                # TODO make this a dict for readability purposes
+                "{0}-{1}-{2}-{3}".format(line[1], line[2], line[3], line[4]))
+
+        variant_info = self._fetch_data_from_udp(
+            udp_internal_ids, variant_params, variant_fields, credentials)
+
+        for line in variant_info:
+            variant = "{0}-{1}-{2}-{3}".format(line[10], line[4], line[6], line[11])
+            if variant in variant_gene_map[line[0]]:
+                line[0] = patient_id_map[line[0]]
+                line[4] = re.sub(r'\.0$', '', line[4])
+                variant_file.write('{0}\n'.format('\t'.join(line)))
+
+        phenotype_info = self._fetch_data_from_udp(
+            udp_internal_ids, phenotype_params, phenotype_fields, credentials)
+
+        for line in phenotype_info:
+            line[0] = patient_id_map[line[0]]
+            pheno_file.write('{0}\n'.format('\t'.join(line)))
+
+        variant_file.close()
+        pheno_file.close()
+
+        return
 
     def parse(self, limit=None):
         """
@@ -80,26 +186,50 @@ class UDP(Source):
         phenotype_file = '/'.join((self.rawdir, self.files['patient_phenotypes']['file']))
         variant_file = '/'.join((self.rawdir, self.files['patient_variants']['file']))
 
-        self._parse_patient_phenotypes(phenotype_file, limit)
-        self._parse_patient_variants(variant_file, limit)
+        phenotype_file_handler = open(phenotype_file, 'r')
+        variant_file_handler = open(variant_file, 'r')
+
+        self._parse_patient_phenotypes(phenotype_file_handler, limit)
+        self._parse_patient_variants(variant_file_handler)
 
         return
 
-    def _parse_patient_variants(self, file, limit):
+    def _fetch_data_from_udp(self, patient_ids, params, fields, credentials):
+        data = []
+        for patient in patient_ids:
+            params['values'] = patient
+            result_count = 1
+            params['start'] = 0
+            params['limit'] = 100
+            while result_count > 0:
+
+                logger.debug("processing {0} lines starting at {1} for patient {2}"
+                             .format(params['limit'], params['start'], patient))
+
+                req = requests.get(self.UDP_SERVER, params=params, auth=credentials)
+                results = req.json()
+                result_count = len(results['Subjects'])
+                for res in results['Subjects']:
+                    line = [res[field] for field in fields]
+                    data.append(line)
+
+                params['start'] = params['start'] + params['limit']
+
+        return data
+
+    def _parse_patient_variants(self, file):
         """
-        :param file: file path
-        :param limit: limit (int, optional) limit the number of rows processed (NOT IMPLEMENTED)
+        :param file: file handler
         :return:
         """
         patient_var_map = self._convert_variant_file_to_dict(file)
-        gene_id_map = self.parse_mapping_file(self.map_files['gene_map'])
         gene_coordinate_map = self._parse_gene_coordinates(self.map_files['gene_coord_map'])
         rs_map = self._parse_rs_map_file(self.map_files['dbsnp_map'])
 
         genotype_util = Genotype(self.graph)
         graph_util = GraphUtils(curie_map.get())
 
-        self._add_variant_gene_relationship(patient_var_map, gene_id_map, gene_coordinate_map)
+        self._add_variant_gene_relationship(patient_var_map, gene_coordinate_map)
 
         for patient in patient_var_map:
             patient_curie = ':{0}'.format(patient)
@@ -143,9 +273,14 @@ class UDP(Source):
                         and len(genes_of_interest) == 1:
 
                         variant_label = "{0}{1}({2}):g.{3}".format(
-                            build, chromosome, genes_of_interest, position)
-                else:
-                    variant_label = 'variant of interest in patient {0}'.format(patient)
+                            build, chromosome, genes_of_interest[0], position)
+                elif len(genes_of_interest) == 1:
+                    variant_label = 'variant of interest' \
+                                    ' in {0} gene of patient' \
+                                    ' {1}'.format(genes_of_interest[0], patient)
+                else :
+                    variant_label = 'variant of interest' \
+                                    ' in patient {0}'.format(patient)
 
                 genotype_util.addSequenceAlteration(variant_bnode, None)
                 # check if it we have built the label
@@ -171,7 +306,7 @@ class UDP(Source):
         self._add_variant_sameas_relationships(patient_var_map, rs_map)
         return
 
-    def _add_variant_gene_relationship(self, patient_var_map, gene_id_map, gene_coordinate_map):
+    def _add_variant_gene_relationship(self, patient_var_map, gene_coordinate_map):
         """
         Right now it is unclear the best approach on how to connect
         variants to genes.  In most cases has_affected_locus/GENO:0000418
@@ -181,6 +316,10 @@ class UDP(Source):
         is the affected locus, and which gene(s) are predicated to be
         causully influenced by (RO:0002566)
 
+        UPDATE 8-30: In the latest dataset we no longer have 1-many mappings
+        between variants and genes, but leaving this here in case we see
+        these in the future
+
         The logic followed here is:
         if mutation type contains downstream/upstream and more than one
         gene of interest, investigate coordinates of all genes to
@@ -188,6 +327,7 @@ class UDP(Source):
         :return: None
         """
         genotype_util = Genotype(self.graph)
+        dipper_util = DipperUtil()
         graph_util = GraphUtils(curie_map.get())
         # Note this could be compressed in someway to remove one level of for looping
         for patient in patient_var_map:
@@ -197,8 +337,9 @@ class UDP(Source):
                 if len(genes_of_interest) == 1:
                     # Assume variant is variant allele of gene
                     gene = genes_of_interest[0]
+                    gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
-                        gene, variant_bnode, gene_id_map,
+                        gene, variant_bnode, gene_id,
                         genotype_util.object_properties['feature_to_gene_relation'])
 
                 elif re.search(r'upstream|downstream',
@@ -209,16 +350,15 @@ class UDP(Source):
                     up_down_gene = []
                     unmatched_genes = []
                     for gene in variant['genes_of_interest']:
-                        if gene in gene_id_map \
-                                and gene_id_map[gene] != '' \
-                                and gene_id_map[gene] in gene_coordinate_map:
-                            ncbi_id = gene_id_map[gene]
-                            if gene_coordinate_map[ncbi_id]['start'] \
+                        if gene_id \
+                                and gene_id != '' \
+                                and gene_id in gene_coordinate_map:
+                            if gene_coordinate_map[gene_id]['start'] \
                                     <= variant['position']\
-                                    <= gene_coordinate_map[ncbi_id]['end']:
+                                    <= gene_coordinate_map[gene_id]['end']:
                                 gene_info = {
                                     'symbol': gene,
-                                    'strand': gene_coordinate_map[ncbi_id]['strand']
+                                    'strand': gene_coordinate_map[gene_id]['strand']
                                 }
                                 ref_gene.append(gene_info)
                             else:
@@ -227,7 +367,7 @@ class UDP(Source):
                             unmatched_genes.append(gene)
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
-                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id,
                             genotype_util.object_properties['feature_to_gene_relation'])
 
                         # update label with gene
@@ -243,7 +383,7 @@ class UDP(Source):
                     # Credit http://stackoverflow.com/a/3844832
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
-                            ref_gene[0]['symbol'], variant_bnode, gene_id_map,
+                            ref_gene[0]['symbol'], variant_bnode, gene_id,
                             genotype_util.object_properties['feature_to_gene_relation'])
 
                         # build label function expects list
@@ -260,7 +400,7 @@ class UDP(Source):
                         if "minus" in strands and "plus" in strands:
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
-                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    r_gene['symbol'], variant_bnode, gene_id,
                                     genotype_util.object_properties['feature_to_gene_relation'])
                         else:
                             logger.warn("unable to map intron variant"
@@ -268,7 +408,7 @@ class UDP(Source):
                                         .format(variant))
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
-                                    r_gene['symbol'], variant_bnode, gene_id_map,
+                                    r_gene['symbol'], variant_bnode, gene_id,
                                     graph_util.object_properties['causally_influences'])
                     elif re.search(r'intron', variant['type'], flags=re.I):
                         logger.warn("unable to map intron variant"
@@ -276,30 +416,31 @@ class UDP(Source):
                                     .format(variant))
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
-                            neighbor, variant_bnode, gene_id_map,
+                            neighbor, variant_bnode, gene_id,
                             graph_util.object_properties['causally_influences'])
                     # Unmatched genes are likely because we cannot map to an NCBIGene
                     # or we do not have coordinate information
                     for unmatched_gene in unmatched_genes:
                         self._add_gene_to_graph(
-                            unmatched_gene, variant_bnode, gene_id_map,
+                            unmatched_gene, variant_bnode, gene_id,
                             graph_util.object_properties['causally_influences'])
 
         return
 
-    def _convert_variant_file_to_dict(self, file):
+    @staticmethod
+    def _convert_variant_file_to_dict(file):
         """
         Converts tsv to dicts with this structure
         {
             'patient_1': {
                 'variant-id': {
-                    'build': hg19
+                    'build': 'hg19'
                     'chromosome': 'chr7',
                     'reference_allele': 'A',
                     'variant_allele': 'G',
-                    'position': '1234'
+                    'position': '1234',
                     'rs_id' : 'RS1234',
-                    'type': 'SNV",
+                    'type': 'SNV',
                     'genes_of_interest' : [SHH, BRCA1]
                 }
             }
@@ -331,6 +472,9 @@ class UDP(Source):
 
         Variant id will be used downstream to form blank nodes (checksumed)
 
+        See docstring for _add_variant_gene_relationship for explanation
+        on why there is a one to many mapping between variants and genes
+
         Values are normalized with these rules:
         1. Basepairs are upper case
         2. HG19 -> hg19
@@ -339,107 +483,106 @@ class UDP(Source):
         """
         patient_variant_map = {}
         line_num = 0
-        with open(file, 'rt') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                if line_num == 0:
-                    line_num += 1
-                    continue
+        reader = csv.reader(file, delimiter="\t")
+        for row in reader:
 
-                (patient, family, chromosome, build, position,
-                 reference_allele, variant_allele, parent_of_origin,
-                 allele_type, mutation_type, gene_symbol, transcript,
-                 reference_aa, variant_aa, aa_change, segregates_with,
-                 locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
-                 num_of_alleles) = row
+            (patient, family, chromosome, build, position,
+             reference_allele, variant_allele, parent_of_origin,
+             allele_type, mutation_type, gene_symbol, transcript,
+             reference_aa, variant_aa, aa_change, segregates_with,
+             locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
+             num_of_alleles) = row
 
-                if patient not in patient_variant_map:
-                    patient_variant_map[patient] = {}
-
-                formatted_chr = re.sub(r'^CHR', 'chr', chromosome, flags=re.I)
-
-                if re.fullmatch(r'[XY]|[0-9]{1,2}', chromosome, flags=re.I):
-                    formatted_chr = "chr{0}".format(chromosome.upper())
-
-                formatted_build = re.sub(r'^HG', 'hg', build, flags=re.I)
-                ref_base = reference_allele.upper()
-                var_base = variant_allele.upper()
-                rs_id = ''
-
-                # Catch misformatted data
-                if re.search(r'LEFT FLANK|NM_|EXON', ref_base):
-                    ref_base = ''
-
-                if re.search(r'LEFT FLANK|NM_|EXON', var_base):
-                    var_base = ''
-
-                if dbSNP_ID != '':
-                    match = re.fullmatch(r'^(rs\d+).*', dbSNP_ID)
-                    if match:
-                        rs_id = match.group(1)
-
-                # Format variant object
-                variant_info = [formatted_chr, formatted_build, position,
-                                ref_base, var_base]
-
-                if '' in variant_info:
-                    filt_list = [info for info in variant_info if info != '']
-                    variant_id = str(line_num) + '-' + '-'.join(filt_list)
-                else:
-                    variant_id = '-'.join(variant_info)
-
-                if variant_id in patient_variant_map[patient]:
-                    patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
-                else:
-                    patient_variant_map[patient][variant_id] = {
-                        'build': formatted_build,
-                        'position': position,
-                        'chromosome': formatted_chr,
-                        'reference_allele': ref_base,
-                        'variant_allele': var_base,
-                        'type': mutation_type,
-                        'rs_id': ''
-                    }
-                    if rs_id:
-                        patient_variant_map[patient][variant_id]['rs_id'] = rs_id
-
-                    patient_variant_map[patient][variant_id]['genes_of_interest'] = [gene_symbol]
-
+            if patient == 'Patient':  # skip header
                 line_num += 1
+                continue
+
+            if patient not in patient_variant_map:
+                patient_variant_map[patient] = {}
+
+            formatted_chr = re.sub(r'^CHR', 'chr', chromosome, flags=re.I)
+
+            if re.fullmatch(r'[XY]|[0-9]{1,2}', chromosome, flags=re.I):
+                formatted_chr = "chr{0}".format(chromosome.upper())
+
+            formatted_build = re.sub(r'^HG', 'hg', build, flags=re.I)
+            ref_base = reference_allele.upper()
+            var_base = variant_allele.upper()
+            rs_id = ''
+
+            # Catch misformatted data
+            if re.search(r'LEFT FLANK|NM_|EXON', ref_base):
+                ref_base = ''
+
+            if re.search(r'LEFT FLANK|NM_|EXON', var_base):
+                var_base = ''
+
+            if dbSNP_ID != '':
+                match = re.fullmatch(r'^(rs\d+).*', dbSNP_ID)
+                if match:
+                    rs_id = match.group(1)
+
+            # Format variant object
+            variant_info = [formatted_chr, formatted_build, position,
+                            ref_base, var_base]
+
+            if '' in variant_info:
+                filt_list = [info for info in variant_info if info != '']
+                variant_id = str(line_num) + '-' + '-'.join(filt_list)
+            else:
+                variant_id = '-'.join(variant_info)
+
+            if variant_id in patient_variant_map[patient]:
+                patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
+            else:
+                patient_variant_map[patient][variant_id] = {
+                    'build': formatted_build,
+                    'position': position,
+                    'chromosome': formatted_chr,
+                    'reference_allele': ref_base,
+                    'variant_allele': var_base,
+                    'type': mutation_type,
+                    'rs_id': ''
+                }
+                if rs_id:
+                    patient_variant_map[patient][variant_id]['rs_id'] = rs_id
+
+                patient_variant_map[patient][variant_id]['genes_of_interest'] = [gene_symbol]
+
+            line_num += 1
 
         return patient_variant_map
 
-    def _parse_patient_phenotypes(self, file, limit):
+    def _parse_patient_phenotypes(self, file, limit=None):
         """
-        :param file: file path
-        :param limit: limit (int, optional) limit the number of rows processed
+        :param file: file handler
+        :param limit: limit rows processed
         :return:
         """
         graph_util = GraphUtils(curie_map.get())
         line_counter = 0
-        with open(file, 'r') as tsvfile:
-            reader = csv.reader(tsvfile, delimiter="\t")
-            for row in reader:
-                (patient_id, hpo_curie, present) = row
-                patient_curie = ':{0}'.format(patient_id)
-                if line_counter == 0:
-                    line_counter += 1
-                    continue
+        reader = csv.reader(file, delimiter="\t")
+        for row in reader:
+            (patient_id, hpo_curie, present) = row
+            patient_curie = ':{0}'.format(patient_id)
+            if patient_id == 'Patient':  # skip header
+                line_counter += 1
+                continue
 
-                graph_util.addPerson(self.graph, patient_curie, patient_id)
+            graph_util.addPerson(self.graph, patient_curie, patient_id)
 
+            graph_util.addTriple(self.graph, patient_curie,
+                                 graph_util.object_properties['has_phenotype'],
+                                 "DOID:4")
+            if present == 'yes':
                 graph_util.addTriple(self.graph, patient_curie,
                                      graph_util.object_properties['has_phenotype'],
-                                     "DOID:4")
-                if present == 'yes':
-                    graph_util.addTriple(self.graph, patient_curie,
-                                         graph_util.object_properties['has_phenotype'],
-                                         hpo_curie)
+                                     hpo_curie)
 
-                line_counter += 1
-                if not self.testMode and limit is not None \
-                        and line_counter >= limit:
-                    break
+            line_counter += 1
+            if not self.testMode and limit is not None \
+                    and line_counter >= limit:
+                break
 
     @staticmethod
     def _parse_gene_coordinates(file):
@@ -532,16 +675,15 @@ class UDP(Source):
                 prefix, position, reference_allele, variant_allele)
         return variant_label
 
-    def _add_gene_to_graph(self, gene, variant_bnode, gene_id_map, relation):
+    def _add_gene_to_graph(self, gene, variant_bnode, gene_id, relation):
         """
         :param gene:
         :param variant_bnode:
         :return:
         """
         graph_util = GraphUtils(curie_map.get())
-        if gene in gene_id_map and gene_id_map[gene] != '':
-            ncbi_curie = gene_id_map[gene]
-            graph_util.addTriple(self.graph, variant_bnode, relation, ncbi_curie)
+        if gene_id:
+            graph_util.addTriple(self.graph, variant_bnode, relation, gene_id)
         elif gene:
             logger.info("gene {0} not mapped to NCBI gene,"
                         " making blank node".format(gene))
@@ -589,7 +731,8 @@ class UDP(Source):
                             graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
         return
 
-    def _get_rs_id(self, variant, rs_map, type):
+    @staticmethod
+    def _get_rs_id(variant, rs_map, variant_type):
         """
         Given a variant dict, return unambiguous RS ID
         TODO
@@ -605,13 +748,13 @@ class UDP(Source):
         :return:
         """
         rs_id = None
-        if type == 'snp':
+        if variant_type == 'snp':
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
             if variant_key in rs_map:
                 snp_candidates = [rs_dict for rs_dict in rs_map[variant_key] if rs_dict['type'] == 'snp']
                 if len(snp_candidates) == 1:
                     rs_id = snp_candidates[0]["rs_id"]
-        elif type == 'indel':
+        elif variant_type == 'indel':
             rs_candidates = []
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
 
@@ -633,5 +776,5 @@ class UDP(Source):
                                 " for variant {0}\n candidate ids: {1}".format
                                 (variant, rs_map[variant_key]))
         else:
-            logger.warn("type: {0} unsupported".format(type))
+            logger.warn("type: {0} unsupported".format(variant_type))
         return rs_id

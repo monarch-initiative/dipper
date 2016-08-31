@@ -5,6 +5,7 @@ import time
 import logging
 import urllib       # TODO tec look @ import requests
 import csv
+import yaml
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
 from rdflib import ConjunctiveGraph, Namespace
@@ -574,6 +575,23 @@ class Source:
             f.write(contents)
 
         return
+
+    @staticmethod
+    def open_and_parse_yaml(file):
+        """
+        :param file: String, path to file containing label-id mappings in
+                             the first two columns of each row
+        :return: dict where keys are labels and values are ids
+        """
+        map = dict()
+        if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
+            map_file = open(os.path.join(os.path.dirname(__file__), file), 'r')
+            map = yaml.load(map_file)
+            map_file.close()
+        else:
+            logger.warn("file: {0} not found".format(file))
+
+        return map
 
     @staticmethod
     def parse_mapping_file(file):
