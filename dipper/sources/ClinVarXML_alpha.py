@@ -33,8 +33,8 @@ import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
-
 # import Requests
+# from dipper.sources.Source import Source
 # from dipper import curie_map  # hangs on to stale data?
 
 LOG = logging.getLogger(__name__)
@@ -139,8 +139,13 @@ CURIEMAP = {
 # def fetch():
 #    get_files()
 
-# Buffer to store the triples below a MONARCH_association"
-_triples = [None] * 1000
+
+# Buffer to store the triples below a MONARCH_association
+# before we decide to whether to keep or not"
+rcvtriples = [None] * 1000
+
+# Buffer to store non redundant triples between RCV sets
+releasetriple = set()
 
 
 def make_spo(sub, prd, obj):
@@ -198,15 +203,7 @@ def write_spo(sub, prd, obj):
     '''
         write triples to a buffer incase we decide to drop them
     '''
-    _triples.append(make_spo(sub, prd, obj))
-
-
-def write_triples():
-    '''
-        output a triple to the previously specified location
-    '''
-    print('\n'.join(_triples), file=OUTPUT)
-    del _triples[:]
+    rcvtriples.append(make_spo(sub, prd, obj))
 
 
 def scv_link(scv_sig):
@@ -251,8 +248,8 @@ def scv_link(scv_sig):
         scv_av = scv_sig.pop(scv_a)
         for scv_b in scv_sig.keys():
             link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
-            write_spo(scv_a, link, scv_b)
-            write_spo(scv_b, link, scv_a)
+            releasetriple.add(make_spo(scv_a, link, scv_b))
+            releasetriple.add(make_spo(scv_b, link, scv_a))
     return
 
 # Translate airbratary strings found in datasets
@@ -281,9 +278,20 @@ with gzip.open(FILENAME, 'rt') as fh:
 
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
 
-    # @prefix MonarchData: <https://data.monarchinitiative.org/ttl/> .
+    # seed releasetriple to avoid union with the empty set
     # <MonarchData: + ARGS.output> <a> <owl:Ontology>
-    write_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology')
+    releasetriple.add(
+        make_spo(
+            'MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
+    releasetriple.add(
+         make_spo(
+            'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
+
+    # not finalized
+    # releasetriple.add(
+    #     make_spo(
+    #        'MonarchData:' + ARGS.output, owl:versionIRI,
+    #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
 
     for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
@@ -479,7 +487,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             continue
 
         # start anew
-        del _triples[:]
+        del rcvtriples[:]
 
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
@@ -739,11 +747,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # store association's significance to compare w/sibs
                     pathocalls[monarch_assoc] = scv_geno
                 else:
-                    del _triples[:]
+                    del rcvtriples[:]
                     continue
             # if we have deleted the triples buffer then
             # there is no point in continueing  (I don't think)
-            if len(_triples) == 0:
+            if len(rcvtriples) == 0:
                 continue
             # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
@@ -833,11 +841,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                         write_spo(
                             _provenance_id, 'rdfs:label', SCV_OIMT.text)
             # End of a SCV (a.k.a. MONARCH association)
-            write_triples()
         # End of the ClinVarSet.
         # Output triples that only are known after processing sibbling records
         scv_link(pathocalls)
-
-        # any clean up?
-
+        # put this RCV's triples in the SET of all triples in this data release
+        releasetriple.update(set(rcvtriples))
+        del rcvtriples[:]
+    # write all the triples out
+    print('\n'.join(list(releasetriple)), file=OUTPUT)
 OUTPUT.close()
