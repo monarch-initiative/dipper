@@ -34,7 +34,8 @@ FNR != NR && /.* -> .*label=.*/ {
 		for(i=2;i<=length(term);i++)
 			row[4] = row[4] "\"" term[i]
 	}
-	for(i=1;i<=length(row);i++)
+    line = row[1]
+	for(i=2;i<=length(row);i++)
 		line = line " " row[i]
 	print  line
 }
