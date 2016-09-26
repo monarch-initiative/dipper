@@ -557,7 +557,7 @@ class GraphUtils:
             'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
             'https://raw.githubusercontent.com/oborel/obo-relations/master/ro.owl',
             'http://purl.obolibrary.org/obo/iao.owl',
-            'http://data.monarchinitiative.org/owl/ero.owl',
+            'http://purl.obolibrary.org/obo/ero.owl',
             'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
             'http://purl.obolibrary.org/obo/pco.owl',
             'http://purl.obolibrary.org/obo/xco.owl'
