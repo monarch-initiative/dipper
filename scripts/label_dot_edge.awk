@@ -18,7 +18,7 @@
 
 BEGIN{FS="\t"; OFS="\t"}
 # load labels
-FNR == NR && $3 != "null"{label[$1$2]=$3}
+FNR == NR && $3 != "null"{label[$1 $2]=$3}
 
 # output lines that do not get labels
 FNR != NR && !/.* -> .*label=.*/ {print}
