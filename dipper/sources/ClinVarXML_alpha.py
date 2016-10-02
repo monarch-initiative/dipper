@@ -206,9 +206,9 @@ def write_spo(sub, prd, obj):
     rcvtriples.append(make_spo(sub, prd, obj))
 
 
-def scv_link(scv_sig):
+def scv_link(scv_sig, rcv_trip):
     '''
-    Creates links between SCV based on their pathonicty/significancce
+    Creates links between SCV based on their pathonicty/significance calls
 
     # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
     # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
@@ -248,12 +248,12 @@ def scv_link(scv_sig):
         scv_av = scv_sig.pop(scv_a)
         for scv_b in scv_sig.keys():
             link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
-            releasetriple.add(make_spo(scv_a, link, scv_b))
-            releasetriple.add(make_spo(scv_b, link, scv_a))
+            rcv_trip.append(make_spo(scv_a, link, scv_b))
+            rcv_trip.append(make_spo(scv_b, link, scv_a))
     return
 
 # Translate airbratary strings found in datasets
-# to specific things found in ontologies
+# to specific terms found in ontologies
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
@@ -843,7 +843,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # End of a SCV (a.k.a. MONARCH association)
         # End of the ClinVarSet.
         # Output triples that only are known after processing sibbling records
-        scv_link(pathocalls)
+        scv_link(pathocalls, rcvtriples)
         # put this RCV's triples in the SET of all triples in this data release
         releasetriple.update(set(rcvtriples))
         del rcvtriples[:]
