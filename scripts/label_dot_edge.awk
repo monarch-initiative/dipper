@@ -1,16 +1,16 @@
 #! /usr/bin/gawk -f
 
 # label_dot_edge.awk
-# example:
+# Attempts to augment opaque ontological terms with their current label
+# example usage:
 # label_dot_edge.awk predicate_curie_term_label.tab  in.dot > out.dot
 #
+# Arguments: two files
 # Loads the first file as a map from terms to labels:
 # (expects: [namespace:]<tab><term><tab><label>[<tab><whatever>])
-# the first set was generated via cypher queries agains whr scigerph (neo4j)
-# instance loaded with the ontologies we use.
-
- 
-# In the second Graphviz digraph dot format file:
+# the first set was generated via cypher queries against our scigraph
+# (neo4j) instance loaded with the ontologies we use.
+# Reads the second Graphviz digraph dot format file:
 # looks for <term> as edge-text 
 # and appends "! <label> (Iff <term> is found in map)
 # note: This "<term> ! <label>" structure is a convention used by Ontologists.
