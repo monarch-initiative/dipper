@@ -38,7 +38,7 @@ class GraphUtils:
     }
 
     object_properties = {
-        'has_disposition': 'GENO:0000208',
+        'has disposition': 'RO:0000091',
         'has_phenotype': 'RO:0002200',
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',

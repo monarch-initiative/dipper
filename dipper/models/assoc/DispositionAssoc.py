@@ -14,7 +14,7 @@ class DispositionAssoc(Assoc):
 
         self.set_subject(entity_id)
         self.set_object(heritability_id)
-        # default to has_disposition
-        self.set_relationship(self.object_properties['has_disposition'])
+        # default to 'has disposition'
+        self.set_relationship(self.object_properties['has disposition'])
 
         return
