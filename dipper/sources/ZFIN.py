@@ -566,7 +566,7 @@ class ZFIN(Source):
                         geno.addParts(
                             tg, extrinsic_id,
                             geno.object_properties[
-                                'has_expression-variant_part'])
+                                'has_variant_part'])
 
             else:
                 extrinsic_id = None
@@ -2026,8 +2026,8 @@ class ZFIN(Source):
                 if reagent_type in ['morph', 'crispr']:
                     try:
                         (gene_num, gene_so_id, gene_symbol, reagent_num,
-                     reagent_so_id, reagent_symbol, reagent_sequence,
-                     publication, note) = row
+                         reagent_so_id, reagent_symbol, reagent_sequence,
+                         publication, note) = row
                     except ValueError:
                         # Catch lines without publication or note
                         (gene_num, gene_so_id, gene_symbol, reagent_num,
