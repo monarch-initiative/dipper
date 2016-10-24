@@ -572,8 +572,9 @@ class GraphUtils:
             if re.search(r'\.owl', ontology):
                 try:
                     ontology_graph.parse(ontology, format='xml')
-                except: URLError
+                except OSError as e:  # URLError:
                     # simple retry
+                    logger.error(e + '\n Retrying:')
                     ontology_graph.parse(ontology, format='xml')
             elif re.search(r'\.ttl', ontology):
                 ontology_graph.parse(ontology, format='turtle')
