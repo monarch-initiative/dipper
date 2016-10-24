@@ -563,10 +563,18 @@ class GraphUtils:
             'http://purl.obolibrary.org/obo/xco.owl'
         ]
 
+        # random timeouts can waste hours. (too many redirects?)
+        # there is a timeout param in urllib.request,
+        # but it is not exposed by rdflib.parsing
+        # so retry once on URLError
         for ontology in ontologies:
             logger.info("parsing: " + ontology)
             if re.search(r'\.owl', ontology):
-                ontology_graph.parse(ontology, format='xml')
+                try:
+                    ontology_graph.parse(ontology, format='xml')
+                except: URLError
+                    # simple retry
+                    ontology_graph.parse(ontology, format='xml')
             elif re.search(r'\.ttl', ontology):
                 ontology_graph.parse(ontology, format='turtle')
             else:
