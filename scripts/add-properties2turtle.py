@@ -12,23 +12,23 @@ def main():
                         help='Location of input file')
     parser.add_argument('--output', '-o', type=str, required=True,
                         help='Location of output file')
-    parser.add_argument('--format', '-f', type=str, default="turtle",
+    parser.add_argument('--input_format', '-f', type=str, default="turtle",
                         help='format of rdf file (turtle, nt, rdf/xml)')
-    parser.add_argument('--output_format', type=str, default="turtle",
+    parser.add_argument('--output_format', '-g', type=str, default="turtle",
                         help='format of rdf file (turtle, nt, rdf/xml)')
     args = parser.parse_args()
-    property_list = get_properties_from_input(args.input, args.format)
+    property_list = get_properties_from_input(args.input, args.input_format)
     merged_graph = make_property_graph(property_list, args)
 
     # merge graphs
-    merged_graph.parse(args.input, format=args.format)
+    merged_graph.parse(args.input, format=args.input_format)
 
     merged_graph.serialize(args.output, format=args.output_format)
 
 
 def get_properties_from_input(file, format):
     input_graph = ConjunctiveGraph()
-    input_graph.parse(file, format=format)
+    input_graph.parse(file, format=input_format)
 
     # collapse to single list
     property_set = set()
@@ -45,9 +45,9 @@ def make_property_graph(properties, args):
     ontologies = [
         'https://raw.githubusercontent.com/monarch-initiative/SEPIO-ontology/master/src/ontology/sepio.owl',
         'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
-        'https://raw.githubusercontent.com/oborel/obo-relations/master/ro.owl',
+        'http://purl.obolibrary.org/obo/ro.owl',
         'http://purl.obolibrary.org/obo/iao.owl',
-        'http://data.monarchinitiative.org/owl/ero.owl',
+        'http://purl.obolibrary.org/obo/ero.owl',
         'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
         'http://purl.obolibrary.org/obo/pco.owl',
         'http://purl.obolibrary.org/obo/xco.owl'
