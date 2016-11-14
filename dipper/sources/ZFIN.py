@@ -2088,7 +2088,8 @@ class ZFIN(Source):
 
     def _process_pheno_enviro(self, limit=None):
         """
-        The pheno_environment.txt file ties experimental conditions
+        The pheno_environment.txt (became pheno_environment_fish.txt?)
+        file ties experimental conditions
         to an environment ID.
         An environment ID may have one or more associated conditions.
         Condition groups present:
