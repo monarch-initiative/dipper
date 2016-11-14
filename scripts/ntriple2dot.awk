@@ -13,12 +13,15 @@
 #  which may belong to a "structural" ontology as opposed to
 # a data uri.
 
-#  Perhaps an improvement would be to also
-#  express subject and objects as individual curies (ala predicates)
-#  iff their namespace is also used by a predicate.
-
 #  Post processing to augment predicate identifiers
 #  with their labels seems to improve usefulness.
+
+
+function usage(){
+	print "usage: ntriple2dot.awk curie_map.yaml rdf.nt > rdf.dot"
+}
+
+
 
 ##########################################################
 # remove first and last chars from input string <>
