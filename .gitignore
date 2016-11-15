@@ -119,5 +119,6 @@ tests/raw
 
 # cmap files
 docs/*/*.cmapthumbs
+docs/.cmapthumbs/
 docs/*/Old
 project.idx
