@@ -100,7 +100,7 @@ class Genotype():
         'translates_to': 'RO:0002513',
         'is_targeted_expression_variant_of': 'GENO:0000443',
         'is_transgene_variant_of': 'GENO:0000444',
-        'has_expression-variant_part': 'GENO:0000532',
+        'has_variant_part': 'GENO:0000382',
         # targeted_by isa between a (reagent-targeted gene) and a morpholino
         'targeted_by': 'GENO:0000634',
         # FIXME should derives_sequence_from_gene just be subsequence of?
@@ -423,7 +423,7 @@ class Genotype():
     def addGeneTargetingReagentToGenotype(self, reagent_id, genotype_id):
         # for example, add a morphant reagent thingy to the genotype,
         # assuming it's a extrinsic_genotype
-        p = self.object_properties['has_expression-variant_part']
+        p = self.object_properties['has_variant_part']
         self.gu.addTriple(self.graph, genotype_id, p, reagent_id)
 
         return

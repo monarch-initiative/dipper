@@ -35,7 +35,7 @@ class Assoc:
     }
 
     object_properties = {
-        'has_disposition': 'GENO:0000208',
+        'has disposition': 'RO:0000091',
         'has_phenotype': 'RO:0002200',
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
@@ -312,9 +312,9 @@ class Assoc:
         A method to create unique identifiers for OBAN-style associations,
         based on all the parts of the association
         If any of the items is empty or None, it will convert it to blank.
-        It effectively md5 hashes the (+)-joined string from the values.
+        It effectively digests the  string of concatonated values.
         Subclasses of Assoc can submit an additional array of attributes
-        that will be added to the ID.
+        that will be appeded to the ID.
 
         :param definedby: The (data) resource that provided the annotation
         :param subject:
@@ -326,11 +326,12 @@ class Assoc:
 
         # note others available:
         #   md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
-        # TEC: at our scale, md5 is in danger of having collisions.
         # putting definedby first,
         # as this will usually be the datasource providing the annotation
         # this will end up making the first few parts of the id
         # be the same for all annotations in that resource
+        # (although the point of a digest is to render such details moot).
+
         items_to_hash = [definedby, subject, predicate, object]
         if attributes is not None:
             items_to_hash += attributes
@@ -342,4 +343,4 @@ class Assoc:
         byte_string = '+'.join(items_to_hash).encode("utf-8")
 
         # TODO put this in a util?
-        return ':'.join(('MONARCH', hashlib.md5(byte_string).hexdigest()))
+        return ':'.join(('MONARCH', hashlib.sha1(byte_string).hexdigest()))

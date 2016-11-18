@@ -84,7 +84,7 @@ class Source:
     def load_core_bindings(self):
 
         for g in [self.graph, self.testgraph]:
-            g.bind("dc", DC)
+            g.bind("dc", DC)  # TODO: Dublin Core?  OBO: Disease Cluster?
             g.bind("foaf", FOAF)
             g.bind("rdfs", RDFS)
             g.bind('owl', OWL)
@@ -201,20 +201,21 @@ class Source:
     @staticmethod
     def make_id(long_string, prefix='MONARCH'):
         """
-        a method to create unique identifiers based on very long strings
-        currently implemented with md5
+        a method to create DETERMINISTIC identifiers based on a string's digest.
+        currently implemented with sha1
         :param long_string:
         :return:
 
         """
-        # FIXME for now, this will do md5.
-        # probably not the best long-term solution
-        # note others available:
+
+        # note other digests available:
         # sha1(), sha224(), sha256(), sha384(), and sha512()
+        # (md5 has no collision insurance)
+
 
         byte_string = long_string.encode("utf-8")
 
-        return ':'.join((prefix, hashlib.md5(byte_string).hexdigest()))
+        return ':'.join((prefix, hashlib.sha1(byte_string).hexdigest()))
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
@@ -374,6 +375,10 @@ class Source:
         :param table_name: The name of the table to process
         :param processing_function: The row processing function
         :param limit:
+
+        Appears to be making calls to the elementTree library
+        although it not explicitly imported here.
+
         :return:
 
         """

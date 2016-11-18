@@ -38,7 +38,7 @@ class GraphUtils:
     }
 
     object_properties = {
-        'has_disposition': 'GENO:0000208',
+        'has disposition': 'RO:0000091',
         'has_phenotype': 'RO:0002200',
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
@@ -563,10 +563,20 @@ class GraphUtils:
             'http://purl.obolibrary.org/obo/xco.owl'
         ]
 
+        # random timeouts can waste hours. (too many redirects?)
+        # there is a timeout param in urllib.request,
+        # but it is not exposed by rdflib.parsing
+        # so retry once on URLError
         for ontology in ontologies:
             logger.info("parsing: " + ontology)
             if re.search(r'\.owl', ontology):
-                ontology_graph.parse(ontology, format='xml')
+                try:
+                    ontology_graph.parse(ontology, format='xml')
+                except OSError as e:  # URLError:
+                    # simple retry
+                    logger.error(e)
+                    logger.error('Retrying: ' + ontology)
+                    ontology_graph.parse(ontology, format='xml')
             elif re.search(r'\.ttl', ontology):
                 ontology_graph.parse(ontology, format='turtle')
             else:

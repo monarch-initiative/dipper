@@ -155,7 +155,7 @@ class AnimalQTLdb(Source):
             build_id = None
             build = None
 
-            k = o+'_bp'
+            k = o + '_bp'
             if k in self.files:
                 file = self.files[k]['file']
                 m = re.search(r'QTL_([\w\.]+)\.gff.txt.gz', file)
@@ -204,7 +204,8 @@ class AnimalQTLdb(Source):
         gu = GraphUtils(curie_map.get())
         eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
 
-        logger.info("Processing genetic location for %s", taxon_id)
+        logger.info(
+            "Processing genetic location for %s from %s", taxon_id, raw)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -264,8 +265,14 @@ class AnimalQTLdb(Source):
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
                 start = stop = None
-                if re.search(r'-', range_cm):
+                # range_cm sometimes ends in "(Mb)"  (i.e pig 2016 Nov)
+                range_mb = re.split(r'\(', range_cm)
+                if range_mb is not None:
+                    range_cm = range_mb[0]
+
+                if re.search(r'[0-9].*-.*[0-9]', range_cm):
                     range_parts = re.split(r'-', range_cm)
+
                     # check for poorly formed ranges
                     if len(range_parts) == 2 and\
                             range_parts[0] != '' and range_parts[1] != '':
@@ -277,7 +284,10 @@ class AnimalQTLdb(Source):
                             "A cM range we can't handle for QTL %s: %s",
                             qtl_id, range_cm)
                 elif position_cm != '':
-                    start = stop = int(float(position_cm))
+                    match = re.match(r'([0-9]*\.[0-9]*)', position_cm)
+                    if match is not None:
+                        position_cm = match.group()
+                        start = stop = int(float(position_cm))
 
                 # FIXME remove converion to int for start/stop
                 # when schema can handle floats add in the genetic location

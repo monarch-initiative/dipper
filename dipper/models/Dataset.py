@@ -81,9 +81,21 @@ class Dataset:
 
     def setVersion(self, date_issued, version_id=None):
         """
-        Legacy function...  should use the other set_* for version and date
+        Legacy function...
+            should use the other set_* for version and date
+
+        as of 2016-10-20  used in:
+        
+        dipper/sources/HPOAnnotations.py 139:
+        dipper/sources/CTD.py             99:
+        dipper/sources/BioGrid.py        100:        
+        dipper/sources/MGI.py            255:
+        dipper/sources/EOM.py             93:
+        dipper/sources/Coriell.py        200:
+        dipper/sources/MMRRC.py           77:
 
         # TODO set as deprecated
+        
         :param date_issued:
         :param version_id:
         :return:
@@ -93,16 +105,16 @@ class Dataset:
         if date_issued is not None:
             self.set_date_issued(date_issued)
         elif version_id is not None:
-            # this shouldn't happen
             self.set_version_by_num(version_id)
         else:
-            logger.error("No date or version set!")
+            logger.error("date or version not set!")
             # TODO throw error
             return
 
         if version_id is not None:
             self.set_version_by_num(version_id)
         else:
+            logger.info("set version to %s", self.version)
             self.set_version_by_date(date_issued)
 
         logger.info("set version to %s", self.version)
