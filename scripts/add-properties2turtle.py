@@ -5,17 +5,26 @@ import re
 
 
 def main():
-    parser = argparse.ArgumentParser(description='description',
-                                     formatter_class=
-                                     argparse.RawTextHelpFormatter)
-    parser.add_argument('--input', '-i', type=str, required=True,
-                        help='Location of input file')
-    parser.add_argument('--output', '-o', type=str, required=True,
-                        help='Location of output file')
-    parser.add_argument('--input_format', '-f', type=str, default="turtle",
-                        help='format of rdf file (turtle, nt, rdf/xml)')
-    parser.add_argument('--output_format', '-g', type=str, default="turtle",
-                        help='format of rdf file (turtle, nt, rdf/xml)')
+    parser = argparse.ArgumentParser(
+        description='description',
+        formatter_class=argparse.RawTextHelpFormatter)
+
+    parser.add_argument(
+        '--input', '-i', type=str, required=True,
+        help='Location of input file')
+
+    parser.add_argument(
+        '--output', '-o', type=str, required=True,
+        help='Location of output file')
+
+    parser.add_argument(
+        '--input_format', '-f', type=str, default="turtle",
+        help='format of source rdf file (turtle, nt, rdf/xml)')
+
+    parser.add_argument(
+        '--output_format', '-g', type=str, default="turtle",
+        help='format of target rdf file (turtle, nt, rdf/xml)')
+
     args = parser.parse_args()
     property_list = get_properties_from_input(args.input, args.input_format)
     merged_graph = make_property_graph(property_list, args)
@@ -26,7 +35,7 @@ def main():
     merged_graph.serialize(args.output, format=args.output_format)
 
 
-def get_properties_from_input(file, format):
+def get_properties_from_input(file, input_format):
     input_graph = ConjunctiveGraph()
     input_graph.parse(file, format=input_format)
 
@@ -78,20 +87,25 @@ def make_property_graph(properties, args):
         output_graph, OWL['DatatypeProperty'], properties)
 
     # Hardcoded properties
-    output_graph.add((URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
-                      RDF['type'], OWL['AnnotationProperty']))
+    output_graph.add(
+        (URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
+            RDF['type'], OWL['AnnotationProperty']))
 
     # Check monarch data triple
-    data_url = "http://data.monarchinitiative.org/ttl/{0}".format(re.sub(r".*/", "", args.input))
-    new_url = "http://data.monarchinitiative.org/ttl/{0}".format(re.sub(r".*/", "", args.output))
+    data_url = "http://data.monarchinitiative.org/ttl/{0}".format(
+        re.sub(r".*/", "", args.input))
+    new_url = "http://data.monarchinitiative.org/ttl/{0}".format(
+        re.sub(r".*/", "", args.output))
     if (URIRef(data_url), RDF.type, OWL['Ontology']) in output_graph:
         output_graph.remove(URIRef(data_url), RDF.type, OWL['Ontology'])
 
     output_graph.add((URIRef(new_url), RDF.type, OWL['Ontology']))
 
-    for row in output_graph.predicates(DC['source'], OWL['AnnotationProperty']):
+    for row in output_graph.predicates(
+            DC['source'], OWL['AnnotationProperty']):
         if row == RDF['type']:
-            output_graph.remove((DC['source'], RDF['type'], OWL['AnnotationProperty']))
+            output_graph.remove(
+                (DC['source'], RDF['type'], OWL['AnnotationProperty']))
 
     output_graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
