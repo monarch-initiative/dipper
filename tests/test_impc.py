@@ -156,10 +156,10 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         sparql_output = impc.graph.query(sparql_query)
 
-        # This may change if we change our approach for
+        # This will fail if we change our approach for
         # making blank node iris, it might be better
         # to check the length of the output (see test_provenance_mode)
-        study = BNode('9328ff6b6455b01254a5548c3cfcc8c4')
+        study = BNode('bdd05a8ca155ddaf415e6a451136a6b97fdc97d8')
         expected_output = [(study,)]
 
         self.assertEqual(list(sparql_output), expected_output)
