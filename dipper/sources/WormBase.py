@@ -45,17 +45,19 @@ class WormBase(Source):
 
     TODO:  get people and gene expression
     """
-
-    wbftp = 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-development-release'
-    wbprod = 'ftp://ftp.wormbase.org/pub/wormbase/releases/current-production-release'
+    wbrel = 'ftp://ftp.wormbase.org/pub/wormbase/releases'
+    wbdev = wbrel + '/current-development-release'
+    wbprod = wbrel + '/current-production-release'
+    species = '/species/c_elegans/PRJNA13758'
     files = {
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
-            'url': wbprod +
-            '/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
-        # 'gene_desc': { # TEC: no functional_descriptions available 2016 Mar 03
+            'url': wbprod + species +
+            '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+        # 'gene_desc': { # TEC: missing as of 2016 Mar 03
         #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
-        #    'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
+        #    'url': wbdev + species +
+        #     '/annotation/c_elegans.PRJNA13758.WSNUMBER.functional_descriptions.txt.gz'},
         'allele_pheno': {
             'file': 'phenotype_association.wb',
             'url': wbprod + '/ONTOLOGY/phenotype_association.WSNUMBER.wb'},
@@ -67,28 +69,35 @@ class WormBase(Source):
             'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
-            'url': wbprod + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+            'url': wbprod + species +
+            '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {
         #   'file': 'development_association.wb',
-        #   'url wbftp+'/ONTOLOGY/development_association.WS249.wb'},
+        #   'url wbdev+'/ONTOLOGY/development_association.WS249.wb'},
         # 'genes_in_anatomy': {
         #   'file': 'anatomy_association.wb',
-        #   'url': wbftp+'/ONTOLOGY/anatomy_association.WS249.wb'},
+        #   'url': wbdev+'/ONTOLOGY/anatomy_association.WS249.wb'},
         # 'gene_interaction': {
         #   'file': 'c_elegans.PRJNA13758.gene_interactions.txt.gz',
-        #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
+        #   'url': wbdev + species +
+        #   '/annotation/c_elegans.PRJNA13758.WSNUMBER.gene_interactions.txt.gz'},
         # 'orthologs': {
         #   'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
-        #   'url': wbftp+'/species/c_elegans/PRJNA13758/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
+        #   'url': wbdev + species +
+        #   '/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
         'xrefs': {
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-            'url': wbprod + '/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
-        'letter': {
-            'file': 'letter.WSNUMBER',
-            'url': wbprod + '/letter.WSNUMBER'},
+            'url': wbprod + species +
+            '/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+        # 'letter': { # no longer exists 2016-11-18
+        #    'file': 'letter.WSNUMBER',
+        #    'url': wbprod + '/letter.WSNUMBER'},
+        'checksums': {
+            'file': 'CHECKSUMS',
+            'url':  wbprod + '/CHECKSUMS'}
     }
 
     test_ids = {
@@ -146,8 +155,7 @@ class WormBase(Source):
         """
         With the given version number ```vernum```,
         update the source's version number, and replace in the file hashmap.
-        We also save the "letter" for the version
-        to maintain the version number.
+        the version number is in the CHECKSUMS file.
         :param vernum:
         :return:
 
@@ -160,10 +168,10 @@ class WormBase(Source):
             self.files[f]['url'] = url
             logger.debug(
                 "Replacing WSNUMBER in %s with %s", f, self.version_num)
+
         # also the letter file - keep this so we know the version number
-        self.files['letter']['file'] = re.sub(r'WSNUMBER',
-                                              self.version_num,
-                                              self.files['letter']['file'])
+        # self.files['checksums']['file'] = re.sub(
+        #    r'WSNUMBER', self.version_num, self.files['checksums']['file'])
         return
 
     def parse(self, limit=None):
@@ -171,15 +179,15 @@ class WormBase(Source):
             logger.info("Only parsing first %s rows of each file", limit)
 
         if self.version_num is None:
-            import os
             logger.info("Figuring out version num for files")
-            # probe the raw directory for the WSnumber on
-            # the "letter.WS###" file.
-            # this is the only one that we keep the version number on
-            files = os.listdir(self.rawdir)
-            letter_file = next(f for f in files if re.match(r'letter', f))
-            vernum = re.search(r'(WS\d+)', letter_file)
+            # probe the raw directory for the WSnumber incthe "CHECKSUMS" file.
+            # 20f7d39c73012c9cfc8444a657af2b80  acedb/md5sum.WS255
+
+            checksums = open(self.rawdir + '/CHECKSUMS', 'r')
+            checksum = checksums.readline()
+            vernum = re.search(r'\.(WS\d+)', checksum)
             self.update_wsnum_in_files(vernum.group(1))
+            checksums.close()
 
         logger.info("Parsing files...")
 
