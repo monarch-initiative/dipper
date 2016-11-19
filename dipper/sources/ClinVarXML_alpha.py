@@ -533,8 +533,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             # scv_assertcount += 1
 
             scv_id = SCV_Assertion.get('ID')
-            monarch_id = hashlib.md5(
-                (rcv_id + scv_id).encode('utf-8')).hexdigest()[1:17]
+            monarch_id = hashlib.sha1(
+                (rcv_id + scv_id).encode('utf-8')).hexdigest()[1:20]
             monarch_assoc = 'MONARCH:' + monarch_id
 
             ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
@@ -547,8 +547,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_submitter = SCV_SubmissionID.get('submitter')
 
             # blank node identifiers
-            _evidence_id = '_:' + monarch_id + '_evidence'
-            _assertion_id = '_:' + monarch_id + '_assertion'
+            _evidence_id = '_:' + hashlib.sha1(
+                (monarch_id + '_evidence').encode('utf-8')).hexdigest()[1:20]
+            write_spo(_evidence_id, 'rdfs:label', monarch_id + '_evidence')
+
+            _assertion_id = '_:' + hashlib.sha1(
+                (monarch_id + '_assertion').encode('utf-8')).hexdigest()[1:20]
+            write_spo(_assertion_id, 'rdfs:label', monarch_id + '_assertion')
 
             #                   TRIPLES
             # <monarch_assoc><rdf:type><OBAN:association>  .
@@ -645,14 +650,19 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # if scv_assert_method in TT:
                     # scv_assert_id = TT[scv_assert_method]
                     # _assertion_method_id = '_:' + monarch_id + \
-                    #    '_assertionmethod_' + hashlib.md5(
+                    #    '_assertionmethod_' + hashlib.sha1(
                     #        (scv_assert_method).encode(
-                    #            'utf-8')).hexdigest()[1:17]
+                    #            'utf-8')).hexdigest()[1:20]
                     #
                     # changing to not include context till we have IRI
-                    _assertion_method_id = '_:' + hashlib.md5(
-                        (scv_assert_method).encode(
-                            'utf-8')).hexdigest()[1:17] + '_assertionmethod'
+
+                    # blank node (would be be nice if these were only made once)
+                    _assertion_method_id = '_:' + hashlib.sha1(
+                        (scv_assert_method + '_assertionmethod').encode(
+                            'utf-8')).hexdigest()[1:20]
+                    write_spo(
+                        _assertion_method_id, 'rdfs:label',
+                        scv_assert_method + '_assertionmethod')
 
                     #       TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
@@ -822,11 +832,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = TT[SCV_OIMT.text]
                         # blank node
-                        _provenance_id = \
-                            '_:' + \
-                            hashlib.md5(
-                                (_evidence_id + scv_evidence_type).
-                                encode('utf-8')).hexdigest()[1:17]
+                        _provenance_id = '_:' +  hashlib.sha1(
+                            (_evidence_id + scv_evidence_type).
+                            encode('utf-8')).hexdigest()[1:20]
+                        write_spo(
+                            _provenance_id, 'rdfs:label',
+                            _evidence_id + scv_evidence_type)
+
                         # TRIPLES
                         # has_provenance -> has_supporting_study
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
