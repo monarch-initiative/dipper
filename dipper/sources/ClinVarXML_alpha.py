@@ -832,11 +832,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = TT[SCV_OIMT.text]
                         # blank node
-                        _provenance_id = \
-                            '_:' + \
-                            hashlib.sha1(
-                                (_evidence_id + scv_evidence_type).
-                                encode('utf-8')).hexdigest()[1:20]
+                        _provenance_id = '_:' +  hashlib.sha1(
+                            (_evidence_id + scv_evidence_type).
+                            encode('utf-8')).hexdigest()[1:20]
                         write_spo(
                             _provenance_id, 'rdfs:label',
                             _evidence_id + scv_evidence_type)
