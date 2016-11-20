@@ -30,6 +30,10 @@ class GWASCatalog(Source):
     Description of the GWAS catalog is here:
     http://www.ebi.ac.uk/gwas/docs/fileheaders#_file_headers_for_catalog_version_1_0_1
 
+    GWAS also pulishes Owl files described here
+    http://www.ebi.ac.uk/gwas/docs/ontology
+
+
     Status:  IN PROGRESS
 
     """
@@ -45,8 +49,11 @@ class GWASCatalog(Source):
 
     files = {
         'catalog': {
-            'file': 'gwas_catalog.tsv',
-            'url': 'http://www.ebi.ac.uk/gwas/api/search/downloads/alternative'}
+            'file': 'gwas-catalog-associations_ontology-annotated.tsv',
+            'url': 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated.tsv'},
+        'efo': {
+            'file': 'efo.owl',
+            'url': 'http://www.ebi.ac.uk/efo/efo.owl'}
     }
 
     def __init__(self):
@@ -108,7 +115,7 @@ class GWASCatalog(Source):
         gu = GraphUtils(curie_map.get())
         EFO_ontology = ConjunctiveGraph()
         logger.info("Loading EFO ontology in separate rdf graph")
-        EFO_ontology.parse('http://www.ebi.ac.uk/efo/efo.owl', format='xml')
+        EFO_ontology.parse(self.files['efo']['url'], format='xml')
         logger.info("Finished loading EFO ontology")
         for curie in curie_map.get().keys():
             ns = curie_map.get()[curie]
@@ -135,15 +142,22 @@ class GWASCatalog(Source):
         loc_to_id_hash = {}
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            next(filereader, None)  # skip the header row
+            filereader = csv.reader(csvfile, delimiter='\t')
+            header = next(filereader, None)  # the header row
+            header_len = len(header)
+            logger.info('header length:\t %i', header_len)
+
             for row in filereader:
                 if not row:
                     pass
                 else:
                     line_counter += 1
-                    (date_added_to_catalog, pubmed_num, first_author, pub_date,
-                     journal, link, study_name, disease_or_trait,
+                    if header_len != len(row):
+                        logger.error(
+                            'BadRow: %i has %i columns', line_counter, row)
+                        pass
+                    (date_added_to_catalog, pubmed_num, first_author,
+                     pub_date, journal, link, study_name, disease_or_trait,
                      initial_sample_description, replicate_sample_description,
                      region, chrom_num, chrom_pos, reported_gene_nums,
                      mapped_gene, upstream_gene_num, downstream_gene_num,
@@ -153,11 +167,11 @@ class GWASCatalog(Source):
                      risk_allele_frequency, pvalue, pvalue_mlog, pvalue_text,
                      or_or_beta, confidence_interval_95,
                      platform_with_snps_passing_qc, cnv_flag, mapped_trait,
-                     mapped_trait_uri) = row
+                     mapped_trait_uri, study_accession) = row
 
-                    intersect = \
-                        list(set([str(i) for i in self.test_ids['gene']]) &
-                             set(re.split(r',', snp_gene_nums)))
+                    intersect = list(
+                        set([str(i) for i in self.test_ids['gene']]) &
+                        set(re.split(r',', snp_gene_nums)))
                     # skip if no matches found in test set
                     if self.testMode and len(intersect) == 0:
                         continue
@@ -334,7 +348,8 @@ class GWASCatalog(Source):
                             query_result = EFO_ontology.query(dis_query)
                             if len(list(query_result)) > 0:
                                 if re.match(r'^EFO', trait_id):
-                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'DOID:4')
+                                    gu.addClassToGraph(g, trait_id, list(
+                                        query_result)[0][0], 'DOID:4')
 
                             phenotype_query = """
                                 SELECT ?trait
@@ -347,7 +362,10 @@ class GWASCatalog(Source):
                             query_result = EFO_ontology.query(phenotype_query)
                             if len(list(query_result)) > 0:
                                 if re.match(r'^EFO', trait_id):
-                                    gu.addClassToGraph(g, trait_id, list(query_result)[0][0], 'UPHENO:0001001')
+                                    gu.addClassToGraph(
+                                        g, trait_id,
+                                        list(query_result)[0][0],
+                                        'UPHENO:0001001')
 
                             assoc = G2PAssoc(
                                 self.name, rs_id, trait_id,
@@ -381,20 +399,20 @@ class GWASCatalog(Source):
     def _map_variant_type(sample_type):
         ctype = None
         type_map = {
-            'stop_gained': 'SO:0001587',       # stop-gain variant
-            'intron_variant': 'SO:0001627',  # intron variant
-            '3_prime_UTR_variant': 'SO:0001624',           # 3'utr variant
-            '5_prime_UTR_variant': 'SO:0001623',           # 5'UTR variant
+            'stop_gained': 'SO:0001587',              # stop-gain variant
+            'intron_variant': 'SO:0001627',           # intron variant
+            '3_prime_UTR_variant': 'SO:0001624',      # 3'utr variant
+            '5_prime_UTR_variant': 'SO:0001623',      # 5'UTR variant
             'synonymous_variant': 'SO:0001819',       # synonymous variant
-            'frameshift_variant': 'SO:0001589',      # frameshift
-            'intergenic_variant': 'SO:0001628',     # intergenic_variant
-            'non_coding_transcript_exon_variant': 'SO:0001619', # noncoding transcript variant
-            'splice_acceptor_variant': 'SO:0001574',        # splice acceptor variant
-            'splice_donor_variant': 'SO:0001575',        # splice donor variant
-            'missense_variant': 'SO:0001583',       # missense variant
-            'downstream_gene_variant': 'SO:0001634',      # 500B_downstream_variant
-            'upstream_gene_variant': 'SO:0001636',      # 2KB_upstream_variant
-            'coding_sequence_variant': 'SO:0001580',  #coding_sequence_variant
+            'frameshift_variant': 'SO:0001589',       # frameshift
+            'intergenic_variant': 'SO:0001628',       # intergenic_variant
+            'non_coding_transcript_exon_variant': 'SO:0001619',  # noncoding transcript variant
+            'splice_acceptor_variant': 'SO:0001574',  # splice acceptor variant
+            'splice_donor_variant': 'SO:0001575',     # splice donor variant
+            'missense_variant': 'SO:0001583',         # missense variant
+            'downstream_gene_variant': 'SO:0001634',  # 500B_downstream_variant
+            'upstream_gene_variant': 'SO:0001636',    # 2KB_upstream_variant
+            'coding_sequence_variant': 'SO:0001580',  # coding_sequence_variant
             'non_coding_exon_variant ': 'SO:0001792',
             'regulatory_region_variant': 'SO:0001566',
             'splice_region_variant': 'SO:0001630',
