@@ -367,7 +367,7 @@ class ZFIN(Source):
 
         self.process_fish(limit)
         # Must be processed after morpholinos/talens/crisprs id/label
-        self._process_pheno_enviro(limit)
+        # self._process_pheno_enviro(limit)  # TODO waiting on issue #385
 
         # once the genotypes and environments are processed,
         # we can associate these with the phenotypes
@@ -2130,10 +2130,16 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (environment_num, condition_group, condition, description,
-                 blank) = row
+                # (environment_num, condition_group, condition, description, blank) = row
+                (environment_id,
+                 zeco_term_name, zeco_term_id,
+                 chebi_term_name, chebi_term_id,
+                 zfa_term_name, zfa_term_id,
+                 altered_structure_name, altered_structure_id,
+                 ncbi_taxon_name, ncbi_taxon_id) = row
 
-                environment_id = 'ZFIN:' + environment_num.strip()
+
+                environment_id = 'ZFIN:' + environment_id.strip()
                 if self.testMode and\
                         environment_num not in self.test_ids['environment']:
                     continue
