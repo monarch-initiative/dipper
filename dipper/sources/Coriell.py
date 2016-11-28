@@ -794,7 +794,8 @@ class Coriell(Source):
             # FIXME: No Match. "Cells isolated from a mass of neoplastic cells,
             # i.e., a growth formed by abnormal cellular proliferation."
             # Oncocyte? CL:0002198
-            'Tumor-derived cell line': 'CL:0002198'
+            'Tumor-derived cell line': 'CL:0002198',
+            'Kidney-derived cell line': 'CLO:0000220'
         }
         if sample_type.strip() in type_map:
             ctype = type_map.get(sample_type)
