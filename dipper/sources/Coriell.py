@@ -879,7 +879,7 @@ class Coriell(Source):
             'Ovis aries': 'NCBITaxon:9940',
             'Felis catus': 'NCBITaxon:9685',
             'Homo sapiens': 'NCBITaxon:9606',
-            'Gorilla gorilla': 'NCBITaxon:9593'
+            'Gorilla gorilla': 'NCBITaxon:9593',
             'Peromyscus maniculatus': 'NCBITaxon:10042'
         }
         if species.strip() in type_map:
