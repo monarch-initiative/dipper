@@ -3,6 +3,7 @@ import re
 import csv
 import gzip
 import io
+import hashlib
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
@@ -1598,7 +1599,7 @@ class FlyBase(PostgreSQLSource):
                     if gene_id is not None and gene_id in self.label_hash:
                         # TODO FAIL: KeyError: None   default?
                         logger.info("getting label for gene_id:\t%s", gene_id)
-                        gene_label = self.label_hash[gene_id]  
+                        gene_label = self.label_hash[gene_id]
                     else:
                         if gene_id is None:
                             logger.error(
@@ -2077,19 +2078,24 @@ class FlyBase(PostgreSQLSource):
         """
         This is a special Flybase-to-MONARCH-ism.
         Flybase tables have unique keys that we use here, but don't want to
-        necessarily re-distribute those internal identifiers.
+        re-distribute those internal identifiers.
         Therefore, we make them into keys in a consistent way here.
+
         :param prefix: the object type to prefix the key with,
                     since the numbers themselves are not unique across tables
+                    nor guarenteed stable within a table over time
+
+        TEC: blank nodes created that way would not allways be valid RDF
+        Better is to use the input as a rdfs:label & maybe rdf:type
+        then digest to poduce a known valid key string.
+        Also other rdf tools DO rewrite blank node identifiers
+
         :param key: the number (unique key)
         :return:
 
         """
-        iid = '_fb'+prefix+'key'+key
-        if self.nobnodes:
-            iid = ':' + iid
 
-        return iid
+        return '_:' + hashlib.sha1('fb'+prefix+'key'+key).hexdigest()[1:20]
 
     def getTestSuite(self):
         import unittest
