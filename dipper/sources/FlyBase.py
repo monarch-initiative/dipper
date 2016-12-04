@@ -2095,7 +2095,8 @@ class FlyBase(PostgreSQLSource):
 
         """
 
-        return '_:' + hashlib.sha1('fb'+prefix+'key'+key).hexdigest()[1:20]
+        return '_:' + hashlib.sha1(
+            ('fb'+prefix+'key'+key).encode('utf-8')).hexdigest()[1:20]
 
     def getTestSuite(self):
         import unittest
