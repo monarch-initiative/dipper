@@ -1,3 +1,7 @@
+# Skolemize Blank Nodes
+# overwrite iri fragment with '' for unresovable bnodes
+'_':    'https://monarchinitiative.org/.well-known/genid/'
+
 # Monarch-specific
 '': 'https://monarchinitiative.org/'
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'
