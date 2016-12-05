@@ -1839,7 +1839,7 @@ class FlyBase(PostgreSQLSource):
                 # so we look them up using NCBI eutils services
                 tax_label = self.label_hash[organism_id]
                 # FIXME comment this out to speed things up
-                tax_num = DipperUtil.get_ncbi_taxon_num_by_label(tax_label)
+                # tax_num = DipperUtil.get_ncbi_taxon_num_by_label(tax_label)
                 if tax_num is not None:
                     organism_id = ':'.join(('NCBITaxon', tax_num))
                     self.idhash['organism'][organism_key] = organism_id
