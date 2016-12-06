@@ -6,7 +6,7 @@ __author__ = ('nlw', 'tec')
 logger = logging.getLogger(__name__)
 
 session = requests.Session()
-adapter = requests.adapters.HTTPAdapter(max_retries=10)
+adapter = requests.adapters.HTTPAdapter(max_retries=3)
 session.mount('https://', adapter)
 session.mount('http://', adapter)
 
