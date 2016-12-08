@@ -10,10 +10,25 @@ adapter = requests.adapters.HTTPAdapter(max_retries=10)
 session.mount('https://', adapter)
 session.mount('http://', adapter)
 
+EUTIL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'
+ESEARCH = EUTIL + '/esearch.fcgi'
+ESUMMARY = EUTIL + '/esummary.fcgi'
+EREQ = {'email': 'info@monarchinitiative.org', 'tool': 'Dipper'}
+
 
 class DipperUtil:
     """
     Various utilities and quick methods used in this application
+
+    (A little too quick)
+    Per: https://www.ncbi.nlm.nih.gov/books/NBK25497/
+    NCBI recommends that users post
+     no more than three URL requests per second and
+     limit large jobs to either weekends or
+     between 9:00 PM and 5:00 AM Eastern time during weekdays
+
+    restructuring to make bulk queries
+    is less likely to result in another ban for peppering them with one offs
 
     """
 
@@ -33,18 +48,14 @@ class DipperUtil:
         """
         Here we want to look up the NCBI Taxon id using some kind of label.
         It will only return a result if there is a unique hit.
+
         :return:
 
         """
-        domain = 'http://eutils.ncbi.nlm.nih.gov'
-        path = '/entrez/eutils/esearch.fcgi'
-        req = {
-            'db': 'taxonomy',
-            'retmode': 'json',
-            'term': label}
-        eutils_url = domain + path
+        req = {'db': 'taxonomy', 'retmode': 'json', 'term': label}
+        req.update(EREQ)
 
-        request = session.get(eutils_url + path, params=req)
+        request = session.get(ESEARCH, params=req)
         logger.info('fetching: %s', request.url)
         request.raise_for_status()
         result = request.json()['esearchresult']
@@ -52,7 +63,7 @@ class DipperUtil:
         # Occasionally eutils returns the json blob
         # {'ERROR': 'Invalid db name specified: taxonomy'}
         if 'ERROR' in result:
-            request = session.get(eutils_url + path, params=req)
+            request = session.get(ESEARCH, params=req)
             logger.info('fetching: %s', request.url)
             request.raise_for_status()
             result = request.json()['esearchresult']
@@ -70,26 +81,23 @@ class DipperUtil:
     def get_homologene_by_gene_num(gene_num):
         # first, get the homologene id from the gene id
         # gene_id = '1264'  for testing
-        host = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils'
-        esearch = host + '/esearch.fcgi'
-        esummary = host + '/esummary.fcgi'
         req = {
-            'email': 'info@monarchinitiative.org',
-            'tool': 'Dipper',
             'db': 'homologene',
             'retmode': 'json',
             'term': str(gene_num) + "[Gene ID]"
             # 'usehistory': None  # y/n
             # 'rettype':  [uilist|count]
         }
-        r = requests.get(esearch, params=req)
+        req.update(EREQ)
+        r = requests.get(ESEARCH, params=req)
         homologene_ids = r.json()['esearchresult']['idlist']
         if len(homologene_ids) != 1:
             return
         hid = homologene_ids[0]
         # now, fetch the homologene record
         req = {'db': 'homologene', 'id': hid, 'retmode': 'json'}
-        request = session.get(esummary, params=req)
+        req.update(EREQ)
+        request = session.get(ESUMMARY, params=req)
         data = request.json()
 
         if 'result' in data and hid in data['result']:
@@ -107,20 +115,20 @@ class DipperUtil:
         :return:
         '''
 
-        MONARCH_URL = 'https://beta.monarchinitiative.org/search/'
+        monarch_url = 'https://beta.monarchinitiative.org/search/'
         gene_id = None
-        url = MONARCH_URL + gene_symbol + '.json'
+        url = monarch_url + gene_symbol + '.json'
         try:
             monarch_request = requests.get(url)
             results = monarch_request.json()
             for res in results['results']:
-                if res['taxon'] == 'Human' \
-                        and 'gene' in res['categories'] \
-                        and (gene_symbol in res['labels'] or gene_symbol in res['synonyms']):
+                if res['taxon'] == 'Human' and \
+                    'gene' in res['categories'] and (
+                        gene_symbol in res['labels'] or
+                        gene_symbol in res['synonyms']):
                     gene_id = res['id']
                     break
         except requests.ConnectionError:
             print("error fetching {0}".format(url))
 
         return gene_id
-
