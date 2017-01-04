@@ -79,10 +79,10 @@
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
 'GeneReviews' : 'http://www.ncbi.nlm.nih.gov/books/'  # diseases too
-'ISBN': 'http://www.monarchinitiative.org/ISBN_'
-'ISBN-10': 'http://www.monarchinitiative.org/ISBN10_'
-'ISBN-13': 'http://www.monarchinitiative.org/ISBN13_'
-'ISBN-15': 'http://www.monarchinitiative.org/ISBN15_'
+'ISBN': 'https://monarchinitiative.org/ISBN_'
+'ISBN-10': 'https://monarchinitiative.org/ISBN10_'
+'ISBN-13': 'https://monarchinitiative.org/ISBN13_'
+'ISBN-15': 'https://monarchinitiative.org/ISBN15_'
 'J' : 'http://www.informatics.jax.org/reference/J:'  # MGI-internal identifiers for pubs
 'MPD':  'http://phenome.jax.org/'
 'MPD-assay': 'http://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='
