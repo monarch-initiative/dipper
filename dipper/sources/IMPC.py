@@ -4,7 +4,6 @@ import re
 import logging
 import os
 import json
-import yaml
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
@@ -86,9 +85,9 @@ class IMPC(Source):
     # or by web crawling, see /scripts/README.md
     map_files = {
         # Procedures
-        'parameter_map': '../../resources/impc_parameters.json',
-        # All other codes
-        'impc_code_map': '../../resources/impc_mappings.yaml'
+        'impress_map': 'http://data.monarchinitiative.org/dipper/cache/impress_codes.json',
+        # All other curated mappings
+        'impc_map': '../../resources/impc_mappings.yaml'
     }
 
     # TODO move these into the conf.json
@@ -165,8 +164,11 @@ class IMPC(Source):
         gu.loadAllProperties(g)
         gu.loadObjectProperties(g, geno.object_properties)
 
-        impc_map = self.open_and_parse_yaml(self.map_files['impc_code_map'])
-        parameter_map = self._get_parameter_mappings()
+        impc_map = self.open_and_parse_yaml(self.map_files['impc_map'])
+        impress_map = json.loads(
+            self.fetch_from_url(self.map_files['impress_map'])
+            .read()
+            .decode('utf-8'))
 
         # Add the taxon as a class
         taxon_id = 'NCBITaxon:10090'  # map to Mus musculus
@@ -480,18 +482,28 @@ class IMPC(Source):
                 assoc_id = assoc.get_association_id()
 
                 # add a free-text description
-                description = \
-                    ' '.join((mp_term_name, 'phenotype determined by',
-                              phenotyping_center, 'in an',
-                              procedure_name, 'assay where',
-                              parameter_name.strip(),
-                              'was measured with an effect_size of',
-                              str(round(float(effect_size), 5)),
-                              '(p =', "{:.4e}".format(float(p_value)), ').'))
+                try:
+                    description = \
+                        ' '.join((mp_term_name, 'phenotype determined by',
+                                  phenotyping_center, 'in an',
+                                  procedure_name, 'assay where',
+                                  parameter_name.strip(),
+                                  'was measured with an effect_size of',
+                                  str(round(float(effect_size), 5)),
+                                  '(p =', "{:.4e}".format(float(p_value)), ').'))
+                except ValueError:
+                    description = \
+                        ' '.join((mp_term_name, 'phenotype determined by',
+                                  phenotyping_center, 'in an',
+                                  procedure_name, 'assay where',
+                                  parameter_name.strip(),
+                                  'was measured with an effect_size of',
+                                  str(effect_size),
+                                  '(p =', "{0}".format(p_value), ').'))
 
                 study_bnode = \
                     self._add_study_provenance(
-                        impc_map, parameter_map, phenotyping_center, colony,
+                        impc_map, impress_map, phenotyping_center, colony,
                         project_fullname, pipeline_name, pipeline_stable_id,
                         procedure_stable_id, procedure_name,
                         parameter_stable_id, parameter_name,
@@ -568,7 +580,7 @@ class IMPC(Source):
 
         return
 
-    def _add_study_provenance(self, impc_map, parameter_map,
+    def _add_study_provenance(self, impc_map, impress_map,
                               phenotyping_center, colony, project_fullname,
                               pipeline_name, pipeline_stable_id,
                               procedure_stable_id, procedure_name,
@@ -577,8 +589,8 @@ class IMPC(Source):
         """
         :param impc_map: dict, generated from map file
         see self._get_impc_mappings() docstring
-        :param parameter_map: dict, generated from map file
-        see _get_parameter_mappings() docstring
+        :param impress_map: dict, generated from map file
+        see _get_impress_mappings() docstring
         :param phenotyping_center: str, from self.files['all']
         :param colony: str, from self.files['all']
         :param project_fullname: str, from self.files['all']
@@ -612,9 +624,9 @@ class IMPC(Source):
 
         # Add study parts
         graph_utils.addIndividualToGraph(
-            self.graph, impc_map['procedures'][procedure_stable_id],
+            self.graph, impress_map[procedure_stable_id],
             procedure_name)
-        study_parts.append(impc_map['procedures'][procedure_stable_id])
+        study_parts.append(impress_map[procedure_stable_id])
 
         study_parts.append(
             impc_map['statistical_method'][statistical_method])
@@ -623,9 +635,9 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
         graph_utils.addIndividualToGraph(
-            self.graph, parameter_map[parameter_stable_id], parameter_label)
+            self.graph, impress_map[parameter_stable_id], parameter_label)
         provenance_model.add_study_measure(
-            study_bnode, parameter_map[parameter_stable_id])
+            study_bnode, impress_map[parameter_stable_id])
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
@@ -643,12 +655,12 @@ class IMPC(Source):
 
         # add pipeline and project
         graph_utils.addIndividualToGraph(
-            self.graph, impc_map['pipelines'][pipeline_stable_id],
+            self.graph, impress_map[pipeline_stable_id],
             pipeline_name)
 
         graph_utils.addTriple(
             self.graph, study_bnode, graph_utils.object_properties['part_of'],
-            impc_map['pipelines'][pipeline_stable_id])
+            impress_map[pipeline_stable_id])
 
         graph_utils.addIndividualToGraph(
             self.graph, impc_map['project'][project_fullname],
@@ -695,7 +707,10 @@ class IMPC(Source):
             graph_utils.addIndividualToGraph(self.graph, p_value_bnode, None,
                                              impc_map['measurements']
                                              ['p_value'])
-            measurements[p_value_bnode] = float(p_value)
+            try:
+                measurements[p_value_bnode] = float(p_value)
+            except ValueError:
+                measurements[p_value_bnode] = p_value
         if percentage_change is not None and percentage_change != '':
 
             fold_change_bnode = self.make_id(
@@ -726,28 +741,6 @@ class IMPC(Source):
             study_bnode)
 
         return evidence_line_bnode
-
-    def _get_parameter_mappings(self):
-        """
-        Opens impc procedure map file stored in self.map_files['parameter_map']
-        and returns dict of mappings
-
-        This file is generated by running a series of scripts in
-        the scripts directory, see scripts/README.md
-        :return: dict, where [code] = iri
-        """
-        parameter_mappings = {}
-        if os.path.exists(os.path.join(os.path.dirname(__file__),
-                                       self.map_files['parameter_map'])):
-            map_file = open(os.path.join(
-                os.path.dirname(
-                    __file__), self.map_files['parameter_map']), 'r')
-            parameter_mappings = json.load(map_file)
-            map_file.close()
-        else:
-            logger.warn("IMPC map file not found")
-
-        return parameter_mappings
 
     def parse_checksum_file(self, file):
         """

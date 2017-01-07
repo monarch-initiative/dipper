@@ -4,6 +4,7 @@ import unittest
 import logging
 import csv
 import gzip
+import json
 from tests.test_source import SourceTestCase
 from dipper.sources.IMPC import IMPC
 from rdflib import URIRef, BNode
@@ -70,7 +71,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
 
@@ -107,8 +108,9 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
-        parameter_map = impc._get_parameter_mappings()
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
+        impress_map = json.loads(
+            impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
 
         (phenotyping_center, colony) = self.test_set_1[2:4]
         (project_fullname, pipeline_name, pipeline_stable_id,
@@ -117,7 +119,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         (statistical_method, resource_name) = self.test_set_1[26:28]
 
         impc._add_study_provenance(
-            impc_map, parameter_map, phenotyping_center, colony,
+            impc_map, impress_map, phenotyping_center, colony,
             project_fullname, pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
@@ -170,7 +172,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         impc._add_assertion_provenance(self.assoc_curie,
                                        self.evidence_curie, impc_map)
@@ -204,8 +206,9 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # init impc (make this a function?)
         impc = IMPC()
         impc.load_bindings()
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_code_map'])
-        parameter_map = impc._get_parameter_mappings()
+        impress_map = json.loads(
+            impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
+        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         # fetch file
         impc.fetch(True)
@@ -232,7 +235,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                            percentage_change, effect_size, self.study_curie)
 
         impc._add_study_provenance(
-            impc_map, parameter_map, phenotyping_center, colony,
+            impc_map, impress_map, phenotyping_center, colony,
             project_fullname, pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
