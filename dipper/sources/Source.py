@@ -4,6 +4,7 @@ import os
 import time
 import logging
 import urllib       # TODO tec look @ import requests
+import requests
 import csv
 import yaml
 from datetime import datetime
@@ -12,8 +13,6 @@ from rdflib import ConjunctiveGraph, Namespace
 from rdflib.namespace import FOAF, DC, RDFS, OWL
 from dipper import curie_map
 from dipper.utils.GraphUtils import GraphUtils
-
-__author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
 core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
@@ -111,7 +110,7 @@ class Source:
         :return: None
 
         """
-        return
+        raise NotImplementedError
 
     def parse(self):
         """
@@ -120,7 +119,7 @@ class Source:
         :return: None
 
         """
-        return
+        raise NotImplementedError
 
     def write(self, format='rdfxml', stream=None):
         """
@@ -314,7 +313,7 @@ class Source:
         return
 
     def fetch_from_url(
-            self, remotefile, localfile, is_dl_forced, headers=None):
+            self, remotefile, localfile=None, is_dl_forced=False, headers=None):
         """
         Given a remote url and a local filename, this will first verify
         if the remote file is newer; if it is,
@@ -325,42 +324,42 @@ class Source:
         :return: None
 
         """
-
-        if ((is_dl_forced is True) or
+        if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
             # TODO url verification, etc
             if headers is not None:
-                r = urllib.request.Request(remotefile, headers=headers)
+                request = urllib.request.Request(remotefile, headers=headers)
             else:
-                r = urllib.request.Request(remotefile)
+                request = urllib.request.Request(remotefile)
 
-            response = urllib.request.urlopen(r)
+            response = urllib.request.urlopen(request)
 
-            with open(localfile, 'wb') as fd:
-                while True:
-                    chunk = response.read(CHUNK)
-                    if not chunk:
-                        break
-                    fd.write(chunk)
+            if localfile is not None:
+                with open(localfile, 'wb') as fd:
+                    while True:
+                        chunk = response.read(CHUNK)
+                        if not chunk:
+                            break
+                        fd.write(chunk)
 
-            logger.info("Finished.  Wrote file to %s", localfile)
-            if self.compare_local_remote_bytes(remotefile, localfile):
-                logger.debug(
-                    "local file is same size as remote after download")
-            else:
-                raise Exception(
-                    "Error when downloading files: local file size " +
-                    "does not match remote file size")
+                logger.info("Finished.  Wrote file to %s", localfile)
+                if self.compare_local_remote_bytes(remotefile, localfile):
+                    logger.debug(
+                        "local file is same size as remote after download")
+                else:
+                    raise Exception(
+                        "Error when downloading files: local file size " +
+                        "does not match remote file size")
+                st = os.stat(localfile)
+                logger.info("file size: %s", st[ST_SIZE])
+                logger.info(
+                    "file created: %s",
+                    time.asctime(time.localtime(st[ST_CTIME])))
         else:
             logger.info("Using existing file %s", localfile)
 
-        st = os.stat(localfile)
-        logger.info("file size: %s", st[ST_SIZE])
-        logger.info(
-            "file created: %s",
-            time.asctime(time.localtime(st[ST_CTIME])))
-        return
+        return response
 
     def process_xml_table(self, elem, table_name, processing_function, limit):
         """
