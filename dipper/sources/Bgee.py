@@ -1,6 +1,6 @@
 import logging
 import os
-from stat import ST_CTIME, ST_SIZE
+from stat import ST_SIZE
 import re
 from zipfile import ZipFile
 from datetime import datetime
@@ -27,11 +27,16 @@ class Bgee(Source):
     between developmental stages, are designed.
     """
     BGEE_FTP = 'ftp.bgee.org'
-    ANAT_ENTITY_DIR = 'current/download/ranks/anat_entity/'
     DEFAULT_TAXA = ['10090', '10116', '13616', '28377', '6239',
                     '7227', '7955', '8364', '9031', '9258',
                     '9544', '9593', '9597', '9598', '9606',
                     '9823', '9913']
+    files = {
+        'anat_entity': {
+            'path': 'current/download/ranks/anat_entity/',
+            'pattern': re.compile(r'.*_all_data_.*')
+        }
+    }
 
     def __init__(self, tax_ids=None):
         """
@@ -53,7 +58,9 @@ class Bgee(Source):
         """
         :return: None
         """
-        files_to_download, ftp = self._get_file_list()
+        files_to_download, ftp = \
+            self._get_file_list(self.files['anat_entity']['path'],
+                                self.files['anat_entity']['pattern'])
         for name, info in files_to_download:
             localfile = '/'.join((self.rawdir, name))
             if not os.path.exists(localfile)\
@@ -116,19 +123,19 @@ class Bgee(Source):
                              int(dt[10:12]), int(dt[12:14]))
         return date_time
 
-    def _get_file_list(self):
+    def _get_file_list(self, working_dir, file_regex=re.compile(r'.*')):
         """
         Get file list from ftp server filtered by taxon
         :return: Tuple of (Generator object with Tuple(file name, info object), ftp object)
         """
         ftp = ftplib.FTP(Bgee.BGEE_FTP)
         ftp.login("anonymous", "info@monarchinitiative.edu")
-        ftp.cwd(Bgee.ANAT_ENTITY_DIR)
+        ftp.cwd(working_dir)
 
         directory = ftp.mlsd()
         files = (value for value in directory if value[1]['type'] == 'file')
         files_to_download = (value for value in files
-                             if re.match(r'.*_all_data_.*', value[0], )
+                             if re.match(file_regex, value[0], )
                              and re.findall(r'^\d+', value[0])[0] in self.tax_ids)
 
         return files_to_download, ftp
