@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Assoc:
     """
-    An abstract class for OBAN (Monarch)-style associations,
+    A base class for OBAN (Monarch)-style associations,
     to enable attribution of source and evidence
     on statements.
     """
@@ -37,6 +37,7 @@ class Assoc:
     object_properties = {
         'has disposition': 'RO:0000091',
         'has_phenotype': 'RO:0002200',
+        'expressed_in': 'RO:0002206',
         'in_taxon': 'RO:0002162',
         'has_quality': 'RO:0000086',
         'towards': 'RO:0002503',
@@ -51,7 +52,8 @@ class Assoc:
 
     datatype_properties = {
         'position': 'faldo:position',
-        'has_measurement': 'IAO:0000004'
+        'has_measurement': 'IAO:0000004',
+        'has_quantifier': 'GENO:0000866'
     }
 
     properties = annotation_properties.copy()
@@ -185,6 +187,23 @@ class Assoc:
     def add_association_to_graph(self, g):
 
         self._add_basic_association_to_graph(g)
+
+        return
+
+    def add_predicate_object(self, graph, predicate, object_node,
+                             object_type=None, datatype=None):
+
+        if object_type == 'Literal':
+            if datatype is not None:
+                literal = Literal(object_node, datatype=datatype)
+            else:
+                literal = Literal(object_node)
+
+            self.gu.addTriple(graph, self.assoc_id, predicate,
+                              literal, True)
+        else:
+            self.gu.addTriple(graph, self.assoc_id, predicate,
+                              object_node, False)
 
         return
 

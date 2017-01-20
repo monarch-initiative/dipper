@@ -75,6 +75,9 @@
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'  # ZFA: Zebrafish Anatomy Ontology [y]
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'  # ZFS: Zebrafish Staging [y]
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'  # ZP: Zebrafish Phenotype Ontology [y]
+'WBbt': 'http://purl.obolibrary.org/obo/WBbt_' #WBbt:  C. elegans gross anatomy
+'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_' # EMAPA: Mouse gross anatomy and development, timed
+'XAO': 'http://purl.obolibrary.org/obo/XAO_' # XAO: Xenopus anatomy and development
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'

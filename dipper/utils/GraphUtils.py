@@ -439,9 +439,8 @@ class GraphUtils:
 
         return self._getNode(id, materialize_bnode)
 
-    def addTriple(
-            self, graph, subject_id, predicate_id, object_id,
-            object_is_literal=False):
+    def addTriple(self, graph, subject_id, predicate_id, object_id,
+                  object_is_literal=False):
 
         if object_is_literal is True:
             graph.add(
