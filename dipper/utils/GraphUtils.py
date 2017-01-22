@@ -36,7 +36,8 @@ class GraphUtils:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
-        'clique_leader': 'MONARCH:cliqueLeader'
+        'clique_leader': 'MONARCH:cliqueLeader',
+        'inchi_key': 'CHEBI:InChIKey',
     }
 
     object_properties = {
