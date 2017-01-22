@@ -687,14 +687,14 @@ class IMPC(Source):
         :return: str, evidence_line_bnode as curie
         """
 
-        evidence_model = Evidence(self.graph)
+        evidence_model = Evidence(self.graph, assoc_id)
         provenance_model = Provenance(self.graph)
         graph_utils = GraphUtils(curie_map.get())
 
         # Add line of evidence
         evidence_line_bnode = self.make_id(
             "{0}{1}".format(assoc_id, study_bnode), '_')
-        evidence_model.add_supporting_evidence(assoc_id, evidence_line_bnode)
+        evidence_model.add_supporting_evidence(evidence_line_bnode)
         graph_utils.addIndividualToGraph(self.graph, evidence_line_bnode, None,
                                          eco_id)
 

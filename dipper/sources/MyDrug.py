@@ -121,8 +121,6 @@ class MyDrug(Source):
 
         for outcome in outcomes:
             drug2outcome_assoc = Assoc(self.name)
-            provenance_model = Provenance(self.graph)
-            evidence_model = Evidence(self.graph)
 
             medra_curie = "MEDDRA:{}".format(outcome['id'])
             graph_util.addIndividualToGraph(self.graph, medra_curie,
@@ -141,12 +139,82 @@ class MyDrug(Source):
                 self.graph, Assoc.annotation_properties['probabalistic_quantifier'],
                 outcome['ror'], 'Literal')
 
-            provenance_model.add_agent_to_graph('https://monarchinitiative.org',
-                                                'Monarch Initiative')
+            self._add_outcome_evidence(drug2outcome_assoc.assoc_id, outcome)
+            self._add_outcome_provenance(drug2outcome_assoc.assoc_id, outcome)
 
-            drug2outcome_assoc.add_predicate_object(
-                self.graph, provenance_model.object_properties['asserted_by'],
-                'https://monarchinitiative.org')
+
+    def _add_outcome_provenance(self, association, outcome):
+        """
+        :param association: str association curie
+        :param outcome: dict (json)
+        :return: None
+        """
+        provenance_model = Provenance(self.graph)
+        graph_util = GraphUtils(curie_map.get())
+
+        provenance_model.add_agent_to_graph(curie_map.get_base(),
+                                            'Monarch Initiative')
+        graph_util.addTriple(
+            self.graph, association,
+            provenance_model.object_properties['asserted_by'],
+            curie_map.get_base())
+
+    def _add_outcome_evidence(self, association, outcome):
+        """
+        :param association: str association curie
+        :param outcome: dict (json)
+        :return: None
+        """
+        evidence_model = Evidence(self.graph, association)
+        source = {
+            'curie': "DOI:10.5061/dryad.8q0s4/1",
+            'label': "Data from: A curated and standardized adverse "
+                     "drug event resource to accelerate drug safety research",
+            'type': 'IAO:0000100'
+        }
+        reference = {
+            'curie': "PMID:27193236",
+            'label': None,
+            'type': "IAO:0000311"
+        }
+        evidence_curie = self.make_id("{0}{1}{2}".format(
+            association, outcome['id'], self.name
+        ))
+        evidence_type = "ECO:0000180"
+        evidence_model.add_evidence(evidence_curie, evidence_type)
+
+        evidence_model.add_supporting_publication(
+            evidence_curie, reference['curie'], reference['label'],
+            reference['type'])
+
+        evidence_model.add_source(
+            evidence_curie, source['curie'], source['label'], source['type'])
+
+        count_bnode = self.make_id(
+            "{0}{1}{2}".format(evidence_curie,
+                               outcome['case_count'], self.name), prefix="_")
+        pr_ratio_bnode = self.make_id(
+            "{0}{1}{2}".format(evidence_curie, outcome['prr'], self.name),
+            prefix="_")
+        odds_ratio_bnode = self.make_id(
+            "{0}{1}{2}".format(evidence_curie, outcome['ror'], self.name),
+            prefix="_")
+
+        evidence_model.add_data_individual(
+            count_bnode, type=evidence_model.data_types['count'])
+        evidence_model.add_data_individual(
+            pr_ratio_bnode,
+            type=evidence_model.data_types['proportional_reporting_ratio'])
+        evidence_model.add_data_individual(
+            odds_ratio_bnode, type=evidence_model.data_types['odds_ratio'])
+
+        value_map = {
+            count_bnode: outcome['case_count'],
+            pr_ratio_bnode: outcome['prr'],
+            odds_ratio_bnode: outcome['ror']
+        }
+        evidence_model.add_supporting_data(evidence_curie, value_map)
+        return
 
     # Override
     def checkIfRemoteIsNewer(self, localfile):
