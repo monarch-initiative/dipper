@@ -185,7 +185,7 @@
 'SIO': 'http://semanticscience.org/resource/SIO_'
 'OAE': 'http://purl.obolibrary.org/obo/OAE_'
 'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'
-'MEDDRA': 'purl.bioontology.org/ontology/MEDDRA/'
+'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'
 'FDADrug': 'http://www.fda.gov/Drugs/InformationOnDrugs/'
 'BT': 'http://c.biothings.io/#'
 'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
