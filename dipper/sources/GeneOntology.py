@@ -43,7 +43,7 @@ class GeneOntology(Source):
     files = {
         '9615': {
             'file': 'gene_association.goa_dog.gz',
-            'url': GOGA+'/gene_association.goa_dog.gz'},
+            'url': GOGA+'/goa_dog.gaf.gz'},
         '7227': {
             'file': 'gene_association.fb.gz',
             'url': GOGA+'/gene_association.fb.gz'},
@@ -61,16 +61,16 @@ class GeneOntology(Source):
             'url': GOGA+'/gene_association.wb.gz'},
         '9823': {
             'file': 'gene_association.goa_ref_pig.gz',
-            'url': GOGA+'/gene_association.goa_ref_pig.gz'},
+            'url': GOGA+'/goa_pig.gaf.gz'},
         '9031': {
             'file': 'gene_association.goa_ref_chicken.gz',
-            'url': GOGA+'/gene_association.goa_ref_chicken.gz'},
+            'url': GOGA+'/goa_chicken.gaf.gz'},
         '9606': {
             'file': 'gene_association.goa_ref_human.gz',
-            'url': GOGA+'/gene_association.goa_ref_human.gz'},
+            'url': GOGA+'/goa_human.gaf.gz'},
         '9913': {
-            'file': 'gene_association.goa_ref_cow.gz',
-            'url': GOGA+'/gene_association.goa_ref_cow.gz'},
+            'file': 'goa_cow.gaf.gz',
+            'url': GOGA+'/goa_cow.gaf.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
