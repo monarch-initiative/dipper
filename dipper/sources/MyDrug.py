@@ -47,7 +47,7 @@ class MyDrug(Source):
         aeolus_file = dir_path / self.files['aeolus']['file']
         if self.checkIfRemoteIsNewer(aeolus_file):
             aeolis_fh = aeolus_file.open('w')
-            aeolis_fh.write("[")
+            aeolis_fh.write("[\n")
             params = {
                 'q': '_exists_:aeolus',
                 'from': 0,
@@ -97,7 +97,6 @@ class MyDrug(Source):
         return
 
     def _parse_aeolus_data(self, document, or_limit=None):
-        print(document['aeolus']['rxcui'])
         graph_util = GraphUtils(curie_map.get())
 
         rxcui_curie = "RXCUI:{}".format(document['aeolus']['rxcui'])
