@@ -36,7 +36,8 @@ class GraphUtils:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
-        'clique_leader': 'MONARCH:cliqueLeader'
+        'clique_leader': 'MONARCH:cliqueLeader',
+        'inchi_key': 'CHEBI:InChIKey',
     }
 
     object_properties = {
@@ -140,6 +141,15 @@ class GraphUtils:
             g.add((n, RDF['type'], t))
         else:
             g.add((n, RDF['type'], self.OWLIND))
+        if description is not None:
+            g.add((n, DC['description'], Literal(description)))
+        return g
+
+    def addEntityToGraph(self, g, id, label, description=None):
+        n = self.getNode(id)
+
+        if label is not None:
+            g.add((n, RDFS['label'], Literal(label)))
         if description is not None:
             g.add((n, DC['description'], Literal(description)))
         return g

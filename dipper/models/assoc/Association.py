@@ -32,6 +32,8 @@ class Assoc:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
+        'inchi_key': 'CHEBI:InChIKey',
+        'probabalistic_quantifier': 'GENO:0000867'
     }
 
     object_properties = {
@@ -47,7 +49,8 @@ class Assoc:
         'is_about': 'IAO:0000136',
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source',
-        'has_provenance': 'OBAN:has_provenance'
+        'has_provenance': 'OBAN:has_provenance',
+        'causes_or_contributes': 'RO:0003302',
     }
 
     datatype_properties = {

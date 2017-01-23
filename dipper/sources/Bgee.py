@@ -153,8 +153,7 @@ class Bgee(Source):
         return
 
     # Override
-    @staticmethod
-    def checkIfRemoteIsNewer(localfile, remote_size, remote_modify):
+    def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
         """
         Overrides checkIfRemoteIsNewer in Source class
         :param localfile: str file path

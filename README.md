@@ -96,6 +96,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
 * The following sources have been mapped:
     * Human Phenotype Ontology Annotations (Disease-Phenotype abnormal associations)
     * BioGrid (Gene-gene interactions)
+    * Bgee (Gene expression in anatomical entities)
     * ZFIN (Genotypes (with their parts), and Genotype-Phenotype associations)
     * OMIM (Diseases, labels, and descriptions; disease-gene associations)
     * Panther (orthologs for ~20 reference genomes)

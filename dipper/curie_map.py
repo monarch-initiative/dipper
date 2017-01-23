@@ -29,3 +29,7 @@ else:
 
 def get():
     return curie_map
+
+
+def get_base():
+    return curie_map['']

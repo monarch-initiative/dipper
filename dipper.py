@@ -61,7 +61,8 @@ def main():
         'udp': 'UDP',
         'mgi-slim': 'MGISlim',
         'zfin-slim': 'ZFINSlim',
-        'bgee': 'Bgee'
+        'bgee': 'Bgee',
+        'mydrug': 'MyDrug'
     }
 
     logger = logging.getLogger(__name__)

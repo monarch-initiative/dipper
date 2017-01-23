@@ -1,9 +1,7 @@
 import logging
-from datetime import datetime
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
-from rdflib import Literal, URIRef, BNode
-
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +29,16 @@ class Evidence:
         'blood test evidence': 'ECO:0001016'
     }
 
+    data_types = {
+        'proportional_reporting_ratio': 'OAE:0001563',
+        'odds_ratio': 'STATO:0000182',
+        'count': 'SIO:000794',
+    }
+
     object_properties = {
         'has_evidence': 'SEPIO:0000006',
         'has_supporting_evidence': 'SEPIO:0000007',
+        'has_evidence': 'SEPIO:0000006',
         'has_supporting_data': 'SEPIO:0000084',
         'is_evidence_for': 'SEPIO:0000031',
         'is_refuting_evidence_for': 'SEPIO:0000033',
@@ -41,7 +46,8 @@ class Evidence:
         'is_evidence_supported_by': 'SEPIO:000010',
         'is_evidence_with_support_from': 'SEPIO:0000059',
         'has_significance': 'STATO:has_significance',
-        'has_supporting_data': 'SEPIO:0000084'
+        'has_supporting_reference': 'SEPIO:0000124',
+        'source': 'dc:source'
     }
 
     data_property = {
@@ -49,28 +55,64 @@ class Evidence:
         'has_measurement': 'IAO:0000004'
     }
 
-    def __init__(self, graph):
+    def __init__(self, graph, association):
 
         self.graph = graph
         self.graph_utils = GraphUtils(curie_map.get())
+        self.association = association
 
         return
 
-    def add_supporting_evidence(self, assoc_id, evidence_line, type=None, label=None):
+    def add_supporting_evidence(self, evidence_line, type=None, label=None):
         """
-        Add supporting line of evidence blank node to association id
+        Add supporting line of evidence node to association id
 
         :param assoc_id: curie or iri, association id
-        :param evidence_line: curie or iri, evidence line (should be
-        blank node)
+        :param evidence_line: curie or iri, evidence line
         :return: None
         """
-        self.graph_utils.addTriple(self.graph, assoc_id,
+        self.graph_utils.addTriple(self.graph, self.association,
                                    self.object_properties['has_supporting_evidence'],
                                    evidence_line)
         if type is not None:
             self.graph_utils.addIndividualToGraph(self.graph, evidence_line,
                                                   label, type)
+        return
+
+    def add_evidence(self, evidence_line, type=None, label=None):
+        """
+        Add line of evidence node to association id
+
+        :param assoc_id: curie or iri, association id
+        :param evidence_line: curie or iri, evidence line
+        :return: None
+        """
+        self.graph_utils.addTriple(self.graph, self.association,
+                                   self.object_properties['has_evidence'],
+                                   evidence_line)
+        if type is not None:
+            self.graph_utils.addIndividualToGraph(self.graph, evidence_line,
+                                                  label, type)
+        return
+
+    def add_data_individual(self, data_curie, label=None, type=None):
+        """
+        Add data individual
+        :param data_curie: str either curie formatted or long string,
+                           long strings will be converted to bnodes
+        :param type: str curie
+        :param label: str
+        :return: None
+        """
+        part_length = len(data_curie.split(':'))
+        if part_length == 0:
+            curie = "_:{}".format(data_curie)
+        elif part_length > 2:
+            raise ValueError("Misformatted curie {}".format(data_curie))
+        else:
+            curie = data_curie
+
+        self.graph_utils.addIndividualToGraph(self.graph, curie, label, type)
         return
 
     def add_supporting_data(self, evidence_line, measurement_dict):
@@ -94,119 +136,43 @@ class Evidence:
             self.graph_utils.addTriple(self.graph, measurement,
                                        self.data_property['has_value'],
                                        measurement_dict[measurement], True)
-
         return
 
-    def _add_measurement_data(self, assay_id, measurement_unit,
-                              significance=None):
+    def add_supporting_publication(self, evidence_line, publication,
+                                   label=None, type=None):
         """
-
-        This is a legacy function to handle MPD and was never
-        implemented.  Leaving here for now but will fix/delete
-        as needed
-
-        Adds an object to measurement_datums like:
-        assay_id : {
-            # MB says each assay should be an instance of OBI Assay
-            type: OBI:0000070
-            label: appmeth
-            unit: unit id or literal?
-            significance: {
-                  type:  significance class id
-                  value: ####
-                  unit:  unit id (optional)
-              } (optional)
-        }
-
-        :param assay_id:
-        :param measurement_value:
-        :param measurement_unit:
-        :param significance:
+        <evidence> <SEPIO:0000124> <source>
+        <source> <rdf:type> <type>
+        <source> <rdfs:label> "label"
+        :param evidence_line: str curie
+        :param publication: str curie
+        :param label: optional, str type as curie
+        :param type: optional, str type as curie
         :return:
         """
+        self.graph_utils.addTriple(
+            self.graph, evidence_line,
+            self.object_properties['has_supporting_reference'], publication
+        )
+        self.graph_utils.addIndividualToGraph(self.graph, publication, label, type)
+        return
 
-        if assay_id not in self.measurement_datums:
-            # @N @M This needs to be a list, not a set,
-            # because multiple values may be possible for a given assay?
-            self.measurement_datums[assay_id] = list()
-
-        ms = self.get_score(self.prov_types['measurement datum'],
-                            measurement_unit)
-        if significance is not None:
-            ms['significance'] = significance
-
-        self.measurement_datums[assay_id].append(ms)
-
-        # as a convenience, we return the measurement data
-        return ms
-
-
-    def _add_measurement_data_to_graph(self, graph, measurement_data):
+    def add_source(self, evidence_line, source, label=None, type=None):
         """
-        This is a legacy function to handle MPD and was never
-        implemented.  Leaving here for now but will fix/delete
-        as needed
-        :param graph:
-        :param measurement_data:
-        :return:
+        Applies the triples:
+        <evidence> <dc:source> <source>
+        <source> <rdf:type> <type>
+        <source> <rdfs:label> "label"
+
+        TODO this should belong in a higher level class
+        :param evidence_line: str curie
+        :param source: str source as curie
+        :param label: optional, str type as curie
+        :param type: optional, str type as curie
+        :return: None
         """
-
-        # assay_id : {
-        #     type: "measurement datum" class
-        #     value: #####,
-        #     unit: unit id or literal?
-        #     significance: {
-        #           type:  significance class id
-        #           value: ####
-        #           unit:  unit id (optional)
-        #       } (optional)
-        # }
-
-        # if no prov_id, then make it a random blank node
-        if self.prov_id is None:
-            t = datetime.now()
-            t_string = t.strftime("%Y-%m-%d-%H-%M")
-            self.prov_id = '_'+str(self.agent)+t_string
-
-        # # TODO deal with units
-        # for m in measurement_data:
-        #     s = measurement_data[m]
-        #     # we assume that the assay has already been added
-        #     # as an Individual
-        #       with properties elsewhere
-        #
-        #     for i in s:
-        #
-        #         logger.debug("\tTYPE: "+str(i.get('type'))+"\tVALUE: "+
-        #                      str(i.get('value'))+"\tUNIT: "+
-        #                      str(i.get('unit'))+" TYPE: None\tDESCRIPTION:"+
-        #                      str(i.get('description')))
-        #         mid = self.get_score_id(i.get('type'), i.get('value'),
-        #                                 i.get('unit'))
-        #
-        #         self.graph_utils.addIndividualToGraph(graph, mid, None,
-        #                                       i.get('description'))
-        #         self.graph_utils.addTriple(
-        #           graph, mid, self.data_property['has_value'],
-        #                           i.get('value'))
-        #         sig = i.get('significance')
-        #         if sig is not None:
-        #             sid = self.get_score_id(i.get('type'), i.get('value'),
-        #                                     i.get('unit'))
-        #             self.graph_utils.addIndividualToGraph(graph, sid, None,
-        #                                          s.get('type'))
-        #             self.graph_utils.addTriple(graph, mid,
-        #                               self.rel_properties['has_significance'],
-        #                               sid)
-        #             self.graph_utils.addTriple(graph, sid,
-        #                               self.data_property['has_value'],
-        #                               sig.get('value'))
-        #         # add the measurement as part of this provenance
-        #         self.graph_utils.addTriple(graph, self.prov_id,
-        #                           # TODO should this be "has_measurement"?
-        #                           self.graph_utils.object_properties['has_part'], mid)
-        #         self.graph_utils.addTriple(graph, self.prov_id,
-        #                           self.graph_utils.object_properties['has_agent'],
-        #                           self.agent)
-
+        self.graph_utils.addTriple(self.graph, evidence_line,
+                                   self.object_properties['source'],
+                                   source)
+        self.graph_utils.addIndividualToGraph(self.graph, source, label, type)
         return
