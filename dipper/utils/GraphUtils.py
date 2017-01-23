@@ -145,6 +145,15 @@ class GraphUtils:
             g.add((n, DC['description'], Literal(description)))
         return g
 
+    def addEntityToGraph(self, g, id, label, description=None):
+        n = self.getNode(id)
+
+        if label is not None:
+            g.add((n, RDFS['label'], Literal(label)))
+        if description is not None:
+            g.add((n, DC['description'], Literal(description)))
+        return g
+
     def addOWLPropertyClassRestriction(
             self, g, class_id, property_id, property_value):
 

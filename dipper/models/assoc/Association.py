@@ -50,7 +50,7 @@ class Assoc:
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source',
         'has_provenance': 'OBAN:has_provenance',
-        'causes_or_contributes': 'RO:00033032',
+        'causes_or_contributes': 'RO:0003302',
     }
 
     datatype_properties = {

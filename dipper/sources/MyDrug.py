@@ -84,7 +84,7 @@ class MyDrug(Source):
         aeolus_fh = aeolus_file.open('r')
         count = 0
         for line in aeolus_fh.readlines():
-            if limit is not None and count > limit:
+            if limit is not None and count >= limit:
                 break
             line = line.rstrip("\n,")
             if line != '[' and line != ']':
@@ -102,12 +102,12 @@ class MyDrug(Source):
 
         rxcui_curie = "RXCUI:{}".format(document['aeolus']['rxcui'])
         uni_curie = "UNII:{}".format(document['aeolus']['unii'])
-        graph_util.addIndividualToGraph(self.graph, rxcui_curie,
-                                        document['aeolus']['drug_name'])
-        graph_util.addIndividualToGraph(self.graph, uni_curie,
-                                        document['aeolus']['drug_name'])
+        graph_util.addEntityToGraph(self.graph, rxcui_curie,
+                                    document['aeolus']['drug_name'])
+        graph_util.addEntityToGraph(self.graph, uni_curie,
+                                    document['aeolus']['drug_name'])
 
-        graph_util.addSameIndividual(self.graph,rxcui_curie, uni_curie)
+        graph_util.addSameIndividual(self.graph, rxcui_curie, uni_curie)
         graph_util.addTriple(self.graph, rxcui_curie,
                              graph_util.annotation_properties['inchi_key'],
                              document['unii']['inchikey'],
@@ -122,18 +122,17 @@ class MyDrug(Source):
         for outcome in outcomes:
             drug2outcome_assoc = Assoc(self.name)
 
-            medra_curie = "MEDDRA:{}".format(outcome['id'])
-            graph_util.addIndividualToGraph(self.graph, medra_curie,
-                                            outcome['name'])
+            meddra_curie = "MEDDRA:{}".format(outcome['code'])
+            graph_util.addEntityToGraph(self.graph, meddra_curie, outcome['name'])
 
             drug2outcome_assoc.sub = rxcui_curie
-            drug2outcome_assoc.obj = medra_curie
+            drug2outcome_assoc.obj = meddra_curie
             drug2outcome_assoc.rel = Assoc.object_properties['causes_or_contributes']
             drug2outcome_assoc.description = \
                 "A proportional reporting ratio or odds " \
-                "ratio greater than or equal to 1 in the " \
+                "ratio greater than or equal to {} in the " \
                 "AEOLUS data was the significance cut-off " \
-                "used for creating drug-outcome associations"
+                "used for creating drug-outcome associations".format(or_limit)
             drug2outcome_assoc.add_association_to_graph(self.graph)
             drug2outcome_assoc.add_predicate_object(
                 self.graph, Assoc.annotation_properties['probabalistic_quantifier'],
@@ -141,7 +140,6 @@ class MyDrug(Source):
 
             self._add_outcome_evidence(drug2outcome_assoc.assoc_id, outcome)
             self._add_outcome_provenance(drug2outcome_assoc.assoc_id, outcome)
-
 
     def _add_outcome_provenance(self, association, outcome):
         """
@@ -181,7 +179,7 @@ class MyDrug(Source):
             association, outcome['id'], self.name
         ))
         evidence_type = "ECO:0000180"
-        evidence_model.add_evidence(evidence_curie, evidence_type)
+        evidence_model.add_supporting_evidence(evidence_curie, evidence_type)
 
         evidence_model.add_supporting_publication(
             evidence_curie, reference['curie'], reference['label'],
@@ -194,10 +192,10 @@ class MyDrug(Source):
             "{0}{1}{2}".format(evidence_curie,
                                outcome['case_count'], self.name), prefix="_")
         pr_ratio_bnode = self.make_id(
-            "{0}{1}{2}".format(evidence_curie, outcome['prr'], self.name),
+            "{0}{1}{2}{3}".format(evidence_curie, outcome['prr'], self.name, 'prr'),
             prefix="_")
         odds_ratio_bnode = self.make_id(
-            "{0}{1}{2}".format(evidence_curie, outcome['ror'], self.name),
+            "{0}{1}{2}{3}".format(evidence_curie, outcome['ror'], self.name, 'ror'),
             prefix="_")
 
         evidence_model.add_data_individual(
@@ -228,7 +226,7 @@ class MyDrug(Source):
         is_remote_newer = False
         if localfile.exists() \
                 and localfile.stat().st_size > 0:
-            logger.info("File exist locally, using cache")
+            logger.info("File exists locally, using cache")
         else:
             is_remote_newer = True
             logger.info("No cache file, fetching entries")

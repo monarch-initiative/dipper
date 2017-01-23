@@ -115,7 +115,6 @@ class Evidence:
         self.graph_utils.addIndividualToGraph(self.graph, curie, label, type)
         return
 
-
     def add_supporting_data(self, evidence_line, measurement_dict):
         """
         Add supporting data
