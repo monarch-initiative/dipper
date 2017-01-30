@@ -60,7 +60,9 @@ def main():
         'reactome': 'Reactome',
         'udp': 'UDP',
         'mgi-slim': 'MGISlim',
-        'zfin-slim': 'ZFINSlim'
+        'zfin-slim': 'ZFINSlim',
+        'bgee': 'Bgee',
+        'mydrug': 'MyDrug'
     }
 
     logger = logging.getLogger(__name__)
@@ -131,7 +133,7 @@ def main():
         tax_ids = [int(t) for t in args.taxon.split(',')]
 
     taxa_supported = [
-        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology']
+        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee']
 
     formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 

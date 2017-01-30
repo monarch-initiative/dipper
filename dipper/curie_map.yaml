@@ -75,6 +75,9 @@
 'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'  # ZFA: Zebrafish Anatomy Ontology [y]
 'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'  # ZFS: Zebrafish Staging [y]
 'ZP': 'http://purl.obolibrary.org/obo/ZP_'  # ZP: Zebrafish Phenotype Ontology [y]
+'WBbt': 'http://purl.obolibrary.org/obo/WBbt_' #WBbt:  C. elegans gross anatomy
+'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_' # EMAPA: Mouse gross anatomy and development, timed
+'XAO': 'http://purl.obolibrary.org/obo/XAO_' # XAO: Xenopus anatomy and development
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
@@ -167,10 +170,6 @@
 'TrEMBL' : 'http://www.uniprot.org/uniprot/'
 'UniProtKB' : 'http://identifiers.org/uniprot/'
 
-#chemicals
-'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
-'DrugBank' : 'http://www.drugbank.ca/drugs/'
-
 # SEPIO: Scientific Evidence and Provenance Information Ontology
 'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'
 'VIVO': 'http://vivoweb.org/ontology/core#'
@@ -179,3 +178,15 @@
 'IMPRESS-procedure' : 'https://www.mousephenotype.org/impress/procedures/'
 'IMPRESS-protocol' : 'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter' : 'https://www.mousephenotype.org/impress/parameterontologies/'
+
+#Drugs, chemicals, compounds
+'CID' : 'http://pubchem.ncbi.nlm.nih.gov/compound/'
+'DrugBank' : 'http://www.drugbank.ca/drugs/'
+'SIO': 'http://semanticscience.org/resource/SIO_'
+'OAE': 'http://purl.obolibrary.org/obo/OAE_'
+'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'
+'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'
+'FDADrug': 'http://www.fda.gov/Drugs/InformationOnDrugs/'
+'BT': 'http://c.biothings.io/#'
+'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
+'GINAS' : 'http://tripod.nih.gov/ginas/app/substance#'

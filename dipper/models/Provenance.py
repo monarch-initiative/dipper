@@ -45,7 +45,8 @@ class Provenance:
         'created_at_location': 'SEPIO:0000019',
         'created_with_resource': 'SEPIO:0000022',
         'measures': 'SEPIO:0000114',
-        'has_supporting_study': 'SEPIO:0000085'
+        'has_supporting_study': 'SEPIO:0000085',
+        'asserted_by': 'SEPIO:0000130'
     }
 
     def __init__(self, graph):

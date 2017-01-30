@@ -1,7 +1,9 @@
 import re
 import logging
 from rdflib import Literal, URIRef, BNode, Namespace, ConjunctiveGraph
+from rdflib import util as rdflib_util
 from rdflib.namespace import DC, RDF, RDFS, OWL, XSD, FOAF
+from xml.sax import SAXParseException
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -34,7 +36,8 @@ class GraphUtils:
         'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
         'definition': 'IAO:0000115',
         'has_xref': 'OIO:hasDbXref',
-        'clique_leader': 'MONARCH:cliqueLeader'
+        'clique_leader': 'MONARCH:cliqueLeader',
+        'inchi_key': 'CHEBI:InChIKey',
     }
 
     object_properties = {
@@ -138,6 +141,15 @@ class GraphUtils:
             g.add((n, RDF['type'], t))
         else:
             g.add((n, RDF['type'], self.OWLIND))
+        if description is not None:
+            g.add((n, DC['description'], Literal(description)))
+        return g
+
+    def addEntityToGraph(self, g, id, label, description=None):
+        n = self.getNode(id)
+
+        if label is not None:
+            g.add((n, RDFS['label'], Literal(label)))
         if description is not None:
             g.add((n, DC['description'], Literal(description)))
         return g
@@ -437,9 +449,8 @@ class GraphUtils:
 
         return self._getNode(id, materialize_bnode)
 
-    def addTriple(
-            self, graph, subject_id, predicate_id, object_id,
-            object_is_literal=False):
+    def addTriple(self, graph, subject_id, predicate_id, object_id,
+                  object_is_literal=False):
 
         if object_is_literal is True:
             graph.add(
@@ -569,18 +580,17 @@ class GraphUtils:
         # so retry once on URLError
         for ontology in ontologies:
             logger.info("parsing: " + ontology)
-            if re.search(r'\.owl', ontology):
-                try:
-                    ontology_graph.parse(ontology, format='xml')
-                except OSError as e:  # URLError:
-                    # simple retry
-                    logger.error(e)
-                    logger.error('Retrying: ' + ontology)
-                    ontology_graph.parse(ontology, format='xml')
-            elif re.search(r'\.ttl', ontology):
-                ontology_graph.parse(ontology, format='turtle')
-            else:
-                ontology_graph.parse(ontology)
+            try:
+                ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
+            except SAXParseException as e:
+                logger.error(e)
+                logger.error('Retrying: ' + ontology)
+                ontology_graph.parse(ontology, format="turtle")
+            except OSError as e:  # URLError:
+                # simple retry
+                logger.error(e)
+                logger.error('Retrying: ' + ontology)
+                ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
 
         # Get object properties
         graph = GraphUtils.add_property_to_graph(
