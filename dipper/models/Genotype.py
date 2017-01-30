@@ -475,8 +475,7 @@ class Genotype():
 
         # akin to a variant locus
         if targeted_gene_id is None:
-            targeted_gene_id = '_' + gene_id + '-' + reagent_id
-            targeted_gene_id = targeted_gene_id.replace(":", "")
+            targeted_gene_id = '_:' + gene_id + '-' + reagent_id
         self.gu.addIndividualToGraph(
             self.graph, targeted_gene_id, targeted_gene_label,
             self.genoparts['reagent_targeted_gene'], description)
@@ -497,8 +496,8 @@ class Genotype():
             self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
         if tgs_type is None:
             tgs_type = self.genoparts['targeted_gene_subregion']
-        self.gu.addIndividualToGraph(self.graph, tgs_id, tgs_label, tgs_type,
-                                     tgs_description)
+        self.gu.addIndividualToGraph(
+            self.graph, tgs_id, tgs_label, tgs_type, tgs_description)
 
     def addMemberOfPopulation(
             self, member_id, population_id):
@@ -539,6 +538,7 @@ class Genotype():
 
     def makeGenomeID(self, taxon_id):
         # scrub off the taxon prefix.  put it in base space
+        # TODO: revisit as BNODE?
 
         genome_id = re.sub(r'.*\:', ':', taxon_id) + 'genome'
 
@@ -573,8 +573,8 @@ class Genotype():
                 build_label = build_id
             chrinbuild_label = makeChromLabel(chr, build_label)
             # add the build-specific chromosome as an instance of the chr class
-            self.gu.addIndividualToGraph(self.graph, chrinbuild_id,
-                                         chrinbuild_label, chr_id)
+            self.gu.addIndividualToGraph(
+                self.graph, chrinbuild_id, chrinbuild_label, chr_id)
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
@@ -588,8 +588,9 @@ class Genotype():
         # the chrom class (generic) id
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
-        self.gu.addClassToGraph(self.graph, chrom_class_id, chrom_class_label,
-                                Feature.types['chromosome'])
+        self.gu.addClassToGraph(
+            self.graph, chrom_class_id, chrom_class_label,
+            Feature.types['chromosome'])
 
         return
 
@@ -608,8 +609,8 @@ class Genotype():
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-        self.gu.addIndividualToGraph(self.graph, chr_id, chr_label,
-                                     Feature.types['chromosome'])
+        self.gu.addIndividualToGraph(
+            self.graph, chr_id, chr_label, Feature.types['chromosome'])
         if chr_type is not None:
             self.gu.addType(self.graph, chr_id, chr_type)
 
@@ -652,20 +653,17 @@ class Genotype():
 
         return vslc_label
 
-    def make_experimental_model_with_genotype(self, g, genotype_id,
-                                              genotype_label, taxon_id,
-                                              taxon_label):
+    def make_experimental_model_with_genotype(
+        self, g, genotype_id, genotype_label, taxon_id, taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)
-        animal_id = '_'+animal_id
-        if self.nobnodes:
-            animal_id = ':'+animal_id
+        animal_id = '_:' + animal_id
 
         animal_label = ' '.join((genotype_label, taxon_label))
         self.gu.addIndividualToGraph(g, animal_id, animal_label, taxon_id)
-        self.gu.addTriple(g, animal_id,
-                          Genotype.object_properties['has_genotype'],
-                          genotype_id)
+        self.gu.addTriple(
+            g, animal_id, Genotype.object_properties['has_genotype'],
+            genotype_id)
 
         return animal_id
