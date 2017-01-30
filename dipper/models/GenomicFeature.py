@@ -37,11 +37,8 @@ class Feature():
         'has_subsequence': 'RO:0002524',
         'is_subsequence_of': 'RO:0002525',
         'has_staining_intensity': 'GENO:0000207',
-        # was GENO:0000626 (staining_intensity),
-        # but changing to has_sequence_attribute
         'upstream_of_sequence_of': 'RO:0002528',
         'downstream_of_sequence_of': 'RO:0002529'
-
     }
 
     data_properties = {
@@ -99,7 +96,7 @@ class Feature():
         self.gu = GraphUtils(curie_map.get())
         self.start = None
         self.stop = None
-        self.nobnodes = True  # TODO remove this before official release
+        # self.nobnodes = True  # TODO remove this before official release
         return
 
     def addFeatureStartLocation(
