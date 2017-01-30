@@ -70,7 +70,7 @@ class HPOAnnotations(Source):
 
     # note, two of these codes are awaiting term requests.  see #114 and
     # https://code.google.com/p/evidenceontology/issues/detail?id=32
-    # TODO TEC see if the GC issue translatedto a GH issue
+    # TODO TEC see if the GC issue translated into a GH issue
     eco_dict = {
         # FIXME currently using "curator inference used in manual assertion"
         "ICE": "ECO:0000305",
