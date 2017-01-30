@@ -11,7 +11,7 @@
 #  This may over generalize in some cases because I do not have
 #  a handy way to differentiate uri for subjects and objects
 #  which may belong to a "structural" ontology as opposed to
-# a data uri.
+#  a data uri.
 
 #  Post processing to augment predicate identifiers
 #  with their labels seems to improve usefulness.
@@ -62,7 +62,7 @@ function stripid(uri){
 # this passes valid node labels from dot's perspective
 function simplify(str){
 	gsub(/[^[:alpha:][:digit:]_]+/,"_",str)
-	gsub(/^_+|_+$/, "",str)
+	gsub(/^_*|_*$/, "",str)
 	gsub(/__*/,"_",str)
 	return str
 }
@@ -193,7 +193,7 @@ BEGIN{
 
 # print anything else so it makes itself known
 (FNR != NR) && (done[NR]<1) && (NF>1){
-	printf("ERROR? in %s at line %i  %s",FILENAME,FNR,$0) > "/dev/stderr"
+	printf("ERROR? in %s at line %i:  %s\n",FILENAME,FNR,$0) > "/dev/stderr"
 }
 
 # output dot file, include edge counts
