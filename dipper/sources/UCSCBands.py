@@ -117,11 +117,10 @@ class UCSCBands(Source):
         # TODO rainbow trout, 8022, when available
     }
 
-    def __init__(self, tax_ids=None):
-        super().__init__('ucscbands')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'ucscbands')
 
         self.tax_ids = tax_ids
-        self.load_bindings()
         self.gu = GraphUtils(curie_map.get())
 
         # Defaults
@@ -197,11 +196,6 @@ class UCSCBands(Source):
         # add the taxon as a class.  adding the class label elsewhere
         self.gu.addClassToGraph(self.graph, taxon_id, None)
         self.gu.addSynonym(self.graph, taxon_id, genome_label)
-
-        self.gu.loadObjectProperties(self.graph, Feature.object_properties)
-        self.gu.loadProperties(self.graph, Feature.data_properties,
-                               self.gu.DATAPROP)
-        self.gu.loadAllProperties(self.graph)
 
         geno.addGenome(taxon_id, genome_label)
 
@@ -388,10 +382,10 @@ class UCSCBands(Source):
             if myband['type'] != Feature.types['assembly_component']:
                 self.gu.addClassToGraph(self.graph, band_class_id,
                                         band_class_label, myband['type'])
-                bfeature = Feature(band_build_id, band_build_label,
+                bfeature = Feature(self.graph, band_build_id, band_build_label,
                                    band_class_id)
             else:
-                bfeature = Feature(band_build_id, band_build_label,
+                bfeature = Feature(self.graph, band_build_id, band_build_label,
                                    myband['type'])
                 if 'synonym' in myband:
                     self.gu.addSynonym(self.graph, band_build_id,
@@ -406,8 +400,7 @@ class UCSCBands(Source):
                 # geno.addParts(band_build_id, chrom_in_build_id)
                 parent_chrom_in_build = makeChromID(myband['parent'],
                                                     build_num, 'MONARCH')
-                bfeature.addSubsequenceOfFeature(self.graph,
-                                                 parent_chrom_in_build)
+                bfeature.addSubsequenceOfFeature(parent_chrom_in_build)
 
             # add the band as a feature
             # (which also instantiates the owl:Individual)
@@ -415,14 +408,13 @@ class UCSCBands(Source):
             bfeature.addFeatureEndLocation(myband['max'], chrom_in_build_id)
             if 'stain' in myband and myband['stain'] is not None:
                 # TODO TEC I recall 'has_staining_intensity' being dropped by MB
-                bfeature.addFeatureProperty(self.graph,
-                                            Feature.properties['has_staining_intensity'],
+                bfeature.addFeatureProperty(Feature.properties['has_staining_intensity'],
                                             myband['stain'])
 
             # type the band as a faldo:Region directly (add_region=False)
             # bfeature.setNoBNodes(self.nobnodes)
             # to come when we merge in ZFIN.py
-            bfeature.addFeatureToGraph(self.graph, False)
+            bfeature.addFeatureToGraph(False)
 
         return
 

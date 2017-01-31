@@ -84,8 +84,8 @@ class GeneOntology(Source):
         }
     }
 
-    def __init__(self, tax_ids=None):
-        Source.__init__(self, 'go')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super.__init__(graph_type, are_bnodes_skolemized, 'go')
 
         # Defaults
         self.tax_ids = tax_ids
@@ -146,10 +146,7 @@ class GeneOntology(Source):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
         gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, Genotype.object_properties)
 
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))

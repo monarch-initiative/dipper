@@ -1,7 +1,3 @@
-'''
-    TODO document me
-'''
-
 import csv
 import logging
 import re
@@ -9,10 +5,9 @@ import gzip
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 
@@ -104,8 +99,8 @@ class AnimalQTLdb(Source):
         1798, 32133
     }
 
-    def __init__(self):
-        Source.__init__(self, 'animalqtldb')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'animalqtldb')
 
         # update the dataset object with details about this resource
         self.dataset = Dataset(
@@ -179,8 +174,6 @@ class AnimalQTLdb(Source):
 
         logger.info("Finished parsing")
 
-        self.load_bindings()
-
         logger.info("Found %d nodes", len(self.graph))
         return
 
@@ -201,7 +194,7 @@ class AnimalQTLdb(Source):
             g = self.graph
         line_counter = 0
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
 
         logger.info(
@@ -224,7 +217,7 @@ class AnimalQTLdb(Source):
                  flankmark_b1,
                  flankmark_b2,
                  exp_id,
-                 model,
+                 model_id,
                  test_base,
                  sig_level,
                  lod_score,
@@ -249,15 +242,15 @@ class AnimalQTLdb(Source):
                 trait_id = 'AQTLTrait:'+trait_id.strip()
 
                 # Add QTL to graph
-                f = Feature(qtl_id, qtl_symbol, geno.genoparts['QTL'])
-                f.addTaxonToFeature(g, taxon_id)
+                feature = Feature(g, qtl_id, qtl_symbol, geno.genoparts['QTL'])
+                feature.addTaxonToFeature(taxon_id)
 
                 # deal with the chromosome
                 chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
-                build_id = 'MONARCH:'+common_name.strip()+'-linkage'
+                build_id = self.make_id(common_name.strip()+'-linkage')
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
                 chrom_in_build_id = makeChromID(
@@ -292,13 +285,13 @@ class AnimalQTLdb(Source):
                 # FIXME remove converion to int for start/stop
                 # when schema can handle floats add in the genetic location
                 # based on the range
-                f.addFeatureStartLocation(
+                feature.addFeatureStartLocation(
                     start, chrom_in_build_id, None,
                     [Feature.types['FuzzyPosition']])
-                f.addFeatureEndLocation(
+                feature.addFeatureEndLocation(
                     stop, chrom_in_build_id, None,
                     [Feature.types['FuzzyPosition']])
-                f.addFeatureToGraph(g)
+                feature.addFeatureToGraph()
 
                 # sometimes there's a peak marker, like a rsid.
                 # we want to add that as a variant of the gene,
@@ -308,10 +301,10 @@ class AnimalQTLdb(Source):
                         re.match(r'rs', peak_mark.strip()):
                     dbsnp_id = 'dbSNP:'+peak_mark.strip()
 
-                    gu.addIndividualToGraph(
-                        g, dbsnp_id, None,
+                    model.addIndividualToGraph(
+                        dbsnp_id, None,
                         geno.genoparts['sequence_alteration'])
-                    gu.addXref(g, qtl_id, dbsnp_id)
+                    model.addXref(qtl_id, dbsnp_id)
 
                 gene_id = gene_id.replace('uncharacterized ', '')
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
@@ -330,34 +323,32 @@ class AnimalQTLdb(Source):
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id
                             vl_id = \
-                                '_' + re.sub(
+                                '_:' + re.sub(
                                     r':', '', gene_id) + '-' + peak_mark
-                            if self.nobnodes:
-                                vl_id = ':' + vl_id
                             geno.addSequenceAlterationToVariantLocus(
                                 dbsnp_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
 
                 # add the trait
-                gu.addClassToGraph(g, trait_id, trait_name)
+                model.addClassToGraph(trait_id, trait_name)
 
                 # Add publication
-                r = None
+                reference = None
                 if re.match(r'ISU.*', pubmed_id):
                     pub_id = 'AQTLPub:'+pubmed_id.strip()
-                    r = Reference(pub_id)
+                    reference = Reference(g, pub_id)
                 elif pubmed_id != '':
                     pub_id = 'PMID:'+pubmed_id.strip()
-                    r = Reference(
+                    reference = Reference(g,
                         pub_id, Reference.ref_types['journal_article'])
 
-                if r is not None:
-                    r.addRefToGraph(g)
+                if reference is not None:
+                    reference.addRefToGraph()
 
                 # make the association to the QTL
                 assoc = G2PAssoc(
-                    self.name, qtl_id, trait_id,
-                    gu.object_properties['is_marker_for'])
+                    g, self.name, qtl_id, trait_id,
+                    model.object_properties['is_marker_for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -378,14 +369,14 @@ class AnimalQTLdb(Source):
                         score = float(s)
                         assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
                 # make the association to the dbsnp_id, if found
                 if dbsnp_id is not None:
                     # make the association to the dbsnp_id
                     assoc = G2PAssoc(
-                        self.name, dbsnp_id, trait_id,
-                        gu.object_properties['is_marker_for'])
+                        g, self.name, dbsnp_id, trait_id,
+                        model.object_properties['is_marker_for'])
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
 
@@ -406,7 +397,7 @@ class AnimalQTLdb(Source):
                             assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
 
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -429,7 +420,7 @@ class AnimalQTLdb(Source):
             g = self.testgraph
         else:
             g = self.graph
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         line_counter = 0
         geno = Genotype(g)
         # assume that chrs get added to the genome elsewhere
@@ -486,7 +477,7 @@ class AnimalQTLdb(Source):
 
                 # make association between QTL and trait
                 qtl_id = 'AQTL:' + str(qtl_num)
-                gu.addIndividualToGraph(g, qtl_id, None, geno.genoparts['QTL'])
+                model.addIndividualToGraph(qtl_id, None, geno.genoparts['QTL'])
                 geno.addTaxon(taxon_id, qtl_id)
 
                 trait_id = 'AQTLTrait:'+attribute_dict.get('trait_ID')
@@ -497,17 +488,17 @@ class AnimalQTLdb(Source):
                     pub_id = attribute_dict.get('PUBMED_ID')
                     if re.match(r'ISU.*', pub_id):
                         pub_id = 'AQTLPub:' + pub_id.strip()
-                        p = Reference(pub_id)
+                        reference = Reference(g, pub_id)
                     else:
                         pub_id = 'PMID:' + pub_id.strip()
-                        p = Reference(
-                            pub_id, Reference.ref_types['journal_article'])
-                    p.addRefToGraph(g)
+                        reference = Reference(
+                            g, pub_id, Reference.ref_types['journal_article'])
+                    reference.addRefToGraph()
 
                 # Add QTL to graph
                 assoc = G2PAssoc(
-                    self.name, qtl_id, trait_id,
-                    gu.object_properties['is_marker_for'])
+                    g, self.name, qtl_id, trait_id,
+                    model.object_properties['is_marker_for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():
@@ -518,7 +509,7 @@ class AnimalQTLdb(Source):
                         score = float(s)
                         assoc.set_score(score)
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
                 # TODO make association to breed
                 # (which means making QTL feature in Breed background)
 
@@ -530,7 +521,7 @@ class AnimalQTLdb(Source):
                     makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
-                qtl_feature = Feature(qtl_id, None, geno.genoparts['QTL'])
+                qtl_feature = Feature(g, qtl_id, None, geno.genoparts['QTL'])
                 if start_bp == '':
                     start_bp = None
                 qtl_feature.addFeatureStartLocation(
@@ -541,8 +532,8 @@ class AnimalQTLdb(Source):
                 qtl_feature.addFeatureEndLocation(
                     stop_bp, chrom_in_build_id, strand,
                     [Feature.types['FuzzyPosition']])
-                qtl_feature.addTaxonToFeature(g, taxon_id)
-                qtl_feature.addFeatureToGraph(g)
+                qtl_feature.addTaxonToFeature(taxon_id)
+                qtl_feature.addFeatureToGraph()
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -566,8 +557,7 @@ class AnimalQTLdb(Source):
         else:
             g = self.graph
         line_counter = 0
-
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
 
         # with open(raw, 'r') as csvfile:
         #     filereader = csv.reader(csvfile, delimiter=',')
@@ -614,17 +604,17 @@ class AnimalQTLdb(Source):
                 #     continue
                 # print(ato_label)
 
-                gu.addClassToGraph(g, ato_id, ato_label.strip())
+                model.addClassToGraph(ato_id, ato_label.strip())
 
                 if re.match(r'VT:.*', vto_id):
-                    gu.addClassToGraph(g, vto_id, None)
-                    gu.addEquivalentClass(g, ato_id, vto_id)
+                    model.addClassToGraph(vto_id, None)
+                    model.addEquivalentClass(ato_id, vto_id)
                 if re.match(r'LPT:.*', pto_id):
-                    gu.addClassToGraph(g, pto_id, None)
-                    gu.addEquivalentClass(g, ato_id, pto_id)
+                    model.addClassToGraph(pto_id, None)
+                    model.addEquivalentClass(ato_id, pto_id)
                 if re.match(r'CMO:.*', cmo_id):
-                    gu.addClassToGraph(g, cmo_id, None)
-                    gu.addXref(g, ato_id, cmo_id)
+                    model.addClassToGraph(cmo_id, None)
+                    model.addXref(ato_id, cmo_id)
 
         logger.info("Done with trait mappings")
         return

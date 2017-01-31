@@ -1,7 +1,6 @@
 import logging
 import re
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 
 __author__ = 'nlw'
 
@@ -29,16 +28,9 @@ class Pathway():
 
     properties = object_properties.copy()
 
-    def __init__(self, graph, nobnodes=False):
-
-        self.gu = GraphUtils(curie_map.get())
-
+    def __init__(self, graph):
         self.graph = graph
-
-        self.nobnodes = nobnodes
-
-        self.gu.loadProperties(self.graph, self.object_properties,
-                               self.gu.OBJPROP)
+        self.model = Model(self.graph)
 
         return
 
@@ -57,11 +49,9 @@ class Pathway():
 
         if pathway_type is None:
             pathway_type = self.pathway_parts['cellular_process']
-        self.gu.addClassToGraph(
-            self.graph, pathway_id, pathway_label, pathway_type,
-            pathway_description)
-        self.gu.addSubclass(
-            self.graph, self.pathway_parts['pathway'], pathway_id)
+        self.model.addClassToGraph(
+            pathway_id, pathway_label, pathway_type, pathway_description)
+        self.model.addSubclass( self.pathway_parts['pathway'], pathway_id)
 
         return
 
@@ -79,16 +69,11 @@ class Pathway():
         :return:
         """
 
-        gene_product = '_'+re.sub(r':', '', gene_id)+'product'
-        if self.nobnodes:
-            gene_product = ':'+gene_product
-        self.gu.addIndividualToGraph(
-            self.graph, gene_product, None,
-            self.pathway_parts['gene_product'])
-        self.gu.addTriple(
-            self.graph, gene_id,
-            self.object_properties['has_gene_product'],
-            gene_product)
+        gene_product = '_:'+re.sub(r':', '', gene_id)+'product'
+        self.model.addIndividualToGraph(
+            gene_product, None, self.pathway_parts['gene_product'])
+        self.graph.addTriple(
+            gene_id, self.object_properties['has_gene_product'], gene_product)
         self.addComponentToPathway(pathway_id, gene_product)
 
         return
@@ -103,8 +88,7 @@ class Pathway():
         :param component_id:
         :return:
         """
-
-        self.gu.addTriple(self.graph, component_id,
-                          self.object_properties['involved_in'], pathway_id)
+        self.graph.addTriple(
+            component_id, self.object_properties['involved_in'], pathway_id)
 
         return

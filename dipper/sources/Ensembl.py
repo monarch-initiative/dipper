@@ -5,10 +5,9 @@ import http
 import xml.etree.ElementTree as etree
 
 from dipper.sources.Source import Source
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature
 
@@ -49,12 +48,11 @@ class Ensembl(Source):
         '4932': {'file': 'ensembl_4932.txt'},  #
     }
 
-    def __init__(self, tax_ids=None, gene_ids=None):
-        Source.__init__(self, 'ensembl')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'ensembl')
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
-        self.load_bindings()
 
         self.dataset = Dataset(
             'ensembl', 'ENSEMBL', 'http://uswest.ensembl.org', None)
@@ -103,9 +101,6 @@ class Ensembl(Source):
 
         for t in self.tax_ids:
             self._process_genes(str(t), limit)
-
-        self.load_core_bindings()
-        self.load_bindings()
 
         logger.info("Done parsing files.")
 
@@ -183,13 +178,12 @@ class Ensembl(Source):
         return query
 
     def _process_genes(self, taxid, limit=None):
-        gu = GraphUtils(curie_map.get())
-
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
+        model = Model(g)
         geno = Genotype(g)
 
         raw = '/'.join((self.rawdir, self.files[taxid]['file']))
@@ -221,23 +215,18 @@ class Ensembl(Source):
                     description = None
                 gene_type_id = self._get_gene_type(gene_biotype)
                 gene_type_id = None
-                gu.addClassToGraph(
-                    g, gene_id, external_gene_name, gene_type_id, description)
+                model.addClassToGraph(
+                    gene_id, external_gene_name, gene_type_id, description)
 
                 if entrezgene != '':
-                    gu.addEquivalentClass(g, gene_id, 'NCBIGene:'+entrezgene)
+                    model.addEquivalentClass(gene_id, 'NCBIGene:'+entrezgene)
                 if hgnc_id is not None and hgnc_id != '':
-                    gu.addEquivalentClass(g, gene_id, hgnc_id)
+                    model.addEquivalentClass(gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
-
-        gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
-        gu.loadProperties(g, Genotype.object_properties, gu.OBJPROP)
-        gu.loadAllProperties(g)
 
         return
 

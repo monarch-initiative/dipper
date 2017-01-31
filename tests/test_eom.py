@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class EOMTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = EOM()
+        self.source = EOM('rdf_graph', True)
         self.source.settestonly(True)
         self._setDirToSource()
         return

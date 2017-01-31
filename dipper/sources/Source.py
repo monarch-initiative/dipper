@@ -4,18 +4,16 @@ import os
 import time
 import logging
 import urllib       # TODO tec look @ import requests
-import requests
 import csv
 import yaml
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
-from rdflib import ConjunctiveGraph, Namespace
-from rdflib.namespace import FOAF, DC, RDFS, OWL
-from dipper import curie_map
+from dipper.graph.RDFGraph import RDFGraph
+from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
-core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 CHUNK = 16 * 1024
 
 
@@ -30,22 +28,30 @@ class Source:
     namespaces = {}
     files = {}
 
-    def __init__(self, name=None):
+    def __init__(self, graph_type, are_bnodes_skized=False, name=None):
+        if graph_type == 'rdf_graph':
+            self.graph = RDFGraph(are_bnodes_skized)
+            self.testgraph = RDFGraph(True)
+        elif graph_type == 'streamed_graph':
+            self.graph = StreamedGraph(are_bnodes_skized)
+            self.graph = StreamedGraph(True)
+        else:
+            logger.error("{} graph type not supported\n"
+                         "valid types: rdf_graph, streamed_graph"
+                         .format(graph_type))
+
         if name is not None:
             logger.info("Processing Source \"%s\"", name)
         self.testOnly = False
         self.name = name
         self.path = ""
-        self.graph = ConjunctiveGraph()
         # to be used to store a subset of data for testing downstream.
-        self.testgraph = ConjunctiveGraph()
         self.triple_count = 0
         self.outdir = 'out'
         self.testdir = 'tests'
         self.rawdir = 'raw'
         self.dataset = None
         # set to True if you want to materialze identifiers for BNodes
-        self.nobnodes = False
         if self.name is not None:
             self.rawdir = '/'.join((self.rawdir, self.name))
             self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
@@ -78,29 +84,6 @@ class Source:
         for g in [self.graph, self.testgraph]:
             self.declareAsOntology(g)
 
-        return
-
-    def load_core_bindings(self):
-
-        for g in [self.graph, self.testgraph]:
-            g.bind("dc", DC)  # TODO: Dublin Core?  OBO: Disease Cluster?
-            g.bind("foaf", FOAF)
-            g.bind("rdfs", RDFS)
-            g.bind('owl', OWL)
-
-        return
-
-    def load_bindings(self):
-        self.load_core_bindings()
-        for g in [self.graph, self.testgraph]:
-
-            for k in self.namespaces.keys():
-                v = self.namespaces[k]
-                g.bind(k, Namespace(v))
-
-            for k in curie_map.get().keys():
-                v = curie_map.get()[k]
-                g.bind(k, Namespace(v))
         return
 
     def fetch(self, is_dl_forced=False):
@@ -186,10 +169,7 @@ class Source:
             else:
                 logger.error("I don't understand your stream.")
                 return
-            if format == 'raw':
-                gu.write_raw_triples(g['g'], file=f)
-            else:
-                gu.write(g['g'], format, file=f)
+            gu.write(g['g'], format, file=f)
 
         return
 
@@ -300,7 +280,10 @@ class Source:
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))
-            self.dataset.setFileAccessUrl(filesource['url'])
+            if re.match(r'^ftp', filesource['url']):
+                self.dataset.setFileAccessUrl(filesource['url'], is_object_literal=True)
+            else:
+                self.dataset.setFileAccessUrl(filesource['url'])
 
             st = os.stat('/'.join((self.rawdir, filesource['file'])))
 
@@ -324,6 +307,7 @@ class Source:
         :return: None
 
         """
+        response = None
         if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
@@ -513,21 +497,6 @@ class Source:
         """
         return None
 
-    def setnobnodes(self, materialize_bnodes):
-        """
-        If materialze_bnodes is True,
-        then all usages of BNodes will be materialized
-        by putting the BNodes into the BASE space,
-        and prefixing the numeric portion (after the colon) with an underscore.
-        :param materialize_bnodes:
-        :return:
-
-        """
-
-        self.nobnodes = materialize_bnodes
-
-        return
-
     def declareAsOntology(self, graph):
         """
         The file we output needs to be declared as an ontology,
@@ -541,10 +510,10 @@ class Source:
         # owl:versionInfo
         # <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(graph)
 
         ontology_file_id = 'MonarchData:'+self.name+".ttl"
-        gu.addOntologyDeclaration(graph, ontology_file_id)
+        model.addOntologyDeclaration(ontology_file_id)
 
         # add timestamp as version info
 
@@ -552,8 +521,8 @@ class Source:
         t_string = t.strftime("%Y-%m-%d-%H-%M")
         ontology_version = self.name+'-'+t_string
         archive_url = 'MonarchArchive:'+ontology_version+'.ttl'
-        gu.addOWLVersionIRI(graph, ontology_file_id, archive_url)
-        gu.addOWLVersionInfo(graph, ontology_file_id, ontology_version)
+        model.addOWLVersionIRI(ontology_file_id, archive_url)
+        model.addOWLVersionInfo(ontology_file_id, ontology_version)
 
         # TODO make sure this is synced with the Dataset class
 

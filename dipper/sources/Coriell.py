@@ -14,6 +14,7 @@ from dipper import config
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import curie_map
 from dipper.models.Genotype import Genotype
+from dipper.models.Family import Family
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
@@ -93,10 +94,8 @@ class Coriell(Source):
         'GM00142', 'NA17944', 'AG02505', 'GM01602', 'GM02455', 'AG00364',
         'GM13707', 'AG00780']
 
-    def __init__(self):
-        Source.__init__(self, 'coriell')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'coriell')
 
         self.dataset = Dataset(
             'coriell', 'Coriell', 'http://ccr.coriell.org/', None)
@@ -219,8 +218,6 @@ class Coriell(Source):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
-
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
@@ -274,12 +271,11 @@ class Coriell(Source):
         else:
             g = self.graph
 
+        family = Family(g)
+
         line_counter = 0
         geno = Genotype(g)
         du = DipperUtil()
-
-        gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
-        gu.loadAllProperties(g)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
@@ -390,7 +386,7 @@ class Coriell(Source):
                     geno.addDerivesFrom(cell_line_id, cell_type)
 
                     # Cell line a member of repository
-                    gu.addMember(g, repository, cell_line_id)
+                    family.addMember(repository, cell_line_id)
 
                     if cat_remark != '':
                         gu.addDescription(g, cell_line_id, cat_remark)
@@ -448,7 +444,7 @@ class Coriell(Source):
                             geno.genoparts['family'])
 
                         # Add the patient as a member of the family
-                        gu.addMemberOf(g, patient_id, family_comp_id)
+                        family.addMemberOf(patient_id, family_comp_id)
 
                     # #############    BUILD THE GENOTYPE   #############
 
@@ -509,11 +505,10 @@ class Coriell(Source):
                             karyotype_feature_label = \
                                 'some karyotype alteration on chr'+str(c)
                             f = Feature(
-                                karyotype_feature_id, karyotype_feature_label,
+                                g, karyotype_feature_id, karyotype_feature_label,
                                 geno.genoparts['sequence_alteration'])
                             f.addFeatureStartLocation(None, chr_id)
-                            f.addFeatureToGraph(g)
-                            f.loadAllProperties(g)
+                            f.addFeatureToGraph()
                             geno.addParts(
                                 karyotype_feature_id, karyotype_id,
                                 geno.object_properties['has_alternate_part'])
@@ -748,16 +743,18 @@ class Coriell(Source):
         :return:
         """
         # #############    BUILD THE CELL LINE REPOSITORY    #############
-        for g in [self.graph, self.testgraph]:
+        for graph in [self.graph, self.testgraph]:
             # FIXME: How to devise a label for each repository?
             gu = GraphUtils(curie_map.get())
+            reference = Reference(graph)
             repo_id = 'CoriellCollection:'+collection_id
             repo_label = label
             repo_page = page
 
+
             gu.addIndividualToGraph(
                 g, repo_id, repo_label, self.terms['collection'])
-            gu.addPage(g, repo_id, repo_page)
+            reference.addPage(repo_id, repo_page)
 
         return
 

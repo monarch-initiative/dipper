@@ -19,9 +19,8 @@ logger = logging.getLogger(__name__)
 class IMPCTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = IMPC()
+        self.source = IMPC('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

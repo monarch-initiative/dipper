@@ -4,11 +4,10 @@ import io
 import csv
 from zipfile import ZipFile
 
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from dipper import curie_map
 from dipper import config
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.HGNC import HGNC
@@ -37,10 +36,8 @@ class Decipher(Source):
             'url': 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip'}
     }
 
-    def __init__(self):
-        Source.__init__(self, 'decipher')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'decipher')
 
         self.dataset = Dataset(
             'decipher', 'Development Disorder Genotype – Phenotype Database',
@@ -54,9 +51,9 @@ class Decipher(Source):
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        self.gu = GraphUtils(curie_map.get())
         self.g = self.graph
         self.geno = Genotype(self.g)
+        self.model = Model(self.g)
 
         return
 
@@ -121,7 +118,6 @@ class Decipher(Source):
             g = self.g
         else:
             g = self.graph
-        gu = GraphUtils(curie_map.get())
 
         # in order for this to work, we need to map the HGNC id-symbol;
         hgnc = HGNC()
@@ -156,7 +152,7 @@ class Decipher(Source):
                     unmapped_gene_count += 1
                     continue
                 # add the gene
-                gu.addClassToGraph(g, hgnc_id, gencode_gene_name)
+                self.model.addClassToGraph(hgnc_id, gencode_gene_name)
 
                 # TODO make VSLC with the variation
                 #   to associate with the disorder
@@ -169,18 +165,18 @@ class Decipher(Source):
                 if omim.strip() != '':
                     omim_id = 'OMIM:'+str(omim.strip())
                     # assume this is declared elsewhere in ontology
-                    gu.addClassToGraph(g, omim_id, None)
+                    self.model.addClassToGraph(omim_id, None)
 
                     if category.strip() == 'Confirmed DD gene':
-                        rel = gu.object_properties['has_phenotype']
+                        rel = self.model.object_properties['has_phenotype']
                     elif category.strip() == 'Probable DD gene':
-                        rel = gu.object_properties['has_phenotype']
+                        rel = self.model.object_properties['has_phenotype']
                     elif category.strip() == 'Possible DD gene':
-                        rel = gu.object_properties['contributes_to']
+                        rel = self.model.object_properties['contributes_to']
                     elif category.strip() == 'Not DD gene':
                         # TODO negative annotation
                         continue
-                    assoc = G2PAssoc(self.name, allele_id, omim_id)
+                    assoc = G2PAssoc(g, self.name, allele_id, omim_id)
                     # TODO 'rel' is assigned to but never used
 
                     for p in re.split(r';', pubmed_ids):
@@ -188,11 +184,11 @@ class Decipher(Source):
                         if p != '':
                             pmid = 'PMID:'+str(p)
                             r = Reference(
-                                pmid, Reference.ref_types['journal_article'])
-                            r.addRefToGraph(g)
+                                g, pmid, Reference.ref_types['journal_article'])
+                            r.addRefToGraph()
                             assoc.add_source(pmid)
 
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
                 else:
                     # these are unmapped to a disease id.
                     # note that some match OMIM disease labels
@@ -217,10 +213,6 @@ class Decipher(Source):
             "gene-disorder associations with no omim id: %d",
             unmapped_omim_counter)
         logger.warning("unmapped gene count: %d", unmapped_gene_count)
-
-        gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
-        gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
 
         return
 
@@ -278,12 +270,10 @@ class Decipher(Source):
         # make the allele
         allele_id = ''.join((gene_id, type_id))
         allele_id = re.sub(r':', '', allele_id)
-        allele_id = '_'+allele_id  # make this a BNode
-        if self.nobnodes:
-            allele_id = ':'+allele_id
+        allele_id = '_:'+allele_id  # make this a BNode
         allele_label = ' '.join((consequence, 'allele in', gene_symbol))
 
-        self.gu.addIndividualToGraph(self.g, allele_id, allele_label, type_id)
+        self.model.addIndividualToGraph(allele_id, allele_label, type_id)
         self.geno.addAlleleOfGene(allele_id, gene_id)
 
         return allele_id

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class PantherTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = Panther()
+        self.source = Panther('rdf_graph', True)
         self.source.test_ids = self._get_conf()['test_ids']['protein']
         self.source.settestonly(True)
         self._setDirToSource()

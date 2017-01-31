@@ -25,9 +25,8 @@ class MyDrug(Source):
         }
     }
 
-    def __init__(self):
-        super().__init__('mydrug')
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'mydrug')
 
         self.dataset = Dataset(
             'MyDrug', 'Drugs and Compounds in BioThings',

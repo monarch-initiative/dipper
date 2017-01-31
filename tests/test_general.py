@@ -2,7 +2,7 @@
 
 import unittest
 import logging
-from rdflib import Graph
+from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map
 
 logging.basicConfig(level=logging.DEBUG)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class GeneralGraphTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.graph = Graph()
+        self.graph = RDFGraph()
         self.curie_map = curie_map.get()
 
     def tearDown(self):
@@ -46,7 +46,7 @@ class GeneralGraphTestCase(unittest.TestCase):
 
         """
         import os
-        vg = Graph()
+        vg = RDFGraph()
         p = os.path.abspath(f)
         logger.info("Testing reading turtle file from %s", p)
         vg.parse(f, format="turtle")

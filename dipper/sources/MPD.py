@@ -79,13 +79,11 @@ class MPD(Source):
     mgd_agent_label = "Mouse Phenotype Database"
     mgd_agent_type = "foaf:organization"
 
-    def __init__(self):
-        Source.__init__(self, 'mpd')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        Source.__init__(self, graph_type, are_bnodes_skolemized, 'mpd')
         # @N, not sure if this step is required
         self.namespaces.update(curie_map.get())
         self.stdevthreshold = 2
-
-        self.nobnodes = True  # FIXME
 
         # update the dataset object with details about this resource
         # @N: Note that there is no license as far as I can tell
@@ -150,14 +148,7 @@ class MPD(Source):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
-
         gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadProperties(g, G2PAssoc.object_properties, GraphUtils.OBJPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, GraphUtils.OBJPROP)
-        gu.loadProperties(
-            g, G2PAssoc.annotation_properties, GraphUtils.ANNOTPROP)
 
         logger.info("Found %d nodes", len(self.graph))
         return
@@ -445,10 +436,6 @@ class MPD(Source):
             sex_specific_genotype_label = strain_label + ' (' + sex + ')'
         else:
             sex_specific_genotype_label = strain_id + '(' + sex + ')'
-
-        if self.nobnodes:
-            genotype_id = ':'+genotype_id
-            sex_specific_genotype_id = ':'+sex_specific_genotype_id
 
         genotype_type = Genotype.genoparts['sex_qualified_genotype']
         if sex == 'm':

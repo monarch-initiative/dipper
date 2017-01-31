@@ -85,10 +85,8 @@ class HPOAnnotations(Source):
         "ITM": "ECO:0000246",
     }
 
-    def __init__(self):
-        Source.__init__(self, 'hpoa')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'hpoa')
 
         self.dataset = Dataset(
             'hpoa', 'Human Phenotype Ontology',

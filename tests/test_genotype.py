@@ -2,8 +2,8 @@
 
 import unittest
 import logging
-from rdflib import Graph
 from dipper.models.Genotype import Genotype
+from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map
 
 logging.basicConfig(level=logging.DEBUG)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class GenotypeTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.graph = Graph()
+        self.graph = RDFGraph()
         self.curie_map = curie_map.get()
         self.genotype = Genotype(self.graph)
 

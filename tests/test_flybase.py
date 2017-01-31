@@ -11,9 +11,8 @@ logger = logging.getLogger(__name__)
 
 class FlyBaseTestCase(SourceTestCase):
     def setUp(self):
-        self.source = FlyBase()
+        self.source = FlyBase('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 
@@ -29,13 +28,13 @@ class FlyBaseTestCase(SourceTestCase):
         :return:
         """
         cvterm_list = {
-            132223: 'derived_sf_assoc_alleles',
-            132216: 'derived_tp_assoc_alleles',
+            133533: 'derived_sf_assoc_alleles',
+            133526: 'derived_tp_assoc_alleles',
             59983: 'associated_with',
             27: 'producedby',
             60095: 'gets_expression_data_from',
             60384: 'alleleof',
-            132241: 'linked_image'
+            133551: 'linked_image'
         }
 
         # TODO check if cvterm file is there first

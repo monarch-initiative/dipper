@@ -144,11 +144,10 @@ class Monochrom(Source):
         'chromosome_part': Feature.types['chromosome_part']
     }
 
-    def __init__(self, tax_ids=None):
-        super().__init__('monochrom')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'monochrom')
 
         self.tax_ids = tax_ids
-        self.load_bindings()
         self.gu = GraphUtils(curie_map.get())
 
         # Defaults
@@ -215,8 +214,6 @@ class Monochrom(Source):
         # add the taxon as a class.  adding the class label elsewhere
         self.gu.addClassToGraph(self.graph, taxon_id, None)
         self.gu.addSynonym(self.graph, taxon_id, genome_label)
-
-        self.gu.loadObjectProperties(self.graph, Feature.object_properties)
 
         genome_id = geno.makeGenomeID(taxon_id)
         geno.addGenome(taxon_id, genome_label)
@@ -363,8 +360,6 @@ class Monochrom(Source):
 
                 if limit is not None and line_counter > limit:
                     break
-
-        self.gu.loadAllProperties(self.graph)
 
         # TODO figure out the staining intensities for the encompassing bands
 

@@ -7,6 +7,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
+from dipper.models.Family import Family
 from dipper.models.Reference import Reference
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Pathway import Pathway
@@ -103,8 +104,8 @@ class KEGG(Source):
             "ko:K00010", "ko:K00027", "ko:K00042", "ko:K00088"]
     }
 
-    def __init__(self):
-        Source.__init__(self, 'kegg')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'kegg')
 
         # update the dataset object with details about this resource
         self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/',
@@ -170,8 +171,6 @@ class KEGG(Source):
 
         logger.info("Finished parsing")
 
-        self.load_bindings()
-
         logger.info("Found %d nodes", len(self.graph))
         return
 
@@ -197,7 +196,7 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        path = Pathway(g, self.nobnodes)
+        path = Pathway(g)
         gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -300,6 +299,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
+        family = Family(g)
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -349,7 +349,7 @@ class KEGG(Source):
                     ko_match = re.search(r'K\d+', ko_part)
                     if ko_match is not None and len(ko_match.groups()) == 1:
                         ko = 'KEGG-ko:'+ko_match.group(1)
-                        gu.addMemberOf(g, gene_id, ko)
+                        family.addMemberOf(gene_id, ko)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -453,7 +453,6 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
         gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -510,7 +509,6 @@ class KEGG(Source):
         geno = Genotype(g)
         gu = GraphUtils(curie_map.get())
         rel = gu.object_properties['is_marker_for']
-        gu.loadAllProperties(g)
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -640,10 +638,6 @@ class KEGG(Source):
                     break
 
         logger.info("Done with OMIM to KEGG gene")
-        gu.loadProperties(
-            g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
 
         return
 
@@ -929,7 +923,7 @@ class KEGG(Source):
                 pathway_id = 'KEGG-'+pathway_id
                 ko_id = 'KEGG-'+ko_id
 
-                p = Pathway(g, self.nobnodes)
+                p = Pathway(g)
                 p.addGeneToPathway(pathway_id, ko_id)
 
                 if not self.testMode and \

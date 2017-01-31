@@ -1,8 +1,7 @@
 import logging
 import re
-
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
+from dipper.models.Family import Family
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 
 __author__ = 'nlw'
@@ -136,16 +135,9 @@ class Genotype():
     properties = object_properties.copy()
     properties.update(annotation_properties)
 
-    def __init__(self, graph, nobnodes=False):
-
-        self.gu = GraphUtils(curie_map.get())
-
+    def __init__(self, graph):
         self.graph = graph
-
-        self.gu.loadProperties(self.graph, self.object_properties,
-                               self.gu.OBJPROP)
-
-        self.nobnodes = nobnodes
+        self.model = Model(self.graph)
 
         return
 
@@ -165,9 +157,8 @@ class Genotype():
         if genotype_type is None:
             genotype_type = self.genoparts['intrinsic_genotype']
 
-        self.gu.addIndividualToGraph(self.graph, genotype_id, genotype_label,
-                                     genotype_type, genotype_description)
-
+        self.model.addIndividualToGraph(
+            genotype_id, genotype_label, genotype_type, genotype_description)
         return
 
     def addAllele(
@@ -187,8 +178,8 @@ class Genotype():
         # TODO should we accept a list of allele types?
         if allele_type is None:
             allele_type = self.genoparts['allele']  # TODO is this a good idea?
-        self.gu.addIndividualToGraph(self.graph, allele_id, allele_label,
-                                     allele_type, allele_description)
+        self.model.addIndividualToGraph(
+            allele_id, allele_label, allele_type, allele_description)
 
         return
 
@@ -198,8 +189,8 @@ class Genotype():
         if gene_type is None:
             gene_type = self.genoparts['gene']
         # genes are classes
-        self.gu.addClassToGraph(self.graph, gene_id, gene_label, gene_type,
-                                gene_description)
+        self.model.addClassToGraph(
+            gene_id, gene_label, gene_type, gene_description)
 
         return
 
@@ -208,8 +199,8 @@ class Genotype():
         # TODO add base type for construct
         # if (constrcut_type is None):
         #    constrcut_type=self.construct_base_type
-        self.gu.addIndividualToGraph(self.graph, construct_id, construct_label,
-                                     construct_type, construct_description)
+        self.model.addIndividualToGraph(construct_id, construct_label,
+                                        construct_type, construct_description)
 
         return
 
@@ -226,17 +217,14 @@ class Genotype():
         :return:
         """
 
-        self.gu.addTriple(
-            self.graph, child_id, self.properties['derives_from'],
-            parent_id)
+        self.graph.addTriple(
+            child_id, self.properties['derives_from'], parent_id)
 
         return
 
     def addSequenceDerivesFrom(self, child_id, parent_id):
-        self.gu.addTriple(
-            self.graph, child_id,
-            self.properties['derives_sequence_from_gene'],
-            parent_id)
+        self.graph.addTriple(
+            child_id, self.properties['derives_sequence_from_gene'], parent_id)
         return
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
@@ -253,7 +241,7 @@ class Genotype():
         """
         if rel_id is None:
             rel_id = self.properties['is_sequence_variant_instance_of']
-        self.gu.addTriple(self.graph, allele_id, rel_id, gene_id)
+        self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
     def addTranscript(
@@ -268,10 +256,10 @@ class Genotype():
         :return:
         """
 
-        self.gu.addIndividualToGraph(self.graph, transcript_id,
-                                     transcript_label, transcript_type)
-        self.gu.addTriple(self.graph, variant_id,
-                          self.properties['transcribed_to'], transcript_id)
+        self.model.addIndividualToGraph(
+            transcript_id, transcript_label, transcript_type)
+        self.graph.addTriple(
+            variant_id, self.properties['transcribed_to'], transcript_id)
 
         return
 
@@ -288,11 +276,12 @@ class Genotype():
 
         if polypeptide_type is None:
             polypeptide_type = self.genoparts['polypeptide']
-        self.gu.addIndividualToGraph(self.graph, polypeptide_id,
-                                     polypeptide_label, polypeptide_type)
+        self.model.addIndividualToGraph(
+            polypeptide_id, polypeptide_label, polypeptide_type)
         if transcript_id is not None:
-            self.gu.addTriple(self.graph, transcript_id,
-                              self.properties['translates_to'], polypeptide_id)
+            self.graph.addTriple(
+                transcript_id, self.properties['translates_to'],
+                polypeptide_id)
 
         return
 
@@ -315,7 +304,6 @@ class Genotype():
         """
 
         # vslc has parts allele1/allele2
-        gu = self.gu
 
         # vslc = gu.getNode(vslc_id)  # TODO unused
         if allele1_id is not None:
@@ -331,8 +319,8 @@ class Genotype():
                 zygosity_id = self.zygosity['heterozygous']
 
         if zygosity_id is not None:
-            gu.addTriple(self.graph, vslc_id, self.properties['has_zygosity'],
-                         zygosity_id)
+            self.graph.addTriple(
+                vslc_id, self.properties['has_zygosity'], zygosity_id)
 
         return
 
@@ -365,7 +353,7 @@ class Genotype():
         if part_relationship is None:
             part_relationship = self.properties['has_part']
 
-        self.gu.addTriple(self.graph, parent_id, part_relationship, part_id)
+        self.graph.addTriple(parent_id, part_relationship, part_id)
 
         return
 
@@ -373,8 +361,8 @@ class Genotype():
             self, sa_id, sa_label, sa_type=None, sa_description=None):
         if sa_type is None:
             sa_type = self.genoparts['sequence_alteration']
-        self.gu.addIndividualToGraph(self.graph, sa_id, sa_label, sa_type,
-                                     sa_description)
+        self.model.addIndividualToGraph(
+            sa_id, sa_label, sa_type, sa_description)
 
         return
 
@@ -387,8 +375,8 @@ class Genotype():
             background_type=None, background_description=None):
         if background_type is None:
             background_type = self.genoparts['genomic_background']
-        self.gu.addIndividualToGraph(
-            self.graph, background_id, background_label, background_type,
+        self.model.addIndividualToGraph(
+            background_id, background_label, background_type,
             background_description)
 
         return
@@ -397,7 +385,7 @@ class Genotype():
             self, background_id, genotype_id, background_type=None):
         if background_type is None:
             background_type = self.genoparts['genomic_background']
-        self.gu.addType(self.graph, background_id, background_type)
+        self.model.addType(background_id, background_type)
         self.addParts(background_id, genotype_id,
                       self.object_properties['has_reference_part'])
 
@@ -414,17 +402,16 @@ class Genotype():
         :param genopart_id:
         :return:
         """
-        in_taxon = self.gu.getNode(self.properties['in_taxon'])
-        s = self.gu.getNode(genopart_id)
-        self.graph.add((s, in_taxon, self.gu.getNode(taxon_id)))
+        self.graph.addTriple\
+            (genopart_id, self.properties['in_taxon'], taxon_id)
 
         return
 
     def addGeneTargetingReagentToGenotype(self, reagent_id, genotype_id):
         # for example, add a morphant reagent thingy to the genotype,
         # assuming it's a extrinsic_genotype
-        p = self.object_properties['has_variant_part']
-        self.gu.addTriple(self.graph, genotype_id, p, reagent_id)
+        self.graph.addTriple(
+            genotype_id, self.properties['has_variant_part'], reagent_id)
 
         return
 
@@ -441,12 +428,11 @@ class Genotype():
         """
 
         # TODO add default type to reagent_type
-        self.gu.addIndividualToGraph(self.graph, reagent_id, reagent_label,
-                                     reagent_type, description)
+        self.model.addIndividualToGraph(
+            reagent_id, reagent_label, reagent_type, description)
 
-        self.gu.addTriple(
-            self.graph, reagent_id,
-            self.object_properties['targets_instance_of'], gene_id)
+        self.graph.addTriple(
+            reagent_id, self.object_properties['targets_instance_of'], gene_id)
 
         return
 
@@ -477,19 +463,18 @@ class Genotype():
         if targeted_gene_id is None:
             targeted_gene_id = '_' + gene_id + '-' + reagent_id
             targeted_gene_id = targeted_gene_id.replace(":", "")
-        self.gu.addIndividualToGraph(
-            self.graph, targeted_gene_id, targeted_gene_label,
+        self.model.addIndividualToGraph(
+            targeted_gene_id, targeted_gene_label,
             self.genoparts['reagent_targeted_gene'], description)
 
         if gene_id is not None:
-            self.gu.addTriple(
-                self.graph, targeted_gene_id,
+            self.graph.addTriple(
+                targeted_gene_id,
                 self.object_properties['is_targeted_expression_variant_of'],
                 gene_id)
 
-        self.gu.addTriple(
-            self.graph, targeted_gene_id,
-            self.object_properties['targeted_by'], reagent_id)
+        self.graph.addTriple(
+            targeted_gene_id, self.properties['targeted_by'], reagent_id)
 
         return
 
@@ -497,14 +482,14 @@ class Genotype():
             self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
         if tgs_type is None:
             tgs_type = self.genoparts['targeted_gene_subregion']
-        self.gu.addIndividualToGraph(self.graph, tgs_id, tgs_label, tgs_type,
-                                     tgs_description)
+        self.model.addIndividualToGraph(
+            tgs_id, tgs_label, tgs_type, tgs_description)
 
-    def addMemberOfPopulation(
-            self, member_id, population_id):
-        self.gu.addTriple(
-            self.graph, population_id,
-            self.properties['has_member_with_allelotype'], member_id)
+    def addMemberOfPopulation(self, member_id, population_id):
+        self.graph.addTriple(
+            population_id,
+            self.properties['has_member_with_allelotype'],
+            member_id)
 
         return
 
@@ -512,8 +497,8 @@ class Genotype():
             self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
         if tgc_type is None:
             tgc_type = self.genoparts['targeted_gene_complement']
-        self.gu.addIndividualToGraph(
-            self.graph, tgc_id, tgc_label, tgc_type, tgc_description)
+        self.model.addIndividualToGraph(
+            tgc_id, tgc_label, tgc_type, tgc_description)
 
         return
 
@@ -522,17 +507,16 @@ class Genotype():
             taxon_label = taxon_id
         genome_label = taxon_label+' genome'
         genome_id = self.makeGenomeID(taxon_id)
-        self.gu.addClassToGraph(
-            self.graph, genome_id, genome_label, Feature.types['genome'])
+        self.model.addClassToGraph(
+            genome_id, genome_label, Feature.types['genome'])
 
         return
 
     def addReferenceGenome(self, build_id, build_label, taxon_id):
         genome_id = self.makeGenomeID(taxon_id)
-        self.gu.addIndividualToGraph(
-            self.graph, build_id, build_label,
-            Feature.types['reference_genome'])
-        self.gu.addType(self.graph, build_id, genome_id)
+        self.model.addIndividualToGraph(
+            build_id, build_label, Feature.types['reference_genome'])
+        self.model.addType(build_id, genome_id)
         self.addTaxon(taxon_id, build_id)
 
         return
@@ -554,7 +538,7 @@ class Genotype():
         build-specific chromosome an instance of the supplied chr.
         The chr then becomes part of the build or genome.
         """
-
+        family = Family()
         # first, make the chromosome class, at the taxon level
         chr_id = makeChromID(str(chr), tax_id)
         if tax_label is not None:
@@ -562,8 +546,8 @@ class Genotype():
         else:
             chr_label = makeChromLabel(chr)
         genome_id = self.makeGenomeID(tax_id)
-        self.gu.addClassToGraph(
-            self.graph, chr_id, chr_label, Feature.types['chromosome'])
+        self.model.addClassToGraph(
+            chr_id, chr_label, Feature.types['chromosome'])
         self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
 
         if build_id is not None:
@@ -573,13 +557,13 @@ class Genotype():
                 build_label = build_id
             chrinbuild_label = makeChromLabel(chr, build_label)
             # add the build-specific chromosome as an instance of the chr class
-            self.gu.addIndividualToGraph(self.graph, chrinbuild_id,
-                                         chrinbuild_label, chr_id)
+            self.model.addIndividualToGraph(
+                chrinbuild_id, chrinbuild_label, chr_id)
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
-            self.gu.addMember(self.graph, build_id, chrinbuild_id)
-            self.gu.addMemberOf(self.graph, chrinbuild_id, build_id)
+            family.addMember(build_id, chrinbuild_id)
+            family.addMemberOf(chrinbuild_id, build_id)
 
         return
 
@@ -588,8 +572,8 @@ class Genotype():
         # the chrom class (generic) id
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
-        self.gu.addClassToGraph(self.graph, chrom_class_id, chrom_class_label,
-                                Feature.types['chromosome'])
+        self.model.addClassToGraph(
+            chrom_class_id, chrom_class_label, Feature.types['chromosome'])
 
         return
 
@@ -604,19 +588,19 @@ class Genotype():
             typically a genome-specific chr
         :return:
         """
-
+        family = Family(self.graph)
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-        self.gu.addIndividualToGraph(self.graph, chr_id, chr_label,
-                                     Feature.types['chromosome'])
+        self.model.addIndividualToGraph(
+            chr_id, chr_label, Feature.types['chromosome'])
         if chr_type is not None:
-            self.gu.addType(self.graph, chr_id, chr_type)
+            self.model.addType(chr_id, chr_type)
 
         # add the build-specific chromosome
         # as a member of the build  (both ways)
-        self.gu.addMember(self.graph, reference_id, chr_id)
-        self.gu.addMemberOf(self.graph, chr_id, reference_id)
+        family.addMember(reference_id, chr_id)
+        family.addMemberOf(chr_id, reference_id)
 
         return
 
@@ -652,20 +636,17 @@ class Genotype():
 
         return vslc_label
 
-    def make_experimental_model_with_genotype(self, g, genotype_id,
+    def make_experimental_model_with_genotype(self, genotype_id,
                                               genotype_label, taxon_id,
                                               taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)
-        animal_id = '_'+animal_id
-        if self.nobnodes:
-            animal_id = ':'+animal_id
+        animal_id = '_:'+animal_id
 
         animal_label = ' '.join((genotype_label, taxon_label))
-        self.gu.addIndividualToGraph(g, animal_id, animal_label, taxon_id)
-        self.gu.addTriple(g, animal_id,
-                          Genotype.object_properties['has_genotype'],
-                          genotype_id)
+        self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
+        self.graph.addTriple(
+            animal_id, Genotype.object_properties['has_genotype'], genotype_id)
 
         return animal_id

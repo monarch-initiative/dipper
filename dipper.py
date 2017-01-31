@@ -71,6 +71,9 @@ def main():
         description='Dipper: Data Ingestion Pipeline for SciGraph',
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
+        '-g', '--graph', type=str, default="rdf_graph",
+        help='graph type: rdf_graph, streamed_graph')
+    parser.add_argument(
         '-s', '--sources', type=str, required=True,
         help='comma separated list of sources')
     parser.add_argument(
@@ -99,7 +102,7 @@ def main():
     # BNodes can't be visualized in Protege,
     # so you can materialize them for testing purposes with this flag
     parser.add_argument(
-        '-nb', '--no_bnodes',
+        '-nb', '--skolemize_bnodes',
         help="convert blank nodes into identified nodes", action="store_true")
 
     # TODO this preconfiguration should probably live in the conf.json,
@@ -145,7 +148,7 @@ def main():
         else:
             logging.basicConfig(level=logging.INFO)
 
-    if args.no_bnodes is True:
+    if args.skolemize_bnodes is True:
         logger.info("Will materialize all BNodes into BASE space")
 
     if args.query is not None:
@@ -194,9 +197,9 @@ def main():
         source_class = getattr(imported_module, src)
         mysource = None
         if src in taxa_supported:
-            mysource = source_class(tax_ids)
+            mysource = source_class(args.graph, args.skolemize_bnodes, tax_ids)
         else:
-            mysource = source_class()
+            mysource = source_class(args.graph, args.skolemize_bnodes)
         if args.parse_only is False:
             start_fetch = time.clock()
             mysource.fetch(args.force)
@@ -204,7 +207,6 @@ def main():
             logger.info("Fetching time: %d sec", end_fetch-start_fetch)
 
         mysource.settestonly(args.test_only)
-        mysource.setnobnodes(args.no_bnodes)
 
         # run tests first
         if (args.no_verify or args.skip_tests) is not True:
@@ -222,15 +224,16 @@ def main():
             mysource.parse(args.limit)
             end_parse = time.clock()
             logger.info("Parsing time: %d sec", end_parse-start_parse)
-            # Add property axioms
-            start_axiom_exp = time.clock()
-            logger.info("Adding property axioms")
+            if args.graph == 'rdf_graph':
+                # Add property axioms
+                start_axiom_exp = time.clock()
+                logger.info("Adding property axioms")
 
-            properties = GraphUtils.get_properties_from_graph(mysource.graph)
-            GraphUtils.add_property_axioms(mysource.graph, properties)
-            end_axiom_exp = time.clock()
-            logger.info("Property axioms added: %d sec",
-                        end_axiom_exp-start_axiom_exp)
+                properties = GraphUtils.get_properties_from_graph(mysource.graph)
+                GraphUtils.add_property_axioms(mysource.graph, properties)
+                end_axiom_exp = time.clock()
+                logger.info("Property axioms added: %d sec",
+                            end_axiom_exp-start_axiom_exp)
 
             start_write = time.clock()
             mysource.write(format=args.format)

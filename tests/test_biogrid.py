@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class BioGridTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = BioGrid()
+        self.source = BioGrid('rdf_graph', True)
         self.source.settestonly(True)
         self.source.test_ids = self._get_conf()['test_ids']['gene']
         self._setDirToSource()

@@ -28,10 +28,8 @@ class Orphanet(Source):
             'url': 'http://www.orphadata.org/data/xml/en_product6.xml'}
     }
 
-    def __init__(self):
-        Source.__init__(self, 'orphanet')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'orphanet')
 
         self.dataset = Dataset(
             'orphanet', 'Orphanet', 'http://www.orpha.net', None,
@@ -198,12 +196,6 @@ class Orphanet(Source):
 
             if self.testMode and limit is not None and line_counter > limit:
                 return
-
-        gu.loadProperties(
-            g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-        gu.loadAllProperties(g)
 
         return
 

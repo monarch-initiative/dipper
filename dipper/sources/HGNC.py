@@ -29,12 +29,11 @@ class HGNC(Source):
             'url': 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt'},
     }
 
-    def __init__(self, tax_ids=None, gene_ids=None):
-        Source.__init__(self, 'hgnc')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
+        super.__init__(graph_type, are_bnodes_skolemized, 'hgnc')
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
-        self.load_bindings()
 
         self.dataset = Dataset(
             'hgnc', 'HGNC', 'http://www.genenames.org', None)
@@ -152,7 +151,7 @@ class HGNC(Source):
                     chrom_id = makeChromID(chrom, 'NCBITaxon:9606', 'CHR')
                     band_pattern = r'([pq][A-H\d]?\d?(?:\.\d+)?)'
                     band_match = re.search(band_pattern, location)
-                    f = Feature(hgnc_id, None, None)
+                    f = Feature(g, hgnc_id, None, None)
                     if band_match is not None and len(band_match.groups()) > 0:
                         band = band_match.group(1)
                         band = chrom + band
@@ -162,21 +161,16 @@ class HGNC(Source):
                         # TEC Monoch? Monarchdom??
                         band_id = makeChromID(band, 'NCBITaxon:9606', 'CHR')
                         gu.addClassToGraph(g, band_id, None)
-                        f.addSubsequenceOfFeature(g, band_id)
+                        f.addSubsequenceOfFeature(band_id)
                     else:
                         gu.addClassToGraph(g, chrom_id, None)
-                        f.addSubsequenceOfFeature(g, chrom_id)
+                        f.addSubsequenceOfFeature(chrom_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
 
             # end loop through file
-
-        gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
-        gu.loadProperties(g, Genotype.object_properties, gu.OBJPROP)
-        gu.loadAllProperties(g)
 
         return
 

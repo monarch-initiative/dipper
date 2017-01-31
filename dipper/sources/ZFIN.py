@@ -263,8 +263,8 @@ class ZFIN(Source):
             "ZDB-FISH-150901-1409"]
     }
 
-    def __init__(self):
-        Source.__init__(self, 'zfin')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        Source.__init__(self, graph_type, are_bnodes_skolemized, 'zfin')
         # update the dataset object with details about this resource
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org', None,
                                'http://zfin.org/warranty.html')
@@ -387,10 +387,7 @@ class ZFIN(Source):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
         gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, Genotype.object_properties)
 
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
@@ -2293,9 +2290,8 @@ class ZFIN(Source):
                     geno.addChromosomeInstance(chromosome, panel_id,
                                                panel_label, chr_id)
                     # add the feature to the mapping-panel chromosome
-                    f = Feature(zfin_id, None, None)
-                    f.addSubsequenceOfFeature(g, chr_inst_id)
-                    f.loadAllProperties(g)
+                    f = Feature(g, zfin_id, None, None)
+                    f.addSubsequenceOfFeature(chr_inst_id)
                     # TODO add the coordinates see:
                     # https://github.com/JervenBolleman/FALDO/issues/24
                 else:
@@ -2479,10 +2475,10 @@ class ZFIN(Source):
                 chrom_in_build = makeChromID(chrom, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chrom, build_id, build_label, chrom_id)
-                f = Feature(gene_id, None, None)
+                f = Feature(g, gene_id, None, None)
                 f.addFeatureStartLocation(start, chrom_in_build, strand)
                 f.addFeatureEndLocation(end, chrom_in_build, strand)
-                f.addFeatureToGraph(g, True, None, True)
+                f.addFeatureToGraph(True, None, True)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -2542,7 +2538,7 @@ class ZFIN(Source):
                 if environment_label is None:
                     environment_label = environment_id
                 geno.make_experimental_model_with_genotype(
-                    g, fish_id, fish_label, fish_taxon, 'zebrafish')
+                    fish_id, fish_label, fish_taxon, 'zebrafish')
 
                 assoc = Assoc(self.name)
 

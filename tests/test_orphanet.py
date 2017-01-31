@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class OrphanetTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = Orphanet()
+        self.source = Orphanet('rdf_graph', True)
         self.source.settestonly(True)
         self.source.setnobnodes(True)
         self._setDirToSource()

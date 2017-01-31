@@ -7,6 +7,7 @@ import urllib
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
+from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID
@@ -89,10 +90,8 @@ class OMIM(Source):
         # disease with known locus
         102480]
 
-    def __init__(self):
-        Source.__init__(self, 'omim')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        Source.__init__(self, graph_type, are_bnodes_skolemized, 'omim')
 
         self.dataset = Dataset(
             'omim', 'Online Mendelian Inheritance in Man',
@@ -311,9 +310,6 @@ class OMIM(Source):
                 logger.info("waiting %d sec", rem)
                 time.sleep(rem/1000)
 
-        if graph is not None:
-            gu.loadAllProperties(graph)
-
         return processed_entries
 
     def _process_all(self, limit):
@@ -357,8 +353,6 @@ class OMIM(Source):
 
         self.process_entries(
             omimids, self._transform_entry, includes, g, limit)
-
-        self.gu.loadAllProperties(g)
 
         return
 
@@ -491,7 +485,7 @@ class OMIM(Source):
                         # not sure if saying subsequence of feature
                         # is the right relationship
 
-                        f = Feature(feature_id, feature_label, omimtype)
+                        f = Feature(g, feature_id, feature_label, omimtype)
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
@@ -697,10 +691,6 @@ class OMIM(Source):
                         limit is not None and line_counter > limit:
                     break
 
-            gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
-            gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
-            gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
-            gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
             logger.info("Added %d G2P associations", assoc_count)
 
         return
@@ -795,6 +785,8 @@ class OMIM(Source):
 
     def _get_process_allelic_variants(self, entry, g):
         gu = GraphUtils(curie_map.get())
+        model = Model(self.graph)
+        reference = Reference(self.graph)
         geno = Genotype(g)
         if entry is not None:
             # to hold the entry-specific publication mentions
@@ -853,8 +845,8 @@ class OMIM(Source):
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:'+rnum
                                 gu.addXref(g, al_id, rid)
-                        gu.addPage(
-                            g, al_id, "http://omim.org/entry/" +
+                        reference.addPage(
+                            al_id, "http://omim.org/entry/" +
                             str(entry_num)+"#" + str(al_num).zfill(4))
                     elif re.search(
                             r'moved', al['allelicVariant']['status']):
@@ -1120,7 +1112,8 @@ class OMIM(Source):
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
                     ref = \
                         Reference(
-                            pub_id, Reference.ref_types['journal_article'])
+                            self.graph, pub_id,
+                            Reference.ref_types['journal_article'])
                 else:
                     # make blank node for internal reference
                     pub_id = \
@@ -1128,7 +1121,7 @@ class OMIM(Source):
                         str(r['reference']['referenceNumber'])
                     if self.nobnodes:
                         pub_id = ':' + pub_id
-                    ref = Reference(pub_id)
+                    ref = Reference(self.graph, pub_id)
                     title = author_list = source = citation = None
                     if 'title' in r['reference']:
                         title = r['reference']['title']

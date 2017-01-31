@@ -100,8 +100,8 @@ class IMPC(Source):
         "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571",
         "MGI:2152453", "MGI:1098270"]
 
-    def __init__(self):
-        Source.__init__(self, 'impc')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'impc')
 
         # update the dataset object with details about this resource
         self.dataset = Dataset(
@@ -161,8 +161,6 @@ class IMPC(Source):
 
         geno = Genotype(g)
         line_counter = 0
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, geno.object_properties)
 
         impc_map = self.open_and_parse_yaml(self.map_files['impc_map'])
         impress_map = json.loads(

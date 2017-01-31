@@ -351,67 +351,6 @@ class GraphUtils:
             g, member_id, self.properties['member_of'], group_id)
         return
 
-    def addInvolvedIn(self, g, member_id, group_id):
-        self.addTriple(
-            g, member_id, self.properties['involved_in'], group_id)
-
-    def write(self, graph, fileformat=None, file=None):
-        """
-         a basic graph writer (to stdout) for any of the sources.
-         this will write raw triples in rdfxml, unless specified.
-         to write turtle, specify format='turtle'
-         an optional file can be supplied instead of stdout
-        :return: None
-
-        """
-        filewriter = None
-        if fileformat is None:
-            fileformat = 'rdfxml'
-        if file is not None:
-            filewriter = open(file, 'wb')
-
-            logger.info("Writing triples in %s to %s", fileformat, file)
-            graph.serialize(filewriter, format=fileformat)
-            filewriter.close()
-        else:
-            print(graph.serialize(format=fileformat).decode())
-        return
-
-    def write_raw_triples(self, graph, file=None):
-        """
-         a basic graph writer (to stdout) for any of the sources.
-         this will write raw triples in rdfxml, unless specified.
-         to write turtle, specify format='turtle'
-         an optional file can be supplied instead of stdout
-        :return: None
-        """
-        filewriter = None
-        if file is not None:
-            filewriter = open(file, 'w')
-            logger.info("Writing raw triples to %s", file)
-
-        for (s, p, o) in graph:
-            output = [s, p, o]
-
-            print(' '.join(output), file=filewriter)
-
-        if filewriter is not None:
-            filewriter.close()
-
-        return
-
-    def write_compact_triples(self, graph, file=None):
-        """
-        Will write out the raw triples,
-        except it will replace the full uri with the curie prefix
-        :param graph:
-        :param file:
-        :return:
-        """
-        # TODO
-
-        return
-
     def _getNode(self, curie, materialize_bnode):
         """
         This is a wrapper for creating a node with a given identifier.
@@ -462,57 +401,6 @@ class GraphUtils:
                  self.getNode(object_id)))
         return
 
-    def loadObjectProperties(self, graph, op):
-        """
-        Given a graph, it will load the supplied object properties
-        as owl['ObjectProperty'] types
-        A convenience.
-        Status: DEPRECATED.  See loadProperties().
-        :param graph:
-        :param op: a dictionary of object properties
-        :return: None
-
-        """
-        self.loadProperties(graph, op, self.OBJPROP)
-        return
-
-    def loadProperties(self, graph, op, property_type):
-        """
-        DEPRECATED, commenting out until all references can
-        be removed
-
-        Given a graph, it will load the supplied object properties
-        as the given property_type.
-        :param graph: a graph
-        :param op: a dictionary of object properties
-        :param property_type: one of OWL:(Annotation|Data|Object)Property
-        :return: None
-
-        """
-
-        if property_type not in [self.OBJPROP, self.ANNOTPROP, self.DATAPROP]:
-            logger.error(
-                "bad property type assigned: %s, %s", property_type, op)
-        else:
-            for k in op:
-                graph.add(
-                    (self.getNode(op[k]), RDF['type'], property_type))
-        return
-
-    def loadAllProperties(self, graph):
-        """
-        A convenience to load all stored properties
-        (object, data, and annotation) into the supplied graph.
-        :param graph:
-        :return:
-
-        """
-
-        self.loadProperties(graph, self.object_properties, self.OBJPROP)
-        self.loadProperties(graph, self.annotation_properties, self.ANNOTPROP)
-        self.loadProperties(graph, self.datatype_properties, self.DATAPROP)
-        return
-
     def addOntologyDeclaration(self, graph, ontology_id):
 
         graph.add((self.getNode(ontology_id), RDF['type'], OWL['Ontology']))
@@ -543,6 +431,28 @@ class GraphUtils:
         self.addTriple(
             graph, node_id, self.annotation_properties['clique_leader'],
             Literal(True, datatype=XSD['boolean']), True)
+        return
+
+    def write(self, graph, fileformat=None, file=None):
+        """
+         a basic graph writer (to stdout) for any of the sources.
+         this will write raw triples in rdfxml, unless specified.
+         to write turtle, specify format='turtle'
+         an optional file can be supplied instead of stdout
+        :return: None
+
+        """
+        filewriter = None
+        if fileformat is None:
+            fileformat = 'rdfxml'
+        if file is not None:
+            filewriter = open(file, 'wb')
+
+            logger.info("Writing triples in %s to %s", fileformat, file)
+            graph.serialize(filewriter, format=fileformat)
+            filewriter.close()
+        else:
+            print(graph.serialize(format=fileformat).decode())
         return
 
     @staticmethod

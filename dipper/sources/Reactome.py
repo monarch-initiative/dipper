@@ -25,8 +25,8 @@ class Reactome(Source):
         'eco_map': '../../resources/eco_map.yaml',
     }
 
-    def __init__(self):
-        super().__init__('reactome')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'reactome')
         self.dataset = Dataset(
             'reactome', 'Reactome', 'http://reactome.org/', None,
             'http://reactome.org/pages/about/license-agreement/')

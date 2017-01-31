@@ -29,7 +29,7 @@ class UDPTestCase(unittest.TestCase):
         for one rsid
         15	51766637	374313651	in-del	-/A/AA/AAA/AAAA/CAAA/TAAA
         """
-        udp = UDP()
+        udp = UDP('rdf_graph', True)
         rs_map = udp._parse_rs_map_file(udp.map_files['dbsnp_map'])
         variant_type = 'indel'
         variant = {

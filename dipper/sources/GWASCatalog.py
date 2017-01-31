@@ -56,10 +56,8 @@ class GWASCatalog(Source):
             'url': 'http://www.ebi.ac.uk/efo/efo.owl'}
     }
 
-    def __init__(self):
-        Source.__init__(self, 'gwascatalog')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
 
         self.dataset = Dataset(
             'gwascatalog', 'GWAS Catalog', 'http://www.ebi.ac.uk/gwas/',
@@ -129,9 +127,6 @@ class GWASCatalog(Source):
 
         line_counter = 0
         geno = Genotype(g)
-
-        gu.loadProperties(g, geno.object_properties, gu.OBJPROP)
-        gu.loadAllProperties(g)
 
         tax_id = 'NCBITaxon:9606'  # hardcode
         genome_version = 'GRCh38'  # hardcode
@@ -253,13 +248,13 @@ class GWASCatalog(Source):
                             ' [risk allele frequency]'
 
                     f = Feature(
-                        rs_id, strongest_snp_risk_allele.strip(),
+                        g, rs_id, strongest_snp_risk_allele.strip(),
                         Feature.types[r'SNP'], snp_description)
                     if chrom_num != '' and chrom_pos != '':
                         f.addFeatureStartLocation(chrom_pos, chrom_id)
                         f.addFeatureEndLocation(chrom_pos, chrom_id)
-                    f.addFeatureToGraph(g)
-                    f.addTaxonToFeature(g, tax_id)
+                    f.addFeatureToGraph()
+                    f.addTaxonToFeature(tax_id)
                     # TODO consider adding allele frequency as property;
                     # but would need background info to do that
 

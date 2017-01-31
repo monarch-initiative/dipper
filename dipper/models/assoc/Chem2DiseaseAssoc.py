@@ -12,8 +12,8 @@ class Chem2DiseaseAssoc(Assoc):
       evidence (str): Evidence curie
     """
 
-    def __init__(self, definedby, chem_id, phenotype_id, rel_id=None):
-        super().__init__(definedby)
+    def __init__(self, graph, definedby, chem_id, phenotype_id, rel_id=None):
+        super().__init__(graph, definedby)
         self.chem_id = chem_id
         self.phenotype_id = phenotype_id
 

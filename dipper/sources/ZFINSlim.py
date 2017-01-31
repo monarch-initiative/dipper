@@ -27,8 +27,8 @@ class ZFINSlim(Source):
         }
     }
 
-    def __init__(self):
-        super().__init__('zfin_slim')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'zfin_slim')
         self.dataset = Dataset(
             'zfin_slim', 'ZFINSlim', 'http://zfin.org/')
 

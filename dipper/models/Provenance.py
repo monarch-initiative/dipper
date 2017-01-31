@@ -1,6 +1,5 @@
 import logging
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ class Provenance:
         'assertion': 'SEPIO:0000001',
         'assay': 'OBI:0000070',
         'organization': 'foaf:organization',
-        'person': GraphUtils.PERSON,
+        'person': 'foaf:person',
         'statistical_hypothesis_test': 'OBI:0000673',
         'mixed_model': 'STATO:0000189',
         'project': 'VIVO:Project',
@@ -52,28 +51,25 @@ class Provenance:
     def __init__(self, graph):
 
         self.graph = graph
-        self.graph_utils = GraphUtils(curie_map.get())
+        self.model = Model(self.graph)
 
         return
 
     def add_study_parts(self, study, study_parts):
         for part in study_parts:
-            self.graph_utils.addTriple(self.graph, study,
-                                       self.graph_utils.object_properties['has_part'],
-                                       part)
+            self.graph.addTriple(
+                study, self.model.object_properties['has_part'], part)
         return
 
     def add_study_to_measurements(self, study, measurements):
         for measurement in measurements:
-            self.graph_utils.addTriple(self.graph, measurement,
-                                       self.object_properties['output_of'],
-                                       study)
+            self.graph.addTriple(
+                measurement, self.object_properties['output_of'], study)
         return
 
     def add_study_measure(self, study, measure):
-        self.graph_utils.addTriple(self.graph, study,
-                                   self.object_properties['measures'],
-                                   measure)
+        self.graph.addTriple(
+            study, self.object_properties['measures'], measure)
         return
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
@@ -85,17 +81,17 @@ class Provenance:
         :param date:
         :return: None
         """
-        self.graph_utils.addIndividualToGraph(
-            self.graph, assertion, None, self.provenance_types['assertion'])
+        self.model.addIndividualToGraph(
+            assertion, None, self.provenance_types['assertion'])
 
         self.add_agent_to_graph(agent, agent_label,
                                 self.provenance_types['organization'])
 
-        self.graph_utils.addTriple(
-            self.graph, assertion, self.object_properties['created_by'], agent)
+        self.graph.addTriple(
+            assertion, self.object_properties['created_by'], agent)
 
         if date is not None:
-            self.graph_utils.addTriple(
+            self.graph.addTriple(
                 self.graph, assertion,
                 self.object_properties['date_created'], date)
 
@@ -106,9 +102,8 @@ class Provenance:
 
         if agent_type is None:
             agent_type = self.provenance_types['organization']
-        self.graph_utils.addIndividualToGraph(self.graph, agent_id,
-                                              agent_label, agent_type,
-                                              agent_description)
+        self.model.addIndividualToGraph(
+            agent_id, agent_label, agent_type, agent_description)
 
         return
 
@@ -116,8 +111,7 @@ class Provenance:
                            assay_description=None):
         if assay_type is None:
             assay_type = self.provenance_types['assay']
-        self.graph_utils.addIndividualToGraph(self.graph, assay_id,
-                                              assay_label, assay_type,
-                                              assay_description)
+        self.model.addIndividualToGraph(
+            assay_id, assay_label, assay_type, assay_description)
 
         return

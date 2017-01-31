@@ -60,10 +60,8 @@ class OMIA(Source):
             'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'},
     }
 
-    def __init__(self):
-        Source.__init__(self, 'omia')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'omia')
 
         self.dataset = Dataset(
             'omia', 'Online Mendelian Inheritance in Animals',

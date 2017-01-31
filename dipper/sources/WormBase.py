@@ -9,10 +9,9 @@ from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.GenomicFeature import makeChromID
+from dipper.models.GenomicFeature import makeChromID, Feature
 from dipper.models.Reference import Reference
-from dipper.utils.GraphUtils import GraphUtils
-from dipper.models.GenomicFeature import Feature
+from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 from dipper import curie_map
 
@@ -111,8 +110,8 @@ class WormBase(Source):
         'pub': []  # FIXME
     }
 
-    def __init__(self):
-        Source.__init__(self, 'wormbase')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'wormbase')
 
         # update the dataset object with details about this resource
         # NO LICENSE for this resource
@@ -198,8 +197,7 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        self.nobnodes = True  # FIXME
+        model = Model(g)
         # to hold any label for a given id
         self.id_label_map = {}
         # to hold the mappings between genotype and background
@@ -224,12 +222,6 @@ class WormBase(Source):
         # self.process_gene_interaction(limit)
 
         logger.info("Finished parsing.")
-
-        self.load_bindings()
-        gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, Genotype.object_properties)
-
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
@@ -243,8 +235,7 @@ class WormBase(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing Gene IDs")
         line_counter = 0
         geno = Genotype(g)
@@ -266,13 +257,13 @@ class WormBase(Source):
                     gene_symbol = gene_synonym
                 if gene_symbol == '':
                     gene_symbol = None
-                gu.addClassToGraph(
-                    g, gene_id, gene_symbol, Genotype.genoparts['gene'])
+                model.addClassToGraph(
+                    gene_id, gene_symbol, Genotype.genoparts['gene'])
                 if live == 'Dead':
-                    gu.addDeprecatedClass(g, gene_id)
+                    model.addDeprecatedClass(gene_id)
                 geno.addTaxon(taxon_id, gene_id)
                 if gene_synonym != '' and gene_synonym is not None:
-                    gu.addSynonym(g, gene_id, gene_synonym)
+                    model.addSynonym(gene_id, gene_synonym)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -287,9 +278,7 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing Gene descriptions")
         line_counter = 0
         # geno = Genotype(g)  # TODO unused
@@ -313,7 +302,7 @@ class WormBase(Source):
                 gene_id = 'WormBase:'+gene_num
 
                 if concise_description != 'none available':
-                    gu.addDefinition(g, gene_id, concise_description)
+                    model.addDefinition(gene_id, concise_description)
 
                 # remove the description if it's identical to the concise
                 descs = {
@@ -330,7 +319,7 @@ class WormBase(Source):
                     else:
                         text = ' '.join((text, '['+d+']'))
                         descs[d] = text
-                        gu.addDescription(g, gene_id, text)
+                        model.addDescription(gene_id, text)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -357,8 +346,6 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        # gu = GraphUtils(curie_map.get())  # TODO unused
 
         logger.info("Processing Allele phenotype associations")
         line_counter = 0
@@ -420,7 +407,7 @@ class WormBase(Source):
                             rnai_num = re.sub(r'WormBase:', '', allele_id)
                             rnai_id = allele_id
                             rtg_id = self.make_reagent_targeted_gene_id(
-                                gene_num, rnai_num, self.nobnodes)
+                                gene_num, rnai_num)
                             geno.addReagentTargetedGene(
                                 rnai_id, 'WormBase:'+gene_num, rtg_id)
                             geno.addGeneTargetingReagent(
@@ -434,9 +421,8 @@ class WormBase(Source):
 
                             # the public name will come from elsewhere
                             geno.addSequenceAlteration(allele_id, None)
-                            vl_id = '_'+'-'.join((gene_num, allele_num))
-                            if self.nobnodes:
-                                vl_id = ':'+vl_id
+                            vl_id = '_:'+'-'.join((gene_num, allele_num))
+                            vl_id = ':'+vl_id
                             geno.addSequenceAlterationToVariantLocus(
                                 allele_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
@@ -445,23 +431,23 @@ class WormBase(Source):
                                 "Some kind of allele I don't recognize: %s",
                                 allele_num)
                             continue
-                        assoc = G2PAssoc(self.name, allele_id, phenotype_id)
+                        assoc = G2PAssoc(g, self.name, allele_id, phenotype_id)
 
                         if eco_id is not None:
                             assoc.add_evidence(eco_id)
 
                         if ref is not None and ref != '':
                             ref = re.sub(r'(WB:|WB_REF:)', 'WormBase:', ref)
-                            r = Reference(ref)
+                            reference = Reference(g, ref)
                             if re.search(r'Person', ref):
-                                r.setType(r.ref_types['person'])
+                                reference.setType(reference.ref_types['person'])
                                 # also add
                                 # inferred from background scientific knowledge
                                 assoc.add_evidence('ECO:0000001')
-                            r.addRefToGraph(g)
+                            reference.addRefToGraph()
                             assoc.add_source(ref)
 
-                        assoc.add_association_to_graph(g)
+                        assoc.add_association_to_graph()
 
                         # finish looping through all alleles
 
@@ -479,8 +465,7 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        # gu = GraphUtils(curie_map.get())  # TODO unused
+        model = Model(g)
 
         logger.info("Processing RNAi phenotype associations")
         line_counter = 0
@@ -528,15 +513,15 @@ class WormBase(Source):
                     # make the "allele" of the gene
                     # that is targeted by the reagent
                     allele_id = self.make_reagent_targeted_gene_id(
-                        gene_num, rnai_num, self.nobnodes)
+                        gene_num, rnai_num)
                     allele_label = gene_alt_symbol+'<'+rnai_num+'>'
                     geno.addReagentTargetedGene(
                         rnai_id, gene_id, allele_id, allele_label)
 
-                    assoc = G2PAssoc(self.name, allele_id, phenotype_id)
+                    assoc = G2PAssoc(g, self.name, allele_id, phenotype_id)
                     assoc.add_source('WormBase:'+ref_num)
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -553,8 +538,7 @@ class WormBase(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing publication xrefs")
         line_counter = 0
         with open(raw, 'r') as csvfile:
@@ -570,18 +554,19 @@ class WormBase(Source):
                     continue
 
                 ref_id = 'WormBase:'+wb_ref
-                xref_id = r = None
+                xref_id = None
+                r = None
                 xref = re.sub(r'<BR>', '', xref)
                 xref = xref.strip()
                 if re.match(r'pmid', xref):
                     xref_id = 'PMID:'+re.sub(r'pmid\s*', '', xref)
-                    r = Reference(
-                        xref_id, Reference.ref_types['journal_article'])
+                    reference = Reference(
+                        g, xref_id, Reference.ref_types['journal_article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
                     continue
                 elif re.match(r'doi', xref):
                     xref_id = 'DOI:'+re.sub(r'doi', '', xref.strip())
-                    r = Reference(xref_id)
+                    reference = Reference(xref_id)
                 elif re.match(r'cgc', xref):
                     # TODO not sure what to do here with cgc xrefs
                     continue
@@ -590,8 +575,8 @@ class WormBase(Source):
                     continue
 
                 if xref_id is not None:
-                    r.addRefToGraph(g)
-                    gu.addSameIndividual(g, ref_id, xref_id)
+                    reference.addRefToGraph()
+                    model.addSameIndividual(ref_id, xref_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -607,9 +592,7 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing Feature location and attributes")
         line_counter = 0
         geno = Genotype(g)
@@ -716,10 +699,10 @@ class WormBase(Source):
                     if flabel is None:
                         flabel = name
                     else:
-                        gu.addSynonym(g, fid, name)
+                        model.addSynonym(fid, name)
 
                 if desc is not None:
-                    gu.addDescription(g, fid, desc)
+                    model.addDescription(fid, desc)
 
                 alias = attribute_dict.get('Alias')
 
@@ -728,7 +711,7 @@ class WormBase(Source):
                 other_name = attribute_dict.get('other_name')
                 for n in [alias, other_name]:
                     if n is not None:
-                        gu.addSynonym(g, fid, other_name)
+                        model.addSynonym(fid, other_name)
 
                 ftype = self.get_feature_type_by_class_and_biotype(
                     feature_type_label, biotype)
@@ -736,18 +719,18 @@ class WormBase(Source):
                 chr_id = makeChromID(chrom, build_id, 'CHR')
                 geno.addChromosomeInstance(chrom, build_id, build_num)
 
-                f = Feature(fid, flabel, ftype)
-                f.addFeatureStartLocation(start, chr_id, strand)
-                f.addFeatureEndLocation(start, chr_id, strand)
+                feature = Feature(g, fid, flabel, ftype)
+                feature.addFeatureStartLocation(start, chr_id, strand)
+                feature.addFeatureEndLocation(start, chr_id, strand)
 
                 feature_is_class = False
                 if feature_type_label == 'gene':
                     feature_is_class = True
 
-                f.addFeatureToGraph(g, True, None, feature_is_class)
+                feature.addFeatureToGraph(True, None, feature_is_class)
 
                 if note is not None:
-                    gu.addDescription(g, fid, note)
+                    model.addDescription(fid, note)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -773,10 +756,9 @@ class WormBase(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing disease models")
-        geno = Genotype(g, self.nobnodes)
+        geno = Genotype(g)
         line_counter = 0
         worm_taxon = 'NCBITaxon:6239'
         with open(raw, 'r') as csvfile:
@@ -800,17 +782,15 @@ class WormBase(Source):
                 gene_id = 'WormBase:'+gene_num
 
                 # make a variant of the gene
-                vl = '_'+'-'.join((gene_num, 'unspecified'))
-                if self.nobnodes:
-                    vl = ':'+vl
+                vl = '_:'+'-'.join((gene_num, 'unspecified'))
                 vl_label = 'some variant of '+gene_symbol
                 geno.addAlleleOfGene(vl, gene_id)
                 animal_id = geno.make_experimental_model_with_genotype(
-                    g, vl, vl_label, worm_taxon, 'worm')
+                    vl, vl_label, worm_taxon, 'worm')
 
                 assoc = G2PAssoc(
-                    self.name, animal_id,
-                    disease_id, gu.object_properties['model_of'])
+                    g, self.name, animal_id,
+                    disease_id, model.object_properties['model_of'])
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
@@ -820,7 +800,7 @@ class WormBase(Source):
                 if eco_id is not None:
                     assoc.add_evidence(eco_id)
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
         return
 
@@ -855,9 +835,7 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         logger.info("Processing gene interaction associations")
         line_counter = 0
 
@@ -873,7 +851,7 @@ class WormBase(Source):
 
                 (interaction_num, interaction_type, interaction_subtype,
                  summary, citation) = row[0:5]
-                print(row)
+                # print(row)
                 interaction_id = 'WormBase:'+interaction_num
 
                 # TODO deal with subtypes
@@ -911,12 +889,12 @@ class WormBase(Source):
                     continue
 
                 assoc = InteractionAssoc(
-                    self.name, gene_a_id, gene_b_id, interaction_type_id)
+                    g, self.name, gene_a_id, gene_b_id, interaction_type_id)
                 assoc.set_association_id(interaction_id)
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
                 # citation is not a pmid or WBref - get this some other way
-                gu.addDescription(g, assoc_id, summary)
+                model.addDescription(assoc_id, summary)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -963,14 +941,11 @@ class WormBase(Source):
         return ftype_id
 
     def make_reagent_targeted_gene_id(
-            self, gene_id, reagent_id, nobnodes=False):
+            self, gene_id, reagent_id):
 
-        rtg_id = '_'+'-'.join((gene_id, reagent_id))
+        rtg_id = '_:'+'-'.join((gene_id, reagent_id))
         # TODO targeted_gene_id unused
         # targeted_gene_id = re.sub(r'W(orm)?B(ase)?:', '', rtg_id)
-
-        if nobnodes:
-            rtg_id = ':'+rtg_id
 
         return rtg_id
 

@@ -51,11 +51,10 @@ class MMRRC(Source):
         'MMRRC:000001-UNC'
     ]
 
-    def __init__(self):
-        Source.__init__(self, 'mmrrc')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        Source.__init__(self, graph_type, are_bnodes_skolemized, 'mmrrc')
         self.strain_hash = {}
         self.id_label_hash = {}
-        self.load_bindings()
         self.dataset = Dataset(
             'mmrrc', 'Mutant Mouse Regional Resource Centers',
             'https://www.mmrrc.org', None,
@@ -364,14 +363,6 @@ class MMRRC(Source):
                     # logger.debug(
                     #   "Strain %s is not making a proper genotype.", s)
                     pass
-
-            gu.loadProperties(
-                g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-            gu.loadProperties(
-                g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-            gu.loadProperties(
-                g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-            gu.loadAllProperties(g)
 
             logger.warning(
                 "The following gene symbols did not list identifiers: %s",

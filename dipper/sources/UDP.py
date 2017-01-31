@@ -73,8 +73,8 @@ class UDP(Source):
 
     UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
-    def __init__(self):
-        super().__init__('udp')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'udp')
         self.dataset = Dataset(
             'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
 

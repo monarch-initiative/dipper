@@ -23,8 +23,8 @@ class Monarch(Source):
 
     """
 
-    def __init__(self):
-        Source.__init__(self, 'monarch')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        Source.__init__(self, graph_type, are_bnodes_skolemized, 'monarch')
 
         self.dataset = Dataset(
             'monarch', 'MonarchInitiative', 'https://monarchinitiative.org',
@@ -58,10 +58,7 @@ class Monarch(Source):
         self.process_omia_phenotypes(limit)
         logger.info("Finished parsing.")
 
-        self.load_bindings()
         gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, Genotype.object_properties)
 
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))

@@ -58,10 +58,8 @@ class GeneReviews(Source):
                    'url': GRDL + '/GRtitle_shortname_NBKid.txt'}
         }
 
-    def __init__(self):
-        Source.__init__(self, 'genereviews')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super.__init__(graph_type, are_bnodes_skolemized, 'genereviews')
 
         self.dataset = Dataset(
             'genereviews', 'Gene Reviews', 'http://genereviews.org/',

@@ -15,13 +15,12 @@ class MGISlim(Source):
     Uses mousemine: http://www.mousemine.org/mousemine/begin.do
     """
 
-    def __init__(self):
-        super().__init__('mgi_slim')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'mgi_slim')
         self.dataset = Dataset(
             'mgi_slim', 'MGISlim', 'http://www.mousemine.org/mousemine/service')
 
     def parse(self, limit=None):
-        self.load_bindings()
 
         count = 0
         for num in range(10, 100):

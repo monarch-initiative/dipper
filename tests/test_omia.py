@@ -13,9 +13,8 @@ logger = logging.getLogger(__name__)
 class OMIATestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = OMIA()
+        self.source = OMIA('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

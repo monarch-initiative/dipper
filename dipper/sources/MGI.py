@@ -10,9 +10,8 @@ from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
+from dipper.models.Model import Model
 from dipper import config
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.GenomicFeature import Feature, makeChromID
 
 
@@ -159,9 +158,8 @@ class MGI(PostgreSQLSource):
             107251870, 107255383, 107256603]
     }
 
-    def __init__(self):
-        super().__init__('mgi')
-        self.namespaces.update(curie_map.get())
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'mgi')
 
         # update the dataset object with details about this resource
         self.dataset = Dataset(
@@ -221,7 +219,7 @@ class MGI(PostgreSQLSource):
 
         self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
-                    '/', cxn['database'])))
+                    '/', cxn['database'])), is_object_literal=True)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
@@ -303,12 +301,6 @@ class MGI(PostgreSQLSource):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
-        for g in [self.graph, self.testgraph]:
-            Assoc(self.name).load_all_properties(g)
-            gu = GraphUtils(curie_map.get())
-            gu.loadAllProperties(g)
-
         logger.info("Loaded %d nodes", len(self.graph))
         return
 
@@ -383,9 +375,10 @@ class MGI(PostgreSQLSource):
             g = self.graph
 
         geno = Genotype(g)
+        model = Model(g)
+
         raw = '/'.join((self.rawdir, 'gxd_genotype_view'))
         logger.info("getting genotypes and their backgrounds")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
             for line in f1:
@@ -416,21 +409,17 @@ class MGI(PostgreSQLSource):
                         # some of the strains don't have public identifiers!
                         # so we make one up, and add it to the hash
                         strain_id = self._makeInternalIdentifier('strain',
-                                                                 strain_key,
-                                                                 self.nobnodes)
+                                                                 strain_key)
                         self.idhash['strain'].update({strain_key: strain_id})
-                        gu.addComment(g, strain_id, "strain_key:"+strain_key)
+                        model.addComment(strain_id, "strain_key:"+strain_key)
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.
                         # so add instances of each.
                         strain_id = \
                             self._makeInternalIdentifier(
                                 'strain', re.sub(r':', '', str(strain_id)))
-                        strain_id += re.sub(r':', '', str(mgiid))
-                        if self.nobnodes:
-                            strain_id = ':' + strain_id
-                        gu.addDescription(
-                            g, strain_id,
+                        model.addDescription(
+                            strain_id,
                             "This genomic background is unknown.  " +
                             "This is a placeholder background for " +
                             mgiid + ".")
@@ -477,11 +466,11 @@ class MGI(PostgreSQLSource):
         else:
             g = self.graph
 
+        model = Model(g)
         line_counter = 0
         geno_hash = {}
         raw = '/'.join((self.rawdir, 'gxd_genotype_summary_view'))
         logger.info("building labels for genotypes")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -519,19 +508,16 @@ class MGI(PostgreSQLSource):
         # now, loop through the hash and add the genotypes as individuals
         # we add the mgi genotype as a synonym
         # (we generate our own label later)
-        gutil = Genotype(g)
+        geno = Genotype(g)
         for gt in geno_hash:
-            geno = geno_hash.get(gt)
-            gvc = sorted(geno.get('vslcs'))
-            label = '; '.join(gvc) + ' [' + geno.get('subtype') + ']'
-            gutil.addGenotype(gt, None)
-            gu.addComment(g, gt, self._makeInternalIdentifier('genotype',
-                                                              geno.get('key')))
-            gu.addSynonym(g, gt, label.strip())
+            genotype = geno_hash.get(gt)
+            gvc = sorted(genotype.get('vslcs'))
+            label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
+            geno.addGenotype(gt, None)
+            model.addComment(gt, self._makeInternalIdentifier(
+                'genotype', genotype.get('key')))
+            model.addSynonym(gt, label.strip())
 
-        gu.loadProperties(g, gutil.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, gutil.annotation_properties, gu.ANNOTPROP)
-        gu.loadAllProperties(g)
         return
 
     def _process_all_summary_view(self, limit):
@@ -547,12 +533,11 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
         logger.info("getting alleles and their labels and descriptions")
@@ -585,8 +570,8 @@ class MGI(PostgreSQLSource):
                     # add the allele key to the hash for later lookup
                     self.idhash['allele'][object_key] = mgiid
                     # TODO consider not adding the individuals in this one
-                    gu.addIndividualToGraph(
-                        g, mgiid, short_description.strip(),
+                    model.addIndividualToGraph(
+                        mgiid, short_description.strip(),
                         altype, description.strip())
                     self.label_hash[mgiid] = short_description.strip()
 
@@ -623,12 +608,11 @@ class MGI(PostgreSQLSource):
 
         """
         # transmission_key -> inheritance? Need to locate related table.
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         geno = Genotype(g)
         line_counter = 0
         logger.info(
@@ -674,8 +658,7 @@ class MGI(PostgreSQLSource):
                             marker_key, symbol)
                         continue
 
-                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key,
-                                                          self.nobnodes)
+                iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
                 # for non-wild type alleles:
                 if iswildtype == '0':
@@ -692,8 +675,8 @@ class MGI(PostgreSQLSource):
                     locus_rel = None
                     locus_type = None
 
-                gu.addIndividualToGraph(g, allele_id, symbol, locus_type)
-                gu.makeLeader(g, allele_id)
+                model.addIndividualToGraph(allele_id, symbol, locus_type)
+                model.makeLeader(allele_id)
                 self.label_hash[allele_id] = symbol
                 self.idhash['seqalt'][allele_key] = iseqalt_id
 
@@ -702,10 +685,10 @@ class MGI(PostgreSQLSource):
                 allele_label = self.label_hash.get(allele_id)
                 marker_label = self.label_hash.get(marker_id)
                 if allele_label is not None and allele_label == marker_label:
-                    gu.addSameIndividual(g, allele_id, marker_id)
+                    model.addSameIndividual(allele_id, marker_id)
                     self.idhash['seqalt'][allele_key] = allele_id
-                    gu.addComment(
-                        g, allele_id,
+                    model.addComment(
+                        allele_id,
                         self._makeInternalIdentifier('allele', allele_key))
                 elif marker_id is not None:
                     # marker_id will be none if the allele
@@ -771,13 +754,13 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-        line_counter = 0
+        model = Model(g)
         geno = Genotype(g)
+        line_counter = 0
         raw = '/'.join((self.rawdir, 'gxd_allelepair_view'))
         logger.info("processing allele pairs (VSLCs) for genotypes")
         geno_hash = {}
@@ -816,8 +799,7 @@ class MGI(PostgreSQLSource):
 
                 # Need to map the allelestate to a zygosity term
                 zygosity_id = self._map_zygosity(allelestate)
-                ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key,
-                                                        self.nobnodes)
+                ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key)
 
                 geno_hash[genotype_id].add(ivslc_id)
                 # TODO: VSLC label likely needs processing similar to
@@ -845,8 +827,8 @@ class MGI(PostgreSQLSource):
                 else:
                     vslc_label += allele2
 
-                gu.addIndividualToGraph(
-                    g, ivslc_id, vslc_label,
+                model.addIndividualToGraph(
+                    ivslc_id, vslc_label,
                     geno.genoparts['variant_single_locus_complement'])
                 self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = geno.object_properties['has_alternate_part']
@@ -875,16 +857,14 @@ class MGI(PostgreSQLSource):
             if len(vslcs) > 1:
                 gvc_id = re.sub(r'_', '', ('-'.join(vslcs)))
                 gvc_id = re.sub(r':', '', gvc_id)
-                gvc_id = '_'+gvc_id
-                if self.nobnodes:
-                    gvc_id = ':'+gvc_id
+                gvc_id = '_:'+gvc_id
                 vslc_labels = []
                 for v in vslcs:
                     vslc_labels.append(self.label_hash[v])
                 gvc_label = '; '.join(vslc_labels)
 
-                gu.addIndividualToGraph(
-                    g, gvc_id, gvc_label,
+                model.addIndividualToGraph(
+                    gvc_id, gvc_label,
                     geno.genoparts['genomic_variation_complement'])
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
@@ -899,8 +879,8 @@ class MGI(PostgreSQLSource):
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
-                gu.addIndividualToGraph(
-                    g, gvc_id, gvc_label,
+                model.addIndividualToGraph(
+                    gvc_id, gvc_label,
                     geno.genoparts['genomic_variation_complement'])
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
@@ -919,7 +899,7 @@ class MGI(PostgreSQLSource):
             else:
                 genotype_label = '['+bkgd_label+']'
 
-            gu.addIndividualToGraph(g, gt, genotype_label)
+            model.addIndividualToGraph(gt, genotype_label)
             self.label_hash[gt] = genotype_label
 
         return
@@ -936,13 +916,11 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_allele_mutation_view'))
         logger.info("getting mutation types for sequence alterations")
@@ -957,13 +935,12 @@ class MGI(PostgreSQLSource):
                 if iseqalt_id is None:
                     iseqalt_id = \
                         self._makeInternalIdentifier(
-                            'seqalt', allele_key, self.nobnodes)
+                            'seqalt', allele_key)
 
-                if self.nobnodes is True:
-                    if self.testMode and \
-                            int(allele_key) not in \
-                            self.test_keys.get('allele'):
-                        continue
+                if self.testMode and \
+                        int(allele_key) not in \
+                        self.test_keys.get('allele'):
+                    continue
 
                 # TODO we might need to map the seq alteration to the MGI id
                 # for unlocated things; need to use hashmap
@@ -981,7 +958,7 @@ class MGI(PostgreSQLSource):
                         # transgenic_insertion, instead of plain old insertion
                         seq_alt_type_id = 'SO:0001218'
 
-                gu.addIndividualToGraph(g, iseqalt_id, None, seq_alt_type_id)
+                model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1007,12 +984,11 @@ class MGI(PostgreSQLSource):
         # TODO what is Phenotype (Derived) vs
         # non-derived?  (annottypekey = 1015)
         # TODO is evidence in this table?  what is the evidence vocab key?
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         logger.info("getting G2P associations")
         raw = '/'.join((self.rawdir, 'voc_annot_view'))
@@ -1046,7 +1022,7 @@ class MGI(PostgreSQLSource):
 
                     # We expect the label for the phenotype
                     # to be taken care of elsewhere
-                    gu.addClassToGraph(g, accid, None)
+                    model.addClassToGraph(accid, None)
 
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
@@ -1054,8 +1030,8 @@ class MGI(PostgreSQLSource):
                                      object_key)
                     else:
                         # add the association
-                        assoc = G2PAssoc(self.name, genotype_id, accid)
-                        assoc.add_association_to_graph(g)
+                        assoc = G2PAssoc(g, self.name, genotype_id, accid)
+                        assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 # OMIM/Genotype are disease-models
                 elif annot_type_key == '1005':
@@ -1069,7 +1045,7 @@ class MGI(PostgreSQLSource):
                                      object_key)
                     else:
                         # add the association
-                        assoc = Assoc(self.name)
+                        assoc = Assoc(g, self.name)
                         # TODO PYLINT
                         # Redefinition of assoc type from
                         # dipper.models.assoc.G2PAssoc.G2PAssoc to
@@ -1077,8 +1053,8 @@ class MGI(PostgreSQLSource):
                         assoc.set_subject(genotype_id)
                         assoc.set_object(omim_id)
                         assoc.set_relationship(
-                            gu.object_properties['model_of'])
-                        assoc.add_association_to_graph(g)
+                            model.object_properties['model_of'])
+                        assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 elif annot_type_key == '1011':
                     # marker category == type
@@ -1089,7 +1065,7 @@ class MGI(PostgreSQLSource):
                     if term_id is not None and marker_id is not None:
                         # do something special for transgenics -
                         # make sure these are transgenic insertions
-                        gu.addType(g, marker_id, term_id)
+                        model.addType(marker_id, term_id)
                 elif annot_type_key == '1012':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
                     omim_id = 'OMIM:'+str(accid)
@@ -1098,18 +1074,18 @@ class MGI(PostgreSQLSource):
                                      object_key)
                     else:
                         # add the association
-                        assoc = Assoc(self.name)
+                        assoc = Assoc(g, self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(omim_id)
                         assoc.set_relationship(
-                            gu.object_properties['model_of'])
-                        assoc.add_association_to_graph(g)
+                            model.object_properties['model_of'])
+                        assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
 
                 if assoc_id is not None:
                     # add the assoc to the hashmap (using the monarch id)
                     self.idhash['annot'][annot_key] = assoc_id
-                    gu.addComment(g, assoc_id, "annot_key:"+annot_key)
+                    model.addComment(assoc_id, "annot_key:"+annot_key)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1138,8 +1114,7 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         line_counter = 0
         logger.info("getting evidence and pubs for annotations")
         raw = '/'.join((self.rawdir, 'voc_evidence_view'))
@@ -1171,16 +1146,16 @@ class MGI(PostgreSQLSource):
 
                 evidence_id = self._map_evidence_id(evidence_code)
 
-                r = Reference(jnumid)
-                r.addRefToGraph(g)
+                reference = Reference(g, jnumid)
+                reference.addRefToGraph()
 
                 # add the ECO and citation information to the annot
-                gu.addTriple(g, assoc_id,
-                             Assoc.object_properties['has_evidence'],
-                             evidence_id)
-                gu.addTriple(g, assoc_id,
-                             Assoc.object_properties['has_source'],
-                             jnumid)
+                g.addTriple(assoc_id,
+                            Assoc.object_properties['has_evidence'],
+                            evidence_id)
+                g.addTriple(assoc_id,
+                            Assoc.object_properties['has_source'],
+                            jnumid)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1203,13 +1178,11 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         # firstpass, get the J number mapping, and add to the global hash
         line_counter = 0
         logger.info('populating pub id hash')
@@ -1234,8 +1207,8 @@ class MGI(PostgreSQLSource):
                 if prefixpart != 'J:':
                     continue
                 self.idhash['publication'][object_key] = accid
-                r = Reference(accid)
-                r.addRefToGraph(g)
+                reference = Reference(g, accid)
+                reference.addRefToGraph()
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1282,15 +1255,15 @@ class MGI(PostgreSQLSource):
                 if pub_id is not None:
                     # only add these to the graph if
                     # it's mapped to something we understand
-                    r = Reference(pub_id)
+                    reference = Reference(g, pub_id)
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
-                        r.setType(Reference.ref_types['journal_article'])
-                        gu.makeLeader(g, pub_id)
-                    r.addRefToGraph(g)
+                        reference.setType(Reference.ref_types['journal_article'])
+                        model.makeLeader(pub_id)
+                    reference.addRefToGraph()
 
-                    gu.addSameIndividual(g, jid, pub_id)
+                    model.addSameIndividual(jid, pub_id)
                 else:
                     logger.warning("Publication from (%s) not mapped for %s",
                                    logical_db, object_key)
@@ -1319,11 +1292,11 @@ class MGI(PostgreSQLSource):
         #   congenic,               consomic,       coisogenic,
         #   recombinant inbred,     NS,             conplastic
 
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
@@ -1351,9 +1324,9 @@ class MGI(PostgreSQLSource):
                     # add the species to the graph as a class
                     sp = self._map_strain_species(species)
                     if sp is not None:
-                        gu.addClassToGraph(g, sp, None)
+                        model.addClassToGraph(sp, None)
                         geno.addTaxon(sp, strain_id)
-                    gu.addIndividualToGraph(g, strain_id, strain, sp)
+                    model.addIndividualToGraph(strain_id, strain, sp)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1378,13 +1351,11 @@ class MGI(PostgreSQLSource):
         :param limit:
         :return:
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         geno = Genotype(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_marker_view'))
@@ -1426,16 +1397,16 @@ class MGI(PostgreSQLSource):
 
                     # it's a gene or pseudogene
                     if mapped_marker_type in ['SO:0000704', 'SO:0000336']:
-                        gu.addClassToGraph(g, marker_id, symbol,
+                        model.addClassToGraph(marker_id, symbol,
                                            mapped_marker_type, name)
-                        gu.addSynonym(g, marker_id, name,
+                        model.addSynonym(marker_id, name,
                                       Assoc.properties['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
                     else:
-                        gu.addIndividualToGraph(g, marker_id, symbol,
-                                                mapped_marker_type, name)
-                        gu.addSynonym(g, marker_id, name,
-                                      Assoc.properties['hasExactSynonym'])
+                        model.addIndividualToGraph(marker_id, symbol,
+                                                   mapped_marker_type, name)
+                        model.addSynonym(marker_id, name,
+                                         Assoc.properties['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1445,7 +1416,7 @@ class MGI(PostgreSQLSource):
 
                     # make MGI the leader for mouse genes.
                     if taxon_id == 'NCBITaxon:10090':
-                        gu.makeLeader(g, marker_id)
+                        model.makeLeader(marker_id)
 
                     if not self.testMode and \
                             limit is not None and line_counter > limit:
@@ -1464,12 +1435,11 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("getting markers and equivalent ids from mrk_summary_view")
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_summary_view'))
@@ -1512,11 +1482,11 @@ class MGI(PostgreSQLSource):
                     if mapped_id is not None:
                         if mgiid in self.markers['classes'] or \
                                 subtype in ['Gene', 'Pseudogene']:
-                            gu.addClassToGraph(g, mapped_id, None)
-                            gu.addEquivalentClass(g, mgiid, mapped_id)
+                            model.addClassToGraph(mapped_id, None)
+                            model.addEquivalentClass(mgiid, mapped_id)
                         elif mgiid in self.markers['indiv']:
-                            gu.addIndividualToGraph(g, mapped_id, None)
-                            gu.addSameIndividual(g, mgiid, mapped_id)
+                            model.addIndividualToGraph(mapped_id, None)
+                            model.addSameIndividual(mgiid, mapped_id)
 
                     # could parse the "subtype" string
                     # to get the kind of thing the marker is
@@ -1570,11 +1540,11 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         # pass through the file again,
         # and make the equivalence statements to a subset of the idspaces.
         # TODO verify the difference between what the
@@ -1617,11 +1587,11 @@ class MGI(PostgreSQLSource):
 
                 if marker_id is not None:
                     if mgiid in self.markers['classes']:
-                        gu.addClassToGraph(g, marker_id, None)
-                        gu.addEquivalentClass(g, mgiid, marker_id)
+                        model.addClassToGraph(marker_id, None)
+                        model.addEquivalentClass(mgiid, marker_id)
                     elif mgiid in self.markers['indiv']:
-                        gu.addIndividualToGraph(g, marker_id, None)
-                        gu.addSameIndividual(g, mgiid, marker_id)
+                        model.addIndividualToGraph(marker_id, None)
+                        model.addSameIndividual(mgiid, marker_id)
                     else:
                         logger.error("mgiid not in class or indiv hash %s",
                                      mgiid)
@@ -1650,12 +1620,11 @@ class MGI(PostgreSQLSource):
         # make a pass through the table first,
         # to create the mapping between the external and internal identifiers
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("mapping strains to internal identifiers")
         raw = '/'.join((self.rawdir, 'prb_strain_acc_view'))
 
@@ -1680,7 +1649,7 @@ class MGI(PostgreSQLSource):
                 if logicaldb_key == '1' and \
                         prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
-                    gu.addIndividualToGraph(g, accid, None, tax_id)
+                    model.addIndividualToGraph(accid, None, tax_id)
 
         # The following are the stock centers for the strains
         # (asterisk indicates complete)
@@ -1759,7 +1728,7 @@ class MGI(PostgreSQLSource):
                         comment = "Originally from ORNL."
                         deprecated = True
                         # add these as synonyms of the MGI mouse
-                        gu.addSynonym(g, mgiid, accid)
+                        model.addSynonym(mgiid, accid)
 
                     elif logicaldb_key == '54':  # NCIMR
                         strain_id = 'NCIMR:'+accid
@@ -1781,16 +1750,16 @@ class MGI(PostgreSQLSource):
 
                 # TODO make these strains, rather than instance of taxon?
                 if strain_id is not None:
-                    gu.addIndividualToGraph(g, strain_id, None, tax_id)
+                    model.addIndividualToGraph(strain_id, None, tax_id)
                     if deprecated:
-                        gu.addDeprecatedIndividual(g, strain_id, [mgiid])
-                        gu.addSynonym(g, mgiid, accid)
+                        model.addDeprecatedIndividual(strain_id, [mgiid])
+                        model.addSynonym(mgiid, accid)
                     else:
-                        gu.addSameIndividual(g, mgiid, strain_id)
+                        model.addSameIndividual(mgiid, strain_id)
                     if re.match(r'MMRRC', strain_id):
-                        gu.makeLeader(g, strain_id)
+                        model.makeLeader(strain_id)
                     if comment is not None:
-                        gu.addComment(g, strain_id, comment)
+                        model.addComment(strain_id, comment)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1813,9 +1782,9 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("getting free text descriptions for annotations")
         raw = '/'.join((self.rawdir, 'mgi_note_vocevidence_view'))
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1837,7 +1806,7 @@ class MGI(PostgreSQLSource):
                 # we have captured through processing
 
                 if annot_id is not None:
-                    gu.addDescription(g, annot_id, note.strip())
+                    model.addDescription(annot_id, note.strip())
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1851,11 +1820,11 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(g)
 
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1891,7 +1860,7 @@ class MGI(PostgreSQLSource):
 
                 if marker_key in self.idhash['marker']:
                     gene_id = self.idhash['marker'][marker_key]
-                    f = Feature(gene_id, None, None)
+                    feature = Feature(g, gene_id, None, None)
                     if strand == '(null)' or strand == '':
                         strand = None
                     if startcoordinate == '(null)' or startcoordinate == '':
@@ -1900,21 +1869,21 @@ class MGI(PostgreSQLSource):
                         endcoordinate = None
 
                     if startcoordinate is not None:
-                        f.addFeatureStartLocation(int(float(startcoordinate)),
-                                                  chrom_id, strand)
+                        feature.addFeatureStartLocation(
+                            int(float(startcoordinate)), chrom_id, strand)
                     else:
-                        f.addFeatureStartLocation(
+                        feature.addFeatureStartLocation(
                             startcoordinate, chrom_id, strand,
                             [Feature.types['FuzzyPosition']])
                     if endcoordinate is not None:
-                        f.addFeatureEndLocation(int(float(endcoordinate)),
-                                                chrom_id, strand)
+                        feature.addFeatureEndLocation(int(float(endcoordinate)),
+                                                      chrom_id, strand)
                     # note we don't add the uncertain end coordinate,
                     # because we don't know what it is.
                     add_as_class = False
                     if gene_id in self.markers['classes']:
                         add_as_class = True
-                    f.addFeatureToGraph(g, True, None, add_as_class)
+                    feature.addFeatureToGraph(True, None, add_as_class)
 
                 else:
                     logger.warning('marker key %s not in idhash',
@@ -1923,10 +1892,6 @@ class MGI(PostgreSQLSource):
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
                     break
-
-        gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
-        gu.loadProperties(g, Feature.annotation_properties, gu.ANNOTPROP)
 
         return
 
@@ -1995,11 +1960,11 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("Assembling notes on alleles")
         raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
         # geno = Genotype(g)  # TODO unused
 
-        gu = GraphUtils(curie_map.get())
         notehash = {}
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -2042,7 +2007,7 @@ class MGI(PostgreSQLSource):
                     len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
                 notes += ' ['+n+']'
-                gu.addDescription(g, allele_id, notes)
+                model.addDescription(allele_id, notes)
 
             if not self.testMode and \
                     limit is not None and line_counter > limit:
@@ -2065,9 +2030,9 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("Getting genotypes for strains")
         raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -2090,17 +2055,17 @@ class MGI(PostgreSQLSource):
                 strain_id = self.idhash['strain'].get(strain_key)
                 if strain_id is None:
                     strain_id = self._makeInternalIdentifier(
-                        'strain', strain_key, self.nobnodes)
+                        'strain', strain_key)
                 genotype_id = self.idhash['genotype'].get(genotype_key)
                 if genotype_id is None:
                     genotype_id = self._makeInternalIdentifier(
-                        'genotype', genotype_key, self.nobnodes)
+                        'genotype', genotype_key)
 
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                gu.addTriple(
-                    g, strain_id,
+                g.addTriple(
+                    strain_id,
                     Genotype.object_properties['has_genotype'],
                     genotype_id)
                 # TODO
@@ -2553,7 +2518,7 @@ class MGI(PostgreSQLSource):
         return ecotype
 
     @staticmethod
-    def _makeInternalIdentifier(prefix, key, nobnodes=False):
+    def _makeInternalIdentifier(prefix, key):
         """
         This is a special MGI-to-MONARCH-ism.
         MGI tables have unique keys that we use here, but don't want to
@@ -2565,9 +2530,7 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
-        iid = '_mgi'+prefix+'key'+key
-        if nobnodes is True:
-            iid = ':'+iid
+        iid = '_:mgi'+prefix+'key'+key
 
         return iid
 
