@@ -5,6 +5,7 @@ from unittest.mock import mock_open
 from unittest.mock import MagicMock
 import logging
 from dipper.sources.UDP import UDP
+from rdflib import URIRef
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -78,9 +79,9 @@ class UDPTestCase(unittest.TestCase):
         udp = UDP('rdf_graph', True)
         udp._parse_patient_phenotypes(mock_file)
         sparql_query = """
-            SELECT *
+            SELECT ?patient
             WHERE {
-                :patient_1 a foaf:Person ;
+                ?patient a foaf:Person ;
                     rdfs:label "patient_1" ;
                     OBO:RO_0002200 OBO:DOID_4,
                          OBO:HP_000001 .
@@ -88,7 +89,10 @@ class UDPTestCase(unittest.TestCase):
         """
         sparql_output = udp.graph.query(sparql_query)
         # Test that query passes and returns one row
-        self.assertEqual(len(list(sparql_output)), 1)
+        results = list(sparql_output)
+        self.assertEqual(results[0][0], URIRef(
+            udp.graph._getNode(":patient_1")))
+        self.assertEqual(len(results), 1)
 
     def test_variant_model(self):
         """
