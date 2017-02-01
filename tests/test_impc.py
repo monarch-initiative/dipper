@@ -68,8 +68,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_evidence()
         """
-        impc = IMPC()
-        impc.load_bindings()
+        impc = IMPC('rdf_graph', True)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
@@ -105,8 +104,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC()
-        impc.load_bindings()
+        impc = IMPC('rdf_graph', False)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
         impress_map = json.loads(
             impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
@@ -169,8 +167,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC()
-        impc.load_bindings()
+        impc = IMPC('rdf_graph', True)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         impc._add_assertion_provenance(self.assoc_curie,
@@ -203,8 +200,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         line_to_test = 1129
         count = 0
         # init impc (make this a function?)
-        impc = IMPC()
-        impc.load_bindings()
+        impc = IMPC('rdf_graph', True)
         impress_map = json.loads(
             impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])

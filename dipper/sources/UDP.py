@@ -340,7 +340,7 @@ class UDP(Source):
                     gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
                         gene, variant_bnode, gene_id,
-                        genotype_util.object_properties['feature_to_gene_relation'])
+                        genotype.object_properties['feature_to_gene_relation'])
 
                 elif re.search(r'upstream|downstream',
                                variant['type'],
