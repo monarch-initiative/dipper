@@ -59,6 +59,9 @@ class GWASCatalog(Source):
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
 
+        if graph_type != 'rdf_graph':
+            raise ValueError("UDP requires a rdf_graph")
+
         self.dataset = Dataset(
             'gwascatalog', 'GWAS Catalog', 'http://www.ebi.ac.uk/gwas/',
             'The NHGRI-EBI Catalog of published genome-wide association studies',

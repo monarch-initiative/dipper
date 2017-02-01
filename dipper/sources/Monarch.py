@@ -7,6 +7,7 @@ from os.path import isfile, join
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Dataset import Dataset
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class Monarch(Source):
     """
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        Source.__init__(self, graph_type, are_bnodes_skolemized, 'monarch')
+        super().__init__(graph_type, are_bnodes_skolemized, 'monarch')
 
         self.dataset = Dataset(
             'monarch', 'MonarchInitiative', 'https://monarchinitiative.org',
@@ -53,9 +54,6 @@ class Monarch(Source):
 
         self.process_omia_phenotypes(limit)
         logger.info("Finished parsing.")
-
-        gu = GraphUtils(curie_map.get())
-
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
@@ -70,7 +68,7 @@ class Monarch(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
 
         logger.info(
             "Processing Monarch OMIA Animal disease-phenotype associations")
@@ -117,7 +115,7 @@ class Monarch(Source):
                     species_id = species_id.strip()
                     if species_id != '':
                         disease_id = '-'.join((disease_id, species_id))
-                    assoc = D2PAssoc(self.name, disease_id, phenotype_id)
+                    assoc = D2PAssoc(g, self.name, disease_id, phenotype_id)
                     if pubmed_id != '':
                         for p in re.split(r'[,;]', pubmed_id):
                             pmid = 'PMID:'+p.strip()
@@ -127,17 +125,17 @@ class Monarch(Source):
                             '/'.join(('http://omia.angis.org.au/OMIA' +
                                       disease_num.strip(),
                                       species_id.strip())))
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
-                        gu.addDescription(g, aid, phenotype_description)
+                        model.addDescription(aid, phenotype_description)
                     if breed_name != '':
-                        gu.addDescription(g, aid,
-                                          breed_name.strip()+' [observed in]')
+                        model.addDescription(
+                            aid, breed_name.strip()+' [observed in]')
                     if assay != '':
-                        gu.addDescription(g, aid, assay.strip()+' [assay]')
+                        model.addDescription(aid, assay.strip()+' [assay]')
                     if curator_notes != '':
-                        gu.addComment(g, aid, curator_notes.strip())
+                        model.addComment(aid, curator_notes.strip())
 
                     if entity_id != '' or quality_id != '':
                         logger.info("EQ not empty for %s: %s + %s", disease_id,

@@ -18,7 +18,6 @@ class MPDTestCase(SourceTestCase):
     def setUp(self):
         self.source = MPD('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         return
 
     def tearDown(self):

@@ -174,5 +174,5 @@ class Evidence:
         self.graph.addTriple(evidence_line,
                              self.object_properties['source'],
                              source)
-        self.graph.addIndividualToGraph(source, label, src_type)
+        self.model.addIndividualToGraph(source, label, src_type)
         return

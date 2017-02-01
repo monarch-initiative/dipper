@@ -9,8 +9,7 @@ from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,6 @@ class MPD(Source):
     def __init__(self, graph_type, are_bnodes_skolemized):
         Source.__init__(self, graph_type, are_bnodes_skolemized, 'mpd')
         # @N, not sure if this step is required
-        self.namespaces.update(curie_map.get())
         self.stdevthreshold = 2
 
         # update the dataset object with details about this resource
@@ -99,9 +97,6 @@ class MPD(Source):
         self.score_means_by_measure = {}
         # to store the mean value for each measure by strain+sex
         self.strain_scores_by_measure = {}
-
-        self.geno = Genotype(self.graph)
-        self.gu = GraphUtils(curie_map.get())
 
         return
 
@@ -124,13 +119,6 @@ class MPD(Source):
 
         logger.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
-            g = self.testgraph
-            self.geno = Genotype(self.testgraph)
-        else:
-            g = self.graph
-
         self._process_straininfo(limit)
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
@@ -147,9 +135,6 @@ class MPD(Source):
         self._fill_provenance_graph(limit)
 
         logger.info("Finished parsing.")
-
-        gu = GraphUtils(curie_map.get())
-
         logger.info("Found %d nodes", len(self.graph))
         return
 
@@ -185,13 +170,12 @@ class MPD(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
 
         logger.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
 
         tax_id = 'NCBITaxon:10090'
-
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             reader = csv.reader(f, delimiter=',', quotechar='\"')
@@ -205,31 +189,31 @@ class MPD(Source):
                         'MPD:'+str(mpd_strainid) not in self.test_ids:
                     continue
                 strain_id = 'MPD-strain:'+str(mpd_strainid)
-                gu.addIndividualToGraph(g, strain_id, strain_name, tax_id)
+                model.addIndividualToGraph(strain_id, strain_name, tax_id)
                 if mpdshortname.strip() != '':
-                    gu.addSynonym(g, strain_id, mpdshortname.strip())
+                    model.addSynonym(strain_id, mpdshortname.strip())
                 self.idlabel_hash[strain_id] = strain_name
                 # make it equivalent to the vendor+stock
                 if stocknum != '':
                     if vendor == 'J':
                         jax_id = 'JAX:'+stocknum
-                        gu.addSameIndividual(g, strain_id, jax_id)
+                        model.addSameIndividual(strain_id, jax_id)
                     elif vendor == 'Rbrc':
                         # reiken
                         reiken_id = 'RBRC:'+re.sub(r'RBRC', '', stocknum)
-                        gu.addSameIndividual(g, strain_id, reiken_id)
+                        model.addSameIndividual(strain_id, reiken_id)
                     else:
                         if url != '':
-                            gu.addXref(g, strain_id, url, True)
+                            model.addXref(strain_id, url, True)
                         if vendor != '':
-                            gu.addXref(
-                                g, strain_id, ':'.join((vendor, stocknum)),
+                            model.addXref(
+                                strain_id, ':'.join((vendor, stocknum)),
                                 True)
 
                 # add the panel information
                 if panel != '':
                     desc = panel+' [panel]'
-                    gu.addDescription(g, strain_id, desc)
+                    model.addDescription(strain_id, desc)
 
                 # TODO make the panels as a resource collection
 
@@ -331,14 +315,13 @@ class MPD(Source):
 
     def _fill_provenance_graph(self, limit):
         logger.info("Building graph ...")
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
-        gu.addClassToGraph(g, taxon_id, None)
+        model.addClassToGraph(taxon_id, None)
 
         scores_passing_threshold_count = 0
         scores_passing_threshold_with_ontologies_count = 0
@@ -423,7 +406,8 @@ class MPD(Source):
         :return:
 
         """
-
+        geno = Genotype(g)
+        model = Model(g)
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
@@ -444,20 +428,19 @@ class MPD(Source):
             genotype_type = Genotype.genoparts['female_genotype']
 
         # add the genotype to strain connection
-        self.geno.addGenotype(
+        geno.addGenotype(
             genotype_id, genotype_label,
             Genotype.genoparts['genomic_background'])
-        self.gu.addTriple(
-            g, strain_id,
-            Genotype.object_properties['has_genotype'], genotype_id)
+        g.addTriple(
+            strain_id, Genotype.object_properties['has_genotype'], genotype_id)
 
-        self.geno.addGenotype(
+        geno.addGenotype(
             sex_specific_genotype_id, sex_specific_genotype_label,
             genotype_type)
 
         # add the strain as the background for the genotype
-        self.gu.addTriple(
-            g, sex_specific_genotype_id,
+        g.addTriple(
+            sex_specific_genotype_id,
             Genotype.object_properties['has_sex_agnostic_genotype_part'],
             genotype_id)
 
@@ -467,12 +450,12 @@ class MPD(Source):
         if phenotypes is not None:
             for phenotype_id in phenotypes:
                 assoc = G2PAssoc(
-                    self.name, sex_specific_genotype_id, phenotype_id)
+                    g, self.name, sex_specific_genotype_id, phenotype_id)
                 assoc.add_evidence(assay_id)
                 assoc.add_evidence(eco_id)
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
-                self.gu.addComment(g, assoc_id, comment)
+                model.addComment(assoc_id, comment)
 
         return
 

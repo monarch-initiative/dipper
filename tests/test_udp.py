@@ -49,7 +49,7 @@ class UDPTestCase(unittest.TestCase):
         Test that we can resolve snps in dbsnp
         to rsids
         """
-        udp = UDP()
+        udp = UDP('rdf_graph', True)
         rs_map = udp._parse_rs_map_file(udp.map_files['dbsnp_map'])
         variant_type = 'snp'
         variant = {
@@ -75,8 +75,7 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP()
-        udp.load_bindings()
+        udp = UDP('rdf_graph', True)
         udp._parse_patient_phenotypes(mock_file)
         sparql_query = """
             SELECT *
@@ -106,8 +105,7 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP()
-        udp.load_bindings()
+        udp = UDP('rdf_graph', True)
 
         # Fails 20161118 see issue 386?
 
