@@ -1,5 +1,6 @@
 import logging
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,11 @@ class Evidence:
     }
 
     def __init__(self, graph, association):
-
-        self.graph = graph
-        self.model = Model()
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
+        self.model = Model(self.graph)
         self.association = association
 
         return

@@ -1,5 +1,6 @@
 import re
 import logging
+from dipper.graph.Graph import Graph
 from dipper.models.Model import Model
 
 __author__ = 'nlw'
@@ -35,7 +36,10 @@ class Reference:
     }
 
     def __init__(self, graph, ref_id=None, ref_type=None):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.ref_id = ref_id
         self.ref_url = None
         self.title = None

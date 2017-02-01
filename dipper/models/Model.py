@@ -1,5 +1,6 @@
 import logging
 import re
+from dipper.graph.Graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class Model():
 
     annotation_properties = {
         'label': 'rdfs:label',
-        'description': 'dc:Description',
+        'description': 'dc:description',
         'replaced_by': 'IAO:0100001',
         'consider': 'OIO:consider',
         'depiction': 'foaf:depiction',
@@ -95,7 +96,10 @@ class Model():
     }
 
     def __init__(self, graph):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
 
     def addType(self, subject_id, subject_type):
         self.graph.addTriple(subject_id, self.object_properties['type'],

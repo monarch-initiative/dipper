@@ -418,6 +418,8 @@ class MGI(PostgreSQLSource):
                         strain_id = \
                             self._makeInternalIdentifier(
                                 'strain', re.sub(r':', '', str(strain_id)))
+                        strain_id += re.sub(r':', '', str(mgiid))
+                        strain_id = re.sub(r'^_', '_:', strain_id)
                         model.addDescription(
                             strain_id,
                             "This genomic background is unknown.  " +
@@ -1114,7 +1116,6 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
         line_counter = 0
         logger.info("getting evidence and pubs for annotations")
         raw = '/'.join((self.rawdir, 'voc_evidence_view'))

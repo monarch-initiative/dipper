@@ -1,5 +1,6 @@
 import logging
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
@@ -36,7 +37,10 @@ class Environment():
     properties.update(annotation_properties)
 
     def __init__(self, graph):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
         return
 

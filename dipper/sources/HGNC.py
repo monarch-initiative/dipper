@@ -5,8 +5,7 @@ import re
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
 
@@ -29,8 +28,9 @@ class HGNC(Source):
             'url': 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt'},
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
-        super.__init__(graph_type, are_bnodes_skolemized, 'hgnc')
+    def __init__(self, graph_type, are_bnodes_skolemized,
+                 tax_ids=None, gene_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'hgnc')
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
@@ -66,9 +66,6 @@ class HGNC(Source):
 
         self._process_genes(limit)
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         logger.info("Done parsing files.")
 
         logger.info("Found %d nodes in graph", len(self.graph))
@@ -77,7 +74,6 @@ class HGNC(Source):
         return
 
     def _process_genes(self, limit=None):
-        gu = GraphUtils(curie_map.get())
 
         if self.testMode:
             g = self.testgraph
@@ -85,7 +81,7 @@ class HGNC(Source):
             g = self.graph
 
         geno = Genotype(g)
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['genes']['file']))
         line_counter = 0
         logger.info("Processing HGNC genes")
@@ -118,24 +114,24 @@ class HGNC(Source):
                 if name == '':
                     name = None
                 gene_type_id = self._get_gene_type(locus_type)
-                gu.addClassToGraph(g, hgnc_id, symbol, gene_type_id, name)
+                model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                 if locus_type == 'withdrawn':
-                    gu.addDeprecatedClass(g, hgnc_id)
+                    model.addDeprecatedClass(hgnc_id)
                 if entrez_id != '':
-                    gu.addEquivalentClass(
-                        g, hgnc_id, 'NCBIGene:' + entrez_id)
+                    model.addEquivalentClass(
+                        hgnc_id, 'NCBIGene:' + entrez_id)
                 if ensembl_gene_id != '':
-                    gu.addEquivalentClass(
-                        g, hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
+                    model.addEquivalentClass(
+                        hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
                 geno.addTaxon('NCBITaxon:9606', hgnc_id)
 
                 # add pubs as "is about"
                 if pubmed_id != '':
                     for p in re.split(r'\|', pubmed_id.strip()):
                         if str(p) != '':
-                            gu.addTriple(
-                                g, 'PMID:' + str(p.strip()),
-                                gu.object_properties['is_about'], hgnc_id)
+                            g.addTriple(
+                                'PMID:' + str(p.strip()),
+                                model.object_properties['is_about'], hgnc_id)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
@@ -160,10 +156,10 @@ class HGNC(Source):
                         # as a class with properties elsewhere in Monochrom
                         # TEC Monoch? Monarchdom??
                         band_id = makeChromID(band, 'NCBITaxon:9606', 'CHR')
-                        gu.addClassToGraph(g, band_id, None)
+                        model.addClassToGraph(band_id, None)
                         f.addSubsequenceOfFeature(band_id)
                     else:
-                        gu.addClassToGraph(g, chrom_id, None)
+                        model.addClassToGraph(chrom_id, None)
                         f.addSubsequenceOfFeature(chrom_id)
 
                 if not self.testMode \

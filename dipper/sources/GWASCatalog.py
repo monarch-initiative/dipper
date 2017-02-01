@@ -7,13 +7,13 @@ from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.CurieUtil import CurieUtil
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
-from rdflib import ConjunctiveGraph, RDFS, Namespace
+from dipper.graph.RDFGraph import RDFGraph
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class GWASCatalog(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super.__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
+        super().__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
 
         self.dataset = Dataset(
             'gwascatalog', 'GWAS Catalog', 'http://www.ebi.ac.uk/gwas/',
@@ -95,8 +95,6 @@ class GWASCatalog(Source):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
-
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
@@ -110,21 +108,17 @@ class GWASCatalog(Source):
         """
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         logger.info("Processing Data from %s", raw)
-        gu = GraphUtils(curie_map.get())
-        EFO_ontology = ConjunctiveGraph()
+        EFO_ontology = RDFGraph()
         logger.info("Loading EFO ontology in separate rdf graph")
         EFO_ontology.parse(self.files['efo']['url'], format='xml')
         logger.info("Finished loading EFO ontology")
-        for curie in curie_map.get().keys():
-            ns = curie_map.get()[curie]
-            EFO_ontology.bind(curie, Namespace(ns))
-        EFO_ontology.bind("rdfs", RDFS)
 
         if self.testMode:      # set the graph to build
             g = self.testgraph
         else:
             g = self.graph
 
+        model = Model(g)
         line_counter = 0
         geno = Genotype(g)
 
@@ -233,8 +227,8 @@ class GWASCatalog(Source):
                     pubmed_id = 'PMID:'+pubmed_num
 
                     r = Reference(
-                        pubmed_id, Reference.ref_types['journal_article'])
-                    r.addRefToGraph(g)
+                        g, pubmed_id, Reference.ref_types['journal_article'])
+                    r.addRefToGraph()
 
                     # create the chromosome
                     chrom_id = makeChromID(chrom_num, genome_version, 'CHR')
@@ -263,7 +257,7 @@ class GWASCatalog(Source):
                     for c in re.split(r';', context):
                         cid = self._map_variant_type(c.strip())
                         if cid is not None:
-                            gu.addType(g, rs_id, cid)
+                            model.addType(rs_id, cid)
 
                     # add deprecation information
                     if merged == 1 and str(snp_id_current.strip()) != '':
@@ -274,13 +268,13 @@ class GWASCatalog(Source):
                         if loc is not None:
                             loc_to_id_hash[loc].append(current_rs_id)
                         current_rs_id += str(snp_id_current)
-                        gu.addDeprecatedIndividual(g, rs_id, current_rs_id)
+                        model.addDeprecatedIndividual(rs_id, current_rs_id)
                         # TODO check on this
                         # should we add the annotations to the current
                         # or orig?
-                        gu.makeLeader(g, current_rs_id)
+                        model.makeLeader(current_rs_id)
                     else:
-                        gu.makeLeader(g, rs_id)
+                        model.makeLeader(rs_id)
 
                     # add the feature as a sequence alteration
                     # affecting various genes
@@ -298,15 +292,15 @@ class GWASCatalog(Source):
                     # add the up and downstream genes if they are available
                     if upstream_gene_num != '':
                         downstream_gene_id = 'NCBIGene:'+downstream_gene_num
-                        gu.addTriple(
-                            g, rs_id,
+                        g.addTriple(
+                            rs_id,
                             Feature.object_properties[
                                 r'upstream_of_sequence_of'],
                             downstream_gene_id)
                     if downstream_gene_num != '':
                         upstream_gene_id = 'NCBIGene:'+upstream_gene_num
-                        gu.addTriple(
-                            g, rs_id,
+                        g.addTriple(
+                            rs_id,
                             Feature.object_properties[
                                 'downstream_of_sequence_of'],
                             upstream_gene_id)
@@ -343,7 +337,7 @@ class GWASCatalog(Source):
                             query_result = EFO_ontology.query(dis_query)
                             if len(list(query_result)) > 0:
                                 if re.match(r'^EFO', trait_id):
-                                    gu.addClassToGraph(g, trait_id, list(
+                                    model.addClassToGraph(trait_id, list(
                                         query_result)[0][0], 'DOID:4')
 
                             phenotype_query = """
@@ -357,14 +351,14 @@ class GWASCatalog(Source):
                             query_result = EFO_ontology.query(phenotype_query)
                             if len(list(query_result)) > 0:
                                 if re.match(r'^EFO', trait_id):
-                                    gu.addClassToGraph(
-                                        g, trait_id,
+                                    model.addClassToGraph(
+                                        trait_id,
                                         list(query_result)[0][0],
                                         'UPHENO:0001001')
 
                             assoc = G2PAssoc(
-                                self.name, rs_id, trait_id,
-                                gu.object_properties['contributes_to'])
+                                g, self.name, rs_id, trait_id,
+                                model.object_properties['contributes_to'])
                             assoc.add_source(pubmed_id)
                             # combinatorial evidence
                             # used in automatic assertion
@@ -374,13 +368,11 @@ class GWASCatalog(Source):
                             # assoc.set_description(description)
                             # FIXME score should get added to provenance/study
                             # assoc.set_score(pvalue)
-                            assoc.add_association_to_graph(g)
+                            assoc.add_association_to_graph()
 
                     if not self.testMode and\
                             (limit is not None and line_counter > limit):
                         break
-
-            Assoc(self.name).load_all_properties(g)
 
         # loop through the location hash,
         # and make all snps at that location equivalent

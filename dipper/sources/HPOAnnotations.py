@@ -9,14 +9,12 @@ from git import Repo
 from git import GitCommandError
 
 from dipper.utils import pysed
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Dataset import Dataset
-from dipper.models.assoc.Association import Assoc
 from dipper.models.Reference import Reference
-from dipper import curie_map
+from dipper.models.Model import Model
 from dipper import config
 
 logger = logging.getLogger(__name__)
@@ -86,7 +84,7 @@ class HPOAnnotations(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super.__init__(graph_type, are_bnodes_skolemized, 'hpoa')
+        super().__init__(graph_type, are_bnodes_skolemized, 'hpoa')
 
         self.dataset = Dataset(
             'hpoa', 'Human Phenotype Ontology',
@@ -220,9 +218,8 @@ class HPOAnnotations(Source):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -242,12 +239,12 @@ class HPOAnnotations(Source):
 
                 # logger.info('adding %s', disease_id)
 
-                gu.addClassToGraph(g, disease_id, None)
-                gu.addClassToGraph(g, pheno_id, None)
+                model.addClassToGraph(disease_id, None)
+                model.addClassToGraph(pheno_id, None)
                 eco_id = self._map_evidence_to_codes(eco)
-                gu.addClassToGraph(g, eco_id, None)
+                model.addClassToGraph(eco_id, None)
                 if onset is not None and onset.strip() != '':
-                    gu.addClassToGraph(g, onset, None)
+                    model.addClassToGraph(onset, None)
 
                 # we want to do things differently depending on
                 # the aspect of the annotation
@@ -256,11 +253,11 @@ class HPOAnnotations(Source):
                 #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
                 if asp == 'O' or asp == 'M':  # organ abnormality or mortality
                     assoc = D2PAssoc(
-                        self.name, disease_id, pheno_id, onset, freq)
+                        g, self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
-                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
-                    assoc = DispositionAssoc(self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
                 else:
                     logger.error("I don't know what this aspect is: %s", asp)
 
@@ -287,8 +284,8 @@ class HPOAnnotations(Source):
                                 pubtype = Reference.ref_types['person']
                             else:
                                 pubtype = Reference.ref_types['publication']
-                            r = Reference(pub, pubtype)
-                            r.addRefToGraph(g)
+                            r = Reference(g, pub, pubtype)
+                            r.addRefToGraph()
                         elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
                             # make the pubs a reference to the website,
                             # instead of the curie
@@ -322,13 +319,11 @@ class HPOAnnotations(Source):
 
                         # TODO add curator
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
-
-            Assoc(None).load_all_properties(g)
 
         return
 
@@ -516,7 +511,7 @@ class HPOAnnotations(Source):
                     continue  # TODO add negative associations
 
                 if disease_id != '' and phenotype_id != '':
-                    assoc = D2PAssoc(self.name, disease_id, phenotype_id)
+                    assoc = D2PAssoc(g, self.name, disease_id, phenotype_id)
                     if age_of_onset_id != '':
                         assoc.onset = age_of_onset_id
                     if frequency != '':
@@ -539,7 +534,7 @@ class HPOAnnotations(Source):
                             assoc.add_source(p.strip())
                     # TODO assigned by?
 
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
                     assoc_count += 1
 
                 if not self.testMode \

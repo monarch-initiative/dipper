@@ -3,8 +3,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 import csv
 import logging
 
@@ -36,9 +35,8 @@ class ZFINSlim(Source):
         self.get_files(is_dl_forced)
 
     def parse(self, limit=None):
-        self.load_bindings()
-        zfin_parser = ZFIN()
-        graph_utils = GraphUtils(curie_map.get())
+        zfin_parser = ZFIN(self.graph_type, self.are_bnodes_skized)
+        model = Model(self.graph)
         zp_file = '/'.join((self.rawdir, self.files['zpmap']['file']))
         g2p_file = '/'.join((self.rawdir, self.files['g2p_clean']['file']))
         zfin_parser.zp_map = zfin_parser._load_zp_mappings(zp_file)
@@ -59,18 +57,18 @@ class ZFINSlim(Source):
                     subterm2_id, modifier)
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
-                graph_utils.makeLeader(self.graph, gene_curie)
+                model.makeLeader(gene_curie)
                 pub_curie = "ZFIN:{0}".format(pub_id)
                 if zp_id:
-                    assoc = G2PAssoc(self.name, gene_curie, zp_id)
+                    assoc = G2PAssoc(self.graph, self.name, gene_curie, zp_id)
                     if pub_id:
-                        reference = Reference(pub_curie,
+                        reference = Reference(self.graph, pub_curie,
                                               Reference.ref_types['document'])
-                        reference.addRefToGraph(self.graph)
+                        reference.addRefToGraph()
                         assoc.add_source(pub_curie)
 
                     assoc.add_evidence('ECO:0000059')
-                    assoc.add_association_to_graph(self.graph)
+                    assoc.add_association_to_graph()
 
 
 

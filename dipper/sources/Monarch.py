@@ -6,11 +6,7 @@ from os.path import isfile, join
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
-from dipper.models.Genotype import Genotype
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
-
 
 logger = logging.getLogger(__name__)
 

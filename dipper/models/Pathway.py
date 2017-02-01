@@ -1,6 +1,7 @@
 import logging
 import re
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
@@ -29,7 +30,10 @@ class Pathway():
     properties = object_properties.copy()
 
     def __init__(self, graph):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
 
         return

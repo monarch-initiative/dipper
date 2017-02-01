@@ -1,5 +1,6 @@
 import logging
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +50,10 @@ class Provenance:
     }
 
     def __init__(self, graph):
-
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
 
         return

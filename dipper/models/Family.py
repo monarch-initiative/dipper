@@ -1,3 +1,6 @@
+from dipper.graph.Graph import Graph
+
+
 class Family():
     """
     Model mereological/part whole relationships
@@ -19,7 +22,10 @@ class Family():
     }
 
     def __init__(self, graph):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
 
     def addMember(self, group_id, member_id):
         self.graph.addTriple(

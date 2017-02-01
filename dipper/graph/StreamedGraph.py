@@ -33,8 +33,11 @@ class StreamedGraph(DipperGraph):
         else:
             obj = object_id
 
+        if literal_type is not None:
+            lit_type = self._getNode(literal_type)
+
         self.serialize(subject_iri, predicate_iri, obj,
-                       object_is_literal, literal_type)
+                       object_is_literal, lit_type)
         return
 
     def skolemizeBlankNode(self, curie):
@@ -60,7 +63,7 @@ class StreamedGraph(DipperGraph):
                 node = self.skolemizeBlankNode(curie)
             else:
                 node = curie
-        elif re.match(r'^http', curie):
+        elif re.match(r'^http|^ftp', curie):
             node = curie
         elif len(curie.split(':')) == 2:
             node = StreamedGraph.curie_util.get_uri(curie)

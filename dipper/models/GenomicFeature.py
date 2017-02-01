@@ -2,6 +2,7 @@ import logging
 import re
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +90,10 @@ class Feature():
 
     def __init__(self, graph, feature_id=None, label=None,
                  feature_type=None, description=None):
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
         self.id = feature_id
         self.label = label

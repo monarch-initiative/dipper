@@ -2,6 +2,7 @@ import re
 import logging
 import hashlib
 from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
@@ -58,8 +59,10 @@ class Assoc:
     properties.update(datatype_properties)
 
     def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
-
-        self.graph = graph
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
 
         # core parts of the association

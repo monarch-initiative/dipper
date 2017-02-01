@@ -483,9 +483,7 @@ class Coriell(Source):
                     karyotype_id = None
                     if karyotype.strip() != '':
                         karyotype_id = \
-                            '_'+re.sub('MONARCH:', '', self.make_id(karyotype))
-                        if self.nobnodes:
-                            karyotype_id = ':'+karyotype_id
+                            '_:'+re.sub('MONARCH:', '', self.make_id(karyotype))
                         # add karyotype as karyotype_variation_complement
                         gu.addIndividualToGraph(
                             g, karyotype_id, karyotype,

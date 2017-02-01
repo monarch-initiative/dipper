@@ -43,7 +43,7 @@ class D2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, g):
+    def add_association_to_graph(self):
         """
         The reified relationship between a disease and a phenotype is decorated
             with some provenance information.
@@ -55,7 +55,7 @@ class D2PAssoc(Assoc):
         """
 
         # add the basic association nodes
-        self._add_basic_association_to_graph(g)
+        self._add_basic_association_to_graph()
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
@@ -68,7 +68,7 @@ class D2PAssoc(Assoc):
                                  self.d2p_object_properties['onset'],
                                  self.onset)
 
-        return g
+        return
 
     def make_d2p_id(self):
         """

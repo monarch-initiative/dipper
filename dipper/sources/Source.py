@@ -40,6 +40,9 @@ class Source:
                          "valid types: rdf_graph, streamed_graph"
                          .format(graph_type))
 
+        self.graph_type = graph_type
+        self.are_bnodes_skized = are_bnodes_skized
+
         if name is not None:
             logger.info("Processing Source \"%s\"", name)
         self.testOnly = False
@@ -280,10 +283,7 @@ class Source:
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))
-            if re.match(r'^ftp', filesource['url']):
-                self.dataset.setFileAccessUrl(filesource['url'], is_object_literal=True)
-            else:
-                self.dataset.setFileAccessUrl(filesource['url'])
+            self.dataset.setFileAccessUrl(filesource['url'])
 
             st = os.stat('/'.join((self.rawdir, filesource['file'])))
 

@@ -20,6 +20,9 @@ class MGISlim(Source):
         self.dataset = Dataset(
             'mgi_slim', 'MGISlim', 'http://www.mousemine.org/mousemine/service')
 
+    def fetch(self, is_dl_forced):
+        return
+
     def parse(self, limit=None):
 
         count = 0
@@ -45,25 +48,18 @@ class MGISlim(Source):
             query.outerjoin("evidence.comments")
 
             for row in query.rows():
-                # To print raw data to stdout
-                # print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}".format(
-                #      row["subject.primaryIdentifier"], row["subject.symbol"],
-                #      row["subject.sequenceOntologyTerm.name"], row["ontologyTerm.identifier"],
-                #      row["ontologyTerm.name"], row["evidence.publications.pubMedId"],
-                #      row["evidence.comments.type"], row["evidence.comments.description"]))
-
                 mgi_curie = row["subject.primaryIdentifier"]
                 mp_curie = row["ontologyTerm.identifier"]
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
-                assoc = G2PAssoc(self.name, mgi_curie, mp_curie)
+                assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie)
                 if row["evidence.publications.pubMedId"]:
-                    reference = Reference(pub_curie,
+                    reference = Reference(self.graph, pub_curie,
                                           Reference.ref_types['journal_article'])
-                    reference.addRefToGraph(self.graph)
+                    reference.addRefToGraph()
                     assoc.add_source(pub_curie)
 
                 assoc.add_evidence('ECO:0000059')
-                assoc.add_association_to_graph(self.graph)
+                assoc.add_association_to_graph()
 
             if not count % 10 and count != 0:
                 count_from = count - 10

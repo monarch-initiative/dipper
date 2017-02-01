@@ -75,7 +75,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
         elif re.match(r'^:', curie):  # do we need to remove embedded ID colons?
             node = base[re.sub(r':', '', curie, 1)]
         # Check if curie actually an IRI
-        elif re.match(r'^http', curie):
+        elif re.match(r'^http|^ftp', curie):
             node = URIRef(curie)
         else:
             iri = RDFGraph.curie_util.get_uri(curie)

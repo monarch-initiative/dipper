@@ -9,9 +9,8 @@ from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Family import Family
 from dipper.models.Reference import Reference
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Pathway import Pathway
-from dipper import curie_map
+from dipper.models.Model import Model
 from dipper import config
 
 
@@ -105,7 +104,7 @@ class KEGG(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super.__init__(graph_type, are_bnodes_skolemized, 'kegg')
+        super().__init__(graph_type, are_bnodes_skolemized, 'kegg')
 
         # update the dataset object with details about this resource
         self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/',
@@ -195,9 +194,9 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         path = Pathway(g)
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -217,7 +216,7 @@ class KEGG(Source):
                 image_filename = re.sub(r'KEGG-path:', '', pathway_id) + '.png'
                 image_url = \
                     'http://www.genome.jp/kegg/pathway/map/'+image_filename
-                gu.addDepiction(g, pathway_id, image_url)
+                model.addDepiction(pathway_id, image_url)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -244,7 +243,7 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -263,7 +262,7 @@ class KEGG(Source):
                 # Add the disease as a class.
                 # we don't get all of these from MONDO yet see:
                 # https://github.com/monarch-initiative/human-disease-ontology/issues/3
-                gu.addClassToGraph(g, disease_id, disease_name)
+                model.addClassToGraph(disease_id, disease_name)
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
@@ -297,8 +296,8 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         family = Family(g)
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
@@ -338,11 +337,11 @@ class KEGG(Source):
                 # add the long name as the description
                 if len(gene_stuff) > 1:
                     description = gene_stuff[1].strip()
-                    gu.addDefinition(g, gene_id, description)
+                    model.addDefinition(gene_id, description)
 
                 # add the rest of the symbols as synonyms
                 for i in enumerate(symbollist, start=1):
-                    gu.addSynonym(g, gene_id, i[1].strip())
+                    model.addSynonym(gene_id, i[1].strip())
 
                 if len(gene_stuff) > 2:
                     ko_part = gene_stuff[2]
@@ -379,8 +378,8 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -404,17 +403,17 @@ class KEGG(Source):
                 orthology_class_id = 'KEGG-'+orthology_class_id.strip()
 
                 orthology_type = OrthologyAssoc.terms['gene_family']
-                gu.addClassToGraph(g, orthology_class_id, orthology_label,
-                                   orthology_type)
+                model.addClassToGraph(orthology_class_id, orthology_label,
+                                      orthology_type)
                 if len(other_labels) > 1:
                     # add the rest as synonyms
                     # todo skip the first
                     for s in other_labels:
-                        gu.addSynonym(g, orthology_class_id, s.strip())
+                        model.addSynonym(orthology_class_id, s.strip())
 
                     # add the last one as the description
                     d = other_labels[len(other_labels)-1]
-                    gu.addDescription(g, orthology_class_id, d)
+                    model.addDescription(orthology_class_id, d)
 
                     # add the enzyme commission number (EC:1.2.99.5)as an xref
                     # sometimes there's two, like [EC:1.3.5.1 1.3.5.4]
@@ -422,7 +421,7 @@ class KEGG(Source):
                     ec_matches = re.findall(r'((?:\d+|\.|-){5,7})', d)
                     if ec_matches is not None:
                         for ecm in ec_matches:
-                            gu.addXref(g, orthology_class_id, 'EC:'+ecm)
+                            model.addXref(orthology_class_id, 'EC:'+ecm)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -451,8 +450,8 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -466,14 +465,13 @@ class KEGG(Source):
                 # and is not 1:1 with the rest
 
                 # add the KO id as a gene-family grouping class
-                OrthologyAssoc(
-                    self.name, gene_id, None).add_gene_family_to_graph(
-                        g, orthology_class_id)
+                OrthologyAssoc(g, self.name, gene_id, None)\
+                    .add_gene_family_to_graph(orthology_class_id)
 
                 # add gene and orthology class to graph;
                 # assume labels will be taken care of elsewhere
-                gu.addClassToGraph(g, gene_id, None)
-                gu.addClassToGraph(g, orthology_class_id, None)
+                model.addClassToGraph(gene_id, None)
+                model.addClassToGraph(orthology_class_id, None)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -505,10 +503,10 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
-        rel = gu.object_properties['is_marker_for']
+        rel = model.object_properties['is_marker_for']
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -538,18 +536,17 @@ class KEGG(Source):
                             disease_label)
                         continue
                     # type this disease_id as a disease
-                    gu.addClassToGraph(g, disease_id, disease_label, 'DOID:4')
+                    model.addClassToGraph(disease_id, disease_label, 'DOID:4')
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id,
                                                                disease_id)
                     alt_label = self.label_hash[alt_locus_id]
-                    gu.addIndividualToGraph(g, alt_locus_id, alt_label,
-                                            geno.genoparts['variant_locus'])
+                    model.addIndividualToGraph(alt_locus_id, alt_label,
+                                               geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
                     # Add the disease to gene relationship.
-                    assoc = G2PAssoc(self.name, alt_locus_id, disease_id, rel)
-                    assoc.load_all_properties(g)
-                    assoc.add_association_to_graph(g)
+                    assoc = G2PAssoc(g, self.name, alt_locus_id, disease_id, rel)
+                    assoc.add_association_to_graph()
 
                 if (not self.testMode) and (
                         limit is not None and line_counter > limit):
@@ -585,9 +582,9 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['omim2gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -604,9 +601,9 @@ class KEGG(Source):
                 if link_type == 'equivalent':
                     # these are genes!
                     # so add them as a class then make equivalence
-                    gu.addClassToGraph(g, omim_id, None)
+                    model.addClassToGraph(omim_id, None)
                     geno.addGene(kegg_gene_id, None)
-                    gu.addEquivalentClass(g, kegg_gene_id, omim_id)
+                    model.addEquivalentClass(kegg_gene_id, omim_id)
                 elif link_type == 'reverse':
                     # make an association between an OMIM ID & the KEGG gene ID
                     # we do this with omim ids because
@@ -615,14 +612,14 @@ class KEGG(Source):
                     alt_locus_id = self._make_variant_locus_id(kegg_gene_id,
                                                                omim_id)
                     alt_label = self.label_hash[alt_locus_id]
-                    gu.addIndividualToGraph(g, alt_locus_id, alt_label,
-                                            geno.genoparts['variant_locus'])
+                    model.addIndividualToGraph(alt_locus_id, alt_label,
+                                               geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, kegg_gene_id)
 
                     # Add the disease to gene relationship.
-                    rel = gu.object_properties['is_marker_for']
-                    assoc = G2PAssoc(self.name, alt_locus_id, omim_id, rel)
-                    assoc.add_association_to_graph(g)
+                    rel = model.object_properties['is_marker_for']
+                    assoc = G2PAssoc(g, self.name, alt_locus_id, omim_id, rel)
+                    assoc.add_association_to_graph()
 
                 elif link_type == 'original':
                     # these are sometimes a gene, and sometimes a disease
@@ -663,7 +660,7 @@ class KEGG(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['omim2disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -704,10 +701,10 @@ class KEGG(Source):
                     ''.join(self.omim_disease_hash.get(omim_disease_id))
                 if len(self.kegg_disease_hash[kegg_disease_id]) == 1:
                     # add ids, and deal with the labels separately
-                    gu.addClassToGraph(g, kegg_disease_id, None)
-                    gu.addClassToGraph(g, omim_disease_id, None)
+                    model.addClassToGraph(kegg_disease_id, None)
+                    model.addClassToGraph(omim_disease_id, None)
                     # TODO is this safe?
-                    gu.addEquivalentClass(g, kegg_disease_id, omim_disease_id)
+                    model.addEquivalentClass(kegg_disease_id, omim_disease_id)
             else:
                 pass
                 # gu.addXref(g, omim_disease_id, kegg_disease_id)
@@ -735,9 +732,9 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
 
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['ncbi']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -756,9 +753,9 @@ class KEGG(Source):
                 # Adding the KEGG gene ID to the graph here is redundant,
                 # unless there happens to be additional gene IDs in this table
                 # not present in the genes table.
-                gu.addClassToGraph(g, kegg_gene_id, None)
-                gu.addClassToGraph(g, ncbi_gene_id, None)
-                gu.addEquivalentClass(g, kegg_gene_id, ncbi_gene_id)
+                model.addClassToGraph(kegg_gene_id, None)
+                model.addClassToGraph(ncbi_gene_id, None)
+                model.addEquivalentClass(kegg_gene_id, ncbi_gene_id)
 
                 if (not self.testMode) and (
                         limit is not None and line_counter > limit):
@@ -779,9 +776,8 @@ class KEGG(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
-
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['pathway_pubmed']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -798,10 +794,10 @@ class KEGG(Source):
                 kegg_id = 'KEGG-'+kegg_pathway_num
 
                 r = Reference(
-                    pubmed_id, Reference.ref_types['journal_article'])
-                r.addRefToGraph(g)
-                gu.addTriple(g, pubmed_id,
-                             GraphUtils.object_properties['is_about'], kegg_id)
+                    g, pubmed_id, Reference.ref_types['journal_article'])
+                r.addRefToGraph()
+                g.addTriple(pubmed_id,
+                            model.object_properties['is_about'], kegg_id)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -827,7 +823,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['pathway_disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -843,9 +839,9 @@ class KEGG(Source):
                 # will look like KEGG-path:map04130 or KEGG-path:hsa04130
                 pathway_id = 'KEGG-'+kegg_pathway_num
 
-                gu.addTriple(
-                    g, pathway_id,
-                    GraphUtils.object_properties[
+                g.addTriple(
+                    pathway_id,
+                    model.object_properties[
                         'causally_upstream_of_or_within'],
                     disease_id)
 
@@ -870,7 +866,7 @@ class KEGG(Source):
             g = self.graph
         line_counter = 0
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['pathway_pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -887,7 +883,7 @@ class KEGG(Source):
                 pathway_id_2 = 'KEGG-'+pathway_id_2
 
                 if pathway_id_1 != pathway_id_2:
-                    gu.addEquivalentClass(g, pathway_id_1, pathway_id_2)
+                    model.addEquivalentClass(pathway_id_1, pathway_id_2)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -946,10 +942,7 @@ class KEGG(Source):
         :return:
 
         """
-        alt_locus_id = '_'+gene_id+'-'+disease_id+'VL'
-        alt_locus_id = re.sub(r':', '', alt_locus_id)
-        if self.nobnodes:
-            alt_locus_id = ':'+alt_locus_id
+        alt_locus_id = '_:'+re.sub(r':', '', gene_id) +'-'+re.sub(r':', '', disease_id)+'VL'
         alt_label = self.label_hash.get(gene_id)
         disease_label = self.label_hash.get(disease_id)
         if alt_label is not None and alt_label != '':

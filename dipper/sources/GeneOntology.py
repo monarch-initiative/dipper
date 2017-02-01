@@ -12,8 +12,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 from dipper import config
 
 
@@ -85,7 +84,7 @@ class GeneOntology(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super.__init__(graph_type, are_bnodes_skolemized, 'go')
+        super().__init__(graph_type, are_bnodes_skolemized, 'go')
 
         # Defaults
         self.tax_ids = tax_ids
@@ -123,13 +122,6 @@ class GeneOntology(Source):
         if self.testOnly:
             self.testMode = True
 
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-
-        self.nobnodes = True  # FIXME
-
         # build the id map for mapping uniprot ids to genes
         uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
 
@@ -145,9 +137,6 @@ class GeneOntology(Source):
             self.process_gaf(file, limit, uniprot_entrez_id_map)
 
         logger.info("Finished parsing.")
-
-        gu = GraphUtils(curie_map.get())
-
         logger.info("Found %d nodes in graph", len(self.graph))
         logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
@@ -160,16 +149,15 @@ class GeneOntology(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         geno = Genotype(g)
         logger.info("Processing Gene Associations from %s", file)
         line_counter = 0
 
-        zfin = wbase = None
         if 7955 in self.tax_ids:
-            zfin = ZFIN()
+            zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
         elif 6239 in self.tax_ids:
-            wbase = WormBase()
+            wbase = WormBase(self.graph_type, self.are_bnodes_skized)
 
         with gzip.open(file, 'rb') as csvfile:
             filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""),
@@ -229,12 +217,12 @@ class GeneOntology(Source):
                             int(gene_num) in self.test_ids):
                     continue
 
-                gu.addClassToGraph(g, gene_id, gene_symbol)
+                model.addClassToGraph(gene_id, gene_symbol)
                 if gene_name != '':
-                    gu.addDescription(g, gene_id, gene_name)
+                    model.addDescription(gene_id, gene_name)
                 if gene_synonym != '':
                     for s in re.split(r'\|', gene_synonym):
-                        gu.addSynonym(g, gene_id, s.strip())
+                        model.addSynonym(gene_id, s.strip())
                 if re.search(r'\|', taxon):
                     # TODO add annotations with >1 taxon
                     logger.info(">1 taxon (%s) on line %d.  skipping", taxon,
@@ -243,7 +231,7 @@ class GeneOntology(Source):
                     tax_id = re.sub(r'taxon:', 'NCBITaxon:', taxon)
                     geno.addTaxon(tax_id, gene_id)
 
-                assoc = Assoc(self.name)
+                assoc = Assoc(g, self.name)
 
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
@@ -263,15 +251,15 @@ class GeneOntology(Source):
                         if re.match(r'PMID', r):
                             ref_type = Reference.ref_types['journal_article']
                             ref.setType(ref_type)
-                        ref.addRefToGraph(g)
+                        ref.addRefToGraph()
                         assoc.add_source(r)
 
                 # TODO add the source of the annotations from assigned by?
 
                 aspect_rel_map = {
-                    'P': gu.object_properties['involved_in'],  # involved in
-                    'F': gu.object_properties['enables'],  # enables
-                    'C': gu.object_properties['part_of']  # part of
+                    'P': model.object_properties['involved_in'],  # involved in
+                    'F': model.object_properties['enables'],  # enables
+                    'C': model.object_properties['part_of']  # part of
                 }
 
                 if aspect not in aspect_rel_map:
@@ -279,7 +267,7 @@ class GeneOntology(Source):
 
                 rel = aspect_rel_map.get(aspect)
                 if aspect == 'F' and re.search(r'contributes_to', qualifier):
-                    rel = gu.object_properties['contributes_to']
+                    rel = model.object_properties['contributes_to']
                 assoc.set_relationship(rel)
                 if uniprotid is not None:
                     assoc.set_description('Mapped from '+uniprotid)
@@ -289,7 +277,7 @@ class GeneOntology(Source):
                 # If the precise product type is unknown,
                 # gene_product should be used
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
                 # Derive G2P Associations from IMP annotations
                 # in version 2.1 Pipe will indicate 'OR'
@@ -317,25 +305,25 @@ class GeneOntology(Source):
                         # in these cases make a reagent-targeted gene
                         if re.search('MRPHLNO|CRISPR|TALEN', i):
                             targeted_gene_id = zfin.make_targeted_gene_id(
-                                gene_id, i, self.nobnodes)
+                                gene_id, i)
                             geno.addReagentTargetedGene(i, gene_id,
                                                         targeted_gene_id)
                             # TODO PYLINT why is this:
                             # Redefinition of assoc type from
                             # dipper.models.assoc.Association.Assoc to
                             # dipper.models.assoc.G2PAssoc.G2PAssoc
-                            assoc = G2PAssoc(self.name, targeted_gene_id,
+                            assoc = G2PAssoc(g, self.name, targeted_gene_id,
                                              phenotypeid)
                         elif re.search(r'WBRNAi', i):
                             targeted_gene_id = \
                                 wbase.make_reagent_targeted_gene_id(
-                                    gene_id, i, self.nobnodes)
+                                    gene_id, i)
                             geno.addReagentTargetedGene(
                                 i, gene_id, targeted_gene_id)
                             assoc = G2PAssoc(
-                                self.name, targeted_gene_id, phenotypeid)
+                                g, self.name, targeted_gene_id, phenotypeid)
                         else:
-                            assoc = G2PAssoc(self.name, i, phenotypeid)
+                            assoc = G2PAssoc(g, self.name, i, phenotypeid)
                         for r in refs:
                             r = r.strip()
                             if r != '':
@@ -346,7 +334,7 @@ class GeneOntology(Source):
                                 assoc.add_source(r)
                                 # experimental phenotypic evidence
                                 assoc.add_evidence("ECO:0000059")
-                        assoc.add_association_to_graph(g, self.nobnodes)
+                        assoc.add_association_to_graph()
                         # TODO should the G2PAssoc be
                         # the evidence for the GO assoc?
 

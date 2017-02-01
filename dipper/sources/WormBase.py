@@ -13,7 +13,6 @@ from dipper.models.GenomicFeature import makeChromID, Feature
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
-from dipper import curie_map
 
 logger = logging.getLogger(__name__)
 
@@ -566,7 +565,7 @@ class WormBase(Source):
                     continue
                 elif re.match(r'doi', xref):
                     xref_id = 'DOI:'+re.sub(r'doi', '', xref.strip())
-                    reference = Reference(xref_id)
+                    reference = Reference(g, xref_id)
                 elif re.match(r'cgc', xref):
                     # TODO not sure what to do here with cgc xrefs
                     continue

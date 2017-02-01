@@ -247,11 +247,21 @@ class NCBIGene(Source):
                                         if re.match(r'^OMIM', fixedr):
                                             isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
+                                                try:
+                                                    model.addEquivalentClass(
+                                                        gene_id, fixedr)
+                                                except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
+                                        else:
+                                            try:
                                                 model.addEquivalentClass(
                                                     gene_id, fixedr)
-                                        else:
-                                            model.addEquivalentClass(
-                                                gene_id, fixedr)
+                                            except AssertionError as e:
+                                                logger.warn(
+                                                    "Error parsing {0}: {1}"
+                                                    .format(gene_id, e))
                                     else:
                                         if re.match(r'^OMIM', fixedr):
                                             isOmimDisease = self._check_if_disease(fixedr)

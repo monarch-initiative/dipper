@@ -250,7 +250,7 @@ class AnimalQTLdb(Source):
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
-                build_id = self.make_id(common_name.strip()+'-linkage')
+                build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
                 chrom_in_build_id = makeChromID(
