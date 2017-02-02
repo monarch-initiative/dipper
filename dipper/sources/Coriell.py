@@ -687,7 +687,7 @@ class Coriell(Source):
                                         # it's own association class?
                                         g.addTriple(
                                             cell_line_id,
-                                            model.properties['model_of'],
+                                            model.object_properties['model_of'],
                                             disease_id)
                                     else:
                                         logger.info(
@@ -703,7 +703,7 @@ class Coriell(Source):
                             ref.setType(Reference.ref_types['journal_article'])
                             ref.addRefToGraph()
                             g.addTriple(
-                                pubmed_id, model.properties['mentions'],
+                                pubmed_id, model.object_properties['mentions'],
                                 cell_line_id)
 
                     if not self.testMode \

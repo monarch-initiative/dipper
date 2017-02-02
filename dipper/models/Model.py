@@ -19,7 +19,7 @@ class Model():
         'annotation_property': 'owl:AnnotationProperty',
         'datatype_property': 'owl:DatatypeProperty',
         'restriction': 'owl:Restriction',
-        'deprecated': 'owl:Deprecated',
+        'deprecated': 'owl:deprecated',
         'person': 'foaf:Person'
     }
 
