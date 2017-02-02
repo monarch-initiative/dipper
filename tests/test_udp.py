@@ -90,9 +90,8 @@ class UDPTestCase(unittest.TestCase):
         sparql_output = udp.graph.query(sparql_query)
         # Test that query passes and returns one row
         results = list(sparql_output)
-        self.assertEqual(results[0][0], URIRef(
-            udp.graph._getNode(":patient_1")))
-        self.assertEqual(len(results), 1)
+        expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
+        self.assertEqual(results, expected)
 
     def test_variant_model(self):
         """

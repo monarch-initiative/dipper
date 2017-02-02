@@ -266,10 +266,20 @@ class NCBIGene(Source):
                                         if re.match(r'^OMIM', fixedr):
                                             isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
-                                                model.addSameIndividual(gene_id, fixedr)
+                                                try:
+                                                    model.addSameIndividual(gene_id, fixedr)
+                                                except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
                                         else:
-                                            model.addSameIndividual(
-                                                gene_id, fixedr)
+                                            try:
+                                                model.addSameIndividual(
+                                                    gene_id, fixedr)
+                                            except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12

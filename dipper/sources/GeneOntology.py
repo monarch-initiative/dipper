@@ -247,7 +247,7 @@ class GeneOntology(Source):
                         prefix = re.split(r':', r)[0]
                         r = re.sub(prefix, self.clean_db_prefix(prefix), r)
                         r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
-                        ref = Reference(r)
+                        ref = Reference(g, r)
                         if re.match(r'PMID', r):
                             ref_type = Reference.ref_types['journal_article']
                             ref.setType(ref_type)

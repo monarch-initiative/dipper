@@ -18,7 +18,6 @@ class OrphanetTestCase(SourceTestCase):
     def setUp(self):
         self.source = Orphanet('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 
