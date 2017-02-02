@@ -545,7 +545,7 @@ class ZFIN(Source):
                     # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
                 extrinsic_id = '_:'+re.sub(
-                    r':?_', '', '-'.join(list_of_targeted_genes))
+                    r':?_?', '', '-'.join(list_of_targeted_genes))
                 extrinsic_label = '; '.join(
                     str(self.id_label_map.get(l))
                     for l in list_of_targeted_genes)

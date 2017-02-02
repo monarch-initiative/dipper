@@ -467,7 +467,7 @@ class OMIA(Source):
             pmid = 'PMID:'+str(row['pubmed_id'])
             self.id_hash['article'][row['article_id']] = pmid
             model.addSameIndividual(iarticle_id, pmid)
-            model.addComment(pmid, iarticle_id)
+            model.addComment(pmid, iarticle_id.replace("_:", ''))
 
         return
 
