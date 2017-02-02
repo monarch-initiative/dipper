@@ -421,7 +421,6 @@ class WormBase(Source):
                             # the public name will come from elsewhere
                             geno.addSequenceAlteration(allele_id, None)
                             vl_id = '_:'+'-'.join((gene_num, allele_num))
-                            vl_id = ':'+vl_id
                             geno.addSequenceAlterationToVariantLocus(
                                 allele_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
