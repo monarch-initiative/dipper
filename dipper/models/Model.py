@@ -13,13 +13,13 @@ class Model():
 
     types = {
         'ontology': 'owl:Ontology',
-        'class': 'owl:class',
+        'class': 'owl:Class',
         'named_individual': 'owl:NamedIndividual',
         'object_property': 'owl:ObjectProperty',
         'annotation_property': 'owl:AnnotationProperty',
         'datatype_property': 'owl:DatatypeProperty',
         'restriction': 'owl:Restriction',
-        'deprecated': 'owl:deprecated',
+        'deprecated': 'owl:Deprecated',
         'person': 'foaf:Person'
     }
 

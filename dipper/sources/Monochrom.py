@@ -7,6 +7,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
+from dipper.models.Family import Family
 
 
 logger = logging.getLogger(__name__)
@@ -197,6 +198,7 @@ class Monochrom(Source):
 
         """
         model = Model(self.graph)
+        family = Family(self.graph)
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
@@ -263,7 +265,7 @@ class Monochrom(Source):
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 model.addOWLPropertyClassRestriction(
-                    cclassid, model.object_properties['member_of'], genome_id)
+                    cclassid, family.object_properties['member_of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
