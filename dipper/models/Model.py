@@ -258,10 +258,10 @@ class Model():
 
         return
 
-    def addSubclass(self, parent_id, child_id):
-        self.graph.addTriple(parent_id,
+    def addSubClass(self, child_id, parent_id):
+        self.graph.addTriple(child_id,
                              self.object_properties['subclass_of'],
-                             child_id)
+                             parent_id)
         return
 
 

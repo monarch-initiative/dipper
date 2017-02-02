@@ -1003,7 +1003,7 @@ class OMIM(Source):
         for ser in serieslist:
             series_id = 'OMIM:'+ser
             model.addClassToGraph(series_id, None)
-            model.addSubclass(series_id, omimid)
+            model.addSubClass(omimid, series_id)
 
         return
 

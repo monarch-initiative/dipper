@@ -55,7 +55,7 @@ class Pathway():
             pathway_type = self.pathway_parts['cellular_process']
         self.model.addClassToGraph(
             pathway_id, pathway_label, pathway_type, pathway_description)
-        self.model.addSubclass( self.pathway_parts['pathway'], pathway_id)
+        self.model.addSubClass(pathway_id, self.pathway_parts['pathway'])
 
         return
 

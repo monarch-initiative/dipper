@@ -198,9 +198,9 @@ class GeneReviews(Source):
                     # but only if the omim id is not a gene
                     if omim_id in entries_that_are_phenotypes:
                         model.addClassToGraph(omim_id, None)
-                        model.addSubclass(gr_id, omim_id)
+                        model.addSubClass(omim_id, gr_id)
             # add this as a generic subclass of DOID:4
-            model.addSubclass('DOID:4', gr_id)
+            model.addSubClass(gr_id, 'DOID:4')
 
         return
 

@@ -423,8 +423,8 @@ class Coriell(Source):
                     #    if mapped_race is not None:
                     #        gu.addTriple(
                     #           g,patient_id,self.terms['race'],mapped_race)
-                    #        gu.addSubclass(
-                    #           g,self.terms['ethnic_group'],mapped_race)
+                    #        model.addSubClass(
+                    #           mapped_race,self.terms['ethnic_group'])
 
                     # #############    BUILD THE FAMILY    #############
 
