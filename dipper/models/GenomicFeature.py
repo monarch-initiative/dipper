@@ -251,7 +251,7 @@ class Feature():
                 region_id = '-'.join(region_items)
                 rid = region_id
                 rid = re.sub(r'\w+\:', '', rid, 1)  # replace the id prefix
-                rid = ':_'+rid+"-Region"
+                rid = '_:'+rid+"-Region"
                 region_id = rid
 
             self.graph.addTriple(self.id, self.properties['location'],

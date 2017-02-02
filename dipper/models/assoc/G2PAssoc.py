@@ -85,7 +85,7 @@ class G2PAssoc(Assoc):
         if self.start_stage_id or self.end_stage_id is not None:
             stage_process_id = '-'.join((str(self.start_stage_id),
                                          str(self.end_stage_id)))
-            stage_process_id = ':_'+re.sub(r':', '', stage_process_id)
+            stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
                 stage_process_id, None,
                 self.g2p_types['developmental_process'])
