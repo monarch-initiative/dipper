@@ -25,6 +25,7 @@
     python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 '''
+
 import os
 import re
 import sys
@@ -89,7 +90,16 @@ ARGS = ARGPARSER.parse_args()
 
 FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
+# avoid clobbering existing output until we are finished
+try:
+    os.remove(ARGS.destination + '/TMP_' + ARGS.output)
+except FileNotFoundError:
+    # no problem
+    LOG.info("fresh start for %s", ARGS.destination + '/TMP_' + ARGS.output)
+
+OUTTMP = open(ARGS.destination + '/TMP_' + ARGS.output, 'a')
 OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
+
 # default to /dev/stdout if anything amiss
 
 # CURIEMAP = curie_map.get()
@@ -252,6 +262,7 @@ def scv_link(scv_sig, rcv_trip):
             rcv_trip.append(make_spo(scv_b, link, scv_a))
     return
 
+
 # Translate airbratary strings found in datasets
 # to specific terms found in ontologies
 TT = {}
@@ -267,6 +278,8 @@ with open(ARGS.transtab) as f:
 if ARGS.blanknode is True:
     CURIEMAP['_'] = '_:B'
 
+count = 0     # tally of  record sets so far
+batch = 1000  # arbitraty nunber of record sets to process before dumping
 #######################################################
 # main loop over xml
 with gzip.open(FILENAME, 'rt') as fh:
@@ -298,7 +311,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             LOG.warning(
                 ClinVarSet.get('ID') + " is not current as of " + rs_dated)
             continue  # or break?
-
+        count += 1
         # collect svc significance calls within a rcv
         pathocalls = {}
 
@@ -385,9 +398,20 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
 
-        RCV_Variant = RCV_Measure.find(
-                'MeasureRelationship[@Type="variant in gene"]')
-        if RCV_Variant is not None:
+        # RCV_Variant = RCV_Measure.find(
+        #    'MeasureRelationship[@Type="variant in gene"]')
+
+        # 540074 genes overlapped by variant
+        # 176970 within single gene
+        # 24746 within multiple genes by overlap
+        # 5698 asserted, but not computed
+        # 439 near gene, upstream
+        # 374 variant in gene
+        # 54 near gene, downstream
+
+        RCV_Variant = RCV_Measure.find('MeasureRelationship@Type')
+
+        if RCV_Variant is not None:   # try letting them all through
             # XRef[@DB="Gene"]/@ID
             RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
             if rcv_ncbigene_id is None and RCV_Gene is not None:
@@ -656,7 +680,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #
                     # changing to not include context till we have IRI
 
-                    # blank node (would be be nice if these were only made once)
+                    # blank node, would be be nice if these were only made once
                     _assertion_method_id = '_:' + hashlib.sha1(
                         (scv_assert_method + '_assertionmethod').encode(
                             'utf-8')).hexdigest()[1:20]
@@ -832,7 +856,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = TT[SCV_OIMT.text]
                         # blank node
-                        _provenance_id = '_:' +  hashlib.sha1(
+                        _provenance_id = '_:' + hashlib.sha1(
                             (_evidence_id + scv_evidence_type).
                             encode('utf-8')).hexdigest()[1:20]
                         write_spo(
@@ -859,6 +883,16 @@ with gzip.open(FILENAME, 'rt') as fh:
         # put this RCV's triples in the SET of all triples in this data release
         releasetriple.update(set(rcvtriples))
         del rcvtriples[:]
-    # write all the triples out
-    print('\n'.join(list(releasetriple)), file=OUTPUT)
+        # exceeding 32G ...
+        # a imperfect stop-gap may allow some duplicate statements
+        #  between batches RCV/ clinvar sets
+        if 0 == count % batch:
+            print('\n'.join(list(releasetriple)), file=OUTTMP)
+            del releasetriple[:]
+
+    # write all remaining triples out
+    print('\n'.join(list(releasetriple)), file=OUTTMP)
+
+OUTTMP.close()
+os.move_file(OUTTMP, OUTPUT)
 OUTPUT.close()
