@@ -3,7 +3,7 @@ import hashlib
 import os
 import time
 import logging
-import urllib       # TODO tec look @ import requests
+import urllib
 import csv
 import yaml
 from datetime import datetime
@@ -73,8 +73,8 @@ class Source:
             self.graph = RDFGraph(are_bnodes_skized)
             self.testgraph = RDFGraph(True)
         elif graph_type == 'streamed_graph':
-            source_file = open(self.outfile, 'w')
-            test_file = open(self.testfile, 'w')
+            source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
+            test_file = open(self.testfile.replace(".ttl", ".nt"), 'w')
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
         else:
