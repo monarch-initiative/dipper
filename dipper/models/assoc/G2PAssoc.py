@@ -24,8 +24,8 @@ class G2PAssoc(Assoc):
         'developmental_process': 'GO:0032502'
     }
 
-    def __init__(self, definedby, entity_id, phenotype_id, rel=None):
-        super().__init__(definedby)
+    def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None):
+        super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
 
@@ -65,7 +65,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, g, nobnodes=False):
+    def add_association_to_graph(self):
         """
         Overrides  Association by including bnode support
 
@@ -79,35 +79,33 @@ class G2PAssoc(Assoc):
         :return:
         """
 
-        self._add_basic_association_to_graph(g)
+        self._add_basic_association_to_graph()
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:
             stage_process_id = '-'.join((str(self.start_stage_id),
                                          str(self.end_stage_id)))
-            stage_process_id = '_'+re.sub(r':', '', stage_process_id)
-            if nobnodes:
-                stage_process_id = ':'+stage_process_id
-            self.gu.addIndividualToGraph(
-                g, stage_process_id, None,
+            stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
+            self.model.addIndividualToGraph(
+                stage_process_id, None,
                 self.g2p_types['developmental_process'])
-            self.gu.addTriple(g, stage_process_id,
-                              self.gu.object_properties['starts_during'],
-                              self.start_stage_id)
-            self.gu.addTriple(g, stage_process_id,
-                              self.gu.object_properties['ends_during'],
-                              self.end_stage_id)
+            self.graph.addTriple(stage_process_id,
+                                 self.model.object_properties['starts_during'],
+                                 self.start_stage_id)
+            self.graph.addTriple(stage_process_id,
+                                 self.model.object_properties['ends_during'],
+                                 self.end_stage_id)
             self.stage_process_id = stage_process_id
 
-            self.gu.addTriple(g, self.assoc_id,
-                              self.gu.object_properties['has_qualifier'],
-                              self.stage_process_id)
+            self.graph.addTriple(self.assoc_id,
+                                 self.model.object_properties['has_qualifier'],
+                                 self.stage_process_id)
 
         if self.environment_id is not None:
-            self.gu.addTriple(g, self.assoc_id,
-                              self.gu.object_properties['has_qualifier'],
-                              self.environment_id)
-        return g
+            self.graph.addTriple(self.assoc_id,
+                                 self.model.object_properties['has_qualifier'],
+                                 self.environment_id)
+        return
 
     def make_g2p_id(self):
         """

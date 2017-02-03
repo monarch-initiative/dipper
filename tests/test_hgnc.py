@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class HGNCTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = HGNC()
+        self.source = HGNC('rdf_graph', True)
         self.source.test_ids = self._get_conf()['test_ids']['gene']
         self.source.settestonly(True)
         self._setDirToSource()

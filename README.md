@@ -119,6 +119,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * OMIA (non-laboratory animal phenotypes)
     * Wormbase (genes, alleles, phenotypes)
     * FlyBase (genotype, phenotype)
+    * MyDrug (drug-outcome associations)
 
    ```
    hpoa,zfin,omim,biogrid,mgi,impc,panther,ncbigene,ucscbands,

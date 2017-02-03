@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
 from dipper.models.Reference import Reference
@@ -58,17 +57,13 @@ class GeneReviews(Source):
                    'url': GRDL + '/GRtitle_shortname_NBKid.txt'}
         }
 
-    def __init__(self):
-        Source.__init__(self, 'genereviews')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'genereviews')
 
         self.dataset = Dataset(
             'genereviews', 'Gene Reviews', 'http://genereviews.org/',
             None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
         self.dataset.set_citation('GeneReviews:NBK1116')
-
-        self.gu = GraphUtils(curie_map.get())
 
         self.book_ids = set()
         self.all_books = {}
@@ -107,13 +102,8 @@ class GeneReviews(Source):
         self.create_books()
         self.process_nbk_html(limit)
 
-        self.load_bindings()
-
         # no test subset for now; test == full graph
         self.testgraph = self.graph
-
-        logger.info("Found %d nodes", len(self.graph))
-
         return
 
     def _get_equivids(self, limit):
@@ -137,11 +127,11 @@ class GeneReviews(Source):
 
         """
         raw = '/'.join((self.rawdir, self.files['idmap']['file']))
-        gu = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         line_counter = 0
 
         # we look some stuff up in OMIM, so initialize here
-        omim = OMIM()
+        omim = OMIM(self.graph_type, self.are_bnodes_skized)
         id_map = {}
         allomimids = set()
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -174,8 +164,8 @@ class GeneReviews(Source):
                 id_map[nbk_num].add(omim_num)
 
                 # add the class along with the shortname
-                gu.addClassToGraph(self.graph, gr_id, None)
-                gu.addSynonym(self.graph, gr_id, shortname)
+                model.addClassToGraph(gr_id, None)
+                model.addSynonym(gr_id, shortname)
 
                 allomimids.add(omim_num)
 
@@ -204,10 +194,10 @@ class GeneReviews(Source):
                     # add the gene reviews as a superclass to the omim id,
                     # but only if the omim id is not a gene
                     if omim_id in entries_that_are_phenotypes:
-                        gu.addClassToGraph(self.graph, omim_id, None)
-                        gu.addSubclass(self.graph, gr_id, omim_id)
+                        model.addClassToGraph(omim_id, None)
+                        model.addSubClass(omim_id, gr_id)
             # add this as a generic subclass of DOID:4
-            gu.addSubclass(self.graph, 'DOID:4', gr_id)
+            model.addSubClass(gr_id, 'DOID:4')
 
         return
 
@@ -231,7 +221,7 @@ class GeneReviews(Source):
         :return:
         """
         raw = '/'.join((self.rawdir, self.files['titles']['file']))
-        gu = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         line_counter = 0
         with open(raw, 'r', encoding='latin-1') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -245,8 +235,8 @@ class GeneReviews(Source):
                 self.book_ids.add(nbk_num)  # a global set of the book nums
 
                 if limit is None or line_counter < limit:
-                    gu.addClassToGraph(self.graph, gr_id, title)
-                    gu.addSynonym(self.graph, gr_id, shortname)
+                    model.addClassToGraph(gr_id, title)
+                    model.addSynonym(gr_id, shortname)
 
         return
 
@@ -278,6 +268,7 @@ class GeneReviews(Source):
         :param limit:
         :return:
         """
+        model = Model(self.graph)
         c = 0
         books_not_found = set()
         for nbk in self.book_ids:
@@ -321,7 +312,7 @@ class GeneReviews(Source):
                          '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
                          nbk_id+']'))
 
-                self.gu.addDefinition(self.graph, nbk_id, ptext.strip())
+                model.addDefinition(nbk_id, ptext.strip())
 
             # get the pubs
             pmid_set = set()
@@ -339,14 +330,14 @@ class GeneReviews(Source):
                                     r'\/pubmed\/(\d+)$', a['href']).group(1)
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
-                            self.gu.addTriple(
-                                self.graph, pmid,
-                                self.gu.object_properties['is_about'],
+                            self.graph.addTriple(
+                                pmid,
+                                model.object_properties['is_about'],
                                 nbk_id)
                             pmid_set.add(pmnum)
-                            r = Reference(
-                                pmid, Reference.ref_types['journal_article'])
-                            r.addRefToGraph(self.graph)
+                            reference = Reference(
+                                self.graph, pmid, Reference.ref_types['journal_article'])
+                            reference.addRefToGraph()
 
             # TODO add author history, copyright, license to dataset
 

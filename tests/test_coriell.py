@@ -11,9 +11,8 @@ logger = logging.getLogger(__name__)
 class CoriellTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = Coriell()
+        self.source = Coriell('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

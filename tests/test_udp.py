@@ -5,6 +5,7 @@ from unittest.mock import mock_open
 from unittest.mock import MagicMock
 import logging
 from dipper.sources.UDP import UDP
+from rdflib import URIRef
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ class UDPTestCase(unittest.TestCase):
         for one rsid
         15	51766637	374313651	in-del	-/A/AA/AAA/AAAA/CAAA/TAAA
         """
-        udp = UDP()
+        udp = UDP('rdf_graph', True)
         rs_map = udp._parse_rs_map_file(udp.map_files['dbsnp_map'])
         variant_type = 'indel'
         variant = {
@@ -49,7 +50,7 @@ class UDPTestCase(unittest.TestCase):
         Test that we can resolve snps in dbsnp
         to rsids
         """
-        udp = UDP()
+        udp = UDP('rdf_graph', True)
         rs_map = udp._parse_rs_map_file(udp.map_files['dbsnp_map'])
         variant_type = 'snp'
         variant = {
@@ -75,13 +76,12 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP()
-        udp.load_bindings()
+        udp = UDP('rdf_graph', True)
         udp._parse_patient_phenotypes(mock_file)
         sparql_query = """
-            SELECT *
+            SELECT ?patient
             WHERE {
-                :patient_1 a foaf:Person ;
+                ?patient a foaf:Person ;
                     rdfs:label "patient_1" ;
                     OBO:RO_0002200 OBO:DOID_4,
                          OBO:HP_000001 .
@@ -89,7 +89,9 @@ class UDPTestCase(unittest.TestCase):
         """
         sparql_output = udp.graph.query(sparql_query)
         # Test that query passes and returns one row
-        self.assertEqual(len(list(sparql_output)), 1)
+        results = list(sparql_output)
+        expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
+        self.assertEqual(results, expected)
 
     def test_variant_model(self):
         """
@@ -106,8 +108,7 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP()
-        udp.load_bindings()
+        udp = UDP('rdf_graph', True)
 
         # Fails 20161118 see issue 386?
 

@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 
 class MMRRCTestCase(SourceTestCase):
     def setUp(self):
-        self.source = MMRRC()
+        self.source = MMRRC('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

@@ -6,14 +6,12 @@ from zipfile import ZipFile
 from datetime import datetime
 import time
 from dipper.sources.Source import Source
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
 import ftplib
 import pandas as pd
-from rdflib.namespace import XSD
 
 logger = logging.getLogger(__name__)
 
@@ -43,18 +41,17 @@ class Bgee(Source):
         }
     }
 
-    def __init__(self, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         """
         :param tax_ids: [int,], List of taxa
         :return:
         """
-        super().__init__('bgee')
+        super().__init__(graph_type, are_bnodes_skolemized, 'bgee')
         if tax_ids is None:
             self.tax_ids = Bgee.DEFAULT_TAXA
         else:
             logger.info("Filtering on taxa {}".format(tax_ids))
             self.tax_ids = tax_ids
-        self.load_bindings()
 
         self.dataset = Dataset(
             'Bgee', 'Bgee Gene expression data in animals',
@@ -137,19 +134,19 @@ class Bgee(Source):
         :param rank: str rank
         :return: None
         """
-        g2a_association = Assoc(self.name)
+        g2a_association = Assoc(self.graph, self.name)
         genotype = Genotype(self.graph)
-        graph_util = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
         rank = re.sub(r'\,', '', rank)
-        graph_util.addIndividualToGraph(self.graph, gene_curie, gene_label, genotype.genoparts['gene'])
+        model.addIndividualToGraph(gene_curie, gene_label, genotype.genoparts['gene'])
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
         g2a_association.rel = Assoc.object_properties['expressed_in']
-        g2a_association.add_association_to_graph(self.graph)
+        g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
-            self.graph, Assoc.datatype_properties['has_quantifier'],
-            float(rank), 'Literal', XSD['float'])
+            Assoc.datatype_properties['has_quantifier'],
+            float(rank), 'Literal', 'xsd:float')
         return
 
     # Override

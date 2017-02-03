@@ -1,9 +1,8 @@
 import logging
 from datetime import datetime
-from rdflib import Graph, Literal, URIRef, Namespace
-from rdflib.namespace import RDF, DCTERMS, XSD, FOAF
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.graph.RDFGraph import RDFGraph
+from dipper.graph.StreamedGraph import StreamedGraph
+from dipper.models.Model import Model
 
 __author__ = 'nlw'
 
@@ -20,33 +19,29 @@ class Dataset:
 
     """
 
-    namespaces = {
-        'dctypes': 'http://purl.org/dc/dcmitype/',
-        'pav': 'http://purl.org/pav/',
-        'dcat': 'http://www.w3.org/ns/dcat#'
-    }
-
-    core_bindings = {'rdf': RDF, 'foaf': FOAF, 'xsd': XSD, 'dct': DCTERMS}
-
     def __init__(self, identifier, title, url, description=None,
-                 license_url=None, data_rights=None):
-        DCTYPES = Namespace(self.namespaces['dctypes'])
-        self.gu = GraphUtils(curie_map.get())
-        self.identifier = URIRef(':'+identifier)
+                 license_url=None, data_rights=None, graph_type=None,
+                 file_handle=None):
+        if graph_type is None:
+            self.graph = RDFGraph()
+        elif graph_type == 'streamed_graph':
+            self.graph = StreamedGraph(True, file_handle=file_handle)
+        elif graph_type == 'rdf_graph':
+            self.graph = RDFGraph()
+        self.model = Model(self.graph)
+        self.identifier = ':' + identifier
         self.version = None
         self.date_issued = None
         self.date_accessed = None
         self.citation = set()
         self.set_access_date()
         self.license = license_url
-        self.graph = Graph()
-        self.load_bindings()
-        self.graph.add((self.identifier, RDF['type'], DCTYPES['Dataset']))
-        self.graph.add((self.identifier, DCTERMS['title'], Literal(title)))
-        self.graph.add(
-            (self.identifier, DCTERMS['identifier'], Literal(identifier)))
-        self.graph.add((self.identifier, FOAF['page'], URIRef(url)))
-        self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
+        self.model.addType(self.identifier, 'dctypes:Dataset')
+        self.graph.addTriple(self.identifier, 'dct:title', title, True)
+        self.graph.addTriple(
+            self.identifier, 'dct:identifier',
+            identifier, object_is_literal=True)
+        self.graph.addTriple(self.identifier, 'foaf:page', url)
         # maybe in the future add the logo here:
         # schemaorg:logo <http://www.ebi.ac.uk/rdf/sites/ebi.ac.uk.rdf/files/resize/images/rdf/chembl_service_logo-146x48.gif> .
 
@@ -54,29 +49,19 @@ class Dataset:
         # FIXME:Temporarily making this in IF statement,
         #  can revert after all current resources are updated.
         if license_url is not None:
-            self.graph.add(
-                (self.identifier, DCTERMS['license'], URIRef(license_url)))
+            self.graph.addTriple(
+                self.identifier, 'dct:license', license_url)
         else:
             logger.debug('No license provided.')
         if data_rights is not None:
-            self.graph.add(
-                (self.identifier, DCTERMS['rights'], Literal(data_rights)))
+            self.graph.addTriple(
+                self.identifier, 'dct:rights',
+                data_rights, object_is_literal=True)
         else:
             logger.debug('No rights provided.')
 
         if description is not None:
-            self.gu.addDescription(self.graph, self.identifier, description)
-        return
-
-    def load_bindings(self):
-        for k in self.core_bindings:
-            v = self.core_bindings[k]
-            self.graph.bind(k, v)
-
-        for k in self.namespaces.keys():
-            v = self.namespaces[k]
-            self.graph.bind(k, Namespace(v))
-
+            self.model.addDescription(self.identifier, description)
         return
 
     def setVersion(self, date_issued, version_id=None):
@@ -124,8 +109,8 @@ class Dataset:
     def set_date_issued(self, date_issued):
 
         self.date_issued = date_issued
-        self.graph.add(
-            (self.identifier, DCTERMS['issued'], Literal(date_issued)))
+        self.graph.addTriple(
+            self.identifier, 'dct:issued', date_issued, object_is_literal=True)
         logger.info("setting date to %s", date_issued)
 
         return
@@ -155,27 +140,28 @@ class Dataset:
         return
 
     def set_version_by_num(self, version_num):
-        PAV = Namespace(self.namespaces['pav'])
 
-        self.version = URIRef(self.identifier+version_num)
-        self.graph.add((self.version, DCTERMS['isVersionOf'], self.identifier))
-        self.graph.add((self.version, PAV['version'], Literal(version_num)))
+        self.version = self.identifier+version_num
+        self.graph.addTriple(self.version, 'dct:isVersionOf', self.identifier)
+        self.graph.addTriple(self.version, 'pav:version', version_num,
+                             object_is_literal=True)
 
         logger.info("setting version to %s", self.version)
 
         # set the monarch-generated-version of the resource-version
         # TODO sync this up with the ontology version
         if version_num != self.date_accessed:
-            self.dipperized_version = URIRef('monarch'+str(self.date_accessed))
-            self.graph.add(
-                (self.dipperized_version, DCTERMS['isVersionOf'],
-                 self.version))
-            self.graph.add(
-                (self.dipperized_version, PAV['version'],
-                 Literal(self.date_accessed)))
-            self.graph.add(
-                (self.dipperized_version, DCTERMS['issued'],
-                 Literal(self.date_accessed, datatype=XSD.dateTime)))
+            dipperized_version = ':'+str(self.date_accessed)
+            self.graph.addTriple(
+                dipperized_version, 'dct:isVersionOf',
+                self.version)
+            self.graph.addTriple(
+                dipperized_version, 'pav:version',
+                self.date_accessed, object_is_literal=True)
+            self.graph.addTriple(
+                dipperized_version, 'dct:issued',
+                self.date_accessed, object_is_literal=True,
+                literal_type="xsd:dateTime")
 
         return
 
@@ -189,10 +175,9 @@ class Dataset:
 
         return
 
-    def setFileAccessUrl(self, url):
-        DCAT = Namespace(self.namespaces['dcat'])
-        self.graph.add((self.identifier, DCAT['accessURL'], URIRef(url)))
-        return
+    def setFileAccessUrl(self, url, is_object_literal=False):
+        self.graph.addTriple(self.identifier, 'dcat:accessURL',
+                             url, is_object_literal)
 
     def getGraph(self):
         return self.graph
@@ -209,6 +194,6 @@ class Dataset:
 
         self.citation.add(citation_id)
         # TODO
-        # gu.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
+        # model.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
 
         return

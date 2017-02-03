@@ -5,18 +5,14 @@ import re
 from datetime import datetime
 from stat import ST_CTIME
 from zipfile import ZipFile
-from rdflib.namespace import FOAF, DC, RDFS
 
-from dipper import curie_map
 from dipper import config
 from dipper.sources.Source import Source
+from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nicole'
-
-core_bindings = {'dc': DC, 'foaf': FOAF, 'rdfs': RDFS}
 
 logger = logging.getLogger(__name__)
 BGDL = 'http://thebiogrid.org/downloads/archives/Latest%20Release'
@@ -44,11 +40,10 @@ class BioGrid(Source):
         108899, 110308, 110364, 110678, 111642, 112300, 112365, 112771, 112898,
         199832, 203220, 247276, 120150, 120160, 124085]
 
-    def __init__(self, tax_ids=None):
-        super().__init__('biogrid')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'biogrid')
 
         self.tax_ids = tax_ids
-        self.load_bindings()
 
         self.dataset = Dataset(
             'biogrid', 'The BioGrid', 'http://thebiogrid.org/', None,
@@ -113,8 +108,6 @@ class BioGrid(Source):
 
         self._get_interactions(limit)
         self._get_identifiers(limit)
-
-        self.load_bindings()
 
         logger.info("Loaded %d test graph nodes", len(self.testgraph))
         logger.info("Loaded %d full graph nodes", len(self.graph))
@@ -190,11 +183,10 @@ class BioGrid(Source):
                 # identifier that does not map to a public URI.
                 # we will construct a monarch identifier from this
 
-                assoc = InteractionAssoc(self.name, gene_a, gene_b, rel)
+                assoc = InteractionAssoc(g, self.name, gene_a, gene_b, rel)
                 assoc.add_evidence(evidence)
                 assoc.add_source(pub_id)
-                assoc.add_association_to_graph(g)
-                assoc.load_all_properties(g)
+                assoc.add_association_to_graph()
 
                 if not self.testMode and (
                         limit is not None and line_counter > limit):
@@ -222,8 +214,6 @@ class BioGrid(Source):
         # assume that the first entry is the item
         fname = myzip.namelist()[0]
         foundheader = False
-
-        gu = GraphUtils(curie_map.get())
 
         # TODO align this species filter with the one above
         # speciesfilters = 'Homo sapiens,Mus musculus,Drosophila melanogaster,
@@ -255,6 +245,8 @@ class BioGrid(Source):
                 else:
                     g = self.graph
 
+                model = Model(g)
+
                 # for each one of these,
                 # create the node and add equivalent classes
                 biogrid_id = 'BIOGRID:'+biogrid_num
@@ -271,10 +263,10 @@ class BioGrid(Source):
                     if (geneidtypefilters is not None) \
                             and (prefix in geneidtypefilters):
                         mapped_id = ':'.join((prefix, id_num))
-                        gu.addEquivalentClass(g, biogrid_id, mapped_id)
+                        model.addEquivalentClass(biogrid_id, mapped_id)
                     # this symbol will only get attached to the biogrid class
                     elif id_type == 'OFFICIAL_SYMBOL':
-                        gu.addClassToGraph(g, biogrid_id, id_num)
+                        model.addClassToGraph(biogrid_id, id_num)
                     # elif (id_type == 'SYNONYM'):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)

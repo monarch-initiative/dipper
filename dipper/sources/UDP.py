@@ -1,8 +1,7 @@
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
-from dipper import curie_map
 from dipper.utils.DipperUtil import DipperUtil
 from rdflib import RDFS, BNode
 from dipper import config
@@ -73,10 +72,12 @@ class UDP(Source):
 
     UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
-    def __init__(self):
-        super().__init__('udp')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'udp')
         self.dataset = Dataset(
             'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
+        if graph_type != 'rdf_graph':
+            raise ValueError("UDP requires a rdf_graph")
 
     def fetch(self, is_dl_forced=True):
         """
@@ -179,7 +180,6 @@ class UDP(Source):
         Returns:
             :return None
         """
-        self.load_bindings()
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
 
@@ -226,8 +226,8 @@ class UDP(Source):
         gene_coordinate_map = self._parse_gene_coordinates(self.map_files['gene_coord_map'])
         rs_map = self._parse_rs_map_file(self.map_files['dbsnp_map'])
 
-        genotype_util = Genotype(self.graph)
-        graph_util = GraphUtils(curie_map.get())
+        genotype = Genotype(self.graph)
+        model = Model(self.graph)
 
         self._add_variant_gene_relationship(patient_var_map, gene_coordinate_map)
 
@@ -236,12 +236,12 @@ class UDP(Source):
             # make intrinsic genotype for each patient
             intrinsic_geno_bnode = self.make_id("{0}-intrinsic-genotype".format(patient), "_")
             genotype_label = "{0} genotype".format(patient)
-            genotype_util.addGenotype(intrinsic_geno_bnode,
-                                      genotype_label,
-                                      genotype_util.genoparts['intrinsic_genotype'])
+            genotype.addGenotype(intrinsic_geno_bnode,
+                                 genotype_label,
+                                 genotype.genoparts['intrinsic_genotype'])
 
-            graph_util.addTriple(self.graph, patient_curie,
-                                 genotype_util.object_properties['has_genotype'],
+            self.graph.addTriple(patient_curie,
+                                 genotype.object_properties['has_genotype'],
                                  intrinsic_geno_bnode)
             for variant_id, variant in patient_var_map[patient].items():
                 build = variant['build']
@@ -278,11 +278,11 @@ class UDP(Source):
                     variant_label = 'variant of interest' \
                                     ' in {0} gene of patient' \
                                     ' {1}'.format(genes_of_interest[0], patient)
-                else :
+                else:
                     variant_label = 'variant of interest' \
                                     ' in patient {0}'.format(patient)
 
-                genotype_util.addSequenceAlteration(variant_bnode, None)
+                genotype.addSequenceAlteration(variant_bnode, None)
                 # check if it we have built the label
                 # in _add_variant_gene_relationship()
                 labels = self.graph.objects(
@@ -291,17 +291,17 @@ class UDP(Source):
                 label_list = list(labels)
 
                 if len(label_list) == 0:
-                    graph_util.addLabel(self.graph, variant_bnode, variant_label)
+                    model.addLabel(variant_bnode, variant_label)
 
-                graph_util.addTriple(self.graph, variant_bnode,
-                                     graph_util.object_properties['in_taxon'],
+                self.graph.addTriple(variant_bnode,
+                                     model.object_properties['in_taxon'],
                                      'NCBITaxon:9606')
-                graph_util.addTriple(self.graph, intrinsic_geno_bnode,
-                                     genotype_util.object_properties['has_alternate_part'],
+                self.graph.addTriple(intrinsic_geno_bnode,
+                                     genotype.object_properties['has_alternate_part'],
                                      variant_bnode)
                 if rs_id:
                     dbsnp_curie = 'dbSNP:{0}'.format(rs_id)
-                    graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
+                    model.addSameIndividual(variant_bnode, dbsnp_curie)
 
         self._add_variant_sameas_relationships(patient_var_map, rs_map)
         return
@@ -326,9 +326,9 @@ class UDP(Source):
         see if we can disambiguate which genes are which
         :return: None
         """
-        genotype_util = Genotype(self.graph)
+        genotype = Genotype(self.graph)
         dipper_util = DipperUtil()
-        graph_util = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         # Note this could be compressed in someway to remove one level of for looping
         for patient in patient_var_map:
             for variant_id, variant in patient_var_map[patient].items():
@@ -340,7 +340,7 @@ class UDP(Source):
                     gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
                         gene, variant_bnode, gene_id,
-                        genotype_util.object_properties['feature_to_gene_relation'])
+                        genotype.object_properties['feature_to_gene_relation'])
 
                 elif re.search(r'upstream|downstream',
                                variant['type'],
@@ -368,7 +368,7 @@ class UDP(Source):
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype_util.object_properties['feature_to_gene_relation'])
+                            genotype.object_properties['feature_to_gene_relation'])
 
                         # update label with gene
                         gene_list = [ref_gene[0]['symbol']]  # build label expects list
@@ -376,7 +376,7 @@ class UDP(Source):
                             variant['build'], variant['chromosome'],
                             variant['position'], variant['reference_allele'],
                             variant['variant_allele'], gene_list)
-                        graph_util.addLabel(self.graph, variant_bnode, variant_label)
+                        model.addLabel(variant_bnode, variant_label)
 
                     # In some cases there are multiple instances
                     # of same gene from dupe rows in the source
@@ -384,7 +384,7 @@ class UDP(Source):
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype_util.object_properties['feature_to_gene_relation'])
+                            genotype.object_properties['feature_to_gene_relation'])
 
                         # build label function expects list
                         gene_list = [ref_gene[0]['symbol']]
@@ -392,7 +392,7 @@ class UDP(Source):
                             variant['build'], variant['chromosome'],
                             variant['position'], variant['reference_allele'],
                             variant['variant_allele'], gene_list)
-                        graph_util.addLabel(self.graph, variant_bnode, variant_label)
+                        model.addLabel(variant_bnode, variant_label)
 
                     # Check if reference genes are on different strands
                     elif len(ref_gene) == 2:
@@ -401,7 +401,7 @@ class UDP(Source):
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
-                                    genotype_util.object_properties['feature_to_gene_relation'])
+                                    genotype.object_properties['feature_to_gene_relation'])
                         else:
                             logger.warn("unable to map intron variant"
                                         " to gene coordinates: {0}"
@@ -409,7 +409,7 @@ class UDP(Source):
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
-                                    graph_util.object_properties['causally_influences'])
+                                    model.object_properties['causally_influences'])
                     elif re.search(r'intron', variant['type'], flags=re.I):
                         logger.warn("unable to map intron variant"
                                     " to gene coordinates: {0}"
@@ -417,13 +417,13 @@ class UDP(Source):
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
                             neighbor, variant_bnode, gene_id,
-                            graph_util.object_properties['causally_influences'])
+                            model.object_properties['causally_influences'])
                     # Unmatched genes are likely because we cannot map to an NCBIGene
                     # or we do not have coordinate information
                     for unmatched_gene in unmatched_genes:
                         self._add_gene_to_graph(
                             unmatched_gene, variant_bnode, gene_id,
-                            graph_util.object_properties['causally_influences'])
+                            model.object_properties['causally_influences'])
 
         return
 
@@ -559,7 +559,7 @@ class UDP(Source):
         :param limit: limit rows processed
         :return:
         """
-        graph_util = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         line_counter = 0
         reader = csv.reader(file, delimiter="\t")
         for row in reader:
@@ -569,14 +569,14 @@ class UDP(Source):
                 line_counter += 1
                 continue
 
-            graph_util.addPerson(self.graph, patient_curie, patient_id)
+            model.addPerson(patient_curie, patient_id)
 
-            graph_util.addTriple(self.graph, patient_curie,
-                                 graph_util.object_properties['has_phenotype'],
+            self.graph.addTriple(patient_curie,
+                                 model.object_properties['has_phenotype'],
                                  "DOID:4")
             if present == 'yes':
-                graph_util.addTriple(self.graph, patient_curie,
-                                     graph_util.object_properties['has_phenotype'],
+                self.graph.addTriple(patient_curie,
+                                     model.object_properties['has_phenotype'],
                                      hpo_curie)
 
             line_counter += 1
@@ -681,15 +681,15 @@ class UDP(Source):
         :param variant_bnode:
         :return:
         """
-        graph_util = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         if gene_id:
-            graph_util.addTriple(self.graph, variant_bnode, relation, gene_id)
+            self.graph.addTriple(variant_bnode, relation, gene_id)
         elif gene:
             logger.info("gene {0} not mapped to NCBI gene,"
                         " making blank node".format(gene))
             gene_bnode = self.make_id("{0}".format(gene), "_")
-            graph_util.addIndividualToGraph(self.graph, gene_bnode, gene)
-            graph_util.addTriple(self.graph, variant_bnode, relation, gene_bnode)
+            model.addIndividualToGraph(gene_bnode, gene)
+            self.graph.addTriple(variant_bnode, relation, gene_bnode)
 
     def _add_variant_sameas_relationships(self, patient_var_map, rs_map):
         """
@@ -698,7 +698,7 @@ class UDP(Source):
         :param rs_map:
         :return:
         """
-        graph_util = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         for patient in patient_var_map:
             for variant_id, variant in patient_var_map[patient].items():
                 variant_bnode = self.make_id("{0}".format(variant_id), "_")
@@ -715,20 +715,20 @@ class UDP(Source):
                         rs_id = self._get_rs_id(variant, rs_map, 'snp')
                         if rs_id:
                             dbsnp_curie = 'dbSNP:rs{0}'.format(rs_id)
-                            graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
+                            model.addSameIndividual(variant_bnode, dbsnp_curie)
 
                     elif re.fullmatch(r'\-', reference_allele)\
                             or re.fullmatch(r'\-', variant_allele):
                         rs_id = self._get_rs_id(variant, rs_map, 'indel')
                         if rs_id is not None:
                             dbsnp_curie = 'dbSNP:rs{0}'.format(rs_id)
-                            graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
+                            model.addSameIndividual(variant_bnode, dbsnp_curie)
                     else:
                         rs_id = self.\
                             _get_rs_id(variant, rs_map, 'indel')
                         if rs_id is not None:
                             dbsnp_curie = 'dbSNP:rs{0}'.format(rs_id)
-                            graph_util.addSameIndividual(self.graph, variant_bnode, dbsnp_curie)
+                            model.addSameIndividual(variant_bnode, dbsnp_curie)
         return
 
     @staticmethod

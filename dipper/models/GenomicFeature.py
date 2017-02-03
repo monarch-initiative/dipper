@@ -1,12 +1,9 @@
 import logging
 import re
-from rdflib import Literal
-from rdflib.namespace import RDF, XSD
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.assoc.Association import Assoc
+from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
-__author__ = 'nlw'
 
 logger = logging.getLogger(__name__)
 
@@ -91,15 +88,19 @@ class Feature():
         'gpos66': 'GENO:0000632'
     }
 
-    def __init__(self, id, label, type, description=None):
-        self.id = id
+    def __init__(self, graph, feature_id=None, label=None,
+                 feature_type=None, description=None):
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
+        self.model = Model(self.graph)
+        self.id = feature_id
         self.label = label
-        self.type = type
+        self.type = feature_type
         self.description = description
-        self.gu = GraphUtils(curie_map.get())
         self.start = None
         self.stop = None
-        self.nobnodes = True  # TODO remove this before official release
         return
 
     def addFeatureStartLocation(
@@ -149,7 +150,7 @@ class Feature():
         :return:
         """
 
-        loc = {}
+        loc = dict()
         loc['coordinate'] = coordinate
         loc['reference'] = reference_id
         loc['type'] = []
@@ -165,7 +166,6 @@ class Feature():
 
     def _getStrandType(self, strand):
         """
-
         :param strand:
         :return:
         """
@@ -186,7 +186,7 @@ class Feature():
         return strand_id
 
     def addFeatureToGraph(
-            self, graph, add_region=True, region_id=None,
+            self, add_region=True, region_id=None,
             feature_as_class=False):
         """
         We make the assumption here that all features are instances.
@@ -214,11 +214,11 @@ class Feature():
         """
 
         if feature_as_class:
-            self.gu.addClassToGraph(graph, self.id, self.label, self.type,
-                                    self.description)
+            self.model.addClassToGraph(self.id, self.label, self.type,
+                                       self.description)
         else:
-            self.gu.addIndividualToGraph(graph, self.id, self.label, self.type,
-                                         self.description)
+            self.model.addIndividualToGraph(self.id, self.label, self.type,
+                                            self.description)
 
         if self.start is None and self.stop is None:
             add_region = False
@@ -251,17 +251,15 @@ class Feature():
                 region_id = '-'.join(region_items)
                 rid = region_id
                 rid = re.sub(r'\w+\:', '', rid, 1)  # replace the id prefix
-                rid = '_'+rid+"-Region"
+                rid = '_:'+rid+"-Region"
                 region_id = rid
-                if self.nobnodes:
-                    region_id = ':'+region_id
-            self.gu.addTriple(graph, self.id, self.properties['location'],
-                              region_id)
-            self.gu.addIndividualToGraph(
-                graph, region_id, None, 'faldo:Region')
+
+            self.graph.addTriple(self.id, self.properties['location'],
+                                 region_id)
+            self.model.addIndividualToGraph(region_id, None, 'faldo:Region')
         else:
             region_id = self.id
-            self.gu.addType(graph, region_id, 'faldo:Region')
+            self.model.addType(region_id, 'faldo:Region')
 
         # add the start/end positions to the region
         beginp = endp = None
@@ -269,8 +267,7 @@ class Feature():
             beginp = self._makePositionId(self.start['reference'],
                                           self.start['coordinate'],
                                           self.start['type'])
-            self.addPositionToGraph(graph,
-                                    self.start['reference'],
+            self.addPositionToGraph(self.start['reference'],
                                     self.start['coordinate'],
                                     self.start['type'])
 
@@ -278,12 +275,11 @@ class Feature():
             endp = self._makePositionId(self.stop['reference'],
                                         self.stop['coordinate'],
                                         self.stop['type'])
-            self.addPositionToGraph(graph,
-                                    self.stop['reference'],
+            self.addPositionToGraph(self.stop['reference'],
                                     self.stop['coordinate'],
                                     self.stop['type'])
 
-        self.addRegionPositionToGraph(graph, region_id, beginp, endp)
+        self.addRegionPositionToGraph(region_id, beginp, endp)
 
         # {coordinate : integer, reference : reference_id, types = []}
 
@@ -316,26 +312,24 @@ class Feature():
             logger.error("Trying to make position with no reference.")
             return None
 
-        i = '_'
-        if self.nobnodes:
-            i = ':'+i
+        curie = '_:'
         reference = re.sub(r'\w+\:', '', reference, 1)
         if re.match(r'^_', reference):
             # this is in the case if the reference is a bnode
             reference = re.sub(r'^_', '', reference)
-        i += reference
+        curie += reference
         if coordinate is not None:
             # just in case it isn't a string already
-            i = '-'.join((i, str(coordinate)))
+            curie = '-'.join((curie, str(coordinate)))
         if types is not None:
             tstring = self._getStrandStringFromPositionTypes(types)
             if tstring is not None:
-                i = '-'.join((i, tstring))
+                curie = '-'.join((curie, tstring))
 
-        return i
+        return curie
 
     def addRegionPositionToGraph(
-            self, graph, region_id, begin_position_id,
+            self, region_id, begin_position_id,
             end_position_id):
 
         if begin_position_id is None:
@@ -343,20 +337,20 @@ class Feature():
             # logger.warn(
             #   "No begin position specified for region %s", region_id)
         else:
-            self.gu.addTriple(graph, region_id, self.properties['begin'],
-                              begin_position_id)
+            self.graph.addTriple(region_id, self.properties['begin'],
+                                 begin_position_id)
 
         if end_position_id is None:
             pass
             # logger.warn("No end position specified for region %s", region_id)
         else:
-            self.gu.addTriple(graph, region_id, self.properties['end'],
-                              end_position_id)
+            self.graph.addTriple(region_id, self.properties['end'],
+                                 end_position_id)
 
         return
 
     def addPositionToGraph(
-            self, graph, reference_id, position,
+            self, reference_id, position,
             position_types=None, strand=None):
         """
         Add the positional information to the graph, following the faldo model.
@@ -374,17 +368,15 @@ class Feature():
         :param strand:
         :return:  Identifier of the position created
         """
-
-        iid = self._makePositionId(reference_id, position, position_types)
-        n = self.gu.getNode(iid)
-        pos = self.gu.getNode(self.properties['position'])
-        ref = self.gu.getNode(self.properties['reference'])
+        pos_id = self._makePositionId(reference_id, position, position_types)
         if position is not None:
-            graph.add((n, pos, Literal(position, datatype=XSD['integer'])))
-        graph.add((n, ref, self.gu.getNode(reference_id)))
+            self.graph.addTriple(pos_id, self.properties['position'],
+                                 position, object_is_literal=True,
+                                 literal_type="xsd:integer")
+        self.graph.addTriple(pos_id, self.properties['reference'], reference_id)
         if position_types is not None:
-            for t in position_types:
-                graph.add((n, RDF['type'], self.gu.getNode(t)))
+            for pos_type in position_types:
+                self.model.addType(pos_id, pos_type)
         s = None
         if strand is not None:
             s = strand
@@ -397,11 +389,11 @@ class Feature():
             s = self.types['Position']
 
         if s is not None:
-            graph.add((n, RDF['type'], self.gu.getNode(s)))
+            self.model.addType(pos_id, s)
 
-        return iid
+        return pos_id
 
-    def addSubsequenceOfFeature(self, graph, parentid):
+    def addSubsequenceOfFeature(self, parentid):
         """
         This will add reciprocal triples like:
         feature is_subsequence_of parent
@@ -410,14 +402,14 @@ class Feature():
         :param parentid:
         :return:
         """
-        self.gu.addTriple(
-            graph, self.id, self.properties['is_subsequence_of'], parentid)
-        self.gu.addTriple(
-            graph, parentid, self.properties['has_subsequence'], self.id)
+        self.graph.addTriple(
+            self.id, self.properties['is_subsequence_of'], parentid)
+        self.graph.addTriple(
+            parentid, self.properties['has_subsequence'], self.id)
 
         return
 
-    def addTaxonToFeature(self, graph, taxonid):
+    def addTaxonToFeature(self, taxonid):
         """
         Given the taxon id, this will add the following triple:
         feature in_taxon taxonid
@@ -427,30 +419,13 @@ class Feature():
         """
         # TEC: should taxon be set in __init__()?
         self.taxon = taxonid
-        self.gu.addTriple(
-            graph, self.id, Assoc.properties['in_taxon'], self.taxon)
+        self.graph.addTriple(
+            self.id, Assoc.properties['in_taxon'], self.taxon)
 
         return
 
-    def loadAllProperties(self, graph):
-
-        prop_dict = {
-            Assoc(None).ANNOTPROP: self.annotation_properties,
-            Assoc(None).OBJECTPROP: self.object_properties,
-            Assoc(None).DATAPROP: self.data_properties
-        }
-
-        for p in prop_dict:
-            self.gu.loadProperties(graph, prop_dict.get(p), p)
-
-        return
-
-    def addFeatureProperty(self, graph, property_type, property):
-        self.gu.addTriple(graph, self.id, property_type, property)
-        return
-
-    def setNoBNodes(self, nobnodes):
-        self.nobnodes = nobnodes
+    def addFeatureProperty(self, property_type, property):
+        self.graph.addTriple(self.id, property_type, property)
         return
 
 
@@ -487,7 +462,6 @@ def makeChromID(chrom, reference=None, prefix=None):
 
 
 def makeChromLabel(chrom, reference=None):
-    label = ''
     c = re.sub(r'ch(r?)[omse\.]*', '', str(chrom))
     c = 'chr'+c
     if reference is None:
