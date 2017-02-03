@@ -29,16 +29,6 @@ class Source:
     files = {}
 
     def __init__(self, graph_type, are_bnodes_skized=False, name=None):
-        if graph_type == 'rdf_graph':
-            self.graph = RDFGraph(are_bnodes_skized)
-            self.testgraph = RDFGraph(True)
-        elif graph_type == 'streamed_graph':
-            self.graph = StreamedGraph(are_bnodes_skized)
-            self.graph = StreamedGraph(True)
-        else:
-            logger.error("{} graph type not supported\n"
-                         "valid types: rdf_graph, streamed_graph"
-                         .format(graph_type))
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
@@ -78,6 +68,19 @@ class Source:
             os.makedirs(self.outdir)
             p = os.path.abspath(self.outdir)
             logger.info("created output directory %s", p)
+
+        if graph_type == 'rdf_graph':
+            self.graph = RDFGraph(are_bnodes_skized)
+            self.testgraph = RDFGraph(True)
+        elif graph_type == 'streamed_graph':
+            source_file = open(self.outfile, 'w')
+            test_file = open(self.testfile, 'w')
+            self.graph = StreamedGraph(are_bnodes_skized, source_file)
+            self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
+        else:
+            logger.error("{} graph type not supported\n"
+                         "valid types: rdf_graph, streamed_graph"
+                         .format(graph_type))
 
         # will be set to True if the intention is
         # to only process and write the test data

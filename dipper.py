@@ -235,10 +235,10 @@ def main():
                 logger.info("Property axioms added: %d sec",
                             end_axiom_exp-start_axiom_exp)
 
-            start_write = time.clock()
-            mysource.write(format=args.format)
-            end_write = time.clock()
-            logger.info("Writing time: %d sec", end_write-start_write)
+                start_write = time.clock()
+                mysource.write(format=args.format)
+                end_write = time.clock()
+                logger.info("Writing time: %d sec", end_write-start_write)
         # if args.no_verify is not True:
 
         #    status = mysource.verify()

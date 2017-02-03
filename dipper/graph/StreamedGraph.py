@@ -34,10 +34,13 @@ class StreamedGraph(DipperGraph):
             obj = object_id
 
         if literal_type is not None:
-            lit_type = self._getNode(literal_type)
+            literal_type = self._getNode(literal_type)
 
-        self.serialize(subject_iri, predicate_iri, obj,
-                       object_is_literal, lit_type)
+        if object_id is not None:
+            self.serialize(subject_iri, predicate_iri, obj,
+                           object_is_literal, literal_type)
+        else:
+            logger.warn("Null value passed as object")
         return
 
     def skolemizeBlankNode(self, curie):
@@ -48,7 +51,28 @@ class StreamedGraph(DipperGraph):
 
     def serialize(self, subject_iri, predicate_iri, obj,
                   object_is_literal=False, literal_type=None):
-        pass
+        if not object_is_literal:
+            triple = "<{}> <{}> <{}> .".format(subject_iri, predicate_iri, obj)
+        elif literal_type is not None:
+            triple = '<{}> <{}> "{}"^^<{}> .'.format(
+                subject_iri, predicate_iri,
+                self._quote_encode(str(obj)), literal_type)
+        else:
+            if isinstance(obj, str):
+                triple = '<{}> <{}> {} .'.format(
+                    subject_iri, predicate_iri, self._quote_encode(obj))
+            else:
+                lit_type = self._getLiteralXSDType(obj)
+                if type is not None:
+                    triple = '<{}> <{}> "{}"^^<{}> .'.format(
+                        subject_iri, predicate_iri, obj, lit_type)
+                else:
+                    raise TypeError("Cannot determine type of {}".format(obj))
+
+        if self.file_handle is None:
+            print(triple)
+        else:
+            self.file_handle.write("{}\n".format(triple))
 
     def _getNode(self, curie):
         """
@@ -68,5 +92,32 @@ class StreamedGraph(DipperGraph):
         elif len(curie.split(':')) == 2:
             node = StreamedGraph.curie_util.get_uri(curie)
         else:
-            logger.error("Cannot process curie {}".format(curie))
+            raise TypeError("Cannot process curie {}".format(curie))
         return node
+
+    def _getLiteralXSDType(self, literal):
+        """
+        This could be much more nuanced, but for now
+        if a literal is not a str, determine if it's
+        a xsd int or double
+        :param literal:
+        :return: str - xsd full iri
+        """
+        if isinstance(literal, int):
+            return self._getNode("xsd:integer")
+        if isinstance(literal, float):
+            return self._getNode("xsd:double")
+
+    @staticmethod
+    def _quote_encode(literal):
+        """
+        Copy of code in rdflib here:
+        https://github.com/RDFLib/rdflib/blob/776b90be/
+        rdflib/plugins/serializers/nt.py#L76
+        :param literal:
+        :return:
+        """
+        return '"%s"' % literal.replace('\\', '\\\\')\
+            .replace('\n', '\\n')\
+            .replace('"', '\\"')\
+            .replace('\r', '\\r')

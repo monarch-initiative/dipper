@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from dipper.graph.RDFGraph import RDFGraph
+from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
 
 __author__ = 'nlw'
@@ -19,8 +20,13 @@ class Dataset:
     """
 
     def __init__(self, identifier, title, url, description=None,
-                 license_url=None, data_rights=None, graph_type=None):
+                 license_url=None, data_rights=None, graph_type=None,
+                 file_handle=None):
         if graph_type is None:
+            self.graph = RDFGraph()
+        elif graph_type == 'streamed_graph':
+            self.graph = StreamedGraph(True, file_handle=file_handle)
+        elif graph_type == 'rdf_graph':
             self.graph = RDFGraph()
         self.model = Model(self.graph)
         self.identifier = ':' + identifier
@@ -188,6 +194,6 @@ class Dataset:
 
         self.citation.add(citation_id)
         # TODO
-        # gu.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
+        # model.addTriple(self.identifier, 'cito:citeAsAuthority', citation_id)
 
         return

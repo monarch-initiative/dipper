@@ -1,4 +1,4 @@
-from rdflib import Graph, ConjunctiveGraph, Literal, URIRef, BNode, Namespace
+from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
@@ -31,15 +31,17 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                   object_is_literal=False, literal_type=None):
 
         if object_is_literal is True:
-            if literal_type is not None:
+            if literal_type is not None and obj is not None:
                 literal_type_iri = self._getNode(literal_type)
                 self.add(
                     (self._getNode(subject_id), self._getNode(predicate_id),
                      Literal(obj, datatype=literal_type_iri)))
-            else:
+            elif obj is not None:
                 self.add(
                     (self._getNode(subject_id), self._getNode(predicate_id),
                      Literal(obj)))
+            else:
+                logger.warn("Null value passed as object")
         else:
             self.add(
                 (self._getNode(subject_id), self._getNode(predicate_id),

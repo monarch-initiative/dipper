@@ -106,7 +106,7 @@ class AnimalQTLdb(Source):
         self.dataset = Dataset(
             'animalqtldb', 'Animal QTL db',
             'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
-            AQDL + '/faq#23')
+            AQDL + '/faq#23', graph_type=graph_type)
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warning(
