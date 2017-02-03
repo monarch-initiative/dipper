@@ -216,10 +216,6 @@ class Coriell(Source):
             self._process_data(file, limit)
 
         logger.info("Finished parsing.")
-
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
-
         return
 
     def _process_data(self, raw, limit=None):

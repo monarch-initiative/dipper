@@ -54,8 +54,6 @@ class Monarch(Source):
 
         self.process_omia_phenotypes(limit)
         logger.info("Finished parsing.")
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
 
         return
 

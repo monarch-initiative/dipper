@@ -225,6 +225,8 @@ def main():
             end_parse = time.clock()
             logger.info("Parsing time: %d sec", end_parse-start_parse)
             if args.graph == 'rdf_graph':
+                logger.info("Found %d nodes", len(mysource.graph))
+
                 # Add property axioms
                 start_axiom_exp = time.clock()
                 logger.info("Adding property axioms")

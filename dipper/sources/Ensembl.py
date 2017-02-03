@@ -104,9 +104,6 @@ class Ensembl(Source):
 
         logger.info("Done parsing files.")
 
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
-
         return
 
     def _build_biomart_gene_query(self, taxid):

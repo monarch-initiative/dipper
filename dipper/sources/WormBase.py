@@ -221,9 +221,6 @@ class WormBase(Source):
         # self.process_gene_interaction(limit)
 
         logger.info("Finished parsing.")
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
-
         return
 
     def process_gene_ids(self, limit):

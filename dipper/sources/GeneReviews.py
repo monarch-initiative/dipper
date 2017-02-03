@@ -104,9 +104,6 @@ class GeneReviews(Source):
 
         # no test subset for now; test == full graph
         self.testgraph = self.graph
-
-        logger.info("Found %d nodes", len(self.graph))
-
         return
 
     def _get_equivids(self, limit):

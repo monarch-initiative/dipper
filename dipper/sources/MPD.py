@@ -135,7 +135,6 @@ class MPD(Source):
         self._fill_provenance_graph(limit)
 
         logger.info("Finished parsing.")
-        logger.info("Found %d nodes", len(self.graph))
         return
 
     def _process_ontology_mappings_file(self, limit):

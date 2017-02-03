@@ -145,7 +145,6 @@ class IMPC(Source):
 
         logger.info("Finished parsing")
 
-        logger.info("Found %d nodes", len(self.graph))
         return
 
     def _process_data(self, raw, limit=None):

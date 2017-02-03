@@ -173,8 +173,6 @@ class AnimalQTLdb(Source):
                     '/'.join((self.rawdir, file)), tax_id, o, limit)
 
         logger.info("Finished parsing")
-
-        logger.info("Found %d nodes", len(self.graph))
         return
 
     def _process_QTLs_genetic_location(

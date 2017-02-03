@@ -68,9 +68,6 @@ class HGNC(Source):
 
         logger.info("Done parsing files.")
 
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
-
         return
 
     def _process_genes(self, limit=None):

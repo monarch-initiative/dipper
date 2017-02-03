@@ -101,7 +101,6 @@ class Panther(Source):
                 str(self.tax_ids))
 
         self._get_orthologs(limit)
-        logger.info("INFO: Found %d nodes", len(self.graph))
 
         return
 

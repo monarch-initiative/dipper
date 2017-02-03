@@ -183,7 +183,6 @@ class Monochrom(Source):
 
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Found %d nodes", len(self.graph))
         logger.info("Done parsing files.")
 
         return

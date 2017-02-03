@@ -118,7 +118,6 @@ class EOM(PostgreSQLSource):
         # we default to copying the entire graph to the test set
         self.testgraph = self.graph
 
-        logger.info("Found %s nodes", len(self.graph))
         return
 
     def _process_nlx_157874_1_view(self, raw, limit=None):
