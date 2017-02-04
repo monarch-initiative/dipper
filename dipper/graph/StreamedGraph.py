@@ -54,7 +54,7 @@ class StreamedGraph(DipperGraph):
         if not object_is_literal:
             triple = "<{}> <{}> <{}> .".format(subject_iri, predicate_iri, obj)
         elif literal_type is not None:
-            triple = '<{}> <{}> "{}"^^<{}> .'.format(
+            triple = '<{}> <{}> {}^^<{}> .'.format(
                 subject_iri, predicate_iri,
                 self._quote_encode(str(obj)), literal_type)
         else:
