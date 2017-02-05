@@ -28,7 +28,6 @@
 
 import os
 import re
-import sys
 import gzip
 import hashlib
 import logging
@@ -91,14 +90,25 @@ ARGS = ARGPARSER.parse_args()
 FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
 # avoid clobbering existing output until we are finished
+OUTFILE = ARGS.destination + '/TMP_' + ARGS.output + '_PART'
 try:
-    os.remove(ARGS.destination + '/TMP_' + ARGS.output)
+    os.remove(OUTFILE)
 except FileNotFoundError:
     # no problem
-    LOG.info("fresh start for %s", ARGS.destination + '/TMP_' + ARGS.output)
+    LOG.info("fresh start for %s", OUTFILE)
 
-OUTTMP = open(ARGS.destination + '/TMP_' + ARGS.output, 'a')
-OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
+OUTTMP = open(OUTFILE, 'a')
+OUTPUT = ARGS.destination + '/' + ARGS.output
+
+# catch and release input for future study
+REJECT = FILENAME + '_REJECT'
+try:
+    os.remove(REJECT)
+except FileNotFoundError:
+    # no problem
+    LOG.info("fresh start for %s", REJECT)
+REJECT = open(REJECT, 'a')
+
 
 # default to /dev/stdout if anything amiss
 
@@ -278,40 +288,29 @@ with open(ARGS.transtab) as f:
 if ARGS.blanknode is True:
     CURIEMAP['_'] = '_:B'
 
-count = 0     # tally of  record sets so far
-batch = 1000  # arbitraty nunber of record sets to process before dumping
+count = 0     # of record sets so far
+
+# Seed releasetriple to avoid union with the empty set
+# <MonarchData: + ARGS.output> <a> <owl:Ontology>
+releasetriple.add(
+    make_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
+
 #######################################################
 # main loop over xml
+# taken in chunks composed of ClinVarSet stanzas
 with gzip.open(FILENAME, 'rt') as fh:
-    TREE = ET.parse(fh)
-    ReleaseSet = TREE.getroot()
-    if ReleaseSet.get('Type') != 'full':
-        LOG.warning('Not a full release')
-        sys.exit(-1)
+    TREE = ET.iterparse(fh)  # w/o specifing events it defaults to 'end'
+    for event, element in TREE:
+        if element.tag != 'ClinVarSet':
+            continue
+        else:
+            ClinVarSet = element
+        count += 1
 
-    rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
-
-    # seed releasetriple to avoid union with the empty set
-    # <MonarchData: + ARGS.output> <a> <owl:Ontology>
-    releasetriple.add(
-        make_spo(
-            'MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
-    releasetriple.add(
-         make_spo(
-            'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
-
-    # not finalized
-    # releasetriple.add(
-    #     make_spo(
-    #        'MonarchData:' + ARGS.output, owl:versionIRI,
-    #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
-
-    for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
             LOG.warning(
-                ClinVarSet.get('ID') + " is not current as of " + rs_dated)
-            continue  # or break?
-        count += 1
+                ClinVarSet.get('ID') + " is not current")
+
         # collect svc significance calls within a rcv
         pathocalls = {}
 
@@ -335,8 +334,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # I do not expect we care as we shouldn't keep the RCV.
         if RCVAssertion.find('RecordStatus').text != 'current':
             LOG.warning(
-                rcv_acc + " <is not current on> " + rs_dated)
-            continue
+                rcv_acc + " <is not current on>")  # + rs_dated)
 
         # # # Child elements
         #
@@ -382,6 +380,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # XRef[@DB="dbSNP"]/@ID
             for RCV_dbSNP in \
                     RCV_Measure.findall('XRef[@DB="dbSNP"]'):
+
                 rcv_dbsnps.append(RCV_dbSNP.get('ID'))
 
             # this xpath works but is not supported by ElementTree.
@@ -392,10 +391,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                         RCV_Synonym.text is not None and \
                         re.match(r'^HGVS', RCV_Synonym.get('Type')):
                     rcv_synonyms.append(RCV_Synonym.text)
-                    # print(rcv_synonyms)
 
         # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
-
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
 
         # RCV_Variant = RCV_Measure.find(
@@ -409,7 +406,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # 374 variant in gene
         # 54 near gene, downstream
 
-        RCV_Variant = RCV_Measure.find('MeasureRelationship@Type')
+        RCV_Variant = RCV_Measure.find('MeasureRelationship[@Type]')
 
         if RCV_Variant is not None:   # try letting them all through
             # XRef[@DB="Gene"]/@ID
@@ -424,7 +421,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'Symbol/ElementValue[@Type="Preferred"]')
             if rcv_gene_symbol is None and RCV_Symbol is not None:
                 rcv_gene_symbol = RCV_Symbol.text
-            elif rcv_ncbigene_id is None:
+
+            if rcv_gene_symbol is None:
                 LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
 
         #######################################################################
@@ -433,7 +431,6 @@ with gzip.open(FILENAME, 'rt') as fh:
         # not the SCV traits as submitted due to time constraints
 
         for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
-
             # /RCV/TraitSet/Trait[@Type="Disease"]/@ID
             # 144,327   2016-Mar
 
@@ -450,7 +447,6 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
-                # print(rcv_acc + ' ' + rcv_disease_label)
             else:
                 LOG.warning(rcv_acc + " MISSING DISEASE NAME")
 
@@ -458,7 +454,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                 if rcv_disease_db is not None:
                     break
-                for RCV_TraitXRef in RCV_Trait.findall('XRef[@DB="OMIM"]'):
+                for RCV_TraitXRef in RCV_Trait.findall(
+                        'XRef[@DB="OMIM"]'):
                     rcv_disease_db = RCV_TraitXRef.get('DB')
                     rcv_disease_id = RCV_TraitXRef.get('ID')
                     break
@@ -507,7 +504,11 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            LOG.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
+            LOG.warning('RCV: %s is under specified. SKIPPING', rcv_acc)
+
+            # Write this Clinvar set out so we can know what we are missing
+            print(ET.tostring(ClinVarSet), file=REJECT)
+            ClinVarSet.clear()
             continue
 
         # start anew
@@ -883,16 +884,32 @@ with gzip.open(FILENAME, 'rt') as fh:
         # put this RCV's triples in the SET of all triples in this data release
         releasetriple.update(set(rcvtriples))
         del rcvtriples[:]
-        # exceeding 32G ...
-        # a imperfect stop-gap may allow some duplicate statements
-        #  between batches RCV/ clinvar sets
-        if 0 == count % batch:
-            print('\n'.join(list(releasetriple)), file=OUTTMP)
-            del releasetriple[:]
+        ClinVarSet.clear()
+
+    ###############################################################
+    # first in is last out
+
+    ROOT = element
+    ReleaseSet = ROOT.find('ReleaseSet')
+
+    if ReleaseSet.get('Type') != 'full':
+        LOG.warning('Not a full release')
+    rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
+
+    releasetriple.add(
+         make_spo(
+            'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
+
+    # not finalized
+    # releasetriple.add(
+    #     make_spo(
+    #        'MonarchData:' + ARGS.output, owl:versionIRI,
+    #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
 
     # write all remaining triples out
     print('\n'.join(list(releasetriple)), file=OUTTMP)
 
+LOG.info('Records not included are written back to \n%s', str(REJECT))
 OUTTMP.close()
-os.move_file(OUTTMP, OUTPUT)
-OUTPUT.close()
+REJECT.close()
+os.replace(OUTFILE, OUTPUT)
