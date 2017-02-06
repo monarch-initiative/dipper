@@ -108,15 +108,15 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP('rdf_graph', True)
+        udp = UDP('rdf_graph', False)
 
         # Fails 20161118 see issue 386?
 
         udp._parse_patient_variants(mock_file)
         sparql_query = """
-            SELECT *
+            SELECT ?patient
             WHERE {
-                :patient_1 OBO:GENO_0000222 [ a OBO:GENO_0000000 ;
+                ?patient OBO:GENO_0000222 [ a OBO:GENO_0000000 ;
                     rdfs:label "patient_1 genotype" ;
                     OBO:GENO_0000382 [ a OBO:SO_0001059 ;
                         rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
@@ -126,4 +126,6 @@ class UDPTestCase(unittest.TestCase):
             }
         """
         sparql_output = udp.graph.query(sparql_query)
-        self.assertEqual(len(list(sparql_output)), 1)
+        results = list(sparql_output)
+        expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
+        self.assertEqual(results, expected)

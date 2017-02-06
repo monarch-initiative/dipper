@@ -117,8 +117,7 @@ class DipperUtil:
         monarch_url = 'https://solr.monarchinitiative.org/solr/search/select'
         params = DipperUtil._get_solr_weight_settings()
         params["q"] = "{0} \"{0}\"".format(gene_symbol)
-        params["fq"] = "taxon:\"NCBITaxon:9606\""
-        params["fq"] = "category:\"gene\""
+        params["fq"] = ["taxon:\"NCBITaxon:9606\"", "category:\"gene\""]
         gene_id = None
         try:
             monarch_request = requests.get(monarch_url, params=params)
