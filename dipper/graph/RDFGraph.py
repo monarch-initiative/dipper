@@ -23,9 +23,10 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
         super().__init__()
         self.are_bnodes_skized = are_bnodes_skized
 
-        for prefix in curie_map.get().keys():
-            iri = curie_map.get()[prefix]
-            self.bind(prefix, Namespace(iri))
+        # Can be removed when this is resolved
+        # https://github.com/RDFLib/rdflib/issues/632
+        obo_map = curie_map.get()['OBO']
+        self.bind('OBO', Namespace(obo_map))
 
     def addTriple(self, subject_id, predicate_id, obj,
                   object_is_literal=False, literal_type=None):
@@ -67,15 +68,12 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
         :param curie: str identifier formatted as curie or iri
         :return: node: RDFLib URIRef or BNode object
         """
-        base = Namespace(self.curie_map.get_base())
         node = None
         if re.match(r'^_', curie):
             if self.are_bnodes_skized is True:
                 node = self.skolemizeBlankNode(curie)
             else:  # replace the leading underscore to make it cleaner
                 node = BNode(re.sub(r'^_:|^_', '', curie, 1))
-        elif re.match(r'^:', curie):  # do we need to remove embedded ID colons?
-            node = base[re.sub(r':', '', curie, 1)]
         # Check if curie actually an IRI
         elif re.match(r'^http|^ftp', curie):
             node = URIRef(curie)
@@ -83,6 +81,11 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
             iri = RDFGraph.curie_util.get_uri(curie)
             if iri is not None:
                 node = URIRef(RDFGraph.curie_util.get_uri(curie))
+                # Bind prefix map to graph
+                prefix = curie.split(':')[0]
+                if prefix not in self.namespace_manager.namespaces():
+                    mapped_iri = curie_map.get()[prefix]
+                    self.bind(prefix, Namespace(mapped_iri))
             else:
                 logger.error("couldn't make URI for %s", curie)
         return node
