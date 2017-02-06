@@ -109,26 +109,44 @@ class DipperUtil:
 
     @staticmethod
     def get_ncbi_id_from_symbol(gene_symbol):
-        '''
+        """
         Get ncbi gene id from symbol using monarch and mygene services
         :param gene_symbol:
         :return:
-        '''
-
-        monarch_url = 'https://beta.monarchinitiative.org/search/'
+        """
+        monarch_url = 'https://solr.monarchinitiative.org/solr/search/select'
+        params = DipperUtil._get_solr_weight_settings()
+        params["q"] = "{0} \"{0}\"".format(gene_symbol)
+        params["fq"] = "taxon:\"NCBITaxon:9606\""
+        params["fq"] = "category:\"gene\""
         gene_id = None
-        url = monarch_url + gene_symbol + '.json'
         try:
-            monarch_request = requests.get(url)
-            results = monarch_request.json()
-            for res in results['results']:
-                if res['taxon'] == 'Human' and \
-                    'gene' in res['categories'] and (
-                        gene_symbol in res['labels'] or
-                        gene_symbol in res['synonyms']):
-                    gene_id = res['id']
-                    break
+            monarch_request = requests.get(monarch_url, params=params)
+            response = monarch_request.json()
+            count = response['response']['numFound']
+            if count > 0:
+                gene_id = response['response']['docs'][0]['id']
         except requests.ConnectionError:
-            print("error fetching {0}".format(url))
+            print("error fetching {0}".format(monarch_url))
 
         return gene_id
+
+    @staticmethod
+    def _get_solr_weight_settings():
+        return {
+            "qt": "standard",
+            "json.nl": "arrarr",
+            "fl": "*,score",
+            "start": "0",
+            "rows": "5",
+            "defType": "edismax",
+            "personality": "monarch_search",
+            "qf": [
+                "label_searchable^1",
+                "definition_searchable^1",
+                "synonym_searchable^1",
+                "label_std^2",
+                "synonym_std^1"
+            ],
+            "wt": "json"
+        }
