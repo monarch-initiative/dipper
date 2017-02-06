@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 class GWASCatalogTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = GWASCatalog()
+        self.source = GWASCatalog('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

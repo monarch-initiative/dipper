@@ -5,9 +5,8 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 from dipper import config
-from dipper import curie_map
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +27,8 @@ class Orphanet(Source):
             'url': 'http://www.orphadata.org/data/xml/en_product6.xml'}
     }
 
-    def __init__(self):
-        Source.__init__(self, 'orphanet')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'orphanet')
 
         self.dataset = Dataset(
             'orphanet', 'Orphanet', 'http://www.orpha.net', None,
@@ -66,9 +63,6 @@ class Orphanet(Source):
 
         self._process_diseasegene(limit)
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         logger.info("Done parsing.")
 
         return
@@ -84,7 +78,7 @@ class Orphanet(Source):
             g = self.graph
         line_counter = 0
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
 
         myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
 
@@ -114,7 +108,7 @@ class Orphanet(Source):
                     gene_iid_to_type[gene_iid] = gene_type
 
                 # assuming that these are in the ontology
-                gu.addClassToGraph(g, disorder_id, disorder_label)
+                model.addClassToGraph(disorder_id, disorder_label)
 
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 for a in assoc_list.findall('DisorderGeneAssociation'):
@@ -125,12 +119,12 @@ class Orphanet(Source):
                     gene_id = 'Orphanet:'+str(gene_num)
                     gene_type_id = \
                         self._map_gene_type_id(gene_iid_to_type[gene_iid])
-                    gu.addClassToGraph(
-                        g, gene_id, gene_symbol, gene_type_id, gene_name)
+                    model.addClassToGraph(
+                        gene_id, gene_symbol, gene_type_id, gene_name)
                     syn_list = a.find('./Gene/SynonymList')
                     if int(syn_list.get('count')) > 0:
                         for s in syn_list.findall('./Synonym'):
-                            gu.addSynonym(g, gene_id, s.text)
+                            model.addSynonym(gene_id, s.text)
 
                     dgtype = a.find('DisorderGeneAssociationType').get('id')
                     rel_id = self._map_rel_id(dgtype)
@@ -143,15 +137,14 @@ class Orphanet(Source):
                             dg_label, disorder_label, gene_symbol)
                         continue
 
-                    alt_locus_id = '_'+gene_num+'-'+disorder_num+'VL'
+                    alt_locus_id = '_:'+gene_num+'-'+disorder_num+'VL'
                     alt_label = \
                         ' '.join(('some variant of', gene_symbol.strip(),
                                   'that is a', dg_label.lower(),
                                   disorder_label))
-                    if self.nobnodes:
-                        alt_locus_id = ':'+alt_locus_id
-                    gu.addIndividualToGraph(g, alt_locus_id, alt_label,
-                                            geno.genoparts['variant_locus'])
+
+                    model.addIndividualToGraph(alt_locus_id, alt_label,
+                                               geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(alt_locus_id, gene_id)
 
                     # consider typing the gain/loss-of-function variants like:
@@ -174,10 +167,10 @@ class Orphanet(Source):
                     # Non-traceable author statement ECO_0000034
                     # imported information in automatic assertion ECO_0000313
 
-                    assoc = G2PAssoc(self.name, alt_locus_id,
+                    assoc = G2PAssoc(g, self.name, alt_locus_id,
                                      disorder_id, rel_id)
                     assoc.add_evidence(eco_id)
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
 
                     rlist = a.find('./Gene/ExternalReferenceList')
                     eqid = None
@@ -192,46 +185,39 @@ class Orphanet(Source):
                         else:
                             pass  # skip the others for now
                         if eqid is not None:
-                            gu.addClassToGraph(g, eqid, None)
-                            gu.addEquivalentClass(g, gene_id, eqid)
+                            model.addClassToGraph(eqid, None)
+                            model.addEquivalentClass(gene_id, eqid)
                 elem.clear()  # discard the element
 
             if self.testMode and limit is not None and line_counter > limit:
                 return
 
-        gu.loadProperties(
-            g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-        gu.loadAllProperties(g)
-
         return
 
-    @staticmethod
-    def _map_rel_id(orphanet_rel_id):
+    def _map_rel_id(self, orphanet_rel_id):
         # TODO check if these ids are stable for mapping
         rel_id = None
-        gu = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         id_map = {
             # Disease-causing germline mutation(s) in
-            '17949': gu.object_properties['has_phenotype'],
+            '17949': model.object_properties['has_phenotype'],
             # Disease-causing somatic mutation(s) in
-            '17955': gu.object_properties['has_phenotype'],
+            '17955': model.object_properties['has_phenotype'],
             # Major susceptibility factor in
-            '17961': gu.object_properties['contributes_to'],
+            '17961': model.object_properties['contributes_to'],
             # Modifying germline mutation in
-            '17967': gu.object_properties['contributes_to'],
+            '17967': model.object_properties['contributes_to'],
             # Modifying somatic mutation in
-            '17973': gu.object_properties['contributes_to'],
+            '17973': model.object_properties['contributes_to'],
             # Part of a fusion gene in
-            '17979': gu.object_properties['contributes_to'],
+            '17979': model.object_properties['contributes_to'],
             # Role in the phenotype of
-            '17985': gu.object_properties['contributes_to'],
+            '17985': model.object_properties['contributes_to'],
             '18273': None,  # Candidate gene tested in  FIXME?
             # Disease-causing germline mutation(s) (loss of function) in
-            '25979': gu.object_properties['has_phenotype'],  # comma added ?!!
+            '25979': model.object_properties['has_phenotype'],  # comma added ?!!
             # Disease-causing germline mutation(s) (gain of function) in
-            '25972': gu.object_properties['has_phenotype'],
+            '25972': model.object_properties['has_phenotype'],
         }
 
         if orphanet_rel_id in id_map:

@@ -7,18 +7,15 @@ import shutil
 
 from dipper.sources.Source import Source
 from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
-#  get_omim_id_from_entry,
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.NCBIGene import NCBIGene
 from dipper.utils.DipperUtil import DipperUtil
-from dipper import curie_map
-
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +57,8 @@ class OMIA(Source):
             'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'},
     }
 
-    def __init__(self):
-        Source.__init__(self, 'omia')
-
-        self.load_bindings()
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'omia')
 
         self.dataset = Dataset(
             'omia', 'Online Mendelian Inheritance in Animals',
@@ -78,7 +73,6 @@ class OMIA(Source):
             'gene': {}
         }
         self.label_hash = {}
-        self.gu = GraphUtils(curie_map.get())
         # used to store the omia to omim phene mappings
         self.omia_omim_map = {}
         # used to store the unique genes that have phenes
@@ -101,7 +95,6 @@ class OMIA(Source):
         # to write a report for curation
         self.stored_omia_mol_gen = {}
         self.g = self.graph
-        self.geno = Genotype(self.g)
         return
 
     def fetch(self, is_dl_forced=False):
@@ -111,7 +104,7 @@ class OMIA(Source):
         """
         self.get_files(is_dl_forced)
 
-        ncbi = NCBIGene()
+        ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
         # ncbi.fetch()
         gene_group = ncbi.files['gene_group']
         self.fetch_from_url(
@@ -142,7 +135,6 @@ class OMIA(Source):
             self.g = self.testgraph
         else:
             self.g = self.graph
-        self.geno = Genotype(self.g)
 
         # we do three passes through the file
         # first process species (two others reference this one)
@@ -156,11 +148,8 @@ class OMIA(Source):
 
         # process the vertebrate orthology for genes
         # that are annotated with phenotypes
-        ncbi = NCBIGene()
+        ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
         ncbi.add_orthologs_by_gene_group(self.g, self.annotated_genes)
-
-        self.load_core_bindings()
-        self.load_bindings()
 
         logger.info("Done parsing.")
 
@@ -176,8 +165,8 @@ class OMIA(Source):
 
         i.e.?i
         omia.xml:1555328.28: PCDATA invalid Char value 2
-		<field name="journal">Bulletin et Memoires de la Societe Centrale de Medic
-         
+        <field name="journal">Bulletin et Memoires de la Societe Centrale de Medic
+
         :return:
 
         """
@@ -318,14 +307,14 @@ class OMIA(Source):
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
         sci_name = row['sci_name']
         com_name = row['com_name']
-
+        model = Model(self.g)
         if self.testMode and \
                 (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
-        self.gu.addClassToGraph(self.g, tax_id, sci_name)
+        model.addClassToGraph(tax_id, sci_name)
         if com_name != '':
-            self.gu.addSynonym(self.g, tax_id, com_name)
+            model.addSynonym(tax_id, com_name)
             self.label_hash[tax_id] = com_name  # for lookup later
         else:
             self.label_hash[tax_id] = sci_name
@@ -333,7 +322,7 @@ class OMIA(Source):
         return
 
     def _process_breed_row(self, row):
-
+        model = Model(self.g)
         # in test mode, keep all breeds of our test species
         if self.testMode and \
                 (int(row['gb_species_id']) not in self.test_ids['taxon']):
@@ -351,13 +340,13 @@ class OMIA(Source):
         if species_label is not None:
             breed_label = breed_label + ' ('+species_label+')'
 
-        self.gu.addIndividualToGraph(self.g, breed_id, breed_label, tax_id)
+        model.addIndividualToGraph(breed_id, breed_label, tax_id)
         self.label_hash[breed_id] = breed_label
 
         return
 
     def _process_phene_row(self, row):
-
+        model = Model(self.g)
         phenotype_id = None
         sp_phene_label = row['phene_name']
         if sp_phene_label == '':
@@ -399,8 +388,8 @@ class OMIA(Source):
         if sp_phene_label is None and \
                 omia_label is not None and species_label is not None:
             sp_phene_label = ' '.join((omia_label, 'in', species_label))
-        self.gu.addClassToGraph(
-            self.g, sp_phene_id, sp_phene_label, omia_id, descr)
+        model.addClassToGraph(
+            sp_phene_id, sp_phene_label, omia_id, descr)
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = sp_phene_id
         self.label_hash[sp_phene_id] = sp_phene_label
@@ -409,21 +398,21 @@ class OMIA(Source):
         for item in [
                 'clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
             if row[item] is not None and row[item] != '':
-                self.gu.addDescription(
-                    self.g, sp_phene_id, row[item] + ' ['+item+']')
+                model.addDescription(
+                    sp_phene_id, row[item] + ' ['+item+']')
         # if row['symbol'] is not None:  # species-specific
         # CHECK ME - sometimes spaces or gene labels
         #     gu.addSynonym(g, sp_phene, row['symbol'])
 
-        self.gu.addOWLPropertyClassRestriction(
-            self.g, sp_phene_id, self.gu.object_properties['in_taxon'],
+        model.addOWLPropertyClassRestriction(
+            sp_phene_id, model.object_properties['in_taxon'],
             species_id)
 
         # add inheritance as an association
         inheritance_id = self._map_inheritance_term_id(row['inherit'])
         if inheritance_id is not None:
-            assoc = DispositionAssoc(self.name, sp_phene_id, inheritance_id)
-            assoc.add_association_to_graph(self.g)
+            assoc = DispositionAssoc(self.g, self.name, sp_phene_id, inheritance_id)
+            assoc.add_association_to_graph()
 
         if row['characterised'] == 'Yes':
             self.stored_omia_mol_gen[omia_id] = {
@@ -456,7 +445,7 @@ class OMIA(Source):
         return
 
     def _process_article_row(self, row):
-
+        model = Model(self.g)
         # don't bother in test mode
         if self.testMode:
             return
@@ -466,23 +455,24 @@ class OMIA(Source):
         rtype = None
         if row['journal'] != '':
             rtype = Reference.ref_types['journal_article']
-        r = Reference(iarticle_id, rtype)
+        reference = Reference(self.g, iarticle_id, rtype)
 
         if row['title'] is not None:
-            r.setTitle(row['title'].strip())
+            reference.setTitle(row['title'].strip())
         if row['year'] is not None:
-            r.setYear(row['year'])
-        r.addRefToGraph(self.g)
+            reference.setYear(row['year'])
+        reference.addRefToGraph()
 
         if row['pubmed_id'] is not None:
             pmid = 'PMID:'+str(row['pubmed_id'])
             self.id_hash['article'][row['article_id']] = pmid
-            self.gu.addSameIndividual(self.g, iarticle_id, pmid)
-            self.gu.addComment(self.g, pmid, iarticle_id)
+            model.addSameIndividual(iarticle_id, pmid)
+            model.addComment(pmid, iarticle_id.replace("_:", ''))
 
         return
 
     def _process_omia_group_row(self, row):
+        model = Model(self.g)
         omia_id = 'OMIA:'+row['omia_id']
 
         if self.testMode and omia_id not in self.test_ids['disease']:
@@ -496,12 +486,12 @@ class OMIA(Source):
         disease_id = \
             self.map_omia_group_category_to_ontology_id(group_category)
         if disease_id is not None:
-            self.gu.addClassToGraph(self.g, disease_id, None)
+            model.addClassToGraph(disease_id, None)
             if disease_id == 'MP:0008762':  # embryonic lethal
                 # add this as a phenotype association
                 # add embryonic onset
-                assoc = D2PAssoc(self.name, omia_id, disease_id)
-                assoc.add_association_to_graph(self.g)
+                assoc = D2PAssoc(self.g, self.name, omia_id, disease_id)
+                assoc.add_association_to_graph()
                 disease_id = None
         else:
             logger.info(
@@ -515,14 +505,15 @@ class OMIA(Source):
         if group_name == '':
             group_name = None
 
-        self.gu.addClassToGraph(
-            self.g, omia_id, group_name, disease_id, group_summary)
+        model.addClassToGraph(omia_id, group_name, disease_id, group_summary)
 
         self.label_hash[omia_id] = group_name
 
         return
 
     def _process_gene_row(self, row):
+        model = Model(self.g)
+        geno = Genotype(self.g)
         if self.testMode and row['gene_id'] not in self.test_ids['gene']:
             return
         gene_id = 'NCBIGene:'+str(row['gene_id'])
@@ -531,12 +522,13 @@ class OMIA(Source):
         self.label_hash[gene_id] = gene_label
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
         gene_type_id = NCBIGene.map_type_of_gene(row['gene_type'])
-        self.gu.addClassToGraph(self.g, gene_id, gene_label, gene_type_id)
-        self.geno.addTaxon(tax_id, gene_id)
+        model.addClassToGraph(gene_id, gene_label, gene_type_id)
+        geno.addTaxon(tax_id, gene_id)
 
         return
 
     def _process_article_breed_row(self, row):
+        model = Model(self.g)
         # article_id, breed_id, added_by
         # don't bother putting these into the test... too many!
 
@@ -549,9 +541,8 @@ class OMIA(Source):
 
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
-            self.gu.addTriple(
-                self.g, article_id, self.gu.object_properties['is_about'],
-                breed_id)
+            self.g.addTriple(
+                article_id, model.object_properties['is_about'], breed_id)
         else:
             logger.warning("Missing article key %s", str(row['article_id']))
 
@@ -564,6 +555,7 @@ class OMIA(Source):
         :param row:
         :return:
         """
+        model = Model(self.g)
         # article_id, phene_id, added_by
         # look up the article in the hashmap
         phenotype_id = self.id_hash['phene'].get(row['phene_id'])
@@ -575,13 +567,14 @@ class OMIA(Source):
             return
 
         # make a triple, where the article is about the phenotype
-        self.gu.addTriple(
-            self.g, article_id,
-            self.gu.object_properties['is_about'], phenotype_id)
+        self.g.addTriple(
+            article_id,
+            model.object_properties['is_about'], phenotype_id)
 
         return
 
     def _process_breed_phene_row(self, row):
+        model = Model(self.g)
         # Linking disorders/characteristic to breeds
         # breed_id, phene_id, added_by
         breed_id = self.id_hash['breed'].get(row['breed_id'])
@@ -598,9 +591,9 @@ class OMIA(Source):
 
         # FIXME we want a different relationship here
         assoc = G2PAssoc(
-            self.name, breed_id, phene_id,
-            self.gu.object_properties['has_phenotype'])
-        assoc.add_association_to_graph(self.g)
+            self.g, self.name, breed_id, phene_id,
+            model.object_properties['has_phenotype'])
+        assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
         # use the omia-omim mappings for this
@@ -616,10 +609,10 @@ class OMIA(Source):
                     omia_id, str(omim_ids))
             for i in omim_ids:
                 assoc = G2PAssoc(
-                    self.name, breed_id, i,
-                    self.gu.object_properties['model_of'])
+                    self.g, self.name, breed_id, i,
+                    model.object_properties['model_of'])
                 assoc.add_evidence(eco_id)
-                assoc.add_association_to_graph(self.g)
+                assoc.add_association_to_graph()
                 aid = assoc.get_association_id()
 
                 breed_label = self.label_hash.get(breed_id)
@@ -642,10 +635,11 @@ class OMIA(Source):
                 desc = ' '.join(
                     ("High incidence of", phene_label, "in", breed_label,
                      "suggests it to be a model of disease", i + "."))
-                self.gu.addDescription(self.g, aid, desc)
+                model.addDescription(aid, desc)
         return
 
     def _process_lida_links_row(self, row):
+        model = Model(self.g)
         # lidaurl, omia_id, added_by
         omia_id = 'OMIA:'+row['omia_id']
         lidaurl = row['lidaurl']
@@ -653,12 +647,12 @@ class OMIA(Source):
         if self.testMode and omia_id not in self.test_ids['disease']:
             return
 
-        self.gu.addXref(self.g, omia_id, lidaurl, True)
+        model.addXref(omia_id, lidaurl, True)
 
         return
 
     def _process_phene_gene_row(self, row):
-
+        geno = Genotype(self.g)
         gene_id = self.id_hash['gene'].get(row['gene_id'])
         phene_id = self.id_hash['phene'].get(row['phene_id'])
 
@@ -677,13 +671,11 @@ class OMIA(Source):
 
         gene_label = self.label_hash[gene_id]
         # some variant of gene_id has phenotype d
-        vl = '_'+re.sub(r'NCBIGene:', '', str(gene_id)) + 'VL'
-        if self.nobnodes:
-            vl = ':'+vl
-        self.geno.addAllele(vl, 'some variant of ' + gene_label)
-        self.geno.addAlleleOfGene(vl, gene_id)
-        assoc = G2PAssoc(self.name, vl, phene_id)
-        assoc.add_association_to_graph(self.g)
+        vl = '_:'+re.sub(r'NCBIGene:', '', str(gene_id)) + 'VL'
+        geno.addAllele(vl, 'some variant of ' + gene_label)
+        geno.addAlleleOfGene(vl, gene_id)
+        assoc = G2PAssoc(self.g, self.name, vl, phene_id)
+        assoc.add_association_to_graph()
 
         # add the gene id to the set of annotated genes
         # for later lookup by orthology
@@ -698,7 +690,7 @@ class OMIA(Source):
         :return:
         """
         # omia_id, omim_id, added_by
-
+        model = Model(self.g)
         omia_id = 'OMIA:'+row['omia_id']
         omim_id = 'OMIM:'+row['omim_id']
 
@@ -711,7 +703,7 @@ class OMIA(Source):
         if self.testMode and omia_id not in self.test_ids['disease']:
             return
 
-        self.gu.addXref(self.g, omia_id, omim_id)
+        model.addXref(omia_id, omim_id)
 
         return
 
@@ -777,13 +769,13 @@ class OMIA(Source):
         mpo_num = int(row['MPO_no'])
         mpo_id = 'MP:'+str(mpo_num).zfill(7)
 
-        assoc = D2PAssoc(self.name, omia_id, mpo_id)
-        assoc.add_association_to_graph(self.g)
+        assoc = D2PAssoc(self.g, self.name, omia_id, mpo_id)
+        assoc.add_association_to_graph()
 
         return
 
     def clean_up_omim_genes(self):
-        omim = OMIM()
+        omim = OMIM(self.graph_type, self.are_bnodes_skized)
         # get all the omim ids
         allomimids = set()
         for omia in self.omia_omim_map:
@@ -813,11 +805,7 @@ class OMIA(Source):
         return
 
     def _make_internal_id(self, prefix, key):
-
-        iid = '_'+''.join(('omia', prefix, 'key', str(key)))
-        if self.nobnodes:
-            iid = ':'+iid
-
+        iid = '_:'+''.join(('omia', prefix, 'key', str(key)))
         return iid
 
     def make_breed_id(self, key):

@@ -6,12 +6,11 @@ import io
 import requests
 
 from dipper.sources.Source import Source
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Reference import Reference
@@ -67,13 +66,13 @@ class NCBIGene(Source):
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz'}
     }
 
-    def __init__(self, tax_ids=None, gene_ids=None):
-        Source.__init__(self, 'ncbigene')
+    def __init__(self, graph_type, are_bnodes_skolemized,
+                 tax_ids=None, gene_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'ncbigene')
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
         self.filter = 'taxids'
-        self.load_bindings()
 
         self.dataset = Dataset(
             'ncbigene', 'National Center for Biotechnology Information',
@@ -121,9 +120,6 @@ class NCBIGene(Source):
         self._get_gene_history(limit)
         self._get_gene2pubmed(limit)
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         logger.info("Done parsing files.")
 
         return
@@ -141,14 +137,13 @@ class NCBIGene(Source):
         :return:
 
         """
-        gu = GraphUtils(curie_map.get())
-
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
         geno = Genotype(g)
+        model = Model(g)
 
         # not unzipping the file
         logger.info("Processing Gene records")
@@ -162,7 +157,7 @@ class NCBIGene(Source):
             # tax label can get added elsewhere
             geno.addGenome(tax_id, str(tax_num))
             # label added elsewhere
-            gu.addClassToGraph(g, tax_id, None)
+            model.addClassToGraph(tax_id, None)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
@@ -210,26 +205,26 @@ class NCBIGene(Source):
                     continue
 
                 if self.class_or_indiv[gene_id] == 'C':
-                    gu.addClassToGraph(g, gene_id, label, gene_type_id, desc)
+                    model.addClassToGraph(gene_id, label, gene_type_id, desc)
                     # NCBI will be the default leader,
                     # so we will not add the leader designation here.
                 else:
-                    gu.addIndividualToGraph(
-                        g, gene_id, label, gene_type_id, desc)
+                    model.addIndividualToGraph(
+                        gene_id, label, gene_type_id, desc)
                     # in this case, they aren't genes.
                     # so we want someone else to be the leader.
 
                 if name != '-':
-                    gu.addSynonym(g, gene_id, name)
+                    model.addSynonym(gene_id, name)
                 if synonyms.strip() != '-':
                     for s in synonyms.split('|'):
-                        gu.addSynonym(
-                            g, gene_id, s.strip(),
+                        model.addSynonym(
+                            gene_id, s.strip(),
                             Assoc.annotation_properties['hasRelatedSynonym'])
                 if other_designations.strip() != '-':
                     for s in other_designations.split('|'):
-                        gu.addSynonym(
-                            g, gene_id, s.strip(),
+                        model.addSynonym(
+                            gene_id, s.strip(),
                             Assoc.annotation_properties['hasRelatedSynonym'])
 
                 # deal with the xrefs
@@ -240,31 +235,51 @@ class NCBIGene(Source):
                         if fixedr is not None and fixedr.strip() != '':
                             if re.match(r'HPRD', fixedr):
                                 # proteins are not == genes.
-                                gu.addTriple(
-                                    g, gene_id,
+                                g.addTriple(
+                                    gene_id,
                                     self.properties[
                                         'has_gene_product'], fixedr)
                             else:
                                 # skip some of these for now
                                 if fixedr.split(':')[0] not in [
-                                        'Vega', 'IMGT/GENE-DB']:
+                                        'Vega', 'IMGT/GENE-DB', 'Araport']:
                                     if self.class_or_indiv.get(gene_id) == 'C':
                                         if re.match(r'^OMIM', fixedr):
                                             isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
-                                                gu.addEquivalentClass(
-                                                    g, gene_id, fixedr)
+                                                try:
+                                                    model.addEquivalentClass(
+                                                        gene_id, fixedr)
+                                                except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
                                         else:
-                                            gu.addEquivalentClass(
-                                                g, gene_id, fixedr)
+                                            try:
+                                                model.addEquivalentClass(
+                                                    gene_id, fixedr)
+                                            except AssertionError as e:
+                                                logger.warn(
+                                                    "Error parsing {0}: {1}"
+                                                    .format(gene_id, e))
                                     else:
                                         if re.match(r'^OMIM', fixedr):
                                             isOmimDisease = self._check_if_disease(fixedr)
                                             if not isOmimDisease:
-                                                gu.addSameIndividual(g, gene_id, fixedr)
+                                                try:
+                                                    model.addSameIndividual(gene_id, fixedr)
+                                                except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
                                         else:
-                                            gu.addSameIndividual(
-                                                g, gene_id, fixedr)
+                                            try:
+                                                model.addSameIndividual(
+                                                    gene_id, fixedr)
+                                            except AssertionError as e:
+                                                    logger.warn(
+                                                        "Error parsing {0}: {1}"
+                                                        .format(gene_id, e))
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -319,7 +334,7 @@ class NCBIGene(Source):
                         mychrom = makeChromID(c, tax_num, 'CHR')
                         # temporarily use taxnum for the disambiguating label
                         mychrom_syn = makeChromLabel(c, tax_num)
-                        gu.addSynonym(g, mychrom, mychrom_syn)
+                        model.addSynonym(mychrom, mychrom_syn)
                         band_match = re.match(
                             r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
                         if band_match is not None and \
@@ -339,11 +354,11 @@ class NCBIGene(Source):
                             maploc_id = makeChromID(c+bid, tax_num, 'CHR')
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             # Assume it's type will be added elsewhere
-                            band = Feature(maploc_id, None, None)
-                            band.addFeatureToGraph(g)
+                            band = Feature(g, maploc_id, None, None)
+                            band.addFeatureToGraph()
                             # add the band as the containing feature
-                            gu.addTriple(
-                                g, gene_id,
+                            g.addTriple(
+                                gene_id,
                                 Feature.object_properties['is_subsequence_of'],
                                 maploc_id)
                         else:
@@ -355,17 +370,12 @@ class NCBIGene(Source):
                                 'not regular band pattern for %s: %s',
                                 gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
-                            gu.addTriple(
-                                g, gene_id,
+                            g.addTriple(
+                                gene_id,
                                 Feature.object_properties['is_subsequence_of'],
                                 mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
-
-            gu.loadProperties(g, Feature.object_properties, gu.OBJPROP)
-            gu.loadProperties(g, Feature.data_properties, gu.DATAPROP)
-            gu.loadProperties(g, Genotype.object_properties, gu.OBJPROP)
-            gu.loadAllProperties(g)
 
         return
 
@@ -378,12 +388,11 @@ class NCBIGene(Source):
         :return:
 
         """
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
@@ -421,21 +430,21 @@ class NCBIGene(Source):
 
                 # add the two genes
                 if self.class_or_indiv.get(gene_id) == 'C':
-                    gu.addClassToGraph(g, gene_id, None)
-                    gu.addClassToGraph(
-                        g, discontinued_gene_id, discontinued_symbol)
+                    model.addClassToGraph(gene_id, None)
+                    model.addClassToGraph(
+                        discontinued_gene_id, discontinued_symbol)
 
                     # add the new gene id to replace the old gene id
-                    gu.addDeprecatedClass(g, discontinued_gene_id, [gene_id])
+                    model.addDeprecatedClass(discontinued_gene_id, [gene_id])
                 else:
-                    gu.addIndividualToGraph(g, gene_id, None)
-                    gu.addIndividualToGraph(
-                        g, discontinued_gene_id, discontinued_symbol)
-                    gu.addDeprecatedIndividual(
-                        g, discontinued_gene_id, [gene_id])
+                    model.addIndividualToGraph(gene_id, None)
+                    model.addIndividualToGraph(
+                        discontinued_gene_id, discontinued_symbol)
+                    model.addDeprecatedIndividual(
+                        discontinued_gene_id, [gene_id])
 
                 # also add the old symbol as a synonym of the new gene
-                gu.addSynonym(g, gene_id, discontinued_symbol)
+                model.addSynonym(gene_id, discontinued_symbol)
 
                 if (not self.testMode) and\
                         (limit is not None and line_counter > limit):
@@ -455,13 +464,11 @@ class NCBIGene(Source):
         :return:
 
         """
-
-        gu = GraphUtils(curie_map.get())
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
@@ -498,17 +505,17 @@ class NCBIGene(Source):
                 pubmed_id = ':'.join(('PMID', pubmed_num))
 
                 if self.class_or_indiv.get(gene_id) == 'C':
-                    gu.addClassToGraph(g, gene_id, None)
+                    model.addClassToGraph(gene_id, None)
                 else:
-                    gu.addIndividualToGraph(g, gene_id, None)
+                    model.addIndividualToGraph(gene_id, None)
                 # add the publication as a NamedIndividual
                 # add type publication
-                gu.addIndividualToGraph(g, pubmed_id, None, None)
-                r = Reference(
-                    pubmed_id, Reference.ref_types['journal_article'])
-                r.addRefToGraph(g)
-                gu.addTriple(
-                    g, pubmed_id, gu.object_properties['is_about'], gene_id)
+                model.addIndividualToGraph(pubmed_id, None, None)
+                reference = Reference(
+                    g, pubmed_id, Reference.ref_types['journal_article'])
+                reference.addRefToGraph()
+                g.addTriple(
+                    pubmed_id, model.object_properties['is_about'], gene_id)
                 assoc_counter += 1
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -615,7 +622,7 @@ class NCBIGene(Source):
         # ortholog id => group
         # this will be the fastest approach, though not memory-efficient.
         geno = Genotype(graph)
-        gu = GraphUtils(curie_map.get())
+        model = Model(graph)
         group_to_orthology = {}
         gene_to_group = {}
         gene_to_taxon = {}
@@ -662,13 +669,13 @@ class NCBIGene(Source):
                     if orthologs is not None:
                         for o in orthologs:
                             oid = 'NCBIGene:'+str(o)
-                            gu.addClassToGraph(
-                                graph, oid, None, Genotype.genoparts['gene'])
+                            model.addClassToGraph(
+                                oid, None, Genotype.genoparts['gene'])
                             otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
                             geno.addTaxon(otaxid, oid)
-                            assoc = OrthologyAssoc(self.name, gid, oid)
+                            assoc = OrthologyAssoc(graph, self.name, gid, oid)
                             assoc.add_source('PMID:24063302')
-                            assoc.add_association_to_graph(graph)
+                            assoc.add_association_to_graph()
                             # todo get gene label for orthologs -
                             # this could get expensive
                             found_counter += 1

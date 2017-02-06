@@ -7,9 +7,9 @@ import csv
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Dataset import Dataset
+from dipper.models.Model import Model
 from dipper import config
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Reference import Reference
 
 
 logger = logging.getLogger(__name__)
@@ -49,9 +49,8 @@ class EOM(PostgreSQLSource):
         }
     }
 
-    def __init__(self):
-        super().__init__('eom')
-        self.namespaces.update(curie_map.get())
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'eom')
 
         # update the dataset object with details about this resource
         # TODO put this into a conf file?
@@ -79,7 +78,7 @@ class EOM(PostgreSQLSource):
 
         self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
-                    '/', cxn['database'])))
+                    '/', cxn['database'])), is_object_literal=True)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -115,13 +114,10 @@ class EOM(PostgreSQLSource):
 
         logger.info("Finished parsing.")
 
-        self.load_bindings()
-
         # since it's so small,
         # we default to copying the entire graph to the test set
         self.testgraph = self.graph
 
-        logger.info("Found %s nodes", len(self.graph))
         return
 
     def _process_nlx_157874_1_view(self, raw, limit=None):
@@ -149,7 +145,7 @@ class EOM(PostgreSQLSource):
         :return:
         """
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(self.graph)
         line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
@@ -172,8 +168,8 @@ class EOM(PostgreSQLSource):
 
                 # Add morphology term to graph as a class
                 # with label, type, and description.
-                gu.addClassToGraph(self.graph, morphology_term_id,
-                                   morphology_term_label)
+                model.addClassToGraph(morphology_term_id,
+                                      morphology_term_label)
 
                 # Assemble the description text
 
@@ -190,7 +186,7 @@ class EOM(PostgreSQLSource):
                     '  '.join(
                         (objective_definition, subjective_definition)).strip()
 
-                gu.addDefinition(self.graph, morphology_term_id, definition)
+                model.addDefinition(morphology_term_id, definition)
 
                 # <term id> FOAF:depicted_by literal url
                 # <url> type foaf:depiction
@@ -198,34 +194,35 @@ class EOM(PostgreSQLSource):
                 # do we want both images?
                 # morphology_term_id has depiction small_figure_url
                 if small_figure_url != '':
-                    gu.addDepiction(self.graph, morphology_term_id,
-                                    small_figure_url)
+                    model.addDepiction(morphology_term_id,
+                                       small_figure_url)
 
                 # morphology_term_id has depiction large_figure_url
                 if large_figure_url != '':
-                    gu.addDepiction(self.graph, morphology_term_id,
-                                    large_figure_url)
+                    model.addDepiction(morphology_term_id,
+                                       large_figure_url)
 
                 # morphology_term_id has comment comments
                 if comments != '':
-                    gu.addComment(self.graph, morphology_term_id,
-                                  comments.strip())
+                    model.addComment(morphology_term_id,
+                                     comments.strip())
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        gu.addSynonym(
-                            self.graph, morphology_term_id, s.strip(),
-                            gu.properties['hasExactSynonym'])
+                        model.addSynonym(
+                            morphology_term_id, s.strip(),
+                            model.annotation_properties['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
-                        gu.addSynonym(
-                            self.graph, morphology_term_id, s.strip(),
-                            gu.properties['hasRelatedSynonym'])
+                        model.addSynonym(
+                            morphology_term_id, s.strip(),
+                            model.annotation_properties['hasRelatedSynonym'])
 
                 # morphology_term_id has page morphology_term_url
-                gu.addPage(self.graph, morphology_term_id, morphology_term_url)
+                reference = Reference(self.graph)
+                reference.addPage(morphology_term_id, morphology_term_url)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -241,8 +238,7 @@ class EOM(PostgreSQLSource):
         :return:
         """
 
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(self.graph)
         line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
@@ -256,10 +252,10 @@ class EOM(PostgreSQLSource):
                 hp_id = re.sub('_', ':', hp_id)
                 if re.match(".*HP:.*", hp_id):
                     # add the HP term as a class
-                    gu.addClassToGraph(self.graph, hp_id, None)
+                    model.addClassToGraph(hp_id, None)
                     # Add the HP ID as an equivalent class
-                    gu.addEquivalentClass(
-                        self.graph, morphology_term_id, hp_id)
+                    model.addEquivalentClass(
+                        morphology_term_id, hp_id)
                 else:
                     logger.warning('No matching HP term for %s',
                                    morphology_term_label)

@@ -7,14 +7,13 @@ import urllib
 import urllib.parse
 import urllib.request
 
-from dipper import curie_map
 from dipper import config
 from dipper.sources.Source import Source
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Reference import Reference
 
 
@@ -77,8 +76,8 @@ class CTD(Source):
         'publications': {'file': 'CTD_curated_references.tsv'}
     }
 
-    def __init__(self):
-        Source.__init__(self, 'ctd')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'ctd')
         self.dataset = Dataset(
             'ctd', 'CTD', 'http://ctdbase.org', None,
             'http://ctdbase.org/about/legal.jsp')
@@ -97,9 +96,9 @@ class CTD(Source):
         else:
             self.test_diseaseids = config.get_config()['test_ids']['disease']
 
-        self.gu = GraphUtils(curie_map.get())
         self.g = self.graph
-        self.geno = Genotype(self.g)
+        self.geno = Genotype(self.graph)
+        self.pathway = Pathway(self.graph)
 
         return
 
@@ -149,25 +148,14 @@ class CTD(Source):
         else:
             self.g = self.graph
         self.geno = Genotype(self.g)
-        self.path = Pathway(self.g, self.nobnodes)
+        self.pathway = Pathway(self.g)
 
         self._parse_ctd_file(
             limit, self.files['chemical_disease_interactions']['file'])
         self._parse_ctd_file(limit, self.files['gene_pathway']['file'])
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self._parse_curated_chem_disease(limit)
-        self.gu.loadAllProperties(self.g)
 
-        self.gu.loadProperties(
-            self.g, G2PAssoc.object_properties, self.gu.OBJPROP)
-        self.gu.loadProperties(
-            self.g, G2PAssoc.datatype_properties, self.gu.DATAPROP)
-        self.gu.loadProperties(
-            self.g, G2PAssoc.annotation_properties, self.gu.ANNOTPROP)
-        self.gu.loadProperties(
-            self.g, Pathway.object_properties, self.gu.OBJPROP)
-
-        self.load_bindings()
         logger.info("Done parsing files.")
 
         return
@@ -225,6 +213,7 @@ class CTD(Source):
         Returns:
             :return None
         """
+        model = Model(self.g)
         self._check_list_len(row, 4)
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
 
@@ -248,10 +237,10 @@ class CTD(Source):
         if re.match(r'KEGG', pathway_id):
             pathway_id = re.sub(r'KEGG:', 'KEGG-path:map', pathway_id)
         # just in case, add it as a class
-        self.gu.addClassToGraph(self.graph, entrez_id, None)
+        model.addClassToGraph(entrez_id, None)
 
-        self.path.addPathway(pathway_id, pathway_name)
-        self.path.addGeneToPathway(pathway_id, entrez_id)
+        self.pathway.addPathway(pathway_id, pathway_name)
+        self.pathway.addGeneToPathway(pathway_id, entrez_id)
 
         return
 
@@ -350,6 +339,7 @@ class CTD(Source):
         Returns:
             :return None
         """
+        model = Model(self.g)
         self._check_list_len(row, 10)
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
          inferred_gene_symbol, inference_score, omim_ids, pubmed_ids) = row
@@ -370,8 +360,8 @@ class CTD(Source):
         reference_list = self._process_pubmed_ids(pubmed_ids)
         if re.match(evidence_pattern, direct_evidence):
             rel_id = self._get_relationship_id(direct_evidence)
-            self.gu.addClassToGraph(self.g, chem_id, chem_name)
-            self.gu.addClassToGraph(self.g, disease_id, None)
+            model.addClassToGraph(chem_id, chem_name)
+            model.addClassToGraph(disease_id, None)
             self._make_association(chem_id, disease_id, rel_id, reference_list)
         else:
             # there's dual evidence, but haven't mapped the pubs
@@ -414,6 +404,7 @@ class CTD(Source):
         # self._check_list_len(row, 9)
         # geno = Genotype(g)
         # gu = GraphUtils(curie_map.get())
+        model = Model(self.g)
         (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,
          inference_chemical_name, inference_score, omim_ids, pubmed_ids) = row
 
@@ -484,18 +475,18 @@ class CTD(Source):
         # we actually want the association between the gene and the disease
         # to be via an alternate locus not the "wildtype" gene itself. So we
         # make an anonymous alternate locus, and put that in the association.
-        alt_locus = '_' + gene_id + '-' + preferred_disease_id + 'VL'
+        alt_id = gene_id + '-' + preferred_disease_id + 'VL'
         # can't have colons in the bnodes
-        alt_locus = re.sub(r':', '', alt_locus)
-        if self.nobnodes:
-            alt_locus = ':' + alt_locus
+        alt_locus = re.sub(r':', '', alt_id)
+        alt_locus = "_:" + alt_locus
+
         alt_label = 'some variant of ' + gene_symbol + ' that is ' \
                     + direct_evidence + ' for ' + disease_name
-        self.gu.addIndividualToGraph(
-            self.g, alt_locus, alt_label,
+        model.addIndividualToGraph(
+            alt_locus, alt_label,
             self.geno.genoparts['variant_locus'])
         # assume that the label gets added elsewhere
-        self.gu.addClassToGraph(self.g, gene_id, None)
+        model.addClassToGraph(gene_id, None)
         self.geno.addAlleleOfGene(alt_locus, gene_id)
 
         # not sure if MESH is getting added separately.
@@ -503,7 +494,7 @@ class CTD(Source):
         dlabel = None
         if re.match(r'MESH', preferred_disease_id):
             dlabel = disease_name
-        self.gu.addClassToGraph(self.g, preferred_disease_id, dlabel)
+        model.addClassToGraph(preferred_disease_id, dlabel)
 
         # Add the disease to gene relationship.
         rel_id = self._get_relationship_id(direct_evidence)
@@ -528,16 +519,16 @@ class CTD(Source):
         """
 
         # TODO pass in the relevant Assoc class rather than relying on G2P
-        assoc = G2PAssoc(self.name, subject_id, object_id, rel_id)
+        assoc = G2PAssoc(self.g, self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
             eco = self._get_evidence_code('TAS')
             for pmid in pubmed_ids:
-                r = Reference(pmid, Reference.ref_types['journal_article'])
-                r.addRefToGraph(self.g)
+                r = Reference(self.g, pmid, Reference.ref_types['journal_article'])
+                r.addRefToGraph()
                 assoc.add_source(pmid)
                 assoc.add_evidence(eco)
 
-        assoc.add_association_to_graph(self.g)
+        assoc.add_association_to_graph()
         return
 
     @staticmethod
@@ -582,10 +573,10 @@ class CTD(Source):
         Returns:
             :return str: curie for relationship label
         """
-        gu = GraphUtils(curie_map.get())
+        model = Model(graph=None)
         rel_map = {
-            'therapeutic': gu.object_properties['substance_that_treats'],
-            'marker/mechanism': gu.object_properties['is_marker_for'],
+            'therapeutic': model.object_properties['substance_that_treats'],
+            'marker/mechanism': model.object_properties['is_marker_for'],
         }
         return str(rel_map[rel])
 
@@ -606,10 +597,10 @@ class CTD(Source):
         return class_map[clslab]
 
     def _parse_curated_chem_disease(self, limit):
+        model = Model(self.g)
         line_counter = 0
         file_path = '/'.join(
             (self.rawdir, self.static_files['publications']['file']))
-        gu = GraphUtils(curie_map.get())
         with open(file_path, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -626,8 +617,8 @@ class CTD(Source):
 
                 rel_id = self._get_relationship_id(evidence)
                 chem_id = 'MESH:' + chem_id
-                gu.addClassToGraph(self.g, chem_id, chem_label)
-                gu.addClassToGraph(self.g, disease_id, None)
+                model.addClassToGraph(chem_id, chem_label)
+                model.addClassToGraph(disease_id, None)
                 if pub_id != '':
                     pub_id = 'PMID:' + pub_id
                     r = Reference(

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class GeneReviewsTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = GeneReviews()
+        self.source = GeneReviews('rdf_graph', True)
         self.source.settestonly(True)
         self._setDirToSource()
         return

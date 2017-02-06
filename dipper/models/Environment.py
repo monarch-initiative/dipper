@@ -1,6 +1,6 @@
 import logging
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
@@ -37,14 +37,11 @@ class Environment():
     properties.update(annotation_properties)
 
     def __init__(self, graph):
-
-        self.gu = GraphUtils(curie_map.get())
-
-        self.graph = graph
-
-        self.gu.loadProperties(
-            self.graph, self.object_properties, self.gu.OBJPROP)
-
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
+        self.model = Model(self.graph)
         return
 
     def addEnvironment(
@@ -52,8 +49,8 @@ class Environment():
         if env_type is None:
             env_type = self.environment_parts['environmental_system']
 
-        self.gu.addIndividualToGraph(
-            self.graph, env_id, env_label, env_type, env_description)
+        self.model.addIndividualToGraph(
+            env_id, env_label, env_type, env_description)
 
         return
 
@@ -62,16 +59,16 @@ class Environment():
         if cond_type is None:
             cond_type = self.environment_parts['environmental_condition']
 
-        self.gu.addIndividualToGraph(
-            self.graph, cond_id, cond_label, cond_type, cond_description)
+        self.model.addIndividualToGraph(
+            cond_id, cond_label, cond_type, cond_description)
 
         return
 
     def addComponentToEnvironment(self, env_id, component_id):
 
-        self.gu.addTriple(
-            self.graph, env_id,
-            self.gu.object_properties['has_part'],  # TODO cbeck if cself
+        self.graph.addTriple(
+            env_id,
+            self.model.object_properties['has_part'],
             component_id)
 
         return
@@ -79,8 +76,8 @@ class Environment():
     def addComponentAttributes(
             self, component_id, entity_id, value=None, unit=None):
 
-        self.gu.addTriple(
-            self.graph, component_id, self.gu.object_properties['has_part'],
+        self.graph.addTriple(
+            component_id, self.model.object_properties['has_part'],
             entity_id)
         # TODO add value and units
 

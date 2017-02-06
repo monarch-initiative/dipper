@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class OMIMTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = OMIM()
+        self.source = OMIM('rdf_graph', True)
         self.source.settestonly(True)
         self._setDirToSource()
         return

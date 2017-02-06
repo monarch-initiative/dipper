@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 class ZFINTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = ZFIN()
+        self.source = ZFIN('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

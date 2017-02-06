@@ -33,7 +33,6 @@ class TestUtils:
         return output
 
     def check_query_syntax(self, query, source):
-        source.load_bindings()
         source.graph.query(query)
         return
 

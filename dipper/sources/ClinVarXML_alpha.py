@@ -33,6 +33,8 @@ import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
+
+
 # import Requests
 # from dipper.sources.Source import Source
 # from dipper import curie_map  # hangs on to stale data?
@@ -288,13 +290,12 @@ with open(ARGS.transtab) as f:
 if ARGS.blanknode is True:
     CURIEMAP['_'] = '_:B'
 
-count = 0     # of record sets so far
-
 # Seed releasetriple to avoid union with the empty set
 # <MonarchData: + ARGS.output> <a> <owl:Ontology>
 releasetriple.add(
     make_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
 
+rjct_cnt = tot_cnt = 0
 #######################################################
 # main loop over xml
 # taken in chunks composed of ClinVarSet stanzas
@@ -302,10 +303,11 @@ with gzip.open(FILENAME, 'rt') as fh:
     TREE = ET.iterparse(fh)  # w/o specifing events it defaults to 'end'
     for event, element in TREE:
         if element.tag != 'ClinVarSet':
+            ReleaseSet = element
             continue
         else:
             ClinVarSet = element
-        count += 1
+            tot_cnt += 1
 
         if ClinVarSet.find('RecordStatus').text != 'current':
             LOG.warning(
@@ -373,9 +375,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'Name/ElementValue[@Type="Preferred"]')
             if RCV_VariantName is not None:
                 rcv_variant_label = RCV_VariantName.text
-            else:
-                LOG.warning(
-                    rcv_acc + " VARIANT MISSING LABEL")
+            # else:
+            #    LOG.warning(
+            #       rcv_acc + " VARIANT MISSING LABEL")
 
             # XRef[@DB="dbSNP"]/@ID
             for RCV_dbSNP in \
@@ -392,38 +394,47 @@ with gzip.open(FILENAME, 'rt') as fh:
                         re.match(r'^HGVS', RCV_Synonym.get('Type')):
                     rcv_synonyms.append(RCV_Synonym.text)
 
-        # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
-        # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
+            # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
+            # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
 
-        # RCV_Variant = RCV_Measure.find(
-        #    'MeasureRelationship[@Type="variant in gene"]')
+            # RCV_Variant = RCV_Measure.find(
+            #    'MeasureRelationship[@Type="variant in gene"]')
 
-        # 540074 genes overlapped by variant
-        # 176970 within single gene
-        # 24746 within multiple genes by overlap
-        # 5698 asserted, but not computed
-        # 439 near gene, upstream
-        # 374 variant in gene
-        # 54 near gene, downstream
+            # 540074 genes overlapped by variant
+            # 176970 within single gene
+            # 24746 within multiple genes by overlap
+            # 5698 asserted, but not computed
+            # 439 near gene, upstream
+            # 374 variant in gene
+            # 54 near gene, downstream
 
-        RCV_Variant = RCV_Measure.find('MeasureRelationship[@Type]')
+            RCV_Variant = RCV_Measure.find('MeasureRelationship')
 
-        if RCV_Variant is not None:   # try letting them all through
-            # XRef[@DB="Gene"]/@ID
-            RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
-            if rcv_ncbigene_id is None and RCV_Gene is not None:
-                rcv_ncbigene_id = RCV_Gene.get('ID')
-            elif rcv_ncbigene_id is None:
-                LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
+            if RCV_Variant is None:  # try letting them all through
+                LOG.info(ET.tostring(RCV_Measure).decode('utf-8'))
+            else:
+                rcv_variant_relationship_type = RCV_Variant.get('Type')
+                # if rcv_variant_relationship_type is not None:
+                #    LOG.warning(
+                #        rcv_acc +
+                #        ' rcv_variant_relationship_type ' +
+                #        rcv_variant_relationship_type)
 
-            # Symbol/ElementValue[@Type="Preferred"]
-            RCV_Symbol = RCV_Variant.find(
-                'Symbol/ElementValue[@Type="Preferred"]')
-            if rcv_gene_symbol is None and RCV_Symbol is not None:
-                rcv_gene_symbol = RCV_Symbol.text
+                # XRef[@DB="Gene"]/@ID
+                RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
+                if rcv_ncbigene_id is None and RCV_Gene is not None:
+                    rcv_ncbigene_id = RCV_Gene.get('ID')
+                # elif rcv_ncbigene_id is None:
+                #    LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
 
-            if rcv_gene_symbol is None:
-                LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
+                # Symbol/ElementValue[@Type="Preferred"]
+                RCV_Symbol = RCV_Variant.find(
+                    'Symbol/ElementValue[@Type="Preferred"]')
+                if rcv_gene_symbol is None and RCV_Symbol is not None:
+                    rcv_gene_symbol = RCV_Symbol.text
+
+                # if rcv_gene_symbol is None:
+                #    LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
 
         #######################################################################
         # the Object is the Disease, here is called a "trait"
@@ -447,8 +458,8 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
-            else:
-                LOG.warning(rcv_acc + " MISSING DISEASE NAME")
+            # else:
+            #    LOG.warning(rcv_acc + " MISSING DISEASE NAME")
 
             # Prioritize OMIM
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
@@ -504,10 +515,16 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            LOG.warning('RCV: %s is under specified. SKIPPING', rcv_acc)
-
+            LOG.info('%s is under specified. SKIPPING', rcv_acc)
+            rjct_cnt += 1
             # Write this Clinvar set out so we can know what we are missing
-            print(ET.tostring(ClinVarSet), file=REJECT)
+            print(
+                # minidom.parseString(
+                #    ET.tostring(
+                #        ClinVarSet)).toprettyxml(
+                #           indent="   "), file=REJECT)
+                #  too slow. doubles time
+                ET.tostring(ClinVarSet).decode('utf-8'), file=REJECT)
             ClinVarSet.clear()
             continue
 
@@ -524,6 +541,12 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_curi)
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
             write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
+
+            # TODO: STOPGAP till we create more granular relationship types
+            # RCV  "is about" a type of gene variant
+            write_spo(
+                'ClinVar:' + rcv_acc,
+                'IAO:0000136', rcv_variant_relationship_type)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV
@@ -888,18 +911,12 @@ with gzip.open(FILENAME, 'rt') as fh:
 
     ###############################################################
     # first in is last out
-
-    ROOT = element
-    ReleaseSet = ROOT.find('ReleaseSet')
-
-    if ReleaseSet.get('Type') != 'full':
+    if ReleaseSet is not None and ReleaseSet.get('Type') != 'full':
         LOG.warning('Not a full release')
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
-
     releasetriple.add(
          make_spo(
             'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
-
     # not finalized
     # releasetriple.add(
     #     make_spo(
@@ -909,7 +926,9 @@ with gzip.open(FILENAME, 'rt') as fh:
     # write all remaining triples out
     print('\n'.join(list(releasetriple)), file=OUTTMP)
 
-LOG.info('Records not included are written back to \n%s', str(REJECT))
+LOG.warning(
+    'The %i out of %i records not included are written back to \n%s',
+    rjct_cnt, tot_cnt, str(REJECT))
 OUTTMP.close()
 REJECT.close()
 os.replace(OUTFILE, OUTPUT)

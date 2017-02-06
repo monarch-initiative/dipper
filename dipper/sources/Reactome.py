@@ -25,8 +25,8 @@ class Reactome(Source):
         'eco_map': '../../resources/eco_map.yaml',
     }
 
-    def __init__(self):
-        super().__init__('reactome')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'reactome')
         self.dataset = Dataset(
             'reactome', 'Reactome', 'http://reactome.org/', None,
             'http://reactome.org/pages/about/license-agreement/')
@@ -53,7 +53,6 @@ class Reactome(Source):
         Returns:
             :return None
         """
-        self.load_bindings()
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
 
@@ -111,13 +110,13 @@ class Reactome(Source):
         pathway.addPathway(pathway_curie, pathway_label)
         pathway.addComponentToPathway(gene_curie, pathway_curie)
 
-        association = Assoc(self.name)
+        association = Assoc(self.graph, self.name)
         association.sub = gene_curie
         association.rel = pathway.object_properties['involved_in']
         association.obj = pathway_curie
         association.set_association_id()
         association.add_evidence(eco_curie)
-        association.add_association_to_graph(self.graph)
+        association.add_association_to_graph()
         return
 
 

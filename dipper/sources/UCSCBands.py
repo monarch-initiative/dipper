@@ -6,9 +6,8 @@ from dipper.sources.Source import Source
 from dipper.sources.Monochrom import Monochrom, getChrPartTypeByNotation
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Genotype import Genotype
-from dipper import curie_map
+from dipper.models.Model import Model
 
 
 logger = logging.getLogger(__name__)
@@ -117,12 +116,10 @@ class UCSCBands(Source):
         # TODO rainbow trout, 8022, when available
     }
 
-    def __init__(self, tax_ids=None):
-        super().__init__('ucscbands')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'ucscbands')
 
         self.tax_ids = tax_ids
-        self.load_bindings()
-        self.gu = GraphUtils(curie_map.get())
 
         # Defaults
         if self.tax_ids is None:
@@ -162,12 +159,8 @@ class UCSCBands(Source):
 
         self._create_genome_builds()
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Found %d nodes", len(self.graph))
         logger.info("Done parsing files.")
 
         return
@@ -178,13 +171,13 @@ class UCSCBands(Source):
         :return:
 
         """
-
+        model = Model(self.graph)
         # TODO PYLINT figure out what limit was for and why it is unused
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
         geno = Genotype(self.graph)
-        monochrom = Monochrom()
+        monochrom = Monochrom(self.graph_type, self.are_bnodes_skized)
 
         # used to hold band definitions for a chr
         # in order to compute extent of encompasing bands
@@ -195,13 +188,8 @@ class UCSCBands(Source):
         taxon_id = 'NCBITaxon:'+taxon
 
         # add the taxon as a class.  adding the class label elsewhere
-        self.gu.addClassToGraph(self.graph, taxon_id, None)
-        self.gu.addSynonym(self.graph, taxon_id, genome_label)
-
-        self.gu.loadObjectProperties(self.graph, Feature.object_properties)
-        self.gu.loadProperties(self.graph, Feature.data_properties,
-                               self.gu.DATAPROP)
-        self.gu.loadAllProperties(self.graph)
+        model.addClassToGraph(taxon_id, None)
+        model.addSynonym(taxon_id, genome_label)
 
         geno.addGenome(taxon_id, genome_label)
 
@@ -386,16 +374,15 @@ class UCSCBands(Source):
             chrom_in_build_id = makeChromID(myband['chr'], build_num, 'MONARCH')
             # if it's != part, then add the class
             if myband['type'] != Feature.types['assembly_component']:
-                self.gu.addClassToGraph(self.graph, band_class_id,
-                                        band_class_label, myband['type'])
-                bfeature = Feature(band_build_id, band_build_label,
+                model.addClassToGraph(band_class_id,
+                                      band_class_label, myband['type'])
+                bfeature = Feature(self.graph, band_build_id, band_build_label,
                                    band_class_id)
             else:
-                bfeature = Feature(band_build_id, band_build_label,
+                bfeature = Feature(self.graph, band_build_id, band_build_label,
                                    myband['type'])
                 if 'synonym' in myband:
-                    self.gu.addSynonym(self.graph, band_build_id,
-                                       myband['synonym'])
+                    model.addSynonym(band_build_id, myband['synonym'])
 
             if myband['parent'] is None:
                 if myband['type'] == Feature.types['assembly_component']:
@@ -406,8 +393,7 @@ class UCSCBands(Source):
                 # geno.addParts(band_build_id, chrom_in_build_id)
                 parent_chrom_in_build = makeChromID(myband['parent'],
                                                     build_num, 'MONARCH')
-                bfeature.addSubsequenceOfFeature(self.graph,
-                                                 parent_chrom_in_build)
+                bfeature.addSubsequenceOfFeature(parent_chrom_in_build)
 
             # add the band as a feature
             # (which also instantiates the owl:Individual)
@@ -415,14 +401,13 @@ class UCSCBands(Source):
             bfeature.addFeatureEndLocation(myband['max'], chrom_in_build_id)
             if 'stain' in myband and myband['stain'] is not None:
                 # TODO TEC I recall 'has_staining_intensity' being dropped by MB
-                bfeature.addFeatureProperty(self.graph,
-                                            Feature.properties['has_staining_intensity'],
+                bfeature.addFeatureProperty(Feature.properties['has_staining_intensity'],
                                             myband['stain'])
 
             # type the band as a faldo:Region directly (add_region=False)
             # bfeature.setNoBNodes(self.nobnodes)
             # to come when we merge in ZFIN.py
-            bfeature.addFeatureToGraph(self.graph, False)
+            bfeature.addFeatureToGraph(False)
 
         return
 
@@ -474,6 +459,7 @@ class UCSCBands(Source):
         }
         g = self.graph
         geno = Genotype(g)
+        model = Model(g)
         logger.info("Adding equivalent assembly identifiers")
         for sp in ucsc_assembly_id_map:
             tax_num = sp
@@ -487,7 +473,7 @@ class UCSCBands(Source):
                 mapped_label = 'NCBI build '+str(mapped_label)
                 geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
                 geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
-                self.gu.addSameIndividual(g, ucsc_id, mapped_id)
+                model.addSameIndividual(ucsc_id, mapped_id)
 
         return
 

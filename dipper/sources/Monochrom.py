@@ -5,9 +5,9 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Genotype import Genotype
-from dipper import curie_map
+from dipper.models.Model import Model
+from dipper.models.Family import Family
 
 
 logger = logging.getLogger(__name__)
@@ -144,13 +144,10 @@ class Monochrom(Source):
         'chromosome_part': Feature.types['chromosome_part']
     }
 
-    def __init__(self, tax_ids=None):
-        super().__init__('monochrom')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'monochrom')
 
         self.tax_ids = tax_ids
-        self.load_bindings()
-        self.gu = GraphUtils(curie_map.get())
-
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [
@@ -184,12 +181,8 @@ class Monochrom(Source):
         for taxon in self.tax_ids:
             self._get_chrbands(limit, str(taxon))
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Found %d nodes", len(self.graph))
         logger.info("Done parsing files.")
 
         return
@@ -203,6 +196,8 @@ class Monochrom(Source):
         :return:
 
         """
+        model = Model(self.graph)
+        family = Family(self.graph)
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
@@ -213,15 +208,13 @@ class Monochrom(Source):
         taxon_id = 'NCBITaxon:'+taxon
 
         # add the taxon as a class.  adding the class label elsewhere
-        self.gu.addClassToGraph(self.graph, taxon_id, None)
-        self.gu.addSynonym(self.graph, taxon_id, genome_label)
-
-        self.gu.loadObjectProperties(self.graph, Feature.object_properties)
+        model.addClassToGraph(taxon_id, None)
+        model.addSynonym(taxon_id, genome_label)
 
         genome_id = geno.makeGenomeID(taxon_id)
         geno.addGenome(taxon_id, genome_label)
-        self.gu.addOWLPropertyClassRestriction(
-            self.graph, genome_id, Genotype.object_properties['in_taxon'],
+        model.addOWLPropertyClassRestriction(
+            genome_id, Genotype.object_properties['in_taxon'],
             taxon_id)
 
         with gzip.open(myfile, 'rb') as f:
@@ -270,17 +263,16 @@ class Monochrom(Source):
 
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
-                self.gu.addOWLPropertyClassRestriction(
-                    self.graph, cclassid,
-                    self.gu.object_properties['member_of'], genome_id)
+                model.addOWLPropertyClassRestriction(
+                    cclassid, family.object_properties['member_of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
                 maplocclass_label = makeChromLabel(chrom+band, genome_label)
                 if band is not None and band.strip() != '':
                     region_type_id = self.map_type_of_region(rtype)
-                    self.gu.addClassToGraph(
-                        self.graph, maplocclass_id, maplocclass_label,
+                    model.addClassToGraph(
+                        maplocclass_id, maplocclass_label,
                         region_type_id)
                 else:
                     region_type_id = Feature.types['chromosome']
@@ -291,8 +283,8 @@ class Monochrom(Source):
                             Feature.types['chromosome_subband']]:
                         stain_type = Feature.types.get(rtype)
                         if stain_type is not None:
-                            self.gu.addOWLPropertyClassRestriction(
-                                self.graph, maplocclass_id,
+                            model.addOWLPropertyClassRestriction(
+                                maplocclass_id,
                                 Feature.properties['has_staining_intensity'],
                                 Feature.types.get(rtype))
                     else:
@@ -321,50 +313,47 @@ class Monochrom(Source):
 
                     rti = getChrPartTypeByNotation(parents[i])
 
-                    self.gu.addClassToGraph(
-                        self.graph, pclassid, pclass_label, rti)
+                    model.addClassToGraph(pclassid, pclass_label, rti)
 
                     # for canonical chromosomes,
                     # then the subbands are subsequences of the full band
                     # add the subsequence stuff as restrictions
                     if i < len(parents) - 1:
                         pid = cclassid+parents[i+1]   # the instance
-                        self.gu.addOWLPropertyClassRestriction(
-                            self.graph, pclassid,
+                        model.addOWLPropertyClassRestriction(
+                            pclassid,
                             Feature.object_properties['is_subsequence_of'],
                             pid)
-                        self.gu.addOWLPropertyClassRestriction(
-                            self.graph, pid,
+                        model.addOWLPropertyClassRestriction(
+                            pid,
                             Feature.object_properties['has_subsequence'],
                             pclassid)
 
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
-                        self.gu.addOWLPropertyClassRestriction(
-                            self.graph, pclassid,
+                        model.addOWLPropertyClassRestriction(
+                            pclassid,
                             Feature.object_properties['is_subsequence_of'],
                             cclassid)
-                        self.gu.addOWLPropertyClassRestriction(
-                            self.graph, cclassid,
+                        model.addOWLPropertyClassRestriction(
+                            cclassid,
                             Feature.object_properties['has_subsequence'],
                             pclassid)
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
-                    self.gu.addOWLPropertyClassRestriction(
-                        self.graph, maplocclass_id,
+                    model.addOWLPropertyClassRestriction(
+                        maplocclass_id,
                         Feature.object_properties['is_subsequence_of'],
                         cclassid+parents[0])
-                    self.gu.addOWLPropertyClassRestriction(
-                        self.graph, cclassid+parents[0],
+                    model.addOWLPropertyClassRestriction(
+                        cclassid+parents[0],
                         Feature.object_properties['has_subsequence'],
                         maplocclass_id)
 
                 if limit is not None and line_counter > limit:
                     break
-
-        self.gu.loadAllProperties(self.graph)
 
         # TODO figure out the staining intensities for the encompassing bands
 

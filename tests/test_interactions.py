@@ -16,8 +16,7 @@ class InteractionsTestCase(unittest.TestCase):
         self.graph = Graph()
 
         self.curie_map = curie_map.get()
-        self.ctd = CTD()
-        self.ctd.graph = Graph()
+        self.ctd = CTD('rdf_graph', True)
         self.ctd.g = self.ctd.graph
         row1 = [
             '06-Paris-LA-66 protocol', 'C046983', 'foo',
@@ -41,7 +40,6 @@ class InteractionsTestCase(unittest.TestCase):
 
         # Make testutils object and load bindings
         test_query = TestUtils(self.ctd.graph)
-        self.ctd.load_bindings()
 
         # Expected structure
         sparql_query = """
@@ -56,21 +54,20 @@ class InteractionsTestCase(unittest.TestCase):
                        """
 
         # SPARQL variables to check
-        gu = GraphUtils(curie_map.get())
         chem_id = 'MESH:D009538'
-        chem_uri = gu.getNode(chem_id)
+        chem_uri = self.graph._getNode(chem_id)
         disease_id = 'OMIM:188890'
-        disease_uri = gu.getNode(disease_id)
+        disease_uri = self.graph._getNode(disease_id)
         pubmed_id = 'PMID:16785264'
-        pubmed_uri = gu.getNode(pubmed_id)
-        rel_id = gu.object_properties['substance_that_treats']
+        pubmed_uri = self.graph._getNode(pubmed_id)
+        rel_id = self.model.object_properties['substance_that_treats']
         eco = 'ECO:0000033'
         # TODO PYLINT  make_association_id() does not exist in CTD
         # there is "_make_association()" with a different sig
 
         assoc_id = self.ctd.make_association_id(
             'ctd', chem_id, rel_id, disease_id, eco, pubmed_id)
-        assoc_uri = gu.getNode(assoc_id)
+        assoc_uri = self.graph._getNode(assoc_id)
 
         # Expected output from query
         expected_output = [assoc_uri, pubmed_uri, disease_uri, chem_uri]

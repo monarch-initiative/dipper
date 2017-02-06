@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 
 class WormBaseTestCase(SourceTestCase):
     def setUp(self):
-        self.source = WormBase()
+        self.source = WormBase('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

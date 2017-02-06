@@ -18,9 +18,9 @@ class D2PAssoc(Assoc):
         'frequency': ':frequencyOfPhenotype'
     }
 
-    def __init__(self, definedby, disease_id, phenotype_id, onset=None,
+    def __init__(self, graph, definedby, disease_id, phenotype_id, onset=None,
                  frequency=None, rel=None):
-        super().__init__(definedby)
+        super().__init__(graph, definedby)
         self.disease_id = disease_id
         self.phenotype_id = phenotype_id
         self.onset = onset
@@ -43,7 +43,7 @@ class D2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, g):
+    def add_association_to_graph(self):
         """
         The reified relationship between a disease and a phenotype is decorated
             with some provenance information.
@@ -55,19 +55,20 @@ class D2PAssoc(Assoc):
         """
 
         # add the basic association nodes
-        self._add_basic_association_to_graph(g)
+        self._add_basic_association_to_graph()
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id,
-                              self.d2p_object_properties['frequency'],
-                              self.frequency, True)
+            self.graph.addTriple(self.assoc_id,
+                                 self.d2p_object_properties['frequency'],
+                                 self.frequency, True)
         if self.onset is not None and self.onset != '':
             # FIXME what is the real predicate here?
-            self.gu.addTriple(g, self.assoc_id,
-                              self.d2p_object_properties['onset'], self.onset)
+            self.graph.addTriple(self.assoc_id,
+                                 self.d2p_object_properties['onset'],
+                                 self.onset)
 
-        return g
+        return
 
     def make_d2p_id(self):
         """
@@ -85,10 +86,3 @@ class D2PAssoc(Assoc):
                                             self.phenotype_id, attributes)
 
         return assoc_id
-
-    def load_all_properties(self, g):
-
-        super().load_all_properties(g)
-        self.gu.loadObjectProperties(g, self.d2p_object_properties)
-
-        return

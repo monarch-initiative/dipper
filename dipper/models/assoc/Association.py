@@ -1,13 +1,8 @@
 import re
 import logging
 import hashlib
-
-from rdflib import Namespace, URIRef, Literal
-from rdflib.namespace import RDF, OWL, RDFS, XSD
-
-from dipper.utils.CurieUtil import CurieUtil
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
@@ -63,24 +58,18 @@ class Assoc:
     properties.update(object_properties)
     properties.update(datatype_properties)
 
-    OWLCLASS = OWL['Class']
-    OWLIND = OWL['NamedIndividual']
-    OBJECTPROP = OWL['ObjectProperty']
-    ANNOTPROP = OWL['AnnotationProperty']
-    DATAPROP = OWL['DatatypeProperty']
-
-    SUBCLASS = RDFS['subClassOf']
-    BASE = Namespace(curie_map.get()[''])
-
-    def __init__(self, definedby):
-        self.cu = CurieUtil(curie_map.get())
-        self.gu = GraphUtils(curie_map.get())
+    def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
+        self.model = Model(self.graph)
 
         # core parts of the association
         self.definedby = definedby
-        self.sub = None
-        self.obj = None
-        self.rel = None
+        self.sub = sub
+        self.obj = obj
+        self.rel = pred
         self.assoc_id = None
 
         self.description = None
@@ -110,108 +99,84 @@ class Assoc:
 
         return True
 
-    def _add_basic_association_to_graph(self, g):
+    def _add_basic_association_to_graph(self):
 
         if not self._is_valid():
             return
 
-        # first, add the direct triple
-        # anonymous (blank) nodes are indicated with underscore
-        s = self.gu.getNode(self.sub)
-        o = self.gu.getNode(self.obj)
-        p = self.gu.getNode(self.rel)
-
-        if s is None:
-            logging.error(
-                "Unable to retrieve graph node for Subject %s ", self.sub)
-            return
-
-        elif p is None:
-            logging.error(
-                "Unable to retrieve graph node for Predicate %s ", self.rel)
-            return
-
-        elif o is None:
-            logging.error(
-                "Unable to retrieve graph node for Object %s ", self.obj)
-            return
-        else:
-            g.add((s, p, o))
+        self.graph.addTriple(self.sub, self.rel, self.obj)
 
         if self.assoc_id is None:
             self.set_association_id()
 
-        node = self.gu.getNode(self.assoc_id)
-        g.add((node, RDF['type'],
-               self.gu.getNode(self.assoc_types['association'])))
+        self.model.addType(self.assoc_id, self.assoc_types['association'])
 
-        self.gu.addTriple(g, self.assoc_id,
-                          self.object_properties['has_subject'], self.sub)
-        self.gu.addTriple(g, self.assoc_id,
-                          self.object_properties['has_object'], self.obj)
-        self.gu.addTriple(g, self.assoc_id,
-                          self.object_properties['has_predicate'], self.rel)
+        self.graph.addTriple(
+            self.assoc_id, self.object_properties['has_subject'], self.sub)
+        self.graph.addTriple(
+            self.assoc_id, self.object_properties['has_object'], self.obj)
+        self.graph.addTriple(
+            self.assoc_id, self.object_properties['has_predicate'], self.rel)
 
         if self.description is not None:
-            self.gu.addDescription(g, self.assoc_id, self.description)
+            self.model.addDescription(self.assoc_id, self.description)
 
         if self.evidence is not None and len(self.evidence) > 0:
             for e in self.evidence:
-                self.gu.addTriple(g, self.assoc_id,
-                                  self.object_properties['has_evidence'], e)
+                self.graph.addTriple(
+                    self.assoc_id, self.object_properties['has_evidence'], e)
 
         if self.source is not None and len(self.source) > 0:
             for s in self.source:
                 if re.match('http', s):
                     # TODO assume that the source is a publication?
                     # use Reference class here
-                    self.gu.addTriple(g, self.assoc_id,
-                                      self.object_properties['has_source'], s,
-                                      True)
+                    self.graph.addTriple(
+                        self.assoc_id, self.object_properties['has_source'],
+                        s, True)
                 else:
-                    self.gu.addTriple(g, self.assoc_id,
-                                      self.object_properties['has_source'], s)
+                    self.graph.addTriple(
+                        self.assoc_id, self.object_properties['has_source'], s)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for p in self.provenance:
-                self.gu.addTriple(g, self.assoc_id,
-                                  self.object_properties['has_provenance'], p)
+                self.graph.addTriple(
+                    self.assoc_id, self.object_properties['has_provenance'], p)
 
         if self.score is not None:
-            self.gu.addTriple(
-                g, self.assoc_id, self.properties['has_measurement'],
-                Literal(self.score, datatype=XSD['float']), True)
+            self.graph.addTriple(
+                self.assoc_id, self.properties['has_measurement'],
+                self.score, True, 'xsd:float')
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
 
         return
 
-    def add_association_to_graph(self, g):
+    def add_association_to_graph(self):
 
-        self._add_basic_association_to_graph(g)
+        self._add_basic_association_to_graph()
 
         return
 
-    def add_predicate_object(self, graph, predicate, object_node,
+    def add_predicate_object(self, predicate, object_node,
                              object_type=None, datatype=None):
 
         if object_type == 'Literal':
             if datatype is not None:
-                literal = Literal(object_node, datatype=datatype)
+                self.graph.addTriple(self.assoc_id, predicate,
+                                     object_node, True, datatype)
             else:
-                literal = Literal(object_node)
-
-            self.gu.addTriple(graph, self.assoc_id, predicate,
-                              literal, True)
+                self.graph.addTriple(self.assoc_id, predicate,
+                                     object_node, True)
         else:
-            self.gu.addTriple(graph, self.assoc_id, predicate,
-                              object_node, False)
+            self.graph.addTriple(self.assoc_id, predicate,
+                                 object_node, False)
 
         return
 
     # This isn't java, but if we must,
-    # prefer use of property decorator - @kshefchek
+    # prefer use of property decorator
     def set_subject(self, identifier):
         self.sub = identifier
         return
@@ -292,40 +257,6 @@ class Assoc:
             self.provenance += [identifier]
 
         return
-
-    def load_all_properties(self, g):
-        props = {
-            self.OBJECTPROP: self.object_properties,
-            self.ANNOTPROP: self.annotation_properties,
-            self.DATAPROP: self.datatype_properties
-        }
-
-        for p in props:
-            self.gu.loadProperties(g, props[p], p)
-
-        return
-
-    def _get_source_uri(self, pub_id):
-        """
-        Given some kind of pub_id (which might be a CURIE or url),
-        convert it into a proper node.
-
-        :param pub_id:
-        :return: source: Well-formed URI for the given identifier (or url)
-        """
-
-        source = None
-        if re.compile('http').match(pub_id):
-            source = URIRef(pub_id)
-        else:
-            u = self.gu.getNode(pub_id)
-            if u is not None:
-                source = URIRef(u)
-            else:
-                logger.error(
-                    "An id we don't know how to deal with: %s", pub_id)
-
-        return source
 
     @staticmethod
     def make_association_id(definedby, subject, predicate, object,

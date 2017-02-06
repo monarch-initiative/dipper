@@ -1,7 +1,6 @@
 import logging
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
-import re
+from dipper.models.Model import Model
+from dipper.graph.Graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +55,11 @@ class Evidence:
     }
 
     def __init__(self, graph, association):
-
-        self.graph = graph
-        self.graph_utils = GraphUtils(curie_map.get())
+        if isinstance(graph, Graph):
+            self.graph = graph
+        else:
+            raise ValueError("{} is not a graph".graph)
+        self.model = Model(self.graph)
         self.association = association
 
         return
@@ -71,15 +72,15 @@ class Evidence:
         :param evidence_line: curie or iri, evidence line
         :return: None
         """
-        self.graph_utils.addTriple(self.graph, self.association,
-                                   self.object_properties['has_supporting_evidence'],
-                                   evidence_line)
+        self.graph.addTriple(self.association,
+                             self.object_properties['has_supporting_evidence'],
+                             evidence_line)
         if type is not None:
-            self.graph_utils.addIndividualToGraph(self.graph, evidence_line,
-                                                  label, type)
+            self.model.addIndividualToGraph(evidence_line,
+                                            label, type)
         return
 
-    def add_evidence(self, evidence_line, type=None, label=None):
+    def add_evidence(self, evidence_line, ev_type=None, label=None):
         """
         Add line of evidence node to association id
 
@@ -87,15 +88,14 @@ class Evidence:
         :param evidence_line: curie or iri, evidence line
         :return: None
         """
-        self.graph_utils.addTriple(self.graph, self.association,
-                                   self.object_properties['has_evidence'],
-                                   evidence_line)
-        if type is not None:
-            self.graph_utils.addIndividualToGraph(self.graph, evidence_line,
-                                                  label, type)
+        self.graph.addTriple(self.association,
+                             self.object_properties['has_evidence'],
+                             evidence_line)
+        if ev_type is not None:
+            self.model.addIndividualToGraph(evidence_line, label, ev_type)
         return
 
-    def add_data_individual(self, data_curie, label=None, type=None):
+    def add_data_individual(self, data_curie, label=None, ind_type=None):
         """
         Add data individual
         :param data_curie: str either curie formatted or long string,
@@ -112,7 +112,7 @@ class Evidence:
         else:
             curie = data_curie
 
-        self.graph_utils.addIndividualToGraph(self.graph, curie, label, type)
+        self.model.addIndividualToGraph(curie, label, ind_type)
         return
 
     def add_supporting_data(self, evidence_line, measurement_dict):
@@ -129,17 +129,17 @@ class Evidence:
         :return: None
         """
         for measurement in measurement_dict:
-            self.graph_utils.addTriple(self.graph, evidence_line,
-                                       self.object_properties['has_supporting_data'],
-                                       measurement)
+            self.graph.addTriple(evidence_line,
+                                 self.object_properties['has_supporting_data'],
+                                 measurement)
 
-            self.graph_utils.addTriple(self.graph, measurement,
-                                       self.data_property['has_value'],
-                                       measurement_dict[measurement], True)
+            self.graph.addTriple(measurement,
+                                 self.data_property['has_value'],
+                                 measurement_dict[measurement], True)
         return
 
     def add_supporting_publication(self, evidence_line, publication,
-                                   label=None, type=None):
+                                   label=None, pub_type=None):
         """
         <evidence> <SEPIO:0000124> <source>
         <source> <rdf:type> <type>
@@ -150,14 +150,14 @@ class Evidence:
         :param type: optional, str type as curie
         :return:
         """
-        self.graph_utils.addTriple(
-            self.graph, evidence_line,
+        self.graph.addTriple(
+            evidence_line,
             self.object_properties['has_supporting_reference'], publication
         )
-        self.graph_utils.addIndividualToGraph(self.graph, publication, label, type)
+        self.model.addIndividualToGraph(publication, label, pub_type)
         return
 
-    def add_source(self, evidence_line, source, label=None, type=None):
+    def add_source(self, evidence_line, source, label=None, src_type=None):
         """
         Applies the triples:
         <evidence> <dc:source> <source>
@@ -171,8 +171,8 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph_utils.addTriple(self.graph, evidence_line,
-                                   self.object_properties['source'],
-                                   source)
-        self.graph_utils.addIndividualToGraph(self.graph, source, label, type)
+        self.graph.addTriple(evidence_line,
+                             self.object_properties['source'],
+                             source)
+        self.model.addIndividualToGraph(source, label, src_type)
         return

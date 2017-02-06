@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class EnsemblTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = Ensembl()
+        self.source = Ensembl('rdf_graph', True)
         self.source.test_ids = self._get_conf()['test_ids']['gene']
         self.source.settestonly(True)
         self._setDirToSource()

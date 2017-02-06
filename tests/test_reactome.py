@@ -17,8 +17,7 @@ class ReactomeTestCase(unittest.TestCase):
         return
 
     def testEnsemblReactomeParser(self):
-        reactome = Reactome()
-        reactome.load_bindings()
+        reactome = Reactome('rdf_graph', True)
         eco_map = reactome._get_eco_map()
         (gene, pathway_id, pathway_iri, pathway_label,
          go_ecode, species_name) = self.test_set_1

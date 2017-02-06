@@ -6,17 +6,15 @@ import io
 import hashlib
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
+from dipper.models.Model import Model
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Environment import Environment
-from dipper import curie_map
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.utils.DipperUtil import DipperUtil
 from dipper import config
-# from dipper.models.GenomicFeature import Feature  # unused
 
 
 logger = logging.getLogger(__name__)
@@ -103,13 +101,11 @@ class FlyBase(PostgreSQLSource):
         'organism': [1, 226, 456]
     }
 
-    def __init__(self):
-        super().__init__('flybase')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'flybase')
         logger.setLevel(logging.INFO)
         # to be used to store the version number to be acquired later
         self.version_num = None
-
-        self.namespaces.update(curie_map.get())
 
         # update the dataset object with details about this resource
         self.dataset = Dataset(
@@ -173,7 +169,7 @@ class FlyBase(PostgreSQLSource):
 
         self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
-                     '/', cxn['database'])))
+                     '/', cxn['database'])), is_object_literal=True)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -215,8 +211,6 @@ class FlyBase(PostgreSQLSource):
         if self.testOnly:
             self.testMode = True
 
-        self.nobnodes = True
-
         # the following will provide us the hash-lookups
         self._process_dbxref()
         self._process_cvterm()
@@ -253,13 +247,6 @@ class FlyBase(PostgreSQLSource):
         # (in parser rather than during fetching)
 
         logger.info("Finished parsing.")
-
-        self.load_bindings()
-        for g in [self.graph, self.testgraph]:
-            Assoc(self.name).load_all_properties(g)
-            gu = GraphUtils(curie_map.get())
-            gu.loadAllProperties(g)
-
         logger.info("Loaded %d nodes", len(self.graph))
         return
 
@@ -279,12 +266,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'genotype'))
         logger.info("building labels for genotypes")
-        gu = GraphUtils(curie_map.get())
         geno = Genotype(g)
         fly_tax = 'NCBITaxon:7227'
         with open(raw, 'r') as f:
@@ -315,8 +301,8 @@ class FlyBase(PostgreSQLSource):
                             self.test_keys['genotype']:
                         continue
 
-                    gu.addIndividualToGraph(
-                        g, genotype_id, uniquename,
+                    model.addIndividualToGraph(
+                        genotype_id, uniquename,
                         Genotype.genoparts['intrinsic_genotype'],
                         description)
                     # we know all genotypes are in flies
@@ -326,10 +312,10 @@ class FlyBase(PostgreSQLSource):
                     geno.addTaxon(fly_tax, genotype_id)
                     genotype_iid = self._makeInternalIdentifier(
                         'genotype', genotype_num)
-                    gu.addComment(
-                        g, genotype_id, genotype_iid)
+                    model.addComment(
+                        genotype_id, genotype_iid)
                     if name.strip() != '':
-                        gu.addSynonym(g, genotype_id, name)
+                        model.addSynonym(genotype_id, name)
 
         return
 
@@ -346,12 +332,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'stock'))
         logger.info("building labels for stocks")
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -384,10 +369,10 @@ class FlyBase(PostgreSQLSource):
 
                     tax_label = self.label_hash[taxon]
                     # add the tax in case it hasn't been already
-                    gu.addClassToGraph(g, taxon, tax_label)
-                    gu.addIndividualToGraph(g, stock_id, stock_label, taxon)
+                    model.addClassToGraph(taxon, tax_label)
+                    model.addIndividualToGraph(stock_id, stock_label, taxon)
                     if is_obsolete == 't':
-                        gu.addDeprecatedIndividual(g, stock_id)
+                        model.addDeprecatedIndividual(stock_id)
 
         return
 
@@ -403,12 +388,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'pub'))
         logger.info("building labels for pubs")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -430,13 +414,13 @@ class FlyBase(PostgreSQLSource):
                     continue
                 line_counter += 1
 
-                r = Reference(pub_id)
+                reference = Reference(g, pub_id)
                 if title != '':
-                    r.setTitle(title)
+                    reference.setTitle(title)
                 if pyear != '':
-                    r.setYear(str(pyear))
+                    reference.setYear(str(pyear))
                 if miniref != '':
-                    r.setShortCitation(miniref)
+                    reference.setShortCitation(miniref)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -447,9 +431,9 @@ class FlyBase(PostgreSQLSource):
                         continue
 
                     if is_obsolete == 't':
-                        gu.addDeprecatedIndividual(g, pub_id)
+                        model.addDeprecatedIndividual(pub_id)
                     else:
-                        r.addRefToGraph(g)
+                        reference.addRefToGraph()
 
         return
 
@@ -470,7 +454,6 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
         raw = '/'.join((self.rawdir, 'environment'))
         logger.info("building labels for environment")
         env_parts = {}
@@ -531,12 +514,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'feature'))
         logger.info("building labels for features")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
@@ -637,36 +619,36 @@ class FlyBase(PostgreSQLSource):
                 if not re.search(r'FBog', feature_id) \
                         and re.search(r'Drosophila', tax_label):
                     # make only fly things leaders
-                    gu.makeLeader(g, feature_id)
+                    model.makeLeader(feature_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     pass
                 else:
                     if is_gene:
-                        gu.addClassToGraph(
-                            g, feature_id, name, type_id)
-                        gu.addTriple(
-                            g, feature_id, gu.object_properties['in_taxon'],
+                        model.addClassToGraph(
+                            feature_id, name, type_id)
+                        g.addTriple(
+                            feature_id, model.object_properties['in_taxon'],
                             tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
                             type_id = Genotype.genoparts['allele']
-                        gu.addIndividualToGraph(g, feature_id, name, type_id)
+                        model.addIndividualToGraph(feature_id, name, type_id)
 
                     if is_obsolete == 't':
                         if is_gene:
-                            gu.addDeprecatedClass(g, feature_id)
+                            model.addDeprecatedClass(feature_id)
                         else:
-                            gu.addDeprecatedIndividual(g, feature_id)
+                            model.addDeprecatedIndividual(feature_id)
                         self.deprecated_features.add(feature_key)
 
-                    gu.addClassToGraph(g, tax_id, tax_label)
+                    model.addClassToGraph(tax_id, tax_label)
                     if tax_id != tax_internal_id:
-                        gu.addEquivalentClass(g, tax_id, tax_internal_id)
+                        model.addEquivalentClass(tax_id, tax_internal_id)
 
-                    gu.addComment(
-                        g, feature_id,
+                    model.addComment(
+                        feature_id,
                         self._makeInternalIdentifier('feature', feature_key))
 
             # TODO save checked_organisms fbid to ncbitax mapping to
@@ -680,7 +662,6 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
         raw = '/'.join((self.rawdir, 'feature_genotype'))
         logger.info("processing genotype features")
         geno = Genotype(g)
@@ -733,17 +714,15 @@ class FlyBase(PostgreSQLSource):
         :param limit:
         :return:
         """
-
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'phendesc'))
         logger.info("processing G2P")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
@@ -774,13 +753,13 @@ class FlyBase(PostgreSQLSource):
 
                 # just make associations with abnormal phenotype
                 phenotype_id = 'FBcv:0001347'
-                assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
+                assoc = G2PAssoc(g, self.name, genotype_id, phenotype_id)
                 assoc.add_source(pub_id)
                 assoc.set_description(description)
                 assoc.set_environment(environment_id)
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
-                gu.addComment(g, assoc_id, phendesc_id)
+                model.addComment(assoc_id, phendesc_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -801,12 +780,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'feature_pub'))
         logger.info("processing feature_pub")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -828,8 +806,8 @@ class FlyBase(PostgreSQLSource):
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
 
-                gu.addTriple(
-                    g, pub_id, gu.object_properties['mentions'], feature_id)
+                g.addTriple(
+                    pub_id, model.object_properties['mentions'], feature_id)
 
                 line_counter += 1
 
@@ -851,12 +829,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'stock_genotype'))
         logger.info("processing stock genotype")
         geno = Genotype(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -873,8 +850,8 @@ class FlyBase(PostgreSQLSource):
                         self.test_keys['genotype']:
                     continue
 
-                gu.addTriple(
-                    g, stock_id, geno.object_properties['has_genotype'],
+                g.addTriple(
+                    stock_id, geno.object_properties['has_genotype'],
                     genotype_id)
 
                 line_counter += 1
@@ -897,12 +874,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'pub_dbxref'))
         logger.info("processing pub_dbxref")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -932,7 +908,7 @@ class FlyBase(PostgreSQLSource):
                                 dbxref_id = dbxrefs[d].strip()
                             else:
                                 dbxref_id = 'PMID:'+dbxrefs[d].strip()
-                            gu.makeLeader(g, dbxref_id)
+                            model.makeLeader(dbxref_id)
                         elif int(d) in isbn:
                             dbxref_id = 'ISBN:'+dbxrefs[d].strip()
                         elif int(d) == 161:
@@ -941,10 +917,10 @@ class FlyBase(PostgreSQLSource):
                         #     dbxref_id = 'FlyBase:'+dbxrefs[d].strip()
 
                         if dbxref_id is not None:
-                            r = Reference(
-                                dbxref_id, Reference.ref_types['publication'])
-                            r.addRefToGraph(g)
-                            gu.addSameIndividual(g, pub_id, dbxref_id)
+                            reference = Reference(
+                                g, dbxref_id, Reference.ref_types['publication'])
+                            reference.addRefToGraph()
+                            model.addSameIndividual(pub_id, dbxref_id)
                             line_counter += 1
 
                 if not self.testMode \
@@ -1109,12 +1085,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'phenotype'))
         logger.info("processing phenotype")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1173,7 +1148,7 @@ class FlyBase(PostgreSQLSource):
                     if phenotype_id is not None:
                         # assume that these fit into the phenotypic uberpheno
                         # elsewhere
-                        gu.addClassToGraph(g, phenotype_id, phenotype_label)
+                        model.addClassToGraph(phenotype_id, phenotype_label)
                         line_counter += 1
 
         return
@@ -1194,12 +1169,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'phenstatement'))
         logger.info("processing phenstatement")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1236,7 +1210,7 @@ class FlyBase(PostgreSQLSource):
 
                 # figure out if there is a relevant stage
 
-                assoc = G2PAssoc(self.name, genotype_id, phenotype_id)
+                assoc = G2PAssoc(g, self.name, genotype_id, phenotype_id)
                 if phenotype_id in self.phenocv:
                     stages = set(
                         s for s in
@@ -1257,10 +1231,10 @@ class FlyBase(PostgreSQLSource):
                 assoc.set_environment(environment_id)
                 # TODO check remove unspecified environments?
                 assoc.add_source(pub_id)
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
-                gu.addComment(g, assoc_id, phenstatement_id)
-                gu.addDescription(g, assoc_id, phenotype_internal_label)
+                model.addComment(assoc_id, phenstatement_id)
+                model.addDescription(assoc_id, phenotype_internal_label)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -1423,11 +1397,10 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'feature_dbxref'))
         logger.info("processing feature dbxref mappings")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1476,11 +1449,11 @@ class FlyBase(PostgreSQLSource):
                             if not re.match(r'OMIM', did):
                                 # these are only omim diseases, not genes;
                                 # we shouldn't be adding these here anyway
-                                gu.addClassToGraph(g, did, dlabel)
-                                gu.addXref(g, feature_id, did)
+                                model.addClassToGraph(did, dlabel)
+                                model.addXref(feature_id, did)
                         else:
-                            gu.addIndividualToGraph(g, did, dlabel)
-                            gu.addXref(g, feature_id, did)
+                            model.addIndividualToGraph(did, dlabel)
+                            model.addXref(feature_id, did)
                         line_counter += 1
 
                 if not self.testMode \
@@ -1510,8 +1483,7 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
         logger.info("determining some feature types based on relationships")
         with open(raw, 'r') as f:
@@ -1521,20 +1493,20 @@ class FlyBase(PostgreSQLSource):
                 (feature_relationship_id, subject_id, object_id, type_id, rank,
                  value) = line
 
-                if int(type_id) in [132216, 129784]:
+                if int(type_id) in [133526, 129784]:
                     # derived_tp_assoc_alleles
                     self.feature_types[subject_id] = \
                         Genotype.genoparts['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
-                    gu.addType(g, sid, self.feature_types[subject_id])
-                elif int(type_id) in [132223, 129791]:
+                    model.addType(sid, self.feature_types[subject_id])
+                elif int(type_id) in [133533, 129791]:
                     # only take the derived_sf_assoc_alleles
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
                     self.feature_types[subject_id] = \
                         Genotype.genoparts['reagent_targeted_gene']
                     sid = self.idhash['allele'].get(subject_id)
-                    gu.addType(g, sid, self.feature_types[subject_id])
+                    model.addType(sid, self.feature_types[subject_id])
 
                 else:
                     continue
@@ -1546,14 +1518,13 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         # ti_allele_map = {}  # TODO to be used when building genotypes
 
         line_counter = 0
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
         logger.info("processing feature relationships")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1615,8 +1586,8 @@ class FlyBase(PostgreSQLSource):
                     if allele_id is not None and gene_id is not None:
                         if self.feature_types[subject_id] == \
                                 Genotype.genoparts['reagent_targeted_gene']:
-                            gu.addTriple(
-                                g, allele_id,
+                            g.addTriple(
+                                allele_id,
                                 Genotype.object_properties[
                                     'is_targeted_expression_variant_of'],
                                 gene_id)
@@ -1684,14 +1655,14 @@ class FlyBase(PostgreSQLSource):
                     #       ti_id, allele_id,
                     #       geno.object_properties['has_alternate_part'])
                     elif reagent_id is not None and ti_id is not None:
-                        gu.addTriple(
-                            g, ti_id, geno.object_properties['targeted_by'],
+                        g.addTriple(
+                            ti_id, geno.object_properties['targeted_by'],
                             reagent_id)
 
                 # derived_tp_assoc_alleles
-                elif int(type_id) == 132216 or int(type_id) == 129784:
+                elif int(type_id) == 133526 or int(type_id) == 129784:
                     # note that the internal type id changed
-                    # from 129784 --> 132216 around 02.2016
+                    # from 129784 --> 133526 around 02.2016
                     # note that this relationship is only specified between
                     # an allele and a tp. therefore we know the FBal should be
                     # a transgenic_insertion
@@ -1705,12 +1676,12 @@ class FlyBase(PostgreSQLSource):
                     #     geno.addParts(
                     #       tp_id, allele_id,
                     #       geno.object_properties['has_alternate_part'])
-                    gu.addComment(g, allele_id, tp_id)
+                    model.addComment(allele_id, tp_id)
 
                 # derived_sf_assoc_alleles
-                elif int(type_id) == 132223 or int(type_id) == 129791:
+                elif int(type_id) == 133533 or int(type_id) == 129791:
                     # note the internal type_id changed
-                    # from 129791 --> 132223 around 02.2016
+                    # from 129791 --> 133533 around 02.2016
                     # the relationship between
                     #   a reagent-feature and the allele it targets
                     # the relationship between
@@ -1727,8 +1698,8 @@ class FlyBase(PostgreSQLSource):
                         reagent_id = self.idhash['reagent'][object_id]
 
                     if allele_id is not None and reagent_id is not None:
-                        gu.addTriple(
-                            g, allele_id,
+                        g.addTriple(
+                            allele_id,
                             geno.object_properties['targeted_by'], reagent_id)
 
                 # produced by
@@ -1781,13 +1752,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'organism'))
         logger.info("processing organisms")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
-
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
@@ -1819,11 +1788,11 @@ class FlyBase(PostgreSQLSource):
                         limit is not None and line_counter > limit:
                     pass
                 else:
-                    gu.addClassToGraph(g, tax_id, tax_label)
+                    model.addClassToGraph(tax_id, tax_label)
                     for s in [common_name, abbreviation]:
                         if s is not None and s.strip() != '':
-                            gu.addSynonym(g, tax_id, s)
-                            gu.addComment(g, tax_id, tax_internal_id)
+                            model.addSynonym(tax_id, s)
+                            model.addComment(tax_id, tax_internal_id)
 
         return
 
@@ -1863,11 +1832,10 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'organism_dbxref'))
         logger.info("processing organsim dbxref mappings")
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1893,10 +1861,10 @@ class FlyBase(PostgreSQLSource):
                         if did == organism_id:
                             continue
                         dlabel = self.label_hash.get(did)
-                        gu.addIndividualToGraph(g, did, dlabel)
-                        gu.addSameIndividual(g, organism_id, did)
+                        model.addIndividualToGraph(did, dlabel)
+                        model.addSameIndividual(organism_id, did)
                         if re.match(r'NCBITaxon', did):
-                            gu.makeLeader(g, did)
+                            model.makeLeader(did)
                         line_counter += 1
 
                 if not self.testMode and\
@@ -1920,13 +1888,12 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['disease_models']['file']))
         logger.info("processing disease models")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
-        geno = Genotype(g, self.nobnodes)
+        geno = Genotype(g)
         fly_taxon = 'NCBITaxon:7227'
 
         with gzip.open(raw, 'rb') as f:
@@ -1949,15 +1916,15 @@ class FlyBase(PostgreSQLSource):
                 rel = None
                 allele_id = 'FlyBase:'+allele_id
                 if qualifier == 'model of':
-                    rel = gu.object_properties['model_of']
+                    rel = model.object_properties['model_of']
                 else:
                     # TODO amelorates, exacerbates, and DOES NOT *
                     continue
 
                 animal_id = geno.make_experimental_model_with_genotype(
-                    g, allele_id, allele_symbol, fly_taxon, 'fly')
+                    allele_id, allele_symbol, fly_taxon, 'fly')
 
-                assoc = G2PAssoc(self.name, animal_id, doid_id, rel)
+                assoc = G2PAssoc(g, self.name, animal_id, doid_id, rel)
                 if pub_id != '':
                     pub_id = 'FlyBase:'+pub_id
                     assoc.add_source(pub_id)
@@ -1968,7 +1935,7 @@ class FlyBase(PostgreSQLSource):
                 else:
                     assoc.set_description(evidence_or_interacting_allele)
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
                 if not self.testMode and\
                         limit is not None and line_counter > limit:
@@ -1989,12 +1956,11 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         raw = '/'.join((self.rawdir, 'stockprop'))
         logger.info("processing stock-image depictions")
 
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -2014,12 +1980,12 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 132241 and re.match(r'FBim', value):
+                if int(type_id) == 133551 and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'
                     if sid is not None:
-                        gu.addDepiction(g, sid, image_url)
+                        model.addDepiction(sid, image_url)
                     # TODO should this be a Reference object?
 
                 # TODO add the stockprop_pub table when there is data to pull

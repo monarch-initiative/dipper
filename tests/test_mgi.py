@@ -17,9 +17,8 @@ logger = logging.getLogger(__name__)
 class MGITestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = MGI()
+        self.source = MGI('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.setnobnodes(True)
         self._setDirToSource()
         return
 

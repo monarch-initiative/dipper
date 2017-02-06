@@ -12,8 +12,8 @@ class PostgreSQLSource(Source):
     Class for interfacing with remote Postgres databases
     """
 
-    def __init__(self, name=None):
-        super().__init__(name)
+    def __init__(self, graph_type, are_bnodes_skolemized, name=None):
+        super().__init__(graph_type, are_bnodes_skolemized, name)
         return
 
     def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):

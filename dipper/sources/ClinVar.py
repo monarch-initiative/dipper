@@ -8,10 +8,8 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-# from dipper.models.assoc.Association import Assoc  # unused
-from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from dipper import curie_map
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
 
@@ -51,13 +49,13 @@ class ClinVar(Source):
         132148, 144375, 146588, 147536, 147814, 147936, 152976, 156327, 161457,
         162000, 167132]
 
-    def __init__(self, tax_ids=None, gene_ids=None):
-        Source.__init__(self, 'clinvar')
+    def __init__(self, graph_type, are_bnodes_skolemized,
+                 tax_ids=None, gene_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'clinvar')
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
         self.filter = 'taxids'
-        self.load_bindings()
 
         self.dataset = Dataset(
             'ClinVar', 'National Center for Biotechnology Information',
@@ -117,9 +115,6 @@ class ClinVar(Source):
         self._get_variants(limit)
         self._get_var_citations(limit)
 
-        self.load_core_bindings()
-        self.load_bindings()
-
         print("Done parsing files.")
 
         return
@@ -132,25 +127,22 @@ class ClinVar(Source):
         :return:
 
         """
-        gu = GraphUtils(curie_map.get())
 
         if self.testMode:
             g = self.testgraph
         else:
             g = self.graph
 
-        geno = Genotype(g)
-        gu.loadAllProperties(g)
-        f = Feature(None, None, None)
-        f.loadAllProperties(g)
+        model = Model(g)
 
-        gu.loadAllProperties(g)
+        geno = Genotype(g)
+        f = Feature(g, None, None, None)
 
         # add the taxon and the genome
         tax_num = '9606'  # HARDCODE
         tax_id = 'NCBITaxon:'+tax_num
         tax_label = 'Human'
-        gu.addClassToGraph(g, tax_id, None)
+        model.addClassToGraph(tax_id, None)
         geno.addGenome(tax_id, tax_label)  # label gets added elsewhere
 
         # not unzipping the file
@@ -310,13 +302,13 @@ class ClinVar(Source):
                 if stop != '-' and stop.strip() != '':
                     f.addFeatureEndLocation(stop, chrinbuild_id)
 
-                f.addFeatureToGraph(g)
-                f.addTaxonToFeature(g, tax_id)
+                f.addFeatureToGraph()
+                f.addTaxonToFeature(tax_id)
                 # make the ClinVarVariant the clique leader
-                gu.makeLeader(g, seqalt_id)
+                model.makeLeader(seqalt_id)
 
                 if bandinbuild_id is not None:
-                    f.addSubsequenceOfFeature(g, bandinbuild_id)
+                    f.addSubsequenceOfFeature(bandinbuild_id)
 
                 # CHECK - this makes the assumption that there is
                 # only one affected chromosome per variant what happens with
@@ -325,38 +317,38 @@ class ClinVar(Source):
 
                 # add the hgvs as synonyms
                 if hgvs_c != '-' and hgvs_c.strip() != '':
-                    gu.addSynonym(g, seqalt_id, hgvs_c)
+                    model.addSynonym(seqalt_id, hgvs_c)
                 if hgvs_p != '-' and hgvs_p.strip() != '':
-                    gu.addSynonym(g, seqalt_id, hgvs_p)
+                    model.addSynonym(seqalt_id, hgvs_p)
 
                 # add the dbsnp and dbvar ids as equivalent
                 if dbsnp_num != '-' and int(dbsnp_num) != -1:
                     dbsnp_id = 'dbSNP:rs'+str(dbsnp_num)
-                    gu.addIndividualToGraph(g, dbsnp_id, None)
-                    gu.addSameIndividual(g, seqalt_id, dbsnp_id)
+                    model.addIndividualToGraph(dbsnp_id, None)
+                    model.addSameIndividual(seqalt_id, dbsnp_id)
                 if dbvar_num != '-':
                     dbvar_id = 'dbVar:'+dbvar_num
-                    gu.addIndividualToGraph(g, dbvar_id, None)
-                    gu.addSameIndividual(g, seqalt_id, dbvar_id)
+                    model.addIndividualToGraph(dbvar_id, None)
+                    model.addSameIndividual(seqalt_id, dbvar_id)
 
                 # TODO - not sure if this is right... add as xref?
                 # the rcv is like the combo of the phenotype with the variant
                 if rcv_nums != '-':
                     for rcv_num in re.split(r';', rcv_nums):
                         rcv_id = 'ClinVar:' + rcv_num
-                        gu.addIndividualToGraph(g, rcv_id, None)
-                        gu.addXref(g, seqalt_id, rcv_id)
+                        model.addIndividualToGraph(rcv_id, None)
+                        model.addXref(seqalt_id, rcv_id)
 
                 if gene_id is not None:
                     # add the gene
-                    gu.addClassToGraph(g, gene_id, gene_symbol)
+                    model.addClassToGraph(gene_id, gene_symbol)
                     # make a variant locus
                     vl_id = '_'+gene_num+'-'+variant_num
                     if self.nobnodes:
                         vl_id = ':'+vl_id
                     vl_label = allele_name
-                    gu.addIndividualToGraph(
-                        g, vl_id, vl_label, geno.genoparts['variant_locus'])
+                    model.addIndividualToGraph(
+                        vl_id, vl_label, geno.genoparts['variant_locus'])
                     geno.addSequenceAlterationToVariantLocus(seqalt_id, vl_id)
                     geno.addAlleleOfGene(vl_id, gene_id)
                 else:
@@ -403,8 +395,8 @@ class ClinVar(Source):
                             continue
 
                         assoc = G2PAssoc(
-                            self.name, seqalt_id, phenotype.strip())
-                        assoc.add_association_to_graph(g)
+                            g, self.name, seqalt_id, phenotype.strip())
+                        assoc.add_association_to_graph()
 
                 if other_ids != '-':
                     id_list = other_ids.split(',')
@@ -415,11 +407,11 @@ class ClinVar(Source):
                         prefix = xrefid.split(':')[0].strip()
                         if prefix == 'OMIM Allelic Variant':
                             xrefid = 'OMIM:'+xrefid.split(':')[1]
-                            gu.addIndividualToGraph(g, xrefid, None)
-                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                            model.addIndividualToGraph(xrefid, None)
+                            model.addSameIndividual(seqalt_id, xrefid)
                         elif prefix == 'HGMD':
-                            gu.addIndividualToGraph(g, xrefid, None)
-                            gu.addSameIndividual(g, seqalt_id, xrefid)
+                            model.addIndividualToGraph(xrefid, None)
+                            model.addSameIndividual(seqalt_id, xrefid)
                         elif prefix == 'dbVar' \
                                 and dbvar_num == xrefid.split(':')[1].strip():
                             pass  # skip over this one
@@ -439,10 +431,6 @@ class ClinVar(Source):
                 if not self.testMode and limit is not None \
                         and line_counter > limit:
                     break
-
-        gu.loadProperties(g, G2PAssoc.object_properties, gu.OBJPROP)
-        gu.loadProperties(g, G2PAssoc.annotation_properties, gu.ANNOTPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, gu.DATAPROP)
 
         logger.info("Finished parsing variants")
 
@@ -464,7 +452,6 @@ class ClinVar(Source):
         #                   PubMedCentral, or the NCBI Bookshelf
         # citation_id		The identifier used by that source
 
-        gu = GraphUtils(curie_map.get())
         logger.info("Processing Citations for variants")
         line_counter = 0
         myfile = \
@@ -473,6 +460,7 @@ class ClinVar(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
 
         with open(myfile, 'r', encoding="utf8") as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -511,15 +499,16 @@ class ClinVar(Source):
                 ref_id = None
                 if citation_source == 'PubMed':
                     ref_id = 'PMID:'+str(citation_id.replace(" ", ""))
-                    gu.makeLeader(g, ref_id)
+                    model.makeLeader(ref_id)
                 elif citation_source == 'PubMedCentral':
                     ref_id = 'PMCID:'+str(citation_id)
                 if ref_id is not None:
                     r = Reference(
-                        ref_id, Reference.ref_types['journal_article'])
-                    r.addRefToGraph(g)
-                    gu.addTriple(
-                        g, ref_id, self.properties['is_about'], var_id)
+                        self.graph, ref_id,
+                        Reference.ref_types['journal_article'])
+                    r.addRefToGraph()
+                    g.addTriple(
+                        ref_id, self.properties['is_about'], var_id)
 
                 if not self.testMode \
                         and (limit is not None and line_counter > limit):

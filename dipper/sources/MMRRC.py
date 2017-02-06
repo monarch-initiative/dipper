@@ -5,13 +5,12 @@ from datetime import datetime
 from stat import ST_CTIME
 import logging
 
-from dipper.utils.GraphUtils import GraphUtils
 from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from dipper.models.Genotype import Genotype
-from dipper import curie_map
+from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +50,10 @@ class MMRRC(Source):
         'MMRRC:000001-UNC'
     ]
 
-    def __init__(self):
-        Source.__init__(self, 'mmrrc')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'mmrrc')
         self.strain_hash = {}
         self.id_label_hash = {}
-        self.load_bindings()
         self.dataset = Dataset(
             'mmrrc', 'Mutant Mouse Regional Resource Centers',
             'https://www.mmrrc.org', None,
@@ -117,9 +115,8 @@ class MMRRC(Source):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         fname = '/'.join((self.rawdir, self.files['catalog']['file']))
 
         self.strain_hash = {}
@@ -227,14 +224,14 @@ class MMRRC(Source):
                     for i in re.split(r'\s+', pubmed_nums):
                         pmid = 'PMID:'+i.strip()
                         pubmed_ids.append(pmid)
-                        r = Reference(pmid,
+                        r = Reference(g, pmid,
                                       Reference.ref_types['journal_article'])
-                        r.addRefToGraph(g)
+                        r.addRefToGraph()
 
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001
                 # is a good example of 4 genotype parts
 
-                gu.addClassToGraph(g, mouse_taxon, None)
+                model.addClassToGraph(mouse_taxon, None)
                 if research_areas.strip() == '':
                     research_areas = None
                 else:
@@ -242,21 +239,21 @@ class MMRRC(Source):
                 strain_type = mouse_taxon
                 if strain_state == 'ES':
                     strain_type = stem_cell_class
-                gu.addIndividualToGraph(
-                    g, strain_id, strain_label, strain_type,
+                model.addIndividualToGraph(
+                    strain_id, strain_label, strain_type,
                     research_areas)  # an inst of mouse??
-                gu.makeLeader(g, strain_id)
+                model.makeLeader(strain_id)
 
                 # phenotypes are associated with the alleles
                 for pid in phenotype_ids:
                     # assume the phenotype label is in the ontology
-                    gu.addClassToGraph(g, pid, None)
+                    model.addClassToGraph(pid, None)
                     if mgi_allele_id is not None and mgi_allele_id != '':
-                        assoc = G2PAssoc(self.name, mgi_allele_id, pid,
-                                         gu.object_properties['has_phenotype'])
+                        assoc = G2PAssoc(g, self.name, mgi_allele_id, pid,
+                                         model.object_properties['has_phenotype'])
                         for p in pubmed_ids:
                             assoc.add_source(p)
-                        assoc.add_association_to_graph(g)
+                        assoc.add_association_to_graph()
                     else:
                         logger.info("Phenotypes and no allele for %s",
                                     strain_id)
@@ -288,10 +285,7 @@ class MMRRC(Source):
                 else:  # len(vars) == 0
                     # it's just anonymous variants in some gene
                     for gene in genes:
-                        vl_id = '_'+gene+'-VL'
-                        vl_id = re.sub(r':', '', vl_id)
-                        if self.nobnodes:
-                            vl_id = ':'+vl_id
+                        vl_id = '_:' + re.sub(r':', '', gene) + '-VL'
                         vl_symbol = self.id_label_hash[gene]+'<?>'
                         self.id_label_hash[vl_id] = vl_symbol
                         geno.addAllele(vl_id, vl_symbol,
@@ -305,29 +299,27 @@ class MMRRC(Source):
                 vslc_list = []
                 for vl in vl_list:
                     # for unknown zygosity
-                    vslc_id = '_'+re.sub(r'^_', '', vl)+'U'
+                    vslc_id = re.sub(r'^_', '', vl)+'U'
                     vslc_id = re.sub(r':', '', vslc_id)
-                    if self.nobnodes:
-                        vslc_id = ':' + vslc_id
+                    vslc_id = '_:' + vslc_id
                     vslc_label = self.id_label_hash[vl] + '/?'
                     self.id_label_hash[vslc_id] = vslc_label
                     vslc_list.append(vslc_id)
                     geno.addPartsToVSLC(
                         vslc_id, vl, None, geno.zygosity['indeterminate'],
                         geno.object_properties['has_alternate_part'], None)
-                    gu.addIndividualToGraph(
-                        g, vslc_id, vslc_label,
+                    model.addIndividualToGraph(
+                        vslc_id, vslc_label,
                         geno.genoparts['variant_single_locus_complement'])
                 if len(vslc_list) > 0:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
-                        gvc_id = re.sub(r':', '', gvc_id)
-                        if self.nobnodes:
-                            gvc_id = ':'+gvc_id
+                        gvc_id = re.sub(r'_|:', '', gvc_id)
+                        gvc_id = '_:'+gvc_id
                         gvc_label = \
                             '; '.join(self.id_label_hash[v] for v in vslc_list)
-                        gu.addIndividualToGraph(
-                            g, gvc_id, gvc_label,
+                        model.addIndividualToGraph(
+                            gvc_id, gvc_label,
                             geno.genoparts['genomic_variation_complement'])
                         for vslc_id in vslc_list:
                             geno.addVSLCtoParent(vslc_id, gvc_id)
@@ -338,12 +330,11 @@ class MMRRC(Source):
 
                     genotype_label = gvc_label + ' [n.s.]'
                     bkgd_id = \
-                        '_' + re.sub(r':', '', '-'.join(
+                        re.sub(r':', '', '-'.join(
                             (geno.genoparts['unspecified_genomic_background'],
                              s)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
-                    if self.nobnodes:
-                        bkgd_id = ':'+bkgd_id
+                    bkgd_id = '_:'+bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
                     geno.addGenomicBackground(
                         bkgd_id, 'unspecified ('+s+')',
@@ -357,21 +348,13 @@ class MMRRC(Source):
                         gvc_id, genotype_id,
                         geno.object_properties['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
-                    gu.addTriple(
-                        g, s, geno.object_properties['has_genotype'],
+                    g.addTriple(
+                        s, geno.object_properties['has_genotype'],
                         genotype_id)
                 else:
                     # logger.debug(
                     #   "Strain %s is not making a proper genotype.", s)
                     pass
-
-            gu.loadProperties(
-                g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-            gu.loadProperties(
-                g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
-            gu.loadProperties(
-                g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-            gu.loadAllProperties(g)
 
             logger.warning(
                 "The following gene symbols did not list identifiers: %s",

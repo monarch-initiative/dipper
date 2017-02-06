@@ -14,8 +14,7 @@ from dipper.models.Environment import Environment
 from dipper.models.GenomicFeature import makeChromID
 from dipper.models.GenomicFeature import Feature
 from dipper.models.Reference import Reference
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import curie_map
+from dipper.models.Model import Model
 from dipper import config
 
 logger = logging.getLogger(__name__)
@@ -141,7 +140,7 @@ class ZFIN(Source):
         'fish_components': {
             'file': 'fish_components_fish.txt',
             'url': ZFDL + '/fish_components_fish.txt'
-        },
+        }
 
     }
 
@@ -263,8 +262,8 @@ class ZFIN(Source):
             "ZDB-FISH-150901-1409"]
     }
 
-    def __init__(self):
-        Source.__init__(self, 'zfin')
+    def __init__(self, graph_type, are_bnodes_skolemized):
+        super().__init__(graph_type, are_bnodes_skolemized, 'zfin')
         # update the dataset object with details about this resource
         self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org', None,
                                'http://zfin.org/warranty.html')
@@ -386,15 +385,6 @@ class ZFIN(Source):
         # self._process_uniprot_ids(limit)
 
         logger.info("Finished parsing.")
-
-        self.load_bindings()
-        gu = GraphUtils(curie_map.get())
-        gu.loadAllProperties(g)
-        gu.loadObjectProperties(g, Genotype.object_properties)
-
-        logger.info("Found %d nodes in graph", len(self.graph))
-        logger.info("Found %d nodes in testgraph", len(self.testgraph))
-
         return
 
     def process_fish(self, limit=None):
@@ -419,7 +409,7 @@ class ZFIN(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         taxon_id = 'NCBITaxon:7955'  # hardcode to zebrafish
 
         geno = Genotype(g)
@@ -536,7 +526,7 @@ class ZFIN(Source):
                     eid = '-'.join(reagent_list)
 
                     targeted_gene_id = self.make_targeted_gene_id(
-                        gid, eid, self.nobnodes)
+                        gid, eid)
                     # get the reagent labels
                     elabel = ', '.join(
                         self.id_label_map.get(l) for l in reagent_list)
@@ -551,10 +541,8 @@ class ZFIN(Source):
                     list_of_targeted_genes += [targeted_gene_id]
                     # end loop through each gene that is targeted
                 list_of_targeted_genes = sorted(list_of_targeted_genes)
-                extrinsic_id = '_'+re.sub(
-                    r':?_', '', '-'.join(list_of_targeted_genes))
-                if self.nobnodes:
-                    extrinsic_id = ':'+extrinsic_id
+                extrinsic_id = '_:'+re.sub(
+                    r':?_?', '', '-'.join(list_of_targeted_genes))
                 extrinsic_label = '; '.join(
                     str(self.id_label_map.get(l))
                     for l in list_of_targeted_genes)
@@ -596,7 +584,7 @@ class ZFIN(Source):
             # build the fish label
             if extrinsic_id is None:
                 # fish == intrinsic
-                gu.addSameIndividual(g, fish_id, intrinsic_genotype_id)
+                model.addSameIndividual(fish_id, intrinsic_genotype_id)
                 fish_label = intrinsic_genotype_label
                 fish_type = intrinsic_type
             else:
@@ -609,7 +597,7 @@ class ZFIN(Source):
 
             # since we re-create a label,
             # add the zfin fish label as the synonym
-            gu.addSynonym(g, fish_id, fish['fish_label'])
+            model.addSynonym(fish_id, fish['fish_label'])
             self.id_label_map[fish_id] = fish_label
 
             if not self.testMode and \
@@ -684,7 +672,7 @@ class ZFIN(Source):
         else:
             g = self.graph
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         taxon_id = 'NCBITaxon:7955'  # hardcode to zebrafish
 
         geno_hash = {}  # This is used to store the genotype partonomy
@@ -715,8 +703,8 @@ class ZFIN(Source):
                 geno.addGenotype(genotype_id, None)
 
                 # add the given name and uniquename as synonyms
-                gu.addSynonym(g, genotype_id, genotype_name)
-                gu.addSynonym(g, genotype_id, genotype_unique_name)
+                model.addSynonym(genotype_id, genotype_name)
+                model.addSynonym(genotype_id, genotype_unique_name)
 
                 # store the alleles of the genotype,
                 # in order to use when processing fish
@@ -739,7 +727,7 @@ class ZFIN(Source):
 
                 # alleles in zfin are really sequence alterations in our system
                 geno.addSequenceAlteration(allele_id, allele_name, allele_type)
-                gu.addSynonym(g, allele_id, allele_ab)
+                model.addSynonym(allele_id, allele_ab)
 
                 # here, we assemble the items into a genotype hash
                 # we need to do this because each row only holds one allele
@@ -905,8 +893,8 @@ class ZFIN(Source):
                     geno.addSequenceAlterationToVariantLocus(
                         allele1_id, vloci1)
                     geno.addAlleleOfGene(vloci1, gene_id)
-                    gu.addIndividualToGraph(
-                        g, vloci1, vloci1_label,
+                    model.addIndividualToGraph(
+                        vloci1, vloci1_label,
                         geno.genoparts['variant_locus'])
                     if allele2_id is not None and \
                             allele2_id not in ['WT', '0', 'UN']:
@@ -916,8 +904,8 @@ class ZFIN(Source):
                             locus_label, allele2_label)
                         geno.addSequenceAlterationToVariantLocus(
                             allele2_id, vloci2)
-                        gu.addIndividualToGraph(
-                            g, vloci2, vloci2_label,
+                        model.addIndividualToGraph(
+                            vloci2, vloci2_label,
                             geno.genoparts['variant_locus'])
                         geno.addAlleleOfGene(vloci2, gene_id)
                 else:
@@ -938,18 +926,16 @@ class ZFIN(Source):
 
                 # TODO also consider adding this to Genotype.py
                 vslc_id = '-'.join((gn, allele1_id, allele2_id))
-                vslc_id = '_' + re.sub(r'(ZFIN)?:', '', vslc_id)
+                vslc_id = '_:' + re.sub(r'(ZFIN)?:', '', vslc_id)
 
-                if self.nobnodes is True:
-                    vslc_id = ':' + vslc_id
                 vslc_label = geno.make_vslc_label(gene_label, allele1_label,
                                                   allele2_label)
 
                 # add to global hash
                 self.id_label_map[vslc_id] = vslc_label
 
-                gu.addIndividualToGraph(
-                    g, vslc_id, vslc_label,
+                model.addIndividualToGraph(
+                    vslc_id, vslc_label,
                     geno.genoparts['variant_single_locus_complement'])
                 geno.addPartsToVSLC(
                     vslc_id, vloci1, vloci2, zygosity_id,
@@ -980,9 +966,7 @@ class ZFIN(Source):
 
                 gvc_id = '-'.join(gvc_parts)
                 gvc_id = re.sub(r'(ZFIN)?:', '', gvc_id)
-                gvc_id = '_' + re.sub(r'^_*', '', gvc_id)
-                if self.nobnodes:
-                    gvc_id = ':' + gvc_id
+                gvc_id = '_:' + re.sub(r'^_*', '', gvc_id)
 
                 for vslc_id in gvc_parts:
                     # add the vslc to the gvc
@@ -1002,16 +986,16 @@ class ZFIN(Source):
                 self.id_label_map[gvc_id] = gvc_label
 
                 # add the gvc
-                gu.addIndividualToGraph(
-                    g, gvc_id, gvc_label,
+                model.addIndividualToGraph(
+                    gvc_id, gvc_label,
                     geno.genoparts['genomic_variation_complement'])
             elif len(gvc_parts) == 1:
                 # assign the vslc to be also a gvc
                 vslc_id = gvc_parts[0]
                 gvc_id = vslc_id
                 gvc_label = self.id_label_map[vslc_id]
-                gu.addType(
-                    g, vslc_id, geno.genoparts['genomic_variation_complement'])
+                model.addType(
+                    vslc_id, geno.genoparts['genomic_variation_complement'])
             else:
                 gvc_id = None
                 gvc_label = ''
@@ -1028,9 +1012,7 @@ class ZFIN(Source):
 
             else:
                 background_num = re.sub(r'ZFIN:', '', gt)
-                background_id = '_bkgd-'+background_num
-                if self.nobnodes:
-                    background_id = ':' + background_id
+                background_id = '_:bkgd-'+background_num
                 background_label = 'n.s. (' + background_num + ')'
                 background_desc = 'This genomic background is unknown. ' +\
                     'This is a placeholder background for ' + gt + '.'
@@ -1108,16 +1090,15 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("Processing genotype backgrounds")
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['backgrounds']['file']))
         geno = Genotype(g)
 
         # Add the taxon as a class
         taxon_id = 'NCBITaxon:7955'  # Danio rerio
-        gu.addClassToGraph(g, taxon_id, None)
+        model.addClassToGraph(taxon_id, None)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1181,11 +1162,11 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("Processing wildtype genotypes")
         line_counter = 0
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['wild']['file']))
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -1206,8 +1187,8 @@ class ZFIN(Source):
                 geno.addGenomicBackground(
                     genotype_id, fish_abbreviation, background_type, fish_name)
 
-                gu.addTriple(
-                    g, fish_id, geno.object_properties['has_genotype'],
+                g.addTriple(
+                    fish_id, geno.object_properties['has_genotype'],
                     genotype_id)
 
                 # Build the hash for the wild type genotypes.
@@ -1239,9 +1220,9 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         logger.info("Processing stages")
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['stage']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1252,8 +1233,8 @@ class ZFIN(Source):
 
                 # Add the stage as a class, and it's obo equivalent
                 stage_id = 'ZFIN:' + stage_id.strip()
-                gu.addClassToGraph(g, stage_id, stage_name)
-                gu.addEquivalentClass(g, stage_id, stage_obo_id)
+                model.addClassToGraph(stage_id, stage_name)
+                model.addEquivalentClass(stage_id, stage_obo_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -1293,8 +1274,7 @@ class ZFIN(Source):
         missing_zpids = list()
         mapped_zpids = list()
 
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         # hardcode
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
         raw = '/'.join((self.rawdir, self.files['pheno']['file']))
@@ -1358,8 +1338,8 @@ class ZFIN(Source):
 
                 if pub_id != '':
                     pub_id = 'ZFIN:' + pub_id.strip()
-                    r = Reference(pub_id)
-                    r.addRefToGraph(g)
+                    r = Reference(g, pub_id)
+                    r.addRefToGraph()
 
                 if not re.match(r'^normal', modifier):
                     if phenotype_id is None:
@@ -1370,7 +1350,7 @@ class ZFIN(Source):
                         end_stage_id = 'ZFIN:' + end_stage_id.strip()
 
                     # add association
-                    assoc = G2PAssoc(self.name, fish_id, phenotype_id)
+                    assoc = G2PAssoc(g, self.name, fish_id, phenotype_id)
 
                     # only add the environment if there's components to it
                     if env_id in self.environment_hash \
@@ -1379,12 +1359,12 @@ class ZFIN(Source):
                     assoc.set_stage(start_stage_id, end_stage_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
-                    assoc.add_association_to_graph(g, self.nobnodes)
+                    assoc.add_association_to_graph()
                     assoc_id = assoc.get_association_id()
                     if env_id not in self.environment_hash \
                             or len(self.environment_hash.get(env_id)) > 0:
-                        gu.addComment(g, assoc_id,
-                                      'Legacy environment id '+env_id)
+                        model.addComment(assoc_id,
+                                         'Legacy environment id '+env_id)
                 else:
                     # TODO add normal phenotypes as associations #134 when
                     # https://github.com/sba1/bio-ontology-zp/issues/9
@@ -1400,8 +1380,8 @@ class ZFIN(Source):
                     c = ' '.join(("Normal phenotype observed:", c,
                                   "(" + pub_id + ")"))
                     if pub_id != '':
-                        gu.addTriple(g, pub_id,
-                                     gu.object_properties['mentions'], fish_id)
+                        g.addTriple(pub_id,
+                                    model.object_properties['mentions'], fish_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -1412,11 +1392,6 @@ class ZFIN(Source):
         logger.info("Phenotype-sextuples: %d mapped : %d unmapped",
                     len(myset), len(myset2))
         self._write_missing_zp_report(missing_zpids)
-
-        gu.loadProperties(g, G2PAssoc.object_properties, G2PAssoc.OBJECTPROP)
-        gu.loadProperties(
-            g, G2PAssoc.annotation_properties, G2PAssoc.ANNOTPROP)
-        gu.loadProperties(g, G2PAssoc.datatype_properties, G2PAssoc.DATAPROP)
 
         return
 
@@ -1469,8 +1444,8 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['gene']['file']))
         geno = Genotype(g)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1493,7 +1468,7 @@ class ZFIN(Source):
                     pass
                 else:
                     geno.addGene(gene_id, gene_symbol)
-                    gu.addEquivalentClass(g, gene_id, ncbi_gene_id)
+                    model.addEquivalentClass(gene_id, ncbi_gene_id)
 
         logger.info("Done with genes")
         return
@@ -1518,10 +1493,9 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("Processing features")
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['features']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -1539,11 +1513,11 @@ class ZFIN(Source):
                     continue
 
                 genomic_feature_id = 'ZFIN:' + genomic_feature_id.strip()
-                gu.addIndividualToGraph(g, genomic_feature_id,
-                                        genomic_feature_name, feature_so_id)
+                model.addIndividualToGraph(genomic_feature_id,
+                                           genomic_feature_name, feature_so_id)
 
-                gu.addSynonym(g, genomic_feature_id,
-                              genomic_feature_abbreviation)
+                model.addSynonym(genomic_feature_id,
+                                 genomic_feature_abbreviation)
                 if construct_id is not None and construct_id != '':
                     construct_id = 'ZFIN:' + construct_id.strip()
                     geno.addConstruct(construct_id, construct_name,
@@ -1607,8 +1581,8 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
+        model = Model(g)
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -1673,8 +1647,8 @@ class ZFIN(Source):
                     # add it's parts and relationship to the gene
                     geno.addSequenceAlterationToVariantLocus(
                         genomic_feature_id, vl_id)
-                    gu.addIndividualToGraph(g, vl_id, vl_label,
-                                            geno.genoparts['variant_locus'])
+                    model.addIndividualToGraph(vl_id, vl_label,
+                                               geno.genoparts['variant_locus'])
                     geno.addAlleleOfGene(vl_id, gene_id)
 
                     # note that deficiencies or translocations
@@ -1729,10 +1703,9 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-
+        model = Model(g)
         logger.info("Processing gene marker relationships")
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
         raw = '/'.join((self.rawdir, self.files['gene_marker_rel']['file']))
         geno = Genotype(g)
 
@@ -1776,8 +1749,8 @@ class ZFIN(Source):
                             marker_id, gene_id, relationship)
                         transgene_part_label = 'Tg(' + relationship + ' ' +\
                             gene_symbol + ')'
-                        gu.addIndividualToGraph(
-                            g, transgene_part_id, transgene_part_label,
+                        model.addIndividualToGraph(
+                            transgene_part_id, transgene_part_label,
                             geno.genoparts['coding_transgene_feature'])
                         geno.addSequenceDerivesFrom(transgene_part_id, gene_id)
 
@@ -1801,8 +1774,8 @@ class ZFIN(Source):
                             marker_id, gene_id, relationship)
                         transgene_part_label = 'Tg(' + relationship + ' ' +\
                             gene_symbol + ')'
-                        gu.addIndividualToGraph(
-                            g, transgene_part_id, transgene_part_label,
+                        model.addIndividualToGraph(
+                            transgene_part_id, transgene_part_label,
                             geno.genoparts['regulatory_transgene_feature'])
                         geno.addSequenceDerivesFrom(transgene_part_id, gene_id)
 
@@ -1814,10 +1787,10 @@ class ZFIN(Source):
                     elif relationship == 'transcript targets gene':  # miRNAs
                         # TODO should this be an interaction
                         # instead of this special relationship?
-                        gu.addIndividualToGraph(
-                            g, marker_id, marker_symbol, marker_so_id)
-                        gu.addTriple(
-                            g, marker_id,
+                        model.addIndividualToGraph(
+                            marker_id, marker_symbol, marker_so_id)
+                        g.addTriple(
+                            marker_id,
                             geno.object_properties['targets_instance_of'],
                             gene_id)
                     else:
@@ -1835,11 +1808,10 @@ class ZFIN(Source):
         return
 
     def _make_transgene_part_id(self, construct_id, part_id, relationship):
-        transgene_part_id = '_' + '-'.join((construct_id, part_id,
-                                            re.sub(r'\W+', '-', relationship)))
+        transgene_part_id = '-'.join((construct_id, part_id,
+                                      re.sub(r'\W+', '-', relationship)))
         transgene_part_id = re.sub(r'ZFIN:', '', transgene_part_id)
-        if self.nobnodes:
-            transgene_part_id = ':'+transgene_part_id
+        transgene_part_id = '_:'+transgene_part_id
 
         return transgene_part_id
 
@@ -1865,7 +1837,7 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['pubs']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1897,7 +1869,7 @@ class ZFIN(Source):
 
                 pub_label = '; '.join(
                     (astring, title, journal, year, vol, pages))
-                r = Reference(pub_id)
+                r = Reference(g, pub_id)
                 r.setShortCitation(pub_label)
                 r.setYear(year)
                 r.setTitle(title)
@@ -1908,14 +1880,14 @@ class ZFIN(Source):
                     r.setType(Reference.ref_types['journal_article'])
 
                     pubmed_id = 'PMID:' + pubmed_id.strip()
-                    rpm = Reference(pubmed_id,
+                    rpm = Reference(g, pubmed_id,
                                     Reference.ref_types['journal_article'])
-                    rpm.addRefToGraph(g)
+                    rpm.addRefToGraph()
 
-                    gu.addSameIndividual(g, pub_id, pubmed_id)
-                    gu.makeLeader(g, pubmed_id)
+                    model.addSameIndividual(pub_id, pubmed_id)
+                    model.makeLeader(pubmed_id)
 
-                r.addRefToGraph(g)
+                r.addRefToGraph()
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:
@@ -1943,7 +1915,7 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['pub2pubmed']['file']))
         with open(raw, 'r', encoding="latin-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1961,11 +1933,11 @@ class ZFIN(Source):
                 if pubmed_id != '' and pubmed_id is not None:
                     pubmed_id = 'PMID:' + pubmed_id.strip()
                     rtype = Reference.ref_types['journal_article']
-                    rpm = Reference(pubmed_id, rtype)
-                    rpm.addRefToGraph(g)
-                    gu.addSameIndividual(g, pub_id, pubmed_id)
-                r = Reference(pub_id, rtype)
-                r.addRefToGraph(g)
+                    rpm = Reference(g, pubmed_id, rtype)
+                    rpm.addRefToGraph()
+                    model.addSameIndividual(pub_id, pubmed_id)
+                r = Reference(g, pub_id, rtype)
+                r.addRefToGraph()
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
@@ -2010,7 +1982,7 @@ class ZFIN(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         geno = Genotype(g)
 
         if reagent_type not in ['morph', 'talen', 'crispr']:
@@ -2063,14 +2035,14 @@ class ZFIN(Source):
                     pubs = re.split(r',', publication.strip())
                     for p in pubs:
                         pub_id = 'ZFIN:' + p.strip()
-                        r = Reference(pub_id)
-                        r.addRefToGraph(g)
-                        gu.addTriple(
-                            g, pub_id, gu.properties['mentions'], reagent_id)
+                        r = Reference(g, pub_id)
+                        r.addRefToGraph()
+                        g.addTriple(
+                            pub_id, model.object_properties['mentions'], reagent_id)
 
                 # Add comment?
                 if note != '':
-                    gu.addComment(g, reagent_id, note)
+                    model.addComment(reagent_id, note)
 
                 # use the variant hash for reagents to list the affected genes
                 if reagent_id not in self.variant_loci_genes:
@@ -2141,7 +2113,7 @@ class ZFIN(Source):
 
                 environment_id = 'ZFIN:' + environment_id.strip()
                 if self.testMode and\
-                        environment_num not in self.test_ids['environment']:
+                        environment_id not in self.test_ids['environment']:
                     continue
 
                 # We can start to build the extrinsic genotype using this file.
@@ -2157,7 +2129,7 @@ class ZFIN(Source):
 
                 # create environmental components, and add to the hash
                 # cleanup the "condition" to remove non-id-friendly chars
-                cond_id = condition.strip()
+                cond_id = zeco_term_id.strip()
                 cond_id = re.sub(r'\W+', '-', cond_id)
                 subcond_id = description.strip()
                 subcond_id = re.sub(r'\W+', '-', subcond_id)
@@ -2167,9 +2139,7 @@ class ZFIN(Source):
                     env_component_id = '-'.join((env_component_id, subcond_id))
 
                 # make them blank nodes
-                env_component_id = '_' + env_component_id
-                if self.nobnodes:
-                    env_component_id = ':' + env_component_id
+                env_component_id = '_:' + env_component_id
 
                 # env_condition = condition.strip()  # TODO unused
 
@@ -2238,7 +2208,7 @@ class ZFIN(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['mappings']['file']))
 
@@ -2263,17 +2233,17 @@ class ZFIN(Source):
                 zfin_id = 'ZFIN:' + zfin_num.strip()
                 if re.match(r'ZDB-GENE.*', zfin_num):
                     # assume type and label get added elsewhere
-                    gu.addClassToGraph(g, zfin_id, None)
+                    model.addClassToGraph(zfin_id, None)
                     geno.addTaxon(taxon_id, zfin_id)
                 elif re.match(r'ZDB-ALT.*', zfin_num):
                     # assume type and label get added elsewhere
-                    gu.addIndividualToGraph(g, zfin_id, None)
+                    model.addIndividualToGraph(zfin_id, None)
                     geno.addTaxon(taxon_id, zfin_id)
                 else:
                     continue
                     # skip any of the others
                 # ZFIN don't catalog non-fish things, thankfully
-                gu.makeLeader(g, zfin_id)
+                model.makeLeader(zfin_id)
                 # make the chromosome class
                 chr_id = makeChromID(chromosome, taxon_id, 'CHR')
                 # chr_label = makeChromLabel(chromosome, taxon_label)
@@ -2285,17 +2255,16 @@ class ZFIN(Source):
                     # add the panel as a genome build
                     panel_id = 'ZFIN:' + pinfo['id']
                     geno.addReferenceGenome(panel_id, panel_label, taxon_id)
-                    gu.addSynonym(g, panel_id, panel_symbol)
-                    gu.addDescription(g, panel_id, pinfo['name'])
+                    model.addSynonym(panel_id, panel_symbol)
+                    model.addDescription(panel_id, pinfo['name'])
 
                     # add the mapping-panel chromosome
                     chr_inst_id = makeChromID(chromosome, panel_id, 'MONARCH')
                     geno.addChromosomeInstance(chromosome, panel_id,
                                                panel_label, chr_id)
                     # add the feature to the mapping-panel chromosome
-                    f = Feature(zfin_id, None, None)
-                    f.addSubsequenceOfFeature(g, chr_inst_id)
-                    f.loadAllProperties(g)
+                    f = Feature(g, zfin_id, None, None)
+                    f.addSubsequenceOfFeature(chr_inst_id)
                     # TODO add the coordinates see:
                     # https://github.com/JervenBolleman/FALDO/issues/24
                 else:
@@ -2332,7 +2301,7 @@ class ZFIN(Source):
         else:
             g = self.graph
         line_counter = 0
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         geno = Genotype(g)
         raw = '/'.join((self.rawdir, self.files['uniprot']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -2350,10 +2319,10 @@ class ZFIN(Source):
 
                 geno.addGene(gene_id, gene_symbol)
                 # TODO: Abstract to one of the model utilities
-                gu.addIndividualToGraph(g, uniprot_id, None,
-                                        geno.genoparts['polypeptide'])
-                gu.addTriple(g, gene_id, gu.properties['has_gene_product'],
-                             uniprot_id)
+                model.addIndividualToGraph(uniprot_id, None,
+                                           geno.genoparts['polypeptide'])
+                g.addTriple(gene_id, model.properties['has_gene_product'],
+                            uniprot_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -2393,7 +2362,7 @@ class ZFIN(Source):
         logger.info("Processing human orthos")
         line_counter = 0
         geno = Genotype(g)
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -2413,7 +2382,7 @@ class ZFIN(Source):
                 geno.addGene(gene_id, human_symbol, None, human_name)
 
                 # make the association
-                assoc = OrthologyAssoc(self.name, zfin_id, gene_id)
+                assoc = OrthologyAssoc(g, self.name, zfin_id, gene_id)
                 # we don't know anything about the orthology type,
                 # so we just use the default
 
@@ -2424,13 +2393,11 @@ class ZFIN(Source):
                 if eco_id is not None:
                     assoc.add_evidence(eco_id)
 
-                assoc.add_association_to_graph(g)
+                assoc.add_association_to_graph()
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
-
-        gu.loadObjectProperties(g, OrthologyAssoc.ortho_rel)
 
         logger.info("Done with human orthos")
         return
@@ -2445,7 +2412,7 @@ class ZFIN(Source):
         line_counter = 0
         geno = Genotype(g)
 
-        gu = GraphUtils(curie_map.get())
+        model = Model(g)
         raw = '/'.join((self.rawdir, self.files['gene_coordinates']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -2472,23 +2439,21 @@ class ZFIN(Source):
                 # make chrom
                 chrom_id = makeChromID(chrom, 'NCBITaxon:7227', 'CHR')
                 # assume it gets added elsewhere
-                gu.addClassToGraph(g, chrom_id, None)
+                model.addClassToGraph(chrom_id, None)
                 # FIXME - remove this hardcoding
                 build_label = 'danRer10'
                 build_id = 'UCSC:'+build_label
                 chrom_in_build = makeChromID(chrom, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chrom, build_id, build_label, chrom_id)
-                f = Feature(gene_id, None, None)
+                f = Feature(g, gene_id, None, None)
                 f.addFeatureStartLocation(start, chrom_in_build, strand)
                 f.addFeatureEndLocation(end, chrom_in_build, strand)
-                f.addFeatureToGraph(g, True, None, True)
+                f.addFeatureToGraph(True, None, True)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
                     break
-
-        gu.loadObjectProperties(g, OrthologyAssoc.ortho_rel)
 
         logger.info("Done with gene coordinates")
 
@@ -2503,8 +2468,8 @@ class ZFIN(Source):
         logger.info("Processing fish models")
         line_counter = 0
         fish_taxon = 'NCBITaxon:7955'
-        geno = Genotype(g, self.nobnodes)
-        gu = GraphUtils(curie_map.get())
+        geno = Genotype(g)
+        model = Model(g)
         raw = '/'.join(
             (self.rawdir, self.files['fish_disease_models']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -2542,13 +2507,13 @@ class ZFIN(Source):
                 if environment_label is None:
                     environment_label = environment_id
                 geno.make_experimental_model_with_genotype(
-                    g, fish_id, fish_label, fish_taxon, 'zebrafish')
+                    fish_id, fish_label, fish_taxon, 'zebrafish')
 
-                assoc = Assoc(self.name)
+                assoc = Assoc(g, self.name)
 
                 assoc.set_subject(fish_id)
                 assoc.set_object(disease_id)
-                assoc.set_relationship(gu.object_properties['model_of'])
+                assoc.set_relationship(model.object_properties['model_of'])
                 desc = ' '.join(('A fish with genotype', fish_label,
                                  'is a model for disease', disease_label,
                                  'under the condition of', environment_label))
@@ -2560,9 +2525,9 @@ class ZFIN(Source):
                 # make the pubmed id, if it exists
                 if pubmed_id != '':
                     pubmed_id = 'PMID:'+pubmed_id
-                    gu.addSameIndividual(g, 'ZFIN:'+zfin_pub_id, pubmed_id)
-                    gu.makeLeader(g, pubmed_id)
-                assoc.add_association_to_graph(g)
+                    model.addSameIndividual('ZFIN:'+zfin_pub_id, pubmed_id)
+                    model.makeLeader(pubmed_id)
+                assoc.add_association_to_graph()
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -2735,9 +2700,7 @@ class ZFIN(Source):
         """
 
         i = '-'.join((gene_id, allele_id))
-        i = '_' + re.sub(r'(ZFIN)?:', '', i)
-        if self.nobnodes:
-            i = ':' + i
+        i = '_:' + re.sub(r'(ZFIN)?:', '', i)
 
         return i
 
@@ -2848,23 +2811,23 @@ class ZFIN(Source):
                 zfin_pub_id = 'ZFIN:'+zfin_pub_num
                 pubmed_id = 'PMID:'+str(pubmed_num)
                 if zfin_gene_num != '' and ortholog_ncbigene_num != '':
-                    assoc = OrthologyAssoc(self.name, zfin_gene_id,
+                    assoc = OrthologyAssoc(g, self.name, zfin_gene_id,
                                            ortho_gene_id)
                     if zfin_pub_num != '':
-                        r = Reference(zfin_pub_id)
-                        r.addRefToGraph(g)
+                        r = Reference(g, zfin_pub_id)
+                        r.addRefToGraph()
                         assoc.add_source(zfin_pub_id)
                     if pubmed_num != '':
                         r = Reference(
-                            pubmed_id, Reference.ref_types['journal_article'])
-                        r.addRefToGraph(g)
+                            g, pubmed_id, Reference.ref_types['journal_article'])
+                        r.addRefToGraph()
                         assoc.add_source(pubmed_id)
                     if evidence_code != '':
                         eco_id = self.get_orthology_evidence_code(
                             evidence_code)
                         assoc.add_evidence(eco_id)
 
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
                 # FIXME need to update with proper provenance model
                 # so the papers get attached with the relevant eco code
 
@@ -2916,16 +2879,12 @@ class ZFIN(Source):
         return eco_abbrev_map.get(abbrev)
 
     @staticmethod
-    def make_targeted_gene_id(geneid, reagentid, nobnodes=False):
+    def make_targeted_gene_id(geneid, reagentid):
 
-        targeted_gene_id = None
         targeted_gene_id = '-'.join((geneid, reagentid))
         # these are not zfin resolvable, so make BNodes
         targeted_gene_id = re.sub(r'(ZFIN)?:', '', targeted_gene_id)
-        targeted_gene_id = '_' + targeted_gene_id
-        if nobnodes:
-            targeted_gene_id = ':' + targeted_gene_id
-
+        targeted_gene_id = '_:' + targeted_gene_id
         return targeted_gene_id
 
     def getTestSuite(self):

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class NCBITestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = NCBIGene()
+        self.source = NCBIGene('rdf_graph', True)
         self.source.test_ids = self._get_conf()['test_ids']['gene']
         self.source.settestonly(True)
         self._setDirToSource()

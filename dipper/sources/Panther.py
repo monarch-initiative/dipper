@@ -4,9 +4,9 @@ import logging
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
+from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
-from dipper.utils.GraphUtils import GraphUtils
-from dipper import config, curie_map
+from dipper import config
 
 __author__ = 'nicole'
 
@@ -50,10 +50,9 @@ class Panther(Source):
             'url': PNTHDL+'/Orthologs_HCOP.tar.gz'}
     }
 
-    def __init__(self, tax_ids=None):
-        super().__init__('panther')
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(graph_type, are_bnodes_skolemized, 'panther')
         self.tax_ids = tax_ids
-        self.load_bindings()
 
         self.dataset = Dataset(
             'panther', 'Protein ANalysis THrough Evolutionary Relationships',
@@ -103,10 +102,6 @@ class Panther(Source):
 
         self._get_orthologs(limit)
 
-        self.load_bindings()
-
-        logger.info("INFO: Found %d nodes", len(self.graph))
-
         return
 
     def _get_orthologs(self, limit):
@@ -155,9 +150,7 @@ class Panther(Source):
 
         else:
             g = self.graph
-
-        gu = GraphUtils(curie_map.get())
-
+        model = Model(g)
         unprocessed_gene_ids = set()
 
         for k in self.files.keys():
@@ -251,27 +244,27 @@ class Panther(Source):
                     evidence_id = 'ECO:0000080'  # phylogenetic evidence
 
                     # add the association and relevant nodes to graph
-                    assoc = OrthologyAssoc(self.name, gene_a, gene_b, rel)
+                    assoc = OrthologyAssoc(g, self.name, gene_a, gene_b, rel)
                     assoc.add_evidence(evidence_id)
 
                     # add genes to graph;
                     # assume labels will be taken care of elsewhere
-                    gu.addClassToGraph(g, gene_a, None)
-                    gu.addClassToGraph(g, gene_b, None)
+                    model.addClassToGraph(gene_a, None)
+                    model.addClassToGraph(gene_b, None)
 
                     # might as well add the taxon info for completeness
-                    gu.addTriple(
-                        g, gene_a, gu.object_properties['in_taxon'], taxon_a)
-                    gu.addTriple(
-                        g, gene_b, gu.object_properties['in_taxon'], taxon_b)
+                    g.addTriple(
+                        gene_a, model.object_properties['in_taxon'], taxon_a)
+                    g.addTriple(
+                        gene_b, model.object_properties['in_taxon'], taxon_b)
 
-                    assoc.add_association_to_graph(g)
+                    assoc.add_association_to_graph()
 
                     # note this is incomplete...
                     # it won't construct the full family hierarchy,
                     # just the top-grouping
                     assoc.add_gene_family_to_graph(
-                        g, ':'.join(('PANTHER', panther_id)))
+                        ':'.join(('PANTHER', panther_id)))
 
                     if not self.testMode \
                             and limit is not None and line_counter > limit:
@@ -281,11 +274,6 @@ class Panther(Source):
             logger.warning(
                 "The following gene ids were unable to be processed: %s",
                 str(unprocessed_gene_ids))
-
-        gu.loadProperties(
-            g, OrthologyAssoc.object_properties, gu.OBJPROP)
-        gu.loadProperties(
-            g, OrthologyAssoc.annotation_properties, gu.ANNOTPROP)
 
         return
 
