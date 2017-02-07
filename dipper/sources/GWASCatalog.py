@@ -6,6 +6,7 @@ from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.utils.CurieUtil import CurieUtil
+from dipper.utils.DipperUtil import DipperUtil
 from dipper.models.Model import Model
 from dipper import curie_map
 from dipper.models.Genotype import Genotype
@@ -52,7 +53,10 @@ class GWASCatalog(Source):
             'url': 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated.tsv'},
         'efo': {
             'file': 'efo.owl',
-            'url': 'http://www.ebi.ac.uk/efo/efo.owl'}
+            'url': 'http://www.ebi.ac.uk/efo/efo.owl'},
+        'so': {
+            'file': 'so.owl',
+            'url': 'http://purl.obolibrary.org/obo/so.owl'}
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -116,6 +120,12 @@ class GWASCatalog(Source):
         efo_ontology.bind_all_namespaces()
         logger.info("Finished loading EFO ontology")
 
+        so_ontology = RDFGraph()
+        logger.info("Loading SO ontology in separate rdf graph")
+        so_ontology.parse(self.files['so']['url'], format='xml')
+        so_ontology.bind_all_namespaces()
+        logger.info("Finished loading SO ontology")
+
         if self.testMode:      # set the graph to build
             g = self.testgraph
         else:
@@ -166,54 +176,38 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                    if re.search(r' x ', strongest_snp_risk_allele) \
-                            or re.search(r',', strongest_snp_risk_allele):
-                        # TODO deal with rs1234xrs234... (haplotypes?)
-                        logger.warning(
-                            "Cannot parse variant groups of this format: %s",
-                            strongest_snp_risk_allele)
-                        continue
-                    elif re.search(r';', strongest_snp_risk_allele):
-                        variant_id = 'dbSNP:'+strongest_snp_risk_allele.strip()
-                        variant_type = "haplotype"
-                    elif re.match(r'rs', strongest_snp_risk_allele):
-                        variant_id = 'dbSNP:'+strongest_snp_risk_allele.strip()
-                        variant_type = "snp"
-                        # remove the alteration
-                    elif re.match(r'kgp', strongest_snp_risk_allele):
-                        # http://www.1000genomes.org/faq/what-are-kgp-identifiers
-                        variant_id = ':kgp-' + strongest_snp_risk_allele.strip()
-                        variant_type = "snp"
-                    elif re.match(r'chr', strongest_snp_risk_allele):
-                        # like: chr10:106180121-G
-                        variant_id = ':gwas-' + \
-                            re.sub(
-                                r':', '-', strongest_snp_risk_allele.strip())
-                        variant_type = "snp"
-                    elif strongest_snp_risk_allele.strip() == '':
+                    variant_curie, variant_type = \
+                        self._get_curie_and_type_from_id(strongest_snp_risk_allele)
+
+                    if strongest_snp_risk_allele.strip() == '':
                         logger.debug("No strongest SNP risk allele for %s:\n%s",
                                      pubmed_num, str(row))
                         # still consider adding in the EFO terms
                         # for what the study measured?
                         continue
-                    else:
+
+                    if variant_type == 'snp':
+                        self._add_snp_to_graph(
+                            variant_curie, strongest_snp_risk_allele,
+                            chrom_num, chrom_pos,
+                            context, risk_allele_frequency)
+
+                        self._add_deprecated_snp(variant_curie, snp_id_current,
+                                                 merged, chrom_num, chrom_pos)
+
+                        self._add_snp_gene_relation(
+                            variant_curie, snp_gene_nums, upstream_gene_num,
+                            downstream_gene_num)
+                    elif variant_type == 'haplotype':
+                        self._process_haplotype(
+                            variant_curie, strongest_snp_risk_allele,
+                            chrom_num, chrom_pos, context,
+                            risk_allele_frequency, mapped_gene, so_ontology)
+                    elif variant_type is None:
                         logger.warning(
                             "There's a snp id i can't manage: %s",
                             strongest_snp_risk_allele)
                         continue
-
-                    if variant_type == 'snp':
-                        self._add_snp_to_graph(
-                            variant_id, strongest_snp_risk_allele,
-                            chrom_num, chrom_pos,
-                            risk_allele_frequency, context)
-
-                        self._add_deprecated_snp(variant_id, snp_id_current,
-                                                 merged, chrom_num, chrom_pos)
-
-                        self._add_snp_gene_relation(
-                            variant_id, snp_gene_nums, upstream_gene_num,
-                            downstream_gene_num)
 
                     description = self._make_description(
                         disease_or_trait, initial_sample_description,
@@ -221,7 +215,7 @@ class GWASCatalog(Source):
                         platform_with_snps_passing_qc, pvalue)
 
                     self._add_variant_trait_association(
-                        variant_id, mapped_trait_uri, efo_ontology,
+                        variant_curie, mapped_trait_uri, efo_ontology,
                         pubmed_num, description)
 
                     if not self.testMode and\
@@ -236,8 +230,113 @@ class GWASCatalog(Source):
                 logger.info("%s has >1 snp id: %s", l, str(snp_ids))
         return
 
+    def _process_haplotype(self, hap_id, hap_label, chrom_num, chrom_pos,
+                           context, risk_allele_frequency, mapped_gene,
+                           so_ontology):
+        tax_id = 'NCBITaxon:9606'
+
+        if self.testMode:
+            g = self.testgraph
+        else:
+            g = self.graph
+        geno = Genotype(g)
+        # add the feature to the graph
+        hap_description = None
+        if risk_allele_frequency != '' and \
+                        risk_allele_frequency != 'NR':
+            hap_description = \
+                str(risk_allele_frequency) + \
+                ' [risk allele frequency]'
+
+        feature = Feature(
+            g, hap_id, hap_label.strip(),
+            Feature.types['haplotype'], hap_description)
+        feature.addFeatureToGraph()
+        feature.addTaxonToFeature(tax_id)
+
+        snp_labels = re.split(r';\s?', hap_label)
+        chrom_nums = re.split(r';\s?', chrom_num)
+        chrom_positions = re.split(r';\s?', chrom_pos)
+        context_list = re.split(r';\s?', context)
+        mapped_genes = re.split(r';\s?', mapped_gene)
+        snp_curies = list()
+
+        for index, snp in enumerate(snp_labels):
+            snp_curie, snp_type = self._get_curie_and_type_from_id(snp)
+            if snp_type is None:
+                # make blank node
+                snp_curie = self.make_id(snp, "_")
+
+            g.addTriple(hap_id, geno.object_properties['has_variant_part'],
+                        snp_curie)
+            snp_curies.append(snp_curie)
+
+        # courtesy http://stackoverflow.com/a/16720915
+        length = len(snp_labels)
+        if not all(len(lst) == length
+                   for lst in [chrom_nums, chrom_positions,
+                               context_list]):
+            logger.warn("Unexpected data field"
+                        " for haplotype {} \n will not add snp details"
+                        .format(hap_label))
+            return
+
+        for snp_curie in snp_curies:
+            variant_in_gene_count = 0
+            self._add_snp_to_graph(snp_curie, snp, chrom_nums[index],
+                                   chrom_positions[index], context_list[index])
+
+            if len(mapped_genes) == len(snp_labels):
+
+                so_class = self._map_variant_type(context_list[index])
+
+                if so_class is None:
+                    raise ValueError("Unknown SO class {} in haplotype {}"
+                                     .format(context_list[index], hap_label))
+                so_query = """
+                    SELECT ?variant_type
+                    WHERE {{
+                        {0} rdfs:subClassOf+ SO:0001564 .
+                    }}
+                """.format(so_class)
+
+                query_result = so_ontology.query(so_query)
+                if len(list(query_result)) > 0:
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    geno.addAlleleOfGene(snp_curie, gene_id)
+                    variant_in_gene_count += 1
+
+                if context_list[index] == 'upstream_gene_variant':
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    g.addTriple(
+                        snp_curie,
+                        Feature.object_properties[
+                            'upstream_of_sequence_of'],
+                        gene_id)
+                elif context_list[index] == 'downstream_gene_variant':
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    g.addTriple(
+                        snp_curie,
+                        Feature.object_properties[
+                            'downstream_of_sequence_of'],
+                        gene_id)
+            else:
+                logger.warn("More mapped genes than snps, "
+                            "cannot disambiguate for {}".format(hap_label))
+
+        if len(mapped_gene) == variant_in_gene_count \
+                and len(set(mapped_genes)) == 1:
+            gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[0])
+            # Note calling a haplotype an "allele of" a gene is likely
+            # the incorrect relation, but is needed to get
+            # variant-gene inferences
+            geno.addAlleleOfGene(hap_id, gene_id)
+
+        return
+
     def _add_snp_to_graph(self, snp_id, snp_label,
-                          chrom_num, chrom_pos, risk_allele_frequency, context):
+                          chrom_num, chrom_pos, context,
+                          risk_allele_frequency=None):
         # constants
         tax_id = 'NCBITaxon:9606'
         genome_version = 'GRCh38'
@@ -260,23 +359,24 @@ class GWASCatalog(Source):
                 and re.match(r'[ATGC]', alteration.group(1)):
             # add variation to snp
             pass  # TODO
-        variant_id = re.sub(r'-.*$', '', snp_id).strip()
+
         if location is not None:
-            self.id_location_map[location].add(variant_id)
+            self.id_location_map[location].add(snp_id)
 
         # create the chromosome
         chrom_id = makeChromID(chrom_num, genome_version, 'CHR')
 
         # add the feature to the graph
         snp_description = None
-        if risk_allele_frequency != '' and \
-                        risk_allele_frequency != 'NR':
+        if risk_allele_frequency is not None\
+                and risk_allele_frequency != ''\
+                and risk_allele_frequency != 'NR':
             snp_description = \
                 str(risk_allele_frequency) + \
                 ' [risk allele frequency]'
 
         f = Feature(
-            g, variant_id, snp_label.strip(),
+            g, snp_id, snp_label.strip(),
             Feature.types['SNP'], snp_description)
         if chrom_num != '' and chrom_pos != '':
             f.addFeatureStartLocation(chrom_pos, chrom_id)
@@ -291,7 +391,7 @@ class GWASCatalog(Source):
         for c in re.split(r';', context):
             cid = self._map_variant_type(c.strip())
             if cid is not None:
-                model.addType(variant_id, cid)
+                model.addType(snp_id, cid)
 
         return
 
@@ -478,6 +578,52 @@ class GWASCatalog(Source):
                  platform_with_snps_passing_qc))
         description = ' '.join((description, '(p=' + pvalue + ')'))
         return description
+
+    @staticmethod
+    def _get_curie_and_type_from_id(variant_id):
+        """
+        Given a variant id, our best guess at its curie
+        and type (snp, haplotype, etc)
+        None will be used for both curie and type
+        for IDs that we can't process
+        :param variant_id:
+        :return:
+        """
+        curie = None
+        variant_type = None
+
+        if re.search(r' x ', variant_id) \
+                or re.search(r',', variant_id):
+            # TODO deal with rs1234xrs234... (haplotypes?)
+            logger.warning(
+                "Cannot parse variant groups of this format: %s",
+                variant_id)
+        elif re.search(r';', variant_id):
+            curie = ':haplotype_' + Source.hash_id(variant_id)
+            variant_type = "haplotype"
+        elif re.match(r'rs', variant_id):
+            curie = 'dbSNP:' + variant_id.strip()
+            curie = re.sub(r'-.*$', '', curie).strip()
+            variant_type = "snp"
+            # remove the alteration
+        elif re.match(r'kgp', variant_id):
+            # http://www.1000genomes.org/faq/what-are-kgp-identifiers
+            curie = ':kgp-' + variant_id.strip()
+            variant_type = "snp"
+        elif re.match(r'chr', variant_id):
+            # like: chr10:106180121-G
+            curie = ':gwas-' + \
+                         re.sub(
+                             r':', '-', variant_id.strip())
+            variant_type = "snp"
+        elif variant_id.strip() == '':
+            pass
+        else:
+            logger.warning(
+                "There's a snp id i can't manage: %s",
+                variant_id)
+
+        return curie, variant_type
 
     def getTestSuite(self):
         import unittest
