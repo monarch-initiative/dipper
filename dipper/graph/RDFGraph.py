@@ -89,3 +89,8 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
             else:
                 logger.error("couldn't make URI for %s", curie)
         return node
+
+    def bind_all_namespaces(self):
+        for prefix in curie_map.get().keys():
+            iri = curie_map.get()[prefix]
+            self.bind(prefix, Namespace(iri))
