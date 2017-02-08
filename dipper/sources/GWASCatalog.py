@@ -305,18 +305,20 @@ class GWASCatalog(Source):
 
                 if context_list[index] == 'upstream_gene_variant':
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
-                    g.addTriple(
-                        snp_curie,
-                        Feature.object_properties[
-                            'upstream_of_sequence_of'],
-                        gene_id)
+                    if gene_id is not None:
+                        g.addTriple(
+                            snp_curie,
+                            Feature.object_properties[
+                                'upstream_of_sequence_of'],
+                            gene_id)
                 elif context_list[index] == 'downstream_gene_variant':
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
-                    g.addTriple(
-                        snp_curie,
-                        Feature.object_properties[
-                            'downstream_of_sequence_of'],
-                        gene_id)
+                    if gene_id is not None:
+                        g.addTriple(
+                            snp_curie,
+                            Feature.object_properties[
+                                'downstream_of_sequence_of'],
+                            gene_id)
             else:
                 logger.warn("More mapped genes than snps, "
                             "cannot disambiguate for {}".format(hap_label))
