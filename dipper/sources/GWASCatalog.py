@@ -126,12 +126,6 @@ class GWASCatalog(Source):
         so_ontology.bind_all_namespaces()
         logger.info("Finished loading SO ontology")
 
-        if self.testMode:      # set the graph to build
-            g = self.testgraph
-        else:
-            g = self.graph
-
-        model = Model(g)
         line_counter = 0
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -240,19 +234,18 @@ class GWASCatalog(Source):
         else:
             g = self.graph
         geno = Genotype(g)
+        model = Model(g)
         # add the feature to the graph
         hap_description = None
         if risk_allele_frequency != '' and \
-                        risk_allele_frequency != 'NR':
+                risk_allele_frequency != 'NR':
             hap_description = \
                 str(risk_allele_frequency) + \
                 ' [risk allele frequency]'
 
-        feature = Feature(
-            g, hap_id, hap_label.strip(),
-            Feature.types['haplotype'], hap_description)
-        feature.addFeatureToGraph()
-        feature.addTaxonToFeature(tax_id)
+        model.addIndividualToGraph(hap_id, hap_label.strip(),
+                                   Feature.types['haplotype'], hap_description)
+        geno.addTaxon(tax_id, hap_id)
 
         snp_labels = re.split(r';\s?', hap_label)
         chrom_nums = re.split(r';\s?', chrom_num)
@@ -281,10 +274,11 @@ class GWASCatalog(Source):
                         .format(hap_label))
             return
 
-        for snp_curie in snp_curies:
-            variant_in_gene_count = 0
-            self._add_snp_to_graph(snp_curie, snp, chrom_nums[index],
-                                   chrom_positions[index], context_list[index])
+        variant_in_gene_count = 0
+        for index, snp_curie in enumerate(snp_curies):
+            self._add_snp_to_graph(
+                snp_curie, snp_labels[index], chrom_nums[index],
+                chrom_positions[index], context_list[index])
 
             if len(mapped_genes) == len(snp_labels):
 
@@ -294,16 +288,18 @@ class GWASCatalog(Source):
                     raise ValueError("Unknown SO class {} in haplotype {}"
                                      .format(context_list[index], hap_label))
                 so_query = """
-                    SELECT ?variant_type
+                    SELECT ?variant_label
                     WHERE {{
-                        {0} rdfs:subClassOf+ SO:0001564 .
+                        {0} rdfs:subClassOf+ SO:0001564 ;
+                            rdfs:label ?variant_label .
                     }}
                 """.format(so_class)
 
                 query_result = so_ontology.query(so_query)
                 if len(list(query_result)) > 0:
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
-                    geno.addAlleleOfGene(snp_curie, gene_id)
+                    geno.addAffectedLocus(snp_curie, gene_id)
+                    geno.addAffectedLocus(hap_id, gene_id)
                     variant_in_gene_count += 1
 
                 if context_list[index] == 'upstream_gene_variant':
@@ -324,13 +320,12 @@ class GWASCatalog(Source):
                 logger.warn("More mapped genes than snps, "
                             "cannot disambiguate for {}".format(hap_label))
 
-        if len(mapped_gene) == variant_in_gene_count \
+        # Seperate in case we want to apply a different relation
+        # If not this is redundant with triples added above
+        if len(mapped_genes) == variant_in_gene_count \
                 and len(set(mapped_genes)) == 1:
             gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[0])
-            # Note calling a haplotype an "allele of" a gene is likely
-            # the incorrect relation, but is needed to get
-            # variant-gene inferences
-            geno.addAlleleOfGene(hap_id, gene_id)
+            geno.addAffectedLocus(hap_id, gene_id)
 
         return
 
@@ -404,13 +399,16 @@ class GWASCatalog(Source):
         model = Model(g)
         location = self._make_location_curie(chrom_num, chrom_pos)
         # add deprecation information
-        if merged == 1 and str(snp_id_current.strip()) != '':
+        if merged == '1' and str(snp_id_current.strip()) != '':
             # get the current rs_id
             current_rs_id = 'dbSNP:'
             if not re.match(r'rs', snp_id_current):
                 current_rs_id += 'rs'
             if location is not None:
-                self.id_location_map[location].append(current_rs_id)
+                if location not in self.id_location_map:
+                    self.id_location_map[location] = set(current_rs_id)
+                else:
+                    self.id_location_map[location].add(current_rs_id)
             current_rs_id += str(snp_id_current)
             model.addDeprecatedIndividual(snp_id, current_rs_id)
             # TODO check on this
@@ -438,7 +436,7 @@ class GWASCatalog(Source):
                 # because sometimes there's a leading comma
                 if s != '':
                     gene_id = 'NCBIGene:' + s
-                    geno.addAlleleOfGene(snp_id, gene_id)
+                    geno.addAffectedLocus(snp_id, gene_id)
 
         # add the up and downstream genes if they are available
         if upstream_gene_num != '':
@@ -518,8 +516,7 @@ class GWASCatalog(Source):
                 assoc.add_evidence(eco_id)
 
                 if description is not None:
-                    #assoc.set_description(description)
-                    pass
+                    assoc.set_description(description)
 
                 # FIXME score should get added to provenance/study
                 # assoc.set_score(pvalue)

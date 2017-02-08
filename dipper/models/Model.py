@@ -232,7 +232,9 @@ class Model():
                              literal_type='xsd:boolean')
 
         if new_ids is not None:
-            if len(new_ids) == 1:
+            if isinstance(new_ids, str):
+                self.graph.addTriple(old_id, replaced_by, new_ids)
+            elif len(new_ids) == 1:
                 self.graph.addTriple(old_id, replaced_by, new_ids[0])
             elif len(new_ids) > 0:
                 for new_id in new_ids:

@@ -316,7 +316,7 @@ class AnimalQTLdb(Source):
                         # FIXME what is the right relationship here?
                         geno.addAlleleOfGene(
                             qtl_id, gene_id,
-                            geno.object_properties['feature_to_gene_relation'])
+                            geno.object_properties['has_affected_locus'])
 
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id

@@ -1,7 +1,12 @@
 from rdflib.graph import ConjunctiveGraph, URIRef
 from rdflib.namespace import RDF, OWL, DC
+from rdflib import util as rdflib_util
+from xml.sax import SAXParseException
 import argparse
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -64,12 +69,17 @@ def make_property_graph(properties, args):
 
     for ontology in ontologies:
         print("parsing: " + ontology)
-        if re.search(r'\.owl', ontology):
-            graph.parse(ontology, format='xml')
-        elif re.search(r'\.ttl', ontology):
-            graph.parse(ontology, format='turtle')
-        else:
-            graph.parse(ontology)
+        try:
+            graph.parse(ontology, format=rdflib_util.guess_format(ontology))
+        except SAXParseException as e:
+            logger.error(e)
+            logger.error('Retrying: ' + ontology)
+            graph.parse(ontology, format="turtle")
+        except OSError as e:  # URLError:
+            # simple retry
+            logger.error(e)
+            logger.error('Retrying: ' + ontology)
+            graph.parse(ontology, format=rdflib_util.guess_format(ontology))
 
     # Get object properties
     output_graph = add_property_to_graph(

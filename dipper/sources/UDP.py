@@ -340,7 +340,7 @@ class UDP(Source):
                     gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
                         gene, variant_bnode, gene_id,
-                        genotype.object_properties['feature_to_gene_relation'])
+                        genotype.object_properties['has_affected_locus'])
 
                 elif re.search(r'upstream|downstream',
                                variant['type'],
@@ -368,7 +368,7 @@ class UDP(Source):
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype.object_properties['feature_to_gene_relation'])
+                            genotype.object_properties['has_affected_locus'])
 
                         # update label with gene
                         gene_list = [ref_gene[0]['symbol']]  # build label expects list
@@ -384,7 +384,7 @@ class UDP(Source):
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype.object_properties['feature_to_gene_relation'])
+                            genotype.object_properties['has_affected_locus'])
 
                         # build label function expects list
                         gene_list = [ref_gene[0]['symbol']]
@@ -401,7 +401,7 @@ class UDP(Source):
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
-                                    genotype.object_properties['feature_to_gene_relation'])
+                                    genotype.object_properties['has_affected_locus'])
                         else:
                             logger.warn("unable to map intron variant"
                                         " to gene coordinates: {0}"
