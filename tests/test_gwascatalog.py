@@ -15,6 +15,7 @@ class GWASCatalogTestCase(SourceTestCase):
 
     def setUp(self):
         self.source = GWASCatalog('rdf_graph', True)
+        self.source.test_ids = self._get_conf()['test_ids']
         self.source.settestonly(True)
         self._setDirToSource()
         return
