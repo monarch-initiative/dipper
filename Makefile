@@ -10,7 +10,9 @@ NOSE = nosetests
 ###
 
 test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch BioGrid-test   \
-ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test
+ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test   \
+GWAS-fetch GWAS-test
+
 
 UDP-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_udp.py
@@ -20,6 +22,12 @@ IMPC-fetch:
 
 IMPC-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_impc.py
+
+GWAS-fetch:
+	$(DIPPER_BIN) --sources gwascatalog --no_verify --fetch_only
+
+GWAS-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_gwascatalog.py
 
 BioGrid-fetch:
 	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only

@@ -298,9 +298,10 @@ class GWASCatalog(Source):
                 query_result = so_ontology.query(so_query)
                 if len(list(query_result)) > 0:
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
-                    geno.addAffectedLocus(snp_curie, gene_id)
-                    geno.addAffectedLocus(hap_id, gene_id)
-                    variant_in_gene_count += 1
+                    if gene_id is not None:
+                        geno.addAffectedLocus(snp_curie, gene_id)
+                        geno.addAffectedLocus(hap_id, gene_id)
+                        variant_in_gene_count += 1
 
                 if context_list[index] == 'upstream_gene_variant':
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
