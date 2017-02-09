@@ -194,7 +194,7 @@ class Coriell(Source):
                         datetime.utcfromtimestamp(
                             st[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
-                self.dataset.setFileAccessUrl(remotef.filename)
+                self.dataset.setFileAccessUrl(remotef.filename, True)
                 self.dataset.setVersion(filedate)
         return
 
