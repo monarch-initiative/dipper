@@ -74,7 +74,7 @@ class Feature():
         'genome': 'SO:0001026',
         'assembly_component': 'SO:0000143',
         'SNP': 'SO:0000694',
-        'haplotype': 'SO:0001024',
+        'haplotype': 'GENO:0000871',
 
         # the following are sequence attributes:
         'band_intensity':  'GENO:0000618',

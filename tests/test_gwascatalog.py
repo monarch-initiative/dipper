@@ -285,7 +285,7 @@ class TestGwasHaplotypeModel(unittest.TestCase):
         sparql_query = """
             SELECT ?snp
             WHERE {
-                :haplotype_cb627b1f64039b0f751a734ad00c4500487464f4 a OBO:SO_0001024 ;
+                :haplotype_cb627b1f64039b0f751a734ad00c4500487464f4 a OBO:GENO_0000871 ;
                     rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
                     OBO:GENO_0000382 ?snp,
                         dbSNP:rs3758171,
