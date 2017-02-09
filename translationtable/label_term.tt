@@ -1,0 +1,62 @@
+# Format:
+# the label to match, some tabs, the ontology identifier to return.
+# post octothorp comments and empty lines are ignored
+# both columns should be unique 
+
+
+# Variant (Subject) Sequence Types
+
+single nucleotide variant	SO:0001483
+Deletion					SO:0000159
+copy number gain			SO:0001742
+copy number loss			SO:0001743
+Duplication					SO:1000035
+Insertion					SO:0000667
+Indel						SO:1000032
+Variation					SO:0001059
+Microsatellite				GENO:0000847
+protein only				GENO:0000848
+inversion					SO:1000036
+Translocation				SO:0000199
+Tandem duplication			SO:1000173
+Complex						SO:0001784
+fusion						SO:0001882
+Structural variant 			SO:0001785
+NT expansion				SO:1000039
+short repeat				GENO:0000846
+undetermined variant		SO:0001059
+
+# Association types
+benign								GENO:0000843
+uncertain significance				GENO:0000845
+likely benign						GENO:0000844
+likely pathogenic					GENO:0000841
+uncertain significance				GENO:0000845
+pathogenic							GENO:0000840
+likely benign						GENO:0000844
+
+# punting to RCV on disease for now
+# (would be a little under 10,000 terms to map here
+# maybe down to 3,500 if clustered)
+
+# evidence & provenance
+# SEPIO
+clinical testing					SEPIO:0000067
+literature only						SEPIO:0000080
+reference population 				SEPIO:0000102
+research							SEPIO:0000066
+curation							SEPIO:0000081
+in vitro							SEPIO:0000073
+in vivo								SEPIO:0000074
+case-control						SEPIO:0000071
+
+# provenance  unused now? (2016 06 03)
+# ENIGMA BRCA1/2 Classification Criteria (2015)						SEPIO:1000001
+# Counsyl Autosomal Dominant Disease Classification criteria (2015)	SEPIO:1000002
+
+
+# RCV variant to gene relationship types type
+has_affected_locus					GENO:0000418
+is upstream of sequence of			RO:0002528
+is downstream of sequence of		RO:0002529
+# asserted, but not computed      (MB no idea what this means)
