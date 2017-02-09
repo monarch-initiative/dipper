@@ -70,8 +70,18 @@ ARGPARSER.add_argument(
 ARGPARSER.add_argument(
     '-t', "--transtab",
     default=RPATH + '/translationtable/' + INAME + '.tt',
-    help="'pOtatoe'\t'PREFIX:p123'   default: " +
+    help="'spud'\t'potato'   default: " +
     RPATH + '/translationtable/' + INAME + '.tt')
+
+ARGPARSER.add_argument(
+    '-l', "--labterm",
+    default=RPATH + '/translationtable/label_term.tt',
+    help="'potato'\t'PREFIX:p123'   default: " +
+    RPATH + '/translationtable/label_term.tt')
+
+# TODO after transtab & labterm are working
+# dynamicaly precombine/chain to speedup/simplify lookup
+# without sacrificing clarity
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(
@@ -275,8 +285,8 @@ def scv_link(scv_sig, rcv_trip):
     return
 
 
-# Translate airbratary strings found in datasets
-# to specific terms found in ontologies
+# Translate external strings found in datasets
+# to specific labels found in ontologies
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
@@ -284,6 +294,17 @@ with open(ARGS.transtab) as f:
         if line != "":
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
+
+
+# Translate labels found in ontologies
+# to the terms they are for
+LT = {}
+with open(ARGS.labterm) as f:
+    for line in f:
+        line = line.partition('#')[0].strip()  # no comment
+        if line != "":
+            (key, val) = re.split(r'\t+', line, 2)
+            LT[key.strip()] = val.strip()
 
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
@@ -364,7 +385,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         for RCV_Measure in \
                 RCV_MeasureSet.findall('Measure'):
-            rcv_variant_type = TT.get(RCV_Measure.get('Type'))
+            rcv_variant_type = LT.get(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
                 LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
@@ -535,18 +556,28 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
 
         if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
-            rcv_ncbigene_curi = 'NCBIGene:' + rcv_ncbigene_id
+            rcv_ncbigene_curi = 'NCBIGene:' + str(rcv_ncbigene_id)
             #           RCV only TRIPLES
-            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-            write_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_curi)
+            if rcv_variant_relationship_type is not None and \
+                    rcv_variant_relationship_type in TT:
+                # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
+                write_spo(
+                    rcv_variant_id,
+                    LT.get(TT.get(rcv_variant_relationship_type)),
+                    rcv_ncbigene_curi)
+            else:
+                LOG.warning(
+                'Check relationship type: ' + rcv_variant_relationship_type)
+                continue    
+
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
             write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
 
-            # TODO: STOPGAP till we create more granular relationship types
+            # STOPGAP till we create more granular relationship types
             # RCV  "is about" a type of gene variant
-            write_spo(
-                'ClinVar:' + rcv_acc,
-                'IAO:0000136', rcv_variant_relationship_type)
+            # write_spo(
+            #    'ClinVar:' + rcv_acc,
+            #    'IAO:0000136', rcv_variant_relationship_type)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV
@@ -773,9 +804,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
                 if scv_significance is not None \
-                        and scv_significance in TT \
-                        and re.match(r'GENO:000084', TT[scv_significance]):
-                    scv_geno = TT[scv_significance]
+                        and scv_significance in LT \
+                        and re.match(r'GENO:000084', LT[scv_significance]):
+                    scv_geno = LT[scv_significance]
                 else:
                     scv_geno = None
 
@@ -878,7 +909,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
-                        scv_evidence_type = TT[SCV_OIMT.text]
+                        scv_evidence_type = LT[SCV_OIMT.text]
                         # blank node
                         _provenance_id = '_:' + hashlib.sha1(
                             (_evidence_id + scv_evidence_type).
