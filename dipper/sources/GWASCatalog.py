@@ -407,12 +407,12 @@ class GWASCatalog(Source):
             current_rs_id = 'dbSNP:'
             if not re.match(r'rs', snp_id_current):
                 current_rs_id += 'rs'
+            current_rs_id += str(snp_id_current)
             if location is not None:
                 if location not in self.id_location_map:
                     self.id_location_map[location] = set(current_rs_id)
                 else:
                     self.id_location_map[location].add(current_rs_id)
-            current_rs_id += str(snp_id_current)
             model.addDeprecatedIndividual(snp_id, current_rs_id)
             # TODO check on this
             # should we add the annotations to the current
