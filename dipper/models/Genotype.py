@@ -105,7 +105,7 @@ class Genotype():
         'targeted_by': 'GENO:0000634',
         # FIXME should derives_sequence_from_gene just be subsequence of?
         'derives_sequence_from_gene': 'GENO:0000639',
-        'feature_to_gene_relation': 'GENO:0000418'
+        'has_affected_locus': 'GENO:0000418'
     }
 
     annotation_properties = {
@@ -245,6 +245,23 @@ class Genotype():
         """
         if rel_id is None:
             rel_id = self.properties['is_sequence_variant_instance_of']
+        self.graph.addTriple(allele_id, rel_id, gene_id)
+        return
+
+    def addAffectedLocus(self, allele_id, gene_id, rel_id=None):
+        """
+        We make the assumption here that if the relationship is not provided,
+        it is a
+        GENO:is_sequence_variant_instance_of.
+
+        Here, the allele should be a variant_locus, not a sequence alteration.
+        :param allele_id:
+        :param gene_id:
+        :param rel_id:
+        :return:
+        """
+        if rel_id is None:
+            rel_id = self.properties['has_affected_locus']
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 

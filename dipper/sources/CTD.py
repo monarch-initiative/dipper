@@ -573,10 +573,9 @@ class CTD(Source):
         Returns:
             :return str: curie for relationship label
         """
-        model = Model(graph=None)
         rel_map = {
-            'therapeutic': model.object_properties['substance_that_treats'],
-            'marker/mechanism': model.object_properties['is_marker_for'],
+            'therapeutic': Model.object_properties['substance_that_treats'],
+            'marker/mechanism': Model.object_properties['is_marker_for'],
         }
         return str(rel_map[rel])
 

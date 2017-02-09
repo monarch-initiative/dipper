@@ -167,7 +167,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC('rdf_graph', True)
+        impc = IMPC('rdf_graph', False)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         impc._add_assertion_provenance(self.assoc_curie,
@@ -176,7 +176,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         sparql_query = """
                       SELECT *
                       WHERE {
-                          :MONARCH_test_association OBO:SEPIO_0000015 ?assertion.
+                          MONARCH:test_association OBO:SEPIO_0000015 ?assertion.
                           ?assertion a OBO:SEPIO_0000001 ;
                               OBO:SEPIO_0000018 <http://www.mousephenotype.org/> ;
                               OBO:SEPIO_0000111 _:evidence  .
