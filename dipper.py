@@ -149,7 +149,7 @@ def main():
         else:
             logging.basicConfig(level=logging.INFO)
 
-    if args.use_bnodes is not True:
+    if args.use_bnodes is False:
         logger.info("Will materialize all BNodes into BASE space")
 
     if args.query is not None:
