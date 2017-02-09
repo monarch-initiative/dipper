@@ -179,7 +179,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                           MONARCH:test_association OBO:SEPIO_0000015 ?assertion.
                           ?assertion a OBO:SEPIO_0000001 ;
                               OBO:SEPIO_0000018 <http://www.mousephenotype.org/> ;
-                              OBO:SEPIO_0000111 <https://monarchinitiative.org/.well-known/genid/study>  .
+                              OBO:SEPIO_0000111 <https://monarchinitiative.org/.well-known/genid/evidence>  .
 
                           <http://www.mousephenotype.org/> a foaf:organization ;
                               rdfs:label "International Mouse Phenotyping Consortium" .
