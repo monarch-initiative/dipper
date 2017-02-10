@@ -32,7 +32,7 @@ class ReactomeTestCase(unittest.TestCase):
                            ?assoc a OBAN:association ;
                                OBO:RO_0002558 OBO:ECO_0000501 ;
                                OBAN:association_has_object REACT:R-BTA-3000480 ;
-                               OBAN:association_has_object_property OBO:RO_0002331 ;
+                               OBAN:association_has_predicate OBO:RO_0002331 ;
                                OBAN:association_has_subject ENSEMBL:ENSBTAP00000013354 .
 
                            REACT:R-BTA-3000480 a owl:Class ;

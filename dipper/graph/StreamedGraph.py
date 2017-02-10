@@ -19,7 +19,7 @@ class StreamedGraph(DipperGraph):
     curie_util = CurieUtil(curie_map.get())
     curie_map = curie_map
 
-    def __init__(self, are_bnodes_skized=False, file_handle=None, fmt='nt'):
+    def __init__(self, are_bnodes_skized=True, file_handle=None, fmt='nt'):
         self.are_bnodes_skized = are_bnodes_skized
         self.fmt = fmt
         self.file_handle = file_handle

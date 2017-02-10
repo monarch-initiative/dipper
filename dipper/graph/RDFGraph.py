@@ -19,7 +19,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     curie_util = CurieUtil(curie_map.get())
     curie_map = curie_map
 
-    def __init__(self, are_bnodes_skized=False):
+    def __init__(self, are_bnodes_skized=True):
         super().__init__()
         self.are_bnodes_skized = are_bnodes_skized
 
