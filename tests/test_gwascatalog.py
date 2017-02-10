@@ -201,14 +201,14 @@ class TestGwasSNPModel(unittest.TestCase):
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
                     OBAN:association_has_object EFO:0000270 ;
-                    OBAN:association_has_object_property OBO:RO_0002326 ;
+                    OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
                 <https://monarchinitiative.org/MONARCH_70a05d8eb1c3d4b037d7cc04ffa625a7d85b5c46> a OBAN:association ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
                     OBAN:association_has_object EFO:0006995 ;
-                    OBAN:association_has_object_property OBO:RO_0002326 ;
+                    OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
                 EFO:0000270 a owl:Class ;
