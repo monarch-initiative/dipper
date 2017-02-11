@@ -13,7 +13,9 @@ within multiple genes by overlap	has_affected_locus
 variant in gene						has_affected_locus
 near gene, upstream					is upstream of sequence of
 near gene, downstream				is downstream of sequence of
-# asserted, but not computed' -> ??? (MB no idea what this means)
+# asserted, but not computed  (MB no idea what this means) punting
+asserted, but not computed			has_affected_locus
+
 
 # Pathos Association types
 benign								benign
@@ -38,4 +40,21 @@ unknown								uncertain significance
 Unknown								uncertain significance
 variant of unknown significance		uncertain significance
 MUT									uncertain significance 
-likely pathogenic - adrenal pheochromocytoma	ikely pathogenic
+likely pathogenic - adrenal pheochromocytoma	likely pathogenic
+
+# Variant (Subject) Sequence Types
+single nucleotide variant			SVN
+Deletion							deletion
+copy number gain					copy_number_gain
+copy number loss					copy_number_loss
+Duplication							duplication
+Insertion							insertion
+Indel								indel
+Variation							sequence_alteration
+Translocation						translocation
+Tandem duplication					tandem_duplication
+Complex								complex_structural_alteration
+fusion								feature_fusion
+Structural variant					structural_alteration
+NT expansion						direct_tandem_duplication
+undetermined variant				sequence_alteration
