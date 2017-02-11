@@ -61,3 +61,10 @@ has_affected_locus				GENO:0000418
 is upstream of sequence of		RO:0002528
 is downstream of sequence of	RO:0002529
 # asserted, but not computed        (MB no idea what this means)
+
+
+in taxon 						RO:0002162
+Homo sapiens					NCBITaxon:9606
+evidence						ECO:0000000
+journal article					IAO:0000013
+has_url							ERO:0000480

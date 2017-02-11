@@ -311,6 +311,26 @@ with open(ARGS.labterm) as f:
 if ARGS.blanknode is True:
     CURIEMAP['_'] = '_:B'
 
+
+# composite mapping
+# given f(x) and g(x)     here:  LT & TT respectivly
+# return g(x)|g(f(x))|f(x) in order of preference
+def resolve(label):
+    if label is not None and label in LT:
+        term_id = LT[label]
+    elif label is not None and label in TT:
+        label = TT[label]
+        if label in LT:
+            term_id = LT[label]
+        else:
+            LOG.warning('Translated but not have a term_id for label: ' + label)
+            term_id = label
+    else:
+        LOG.error('Do not have a mapping for label: ' + label)
+        term_id = None
+    return term_id
+
+
 # Seed releasetriple to avoid union with the empty set
 # <MonarchData: + ARGS.output> <a> <owl:Ontology>
 releasetriple.add(
@@ -385,7 +405,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         for RCV_Measure in \
                 RCV_MeasureSet.findall('Measure'):
-            rcv_variant_type = LT.get(RCV_Measure.get('Type'))
+            rcv_variant_type = resolve(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
                 LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
@@ -558,17 +578,17 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
             rcv_ncbigene_curi = 'NCBIGene:' + str(rcv_ncbigene_id)
             #           RCV only TRIPLES
-            if rcv_variant_relationship_type is not None and \
-                    rcv_variant_relationship_type in TT:
+            term_id = resolve(rcv_variant_relationship_type)
+            if term_id is not None:
                 # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
                 write_spo(
                     rcv_variant_id,
-                    LT.get(TT.get(rcv_variant_relationship_type)),
+                    term_id,
                     rcv_ncbigene_curi)
             else:
-                LOG.warning(
-                'Check relationship type: ' + rcv_variant_relationship_type)
-                continue    
+                # LOG.warning(
+                # 'Check relationship type: ' + rcv_variant_relationship_type)
+                continue
 
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
             write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
@@ -658,7 +678,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'dbSNP:' + rcv_variant_dbsnp_id)
             rcv_dbsnps = []
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
-            write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
+            write_spo(
+                rcv_variant_id, resolve('in taxon'), resolve('Homo sapiens')
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
@@ -676,7 +697,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(monarch_assoc, 'SEPIO:0000015', _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
-            write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
+            write_spo(_evidence_id, 'rdf:type', resolve('evidence'))
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
             write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
@@ -727,7 +748,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     scv_assert_method = SCV_Attribute.text
                     #  need to be mapped to a <sepio:100...n> curie ????
                     # if scv_assert_method in TT:
-                    # scv_assert_id = TT[scv_assert_method]
+                    # scv_assert_id = resolve(scv_assert_method)
                     # _assertion_method_id = '_:' + monarch_id + \
                     #    '_assertionmethod_' + hashlib.sha1(
                     #        (scv_assert_method).encode(
@@ -762,7 +783,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         if SCV_Citation_URL is not None:
                             write_spo(
                                 _assertion_method_id,
-                                'ERO:0000480',
+                                resolve('has_url'),
                                 SCV_Citation_URL.text)
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
@@ -796,29 +817,22 @@ with gzip.open(FILENAME, 'rt') as fh:
                 write_spo(
                     'PMID:' + scv_citation_id,
                     'rdf:type',
-                    'IAO:0000013')
+                    resolve('journal article'))
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
             scv_significance = scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
-                if scv_significance is not None \
-                        and scv_significance in LT \
-                        and re.match(r'GENO:000084', LT[scv_significance]):
-                    scv_geno = LT[scv_significance]
-                else:
-                    scv_geno = None
-
-                if scv_geno is not None and scv_geno in (
-                        'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
-                        'GENO:0000843', 'GENO:0000845'):
+                scv_geno = resolve(scv_significance)
+                if scv_geno is not None \
+                        and TT[scv_significance] != 'uncertain significance':
                     # we have the association's (SCV) pathnogicty call
                     # and its significance is explicit
                     ##########################################################
                     # 2016 july.
                     # We do not want any of the proceeding triples
-                    # unless we get here (no implicit "unknown significance")
+                    # unless we get here (no implicit "uncertain significance")
                     # TRIPLES
                     # <monarch_assoc>
                     #   <OBAN:association_has_object_property>
@@ -864,7 +878,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                             write_spo(
                                 'PMID:' + scv_citation_id.text,
                                 'rdf:type',
-                                'IAO:0000013')
+                                resolve('journal article'))
 
                             # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                             write_spo(
@@ -909,7 +923,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
-                        scv_evidence_type = LT[SCV_OIMT.text]
+                        scv_evidence_type = resolve(SCV_OIMT.text)
                         # blank node
                         _provenance_id = '_:' + hashlib.sha1(
                             (_evidence_id + scv_evidence_type).
