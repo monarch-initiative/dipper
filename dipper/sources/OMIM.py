@@ -519,12 +519,13 @@ class OMIM(Source):
                                         fstart, fend, omimid)
                             # add the cytogenic location too
                             # for now, just take the first one
-                            cytoloc = "chr{} ({})".format(cytoloc.split('-')[0], tax_label)
+                            cytoloc = cytoloc.split('-')[0]
                             loc = makeChromID(cytoloc, tax_num, 'CHR')
                             # this is the chr band
                             # Commenting out label creation as this seems
                             # redundant with monochrom
-                            # model.addClassToGraph(loc, cytoloc)
+                            # cytoloc_label = "chr{} ({})".format(cytoloc.split('-')[0], tax_label)
+                            # model.addClassToGraph(loc, cytoloc_label)
                             model.addClassToGraph(loc, None)
                             f.addSubsequenceOfFeature(loc)
                             f.addFeatureToGraph(True, None, is_gene)
