@@ -25,14 +25,16 @@
     python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 '''
+
 import os
 import re
-import sys
 import gzip
 import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
+
+
 # import Requests
 # from dipper.sources.Source import Source
 # from dipper import curie_map  # hangs on to stale data?
@@ -68,8 +70,18 @@ ARGPARSER.add_argument(
 ARGPARSER.add_argument(
     '-t', "--transtab",
     default=RPATH + '/translationtable/' + INAME + '.tt',
-    help="'pOtatoe'\t'PREFIX:p123'   default: " +
+    help="'spud'\t'potato'   default: " +
     RPATH + '/translationtable/' + INAME + '.tt')
+
+ARGPARSER.add_argument(
+    '-l', "--labterm",
+    default=RPATH + '/translationtable/label_term.tt',
+    help="'potato'\t'PREFIX:p123'   default: " +
+    RPATH + '/translationtable/label_term.tt')
+
+# TODO after transtab & labterm are working
+# dynamicaly precombine/chain to speedup/simplify lookup
+# without sacrificing clarity
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(
@@ -89,7 +101,27 @@ ARGS = ARGPARSER.parse_args()
 
 FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
-OUTPUT = open(ARGS.destination + '/' + ARGS.output, 'w')
+# avoid clobbering existing output until we are finished
+OUTFILE = ARGS.destination + '/TMP_' + ARGS.output + '_PART'
+try:
+    os.remove(OUTFILE)
+except FileNotFoundError:
+    # no problem
+    LOG.info("fresh start for %s", OUTFILE)
+
+OUTTMP = open(OUTFILE, 'a')
+OUTPUT = ARGS.destination + '/' + ARGS.output
+
+# catch and release input for future study
+REJECT = FILENAME + '_REJECT'
+try:
+    os.remove(REJECT)
+except FileNotFoundError:
+    # no problem
+    LOG.info("fresh start for %s", REJECT)
+REJECT = open(REJECT, 'a')
+
+
 # default to /dev/stdout if anything amiss
 
 # CURIEMAP = curie_map.get()
@@ -191,7 +223,7 @@ def make_spo(sub, prd, obj):
             prdcuri is not None and prdcuri in CURIEMAP:
         subjt = CURIEMAP[subcuri] + subid
         if subcuri != '_' or CURIEMAP[subcuri] != '_:B':
-            subjt = '<' + subjt + '> '
+            subjt = '<' + subjt + '>'
 
         return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
     else:
@@ -252,8 +284,9 @@ def scv_link(scv_sig, rcv_trip):
             rcv_trip.append(make_spo(scv_b, link, scv_a))
     return
 
-# Translate airbratary strings found in datasets
-# to specific terms found in ontologies
+
+# Translate external strings found in datasets
+# to specific labels found in ontologies
 TT = {}
 with open(ARGS.transtab) as f:
     for line in f:
@@ -262,42 +295,65 @@ with open(ARGS.transtab) as f:
             (key, val) = re.split(r'\t+', line, 2)
             TT[key.strip()] = val.strip()
 
+
+# Translate labels found in ontologies
+# to the terms they are for
+LT = {}
+with open(ARGS.labterm) as f:
+    for line in f:
+        line = line.partition('#')[0].strip()  # no comment
+        if line != "":
+            (key, val) = re.split(r'\t+', line, 2)
+            LT[key.strip()] = val.strip()
+
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
 if ARGS.blanknode is True:
     CURIEMAP['_'] = '_:B'
 
+
+# composite mapping
+# given f(x) and g(x)     here:  LT & TT respectivly
+# return g(x)|g(f(x))|f(x) in order of preference
+def resolve(label):
+    if label is not None and label in LT:
+        term_id = LT[label]
+    elif label is not None and label in TT:
+        label = TT[label]
+        if label in LT:
+            term_id = LT[label]
+        else:
+            LOG.warning(
+                'Translated but do not have a term_id for label: ' + label)
+            term_id = label
+    else:
+        LOG.error('Do not have any mapping for label: ' + label)
+        term_id = None
+    return term_id
+
+
+# Seed releasetriple to avoid union with the empty set
+# <MonarchData: + ARGS.output> <a> <owl:Ontology>
+releasetriple.add(
+    make_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
+
+rjct_cnt = tot_cnt = 0
 #######################################################
 # main loop over xml
+# taken in chunks composed of ClinVarSet stanzas
 with gzip.open(FILENAME, 'rt') as fh:
-    TREE = ET.parse(fh)
-    ReleaseSet = TREE.getroot()
-    if ReleaseSet.get('Type') != 'full':
-        LOG.warning('Not a full release')
-        sys.exit(-1)
+    TREE = ET.iterparse(fh)  # w/o specifing events it defaults to 'end'
+    for event, element in TREE:
+        if element.tag != 'ClinVarSet':
+            ReleaseSet = element
+            continue
+        else:
+            ClinVarSet = element
+            tot_cnt += 1
 
-    rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
-
-    # seed releasetriple to avoid union with the empty set
-    # <MonarchData: + ARGS.output> <a> <owl:Ontology>
-    releasetriple.add(
-        make_spo(
-            'MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
-    releasetriple.add(
-         make_spo(
-            'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
-
-    # not finalized
-    # releasetriple.add(
-    #     make_spo(
-    #        'MonarchData:' + ARGS.output, owl:versionIRI,
-    #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
-
-    for ClinVarSet in ReleaseSet.findall('ClinVarSet[RecordStatus]'):
         if ClinVarSet.find('RecordStatus').text != 'current':
             LOG.warning(
-                ClinVarSet.get('ID') + " is not current as of " + rs_dated)
-            continue  # or break?
+                ClinVarSet.get('ID') + " is not current")
 
         # collect svc significance calls within a rcv
         pathocalls = {}
@@ -322,8 +378,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # I do not expect we care as we shouldn't keep the RCV.
         if RCVAssertion.find('RecordStatus').text != 'current':
             LOG.warning(
-                rcv_acc + " <is not current on> " + rs_dated)
-            continue
+                rcv_acc + " <is not current on>")  # + rs_dated)
 
         # # # Child elements
         #
@@ -351,7 +406,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         for RCV_Measure in \
                 RCV_MeasureSet.findall('Measure'):
-            rcv_variant_type = TT.get(RCV_Measure.get('Type'))
+            rcv_variant_type = resolve(RCV_Measure.get('Type'))
             if rcv_variant_type is None:
                 LOG.warning(
                     rcv_acc + " UNKNOWN VARIANT TYPE " +
@@ -362,13 +417,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'Name/ElementValue[@Type="Preferred"]')
             if RCV_VariantName is not None:
                 rcv_variant_label = RCV_VariantName.text
-            else:
-                LOG.warning(
-                    rcv_acc + " VARIANT MISSING LABEL")
+            # else:
+            #    LOG.warning(
+            #       rcv_acc + " VARIANT MISSING LABEL")
 
             # XRef[@DB="dbSNP"]/@ID
             for RCV_dbSNP in \
                     RCV_Measure.findall('XRef[@DB="dbSNP"]'):
+
                 rcv_dbsnps.append(RCV_dbSNP.get('ID'))
 
             # this xpath works but is not supported by ElementTree.
@@ -379,29 +435,48 @@ with gzip.open(FILENAME, 'rt') as fh:
                         RCV_Synonym.text is not None and \
                         re.match(r'^HGVS', RCV_Synonym.get('Type')):
                     rcv_synonyms.append(RCV_Synonym.text)
-                    # print(rcv_synonyms)
 
-        # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
+            # /RCV/MeasureSet/Measure/Name/ElementValue/[@Type="Preferred"]
+            # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
 
-        # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
+            # RCV_Variant = RCV_Measure.find(
+            #    'MeasureRelationship[@Type="variant in gene"]')
 
-        RCV_Variant = RCV_Measure.find(
-                'MeasureRelationship[@Type="variant in gene"]')
-        if RCV_Variant is not None:
-            # XRef[@DB="Gene"]/@ID
-            RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
-            if rcv_ncbigene_id is None and RCV_Gene is not None:
-                rcv_ncbigene_id = RCV_Gene.get('ID')
-            elif rcv_ncbigene_id is None:
-                LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
+            # 540074 genes overlapped by variant
+            # 176970 within single gene
+            # 24746 within multiple genes by overlap
+            # 5698 asserted, but not computed
+            # 439 near gene, upstream
+            # 374 variant in gene
+            # 54 near gene, downstream
 
-            # Symbol/ElementValue[@Type="Preferred"]
-            RCV_Symbol = RCV_Variant.find(
-                'Symbol/ElementValue[@Type="Preferred"]')
-            if rcv_gene_symbol is None and RCV_Symbol is not None:
-                rcv_gene_symbol = RCV_Symbol.text
-            elif rcv_ncbigene_id is None:
-                LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
+            RCV_Variant = RCV_Measure.find('MeasureRelationship')
+
+            if RCV_Variant is None:  # try letting them all through
+                LOG.info(ET.tostring(RCV_Measure).decode('utf-8'))
+            else:
+                rcv_variant_relationship_type = RCV_Variant.get('Type')
+                # if rcv_variant_relationship_type is not None:
+                #    LOG.warning(
+                #        rcv_acc +
+                #        ' rcv_variant_relationship_type ' +
+                #        rcv_variant_relationship_type)
+
+                # XRef[@DB="Gene"]/@ID
+                RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
+                if rcv_ncbigene_id is None and RCV_Gene is not None:
+                    rcv_ncbigene_id = RCV_Gene.get('ID')
+                # elif rcv_ncbigene_id is None:
+                #    LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
+
+                # Symbol/ElementValue[@Type="Preferred"]
+                RCV_Symbol = RCV_Variant.find(
+                    'Symbol/ElementValue[@Type="Preferred"]')
+                if rcv_gene_symbol is None and RCV_Symbol is not None:
+                    rcv_gene_symbol = RCV_Symbol.text
+
+                # if rcv_gene_symbol is None:
+                #    LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
 
         #######################################################################
         # the Object is the Disease, here is called a "trait"
@@ -409,7 +484,6 @@ with gzip.open(FILENAME, 'rt') as fh:
         # not the SCV traits as submitted due to time constraints
 
         for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
-
             # /RCV/TraitSet/Trait[@Type="Disease"]/@ID
             # 144,327   2016-Mar
 
@@ -426,15 +500,15 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
-                # print(rcv_acc + ' ' + rcv_disease_label)
-            else:
-                LOG.warning(rcv_acc + " MISSING DISEASE NAME")
+            # else:
+            #    LOG.warning(rcv_acc + " MISSING DISEASE NAME")
 
             # Prioritize OMIM
             for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
                 if rcv_disease_db is not None:
                     break
-                for RCV_TraitXRef in RCV_Trait.findall('XRef[@DB="OMIM"]'):
+                for RCV_TraitXRef in RCV_Trait.findall(
+                        'XRef[@DB="OMIM"]'):
                     rcv_disease_db = RCV_TraitXRef.get('DB')
                     rcv_disease_id = RCV_TraitXRef.get('ID')
                     break
@@ -483,7 +557,17 @@ with gzip.open(FILENAME, 'rt') as fh:
         if rcv_disease_db is None or rcv_disease_id is None or \
                 rcv_disease_label is None or rcv_variant_id is None or \
                 rcv_variant_type is None or rcv_variant_label is None:
-            LOG.warning(rcv_acc + " RCV IS WONKY, BYEBYE")
+            LOG.info('%s is under specified. SKIPPING', rcv_acc)
+            rjct_cnt += 1
+            # Write this Clinvar set out so we can know what we are missing
+            print(
+                # minidom.parseString(
+                #    ET.tostring(
+                #        ClinVarSet)).toprettyxml(
+                #           indent="   "), file=REJECT)
+                #  too slow. doubles time
+                ET.tostring(ClinVarSet).decode('utf-8'), file=REJECT)
+            ClinVarSet.clear()
             continue
 
         # start anew
@@ -493,12 +577,28 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
 
         if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
-            rcv_ncbigene_curi = 'NCBIGene:' + rcv_ncbigene_id
+            rcv_ncbigene_curi = 'NCBIGene:' + str(rcv_ncbigene_id)
             #           RCV only TRIPLES
-            # <rcv_variant_id><GENO:0000418><scv_ncbigene_id>
-            write_spo(rcv_variant_id, 'GENO:0000418', rcv_ncbigene_curi)
+            term_id = resolve(rcv_variant_relationship_type)
+            if term_id is not None:
+                # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
+                write_spo(
+                    rcv_variant_id,
+                    term_id,
+                    rcv_ncbigene_curi)
+            else:
+                # LOG.warning(
+                # 'Check relationship type: ' + rcv_variant_relationship_type)
+                continue
+
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
             write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
+
+            # STOPGAP till we create more granular relationship types
+            # RCV  "is about" a type of gene variant
+            # write_spo(
+            #    'ClinVar:' + rcv_acc,
+            #    'IAO:0000136', rcv_variant_relationship_type)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV
@@ -579,7 +679,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'dbSNP:' + rcv_variant_dbsnp_id)
             rcv_dbsnps = []
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
-            write_spo(rcv_variant_id, 'RO:0002162', 'NCBITaxon:9606')
+            write_spo(
+                rcv_variant_id, resolve('in taxon'), resolve('Homo sapiens'))
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
@@ -587,33 +688,36 @@ with gzip.open(FILENAME, 'rt') as fh:
             rcv_synonyms = []
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
-                    monarch_assoc,
-                    'OBAN:association_has_object', rcv_disease_curi)
+                monarch_assoc, 'OBAN:association_has_object', rcv_disease_curi)
             # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
             write_spo(rcv_disease_curi, 'rdfs:label', rcv_disease_label)
             # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
-            write_spo(monarch_assoc, 'SEPIO:0000007', _evidence_id)
-            # <monarch_assoc><SEPIO:0000015><:_assertion_id>  is asserted in
-            write_spo(monarch_assoc, 'SEPIO:0000015', _assertion_id)
+            write_spo(
+                monarch_assoc,
+                resolve('has_supporting_evidence'), _evidence_id)
+            # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
+            write_spo(monarch_assoc, resolve('is_asserted_in'), _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
-            write_spo(_evidence_id, 'rdf:type', 'ECO:0000000')
+            write_spo(_evidence_id, 'rdf:type', resolve('evidence'))
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
-            write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
+            write_spo(_assertion_id, 'rdf:type', resolve('assertion'))
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(
                 _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
 
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>
-            write_spo(_assertion_id, 'SEPIO:0000111', _evidence_id)
+            write_spo(
+                _assertion_id,
+                resolve('is_assertion_supported_by_evidence'), _evidence_id)
 
             # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
             write_spo(
                 _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver)
             # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
             write_spo(
-                _assertion_id, 'SEPIO:0000018',
+                _assertion_id, resolve('created_by'),
                 'ClinVarSubmitters:' + scv_orgid)
             # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
             write_spo(
@@ -643,12 +747,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
                     if scv_eval_date != "None":
                         write_spo(
-                            _assertion_id, 'SEPIO:0000021', scv_eval_date)
+                            _assertion_id,
+                            resolve('date_created'), scv_eval_date)
 
                     scv_assert_method = SCV_Attribute.text
                     #  need to be mapped to a <sepio:100...n> curie ????
                     # if scv_assert_method in TT:
-                    # scv_assert_id = TT[scv_assert_method]
+                    # scv_assert_id = resolve(scv_assert_method)
                     # _assertion_method_id = '_:' + monarch_id + \
                     #    '_assertionmethod_' + hashlib.sha1(
                     #        (scv_assert_method).encode(
@@ -656,7 +761,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #
                     # changing to not include context till we have IRI
 
-                    # blank node (would be be nice if these were only made once)
+                    # blank node, would be be nice if these were only made once
                     _assertion_method_id = '_:' + hashlib.sha1(
                         (scv_assert_method + '_assertionmethod').encode(
                             'utf-8')).hexdigest()[1:20]
@@ -667,11 +772,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #       TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
                     write_spo(
-                        _assertion_id, 'SEPIO:0000041', _assertion_method_id)
+                        _assertion_id,
+                        resolve('is_specified_by'), _assertion_method_id)
 
                     # <_assertion_method_id><rdf:type><SEPIO:0000037>
                     write_spo(
-                        _assertion_method_id, 'rdf:type', 'SEPIO:0000037')
+                        _assertion_method_id,
+                        'rdf:type', resolve('assertion method'))
 
                     # <_assertion_method_id><rdfs:label><scv_assert_method>
                     write_spo(
@@ -683,7 +790,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         if SCV_Citation_URL is not None:
                             write_spo(
                                 _assertion_method_id,
-                                'ERO:0000480',
+                                resolve('has_url'),
                                 SCV_Citation_URL.text)
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
@@ -705,7 +812,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 write_spo(
                     _evidence_id,
-                    'SEPIO:0000124',
+                    resolve('has_supporting_reference'),
                     'PMID:' + scv_citation_id)
                 # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                 write_spo(
@@ -717,29 +824,22 @@ with gzip.open(FILENAME, 'rt') as fh:
                 write_spo(
                     'PMID:' + scv_citation_id,
                     'rdf:type',
-                    'IAO:0000013')
+                    resolve('journal article'))
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
             scv_significance = scv_geno = None
             SCV_Description = ClinicalSignificance.find('Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
-                if scv_significance is not None \
-                        and scv_significance in TT \
-                        and re.match(r'GENO:000084', TT[scv_significance]):
-                    scv_geno = TT[scv_significance]
-                else:
-                    scv_geno = None
-
-                if scv_geno is not None and scv_geno in (
-                        'GENO:0000840', 'GENO:0000841', 'GENO:0000844',
-                        'GENO:0000843', 'GENO:0000845'):
+                scv_geno = resolve(scv_significance)
+                if scv_geno is not None \
+                        and scv_geno != resolve('uncertain significance'):
                     # we have the association's (SCV) pathnogicty call
                     # and its significance is explicit
                     ##########################################################
                     # 2016 july.
                     # We do not want any of the proceeding triples
-                    # unless we get here (no implicit "unknown significance")
+                    # unless we get here (no implicit "uncertain significance")
                     # TRIPLES
                     # <monarch_assoc>
                     #   <OBAN:association_has_object_property>
@@ -779,13 +879,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                             write_spo(
                                 _evidence_id,
-                                'SEPIO:0000124',
+                                resolve('has_supporting_reference'),
                                 'PMID:' + scv_citation_id.text)
                             # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                             write_spo(
                                 'PMID:' + scv_citation_id.text,
                                 'rdf:type',
-                                'IAO:0000013')
+                                resolve('journal article'))
 
                             # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                             write_spo(
@@ -830,9 +930,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
-                        scv_evidence_type = TT[SCV_OIMT.text]
+                        scv_evidence_type = resolve(SCV_OIMT.text)
                         # blank node
-                        _provenance_id = '_:' +  hashlib.sha1(
+                        _provenance_id = '_:' + hashlib.sha1(
                             (_evidence_id + scv_evidence_type).
                             encode('utf-8')).hexdigest()[1:20]
                         write_spo(
@@ -843,7 +943,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # has_provenance -> has_supporting_study
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         write_spo(
-                            _evidence_id, 'SEPIO:0000085', _provenance_id)
+                            _evidence_id,
+                            resolve('has_supporting_activity'), _provenance_id)
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         write_spo(
@@ -859,6 +960,28 @@ with gzip.open(FILENAME, 'rt') as fh:
         # put this RCV's triples in the SET of all triples in this data release
         releasetriple.update(set(rcvtriples))
         del rcvtriples[:]
-    # write all the triples out
-    print('\n'.join(list(releasetriple)), file=OUTPUT)
-OUTPUT.close()
+        ClinVarSet.clear()
+
+    ###############################################################
+    # first in is last out
+    if ReleaseSet is not None and ReleaseSet.get('Type') != 'full':
+        LOG.warning('Not a full release')
+    rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
+    releasetriple.add(
+         make_spo(
+            'MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
+    # not finalized
+    # releasetriple.add(
+    #     make_spo(
+    #        'MonarchData:' + ARGS.output, owl:versionIRI,
+    #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
+
+    # write all remaining triples out
+    print('\n'.join(list(releasetriple)), file=OUTTMP)
+
+LOG.warning(
+    'The %i out of %i records not included are written back to \n%s',
+    rjct_cnt, tot_cnt, str(REJECT))
+OUTTMP.close()
+REJECT.close()
+os.replace(OUTFILE, OUTPUT)

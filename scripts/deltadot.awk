@@ -39,9 +39,8 @@ NR!=FNR && / -> / {
 }
 
 END{
-
 	for(e in edge1){
-		if(! (e in edge2)) edges[e "(" edge1[e] ")\", color=\"orange\"];"];
+		if(!(e in edge2)) edges[e "(" edge1[e] ")\", color=\"orange\"];"];
 		else {
 			# TODO flag losses?
 			diff =  edge2[e] - edge1[e];

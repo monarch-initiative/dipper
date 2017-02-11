@@ -423,8 +423,8 @@ class Genotype():
         :param genopart_id:
         :return:
         """
-        self.graph.addTriple\
-            (genopart_id, self.properties['in_taxon'], taxon_id)
+        self.graph.addTriple(
+            genopart_id, self.properties['in_taxon'], taxon_id)
 
         return
 
@@ -486,6 +486,7 @@ class Genotype():
             targeted_gene_id = targeted_gene_id.replace(":", "")
         self.model.addIndividualToGraph(
             targeted_gene_id, targeted_gene_label,
+
             self.genoparts['reagent_targeted_gene'], description)
 
         if gene_id is not None:
@@ -503,6 +504,7 @@ class Genotype():
             self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
         if tgs_type is None:
             tgs_type = self.genoparts['targeted_gene_subregion']
+
         self.model.addIndividualToGraph(
             tgs_id, tgs_label, tgs_type, tgs_description)
 
@@ -511,7 +513,6 @@ class Genotype():
             population_id,
             self.properties['has_member_with_allelotype'],
             member_id)
-
         return
 
     def addTargetedGeneComplement(
@@ -544,6 +545,7 @@ class Genotype():
 
     def makeGenomeID(self, taxon_id):
         # scrub off the taxon prefix.  put it in base space
+        # TODO: revisit as BNODE?
 
         genome_id = re.sub(r'.*\:', ':', taxon_id) + 'genome'
 
@@ -578,6 +580,7 @@ class Genotype():
                 build_label = build_id
             chrinbuild_label = makeChromLabel(chr, build_label)
             # add the build-specific chromosome as an instance of the chr class
+
             self.model.addIndividualToGraph(
                 chrinbuild_id, chrinbuild_label, chr_id)
 
@@ -657,9 +660,8 @@ class Genotype():
 
         return vslc_label
 
-    def make_experimental_model_with_genotype(self, genotype_id,
-                                              genotype_label, taxon_id,
-                                              taxon_label):
+    def make_experimental_model_with_genotype(
+             self, genotype_id, genotype_label, taxon_id, taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)
@@ -669,5 +671,4 @@ class Genotype():
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
         self.graph.addTriple(
             animal_id, Genotype.object_properties['has_genotype'], genotype_id)
-
         return animal_id
