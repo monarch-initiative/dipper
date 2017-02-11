@@ -482,9 +482,10 @@ class Genotype():
 
         # akin to a variant locus
         if targeted_gene_id is None:
-            targeted_gene_id = '_:' + gene_id + '-' + reagent_id
-        self.gu.addIndividualToGraph(
-            self.graph, targeted_gene_id, targeted_gene_label,
+            targeted_gene_id = '_' + gene_id + '-' + reagent_id
+            targeted_gene_id = targeted_gene_id.replace(":", "")
+        self.model.addIndividualToGraph(
+            targeted_gene_id, targeted_gene_label,
 
             self.genoparts['reagent_targeted_gene'], description)
 
