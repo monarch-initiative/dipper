@@ -423,8 +423,8 @@ class Genotype():
         :param genopart_id:
         :return:
         """
-        self.graph.addTriple\
-            (genopart_id, self.properties['in_taxon'], taxon_id)
+        self.graph.addTriple(
+            genopart_id, self.properties['in_taxon'], taxon_id)
 
         return
 
@@ -503,20 +503,15 @@ class Genotype():
             self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
         if tgs_type is None:
             tgs_type = self.genoparts['targeted_gene_subregion']
-<<<<<<< HEAD
-        self.gu.addIndividualToGraph(
-            self.graph, tgs_id, tgs_label, tgs_type, tgs_description)
-=======
+
         self.model.addIndividualToGraph(
             tgs_id, tgs_label, tgs_type, tgs_description)
->>>>>>> c77a3fd909b55ab7940def62b29f0bc51068a178
 
     def addMemberOfPopulation(self, member_id, population_id):
         self.graph.addTriple(
             population_id,
             self.properties['has_member_with_allelotype'],
             member_id)
-
         return
 
     def addTargetedGeneComplement(
@@ -584,13 +579,9 @@ class Genotype():
                 build_label = build_id
             chrinbuild_label = makeChromLabel(chr, build_label)
             # add the build-specific chromosome as an instance of the chr class
-<<<<<<< HEAD
-            self.gu.addIndividualToGraph(
-                self.graph, chrinbuild_id, chrinbuild_label, chr_id)
-=======
+
             self.model.addIndividualToGraph(
                 chrinbuild_id, chrinbuild_label, chr_id)
->>>>>>> c77a3fd909b55ab7940def62b29f0bc51068a178
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
@@ -604,14 +595,8 @@ class Genotype():
         # the chrom class (generic) id
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
-<<<<<<< HEAD
-        self.gu.addClassToGraph(
-            self.graph, chrom_class_id, chrom_class_label,
-            Feature.types['chromosome'])
-=======
         self.model.addClassToGraph(
             chrom_class_id, chrom_class_label, Feature.types['chromosome'])
->>>>>>> c77a3fd909b55ab7940def62b29f0bc51068a178
 
         return
 
@@ -630,13 +615,8 @@ class Genotype():
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-<<<<<<< HEAD
-        self.gu.addIndividualToGraph(
-            self.graph, chr_id, chr_label, Feature.types['chromosome'])
-=======
         self.model.addIndividualToGraph(
             chr_id, chr_label, Feature.types['chromosome'])
->>>>>>> c77a3fd909b55ab7940def62b29f0bc51068a178
         if chr_type is not None:
             self.model.addType(chr_id, chr_type)
 
@@ -679,23 +659,8 @@ class Genotype():
 
         return vslc_label
 
-<<<<<<< HEAD
     def make_experimental_model_with_genotype(
-        self, g, genotype_id, genotype_label, taxon_id, taxon_label):
-
-        animal_id = '-'.join((taxon_id, 'with', genotype_id))
-        animal_id = re.sub(r':', '', animal_id)
-        animal_id = '_:' + animal_id
-
-        animal_label = ' '.join((genotype_label, taxon_label))
-        self.gu.addIndividualToGraph(g, animal_id, animal_label, taxon_id)
-        self.gu.addTriple(
-            g, animal_id, Genotype.object_properties['has_genotype'],
-            genotype_id)
-=======
-    def make_experimental_model_with_genotype(self, genotype_id,
-                                              genotype_label, taxon_id,
-                                              taxon_label):
+             self, genotype_id, genotype_label, taxon_id, taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)
@@ -705,6 +670,4 @@ class Genotype():
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
         self.graph.addTriple(
             animal_id, Genotype.object_properties['has_genotype'], genotype_id)
->>>>>>> c77a3fd909b55ab7940def62b29f0bc51068a178
-
         return animal_id
