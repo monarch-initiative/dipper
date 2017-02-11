@@ -525,7 +525,7 @@ class OMIM(Source):
                             # Commenting out label creation as this seems
                             # redundant with monochrom
                             # model.addClassToGraph(loc, cytoloc)
-                            model.addClassToGraph(loc)
+                            model.addClassToGraph(loc, None)
                             f.addSubsequenceOfFeature(loc)
                             f.addFeatureToGraph(True, None, is_gene)
 
