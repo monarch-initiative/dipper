@@ -323,10 +323,11 @@ def resolve(label):
         if label in LT:
             term_id = LT[label]
         else:
-            LOG.warning('Translated but not have a term_id for label: ' + label)
+            LOG.warning(
+                'Translated but do not have a term_id for label: ' + label)
             term_id = label
     else:
-        LOG.error('Do not have a mapping for label: ' + label)
+        LOG.error('Do not have any mapping for label: ' + label)
         term_id = None
     return term_id
 
@@ -679,7 +680,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             rcv_dbsnps = []
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
             write_spo(
-                rcv_variant_id, resolve('in taxon'), resolve('Homo sapiens')
+                rcv_variant_id, resolve('in taxon'), resolve('Homo sapiens'))
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
@@ -687,33 +688,36 @@ with gzip.open(FILENAME, 'rt') as fh:
             rcv_synonyms = []
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
-                    monarch_assoc,
-                    'OBAN:association_has_object', rcv_disease_curi)
+                monarch_assoc, 'OBAN:association_has_object', rcv_disease_curi)
             # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
             write_spo(rcv_disease_curi, 'rdfs:label', rcv_disease_label)
             # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
-            write_spo(monarch_assoc, 'SEPIO:0000007', _evidence_id)
-            # <monarch_assoc><SEPIO:0000015><:_assertion_id>  is asserted in
-            write_spo(monarch_assoc, 'SEPIO:0000015', _assertion_id)
+            write_spo(
+                monarch_assoc,
+                resolve('has_supporting_evidence'), _evidence_id)
+            # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
+            write_spo(monarch_assoc, resolve('is_asserted_in'), _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
             write_spo(_evidence_id, 'rdf:type', resolve('evidence'))
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
-            write_spo(_assertion_id, 'rdf:type', 'SEPIO:0000001')
+            write_spo(_assertion_id, 'rdf:type', resolve('assertion'))
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(
                 _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
 
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>
-            write_spo(_assertion_id, 'SEPIO:0000111', _evidence_id)
+            write_spo(
+                _assertion_id,
+                resolve('is_assertion_supported_by_evidence'), _evidence_id)
 
             # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
             write_spo(
                 _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver)
             # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
             write_spo(
-                _assertion_id, 'SEPIO:0000018',
+                _assertion_id, resolve('created_by'),
                 'ClinVarSubmitters:' + scv_orgid)
             # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
             write_spo(
@@ -743,7 +747,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
                     if scv_eval_date != "None":
                         write_spo(
-                            _assertion_id, 'SEPIO:0000021', scv_eval_date)
+                            _assertion_id,
+                            resolve('date_created'), scv_eval_date)
 
                     scv_assert_method = SCV_Attribute.text
                     #  need to be mapped to a <sepio:100...n> curie ????
@@ -767,11 +772,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #       TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
                     write_spo(
-                        _assertion_id, 'SEPIO:0000041', _assertion_method_id)
+                        _assertion_id,
+                        resolve('is_specified_by'), _assertion_method_id)
 
                     # <_assertion_method_id><rdf:type><SEPIO:0000037>
                     write_spo(
-                        _assertion_method_id, 'rdf:type', 'SEPIO:0000037')
+                        _assertion_method_id,
+                        'rdf:type', resolve('assertion method'))
 
                     # <_assertion_method_id><rdfs:label><scv_assert_method>
                     write_spo(
@@ -805,7 +812,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 write_spo(
                     _evidence_id,
-                    'SEPIO:0000124',
+                    resolve('has_supporting_reference'),
                     'PMID:' + scv_citation_id)
                 # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                 write_spo(
@@ -826,7 +833,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_significance = SCV_Description.text
                 scv_geno = resolve(scv_significance)
                 if scv_geno is not None \
-                        and TT[scv_significance] != 'uncertain significance':
+                        and scv_geno != resolve('uncertain significance'):
                     # we have the association's (SCV) pathnogicty call
                     # and its significance is explicit
                     ##########################################################
@@ -872,7 +879,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                             write_spo(
                                 _evidence_id,
-                                'SEPIO:0000124',
+                                resolve('has_supporting_reference'),
                                 'PMID:' + scv_citation_id.text)
                             # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                             write_spo(
@@ -936,7 +943,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # has_provenance -> has_supporting_study
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         write_spo(
-                            _evidence_id, 'SEPIO:0000085', _provenance_id)
+                            _evidence_id,
+                            resolve('has_supporting_activity'), _provenance_id)
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         write_spo(
