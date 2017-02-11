@@ -68,7 +68,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_evidence()
         """
-        impc = IMPC('rdf_graph', True)
+        impc = IMPC('rdf_graph', False)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
@@ -167,7 +167,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC('rdf_graph', False)
+        impc = IMPC('rdf_graph', True)
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         impc._add_assertion_provenance(self.assoc_curie,
@@ -179,7 +179,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                           MONARCH:test_association OBO:SEPIO_0000015 ?assertion.
                           ?assertion a OBO:SEPIO_0000001 ;
                               OBO:SEPIO_0000018 <http://www.mousephenotype.org/> ;
-                              OBO:SEPIO_0000111 _:evidence  .
+                              OBO:SEPIO_0000111 <https://monarchinitiative.org/.well-known/genid/evidence>  .
 
                           <http://www.mousephenotype.org/> a foaf:organization ;
                               rdfs:label "International Mouse Phenotyping Consortium" .
@@ -244,7 +244,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                       WHERE {
                           ?assoc OBO:SEPIO_0000007 ?evidenceline .
                           ?evidenceline a OBO:ECO_0000015 ;
-                              OBO:SEPIO_0000085 _:study  .
+                              OBO:SEPIO_0000085 <https://monarchinitiative.org/.well-known/genid/study> .
 
                           ?study a OBO:OBI_0000471 ;
                               OBO:SEPIO_0000114 ?param ;

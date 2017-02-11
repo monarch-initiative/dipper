@@ -102,8 +102,9 @@ def main():
     # BNodes can't be visualized in Protege,
     # so you can materialize them for testing purposes with this flag
     parser.add_argument(
-        '-nb', '--skolemize_bnodes',
-        help="convert blank nodes into identified nodes", action="store_true")
+        '-b', '--use_bnodes',
+        help="use blank nodes instead of skolemizing", action="store_true",
+        default=False)
 
     # TODO this preconfiguration should probably live in the conf.json,
     #   and the same filter be applied to all sources
@@ -148,7 +149,7 @@ def main():
         else:
             logging.basicConfig(level=logging.INFO)
 
-    if args.skolemize_bnodes is True:
+    if not args.use_bnodes:
         logger.info("Will materialize all BNodes into BASE space")
 
     if args.query is not None:
@@ -196,10 +197,11 @@ def main():
         imported_module = importlib.import_module(module)
         source_class = getattr(imported_module, src)
         mysource = None
+        are_bnodes_skolemized = not args.use_bnodes
         if src in taxa_supported:
-            mysource = source_class(args.graph, args.skolemize_bnodes, tax_ids)
+            mysource = source_class(args.graph, are_bnodes_skolemized, tax_ids)
         else:
-            mysource = source_class(args.graph, args.skolemize_bnodes)
+            mysource = source_class(args.graph, are_bnodes_skolemized)
         if args.parse_only is False:
             start_fetch = time.clock()
             mysource.fetch(args.force)

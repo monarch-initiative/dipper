@@ -314,18 +314,16 @@ class AnimalQTLdb(Source):
                         # we will expect that these labels provided elsewhere
                         geno.addGene(gene_id, None)
                         # FIXME what is the right relationship here?
-                        geno.addAlleleOfGene(
-                            qtl_id, gene_id,
-                            geno.object_properties['has_affected_locus'])
+                        geno.addAffectedLocus(qtl_id, gene_id)
 
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id
                             vl_id = \
                                 '_:' + re.sub(
-                                    r':', '', gene_id) + '-' + peak_mark
+                                    r':', '', gene_id) + '-' + peak_mark.strip()
                             geno.addSequenceAlterationToVariantLocus(
                                 dbsnp_id, vl_id)
-                            geno.addAlleleOfGene(vl_id, gene_id)
+                            geno.addAffectedLocus(vl_id, gene_id)
 
                 # add the trait
                 model.addClassToGraph(trait_id, trait_name)
