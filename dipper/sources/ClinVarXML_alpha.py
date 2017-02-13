@@ -842,11 +842,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # unless we get here (no implicit "uncertain significance")
                     # TRIPLES
                     # <monarch_assoc>
-                    #   <OBAN:association_has_object_property>
+                    #   <OBAN:association_has_predicate>
                     #       <scv_geno>
                     write_spo(
                         monarch_assoc,
-                        'OBAN:association_has_object_property',
+                        'OBAN:association_has_predicate',
                         scv_geno)
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                     write_spo(rcv_variant_id, scv_geno, rcv_disease_curi)
