@@ -6,7 +6,7 @@
 
 # Variant (Subject) Sequence Types
 
-SVN								SO:0001483
+SNV								SO:0001483
 deletion						SO:0000159
 copy_number_gain				SO:0001742
 copy_number_loss				SO:0001743
@@ -21,11 +21,16 @@ complex_structural_alteration	SO:0001784
 fusion							SO:0001882
 structural_alteration 			SO:0001785
 direct_tandem_duplication		SO:1000039
-sequence_alteration				SO:0001059
-
+sequence_alteration				SO:000105
+# microsatellite				SO:0000289
+# here Matt has overridden the sequence ontology
+microsatellite					GENO:0000847
 short repeat					GENO:0000846
-Microsatellite					GENO:0000847
-protein only					GENO:0000848
+complex heterozygous			GENO:0000402
+variant single locus complement	GENO:0000030
+has_zygosity					GENO:0000608
+haplotype						GENO:0000871
+coding sequence alteration		GENO:0000848
 
 # Association types
 pathogenic						GENO:0000840
