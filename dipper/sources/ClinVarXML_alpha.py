@@ -93,7 +93,7 @@ ARGPARSER.add_argument(
     help='file name to write to')
 
 ARGPARSER.add_argument(
-    '-b', '--blanknode', default=True,
+    '-b', '--blanknode', default=False,
     help='default: True. have blank nodes. False to materialize blank nodes')
 
 # TODO validate IO arguments
