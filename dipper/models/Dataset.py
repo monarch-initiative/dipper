@@ -32,9 +32,8 @@ class Dataset:
         self.identifier = ':' + identifier
         self.version = None
         self.date_issued = None
-        self.date_accessed = None
+        self.date_accessed = datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.citation = set()
-        self.set_access_date()
         self.license = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
         self.graph.addTriple(self.identifier, 'dct:title', title, True)
@@ -151,7 +150,7 @@ class Dataset:
         # set the monarch-generated-version of the resource-version
         # TODO sync this up with the ontology version
         if version_num != self.date_accessed:
-            dipperized_version = ':'+str(self.date_accessed)
+            dipperized_version = ':' + str(self.date_accessed)
             self.graph.addTriple(
                 dipperized_version, 'dct:isVersionOf',
                 self.version)
@@ -162,18 +161,8 @@ class Dataset:
                 dipperized_version, 'dct:issued',
                 self.date_accessed, object_is_literal=True,
                 literal_type="xsd:dateTime")
-
         return
 
-    def set_access_date(self):
-
-        t = datetime.now()
-        t_string = t.strftime("%Y-%m-%d-%H-%M")
-        d = t_string
-        self.date_accessed = d
-        logger.info("Setting date of access to %s", self.date_accessed)
-
-        return
 
     def setFileAccessUrl(self, url, is_object_literal=False):
         self.graph.addTriple(self.identifier, 'dcat:accessURL',
