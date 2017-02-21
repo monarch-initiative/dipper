@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
 '''
-    Isolate subset of ClinVar XML for a TestSet based on Variant IDs
+    Isolate subset of ClinVar XML for a TestSet based on Various IDs
 
 '''
 import os
 import re
-# import sys
+# import yaml
 import gzip
 import logging
 import argparse
@@ -35,16 +35,20 @@ ARGPARSER.add_argument(
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/clinvarxml_alpha',
-    help="path to input file. default: '" + RPATH + '/raw/clinvarxml_alpha' "'")
+    help="input path. default: '" + RPATH + '/raw/clinvarxml_alpha' "'")
 
 # OUTPUT
 ARGPARSER.add_argument(
     '-d', "--destination", default=RPATH + '/raw/clinvarxml_alpha',
-    help='directory to write into. default: "' + RPATH + '/raw/clinvarxml_alpha')
+    help='output path. default: "' + RPATH + '/raw/clinvarxml_alpha')
 
 ARGPARSER.add_argument(
-    '-o', "--output", default=INAME + '_subset.xml',
+    '-o', "--output", default=INAME + '.xml',
     help='file name to write to')
+
+ARGPARSER.add_argument(
+    '-t', "--testfile", default=RPATH + '/raw/test/testid.txt',
+    help='file of IDs to capture')
 
 ARGS = ARGPARSER.parse_args()
 
@@ -52,18 +56,33 @@ FILENAME = ARGS.inputdir + '/' + ARGS.filename
 
 OUTPUT = ARGS.destination + '/' + ARGS.output
 
-# these variant IDs are taken from the original tab file parser
-# I don't know how they were chosen
-VARIANTS = [
-    4288, 4289, 4290, 4291, 4297, 5240, 5241, 5242, 5243, 5244, 5245, 5246,
-    7105, 8877, 9295, 9296, 9297, 9298, 9449, 10072, 10361, 10382, 12528,
-    12529, 12530, 12531, 12532, 14353, 14823, 15872, 17232, 17233, 17234,
-    17235, 17236, 17237, 17238, 17239, 17284, 17285, 17286, 17287, 18179,
-    18180, 18181, 18343, 18363, 31951, 37123, 38562, 94060, 98004, 98005,
-    98006, 98008, 98009, 98194, 98195, 98196, 98197, 98198, 100055, 112885,
-    114372, 119244, 128714, 130558, 130559, 130560, 130561, 132146, 132147,
-    132148, 144375, 146588, 147536, 147814, 147936, 152976, 156327, 161457,
-    162000, 167132]
+VARIANT = []
+DISEASE = []
+GENE = []
+RCV = []
+
+with open(ARGS.testfile) as f:
+    for line in f:
+        line = line.partition('#')[0].strip()  # no comment
+        if line != "":
+            (prfx, lcl_id) = re.split(r':', line, 2)
+            #
+            if prfx == 'ClinVar':
+                RCV.append(lcl_id.strip())
+
+            elif prfx == 'ClinVarVariant':
+                VARIANT.append(lcl_id.strip())
+
+            elif prfx == 'NCBIGene':
+                GENE.append(lcl_id.strip())
+
+            elif prfx == 'OMIM':
+                DISEASE.append(lcl_id.strip())
+
+LOG.warning('RCV has ' + str(len(RCV)))
+LOG.warning('GENE has ' + str(len(GENE)))
+LOG.warning('DISEASE has ' + str(len(DISEASE)))
+LOG.warning('VARIANT has ' + str(len(VARIANT)))
 
 #######################################################
 # main loop over xml
@@ -76,24 +95,58 @@ with gzip.open(FILENAME, 'rt') as fh:
         if event == 'start' and element.tag == 'ReleaseSet':
             ReleaseSet = element
             continue
-        elif  event == 'end' and element.tag == 'ClinVarSet':
+        elif event == 'end' and element.tag == 'ClinVarSet':
             ClinVarSet = element
         else:
             continue
 
+        # Clinvar sets to keep based on the inclusion of some identifier
+        # it could be a ClinVarVariant ID or a RCV or an OMIM or a NCBIGene
+        keep = False
+
         # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/MeasureSet/@ID
         RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
+
+        # rcv_variants are not unique to a single ClinVarSet
         rcv_variant = int(RCVAssertion.find('MeasureSet').get('ID'))
 
-        if rcv_variant not in VARIANTS:
+        rcv_acc = RCVAssertion.find('ClinVarAccession').get('Acc')
+
+        # Disease
+        for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
+            for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
+                for RCV_TraitXRef in RCV_Trait.findall('XRef[@DB="OMIM"]'):
+                    rcv_disease_id = RCV_TraitXRef.get('ID')
+                    if not keep and rcv_disease_id is not None \
+                            and rcv_disease_id in DISEASE:
+                        LOG.warning(rcv_disease_id + ' in DISEASE')
+                        keep = True
+        # Gene
+        # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
+        for RCV_Measure in RCVAssertion.find('MeasureSet').findall('Measure'):
+            RCV_MRel = RCV_Measure.find('MeasureRelationship')
+            if RCV_MRel is not None and not keep:
+                RCV_Gene = RCV_MRel.find('XRef[@DB="Gene"]')
+                if RCV_Gene is not None:
+                    rcv_ncbigene_id = RCV_Gene.get('ID')
+                    if rcv_ncbigene_id is not None \
+                            and rcv_ncbigene_id in GENE:
+                        LOG.warning(rcv_ncbigene_id + ' in GENE')
+                        keep = True
+
+        # check if we caught anything
+        if not (keep or rcv_acc in RCV or rcv_variant in VARIANT):
             ClinVarSet.clear()  # can not clear itself
             ReleaseSet.remove(ClinVarSet)
-            # remove('<ClinVarSet/>')
         else:
-            print(rcv_variant)
+            print(rcv_acc)
 
 print('writing to: ' + OUTPUT)
-# tree.write(OUTPUT, encoding='utf8')
 
+# for people to look at
 with open(OUTPUT, 'wb') as output:
+    output.write(ET.tostring(ReleaseSet))
+
+# to feed to dipper
+with gzip.open(OUTPUT + '.gz', 'wb') as output:
     output.write(ET.tostring(ReleaseSet))
