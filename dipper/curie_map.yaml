@@ -2,7 +2,7 @@
 '': 'https://monarchinitiative.org/'
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'
 
-'MonarchData': 'http://data.monarchinitiative.org/ttl/'
+'MonarchData': 'https://data.monarchinitiative.org/ttl/'
 'MonarchArchive': 'https://archive.monarchinitiative.org/201702/'
 
 # other semantic-web items
