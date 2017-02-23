@@ -509,6 +509,21 @@ class Source:
         """
         The file we output needs to be declared as an ontology,
         including it's version information.
+        ------------------------------------------------------------------------
+
+        TEC: I am not convinced dipper reformating external data as RDF triples
+        makes an OWL ontology (nor that it should be considered a goal).
+
+        Proper ontologies are built by ontologists. Dipper reformats data
+        and anotates/decorates it with a minimal set of carefully arranged terms
+        drawn from from multiple proper ontologies. Which allows the whole
+        (dipper's RDF triples and parent ontologies) to function as a single
+        ontology we can reason over when combined in a store such as SciGraph.
+
+        Including more than the minimal ontological terms in dipper's RDF
+        output constitutes a liability as it allows divergence.
+
+        ------------------------------------------------------------------------
         Further information will be augmented in the dataset object.
         :param version:
         :return:
@@ -516,19 +531,23 @@ class Source:
         """
         # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
         # owl:versionInfo
-        # <http://archive.monarchinitiative.org/ttl/biogrid-YYYY-MM-DD.ttl>
+        # <https://archive.monarchinitiative.org/YYYYMM/ttl/biogrid.ttl>
+
 
         model = Model(graph)
 
-        ontology_file_id = 'MonarchData:'+self.name+".ttl"
+        ontology_file_id = 'MonarchData:' + self.name + ".ttl"
         model.addOntologyDeclaration(ontology_file_id)
 
         # add timestamp as version info
 
         t = datetime.now()
-        t_string = t.strftime("%Y-%m-%d-%H-%M")
-        ontology_version = self.name+'-'+t_string
-        archive_url = 'MonarchArchive:'+ontology_version+'.ttl'
+        t_string = t.strftime("%Y%m")
+        ontology_version = self.name+'-' + t_string
+        # TEC this means the MonarchArchive IRI needs the release updated
+        # maybe extract the version info from there
+
+        archive_url = 'MonarchArchive:' + 'ttl/' + self.name +'.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
 

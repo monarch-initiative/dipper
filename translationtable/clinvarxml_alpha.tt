@@ -3,7 +3,7 @@
 # post octothorp comments and empty lines are ignored
 # only the first column could be unique
 # Items in the the second column
-# 	should appear in the first column of label_term.tt
+# should appear in the first column of label_term.tt
 
 ### RCV variant to gene relationship types type
 #########################################################
@@ -61,13 +61,17 @@ Moderate							uncertain significance
 protective							likely benign
 unknown significance				uncertain significance
 likely pathogenic - adrenal bilateral pheochromocy	likely pathogenic
-Associated with leiomyomas		likely benign
-# Pathologic
+Associated with leiomyomas			likely benign
 
+# this next set are still unmapped
+# Pathologic
+# VSB
+# POLY
+# VOUS
 
 ###  Variant (Subject) Sequence Types
 #############################################################
-single nucleotide variant			SVN
+single nucleotide variant			SNV
 Deletion							deletion
 copy number gain					copy_number_gain
 copy number loss					copy_number_loss
@@ -83,4 +87,8 @@ Structural variant					structural_alteration
 NT expansion						direct_tandem_duplication
 undetermined variant				sequence_alteration
 Inversion							inversion
+Microsatellite						microsatellite
+protein only						coding sequence alteration
+CompoundHeterozygote				variant single locus complement
+
 #############################################################

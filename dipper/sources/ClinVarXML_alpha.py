@@ -93,7 +93,7 @@ ARGPARSER.add_argument(
     help='file name to write to')
 
 ARGPARSER.add_argument(
-    '-b', '--blanknode', default=True,
+    '-b', '--blanknode', default=False,
     help='default: True. have blank nodes. False to materialize blank nodes')
 
 # TODO validate IO arguments
@@ -403,14 +403,22 @@ with gzip.open(FILENAME, 'rt') as fh:
         # Note: it is a "set" but have only seen a half dozen with two,
         # all of type:  copy number gain  SO:0001742
         rcv_variant_id = RCV_MeasureSet.get('ID')
+        rcv_variant_supertype = RCV_MeasureSet.get('Type')
 
-        for RCV_Measure in \
-                RCV_MeasureSet.findall('Measure'):
-            rcv_variant_type = resolve(RCV_Measure.get('Type'))
-            if rcv_variant_type is None:
+        for RCV_Measure in RCV_MeasureSet.findall('Measure'):
+
+            if rcv_variant_supertype == "Variant":
+                rcv_variant_type = resolve(RCV_Measure.get('Type'))
+            elif rcv_variant_supertype == "Haplotype":
+                rcv_variant_type = resolve('haplotype')
+            elif rcv_variant_supertype == "CompoundHeterozygote":
+                rcv_variant_type = resolve('variant single locus complement')
+                # this resolve('has_zygosity') resolve('complex heterozygous')
+            else:
+                rcv_variant_id = None
                 LOG.warning(
-                    rcv_acc + " UNKNOWN VARIANT TYPE " +
-                    RCV_Measure.get('Type'))
+                    rcv_acc + " UNKNOWN VARIANT SUPERTYPE / TYPE \n" +
+                    rcv_variant_supertype + " / " + RCV_Measure.get('Type'))
                 continue
 
             RCV_VariantName = RCV_Measure.find(
@@ -667,6 +675,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(rcv_variant_id, 'rdfs:label', rcv_variant_label)
             # <ClinVarVariant:rcv_variant_id><rdf:type><rcv_variant_type>  .
             write_spo(rcv_variant_id, 'rdf:type', rcv_variant_type)
+            if rcv_variant_supertype == "CompoundHeterozygote":
+                write_spo(
+                   rcv_variant_id,
+                   resolve('has_zygosity'),
+                   resolve('complex heterozygous'))
 
             # <ClinVarVariant:rcv_variant_id><GENO:0000418>
 
@@ -842,11 +855,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # unless we get here (no implicit "uncertain significance")
                     # TRIPLES
                     # <monarch_assoc>
-                    #   <OBAN:association_has_object_property>
+                    #   <OBAN:association_has_predicate>
                     #       <scv_geno>
                     write_spo(
                         monarch_assoc,
-                        'OBAN:association_has_object_property',
+                        'OBAN:association_has_predicate',
                         scv_geno)
                     # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                     write_spo(rcv_variant_id, scv_geno, rcv_disease_curi)
