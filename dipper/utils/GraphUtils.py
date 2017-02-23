@@ -112,6 +112,9 @@ class GraphUtils:
         graph.add((URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
                   RDF['type'], OWL['AnnotationProperty']))
 
+        graph.add((URIRef('https://monarchinitiatve.org/MONARCH_anonymous'),
+                  RDF['type'], OWL['AnnotationProperty']))
+
         return graph
 
     @staticmethod

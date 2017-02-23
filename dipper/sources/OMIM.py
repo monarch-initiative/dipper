@@ -735,7 +735,9 @@ class OMIM(Source):
 
             model.addIndividualToGraph(
                 alt_locus, alt_label, Genotype.genoparts['variant_locus'])
-            geno.addAlleleOfGene(alt_locus, gene_id)
+            geno.addAffectedLocus(alt_locus, gene_id)
+            model.addBlankNodeAnnotation(alt_locus)
+
         else:
             # assume it's already been added
             alt_locus = gene_id

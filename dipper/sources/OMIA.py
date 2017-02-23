@@ -653,6 +653,7 @@ class OMIA(Source):
 
     def _process_phene_gene_row(self, row):
         geno = Genotype(self.g)
+        model = Model(self.g)
         gene_id = self.id_hash['gene'].get(row['gene_id'])
         phene_id = self.id_hash['phene'].get(row['phene_id'])
 
@@ -674,6 +675,8 @@ class OMIA(Source):
         vl = '_:'+re.sub(r'NCBIGene:', '', str(gene_id)) + 'VL'
         geno.addAllele(vl, 'some variant of ' + gene_label)
         geno.addAlleleOfGene(vl, gene_id)
+        geno.addAffectedLocus(vl, gene_id)
+        model.addBlankNodeAnnotation(vl)
         assoc = G2PAssoc(self.g, self.name, vl, phene_id)
         assoc.add_association_to_graph()
 

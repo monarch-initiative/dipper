@@ -145,7 +145,8 @@ class Orphanet(Source):
 
                     model.addIndividualToGraph(alt_locus_id, alt_label,
                                                geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus_id, gene_id)
+                    geno.addAffectedLocus(alt_locus_id, gene_id)
+                    model.addBlankNodeAnnotation(alt_locus_id)
 
                     # consider typing the gain/loss-of-function variants like:
                     # http://sequenceontology.org/browser/current_svn/term/SO:0002054

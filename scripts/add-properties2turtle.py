@@ -101,6 +101,10 @@ def make_property_graph(properties, args):
         (URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
             RDF['type'], OWL['AnnotationProperty']))
 
+    output_graph.add(
+        (URIRef('https://monarchinitiatve.org/MONARCH_anonymous'),
+            RDF['type'], OWL['AnnotationProperty']))
+
     # Check monarch data triple
     data_url = "http://data.monarchinitiative.org/ttl/{0}".format(
         re.sub(r".*/", "", args.input))

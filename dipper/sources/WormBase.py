@@ -779,7 +779,8 @@ class WormBase(Source):
                 # make a variant of the gene
                 vl = '_:'+'-'.join((gene_num, 'unspecified'))
                 vl_label = 'some variant of '+gene_symbol
-                geno.addAlleleOfGene(vl, gene_id)
+                geno.addAffectedLocus(vl, gene_id)
+                model.addBlankNodeAnnotation(vl)
                 animal_id = geno.make_experimental_model_with_genotype(
                     vl, vl_label, worm_taxon, 'worm')
 
