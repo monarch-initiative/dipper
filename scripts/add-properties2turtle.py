@@ -98,11 +98,11 @@ def make_property_graph(properties, args):
 
     # Hardcoded properties
     output_graph.add(
-        (URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
+        (URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'),
             RDF['type'], OWL['AnnotationProperty']))
 
     output_graph.add(
-        (URIRef('https://monarchinitiatve.org/MONARCH_anonymous'),
+        (URIRef('https://monarchinitiative.org/MONARCH_anonymous'),
             RDF['type'], OWL['AnnotationProperty']))
 
     # Check monarch data triple
