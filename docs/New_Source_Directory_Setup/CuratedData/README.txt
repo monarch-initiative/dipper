@@ -1,0 +1,2 @@
+This directory holds 'curated' versions of source data created to facilitate exploration and understanding
+of the soruce data scope, content, and structure (e.g. cleaned, reformatted, subsetted soruce data files).
