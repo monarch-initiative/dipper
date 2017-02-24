@@ -1,0 +1,1 @@
+This directory holds iPyhton Jypyter notebooks or other artifacts for programatic exploration of source data or Dipper-generated rdf data.
