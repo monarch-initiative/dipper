@@ -487,7 +487,8 @@ class CTD(Source):
             self.geno.genoparts['variant_locus'])
         # assume that the label gets added elsewhere
         model.addClassToGraph(gene_id, None)
-        self.geno.addAlleleOfGene(alt_locus, gene_id)
+        self.geno.addAffectedLocus(alt_locus, gene_id)
+        model.addBlankNodeAnnotation(alt_locus)
 
         # not sure if MESH is getting added separately.
         # adding labels here for good measure

@@ -109,7 +109,10 @@ class GraphUtils:
         graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
         # Hardcoded properties
-        graph.add((URIRef('https://monarchinitiatve.org/MONARCH_cliqueLeader'),
+        graph.add((URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'),
+                  RDF['type'], OWL['AnnotationProperty']))
+
+        graph.add((URIRef('https://monarchinitiative.org/MONARCH_anonymous'),
                   RDF['type'], OWL['AnnotationProperty']))
 
         return graph

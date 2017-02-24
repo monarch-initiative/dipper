@@ -542,7 +542,8 @@ class KEGG(Source):
                     alt_label = self.label_hash[alt_locus_id]
                     model.addIndividualToGraph(alt_locus_id, alt_label,
                                                geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus_id, gene_id)
+                    geno.addAffectedLocus(alt_locus_id, gene_id)
+                    model.addBlankNodeAnnotation(alt_locus_id)
                     # Add the disease to gene relationship.
                     assoc = G2PAssoc(g, self.name, alt_locus_id, disease_id, rel)
                     assoc.add_association_to_graph()
@@ -613,7 +614,8 @@ class KEGG(Source):
                     alt_label = self.label_hash[alt_locus_id]
                     model.addIndividualToGraph(alt_locus_id, alt_label,
                                                geno.genoparts['variant_locus'])
-                    geno.addAlleleOfGene(alt_locus_id, kegg_gene_id)
+                    geno.addAffectedLocus(alt_locus_id, kegg_gene_id)
+                    model.addBlankNodeAnnotation(alt_locus_id)
 
                     # Add the disease to gene relationship.
                     rel = model.object_properties['is_marker_for']

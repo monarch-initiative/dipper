@@ -37,6 +37,7 @@ class Model():
         'has_xref': 'OIO:hasDbXref',
         'clique_leader': 'MONARCH:cliqueLeader',
         'inchi_key': 'CHEBI:InChIKey',
+        'is_anonymous': 'MONARCH:anonymous'
     }
 
     object_properties = {
@@ -344,5 +345,18 @@ class Model():
         """
         self.graph.addTriple(
             node_id, self.annotation_properties['clique_leader'], True,
+            object_is_literal=True, literal_type='xsd:boolean')
+        return
+
+    def addBlankNodeAnnotation(self, node_id):
+        """
+        Add an annotation property to the given ```node_id```
+        to be a pseudo blank node.
+        This is a monarchism.
+        :param node_id:
+        :return:
+        """
+        self.graph.addTriple(
+            node_id, self.annotation_properties['is_anonymous'], True,
             object_is_literal=True, literal_type='xsd:boolean')
         return
