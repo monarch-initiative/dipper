@@ -13,11 +13,11 @@
         write the test set back to the raw directory
     ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
 
-    parsing a test set  (producing blank nodes)
-    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
+    parsing a test set  (producing plain blank nodes)
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -s False
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
-    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -bnode=False
+    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
 
     For while we are still required to redundantly conflate the owl properties
     in with the data files.
@@ -93,8 +93,8 @@ ARGPARSER.add_argument(
     help='file name to write to')
 
 ARGPARSER.add_argument(
-    '-b', '--blanknode', default=False,
-    help='default: True. have blank nodes. False to materialize blank nodes')
+    '-s', '--skolemize', default=True,
+    help='default: True. False keeps plain blank nodes  "_:xxx"')
 
 # TODO validate IO arguments
 ARGS = ARGPARSER.parse_args()
@@ -134,7 +134,7 @@ REJECT = open(REJECT, 'a')
 # hardcoding this while my loading from curie_map.yaml is wonky
 CURIEMAP = {
     '':     'https://monarchinitiative.org',
-    '_':    'https://monarchinitiative.org/.well-known/genid/BN',
+    '_':    'https://monarchinitiative.org/.well-known/genid/',
     'MONARCH':  'https://monarchinitiative.org/MONARCH_',
     'MonarchData': 'https://data.monarchinitiative.org/ttl/',
     'dc':   'http://purl.org/dc/elements/1.1/',
@@ -285,6 +285,15 @@ def scv_link(scv_sig, rcv_trip):
     return
 
 
+# return a deterministic digest of input
+# the 'b' is an experiment forcing the first char to be
+# non numeric but valid hex
+# which is in no way required for RDF
+# but can help when using the identifier in other contexts
+def digest_id(wordage):
+    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
+
+
 # Translate external strings found in datasets
 # to specific labels found in ontologies
 TT = {}
@@ -308,8 +317,8 @@ with open(ARGS.labterm) as f:
 
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
-if ARGS.blanknode is True:
-    CURIEMAP['_'] = '_:B'
+if ARGS.skolemize is False:
+    CURIEMAP['_'] = '_:'
 
 
 # composite mapping
@@ -641,8 +650,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # scv_assertcount += 1
 
             scv_id = SCV_Assertion.get('ID')
-            monarch_id = hashlib.sha1(
-                (rcv_id + scv_id).encode('utf-8')).hexdigest()[1:20]
+            monarch_id = digest_id(rcv_id + scv_id)
             monarch_assoc = 'MONARCH:' + monarch_id
 
             ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
@@ -655,12 +663,10 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_submitter = SCV_SubmissionID.get('submitter')
 
             # blank node identifiers
-            _evidence_id = '_:' + hashlib.sha1(
-                (monarch_id + '_evidence').encode('utf-8')).hexdigest()[1:20]
+            _evidence_id = '_:' + digest_id(monarch_id + '_evidence')
             write_spo(_evidence_id, 'rdfs:label', monarch_id + '_evidence')
 
-            _assertion_id = '_:' + hashlib.sha1(
-                (monarch_id + '_assertion').encode('utf-8')).hexdigest()[1:20]
+            _assertion_id = '_:' + digest_id(monarch_id + '_assertion')
             write_spo(_assertion_id, 'rdfs:label', monarch_id + '_assertion')
 
             #                   TRIPLES
@@ -768,16 +774,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # if scv_assert_method in TT:
                     # scv_assert_id = resolve(scv_assert_method)
                     # _assertion_method_id = '_:' + monarch_id + \
-                    #    '_assertionmethod_' + hashlib.sha1(
-                    #        (scv_assert_method).encode(
-                    #            'utf-8')).hexdigest()[1:20]
+                    #    '_assertionmethod_' + digest_id(scv_assert_method)
                     #
                     # changing to not include context till we have IRI
 
                     # blank node, would be be nice if these were only made once
-                    _assertion_method_id = '_:' + hashlib.sha1(
-                        (scv_assert_method + '_assertionmethod').encode(
-                            'utf-8')).hexdigest()[1:20]
+                    _assertion_method_id = '_:' + digest_id(
+                        scv_assert_method + '_assertionmethod')
                     write_spo(
                         _assertion_method_id, 'rdfs:label',
                         scv_assert_method + '_assertionmethod')
@@ -945,9 +948,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = resolve(SCV_OIMT.text)
                         # blank node
-                        _provenance_id = '_:' + hashlib.sha1(
-                            (_evidence_id + scv_evidence_type).
-                            encode('utf-8')).hexdigest()[1:20]
+                        _provenance_id = '_:' + digest_id(
+                            _evidence_id + scv_evidence_type)
+
                         write_spo(
                             _provenance_id, 'rdfs:label',
                             _evidence_id + scv_evidence_type)
@@ -991,10 +994,10 @@ with gzip.open(FILENAME, 'rt') as fh:
 
     # write all remaining triples out
     print('\n'.join(list(releasetriple)), file=OUTTMP)
-
-LOG.warning(
-    'The %i out of %i records not included are written back to \n%s',
-    rjct_cnt, tot_cnt, str(REJECT))
+if rjct_cnt > 0:
+    LOG.warning(
+        'The %i out of %i records not included are written back to \n%s',
+        rjct_cnt, tot_cnt, str(REJECT))
 OUTTMP.close()
 REJECT.close()
 os.replace(OUTFILE, OUTPUT)
