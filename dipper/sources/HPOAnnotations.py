@@ -61,8 +61,8 @@ class HPOAnnotations(Source):
         #   'file': 'phenotype_annotation.tab',
         #    'url': HPOADL + '/negative_phenotype_annotation.tab'},
         'doid': {
-            'file': 'doid-edit.owl',
-            'url': 'https://raw.githubusercontent.com/monarch-initiative/human-disease-ontology/master/src/ontology/doid-edit.owl'
+            'file': 'doid.owl',
+            'url': 'http://purl.obolibrary.org/obo/doid.owl'
         }
     }
 
