@@ -137,10 +137,7 @@ class Bgee(Source):
         g2a_association = Assoc(self.graph, self.name)
         genotype = Genotype(self.graph)
         model = Model(self.graph)
-        if re.match(r'^FBgn', gene_id):
-            gene_curie = "FlyBase:{}".format(gene_id)
-        else:
-            gene_curie = "ENSEMBL:{}".format(gene_id)
+        gene_curie = "ENSEMBL:{}".format(gene_id)
         rank = re.sub(r',', '', rank)
         model.addIndividualToGraph(ind_id=gene_curie, label=None,
                                    ind_type=genotype.genoparts['gene'])
