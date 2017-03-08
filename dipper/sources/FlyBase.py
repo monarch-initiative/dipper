@@ -369,7 +369,7 @@ class FlyBase(PostgreSQLSource):
 
                     tax_label = self.label_hash[taxon]
                     # add the tax in case it hasn't been already
-                    model.addClassToGraph(taxon, tax_label)
+                    model.addClassToGraph(taxon)
                     model.addIndividualToGraph(stock_id, stock_label, taxon)
                     if is_obsolete == 't':
                         model.addDeprecatedIndividual(stock_id)
@@ -607,7 +607,7 @@ class FlyBase(PostgreSQLSource):
                 # deal with the taxonomy
                 # only get taxa for features that are actually used in our set
                 tax_internal_id = self._makeInternalIdentifier(
-                    'organism', organism_id)
+                    'organism', (organism_id + uniquename))
                 if organism_id not in self.checked_organisms:
                     # will get the NCBITax if necessary
                     tax_id = self._get_organism_id(organism_id)
@@ -643,7 +643,7 @@ class FlyBase(PostgreSQLSource):
                             model.addDeprecatedIndividual(feature_id)
                         self.deprecated_features.add(feature_key)
 
-                    model.addClassToGraph(tax_id, tax_label)
+                    model.addClassToGraph(tax_id)
                     if tax_id != tax_internal_id:
                         model.addEquivalentClass(tax_id, tax_internal_id)
 
