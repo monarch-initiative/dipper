@@ -238,9 +238,12 @@ class Orphanet(Source):
 
         return rel_id
 
+    # To check the "GeneType" mappings
+    # xmlstarlet sel -t -v \
+    #   './JDBOR/DisorderList/Disorder//Gene/GeneType/Name'
+    #   en_product6.xml | sort | uniq -c | sort -nr
     @staticmethod
     def _map_gene_type_id(orphanet_type_id):
-        # TODO check if these ids are stable for mapping
         type_id = Genotype.genoparts['sequence_feature']
         id_map = {
             # locus
