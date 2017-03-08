@@ -312,7 +312,7 @@ class OMIA(Source):
                 (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
-        model.addClassToGraph(tax_id, sci_name)
+        model.addClassToGraph(tax_id)
         if com_name != '':
             model.addSynonym(tax_id, com_name)
             self.label_hash[tax_id] = com_name  # for lookup later

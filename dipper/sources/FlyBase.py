@@ -369,7 +369,7 @@ class FlyBase(PostgreSQLSource):
 
                     tax_label = self.label_hash[taxon]
                     # add the tax in case it hasn't been already
-                    model.addClassToGraph(taxon, tax_label)
+                    model.addClassToGraph(taxon)
                     model.addIndividualToGraph(stock_id, stock_label, taxon)
                     if is_obsolete == 't':
                         model.addDeprecatedIndividual(stock_id)
@@ -643,7 +643,7 @@ class FlyBase(PostgreSQLSource):
                             model.addDeprecatedIndividual(feature_id)
                         self.deprecated_features.add(feature_key)
 
-                    model.addClassToGraph(tax_id, tax_label)
+                    model.addClassToGraph(tax_id)
                     if tax_id != tax_internal_id:
                         model.addEquivalentClass(tax_id, tax_internal_id)
 
@@ -1861,10 +1861,11 @@ class FlyBase(PostgreSQLSource):
                         if did == organism_id:
                             continue
                         dlabel = self.label_hash.get(did)
-                        model.addIndividualToGraph(did, dlabel)
-                        model.addSameIndividual(organism_id, did)
+                        model.addXref(organism_id, did)
                         if re.match(r'NCBITaxon', did):
                             model.makeLeader(did)
+                        else:
+                            model.addIndividualToGraph(did, dlabel)
                         line_counter += 1
 
                 if not self.testMode and\
