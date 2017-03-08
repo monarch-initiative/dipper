@@ -112,7 +112,7 @@ class Model():
                              label, object_is_literal=True)
         return
 
-    def addClassToGraph(self, class_id, label,
+    def addClassToGraph(self, class_id, label=None,
                         class_type=None, description=None):
         """
         Any node added to the graph will get at least 3 triples:

@@ -48,6 +48,8 @@ class NCBIGene(Source):
 
     """
 
+    SCIGRAPH_BASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
+
     files = {
         'gene_info': {
             'file': 'gene_info.gz',
@@ -706,9 +708,8 @@ class NCBIGene(Source):
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(logging.ERROR)
 
-        SCIGRAPH_BASE = 'https://scigraph-ontology.monarchinitiative.org/scigraph/graph/'
         isOmimDisease = False
-        url = SCIGRAPH_BASE + gene_id + '.json'
+        url = NCBIGene.SCIGRAPH_BASE + gene_id + '.json'
         response = session.get(url)
         try:
             results = response.json()
