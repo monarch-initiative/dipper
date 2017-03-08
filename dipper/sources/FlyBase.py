@@ -607,7 +607,7 @@ class FlyBase(PostgreSQLSource):
                 # deal with the taxonomy
                 # only get taxa for features that are actually used in our set
                 tax_internal_id = self._makeInternalIdentifier(
-                    'organism', (organism_id + uniquename))
+                    'organism', organism_id)
                 if organism_id not in self.checked_organisms:
                     # will get the NCBITax if necessary
                     tax_id = self._get_organism_id(organism_id)
@@ -1861,10 +1861,11 @@ class FlyBase(PostgreSQLSource):
                         if did == organism_id:
                             continue
                         dlabel = self.label_hash.get(did)
-                        model.addIndividualToGraph(did, dlabel)
-                        model.addSameIndividual(organism_id, did)
+                        model.addXref(organism_id, did)
                         if re.match(r'NCBITaxon', did):
                             model.makeLeader(did)
+                        else:
+                            model.addIndividualToGraph(did, dlabel)
                         line_counter += 1
 
                 if not self.testMode and\
