@@ -137,7 +137,7 @@ def main():
         tax_ids = [int(t) for t in args.taxon.split(',')]
 
     taxa_supported = [
-        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee']
+        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee', 'Ensembl']
 
     formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 

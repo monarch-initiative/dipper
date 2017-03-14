@@ -472,6 +472,39 @@ class Source:
             l = sum(1 for line in f)
         return l
 
+    @staticmethod
+    def get_eco_map(url):
+        """
+        To conver the three column file to
+        a hashmap we join primary and secondary keys,
+        for example
+        IEA	GO_REF:0000002	ECO:0000256
+        IEA	GO_REF:0000003	ECO:0000501
+        IEA	Default	ECO:0000501
+
+        becomes
+        IEA-GO_REF:0000002: ECO:0000256
+        IEA-GO_REF:0000003: ECO:0000501
+        IEA: ECO:0000501
+
+        :return: dict
+        """
+        eco_map = {}
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+
+        for line in response:
+            line = line.decode('utf-8').rstrip()
+            if re.match(r'^#', line):
+                continue
+            (code, go_ref, eco_curie) = line.split('\t')
+            if go_ref != 'Default':
+                eco_map["{}-{}".format(code, go_ref)] = eco_curie
+            else:
+                eco_map[code] = eco_curie
+
+        return eco_map
+
     def settestonly(self, testonly):
         """
         Set that this source should only be processed in testMode
