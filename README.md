@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
 [![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
-[![Join the chat at https://gitter.im/monarch-initiative/dipper](https://badges.gitter.im/monarch-initiative/dipper.svg)](https://gitter.im/monarch-initiative/dipper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # DIPPER
 
@@ -11,10 +10,6 @@ Dipper includes subpackages and modules to create graphical models of this data,
 * Graph utilities to create common relationships using a variety of ontologies
 * Fetchers and Parsers that interface with remote databases and web services
 
-## Beware: This code and resulting TTL is still actively being developed, and is subject to change.
-The code in this repository is still under active development while we are refining the models for variant, 
-genotype, and genotype-to-phenotype association.  This means that the graph patterns we are employing 
-between the different entities is in flux.  **We will indicate here when the modeling has generally stabilized.**
 
 * The dipper main wraps all of the source parsers, enabling users to specify one or more sources to process. 
 The general strategy is that there is one class per data source.  We define the files to be fetched,
@@ -119,6 +114,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * OMIA (non-laboratory animal phenotypes)
     * Wormbase (genes, alleles, phenotypes)
     * FlyBase (genotype, phenotype)
+    * Reactome (gene-pathway associations)
     * MyDrug (drug-outcome associations)
 
    ```

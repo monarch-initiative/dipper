@@ -607,7 +607,7 @@ class AnimalQTLdb(Source):
                     model.addEquivalentClass(ato_id, vto_id)
                 if re.match(r'LPT:.*', pto_id):
                     model.addClassToGraph(pto_id, None)
-                    model.addEquivalentClass(ato_id, pto_id)
+                    model.addXref(ato_id, pto_id)
                 if re.match(r'CMO:.*', cmo_id):
                     model.addClassToGraph(cmo_id, None)
                     model.addXref(ato_id, cmo_id)

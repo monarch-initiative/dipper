@@ -121,12 +121,12 @@ class Bgee(Source):
         for gene, group in gene_groups:
             for index, row in group.iterrows():
                 self._add_gene_anatomy_association(
-                    row['Ensembl gene ID'], row['gene name'],
-                    row['anatomical entity ID'], row['rank score']
+                    row['Ensembl gene ID'], row['anatomical entity ID'],
+                    row['rank score']
                 )
         return
 
-    def _add_gene_anatomy_association(self, gene_id, gene_label, anatomy_curie, rank):
+    def _add_gene_anatomy_association(self, gene_id, anatomy_curie, rank):
         """
         :param gene_id: str Non curified ID
         :param gene_label: str Gene symbol
@@ -138,8 +138,9 @@ class Bgee(Source):
         genotype = Genotype(self.graph)
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
-        rank = re.sub(r'\,', '', rank)
-        model.addIndividualToGraph(gene_curie, gene_label, genotype.genoparts['gene'])
+        rank = re.sub(r',', '', rank)
+        model.addIndividualToGraph(ind_id=gene_curie, label=None,
+                                   ind_type=genotype.genoparts['gene'])
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
         g2a_association.rel = Assoc.object_properties['expressed_in']
