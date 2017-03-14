@@ -118,7 +118,7 @@ class Ensembl(Source):
         # basic stuff for ensembl ids
         cols_to_fetch = [
             "ensembl_gene_id", "external_gene_name", "description",
-            "gene_biotype", "entrezgene"]
+            "gene_biotype", "entrezgene", "ensembl_peptide_id"]
 
         if taxid == '9606':
             cols_to_fetch.append("hgnc_id")
@@ -193,12 +193,12 @@ class Ensembl(Source):
                     logger.error("Data error for file %s", raw)
                     return
                 (ensembl_gene_id, external_gene_name, description,
-                 gene_biotype, entrezgene) = row[0:5]
+                 gene_biotype, entrezgene, peptide_id) = row[0:6]
 
                 # in the case of human genes, we also get the hgnc id,
                 # and is the last col
                 if taxid == '9606':
-                    hgnc_id = row[5]
+                    hgnc_id = row[6]
                 else:
                     hgnc_id = None
 
@@ -207,10 +207,11 @@ class Ensembl(Source):
                     continue
 
                 line_counter += 1
-                gene_id = 'ENSEMBL:'+ensembl_gene_id
+                gene_id = 'ENSEMBL:' + ensembl_gene_id
+                peptide_id = 'ENSEMBL:' + peptide_id
                 if description == '':
                     description = None
-                gene_type_id = self._get_gene_type(gene_biotype)
+                # gene_type_id = self._get_gene_type(gene_biotype)
                 gene_type_id = None
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
@@ -220,6 +221,8 @@ class Ensembl(Source):
                 if hgnc_id is not None and hgnc_id != '':
                     model.addEquivalentClass(gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
+                if peptide_id != '':
+                    geno.addGeneProduct(gene_id, peptide_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:

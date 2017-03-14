@@ -15,14 +15,14 @@ class Reactome(Source):
     Reactome is a free, open-source, curated and peer reviewed pathway database.
     (http://reactome.org/)
     """
-    PANTHER_BASE = "http://www.reactome.org/download/current/"
+    REACTOME_BASE = "http://www.reactome.org/download/current/"
     files = {
         'ensembl2pathway': {
             'file': 'Ensembl2Reactome.txt',
-            'url': PANTHER_BASE+'Ensembl2Reactome.txt'},
+            'url': REACTOME_BASE+'Ensembl2Reactome.txt'},
     }
     map_files = {
-        'eco_map': '../../resources/eco_map.yaml',
+        'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -68,7 +68,7 @@ class Reactome(Source):
         :param limit: limit (int, optional) limit the number of rows processed
         :return: None
         """
-        eco_map = self._get_eco_map()
+        eco_map = Reactome.get_eco_map(Reactome.map_files['eco_map'])
         count = 0
         with open(file, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
@@ -83,22 +83,6 @@ class Reactome(Source):
                     break
 
         return
-
-    def _get_eco_map(self):
-        """
-        :return: dict
-        """
-        eco_map = {}
-        if os.path.exists(os.path.join(os.path.dirname(__file__),
-                                       self.map_files['eco_map'])):
-            map_file = open(os.path.join(
-                os.path.dirname(__file__), self.map_files['eco_map']), 'r')
-            eco_map = yaml.load(map_file)
-            map_file.close()
-        else:
-            logger.warn("IMPC map file not found")
-
-        return eco_map
 
     def _add_gene_pathway_association(
             self, eco_map, gene, pathway_id, pathway_label, go_ecode):
