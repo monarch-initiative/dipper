@@ -1,1 +1,0 @@
-This directory holds artifacts that specify or document the target data model for the source.
