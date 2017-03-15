@@ -80,7 +80,7 @@ class GraphUtils:
                 ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
             except SAXParseException as e:
                 logger.error(e)
-                logger.error('Retrying: ' + ontology)
+                logger.error('Retrying as turtle: ' + ontology)
                 ontology_graph.parse(ontology, format="turtle")
             except OSError as e:  # URLError:
                 # simple retry
