@@ -1,0 +1,1 @@
+This directory holds output test datasets for QA - typically a specific subset of the full transformed dataset that includes a diverse colelction of records. 

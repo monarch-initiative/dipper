@@ -1,0 +1,679 @@
+@prefix ns1: <http://tripod.nih.gov/ginas/app/substance#> .
+@prefix ns2: <http://purl.obolibrary.org/obo/chebi#> .
+@prefix ns3: <http://www.geneontology.org/formats/oboInOwl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://data.monarchinitiative.org/ttl/ginas.ttl> a <http://www.w3.org/2002/07/owl#Ontology> .
+
+ns2:InChIKey a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+<http://purl.org/dc/elements/1.1/source> a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ACTIVE_CONSTITUENT_ALWAYS_PRESENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ACTIVE_CONSTITUENT_ALWAYS_PRESENT--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ACTIVE_ENANTIOMER--RACEMATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ACTIVE_ISOMER--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ACTIVE_MOIETY a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:AGONIST--TARGET a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:BASIS_OF_STRENGTH a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:BIOSIMILAR--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONJUGATE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONJUGATE--TOXIN a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONJUGATED_ANTIGEN--CONJUGATE_COMPONENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONJUGATE_COMPONENT--CONJUGATED_ANTIGEN a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONSTITUENT_ALWAYS_PRESENT--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:CONSTITUENT_MAY_BE_PRESENT--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:DEGRADENT--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:DERIVATIVE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:DIASTEREOISOMER--DIASTEREOISOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:DIASTEREOISOMER--EPIMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:DRUG_INTERACTION--FOOD a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ENANTIOMER--ENANTIOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:ENANTIOMER--RACEMATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:EPIMER--DIASTEREOISOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:EXCRETED_UNCHANGED a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:FATTY_ACID--LIPID a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:FOOD--DRUG_INTERACTION a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:IMPURITY--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INACTIVE_ISOMER--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INDUCER--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INDUCER--TRANSPORTER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INFRASPECIFIC--PARENT_ORGANISM a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INHIBITOR--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INHIBITOR--TARGET a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:INHIBITOR--TRANSPORTER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:IONIC_MOIETY a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:LABELED--NON-LABELED a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:LESS_ACTIVE_ISOMER--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:LIPID--FATTY_ACID a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--INDUCER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--INHIBITOR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--NON-INDUCER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--NON-INHIBITOR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--NON-SUBSTRATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLIC_ENZYME--SUBSTRATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_ACTIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_ACTIVE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_ACTIVE--PRODRUG a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_INACTIVE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_LESS_ACTIVE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:METABOLITE_TOXIC--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:MOLECULAR_FRAGMENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:MORE_ACTIVE_ISOMER--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:NON-INDUCER--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:NON-INHIBITOR--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:NON-LABELED--LABELED a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:NON-SUBSTRATE--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:NON-SUBSTRATE--TRANSPORTER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--ACTIVE_CONSTITUENT_ALWAYS_PRESENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--ACTIVE_ISOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--BIOSIMILAR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--CONJUGATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--CONSTITUENT_ALWAYS_PRESENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--CONSTITUENT_MAY_BE_PRESENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--DEGRADENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--DERIVATIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--IMPURITY a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--LESS_ACTIVE_ISOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--METABOLITE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--METABOLITE_ACTIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--METABOLITE_INACTIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--METABOLITE_LESS_ACTIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--METABOLITE_TOXIC a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--MORE_ACTIVE_ISOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--POSSIBLE_ACTIVE_CONSTITUENT_ALWAYS_PRESENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT--SALT_SOLVATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT_ORGANISM--INFRASPECIFIC a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PARENT_ORGANISM--PART_FRACTION a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PART_FRACTION--PARENT_ORGANISM a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:POSSIBLE_ACTIVE_CONSTITUENT_ALWAYS_PRESENT--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:PRODRUG--METABOLITE_ACTIVE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:RACEMATE--ACTIVE_ENANTIOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:RACEMATE--ENANTIOMER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:RADIOISOTOPE--RADIOISOTOPE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SALT_SOLVATE--PARENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SALT_SOLVATE--SALT_SOLVATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SPECIFIED_SUBSTANCE--_ a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SUBSTANCE--SUB_CONCEPT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SUBSTANCE_ASSAY_DEFINED_AMOUNT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SUBSTRATE--METABOLIC_ENZYME a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SUBSTRATE--TRANSPORTER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:SUB_CONCEPT--SUBSTANCE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TARGET--INHIBITOR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TOXIN--CONJUGATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TRANSPORTER--INDUCER a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TRANSPORTER--INHIBITOR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TRANSPORTER--NON-INHIBITOR a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TRANSPORTER--NON-SUBSTRATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:TRANSPORTER--SUBSTRATE a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:UNSPECIFIED_INGREDIENT a <http://www.w3.org/2002/07/owl#ObjectProperty> .
+
+ns1:code_references a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:mixture_component_substance a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:mixture_component_type a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:reference_citation a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:reference_uuid a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:structure_charge a <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:structure_formula a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:substanceClass a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns1:uuid a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+ns3:hasdbxref a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+rdfs:label a <http://www.w3.org/2002/07/owl#AnnotationProperty>,
+        <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+
+<https://fdasis.nlm.nih.gov/srs/unii/14104CR85Q> rdfs:label "12-HPETE, (R)-" ;
+    ns2:InChIKey "ZIOZYRSDNLNNNJ-ZYBDYUKJSA-N" ;
+    ns1:code_references <http://127.0.0.1/27aaa975-3184-43eb-99f6-7e41b298efb6> ;
+    ns1:reference_uuid <http://127.0.0.1/0ca80f9c-b067-4f84-8dbc-ab0c55b07bae>,
+        <http://127.0.0.1/164fef44-81ed-402d-bdfe-696125b8d62b>,
+        <http://127.0.0.1/27aaa975-3184-43eb-99f6-7e41b298efb6>,
+        <http://127.0.0.1/97590a58-a67f-4067-8942-ddda6e359e3e>,
+        <http://127.0.0.1/e1826598-0981-4404-acf9-6bd10e200097> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "1" ;
+    ns1:structure_ezCenters "4" ;
+    ns1:structure_formula "C20H32O4" ;
+    ns1:structure_mwt "336.4657" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "1" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "3ae96f81-5feb-4bd4-870f-3d533a388b0b" ;
+    ns3:hasdbxref <http://www.cas-no.org/126873-49-2> .
+
+<https://fdasis.nlm.nih.gov/srs/unii/216KS77J4M> rdfs:label "SODIUM OLEOYL ISETHIONATE" ;
+    ns2:InChIKey "MCFLGJDKSROECH-KVVVOXFISA-M" ;
+    ns1:code_references <http://127.0.0.1/1622cc16-37c1-4030-ae6a-83611e52403b> ;
+    ns1:reference_uuid <http://127.0.0.1/1622cc16-37c1-4030-ae6a-83611e52403b>,
+        <http://127.0.0.1/3298ea6b-3abc-4b54-a253-cbc7b99d8d92>,
+        <http://127.0.0.1/3cd27127-a511-4dcc-aaeb-6bea213f9cc6>,
+        <http://127.0.0.1/693c425a-3ba9-4e50-ae93-282cba10fef6>,
+        <http://127.0.0.1/73c27466-890c-4f18-b8fe-1dba334685d0>,
+        <http://127.0.0.1/cc911d6e-8ed9-4e42-98d2-b81c9f62bb19> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "1" ;
+    ns1:structure_formula "C20H37NaO5S.Na.C20H37O5S" ;
+    ns1:structure_mwt "412.56" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "0" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "7d023e25-346a-426c-85cc-b57ef82647c8" ;
+    ns3:hasdbxref <http://www.cas-no.org/142-15-4>,
+        "ECHA (EC/EINECS):205-522-4",
+        "EPA PESTICIDE CODE:47703" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/5QTR54Z0E1> rdfs:label "ROTIGOTINE, (+/-)-" ;
+    ns2:InChIKey "KFQYTPMOWPVWEJ-UHFFFAOYSA-N" ;
+    ns1:code_references <http://127.0.0.1/283e8244-8d7f-4ab7-8bae-9f5f6372f5af> ;
+    ns1:reference_uuid <http://127.0.0.1/0415ad67-6bbc-4b66-bafb-97adfc096317>,
+        <http://127.0.0.1/283e8244-8d7f-4ab7-8bae-9f5f6372f5af>,
+        <http://127.0.0.1/3d8a7dbc-0bf8-4c3e-a9ae-c46da8e0a9d7>,
+        <http://127.0.0.1/4d808d50-2767-49a1-8399-c9052012cb3d>,
+        <http://127.0.0.1/8d3ea144-7c5e-42de-b40d-78aa8998353d>,
+        <http://127.0.0.1/cd982296-5144-4521-824a-31f1d0d661d6>,
+        <http://127.0.0.1/efaebe9d-34e7-4c9a-8d4e-2c254c544db8>,
+        <http://127.0.0.1/f6b96447-ce4f-49b1-bde3-ed3cb20bc7f6> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C19H25NOS" ;
+    ns1:structure_mwt "315.473" ;
+    ns1:structure_opticalActivity "( + / - )" ;
+    ns1:structure_stereoCenters "1" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "8ecabebc-a900-4d0f-ab72-d0b23ee27541" ;
+    ns3:hasdbxref <http://www.cas-no.org/92206-54-7>,
+        "DRUG BANK:DB05271",
+        "MERCK INDEX:M9674" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/7C989JK2XB> rdfs:label "FLUTHIACET-METHYL" ;
+    ns2:InChIKey "ZCNQYNHDVRPZIH-JXAWBTAJSA-N" ;
+    ns1:code_references <http://127.0.0.1/89a5d872-fc78-4748-b594-743227f0884d> ;
+    ns1:reference_uuid <http://127.0.0.1/2c5cf595-e4ac-44df-b8ff-41d3c122df1d>,
+        <http://127.0.0.1/4b355b41-c8cd-42a6-a442-0ea43adfc11c>,
+        <http://127.0.0.1/6084ef98-3f6f-499f-afea-8be2469fe800>,
+        <http://127.0.0.1/89a5d872-fc78-4748-b594-743227f0884d>,
+        <http://127.0.0.1/91a9157a-8857-4286-b286-dc06a891f95b>,
+        <http://127.0.0.1/aaf76382-e653-4eb0-855e-10d6e7def6a0>,
+        <http://127.0.0.1/aeefb23c-904a-4205-8de0-017893f679aa>,
+        <http://127.0.0.1/d7190182-cc1d-4da9-937b-7cbe9ce3d215>,
+        <http://127.0.0.1/de3ef35d-926f-41c1-bf92-a556c5f61d61>,
+        <http://127.0.0.1/e7edd38d-0b8f-4d5a-b7bf-9fbbf4fe032f>,
+        <http://127.0.0.1/f2681feb-6410-4101-824e-33c68d80c0fa>,
+        <http://127.0.0.1/f62b5854-9fb5-4c85-8363-5e0a72bd92af>,
+        <http://127.0.0.1/ff0d8338-70c2-431b-a574-a2e57d16565e>,
+        <http://127.0.0.1/ff7cedba-927b-45b4-9b50-9aac00a38866> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "1" ;
+    ns1:structure_formula "C15H15ClFN3O3S2" ;
+    ns1:structure_mwt "403.879" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "0" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "a425ddae-6248-4f63-b3bd-c18a34ca51f2" ;
+    ns3:hasdbxref <http://www.cas-no.org/117337-19-6>,
+        "EPA PESTICIDE CODE:108803",
+        "MERCK INDEX:M5509" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/8G74PB649I> rdfs:label "PIGMENT RED 68" ;
+    ns2:InChIKey "QDORUQCHIMQWMJ-ZELMBCLWSA-J" ;
+    ns1:code_references <http://127.0.0.1/4a4f9612-d115-46b1-8785-fc04b9b7227d> ;
+    ns1:reference_uuid <http://127.0.0.1/1a0223ff-d718-44f2-82a7-73e6d1a87dd9>,
+        <http://127.0.0.1/27fc6058-a8ef-4493-8fe9-98e5d7d37699>,
+        <http://127.0.0.1/4a4f9612-d115-46b1-8785-fc04b9b7227d>,
+        <http://127.0.0.1/50c84b20-5be0-415d-a75a-18546e4f0c63>,
+        <http://127.0.0.1/66640016-8a90-43a6-b11b-8c57e5147aaf>,
+        <http://127.0.0.1/80ac6a3b-a5db-4907-9d7b-d4355974a967>,
+        <http://127.0.0.1/bda9fb14-61c1-449b-9671-a424636044dd>,
+        <http://127.0.0.1/f135ae0c-ca21-4a5a-820f-fd0966c51bf2> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "2" ;
+    ns1:structure_formula "C34H18CaCl2N4Na2O12S2.Na.Na.Ca.C17H9ClN2O6S.C17H9ClN2O6S" ;
+    ns1:structure_mwt "895.62" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "0" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "74acf96a-dce2-483d-8f60-ccc937486f89" ;
+    ns3:hasdbxref <http://www.cas-no.org/5850-80-6>,
+        "ECHA (EC/EINECS):227-456-5" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/D98432ZJPA> rdfs:label "ALUMINUM BUTYLATE" ;
+    ns2:InChIKey "MYWQGROTKMBNKN-UHFFFAOYSA-N" ;
+    ns1:PARENT--SALT_SOLVATE <https://fdasis.nlm.nih.gov/srs/unii/8PJ61P6TS3> ;
+    ns1:code_references <http://127.0.0.1/7aa1f112-b596-4faf-8d82-4a3882541bdb> ;
+    ns1:reference_uuid <http://127.0.0.1/24e5947d-371d-4974-9c3c-52c736b17664>,
+        <http://127.0.0.1/560e92ff-fdf0-4d88-8531-d2f6b1fe2a40>,
+        <http://127.0.0.1/7aa1f112-b596-4faf-8d82-4a3882541bdb>,
+        <http://127.0.0.1/7cf749c6-c1e1-40c7-a505-f6f522f358d7>,
+        <http://127.0.0.1/b2fe0f47-0033-4ca3-8733-7c8f7dbc32c9>,
+        <http://127.0.0.1/f6602ed2-dcd8-43f0-b2c6-3f23ac941c76> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C12H27AlO3.Al.C4H9O.C4H9O.C4H9O" ;
+    ns1:structure_mwt "246.3225" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "0" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "417b7c82-8595-451e-b16c-dd5fe7f1295b" ;
+    ns3:hasdbxref <http://www.cas-no.org/3085-30-1>,
+        "ECHA (EC/EINECS):221-394-2" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/I21MX86B4X> rdfs:label "PYRIMIDIFEN" ;
+    ns2:InChIKey "ITKAIUGKVKDENI-UHFFFAOYSA-N" ;
+    ns1:code_references <http://127.0.0.1/49259eb6-bc1e-4137-ac2b-623a0ae89f96> ;
+    ns1:reference_uuid <http://127.0.0.1/0b7f748b-0530-44f2-847a-767afe75c1b6>,
+        <http://127.0.0.1/49259eb6-bc1e-4137-ac2b-623a0ae89f96>,
+        <http://127.0.0.1/4ee8751f-6215-4c31-8ff2-2a6cb9c7adbe>,
+        <http://127.0.0.1/5a497612-8b0c-4166-80ee-d01a05d49ba5>,
+        <http://127.0.0.1/bf04a1b4-5cf1-4640-8236-b63217b63e06>,
+        <http://127.0.0.1/c3a02da4-0048-4a28-8f3c-8e0e2516410e>,
+        <http://127.0.0.1/e41d9f8f-599e-4fa8-925e-825aadcc96bd> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "0" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C20H28ClN3O2" ;
+    ns1:structure_mwt "377.908" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "0" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "5c1953ab-1868-4393-b5f0-fe8af6895ac3" ;
+    ns3:hasdbxref <http://purl.obolibrary.org/obo/MESH_C476509>,
+        <http://www.cas-no.org/105779-78-0> .
+
+<https://fdasis.nlm.nih.gov/srs/unii/J9DFR4IT9Z> rdfs:label "HEXESTROL DICAPRYLATE" ;
+    ns2:InChIKey "JZMCTYYCJNIOBO-MEKGRNQZSA-N" ;
+    ns1:ACTIVE_MOIETY <https://fdasis.nlm.nih.gov/srs/unii/10BI795R7D> ;
+    ns1:code_references <http://127.0.0.1/335b77e2-474a-414e-beb9-8df6bac47ca4> ;
+    ns1:reference_uuid <http://127.0.0.1/335b77e2-474a-414e-beb9-8df6bac47ca4>,
+        <http://127.0.0.1/cebb6237-7d81-45f4-bf67-7eae5fbd9721>,
+        <http://127.0.0.1/d60767c5-5202-495d-884b-72b270cfb688>,
+        <http://127.0.0.1/e8609512-600d-4a78-9b7e-6dcc978e8d7b>,
+        <http://127.0.0.1/f43f6d50-ce6d-48cf-8ca4-72299f310621>,
+        <http://127.0.0.1/f47be464-3570-42a7-8a99-e36bf5b3f124> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "2" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C34H50O4" ;
+    ns1:structure_mwt "522.7584" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "2" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "d42b43a0-0200-4cfc-8cfc-1432a90f8313" ;
+    ns3:hasdbxref <http://www.cas-no.org/20305-51-5> .
+
+<https://fdasis.nlm.nih.gov/srs/unii/M9C36LC10E> rdfs:label "SALVIA OFFICINALIS WHOLE" ;
+    ns1:PART_FRACTION--PARENT_ORGANISM <https://fdasis.nlm.nih.gov/srs/unii/065C5D077J>,
+        <https://fdasis.nlm.nih.gov/srs/unii/236QY0A1BL>,
+        <https://fdasis.nlm.nih.gov/srs/unii/48JCS720FN>,
+        <https://fdasis.nlm.nih.gov/srs/unii/U27K0H1H2O> ;
+    ns1:code_references <http://127.0.0.1/a8af8262-6acc-4186-b490-429d14b454f6> ;
+    ns1:reference_uuid <http://127.0.0.1/0063203b-bbbf-4340-8629-ed9b5d74157f>,
+        <http://127.0.0.1/5f770010-62c6-48e3-89e4-bab86133c15b>,
+        <http://127.0.0.1/6093b8ea-a293-4bae-b52f-fd8660468e68>,
+        <http://127.0.0.1/630ad7f8-f146-406b-9d6c-de583df3fd78>,
+        <http://127.0.0.1/7d29451d-ba9f-4d56-9414-e918b18234f7>,
+        <http://127.0.0.1/8c8b2c43-fd08-48c8-9646-99e6758ed6ad>,
+        <http://127.0.0.1/a8af8262-6acc-4186-b490-429d14b454f6>,
+        <http://127.0.0.1/b137315d-1023-457d-b244-a1a32314c773>,
+        <http://127.0.0.1/c0c7147f-4ec8-42f0-994a-4e76ba1ba937>,
+        <http://127.0.0.1/cdf89761-a95a-490e-a47e-fcbc61471f7e>,
+        <http://127.0.0.1/e5df0695-6fe7-4fe9-8bd6-ce9b43e2304e>,
+        <http://127.0.0.1/ea9efbed-fa10-435f-bfb2-e054800b35b0>,
+        <http://127.0.0.1/ee04a0f8-95d9-4808-ad42-53933ba6e203>,
+        <http://127.0.0.1/f68f4cda-7872-47c7-af2e-44f03c4eea0a> ;
+    ns1:substanceClass "structurallyDiverse" ;
+    ns1:uuid "80008af4-9f56-462a-88bc-5a5b3ee0144b" ;
+    ns3:hasdbxref <https://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&code=C72432>,
+        "GRIN:32950",
+        "ITIS:32729",
+        "NCBI TAXONOMY:38868",
+        "USDA PLANTS:SAOF2" .
+
+<https://fdasis.nlm.nih.gov/srs/unii/SCC2RK476A> rdfs:label "ESOMEPRAZOLE STRONTIUM ANHYDROUS" ;
+    ns2:InChIKey "FEVPVZSYBDUVGY-YPPDDXJESA-N" ;
+    ns1:PARENT--SALT_SOLVATE <https://fdasis.nlm.nih.gov/srs/unii/37077S2C93> ;
+    ns1:code_references <http://127.0.0.1/e4e5b151-19ee-4f5d-9194-998861a02f6b> ;
+    ns1:reference_uuid <http://127.0.0.1/707fbc42-e5f3-4502-b594-d80c252774db>,
+        <http://127.0.0.1/8c6c8090-b988-4416-8e5f-0e0f43799567>,
+        <http://127.0.0.1/a777c34f-25d1-4703-9d29-436352582943>,
+        <http://127.0.0.1/a8554335-9902-4fea-ad50-fbaa228a25dd>,
+        <http://127.0.0.1/d3e00e77-3fad-4861-8f1d-670f37132645>,
+        <http://127.0.0.1/e4e5b151-19ee-4f5d-9194-998861a02f6b> ;
+    ns1:structure_charge "2" ;
+    ns1:structure_definedStereo "2" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C34H38N6O6S2Sr.Sr.C17H19N3O3S.C17H19N3O3S" ;
+    ns1:structure_mwt "778.45" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "2" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "b28dcef8-7b96-4987-935b-6b8f762c016b" ;
+    ns3:hasdbxref <http://www.cas-no.org/914613-86-8> .
+
+<https://fdasis.nlm.nih.gov/srs/unii/YZT97E2Q3F> rdfs:label "CORTISTATIN D" ;
+    ns2:InChIKey "VSVYWUPPYDXESC-OMXDIREYSA-N" ;
+    ns1:code_references <http://127.0.0.1/42b03139-8e59-44f6-86e2-950432958525> ;
+    ns1:reference_uuid <http://127.0.0.1/42b03139-8e59-44f6-86e2-950432958525>,
+        <http://127.0.0.1/8df65151-2463-4e5f-b41d-21c2da8051a8>,
+        <http://127.0.0.1/c596675f-11bb-443a-ae00-58878b6e9951>,
+        <http://127.0.0.1/fd2d1f03-bb20-4418-8c2e-209680085464> ;
+    ns1:structure_charge "0" ;
+    ns1:structure_definedStereo "8" ;
+    ns1:structure_ezCenters "0" ;
+    ns1:structure_formula "C30H34N2O5" ;
+    ns1:structure_mwt "502.6014" ;
+    ns1:structure_opticalActivity "UNSPECIFIED" ;
+    ns1:structure_stereoCenters "8" ;
+    ns1:substanceClass "chemical" ;
+    ns1:uuid "169c1e69-74b3-4ee4-bc48-bc2b7980b629" ;
+    ns3:hasdbxref <http://www.cas-no.org/882976-98-9> .
+
+<https://monarchinitiative.org/MONARCH_anonymous> a <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+
+<https://monarchinitiative.org/MONARCH_cliqueLeader> a <http://www.w3.org/2002/07/owl#AnnotationProperty> .
+
+<http://127.0.0.1/0063203b-bbbf-4340-8629-ed9b5d74157f> ns1:reference_citation "Generated from SRS LOCATOR" .
+
+<http://127.0.0.1/0415ad67-6bbc-4b66-bafb-97adfc096317> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/0b7f748b-0530-44f2-847a-767afe75c1b6> ns1:reference_citation "ALANWOOD.NET 2010:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/0ca80f9c-b067-4f84-8dbc-ab0c55b07bae> ns1:reference_citation "SRS import [14104CR85Q]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=14104CR85Q>" .
+
+<http://127.0.0.1/164fef44-81ed-402d-bdfe-696125b8d62b> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/1a0223ff-d718-44f2-82a7-73e6d1a87dd9> ns1:reference_citation "CI 15525 [INCI]" .
+
+<http://127.0.0.1/24e5947d-371d-4974-9c3c-52c736b17664> ns1:reference_citation "CHEMID:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/27fc6058-a8ef-4493-8fe9-98e5d7d37699> ns1:reference_citation "CHEMID  2011" .
+
+<http://127.0.0.1/2c5cf595-e4ac-44df-b8ff-41d3c122df1d> ns1:reference_citation "ISO:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/3298ea6b-3abc-4b54-a253-cbc7b99d8d92> ns1:reference_citation "SRS import [216KS77J4M]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=216KS77J4M>" .
+
+<http://127.0.0.1/3cd27127-a511-4dcc-aaeb-6bea213f9cc6> ns1:reference_citation "SODIUM OLEOYL ISETHIONATE [INCI]" .
+
+<http://127.0.0.1/3d8a7dbc-0bf8-4c3e-a9ae-c46da8e0a9d7> ns1:reference_citation "ROTIGOTINE (+/-)-FORM [MI]" .
+
+<http://127.0.0.1/4b355b41-c8cd-42a6-a442-0ea43adfc11c> ns1:reference_citation "FLUTHIACET-METHYL [MI]" .
+
+<http://127.0.0.1/4d808d50-2767-49a1-8399-c9052012cb3d> ns1:reference_citation "SRS import [5QTR54Z0E1]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=5QTR54Z0E1>" .
+
+<http://127.0.0.1/4ee8751f-6215-4c31-8ff2-2a6cb9c7adbe> ns1:reference_citation "CHEMID  2010" .
+
+<http://127.0.0.1/50c84b20-5be0-415d-a75a-18546e4f0c63> ns1:reference_citation "PCPC-DB:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/560e92ff-fdf0-4d88-8531-d2f6b1fe2a40> ns1:reference_citation "SRS import [D98432ZJPA]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=D98432ZJPA>" .
+
+<http://127.0.0.1/5a497612-8b0c-4166-80ee-d01a05d49ba5> ns1:reference_citation "http://www.alanwood.net/pesticides/pyrimidifen.html:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://www.alanwood.net/pesticides/pyrimidifen.html>" .
+
+<http://127.0.0.1/5f770010-62c6-48e3-89e4-bab86133c15b> ns1:reference_citation "3952145795" .
+
+<http://127.0.0.1/6084ef98-3f6f-499f-afea-8be2469fe800> ns1:reference_citation "MERCK:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/6093b8ea-a293-4bae-b52f-fd8660468e68> ns1:reference_citation "FDA_SRS 2011:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/630ad7f8-f146-406b-9d6c-de583df3fd78> ns1:reference_citation "SAGE [HOC]" .
+
+<http://127.0.0.1/66640016-8a90-43a6-b11b-8c57e5147aaf> ns1:reference_citation "PIGMENT RED 68 [INCI]" .
+
+<http://127.0.0.1/693c425a-3ba9-4e50-ae93-282cba10fef6> ns1:reference_citation "PCPC-DB:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/707fbc42-e5f3-4502-b594-d80c252774db> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/73c27466-890c-4f18-b8fe-1dba334685d0> ns1:reference_citation "PCPC:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/7cf749c6-c1e1-40c7-a505-f6f522f358d7> ns1:reference_citation "TOX 21:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/7d29451d-ba9f-4d56-9414-e918b18234f7> ns1:reference_citation "Catalog of Life 2011" .
+
+<http://127.0.0.1/80ac6a3b-a5db-4907-9d7b-d4355974a967> ns1:reference_citation "SRS import [8G74PB649I]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=8G74PB649I>" .
+
+<http://127.0.0.1/8c6c8090-b988-4416-8e5f-0e0f43799567> ns1:reference_citation "USAN COUN 2011:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/8c8b2c43-fd08-48c8-9646-99e6758ed6ad> ns1:reference_citation "Generated from SRS LOCATOR" .
+
+<http://127.0.0.1/8d3ea144-7c5e-42de-b40d-78aa8998353d> ns1:reference_citation "MERCK INDEX:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/8df65151-2463-4e5f-b41d-21c2da8051a8> ns1:reference_citation "SRS import [YZT97E2Q3F]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=YZT97E2Q3F>" .
+
+<http://127.0.0.1/91a9157a-8857-4286-b286-dc06a891f95b> ns1:reference_citation "ICSAS BATCH 2010:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/97590a58-a67f-4067-8942-ddda6e359e3e> ns1:reference_citation "FDA_SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/a777c34f-25d1-4703-9d29-436352582943> ns1:reference_citation "STN" .
+
+<http://127.0.0.1/a8554335-9902-4fea-ad50-fbaa228a25dd> ns1:reference_citation "FDA_SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/aaf76382-e653-4eb0-855e-10d6e7def6a0> ns1:reference_citation "CFSAN:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/aeefb23c-904a-4205-8de0-017893f679aa> ns1:reference_citation "MERCK INDEX:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/b137315d-1023-457d-b244-a1a32314c773> ns1:reference_citation "WHO-DD:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/b2fe0f47-0033-4ca3-8733-7c8f7dbc32c9> ns1:reference_citation "CFSAN:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/bda9fb14-61c1-449b-9671-a424636044dd> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/bf04a1b4-5cf1-4640-8236-b63217b63e06> ns1:reference_citation "SRS import [I21MX86B4X]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=I21MX86B4X>" .
+
+<http://127.0.0.1/c0c7147f-4ec8-42f0-994a-4e76ba1ba937> ns1:reference_citation "HOC 2:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/c3a02da4-0048-4a28-8f3c-8e0e2516410e> ns1:reference_citation "ALANWOOD.NET:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/c596675f-11bb-443a-ae00-58878b6e9951> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/cc911d6e-8ed9-4e42-98d2-b81c9f62bb19> ns1:reference_citation "PCPC-DB" .
+
+<http://127.0.0.1/cd982296-5144-4521-824a-31f1d0d661d6> ns1:reference_citation "FDA_SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/cdf89761-a95a-490e-a47e-fcbc61471f7e> ns1:reference_citation "SRS import [M9C36LC10E]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=M9C36LC10E>" .
+
+<http://127.0.0.1/cebb6237-7d81-45f4-bf67-7eae5fbd9721> ns1:reference_citation "HEXESTROL DICAPRYLATE [WHO-DD]" .
+
+<http://127.0.0.1/d3e00e77-3fad-4861-8f1d-670f37132645> ns1:reference_citation "SRS import [SCC2RK476A]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=SCC2RK476A>" .
+
+<http://127.0.0.1/d60767c5-5202-495d-884b-72b270cfb688> ns1:reference_citation "WHO-DD:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/d7190182-cc1d-4da9-937b-7cbe9ce3d215> ns1:reference_citation "Merck:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/de3ef35d-926f-41c1-bf92-a556c5f61d61> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/e1826598-0981-4404-acf9-6bd10e200097> ns1:reference_citation "STN" .
+
+<http://127.0.0.1/e41d9f8f-599e-4fa8-925e-825aadcc96bd> ns1:reference_citation "PYRIMIDIFEN [ISO]" .
+
+<http://127.0.0.1/e5df0695-6fe7-4fe9-8bd6-ce9b43e2304e> ns1:reference_citation "PCPC:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/e7edd38d-0b8f-4d5a-b7bf-9fbbf4fe032f> ns1:reference_citation "HSDB:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/e8609512-600d-4a78-9b7e-6dcc978e8d7b> ns1:reference_citation "STN" .
+
+<http://127.0.0.1/ea9efbed-fa10-435f-bfb2-e054800b35b0> ns1:reference_citation "FDA SRS 2011:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/ee04a0f8-95d9-4808-ad42-53933ba6e203> ns1:reference_citation "SALVIA OFFICINALIS [WHO-DD]" .
+
+<http://127.0.0.1/efaebe9d-34e7-4c9a-8d4e-2c254c544db8> ns1:reference_citation "STN" .
+
+<http://127.0.0.1/f135ae0c-ca21-4a5a-820f-fd0966c51bf2> ns1:reference_citation "CHEMID 2011:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/f2681feb-6410-4101-824e-33c68d80c0fa> ns1:reference_citation "SRS import [7C989JK2XB]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=7C989JK2XB>" .
+
+<http://127.0.0.1/f43f6d50-ce6d-48cf-8ca4-72299f310621> ns1:reference_citation "FDA SRS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/f47be464-3570-42a7-8a99-e36bf5b3f124> ns1:reference_citation "SRS import [J9DFR4IT9Z]:<SRS_LEGACY_DATA><CREATED_BY></CREATED_BY><CREATED_DATE>null</CREATED_DATE></SRS_LEGACY_DATA>" ;
+    ns3:hasdbxref "<http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno=J9DFR4IT9Z>" .
+
+<http://127.0.0.1/f62b5854-9fb5-4c85-8363-5e0a72bd92af> ns1:reference_citation "FLUTHIACET-METHYL [HSDB]" .
+
+<http://127.0.0.1/f6602ed2-dcd8-43f0-b2c6-3f23ac941c76> ns1:reference_citation "CHEMID  2011" .
+
+<http://127.0.0.1/f68f4cda-7872-47c7-af2e-44f03c4eea0a> ns1:reference_citation "USDA PLANTS:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/f6b96447-ce4f-49b1-bde3-ed3cb20bc7f6> ns1:reference_citation "Generated from SRS LOCATOR" .
+
+<http://127.0.0.1/fd2d1f03-bb20-4418-8c2e-209680085464> ns1:reference_citation "STN" .
+
+<http://127.0.0.1/ff0d8338-70c2-431b-a574-a2e57d16565e> ns1:reference_citation "FLUTHIACET-METHYL [ISO]" .
+
+<http://127.0.0.1/ff7cedba-927b-45b4-9b50-9aac00a38866> ns1:reference_citation "CHEMID 2010" .
+
+<http://127.0.0.1/1622cc16-37c1-4030-ae6a-83611e52403b> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/27aaa975-3184-43eb-99f6-7e41b298efb6> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/283e8244-8d7f-4ab7-8bae-9f5f6372f5af> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/335b77e2-474a-414e-beb9-8df6bac47ca4> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/42b03139-8e59-44f6-86e2-950432958525> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/49259eb6-bc1e-4137-ac2b-623a0ae89f96> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/4a4f9612-d115-46b1-8785-fc04b9b7227d> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/7aa1f112-b596-4faf-8d82-4a3882541bdb> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/89a5d872-fc78-4748-b594-743227f0884d> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/a8af8262-6acc-4186-b490-429d14b454f6> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
+<http://127.0.0.1/e4e5b151-19ee-4f5d-9194-998861a02f6b> ns1:reference_citation "SRS CODE IMPORT:<SRS_LEGACY_DATA></SRS_LEGACY_DATA>" .
+
