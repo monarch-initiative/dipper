@@ -276,18 +276,22 @@ class Source:
 
         return False
 
-    def get_files(self, is_dl_forced):
+    def get_files(self, is_dl_forced, files=None):
         """
         Given a set of files for this source, it will go fetch them, and
         set a default version by date.  If you need to set the version number
         by another method, then it can be set again.
-        :return:
+        :param is_dl_forced - boolean
+        :param files dict - override instance files dict
+        :return: None
         """
 
         st = None
-        for fname in self.files.keys():
+        if files is None:
+            files = self.files
+        for fname in files.keys():
             logger.info("Getting %s", fname)
-            filesource = self.files.get(fname)
+            filesource = files.get(fname)
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))

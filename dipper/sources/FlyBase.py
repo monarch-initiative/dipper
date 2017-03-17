@@ -1788,7 +1788,7 @@ class FlyBase(PostgreSQLSource):
                         limit is not None and line_counter > limit:
                     pass
                 else:
-                    model.addClassToGraph(tax_id, tax_label)
+                    model.addClassToGraph(tax_id)
                     for s in [common_name, abbreviation]:
                         if s is not None and s.strip() != '':
                             model.addSynonym(tax_id, s)
