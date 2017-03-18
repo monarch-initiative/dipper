@@ -83,7 +83,12 @@ class StringDB(Source):
 
             fh = gzip.open(string_file_path, 'rb')
             dataframe = pd.read_csv(fh, sep='\s+')
+            logger.info("Fetching ensembl proteins "
+                        "for taxon {}".format(taxon))
             protein_list = ensembl.fetch_protein_list(taxon)
+
+            logger.info("Finished fetching ENSP IDs, "
+                        "fetched {} proteins".format(len(protein_list)))
 
             logger.info("Fetching protein protein interactions "
                         "for taxon {}".format(taxon))

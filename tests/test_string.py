@@ -55,10 +55,7 @@ class StringTestFakeData(unittest.TestCase):
 
     def testFakeDataSet2(self):
         string_db = StringDB('rdf_graph', True)
-
         dataframe = pd.DataFrame(data=self.test_set_2, columns=self.columns)
-
         string_db._process_protein_links(dataframe, self.protein_list, 9606)
-
         self.assertEqual(len(string_db.graph), 3)
 
