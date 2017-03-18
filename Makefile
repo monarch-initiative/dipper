@@ -9,9 +9,9 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch BioGrid-test   \
-ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test   \
-GWAS-fetch GWAS-test string-fetch string-test
+test: string-fetch string-test UDP-test IMPC-fetch IMPC-test BioGrid-fetch   \
+BioGrid-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch   \
+ucscBands-test GWAS-fetch GWAS-test
 
 string-fetch:
 	$(DIPPER_BIN) --sources stringdb --no_verify --fetch_only
