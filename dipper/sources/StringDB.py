@@ -97,7 +97,8 @@ class StringDB(Source):
 
     def _process_protein_links(self, dataframe, prot_list, taxon,
                                limit=None, rank_min=10):
-        for index, row in dataframe.iterrows():
+        filtered_df = dataframe[dataframe['experimental'] > rank_min]
+        for index, row in filtered_df.iterrows():
             # Check if proteins are in same species
             protein1 = row['protein1'].replace('{}.'.format(str(taxon)), '')
             protein2 = row['protein2'].replace('{}.'.format(str(taxon)), '')
@@ -106,7 +107,7 @@ class StringDB(Source):
             if protein1 not in prot_list \
                     or protein2 not in prot_list:
                 filtered_out_count += 1
-            elif row['experimental'] > rank_min:
+            else:
                 protein1_curie = "ENSEMBL:{}".format(protein1)
                 protein2_curie = "ENSEMBL:{}".format(protein2)
                 # RO:0002434 ! interacts_with
