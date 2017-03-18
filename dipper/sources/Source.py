@@ -276,18 +276,22 @@ class Source:
 
         return False
 
-    def get_files(self, is_dl_forced):
+    def get_files(self, is_dl_forced, files=None):
         """
         Given a set of files for this source, it will go fetch them, and
         set a default version by date.  If you need to set the version number
         by another method, then it can be set again.
-        :return:
+        :param is_dl_forced - boolean
+        :param files dict - override instance files dict
+        :return: None
         """
 
         st = None
-        for fname in self.files.keys():
+        if files is None:
+            files = self.files
+        for fname in files.keys():
             logger.info("Getting %s", fname)
-            filesource = self.files.get(fname)
+            filesource = files.get(fname)
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))
@@ -471,6 +475,39 @@ class Source:
         with open(fname) as f:
             l = sum(1 for line in f)
         return l
+
+    @staticmethod
+    def get_eco_map(url):
+        """
+        To conver the three column file to
+        a hashmap we join primary and secondary keys,
+        for example
+        IEA	GO_REF:0000002	ECO:0000256
+        IEA	GO_REF:0000003	ECO:0000501
+        IEA	Default	ECO:0000501
+
+        becomes
+        IEA-GO_REF:0000002: ECO:0000256
+        IEA-GO_REF:0000003: ECO:0000501
+        IEA: ECO:0000501
+
+        :return: dict
+        """
+        eco_map = {}
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+
+        for line in response:
+            line = line.decode('utf-8').rstrip()
+            if re.match(r'^#', line):
+                continue
+            (code, go_ref, eco_curie) = line.split('\t')
+            if go_ref != 'Default':
+                eco_map["{}-{}".format(code, go_ref)] = eco_curie
+            else:
+                eco_map[code] = eco_curie
+
+        return eco_map
 
     def settestonly(self, testonly):
         """

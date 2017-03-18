@@ -82,7 +82,7 @@ class Pathway():
 
         return
 
-    def addComponentToPathway(self, pathway_id, component_id):
+    def addComponentToPathway(self, component_id, pathway_id):
         """
         This can be used directly when the component is directly involved in
         the pathway.  If a transforming event is performed on the component
