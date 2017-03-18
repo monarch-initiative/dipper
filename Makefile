@@ -13,6 +13,11 @@ test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch BioGrid-test   \
 ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test   \
 GWAS-fetch GWAS-test string-fetch string-test
 
+string-fetch:
+	$(DIPPER_BIN) --sources stringdb --no_verify --fetch_only
+
+string-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_string.py
 
 UDP-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_udp.py
@@ -82,9 +87,3 @@ kegg-fetch:
 
 kegg-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_kegg.py
-
-string-fetch:
-	$(DIPPER_BIN) --sources stringdb --no_verify --fetch_only
-
-string-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_string.py
