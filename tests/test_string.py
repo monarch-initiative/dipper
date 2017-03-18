@@ -39,6 +39,8 @@ class StringTestFakeData(unittest.TestCase):
         string_db.graph.bind_all_namespaces()
         ensembl = Ensembl('rdf_graph', True)
         protein_list = ensembl.fetch_protein_list(9606)
+        print("Finished fetching ENSP IDs, "
+              "fetched {} proteins".format(len(protein_list)))
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
         string_db._process_protein_links(dataframe, protein_list, 9606)
