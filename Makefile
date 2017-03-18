@@ -9,7 +9,7 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: string-test UDP-test IMPC-fetch IMPC-test BioGrid-fetch   \
+test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch   \
 BioGrid-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch   \
 ucscBands-test GWAS-fetch GWAS-test
 
