@@ -37,9 +37,11 @@ class StringTestFakeData(unittest.TestCase):
     def testFakeDataSet1(self):
         string_db = StringDB('rdf_graph', True)
         string_db.graph.bind_all_namespaces()
+        ensembl = Ensembl('rdf_graph', True)
+        protein_list = ensembl.fetch_protein_list(9606)
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
-        string_db._process_protein_links(dataframe, self.protein_list, 9606)
+        string_db._process_protein_links(dataframe, protein_list, 9606)
 
         sparql_query = """
                       SELECT ?prot
