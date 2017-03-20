@@ -6,9 +6,9 @@
 Dipper is a pure Python package to generate RDF triples from common scientific resources.
 Dipper includes subpackages and modules to create graphical models of this data, including:
 
-* Models for ternary associations and complex partonomies
-* Graph utilities to create common relationships using a variety of ontologies
-* Fetchers and Parsers that interface with remote databases and web services
+* Models package for generating common sets of triples, including common OWL axioms, complex genotypes, associations, evidence and provenance models.
+* Graph package for building graphs with RDFLib or streaming n-triples
+* Source package containing fetchers and parsers that interface with remote databases and web services
 
 
 * The dipper main wraps all of the source parsers, enabling users to specify one or more sources to process. 
@@ -88,6 +88,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
 
     ```pip3 install -e /path/to/git/dipper```
 
+## Sources:
 * The following sources have been mapped:
     * Human Phenotype Ontology Annotations (Disease-Phenotype abnormal associations)
     * BioGrid (Gene-gene interactions)
@@ -116,6 +117,14 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * FlyBase (genotype, phenotype)
     * Reactome (gene-pathway associations)
     * MyDrug (drug-outcome associations)
+    * GeneOntology (gene-process/function/subcellular location associations)
+    * Monarch (Monarch curated genotype-phenotyp associations)
+    * Monochrom (Ontology of chromosomes)
+    * Orphanet (gene-disease associations)
+    * UCSCBands (RDF representation of chromosomal bands using FALDO an Monochrom)
+    * WormBase (genotype-phenotype associations)
+    
+    Each source has a corresponding script at https://github.com/monarch-initiative/dipper/tree/master/dipper/sources
 
    ```
    hpoa,zfin,omim,biogrid,mgi,impc,panther,ncbigene,ucscbands,

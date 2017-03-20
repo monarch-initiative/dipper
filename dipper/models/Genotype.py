@@ -96,7 +96,7 @@ class Genotype():
         'is_allelotype_of': 'GENO:0000206',
         'has_genotype': 'GENO:0000222',
         'has_phenotype': 'RO:0002200',
-        'transcribed_to': 'RO:0002205',
+        'has_gene_product': 'RO:0002205',
         'translates_to': 'RO:0002513',
         'is_targeted_expression_variant_of': 'GENO:0000443',
         'is_transgene_variant_of': 'GENO:0000444',
@@ -265,22 +265,24 @@ class Genotype():
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
-    def addTranscript(
-            self, variant_id, transcript_id,
-            transcript_label=None, transcript_type=None):
+    def addGeneProduct(
+            self, sequence_id, product_id,
+            product_label=None, product_type=None):
         """
-        Add gene/variant/allele transcribes_to relationship
-        :param variant_id:
-        :param transcript_id:
-        :param transcript_label:
-        :param transcript_type:
+        Add gene/variant/allele has_gene_product relationship
+        Can be used to either describe a gene to transcript relationship
+        or gene to protein
+        :param sequence_id:
+        :param product_id:
+        :param product_label:
+        :param product_type:
         :return:
         """
-
-        self.model.addIndividualToGraph(
-            transcript_id, transcript_label, transcript_type)
+        if product_label is not None and product_type is not None:
+            self.model.addIndividualToGraph(
+                product_id, product_label, product_type)
         self.graph.addTriple(
-            variant_id, self.properties['transcribed_to'], transcript_id)
+            sequence_id, self.properties['has_gene_product'], product_id)
 
         return
 

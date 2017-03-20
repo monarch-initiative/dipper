@@ -106,6 +106,31 @@ class Ensembl(Source):
 
         return
 
+    def fetch_protein_list(self, taxon_id):
+        """
+        Fetch a list of proteins for a species in biomart
+        :param taxid:
+        :return: list
+        """
+        protein_list = list()
+        params = urllib.parse.urlencode(
+            {'query': self._build_biomart_gene_query(str(taxon_id))})
+        conn = http.client.HTTPConnection('uswest.ensembl.org')
+        conn.request("GET", '/biomart/martservice?' + params)
+        response = conn.getresponse()
+        for line in response:
+            line = line.decode('utf-8').rstrip()
+            row = line.split('\t')
+            if len(row) < 6:
+                logger.warn("Data error for query on %d", taxon_id)
+                continue
+            (ensembl_gene_id, external_gene_name,
+             description, gene_biotype, entrezgene,
+             peptide_id) = row[0:6]
+            protein_list.append(peptide_id)
+
+        return protein_list
+
     def _build_biomart_gene_query(self, taxid):
         """
         Building url to fetch equivalent identifiers via Biomart Restful API.
@@ -118,7 +143,7 @@ class Ensembl(Source):
         # basic stuff for ensembl ids
         cols_to_fetch = [
             "ensembl_gene_id", "external_gene_name", "description",
-            "gene_biotype", "entrezgene"]
+            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprot_swissprot"]
 
         if taxid == '9606':
             cols_to_fetch.append("hgnc_id")
@@ -190,15 +215,16 @@ class Ensembl(Source):
             filereader = csv.reader(csvfile, delimiter='\t')
             for row in filereader:
                 if len(row) < 4:
-                    logger.error("Data error for file %s", raw)
+                    logger.warn("Data error for file %s", raw)
                     return
-                (ensembl_gene_id, external_gene_name, description,
-                 gene_biotype, entrezgene) = row[0:5]
+                (ensembl_gene_id, external_gene_name,
+                 description, gene_biotype, entrezgene,
+                 peptide_id, uniprot_swissprot) = row[0:7]
 
                 # in the case of human genes, we also get the hgnc id,
                 # and is the last col
                 if taxid == '9606':
-                    hgnc_id = row[5]
+                    hgnc_id = row[7]
                 else:
                     hgnc_id = None
 
@@ -207,19 +233,27 @@ class Ensembl(Source):
                     continue
 
                 line_counter += 1
-                gene_id = 'ENSEMBL:'+ensembl_gene_id
+                gene_id = 'ENSEMBL:' + ensembl_gene_id
+                peptide_curie = 'ENSEMBL:{}'.format(peptide_id)
+                uniprot_curie = 'UniProtKB:{}'.format(uniprot_swissprot)
+                entrez_curie = 'NCBIGene:{}'.format(entrezgene)
+
                 if description == '':
                     description = None
-                gene_type_id = self._get_gene_type(gene_biotype)
+                # gene_type_id = self._get_gene_type(gene_biotype)
                 gene_type_id = None
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
 
                 if entrezgene != '':
-                    model.addEquivalentClass(gene_id, 'NCBIGene:'+entrezgene)
+                    model.addEquivalentClass(gene_id, entrez_curie)
                 if hgnc_id is not None and hgnc_id != '':
                     model.addEquivalentClass(gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
+                if peptide_id != '':
+                    geno.addGeneProduct(gene_id, peptide_curie)
+                    if uniprot_swissprot != '':
+                        model.addEquivalentClass(peptide_curie, uniprot_curie)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:

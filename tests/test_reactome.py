@@ -18,7 +18,7 @@ class ReactomeTestCase(unittest.TestCase):
 
     def testEnsemblReactomeParser(self):
         reactome = Reactome('rdf_graph', True)
-        eco_map = reactome._get_eco_map()
+        eco_map = Reactome.get_eco_map(Reactome.map_files['eco_map'])
         (gene, pathway_id, pathway_iri, pathway_label,
          go_ecode, species_name) = self.test_set_1
         reactome._add_gene_pathway_association(eco_map, gene, pathway_id,
@@ -37,7 +37,6 @@ class ReactomeTestCase(unittest.TestCase):
 
                            REACT:R-BTA-3000480 a owl:Class ;
                                rdfs:label "Scavenging by Class A Receptors" ;
-                               OBO:RO_0002331 ENSEMBL:ENSBTAP00000013354 ;
                                rdfs:subClassOf OBO:GO_0009987,
                                    OBO:PW_0000001 .
 

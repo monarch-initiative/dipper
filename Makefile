@@ -9,10 +9,12 @@ NOSE = nosetests
 ### Tests
 ###
 
-test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch BioGrid-test   \
-ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch ucscBands-test   \
-GWAS-fetch GWAS-test
+test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch   \
+BioGrid-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch   \
+ucscBands-test GWAS-fetch GWAS-test
 
+string-test:
+	$(NOSE) --with-coverage --cover-package=dipper tests/test_string.py
 
 UDP-test:
 	$(NOSE) --with-coverage --cover-package=dipper tests/test_udp.py

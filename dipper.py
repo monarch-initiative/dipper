@@ -62,7 +62,8 @@ def main():
         'mgi-slim': 'MGISlim',
         'zfin-slim': 'ZFINSlim',
         'bgee': 'Bgee',
-        'mydrug': 'MyDrug'
+        'mydrug': 'MyDrug',
+        'stringdb': 'StringDB'
     }
 
     logger = logging.getLogger(__name__)
@@ -133,7 +134,8 @@ def main():
         tax_ids = [int(t) for t in args.taxon.split(',')]
 
     taxa_supported = [
-        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee']
+        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology',
+        'Bgee', 'Ensembl', 'StringDB']
 
     formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
 
