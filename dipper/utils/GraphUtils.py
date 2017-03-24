@@ -21,13 +21,14 @@ class GraphUtils:
 
     def write(self, graph, fileformat=None, file=None):
         """
-         a basic graph writer (to stdout) for any of the sources.
-         this will write raw triples in rdfxml, unless specified.
-         to write turtle, specify format='turtle'
-         an optional file can be supplied instead of stdout
+        A basic graph writer (to stdout) for any of the sources.
+        this will write raw triples in rdfxml, unless specified.
+        to write turtle, specify format='turtle'
+        an optional file can be supplied instead of stdout
         :return: None
 
         """
+
         filewriter = None
         if fileformat is None:
             fileformat = 'rdfxml'
@@ -80,7 +81,7 @@ class GraphUtils:
                 ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
             except SAXParseException as e:
                 logger.error(e)
-                logger.error('Retrying: ' + ontology)
+                logger.error('Retrying as turtle: ' + ontology)
                 ontology_graph.parse(ontology, format="turtle")
             except OSError as e:  # URLError:
                 # simple retry

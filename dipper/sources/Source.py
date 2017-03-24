@@ -186,8 +186,8 @@ class Source:
     @staticmethod
     def make_id(long_string, prefix='MONARCH'):
         """
-        a method to create DETERMINISTIC identifiers based on a string's digest.
-        currently implemented with sha1
+        a method to create DETERMINISTIC identifiers
+        based on a string's digest. currently implemented with sha1
         :param long_string:
         :return:
 
@@ -308,7 +308,8 @@ class Source:
         return
 
     def fetch_from_url(
-            self, remotefile, localfile=None, is_dl_forced=False, headers=None):
+            self, remotefile, localfile=None, is_dl_forced=False,
+            headers=None):
         """
         Given a remote url and a local filename, this will first verify
         if the remote file is newer; if it is,
@@ -363,8 +364,8 @@ class Source:
         xml document, when the xml is used as an alternative way of
         distributing sql-like tables.  In this case, the "elem" is akin to an
         sql table, with it's name of ```table_name```.
-        It will then process each ```row```
-            given the ```processing_function``` supplied.
+        It will then process each ```row``` given the ```processing_function```
+        supplied.
 
         :param elem: The element data
         :param table_name: The name of the table to process
@@ -523,10 +524,11 @@ class Source:
     def settestmode(self, mode):
         """
         Set testMode to (mode).
-            True: run the Source in testMode;
-            False: run it in full mode
+        - True: run the Source in testMode;
+        - False: run it in full mode
         :param mode:
         :return: None
+
         """
 
         self.testMode = mode
@@ -546,30 +548,29 @@ class Source:
         """
         The file we output needs to be declared as an ontology,
         including it's version information.
-        ------------------------------------------------------------------------
 
         TEC: I am not convinced dipper reformating external data as RDF triples
         makes an OWL ontology (nor that it should be considered a goal).
 
         Proper ontologies are built by ontologists. Dipper reformats data
-        and anotates/decorates it with a minimal set of carefully arranged terms
-        drawn from from multiple proper ontologies. Which allows the whole
-        (dipper's RDF triples and parent ontologies) to function as a single
-        ontology we can reason over when combined in a store such as SciGraph.
+        and anotates/decorates it with a minimal set of carefully arranged
+        terms drawn from from multiple proper ontologies.
+        Which allows the whole (dipper's RDF triples and parent ontologies)
+        to function as a single ontology we can reason over when combined
+        in a store such as SciGraph.
 
         Including more than the minimal ontological terms in dipper's RDF
         output constitutes a liability as it allows divergence.
 
-        ------------------------------------------------------------------------
         Further information will be augmented in the dataset object.
         :param version:
         :return:
 
         """
+
         # <http://data.monarchinitiative.org/ttl/biogrid.ttl> a owl:Ontology ;
         # owl:versionInfo
         # <https://archive.monarchinitiative.org/YYYYMM/ttl/biogrid.ttl>
-
 
         model = Model(graph)
 
@@ -584,7 +585,7 @@ class Source:
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
 
-        archive_url = 'MonarchArchive:' + 'ttl/' + self.name +'.ttl'
+        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
 
@@ -595,15 +596,16 @@ class Source:
     @staticmethod
     def remove_backslash_r(filename, encoding):
         """
-        A helpful utility to remove '\r' from any file.
+        A helpful utility to remove Carriage Return from any file.
         This will read a file into memory,
         and overwrite the contents of the original file.
         :param filename:
+
         :return:
 
         """
 
-        f = open(filename, 'r', encoding=encoding, newline='\n')
+        f = open(filename, 'r', encoding=encoding, newline=r'\n')
         contents = f.read()
         f.close()
         contents = re.sub(r'\r', '', contents)
@@ -639,7 +641,8 @@ class Source:
         """
         id_map = {}
         if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+            with open(
+                    os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
                     label = row[0]

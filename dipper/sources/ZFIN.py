@@ -30,14 +30,14 @@ class ZFIN(Source):
     We generate the zfin graph to include the following information:
     * genes
     * sequence alterations
-        (includes SNPs/del/ins/indel and large chromosomal rearrangements)
+    (includes SNPs/del/ins/indel and large chromosomal rearrangements)
     * transgenic constructs
     * morpholinos, talens, crisprs as expression-affecting reagents
     * genotypes, and their components
     * fish (as comprised of intrinsic and extrinsic genotypes)
     * publications (and their mapping to PMIDs, if available)
     * genotype-to-phenotype associations
-        (including environments and stages at which they are assayed)
+    (including environments and stages at which they are assayed)
     * environmental components
     * orthology to human genes
     * genetic positional information for genes and sequence alterations
@@ -53,10 +53,10 @@ class ZFIN(Source):
     Furthermore, we process the genotype components to build labels
     in a monarch-style.  This leads to genotype labels that include:
     *  all genes targeted by reagents (morphants, crisprs, etc),
-        in addition to the ones that the reagent was designed against.
+    in addition to the ones that the reagent was designed against.
     *  all affected genes within deficiencies
     *  complex hets being listed as gene<mutation1>/gene<mutation2>
-        rather than gene<mutation1>/+; gene<mutation2>/+
+    rather than gene<mutation1>/+; gene<mutation2>/+
 
     """
 
@@ -169,11 +169,12 @@ class ZFIN(Source):
         "gene": [
             "ZDB-GENE-000616-6", "ZDB-GENE-000710-4", "ZDB-GENE-030131-2773",
             "ZDB-GENE-030131-8769", "ZDB-GENE-030219-146", "ZDB-GENE-030404-2",
-            "ZDB-GENE-030826-1", "ZDB-GENE-030826-2", "ZDB-GENE-040123-1",
-            "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534",
+            "ZDB-GENE-030826-1", "ZDB-GENE-030826-2",
+            "ZDB-GENE-040123-1", "ZDB-GENE-040426-1309", "ZDB-GENE-050522-534",
             "ZDB-GENE-060503-719", "ZDB-GENE-080405-1", "ZDB-GENE-081211-2",
-            "ZDB-GENE-091118-129", "ZDB-GENE-980526-135", "ZDB-GENE-980526-166",
-            "ZDB-GENE-980526-196", "ZDB-GENE-980526-265", "ZDB-GENE-980526-299",
+            "ZDB-GENE-091118-129", "ZDB-GENE-980526-135",
+            "ZDB-GENE-980526-166", "ZDB-GENE-980526-196",
+            "ZDB-GENE-980526-265", "ZDB-GENE-980526-299",
             "ZDB-GENE-980526-41", "ZDB-GENE-980526-437", "ZDB-GENE-980526-44",
             "ZDB-GENE-980526-481", "ZDB-GENE-980526-561", "ZDB-GENE-980526-89",
             "ZDB-GENE-990415-181", "ZDB-GENE-990415-72", "ZDB-GENE-990415-75",
@@ -309,7 +310,7 @@ class ZFIN(Source):
         """
         Perform various data-scrubbing on the raw data files prior to parsing.
         For this resource, this currently includes:
-          * remove oddities where there are "\" instead of empty strings
+        * remove oddities where there are "\" instead of empty strings
         :return: None
 
         """
@@ -337,10 +338,10 @@ class ZFIN(Source):
         if self.testOnly:
             self.testMode = True
 
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
+        # if self.testMode:   # unused
+        #    g = self.testgraph
+        # else:
+        #    g = self.graph
 
         # basic information on classes and instances
         self._process_genes(limit)
@@ -391,7 +392,7 @@ class ZFIN(Source):
         """
         Fish give identifiers to the "effective genotypes" that we create.
         We can match these by:
-            Fish = (intrinsic) genotype + set of morpholinos
+        Fish = (intrinsic) genotype + set of morpholinos
 
         We assume here that the intrinsic genotypes and their parts
         will be processed separately, prior to calling this function.
@@ -400,6 +401,7 @@ class ZFIN(Source):
         :return:
 
         """
+        
         logger.info("Processing Fish Parts")
 
         raw = '/'.join((self.rawdir, self.files['fish_components']['file']))
@@ -1162,7 +1164,7 @@ class ZFIN(Source):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
+        # model = Model(g)  # unused
         logger.info("Processing wildtype genotypes")
         line_counter = 0
         geno = Genotype(g)
@@ -1380,8 +1382,9 @@ class ZFIN(Source):
                     c = ' '.join(("Normal phenotype observed:", c,
                                   "(" + pub_id + ")"))
                     if pub_id != '':
-                        g.addTriple(pub_id,
-                                    model.object_properties['mentions'], fish_id)
+                        g.addTriple(
+                            pub_id,
+                            model.object_properties['mentions'], fish_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -1958,7 +1961,8 @@ class ZFIN(Source):
             but at the transcriptional level instead of mRNA level.
 
         You can read more about TALEN and CRISPR techniques in review
-        [Gaj et al](http://www.cell.com/trends/biotechnology/abstract/S0167-7799%2813%2900087-5)
+        [Gaj et al]
+        http://www.cell.com/trends/biotechnology/abstract/S0167-7799%2813%2900087-5
 
         TODO add sequences
 
@@ -2038,7 +2042,8 @@ class ZFIN(Source):
                         r = Reference(g, pub_id)
                         r.addRefToGraph()
                         g.addTriple(
-                            pub_id, model.object_properties['mentions'], reagent_id)
+                            pub_id,
+                            model.object_properties['mentions'], reagent_id)
 
                 # Add comment?
                 if note != '':
@@ -2065,8 +2070,8 @@ class ZFIN(Source):
         to an environment ID.
         An environment ID may have one or more associated conditions.
         Condition groups present:
-            chemical, physical, physiological,
-            salinity, temperature, _Generic-control
+        * chemical, physical, physiological,
+        * salinity, temperature, _Generic-control
 
         First, we build a nice human-readable label
         of all of the components of the environment.
@@ -2092,7 +2097,7 @@ class ZFIN(Source):
             g = self.graph
         line_counter = 0
         env_hash = {}
-        enviro_label_hash = {}
+        # enviro_label_hash = {}   #  unused
         envo = Environment(g)
         # pp = pprint.PrettyPrinter(indent=4)
 
@@ -2102,14 +2107,14 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                # (environment_num, condition_group, condition, description, blank) = row
+                # (environment_num, condition_group,
+                #  condition, description, blank) = row
                 (environment_id,
                  zeco_term_name, zeco_term_id,
                  chebi_term_name, chebi_term_id,
                  zfa_term_name, zfa_term_id,
                  altered_structure_name, altered_structure_id,
                  ncbi_taxon_name, ncbi_taxon_id) = row
-
 
                 environment_id = 'ZFIN:' + environment_id.strip()
                 if self.testMode and\
@@ -2131,33 +2136,35 @@ class ZFIN(Source):
                 # cleanup the "condition" to remove non-id-friendly chars
                 cond_id = zeco_term_id.strip()
                 cond_id = re.sub(r'\W+', '-', cond_id)
-                subcond_id = description.strip()
-                subcond_id = re.sub(r'\W+', '-', subcond_id)
-                env_component_id = '-'.join((condition_group.strip(),
-                                             cond_id.strip()))
-                if subcond_id != '':
-                    env_component_id = '-'.join((env_component_id, subcond_id))
 
+                # TODO  Matt re model
+                # description is gone
+                # condition is gone
+                # condition_group is gone
+                # subcond_id = description.strip()
+                # subcond_id = re.sub(r'\W+', '-', subcond_id)
+                # env_component_id = '-'.join((condition_group.strip(),
+                #                             cond_id.strip()))
+                # if subcond_id != '':
+                #   env_component_id = '-'.join((env_component_id, subcond_id))
                 # make them blank nodes
-                env_component_id = '_:' + env_component_id
+                # env_component_id = '_:' + env_component_id
+                # env_condition = condition.strip()
+                # env_component_label = condition_group + '[' + condition + ']'
+                # if description != '':
+                #    env_component_label += ': ' + description
 
-                # env_condition = condition.strip()  # TODO unused
+                # self.id_label_map[env_component_id] = env_component_label
+                # env_hash[environment_id] += [env_component_id]
 
-                env_component_label = condition_group + '[' + condition + ']'
-                if description != '':
-                    env_component_label += ': ' + description
-
-                self.id_label_map[env_component_id] = env_component_label
-                env_hash[environment_id] += [env_component_id]
-
-                if environment_id not in enviro_label_hash:
-                    enviro_label_hash[environment_id] = [env_component_id]
-                else:
-                    enviro_label_hash[environment_id].append(env_component_id)
+                # if environment_id not in enviro_label_hash:
+                #   enviro_label_hash[environment_id] = [env_component_id]
+                # else:
+                #    enviro_label_hash[environment_id].append(env_component_id)
 
                 # add each component to the environment as a part
-                envo.addEnvironmentalCondition(env_component_id,
-                                               env_component_label)
+                # envo.addEnvironmentalCondition(
+                #    env_component_id, env_component_label)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -2362,7 +2369,7 @@ class ZFIN(Source):
         logger.info("Processing human orthos")
         line_counter = 0
         geno = Genotype(g)
-        model = Model(g)
+        # model = Model(g)  # unused
         raw = '/'.join((self.rawdir, self.files['human_orthos']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -2819,7 +2826,8 @@ class ZFIN(Source):
                         assoc.add_source(zfin_pub_id)
                     if pubmed_num != '':
                         r = Reference(
-                            g, pubmed_id, Reference.ref_types['journal_article'])
+                            g, pubmed_id,
+                            Reference.ref_types['journal_article'])
                         r.addRefToGraph()
                         assoc.add_source(pubmed_id)
                     if evidence_code != '':

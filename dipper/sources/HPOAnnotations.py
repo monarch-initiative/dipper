@@ -41,12 +41,10 @@ class HPOAnnotations(Source):
     In order to properly test this class,
     you should have a conf.json file configured with some test ids, in
     the structure of:
-        <pre>
-        test_ids: {
-            # as examples.  put your favorite ids in the config.
-            "disease" : ["OMIM:119600", "OMIM:120160"]
-        }
-        </pre>
+    # as examples.  put your favorite ids in the config.
+    <pre>
+    test_ids: {"disease" : ["OMIM:119600", "OMIM:120160"]}
+    </pre>
 
     """
 
@@ -143,9 +141,11 @@ class HPOAnnotations(Source):
         Perform various data-scrubbing on the raw data files prior to parsing.
         For this resource, this currently includes:
         * revise errors in identifiers for some OMIM and PMIDs
+
         :return: None
 
         """
+
         # scrub file of the oddities...lots of publication rewriting
         f = '/'.join((self.rawdir, self.files['annot']['file']))
         logger.info('scrubbing PubMed:12345 --> PMID:12345')
@@ -255,9 +255,11 @@ class HPOAnnotations(Source):
                     assoc = D2PAssoc(
                         g, self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
-                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(
+                        g, self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
-                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(
+                        g, self.name, disease_id, pheno_id)
                 else:
                     logger.error("I don't know what this aspect is: %s", asp)
 
@@ -269,17 +271,22 @@ class HPOAnnotations(Source):
                     pub = pub.strip()
                     pubtype = None
                     if pub != '':
-                        # if re.match(r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
+                        # if re.match(
+                        #       r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene',
+                        #        pub):
                         #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
                         #     m = re.search(r'part\=(\w+)', pub)
                         #     pub_id = 'GeneReviews:'+m.group(1)
-                        # elif re.search(r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
+                        # elif re.search(
+                        #        r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=',
+                        #        pub):
                         #     m = re.search(r'Expert=(\d+)', pub)
                         #     pub_id = 'Orphanet:'+m.group(1)
 
                         if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match(r'PMID', pub):
-                                pubtype = Reference.ref_types['journal_article']
+                                pubtype = \
+                                    Reference.ref_types['journal_article']
                             elif re.match(r'HPO', pub):
                                 pubtype = Reference.ref_types['person']
                             else:
@@ -297,13 +304,15 @@ class HPOAnnotations(Source):
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
                                 orphaneturl = \
-                                    ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                             str(orphanetnum)))
+                                    ''.join((
+                                        'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                        str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
-                                decipherurl = '/'.join(('https://decipher.sanger.ac.uk/syndrome',
-                                                        deciphernum))
+                                decipherurl = '/'.join(
+                                    ('https://decipher.sanger.ac.uk/syndrome',
+                                     deciphernum))
                                 pub = decipherurl
                             pubtype = Reference.ref_types['webpage']
                         elif re.match(r'http', pub):
@@ -331,15 +340,17 @@ class HPOAnnotations(Source):
         """
         Fetch the raw hpo-annotation-data by cloning/pulling the
         [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
-        These files get added to the files object, and iterated over separately.
+        These files get added to the files object,
+        and iterated over separately.
         :return:
 
         """
 
-        # TODO TEC as of 2016-Mar-2 this repo does not exist
         repo_dir = '/'.join((self.rawdir, 'git'))
-        REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
-        HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
+        REMOTE_URL = \
+            "git@github.com:monarch-initiative/hpo-annotation-data.git"
+        HTTPS_URL = \
+            "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
@@ -446,9 +457,9 @@ class HPOAnnotations(Source):
         """
         Make disaese-phenotype associations.
         Some identifiers need clean up:
-          * DOIDs are listed as DOID-DOID: --> DOID:
-          * DOIDs may be unnecessarily zero-padded.
-            these are remapped to their non-padded equivalent.
+        * DOIDs are listed as DOID-DOID: --> DOID:
+        * DOIDs may be unnecessarily zero-padded.
+        these are remapped to their non-padded equivalent.
 
         :param raw:
         :param unpadded_doids:
@@ -468,7 +479,7 @@ class HPOAnnotations(Source):
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = csvfile.readline()  # skip the header row
-            # logger.info("HEADER: %s",header)
+            logger.info("HEADER: %s", header)
             disease_id = None
             for row in filereader:
 
@@ -476,8 +487,8 @@ class HPOAnnotations(Source):
                     (did, dname, gid, gene_name, genotype, gene_symbols,
                      phenotype_id, phenotype_name, age_of_onset_id,
                      age_of_onset_name, eid, evidence_name, frequency, sex_id,
-                     sex_name, negation_id, negation_name, description, pub_ids,
-                     assigned_by, date_created) = row
+                     sex_name, negation_id, negation_name, description,
+                     pub_ids, assigned_by, date_created) = row
                 else:
                     logger.warning(
                         "Wrong number of columns! expected 21, got: %s in: %s",

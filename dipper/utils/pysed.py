@@ -18,7 +18,9 @@ def replace(oldstr, newstr, infile, dryrun=False):
     This will dump the output to STDOUT instead of changing the input file.
     Example 'DRYRUN':
     pysed.replace('xyz', 'XYZ', '/path/to/file.txt', dryrun=True)
+
     """
+
     linelist = []
     with open(infile) as f:
         for item in f:
@@ -42,10 +44,12 @@ def rmlinematch(oldstr, infile, dryrun=False):
     Sed-like line deletion function based on given string..
     Usage: pysed.rmlinematch(<Unwanted string>, <Text File>)
     Example: pysed.rmlinematch('xyz', '/path/to/file.txt')
-    Example
-        'DRYRUN': pysed.rmlinematch('xyz', '/path/to/file.txt', dryrun=True)
-    #This will dump the output to STDOUT instead of changing the input file.
+    Example:
+    'DRYRUN': pysed.rmlinematch('xyz', '/path/to/file.txt', dryrun=True)
+    This will dump the output to STDOUT instead of changing the input file.
+
     """
+
     linelist = []
     with open(infile) as f:
         for item in f:
@@ -72,7 +76,9 @@ def rmlinenumber(linenumber, infile, dryrun=False):
     Example: pysed.rmlinenumber(10, '/path/to/file.txt')
     Example 'DRYRUN': pysed.rmlinenumber(10, '/path/to/file.txt', dryrun=True)
     #This will dump the output to STDOUT instead of changing the input file.
+
     """
+
     linelist = []
     linecounter = 0
     if isinstance(linenumber) != isinstance(linecounter):

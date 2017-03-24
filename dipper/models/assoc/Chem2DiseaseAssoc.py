@@ -4,12 +4,13 @@ from dipper.models.assoc.Association import Assoc
 class Chem2DiseaseAssoc(Assoc):
     """
     Attributes:
-      assoc_id (str): Association Curie (Prefix:ID)
-      chem_id (str): Chemical Curie
-      phenotype_id (str): Phenotype Curie
-      pub_list (str,list): One or more publication curies
-      rel (str): Property relating assoc_id and chem_id
-      evidence (str): Evidence curie
+    assoc_id (str): Association Curie (Prefix:ID)
+    chem_id (str): Chemical Curie
+    phenotype_id (str): Phenotype Curie
+    pub_list (str,list): One or more publication curies
+    rel (str): Property relating assoc_id and chem_id
+    evidence (str): Evidence curie
+
     """
 
     def __init__(self, graph, definedby, chem_id, phenotype_id, rel_id=None):
@@ -28,12 +29,14 @@ class Chem2DiseaseAssoc(Assoc):
     def set_association_id(self, assoc_id=None):
         """
         This will set the association ID based on the internal parts
-            of the association.
+        of the association.
         To be used in cases where an external association identifier
-            should be used.
+        should be used.
 
         :param assoc_id:
+
         :return:
+
         """
 
         if assoc_id is None:

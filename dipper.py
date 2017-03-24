@@ -100,14 +100,13 @@ def main():
     parser.add_argument(
         '--skip_tests', help='skip any testing', action="store_true")
 
-    # BNodes can't be visualized in Protege,
-    # so you can materialize them for testing purposes with this flag
+    # Blank Nodes can't be visualized in Protege, default to Skolemizing them
     parser.add_argument(
         '-b', '--use_bnodes',
         help="use blank nodes instead of skolemizing", action="store_true",
         default=False)
 
-    # TODO this preconfiguration should probably live in the conf.json,
+    # TODO this should live in a global data file
     #   and the same filter be applied to all sources
     parser.add_argument(
         '-t', '--taxon', type=str,
@@ -132,9 +131,6 @@ def main():
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
-        # TODO PYLINT Used builtin function 'map'. DONE?
-        # Using a list comprehension can be clearer.
-        # tax_ids = list(map(int, args.taxon.split(',')))
         tax_ids = [int(t) for t in args.taxon.split(',')]
 
     taxa_supported = [
@@ -152,7 +148,7 @@ def main():
             logging.basicConfig(level=logging.INFO)
 
     if not args.use_bnodes:
-        logger.info("Will materialize all BNodes into BASE space")
+        logger.info("Will Skolemize Blank Nodes")
 
     if args.query is not None:
         test_query = TestUtils()

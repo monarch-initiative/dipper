@@ -36,23 +36,24 @@ class IMPC(Source):
     We use all identifiers given by the IMPC with a few exceptions:
 
     *  For identifiers that IMPC provides, but does not resolve,
-        we instantiate them as BNodes.
-        Examples include things with the pattern of:
-            EUROALL, EUROCURATE, NULL-*,
+    we instantiate them as Blank Nodes.
+    Examples include things with the pattern of: UROALL, EUROCURATE, NULL-*,
 
     *  We mint three identifiers:
-       1.  Intrinsic genotypes not including sex, based on:
-         * colony_id (ES cell line + phenotyping center)
-         * strain
-         * zygosity
-       2.  For the Effective genotypes that are attached to the phenotypes:
-         * colony_id (ES cell line + phenotyping center)
-         * strain
-         * zygosity
-         * sex
-       3.  Associations based on
-           effective_genotype_id + phenotype_id + phenotyping_center +
-           pipeline_stable_id + procedure_stable_id + parameter_stable_id
+    1.  Intrinsic genotypes not including sex, based on:
+     * colony_id (ES cell line + phenotyping center)
+     * strain
+     * zygosity
+    
+    2.  For the Effective genotypes that are attached to the phenotypes:
+     * colony_id (ES cell line + phenotyping center)
+     * strain
+     * zygosity
+     * sex
+    
+    3.  Associations based on:
+    effective_genotype_id + phenotype_id + phenotyping_center +
+    pipeline_stable_id + procedure_stable_id + parameter_stable_id
 
     We DO NOT yet add the assays as evidence for the G2P associations here.
     To be added in the future.

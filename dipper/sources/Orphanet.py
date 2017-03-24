@@ -188,23 +188,31 @@ class Orphanet(Source):
                         if eqid is not None:
                             model.addClassToGraph(eqid, None)
                             model.addEquivalentClass(gene_id, eqid)
-                elem.clear()  # discard the element
+                elem.clear()  # empty the element
 
             if self.testMode and limit is not None and line_counter > limit:
                 return
 
         return
 
+    # TODO rebuilding the map every time the function is called is
+    # not at all efficent ...(try decorator staticmethod or remove from class?)
+    # @staticmethod
     def _map_rel_id(self, orphanet_rel_id):
-        # TODO check if these ids are stable for mapping
+        # To check on  the "DisorderGeneAssociationType" to map
+        # xmlstarlet sel -t -m \
+        # './JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/\
+        # DisorderGeneAssociation/DisorderGeneAssociationType'\
+        # -v './@id' -o '    ' -v './Name' -n en_product6.xml |\
+        # sort | uniq -c | sort -nr
         rel_id = None
         model = Model(self.graph)
         id_map = {
-            # Disease-causing germline mutation(s) in
+            # Disease-causing germline mutation(s) in (RO:0002200)
             '17949': model.object_properties['has_phenotype'],
             # Disease-causing somatic mutation(s) in
             '17955': model.object_properties['has_phenotype'],
-            # Major susceptibility factor in
+            # Major susceptibility factor in  ('RO:0002326')
             '17961': model.object_properties['contributes_to'],
             # Modifying germline mutation in
             '17967': model.object_properties['contributes_to'],
@@ -215,9 +223,9 @@ class Orphanet(Source):
             # Role in the phenotype of
             '17985': model.object_properties['contributes_to'],
             '18273': None,  # Candidate gene tested in  FIXME?
-            # Disease-causing germline mutation(s) (loss of function) in
-            '25979': model.object_properties['has_phenotype'],  # comma added ?!!
             # Disease-causing germline mutation(s) (gain of function) in
+            '25979': model.object_properties['has_phenotype'],
+            # Disease-causing germline mutation(s) (loss of function) in
             '25972': model.object_properties['has_phenotype'],
         }
 
@@ -230,9 +238,12 @@ class Orphanet(Source):
 
         return rel_id
 
+    # To check the "GeneType" mappings
+    # xmlstarlet sel -t -v \
+    #   './JDBOR/DisorderList/Disorder//Gene/GeneType/Name'
+    #   en_product6.xml | sort | uniq -c | sort -nr
     @staticmethod
     def _map_gene_type_id(orphanet_type_id):
-        # TODO check if these ids are stable for mapping
         type_id = Genotype.genoparts['sequence_feature']
         id_map = {
             # locus

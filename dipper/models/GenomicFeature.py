@@ -16,11 +16,12 @@ class Feature():
     between the regions, but this should be tested/verified.
 
     TODO:
-        the graph additions are in the addXToFeature functions,
-        but should be separated.
+    the graph additions are in the addXToFeature functions,
+    but should be separated.
     TODO:
-        this will need to be extended to properly deal with
-        fuzzy positions in faldo.
+    this will need to be extended to properly deal with
+    fuzzy positions in faldo.
+
     """
 
     object_properties = {
@@ -110,7 +111,9 @@ class Feature():
         :param reference_id:
         :param strand:
         :param position_types:
+
         :return:
+
         """
 
         # make an object for the start, which has:
@@ -128,7 +131,9 @@ class Feature():
         :param coordinate:
         :param reference_id:
         :param strand:
+
         :return:
+
         """
 
         self.stop = self._getLocation(coordinate, reference_id, strand,
@@ -145,7 +150,9 @@ class Feature():
         :param reference_id:
         :param strand:
         :param position_types:
+
         :return:
+
         """
 
         loc = dict()
@@ -189,26 +196,28 @@ class Feature():
         """
         We make the assumption here that all features are instances.
         The features are located on a region,
-            which begins and ends with faldo:Position
+        which begins and ends with faldo:Position
         The feature locations leverage the Faldo model,
-            which has a general structure like:
+        which has a general structure like:
         Triples:
         feature_id a feature_type (individual)
-            faldo:location region_id
+        faldo:location region_id
         region_id a faldo:region
-            faldo:begin start_position
-            faldo:end end_position
+        faldo:begin start_position
+        faldo:end end_position
         start_position a
-            (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
-            faldo:position Integer(numeric position)
-            faldo:reference reference_id
+        (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
+        faldo:position Integer(numeric position)
+        faldo:reference reference_id
         end_position a
-            (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
-            faldo:position Integer(numeric position)
-            faldo:reference reference_id
+        (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
+        faldo:position Integer(numeric position)
+        faldo:reference reference_id
 
         :param graph:
+
         :return:
+
         """
 
         if feature_as_class:
@@ -299,7 +308,7 @@ class Feature():
     def _makePositionId(self, reference, coordinate, types=None):
         """
         Note that positions should have a reference (we will enforce).
-            Only exact positions need a coordinate.
+        Only exact positions need a coordinate.
         :param reference:
         :param coordinate:
         :param types:
@@ -353,25 +362,28 @@ class Feature():
         """
         Add the positional information to the graph, following the faldo model.
         We assume that if the strand is None,
-            we give it a generic "Position" only.
+        we give it a generic "Position" only.
         Triples:
         my_position a (any of: faldo:(((Both|Plus|Minus)Strand)|Exact)Position)
-            faldo:position Integer(numeric position)
-            faldo:reference reference_id
+        faldo:position Integer(numeric position)
+        faldo:reference reference_id
 
         :param graph:
         :param reference_id:
         :param position:
         :param position_types:
         :param strand:
+
         :return:  Identifier of the position created
+
         """
         pos_id = self._makePositionId(reference_id, position, position_types)
         if position is not None:
             self.graph.addTriple(pos_id, self.properties['position'],
                                  position, object_is_literal=True,
                                  literal_type="xsd:integer")
-        self.graph.addTriple(pos_id, self.properties['reference'], reference_id)
+        self.graph.addTriple(
+            pos_id, self.properties['reference'], reference_id)
         if position_types is not None:
             for pos_type in position_types:
                 self.model.addType(pos_id, pos_type)
@@ -398,7 +410,9 @@ class Feature():
         parent has_subsequence feature
         :param graph:
         :param parentid:
+
         :return:
+
         """
         self.graph.addTriple(
             self.id, self.properties['is_subsequence_of'], parentid)
@@ -437,7 +451,9 @@ def makeChromID(chrom, reference=None, prefix=None):
 
     :param chrom: the chromosome (preferably without any chr prefix)
     :param reference: the numeric portion of the taxon id
+
     :return:
+
     """
     if reference is None:
         logger.warning(

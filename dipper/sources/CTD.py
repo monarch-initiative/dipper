@@ -31,9 +31,9 @@ class CTD(Source):
     leveraging only the associations based on DIRECT evidence
     (not using the inferred associations).
     We currently process the following associations:
-        * chemical-disease
-        * gene-pathway
-        * gene-disease
+    * chemical-disease
+    * gene-pathway
+    * gene-disease
 
     CTD curates relationships between genes and chemicals/diseases with
     marker/mechanism and/or therapeutic.
@@ -107,9 +107,9 @@ class CTD(Source):
         Override Source.fetch()
         Fetches resources from CTD using the CTD.files dictionary
         Args:
-            :param is_dl_forced (bool): Force download
+        :param is_dl_forced (bool): Force download
         Returns:
-            :return None
+        :return None
         """
         self.get_files(is_dl_forced)
 
@@ -124,9 +124,9 @@ class CTD(Source):
         Override Source.parse()
         Parses version and interaction information from CTD
         Args:
-            :param limit (int, optional) limit the number of rows processed
+        :param limit (int, optional) limit the number of rows processed
         Returns:
-            :return None
+        :return None
         """
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
@@ -524,7 +524,8 @@ class CTD(Source):
         if pubmed_ids is not None and len(pubmed_ids) > 0:
             eco = self._get_evidence_code('TAS')
             for pmid in pubmed_ids:
-                r = Reference(self.g, pmid, Reference.ref_types['journal_article'])
+                r = Reference(
+                    self.g, pmid, Reference.ref_types['journal_article'])
                 r.addRefToGraph()
                 assoc.add_source(pmid)
                 assoc.add_evidence(eco)
@@ -556,10 +557,12 @@ class CTD(Source):
         """
         Get curie for evidence class label
         Args:
-            :param evidence (str): evidence label
+        :param evidence (str): evidence label
         Label:
-            :return str: curie for evidence label from ECO
+        :return str: curie for evidence label from ECO
+
         """
+
         eco_map = {
             'TAS': 'ECO:0000033'
         }

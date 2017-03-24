@@ -11,6 +11,7 @@ class D2PAssoc(Assoc):
     and nodes get added.
     By default, an association will assume the "has_phenotype" relationship,
     unless otherwise specified.
+
     """
 
     d2p_object_properties = {
@@ -46,12 +47,14 @@ class D2PAssoc(Assoc):
     def add_association_to_graph(self):
         """
         The reified relationship between a disease and a phenotype is decorated
-            with some provenance information.
+        with some provenance information.
         This makes the assumption that both the disease and phenotype
-            are classes.
+        are classes.
 
         :param g:
+
         :return:
+
         """
 
         # add the basic association nodes
@@ -73,16 +76,17 @@ class D2PAssoc(Assoc):
     def make_d2p_id(self):
         """
         Make an association id for phenotypic associations with disease
-            that is defined by:
-            source of association + disease + relationship + phenotype
-                + onset + frequency
+        that is defined by:
+        source of association + disease + relationship + phenotype
+        + onset + frequency
+
         :return:
+
         """
 
         attributes = [self.onset, self.frequency]
-        assoc_id = self.make_association_id(self.definedby,
-                                            self.disease_id,
-                                            self.rel,
-                                            self.phenotype_id, attributes)
+        assoc_id = self.make_association_id(
+            self.definedby, self.disease_id, self.rel, self.phenotype_id,
+            attributes)
 
         return assoc_id

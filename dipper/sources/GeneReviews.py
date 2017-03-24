@@ -34,12 +34,12 @@ class GeneReviews(Source):
     © 1993-2015. Permission is hereby granted to reproduce, distribute,
     and translate copies of content materials provided that
     (i) credit for source (www.ncbi.nlm.nih.gov/books/NBK1116/)
-        and copyright (University of Washington, Seattle)
-        are included with each copy;
+    and copyright (University of Washington, Seattle)
+    are included with each copy;
     (ii) a link to the original material is provided whenever the material is
-        published elsewhere on the Web; and
+    published elsewhere on the Web; and
     (iii) reproducers, distributors, and/or translators comply with this
-        copyright notice and the GeneReviews Usage Disclaimer.
+    copyright notice and the GeneReviews Usage Disclaimer.
 
     This script doesn't pull the GeneReviews books from the NCBI Bookshelf
     directly; scripting this task is expressly prohibited by
@@ -336,7 +336,8 @@ class GeneReviews(Source):
                                 nbk_id)
                             pmid_set.add(pmnum)
                             reference = Reference(
-                                self.graph, pmid, Reference.ref_types['journal_article'])
+                                self.graph,
+                                pmid, Reference.ref_types['journal_article'])
                             reference.addRefToGraph()
 
             # TODO add author history, copyright, license to dataset
