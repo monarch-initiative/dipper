@@ -7,7 +7,7 @@ Submodules
 :mod:`Assoc` Module
 --------------------------
 
-.. automodule:: dipper.models.Assoc
+.. automodule:: dipper.models.assoc.Association
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ Submodules
 :mod:`Chem2DiseaseAssoc` Module
 --------------------------------------
 
-.. automodule:: dipper.models.Chem2DiseaseAssoc
+.. automodule:: dipper.models.assoc.Chem2DiseaseAssoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ Submodules
 :mod:`D2PAssoc` Module
 -----------------------------
 
-.. automodule:: dipper.models.D2PAssoc
+.. automodule:: dipper.models.assoc.D2PAssoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ Submodules
 :mod:`DispositionAssoc` Module
 -------------------------------------
 
-.. automodule:: dipper.models.DispositionAssoc
+.. automodule:: dipper.models.assoc.DispositionAssoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -47,7 +47,7 @@ Submodules
 :mod:`G2PAssoc` Module
 -----------------------------
 
-.. automodule:: dipper.models.G2PAssoc
+.. automodule:: dipper.models.assoc.G2PAssoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -71,7 +71,7 @@ Submodules
 :mod:`InteractionAssoc` Module
 -------------------------------------
 
-.. automodule:: dipper.models.InteractionAssoc
+.. automodule:: dipper.models.assoc.InteractionAssoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -79,10 +79,7 @@ Submodules
 :mod:`OrthologyAssoc` Module
 -----------------------------------
 
-.. automodule:: dipper.models.OrthologyAssoc
+.. automodule:: dipper.models.assoc.OrthologyAssoc
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-

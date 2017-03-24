@@ -115,6 +115,3 @@ Submodules
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-
