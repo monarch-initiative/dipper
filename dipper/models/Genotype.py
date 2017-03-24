@@ -17,6 +17,7 @@ class Genotype():
     GENO https://github.com/monarch-initiative/GENO-ontology.
     For specific sequence features,
     we use the GenomicFeature class to create them.
+
     """
 
     # special genotype parts mapped to their
@@ -150,12 +151,13 @@ class Genotype():
             genotype_description=None):
         """
         If a genotype_type is not supplied,
-            we will default to 'intrinsic_genotype'
+        we will default to 'intrinsic_genotype'
         :param genotype_id:
         :param genotype_label:
         :param genotype_type:
         :param genotype_description:
         :return:
+
         """
 
         if genotype_type is None:
@@ -170,13 +172,14 @@ class Genotype():
             allele_description=None):
         """
         Make an allele object.
-            If no allele_type is added, it will default to a geno:allele
+        If no allele_type is added, it will default to a geno:allele
         :param allele_id: curie for allele (required)
         :param allele_label: label for allele (required)
         :param allele_type: id for an allele type (optional,
-            recommended SO or GENO class)
+        recommended SO or GENO class)
         :param allele_description: a free-text description of the allele
         :return:
+
         """
 
         # TODO should we accept a list of allele types?
@@ -219,6 +222,7 @@ class Genotype():
         :param child_id:
         :param parent_id:
         :return:
+
         """
 
         self.graph.addTriple(
@@ -242,6 +246,7 @@ class Genotype():
         :param gene_id:
         :param rel_id:
         :return:
+
         """
         if rel_id is None:
             rel_id = self.properties['is_sequence_variant_instance_of']
@@ -259,6 +264,7 @@ class Genotype():
         :param gene_id:
         :param rel_id:
         :return:
+
         """
         if rel_id is None:
             rel_id = self.properties['has_affected_locus']
@@ -277,6 +283,7 @@ class Genotype():
         :param product_label:
         :param product_type:
         :return:
+
         """
         if product_label is not None and product_type is not None:
             self.model.addIndividualToGraph(
@@ -295,6 +302,7 @@ class Genotype():
         :param polypeptide_type:
         :param transcript_id:
         :return:
+
         """
 
         if polypeptide_type is None:
@@ -324,6 +332,7 @@ class Genotype():
         :param allele1_rel:
         :param allele2_rel:
         :return:
+
         """
 
         # vslc has parts allele1/allele2
@@ -350,7 +359,7 @@ class Genotype():
     def addVSLCtoParent(self, vslc_id, parent_id):
         """
         The VSLC can either be added to a genotype or to a GVC.
-            The vslc is added as a part of the parent.
+        The vslc is added as a part of the parent.
         :param vslc_id:
         :param parent_id:
         :return:
@@ -364,13 +373,14 @@ class Genotype():
     def addParts(self, part_id, parent_id, part_relationship=None):
         """
         This will add a has_part (or subproperty) relationship between
-            a parent_id and the supplied part.
+        a parent_id and the supplied part.
         By default the relationship will be BFO:has_part,
-            but any relationship could be given here.
+        but any relationship could be given here.
         :param part_id:
         :param parent_id:
         :param part_relationship:
         :return:
+
         """
 
         if part_relationship is None:
@@ -417,13 +427,15 @@ class Genotype():
     def addTaxon(self, taxon_id, genopart_id):
         """
         The supplied geno part will have the specified taxon added with
-            RO:in_taxon relation.
+        RO:in_taxon relation.
         Generally the taxon is associated with a genomic_background,
         but could be added to any genotype part (including a gene,
-            regulatory element, or sequence alteration).
+        regulatory element, or sequence alteration).
         :param taxon_id:
         :param genopart_id:
+
         :return:
+
         """
         self.graph.addTriple(
             genopart_id, self.properties['in_taxon'], taxon_id)
@@ -443,11 +455,13 @@ class Genotype():
             description=None):
         """
         Here, a gene-targeting reagent is added.
-            The actual targets of this reagent should be added separately.
+        The actual targets of this reagent should be added separately.
         :param reagent_id:
         :param reagent_label:
         :param reagent_type:
+
         :return:
+
         """
 
         # TODO add default type to reagent_type
@@ -467,19 +481,20 @@ class Genotype():
         reagent (such as a morpholino or rnai).
         If an instance id is not supplied,
         we will create it as an anonymous individual which is of the type
-            GENO:reagent_targeted_gene.
+        GENO:reagent_targeted_gene.
         We will also add the targets relationship between the reagent and
-            gene class.
+        gene class.
 
         <targeted_gene_id> a GENO:reagent_targeted_gene
-            rdf:label targeted_gene_label
-            dc:description description
+        rdf:label targeted_gene_label
+        dc:description description
         <reagent_id> GENO:targets_instance_of <gene_id>
 
         :param reagent_id:
         :param gene_id:
         :param targeted_gene_id:
         :return:
+
         """
 
         # akin to a variant locus
@@ -611,8 +626,10 @@ class Genotype():
         :param reference_id: for example, a build id like UCSC:hg19
         :param reference_label:
         :param chr_type: this is the class that this is an instance of.
-            typically a genome-specific chr
+        typically a genome-specific chr
+
         :return:
+
         """
         family = Family(self.graph)
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
