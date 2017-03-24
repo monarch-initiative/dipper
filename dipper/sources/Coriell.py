@@ -8,7 +8,7 @@ import os
 import pysftp
 
 from dipper.sources.Source import Source
-from dipper.models.assoc.Association import Assoc
+# from dipper.models.assoc.Association import Assoc unused
 from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.models.Model import Model
@@ -121,20 +121,20 @@ class Coriell(Source):
         Here we connect to the coriell sftp server using private connection
         details.  They dump bi-weekly files with a timestamp in the filename.
         For each catalog, we poll the remote site and pull the most-recently
-        updated file, renaming it to our local *_latest.csv.
+        updated file, renaming it to our local  latest.csv.
 
         Be sure to have pg user/password connection details in your conf.json
         file, like:
-        dbauth : {
-            "coriell" : {
-                "user" : "<username>", "password" : "<password>",
-                "host" : <host>, "private_key"=path/to/rsa_key}
+        dbauth : {"coriell" : {
+        "user" : "<username>", "password" : "<password>",
+        "host" : <host>, "private_key"=path/to/rsa_key}
         }
 
         :param is_dl_forced:
         :return:
 
         """
+
         host = config.get_config()['dbauth']['coriell']['host']
         user = config.get_config()['dbauth']['coriell']['user']
         passwd = config.get_config()['dbauth']['coriell']['password']
@@ -228,36 +228,40 @@ class Coriell(Source):
 
         :NIGMSrepository a CLO_0000008 #repository
         label : NIGMS Human Genetic Cell Repository
-        foaf:page https://catalog.coriell.org/0/sections/collections/NIGMS/?SsId=8
+        foaf:page
+         https://catalog.coriell.org/0/sections/collections/NIGMS/?SsId=8
 
-            line_id a CL_0000057,  #fibroblast line
-                derives_from patient_id
-                part_of :NIGMSrepository
-                RO:model_of OMIM:disease_id
+        line_id a CL_0000057,  #fibroblast line
+            derives_from patient_id
+            part_of :NIGMSrepository
+            RO:model_of OMIM:disease_id
 
-            patient id a foaf:person,
-                label: "fibroblast from patient 12345 with disease X"
-                member_of family_id  #what is the right thing here?
-                SIO:race EFO:caucasian  #subclass of EFO:0001799
-                in_taxon NCBITaxon:9606
-                dc:description Literal(remark)
-                RO:has_phenotype OMIM:disease_id
-                GENO:has_genotype genotype_id
+        patient id a foaf:person,
+            label: "fibroblast from patient 12345 with disease X"
+            member_of family_id  #what is the right thing here?
+            SIO:race EFO:caucasian  #subclass of EFO:0001799
+            in_taxon NCBITaxon:9606
+            dc:description Literal(remark)
+            RO:has_phenotype OMIM:disease_id
+            GENO:has_genotype genotype_id
 
-            family_id a owl:NamedIndividual
-                foaf:page "https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?PgId=402&fam=2104&coll=GM"
+        family_id a owl:NamedIndividual
+            foaf:page
+             "https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?PgId=402&fam=2104&coll=GM"
 
-            genotype_id a intrinsic_genotype
-                GENO:has_alternate_part allelic_variant_id
-                we don't necessarily know much about the genotype,
-                other than the allelic variant. also there's the sex here
+        genotype_id a intrinsic_genotype
+            GENO:has_alternate_part allelic_variant_id
+            we don't necessarily know much about the genotype,
+            other than the allelic variant. also there's the sex here
 
-            pub_id mentions cell_line_id
+        pub_id mentions cell_line_id
 
         :param raw:
         :param limit:
         :return:
+
         """
+
         logger.info("Processing Data from %s", raw)
 
         if self.testMode:      # set the graph to build
@@ -476,7 +480,8 @@ class Coriell(Source):
                     karyotype_id = None
                     if karyotype.strip() != '':
                         karyotype_id = \
-                            '_:'+re.sub('MONARCH:', '', self.make_id(karyotype))
+                            '_:'+re.sub(
+                                'MONARCH:', '', self.make_id(karyotype))
                         # add karyotype as karyotype_variation_complement
                         model.addIndividualToGraph(
                             karyotype_id, karyotype,
@@ -496,7 +501,8 @@ class Coriell(Source):
                             karyotype_feature_label = \
                                 'some karyotype alteration on chr'+str(c)
                             f = Feature(
-                                g, karyotype_feature_id, karyotype_feature_label,
+                                g, karyotype_feature_id,
+                                karyotype_feature_label,
                                 geno.genoparts['sequence_alteration'])
                             f.addFeatureStartLocation(None, chr_id)
                             f.addFeatureToGraph()
@@ -516,8 +522,9 @@ class Coriell(Source):
                         mutation = mutation.strip()
                         gvc_id = karyotype_id
                         if variant_id != '':
-                            gvc_id = '_:' + variant_id.replace(';', '-') + '-' \
-                                    + re.sub(r'\w*:', '', karyotype_id)
+                            gvc_id = \
+                                '_:' + variant_id.replace(';', '-') + '-' \
+                                + re.sub(r'\w*:', '', karyotype_id)
                         if mutation.strip() != '':
                             gvc_label = '; '.join((vl, karyotype))
                         else:
@@ -675,7 +682,8 @@ class Coriell(Source):
                                         # add the association:
                                         #   the patient has the disease
                                         assoc = G2PAssoc(
-                                            g, self.name, patient_id, disease_id)
+                                            g, self.name,
+                                            patient_id, disease_id)
                                         assoc.add_association_to_graph()
 
                                         # this line is a model of this disease
@@ -683,7 +691,8 @@ class Coriell(Source):
                                         # it's own association class?
                                         g.addTriple(
                                             cell_line_id,
-                                            model.object_properties['model_of'],
+                                            model.object_properties[
+                                                'model_of'],
                                             disease_id)
                                     else:
                                         logger.info(
