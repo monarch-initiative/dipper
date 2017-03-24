@@ -23,12 +23,10 @@ class EOM(PostgreSQLSource):
     between EOM and HP terminologies.
 
     The website is crawled monthly by NIF's DISCO crawler system,
-        which we utilize here.
+    which we utilize here.
     Be sure to have pg user/password connection details in your conf.json file,
     like:
-      dbauth : {
-        'disco' : {'user' : '<username>', 'password' : '<password>'}
-      }
+    dbauth : {'disco' : {'user' : '<username>', 'password' : '<password>'}}
 
     Monarch-curated data for the HP to EOM mapping is stored at
     https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv
@@ -158,7 +156,7 @@ class EOM(PostgreSQLSource):
                  subcategory, objective_definition, subjective_definition,
                  comments, synonyms, replaces, small_figure_url,
                  large_figure_url, e_uid, v_uid, v_uuid,
-                 v_last_modified,v_status, v_lastmodified_epoch) = line
+                 v_last_modified, v_status, v_lastmodified_epoch) = line
 
                 # note:
                 # e_uid v_uuid v_last_modified terminology_category_url
