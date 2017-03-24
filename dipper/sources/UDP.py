@@ -35,7 +35,7 @@ class UDP(Source):
           "password": "bar"
       }
     }
-    See dipper.config for more information
+    See dipper/config.py for more information
 
     Output of fetcher:
     udp_variants.tsv
