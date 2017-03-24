@@ -233,7 +233,7 @@ latex_documents = [
 man_pages = [
     ('index', 'dipper', 'Dipper Documentation',
      ['Nicole Washington, Bryan Laraway, Kent Shefchek, ' +
-      'Matthew Brush, Chris Condit, To,Conlin'], 1)
+      'Matthew Brush, Chris Condit, Tom Conlin'], 1)
 ]
 
 # If true, show URL addresses after external links.
