@@ -116,13 +116,14 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * Wormbase (genes, alleles, phenotypes)
     * FlyBase (genotype, phenotype)
     * Reactome (gene-pathway associations)
-    * MyDrug (drug-outcome associations)
+    * MyDrug (FAERS drug-outcome associations)
     * GeneOntology (gene-process/function/subcellular location associations)
     * Monarch (Monarch curated genotype-phenotyp associations)
     * Monochrom (Ontology of chromosomes)
     * Orphanet (gene-disease associations)
     * UCSCBands (RDF representation of chromosomal bands using FALDO an Monochrom)
     * WormBase (genotype-phenotype associations)
+    * String (direct protein-protein interactions from experimental data)
     
     Each source has a corresponding script at https://github.com/monarch-initiative/dipper/tree/master/dipper/sources
 
