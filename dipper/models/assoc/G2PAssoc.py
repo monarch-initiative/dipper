@@ -18,6 +18,7 @@ class G2PAssoc(Assoc):
     Note that genotypes are expected to be
     created and defined outside of this association,
     most likely by calling methods in the Genotype() class.
+
     """
 
     g2p_types = {
@@ -110,14 +111,16 @@ class G2PAssoc(Assoc):
     def make_g2p_id(self):
         """
         Make an association id for phenotypic associations that is defined by:
-            source of association +
-            (Annot subject) +
-            relationship +
-            phenotype/disease +
-            environment +
-            start stage +
-            end stage
+        source of association +
+        (Annot subject) +
+        relationship +
+        phenotype/disease +
+        environment +
+        start stage +
+        end stage
+
         :return:
+
         """
 
         attributes = \
