@@ -31,9 +31,7 @@ class MGI(PostgreSQLSource):
     when adding nodes to the graph.
     In order to use this parser, you will need to have user/password connection
     details in your conf.json file, like:
-      dbauth : {
-        'mgi' : {'user' : '<username>', 'password' : '<password>'}
-      }
+    dbauth : {'mgi' : {'user' : '<username>', 'password' : '<password>'}}
     You can request access by contacting mgi-help@jax.org
 
     """
@@ -1260,7 +1258,8 @@ class MGI(PostgreSQLSource):
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
-                        reference.setType(Reference.ref_types['journal_article'])
+                        reference.setType(
+                            Reference.ref_types['journal_article'])
                         model.makeLeader(pub_id)
                     reference.addRefToGraph()
 
@@ -1398,16 +1397,18 @@ class MGI(PostgreSQLSource):
 
                     # it's a gene or pseudogene
                     if mapped_marker_type in ['SO:0000704', 'SO:0000336']:
-                        model.addClassToGraph(marker_id, symbol,
-                                           mapped_marker_type, name)
-                        model.addSynonym(marker_id, name,
-                                      Assoc.properties['hasExactSynonym'])
+                        model.addClassToGraph(
+                            marker_id, symbol, mapped_marker_type, name)
+                        model.addSynonym(
+                            marker_id,
+                            name, Assoc.properties['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
                     else:
-                        model.addIndividualToGraph(marker_id, symbol,
-                                                   mapped_marker_type, name)
-                        model.addSynonym(marker_id, name,
-                                         Assoc.properties['hasExactSynonym'])
+                        model.addIndividualToGraph(
+                            marker_id, symbol, mapped_marker_type, name)
+                        model.addSynonym(
+                            marker_id, name,
+                            Assoc.properties['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1741,7 +1742,8 @@ class MGI(PostgreSQLSource):
                         # but all these are actually MGI ids
                         strain_id = accid
                     elif logicaldb_key == '70':  # RIKEN
-                        # like 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160'
+                        # like
+                        # http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC00160
                         strain_id = 'RBRC:' + accid
                     elif logicaldb_key == '87':
                         strain_id = 'MUGEN:' + accid
@@ -1821,7 +1823,7 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
+        # model = Model(g)  # unused
         logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(g)
@@ -1877,8 +1879,8 @@ class MGI(PostgreSQLSource):
                             startcoordinate, chrom_id, strand,
                             [Feature.types['FuzzyPosition']])
                     if endcoordinate is not None:
-                        feature.addFeatureEndLocation(int(float(endcoordinate)),
-                                                      chrom_id, strand)
+                        feature.addFeatureEndLocation(
+                            int(float(endcoordinate)), chrom_id, strand)
                     # note we don't add the uncertain end coordinate,
                     # because we don't know what it is.
                     add_as_class = False
@@ -2031,7 +2033,7 @@ class MGI(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
+        # model = Model(g)  # unused
         logger.info("Getting genotypes for strains")
         raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -2323,7 +2325,7 @@ class MGI(PostgreSQLSource):
             'laboratory mouse and M. m. musculus (Prague)': '39442',
             'M. m. castaneus and M. m. musculus': '477816',
             'M. m. domesticus (Canada)': '10092',
-            # FIXME9
+            # FIXME
             'M. m. domesticus and M. m. domesticus poschiavinus': '10092',
             'M. m. musculus and M. spretus or M. m. domesticus': '186842',
             'M. chypre': '862507',  # unclassified mus
