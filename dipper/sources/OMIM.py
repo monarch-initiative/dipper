@@ -29,26 +29,25 @@ OMIMAPI = 'http://api.omim.org/api/entry?format=json&apiKey=' + \
 
 class OMIM(Source):
     """
-     OMIM is an unusual source.
-     We get lots of the disease-gene associations, including allelic variants
-     from their ftp site, which is obtainable anonymously.
-     However, more detailed information is available via their API.
-     So, we pull the basic files from their ftp site,
-     extract the omim identifiers, then query their API in batch.
-     (Note this requires an apiKey, which is not stored in the repo,
-        but in a separate conf.json file.)
-     Processing this source serves two purposes:
-     1.  enables the creation of the OMIM classes for the purposes of merging
-            into the disease ontology
-     2.  adds annotations such as disease-gene associations
+    OMIM is an unusual source.
+    We get lots of the disease-gene associations, including allelic variants
+    from their ftp site, which is obtainable anonymously.
+    However, more detailed information is available via their API.
+    So, we pull the basic files from their ftp site,
+    extract the omim identifiers, then query their API in batch.
+    (Note this requires an apiKey, which is not stored in the repo,
+    but in a separate conf.json file.)
+    Processing this source serves two purposes:
+    1.  enables the creation of the OMIM classes for the purposes of merging
+    into the disease ontology
+    2.  adds annotations such as disease-gene associations
 
-     When creating the disease classes, we pull from their REST-api
-        id/label/definition information.
-     Additionally we pull the Orphanet and UMLS mappings
-     (to make equivalent ids).
-     We also pull the phenotypic series annotations as grouping classes.
+    When creating the disease classes, we pull from their REST-api
+    id/label/definition information.
+    Additionally we pull the Orphanet and UMLS mappings
+    (to make equivalent ids).
+    We also pull the phenotypic series annotations as grouping classes.
 
-     Note that ... ???
 
     """
 
@@ -521,11 +520,6 @@ class OMIM(Source):
                             # for now, just take the first one
                             cytoloc = cytoloc.split('-')[0]
                             loc = makeChromID(cytoloc, tax_num, 'CHR')
-                            # this is the chr band
-                            # Commenting out label creation as this seems
-                            # redundant with monochrom
-                            # cytoloc_label = "chr{} ({})".format(cytoloc.split('-')[0], tax_label)
-                            # model.addClassToGraph(loc, cytoloc_label)
                             model.addClassToGraph(loc, None)
                             f.addSubsequenceOfFeature(loc)
                             f.addFeatureToGraph(True, None, is_gene)
@@ -712,7 +706,7 @@ class OMIM(Source):
             rel_label = 'contributes to'
         elif re.match(r'\?', disorder_label):
             # this is a questionable mapping!  skip?
-            rel_id =  model.object_properties['contributes_to']
+            rel_id = model.object_properties['contributes_to']
             rel_label = 'contributes to'
 
         evidence = self._map_phene_mapping_code_to_eco(phene_key)
@@ -1076,8 +1070,10 @@ class OMIM(Source):
         """
 
         labels = []
-        # "alternativeTitles": "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
-        # "includedTitles": "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
+        # "alternativeTitles": "
+        #   ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
+        # "includedTitles":
+        #   "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
 
         for t in titles.split(';;'):
             # remove ', included', if present
