@@ -14,6 +14,7 @@ class Assoc:
     A base class for OBAN (Monarch)-style associations,
     to enable attribution of source and evidence
     on statements.
+
     """
 
     assoc_types = {
@@ -192,12 +193,14 @@ class Assoc:
     def set_association_id(self, assoc_id=None):
         """
         This will set the association ID based on the internal parts
-            of the association.
+        of the association.
         To be used in cases where an external association identifier
-            should be used.
+        should be used.
 
         :param assoc_id:
+
         :return:
+
         """
         if assoc_id is None:
             self.assoc_id = self.make_association_id(self.definedby, self.sub,
@@ -228,7 +231,9 @@ class Assoc:
         """
         Add an evidence code to the association object (maintained as a list)
         :param identifier:
+
         :return:
+
         """
 
         if identifier is not None and identifier.strip() != '':
@@ -243,7 +248,9 @@ class Assoc:
         TODO we need to greatly expand this function!
 
         :param identifier:
+
         :return:
+
         """
 
         if identifier is not None and identifier.strip() != '':
@@ -274,7 +281,9 @@ class Assoc:
         :param predicate:
         :param object:
         :param attributes:
+
         :return:
+
         """
 
         # note others available:
