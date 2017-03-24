@@ -255,9 +255,11 @@ class HPOAnnotations(Source):
                     assoc = D2PAssoc(
                         g, self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
-                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(
+                        g, self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
-                    assoc = DispositionAssoc(g, self.name, disease_id, pheno_id)
+                    assoc = DispositionAssoc(
+                        g, self.name, disease_id, pheno_id)
                 else:
                     logger.error("I don't know what this aspect is: %s", asp)
 
@@ -269,17 +271,22 @@ class HPOAnnotations(Source):
                     pub = pub.strip()
                     pubtype = None
                     if pub != '':
-                        # if re.match(r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene', pub):
+                        # if re.match(
+                        #       r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene',
+                        #        pub):
                         #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
                         #     m = re.search(r'part\=(\w+)', pub)
                         #     pub_id = 'GeneReviews:'+m.group(1)
-                        # elif re.search(r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=', pub):
+                        # elif re.search(
+                        #        r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=',
+                        #        pub):
                         #     m = re.search(r'Expert=(\d+)', pub)
                         #     pub_id = 'Orphanet:'+m.group(1)
 
                         if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match(r'PMID', pub):
-                                pubtype = Reference.ref_types['journal_article']
+                                pubtype = \
+                                    Reference.ref_types['journal_article']
                             elif re.match(r'HPO', pub):
                                 pubtype = Reference.ref_types['person']
                             else:
@@ -297,8 +304,9 @@ class HPOAnnotations(Source):
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
                                 orphaneturl = \
-                                    ''.join(('http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                             str(orphanetnum)))
+                                    ''.join((
+                                        'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                        str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
@@ -332,7 +340,8 @@ class HPOAnnotations(Source):
         """
         Fetch the raw hpo-annotation-data by cloning/pulling the
         [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
-        These files get added to the files object, and iterated over separately.
+        These files get added to the files object,
+        and iterated over separately.
         :return:
 
         """
