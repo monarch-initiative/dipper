@@ -133,7 +133,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
    ensembl,hgnc,orphanet,omia,flybase,mmrrc,wormbase,mpd,gwascatalog,go
    ``` 
 * Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
-Please see our [best-practies documentation](sources/README.md) for details on writing new Source parsers 
+Please see our [best-practices documentation](sources/README.md) for details on writing new Source parsers 
 using Dipper code, and make a Pull request.  
 
 ## License (Under consideration)
