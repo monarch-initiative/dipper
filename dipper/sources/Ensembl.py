@@ -115,7 +115,7 @@ class Ensembl(Source):
         protein_list = list()
         params = urllib.parse.urlencode(
             {'query': self._build_biomart_gene_query(str(taxon_id))})
-        conn = http.client.HTTPConnection('uswest.ensembl.org')
+        conn = http.client.HTTPConnection('www.ensembl.org')
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
         for line in response:
@@ -143,7 +143,7 @@ class Ensembl(Source):
         # basic stuff for ensembl ids
         cols_to_fetch = [
             "ensembl_gene_id", "external_gene_name", "description",
-            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprot_swissprot"]
+            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
 
         if taxid == '9606':
             cols_to_fetch.append("hgnc_id")
@@ -215,8 +215,7 @@ class Ensembl(Source):
             filereader = csv.reader(csvfile, delimiter='\t')
             for row in filereader:
                 if len(row) < 4:
-                    logger.warn("Data error for file %s", raw)
-                    return
+                    raise ValueError("Data error for file %s", raw)
                 (ensembl_gene_id, external_gene_name,
                  description, gene_biotype, entrezgene,
                  peptide_id, uniprot_swissprot) = row[0:7]
@@ -244,6 +243,7 @@ class Ensembl(Source):
                 gene_type_id = None
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
+                model.addIndividualToGraph(peptide_curie, None, self._get_gene_type("polypeptide"))
 
                 if entrezgene != '':
                     model.addEquivalentClass(gene_id, entrez_curie)
@@ -264,6 +264,7 @@ class Ensembl(Source):
     def _get_gene_type(self, biotype):
 
         type_id_map = {
+            "polypeptide": "SO:0000104",
             '3prime_overlapping_ncrna': 'SO:0001263',
             # IG_C_gene
             # IG_C_pseudogene
