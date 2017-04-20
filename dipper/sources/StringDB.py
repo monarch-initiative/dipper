@@ -113,8 +113,6 @@ class StringDB(Source):
                 # RO:0002434 ! interacts_with
                 interacts_with = 'RO:0002434'
                 self.graph.addTriple(protein1_curie, interacts_with, protein2_curie)
-                # Until we have symmetry working
-                self.graph.addTriple(protein2_curie, interacts_with, protein1_curie)
                 if limit is not None and index >= limit:
                     break
         logger.info("Finished parsing p-p interactions for {},"

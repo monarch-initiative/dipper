@@ -240,7 +240,7 @@ class CTD(Source):
         model.addClassToGraph(entrez_id, None)
 
         self.pathway.addPathway(pathway_id, pathway_name)
-        self.pathway.addGeneToPathway(pathway_id, entrez_id)
+        self.pathway.addGeneToPathway(entrez_id, pathway_id)
 
         return
 
