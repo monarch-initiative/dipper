@@ -143,7 +143,7 @@ class Ensembl(Source):
         # basic stuff for ensembl ids
         cols_to_fetch = [
             "ensembl_gene_id", "external_gene_name", "description",
-            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprot_swissprot"]
+            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
 
         if taxid == '9606':
             cols_to_fetch.append("hgnc_id")

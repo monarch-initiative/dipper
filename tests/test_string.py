@@ -45,9 +45,6 @@ class StringTestFakeData(unittest.TestCase):
 
         string_db._process_protein_links(dataframe, protein_list, 9606)
 
-        print(string_db.graph.serialize(format="turtle").decode("utf-8"))
-        self.assertTrue(False)
-
         sparql_query = """
                       SELECT ?prot
                       WHERE {
