@@ -253,7 +253,7 @@ class Ensembl(Source):
                 if peptide_id != '':
                     geno.addGeneProduct(gene_id, peptide_curie)
                     if uniprot_swissprot != '':
-                        model.addEquivalentClass(peptide_curie, uniprot_curie)
+                        model.addXref(peptide_curie, uniprot_curie)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
