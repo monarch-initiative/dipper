@@ -75,9 +75,9 @@ class StringDB(Source):
             logger.info("Only parsing first %d rows", limit)
 
         protein_paths = self._get_file_paths(self.tax_ids, 'protein_links')
-        ensembl = Ensembl(self.graph_type, self.are_bnodes_skized)
-
+        
         for taxon in protein_paths:
+            ensembl = Ensembl(self.graph_type, self.are_bnodes_skized)
             string_file_path = '/'.join((
                 self.rawdir, protein_paths[taxon]['file']))
 
