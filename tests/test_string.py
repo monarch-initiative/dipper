@@ -49,7 +49,6 @@ class StringTestFakeData(unittest.TestCase):
                       SELECT ?prot
                       WHERE {
                           ?prot RO:0002434 ENSEMBL:ENSP00000003084 .
-                          ENSEMBL:ENSP00000003084 RO:0002434 ?prot .
                       }
                       """
         sparql_output = string_db.graph.query(sparql_query)
@@ -58,6 +57,15 @@ class StringTestFakeData(unittest.TestCase):
         self.assertEqual(results, expected)
 
     def testFakeDataSet2(self):
+        """
+        Dataset contains a deprecated protein ID
+        that we expect if filtered out by ensembl biomart
+        We test that this returns a graph with 3 triples:
+        MonarchData:string.ttl a owl:Ontology ;
+        owl:versionIRI <https://archive.monarchinitiative.org/.../string.ttl> ;
+        owl:versionInfo "some version"
+        :return:
+        """
         string_db = StringDB('rdf_graph', True)
         dataframe = pd.DataFrame(data=self.test_set_2, columns=self.columns)
         string_db._process_protein_links(dataframe, self.protein_list, 9606)

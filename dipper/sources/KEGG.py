@@ -921,7 +921,7 @@ class KEGG(Source):
                 ko_id = 'KEGG-'+ko_id
 
                 p = Pathway(g)
-                p.addGeneToPathway(pathway_id, ko_id)
+                p.addGeneToPathway(ko_id, pathway_id)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:

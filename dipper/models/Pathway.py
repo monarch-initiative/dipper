@@ -59,7 +59,7 @@ class Pathway():
 
         return
 
-    def addGeneToPathway(self, pathway_id, gene_id):
+    def addGeneToPathway(self, gene_id, pathway_id):
         """
         When adding a gene to a pathway, we create an intermediate
         'gene product' that is involved in
