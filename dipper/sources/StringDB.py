@@ -24,7 +24,7 @@ class StringDB(Source):
     From: http://string-db.org/cgi/help.pl
     """
     STRING_BASE = "http://string-db.org/download/"
-    STRING_VERSION = "v10"
+    STRING_VERSION = "v10.5"
     DEFAULT_TAXA = [9606, 10090, 7955, 7227, 6239]
 
     files = {
