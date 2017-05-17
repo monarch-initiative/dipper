@@ -2,8 +2,8 @@
 
 #  Reduce the subject and object of RDF triples (ntriples format)
 #  down to their @prefix (or literal object class)
-#  Reduce predicates to the specific identifier
-#  and the ontology they are from.(curi form)
+#  Reduce predicates to the specific term identifier
+#  and the ontology they are from. (curi form)
 #  Express the subject and object as nodes with a directed edge
 #  labeled with the predicate in the graphviz dot format
 #  Include a tally of each combination of nodes and edge
@@ -31,13 +31,13 @@ function trim(str){
 
 ########################################################
 # remove final(ish) element in paths with various delimiters
-# this leaves the namespace of a removed identifier
+# this leaves the namespace of a removed local identifier
 
 # this may need to be called more than once since
 # some identifiers may have embedded delimiters other uri use differently
 function stripid(uri){
 	# <_:blanknode> are not allowed in ntriples (but may happen anyway)
-	if(0 < match(uri, /^_:/))
+	if(0 < match(uri, /^_:|^https:\/\/monarchinitiative.org\/.well-known\/genid\//))
 		return "BNODE"
 	# perspective endpoints, choose the longest
 	delim["_"]=0; delim["/"]=0;
@@ -94,7 +94,7 @@ function final(uri){
 BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
-	prefix["https://monarchinitiative.org/_"]="BNODE"
+	# prefix["https://monarchinitiative.org/_"]="BNODE"
 	# just until skolemized bnodes get in the curie map?
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
 	############################################################
@@ -105,6 +105,7 @@ BEGIN{
 	prefix["http://www.w3.org/2002/07/owl#"]="owl"
 	# in mgi
 	prefix["https://www.mousephenotype.org"]="IMPC"
+    # http://www.mousephenotype.org/data/genes
 	# in panther
 	prefix["http://identifiers.org/wormbase"]="WormBase"
 	# in IMPC
