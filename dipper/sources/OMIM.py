@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # omimftp key EXPIRES MAY 2018
 # get a new one here: http://omim.org/help/api
+# note they forbid more than one call per two seconds
 OMIMFTP = 'http://data.omim.org/downloads/' + \
     config.get_config()['keys']['omim']
 
@@ -237,6 +238,9 @@ class OMIM(Source):
 
         # note that you can only do request batches of 20
         # see info about "Limits" at http://omim.org/help/api
+        # TODO 2017 May seems a majority of many groups of 20
+        # are producing python None for RDF triple Objects
+
         groupsize = 20
         if not self.testMode and limit is not None:
             # just in case the limit is larger than the number of records,
