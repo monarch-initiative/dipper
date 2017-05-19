@@ -2493,8 +2493,10 @@ class ZFIN(Source):
                 # acute T cell leukemia
                 # ZDB-PUB-110523-12
                 # 21552289
+                # TAS, ECO:0000033
+                # <tab>
                 (fish, environment, rel, disease_id, disease_label,
-                 zfin_pub_id, pubmed_id, blank) = row
+                 zfin_pub_id, pubmed_id, evidence_code, terminaltab) = row
 
                 if self.testMode \
                         and (fish not in self.test_ids['fish'] and
