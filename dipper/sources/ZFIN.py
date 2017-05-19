@@ -317,13 +317,14 @@ class ZFIN(Source):
 
         # scrub file of the oddities
         # where there are "\" instead of empty strings
-        pysed.replace("\\\\", '', '/'.join((self.rawdir,
-                                            self.files['geno']['file'])))
+        # 2017 May  see two lines with trailing baclslash in genbank.txt
+        pysed.replace(
+            "\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
 
         # pubs has control characters!
-        self.remove_backslash_r('/'.join((self.rawdir,
-                                          self.files['pubs']['file'])),
-                                'latin-1')
+        # not detecting any onntrol chars in pubs 2017 May
+        #self.remove_backslash_r(
+        #    '/'.join((self.rawdir, self.files['pubs']['file'])), 'latin-1')
 
         return
 
