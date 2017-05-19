@@ -18,10 +18,10 @@ from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 logger = logging.getLogger(__name__)
 
 
-# omimftp key EXPIRES April 11th, 2017
+# omimftp key EXPIRES MAY 2018
 # get a new one here: http://omim.org/help/api
 OMIMFTP = 'http://data.omim.org/downloads/' + \
-    config.get_config()['keys']['omimftp']
+    config.get_config()['keys']['omim']
 
 OMIMAPI = 'http://api.omim.org/api/entry?format=json&apiKey=' + \
     config.get_config()['keys']['omim'] + '&'
