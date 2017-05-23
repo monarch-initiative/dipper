@@ -166,7 +166,7 @@ CURIEMAP = {
 }
 
 # def fetch():
-    # wget --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
+# wget --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
 
 # def parse()
 
@@ -382,16 +382,16 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_disease_db = rcv_disease_id = rcv_disease_label = None
         rcv_disease_curi = rcv_ncbigene_id = rcv_gene_symbol = None
 
-        RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
+        RCVAssertion = ClinVarSet.find('./ReferenceClinVarAssertion')
         rcv_created = RCVAssertion.get('DateCreated')
         rcv_updated = RCVAssertion.get('DateLastUpdated')
         rcv_id = RCVAssertion.get('ID')
         # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/ClinVarAccession/@Acc
         # 162,466  2016-Mar
-        rcv_acc = RCVAssertion.find('ClinVarAccession').get('Acc')
+        rcv_acc = RCVAssertion.find('./ClinVarAccession').get('Acc')
 
         # I do not expect we care as we shouldn't keep the RCV.
-        if RCVAssertion.find('RecordStatus').text != 'current':
+        if RCVAssertion.find('./RecordStatus').text != 'current':
             LOG.warning(
                 rcv_acc + " <is not current on>")  # + rs_dated)
 
@@ -415,18 +415,29 @@ with gzip.open(FILENAME, 'rt') as fh:
         # 162,466  2016-Mar
         # 366,566  2017-Mar
 
-        RCV_MeasureSet = RCVAssertion.find('MeasureSet')
+        # are now up to three types
+        # <GenotypeSet ID="424700" Type="CompoundHeterozygote">
+        # <MeasureSet  ID="242681" Type="Variant">
+        # <Measure     ID="46900"  Type="single nucleotide variant">
+
+
+        RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
         # Note: it is a "set" but have only seen a half dozen with two,
         # all of type:  copy number gain  SO:0001742
 
-        rcv_variant_id = RCV_MeasureSet.get('ID')
-        # 2017 May EXISTS first MeasureSet w/o ID
+        if RCV_MeasureSet is None:
+            RCV_GenotypeSet = RCVAssertion.find('./GenotypeSet')
+            rcv_variant_supertype = RCV_GenotypeSet.get('Type')
+            for RCV_MeasureSet in RCV_GenotypeSet.findall('./MeasureSet'):
+                if rcv_variant_id is not None:
+                    rcv_variant_id += ',' +  RCV_MeasureSet.get('ID')
+                else:
+                    rcv_variant_id = RCV_MeasureSet.get('ID')
+        else:
+            rcv_variant_id = RCV_MeasureSet.get('ID')
+            rcv_variant_supertype = RCV_MeasureSet.get('Type')
 
-
-
-        rcv_variant_supertype = RCV_MeasureSet.get('Type')
-
-        for RCV_Measure in RCV_MeasureSet.findall('Measure'):
+        for RCV_Measure in RCV_MeasureSet.findall('./Measure'):
 
             if rcv_variant_supertype == "Variant":
                 rcv_variant_type = resolve(RCV_Measure.get('Type'), LTT)
@@ -445,7 +456,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 continue
 
             RCV_VariantName = RCV_Measure.find(
-                'Name/ElementValue[@Type="Preferred"]')
+                './Name/ElementValue[@Type="Preferred"]')
             if RCV_VariantName is not None:
                 rcv_variant_label = RCV_VariantName.text
             # else:
@@ -454,14 +465,14 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # XRef[@DB="dbSNP"]/@ID
             for RCV_dbSNP in \
-                    RCV_Measure.findall('XRef[@DB="dbSNP"]'):
+                    RCV_Measure.findall('./XRef[@DB="dbSNP"]'):
 
                 rcv_dbsnps.append(RCV_dbSNP.get('ID'))
 
             # this xpath works but is not supported by ElementTree.
             # ./AttributeSet/Attribute[starts-with(@Type, "HGVS")]
             for RCV_Synonym in \
-                    RCV_Measure.findall('AttributeSet/Attribute[@Type]'):
+                    RCV_Measure.findall('./AttributeSet/Attribute[@Type]'):
                 if RCV_Synonym.get('Type') is not None and \
                         RCV_Synonym.text is not None and \
                         re.match(r'^HGVS', RCV_Synonym.get('Type')):
@@ -471,7 +482,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
 
             # RCV_Variant = RCV_Measure.find(
-            #    'MeasureRelationship[@Type="variant in gene"]')
+            #    './MeasureRelationship[@Type="variant in gene"]')
 
             # 540074 genes overlapped by variant
             # 176970 within single gene
@@ -481,7 +492,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # 374 variant in gene
             # 54 near gene, downstream
 
-            RCV_Variant = RCV_Measure.find('MeasureRelationship')
+            RCV_Variant = RCV_Measure.find('./MeasureRelationship')
 
             if RCV_Variant is None:  # try letting them all through
                 LOG.info(ET.tostring(RCV_Measure).decode('utf-8'))
@@ -494,7 +505,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 #        rcv_variant_relationship_type)
 
                 # XRef[@DB="Gene"]/@ID
-                RCV_Gene = RCV_Variant.find('XRef[@DB="Gene"]')
+                RCV_Gene = RCV_Variant.find('./XRef[@DB="Gene"]')
                 if rcv_ncbigene_id is None and RCV_Gene is not None:
                     rcv_ncbigene_id = RCV_Gene.get('ID')
                 # elif rcv_ncbigene_id is None:
@@ -502,7 +513,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                 # Symbol/ElementValue[@Type="Preferred"]
                 RCV_Symbol = RCV_Variant.find(
-                    'Symbol/ElementValue[@Type="Preferred"]')
+                    './Symbol/ElementValue[@Type="Preferred"]')
                 if rcv_gene_symbol is None and RCV_Symbol is not None:
                     rcv_gene_symbol = RCV_Symbol.text
 
@@ -514,7 +525,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # reluctantly starting with the RCV disease
         # not the SCV traits as submitted due to time constraints
 
-        for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
+        for RCV_TraitSet in RCVAssertion.findall('./TraitSet'):
             # /RCV/TraitSet/Trait[@Type="Disease"]/@ID
             # 144,327   2016-Mar
 
@@ -527,7 +538,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # 142532 MedGen
 
             RCV_TraitName = RCV_TraitSet.find(
-                'Trait[@Type="Disease"]/Name/ElementValue[@Type="Preferred"]')
+                './Trait[@Type="Disease"]/Name/ElementValue[@Type="Preferred"]')
 
             if RCV_TraitName is not None:
                 rcv_disease_label = RCV_TraitName.text
@@ -535,11 +546,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             #    LOG.warning(rcv_acc + " MISSING DISEASE NAME")
 
             # Prioritize OMIM
-            for RCV_Trait in RCV_TraitSet.findall('Trait[@Type="Disease"]'):
+            for RCV_Trait in RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
                 if rcv_disease_db is not None:
                     break
                 for RCV_TraitXRef in RCV_Trait.findall(
-                        'XRef[@DB="OMIM"]'):
+                        './XRef[@DB="OMIM"]'):
                     rcv_disease_db = RCV_TraitXRef.get('DB')
                     rcv_disease_id = RCV_TraitXRef.get('ID')
                     break
@@ -547,11 +558,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             # Accept Orphanet if no OMIM
             if rcv_disease_db is None or rcv_disease_id is None:
                 for RCV_Trait in \
-                        RCV_TraitSet.findall('Trait[@Type="Disease"]'):
+                        RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
                     if rcv_disease_db is not None:
                         break
                     for RCV_TraitXRef in RCV_Trait.findall(
-                            'XRef[@DB="Orphanet"]'):
+                            './XRef[@DB="Orphanet"]'):
                         rcv_disease_db = RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
@@ -559,11 +570,11 @@ with gzip.open(FILENAME, 'rt') as fh:
             # Otherwise go with MedGen
             if rcv_disease_db is None or rcv_disease_id is None:
                 for RCV_Trait in \
-                        RCV_TraitSet.findall('Trait[@Type="Disease"]'):
+                        RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
                     if rcv_disease_db is not None:
                         break
                     for RCV_TraitXRef in RCV_Trait.findall(
-                            'XRef[@DB="MedGen"]'):
+                            './XRef[@DB="MedGen"]'):
                         rcv_disease_db = RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
@@ -572,8 +583,8 @@ with gzip.open(FILENAME, 'rt') as fh:
             # EFO, Gene, Human Phenotype Ontology
             if rcv_disease_db is None:
                 for RCV_Trait in\
-                        RCV_TraitSet.findall('Trait[@Type="Disease"]'):
-                    for RCV_TraitXRef in RCV_Trait.findall('XRef'):
+                        RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
+                    for RCV_TraitXRef in RCV_Trait.findall('./XRef'):
                         LOG.warning(
                             rcv_acc + " UNKNOWN DISEASE DB:\t" +
                             RCV_TraitXRef.get('DB') + ":" +
@@ -640,7 +651,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         pathocalls = {}
 
-        for SCV_Assertion in ClinVarSet.findall('ClinVarAssertion'):
+        for SCV_Assertion in ClinVarSet.findall('./ClinVarAssertion'):
 
             # /SCV/AdditionalSubmitters
             # /SCV/Assertion
@@ -667,12 +678,12 @@ with gzip.open(FILENAME, 'rt') as fh:
             monarch_id = digest_id(rcv_id + scv_id)
             monarch_assoc = 'MONARCH:' + monarch_id
 
-            ClinVarAccession = SCV_Assertion.find('ClinVarAccession')
+            ClinVarAccession = SCV_Assertion.find('./ClinVarAccession')
             scv_acc = ClinVarAccession.get('Acc')
             scv_accver = ClinVarAccession.get('Version')
             scv_orgid = ClinVarAccession.get('OrgID')
             scv_updated = ClinVarAccession.get('DateUpdated')
-            SCV_SubmissionID = SCV_Assertion.find('ClinVarSubmissionID')
+            SCV_SubmissionID = SCV_Assertion.find('./ClinVarSubmissionID')
             if SCV_SubmissionID is not None:
                 scv_submitter = SCV_SubmissionID.get('submitter')
 
@@ -766,22 +777,22 @@ with gzip.open(FILENAME, 'rt') as fh:
                 'rdfs:label',
                 scv_submitter)
             ################################################################
-            ClinicalSignificance = SCV_Assertion.find('ClinicalSignificance')
+            ClinicalSignificance = SCV_Assertion.find('./ClinicalSignificance')
             if ClinicalSignificance is not None:
                 scv_eval_date = str(
                     ClinicalSignificance.get('DateLastEvaluated'))
 
             # bummer. cannot specify xpath parent '..' targeting above .find()
-            for SCV_AttributeSet in SCV_Assertion.findall('AttributeSet'):
+            for SCV_AttributeSet in SCV_Assertion.findall('./AttributeSet'):
                 # /SCV/AttributeSet/Attribute[@Type="AssertionMethod"]
                 SCV_Attribute = SCV_AttributeSet.find(
-                    'Attribute[@Type="AssertionMethod"]')
+                    './Attribute[@Type="AssertionMethod"]')
                 if SCV_Attribute is not None:
                     SCV_Citation = SCV_AttributeSet.find(
-                        'Citation')
+                        './Citation')
 
                     # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
-  line 421                  if scv_eval_date != "None":
+                    if scv_eval_date != "None":
                         write_spo(
                             _assertion_id,
                             resolve('date_created', LTT), scv_eval_date)
@@ -819,7 +830,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                     # <_assertion_method_id><ERO:0000480><scv_citation_url>
                     if SCV_Citation is not None:
-                        SCV_Citation_URL = SCV_Citation.find('URL')
+                        SCV_Citation_URL = SCV_Citation.find('./URL')
                         if SCV_Citation_URL is not None:
                             write_spo(
                                 _assertion_method_id,
@@ -829,7 +840,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
             # RecordStatus                             # assert =='current' ?
 
-            # SCV_ReviewStatus = ClinicalSignificance.find('ReviewStatus')
+            # SCV_ReviewStatus = ClinicalSignificance.find('./ReviewStatus')
             # if SCV_ReviewStatus is not None:
             #    scv_review = SCV_ReviewStatus.text
 
@@ -838,7 +849,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             # SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
             for SCV_Citation in \
                     ClinicalSignificance.findall(
-                        'Citation/ID[@Source="PubMed"]'):
+                        './Citation/ID[@Source="PubMed"]'):
                 scv_citation_id = SCV_Citation.text
                 #           TRIPLES
                 # has_part -> has_supporting_reference
@@ -862,7 +873,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
             scv_significance = scv_geno = None
-            SCV_Description = ClinicalSignificance.find('Description')
+            SCV_Description = ClinicalSignificance.find('./Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text
                 scv_geno = resolve(scv_significance, LTT)
@@ -897,17 +908,17 @@ with gzip.open(FILENAME, 'rt') as fh:
             # there is no point in continueing  (I don't think)
             if len(rcvtriples) == 0:
                 continue
-            # scv_assert_type = SCV_Assertion.find('Assertion').get('Type')
+            # scv_assert_type = SCV_Assertion.find('./Assertion').get('Type')
             # check scv_assert_type == 'variation to disease'?
             # /SCV/ObservedIn/ObservedData/Citation/'ID[@Source="PubMed"]
-            for SCV_ObsIn in SCV_Assertion.findall('ObservedIn'):
+            for SCV_ObsIn in SCV_Assertion.findall('./ObservedIn'):
                 # /SCV/ObservedIn/Sample
                 # /SCV/ObservedIn/Method
-                for SCV_ObsData in SCV_ObsIn.findall('ObservedData'):
-                    for SCV_Citation in SCV_ObsData.findall('Citation'):
+                for SCV_ObsData in SCV_ObsIn.findall('./ObservedData'):
+                    for SCV_Citation in SCV_ObsData.findall('./Citation'):
 
                         for scv_citation_id in \
-                                SCV_Citation.findall('ID[@Source="PubMed"]'):
+                                SCV_Citation.findall('./ID[@Source="PubMed"]'):
                             # has_supporting_reference
                             # see also: SCV/ClinicalSignificance/Citation/ID
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
@@ -928,13 +939,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                                 'PMID:' + scv_citation_id.text)
                         for scv_pub_comment in \
                                 SCV_Citation.findall(
-                                    'Attribute[@Type="Description"]'):
+                                    './Attribute[@Type="Description"]'):
                             # <PMID:scv_citation_id><rdf:comment><scv_pub_comment>
                             write_spo(
                                 'PMID:' + scv_citation_id.text,
                                 'rdf:comment',
                                 scv_pub_comment)
-                    # for SCV_Citation in SCV_ObsData.findall('Citation'):
+                    # for SCV_Citation in SCV_ObsData.findall('./Citation'):
                     for SCV_Description in \
                             SCV_ObsData.findall(
                                 'Attribute[@Type="Description"]'):
@@ -954,7 +965,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/Sample/Origin
                 # /SCV/Sample/Species@TaxonomyId="9606" is a constant
                 # scv_affectedstatus = \
-                #    SCV_ObsIn.find('Sample').find('AffectedStatus').text
+                #    SCV_ObsIn.find('./Sample').find('./AffectedStatus').text
 
                 # /SCV/ObservedIn/Method/NamePlatform
                 # /SCV/ObservedIn/Method/TypePlatform
@@ -962,7 +973,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/SourceType
                 # /SCV/ObservedIn/Method/MethodType
                 # /SCV/ObservedIn/Method/MethodType
-                for SCV_OIMT in SCV_ObsIn.findall('Method/MethodType'):
+                for SCV_OIMT in SCV_ObsIn.findall('./Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = resolve(SCV_OIMT.text, LTT)
                         # blank node
