@@ -165,6 +165,9 @@ class HPOAnnotations(Source):
 
         logger.info('scrubbing ORPHANET --> Orphanet')
         pysed.replace("ORPHANET", "Orphanet", f)
+
+        logger.info('scrubbing ORPHA --> Orphanet')
+        pysed.replace("ORPHA", "Orphanet", f)
         return
 
     def parse(self, limit=None):
