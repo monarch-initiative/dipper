@@ -15,7 +15,7 @@ class GraphUtils:
 
     def __init__(self, curie_map):
         self.curie_map = curie_map
-        self.cu = CurieUtil(curie_map)         # TEC: what is cu really?
+        self.cu = CurieUtil(curie_map)
 
         return
 
@@ -124,3 +124,17 @@ class GraphUtils:
             if row in property_list:
                 graph.add((row, RDF['type'], property_type))
         return graph
+
+
+    def digest_id(wordage):
+        '''
+        Form a deterministic digest of input
+        Leading 'b' is an experiment forcing the first char to be non numeric
+        but valid hex
+        Not required for RDF but some other contexts do not want the leading
+        char to be a digit
+
+        : param str wordage arbitrary string
+        : return str 
+        '''
+        return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]

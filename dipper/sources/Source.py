@@ -599,6 +599,9 @@ class Source:
         A helpful utility to remove Carriage Return from any file.
         This will read a file into memory,
         and overwrite the contents of the original file.
+
+        TODO: This function may be a liability
+
         :param filename:
 
         :return:

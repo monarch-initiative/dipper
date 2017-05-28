@@ -42,7 +42,8 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                     (self._getNode(subject_id), self._getNode(predicate_id),
                      Literal(obj)))
             else:
-                logger.warn("Null value passed as object")
+                logger.warn("None as object for subj: %s and pred: %s",
+                    subject_id, predicate_id)
         else:
             self.add(
                 (self._getNode(subject_id), self._getNode(predicate_id),
