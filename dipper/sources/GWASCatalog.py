@@ -592,9 +592,11 @@ class GWASCatalog(Source):
         curie = None
         variant_type = None
 
+        # remove space before hyphens
+        variant_id = re.sub(r' -', '-', variant_id)
         if re.search(r' x ', variant_id) \
                 or re.search(r',', variant_id):
-            # TODO deal with rs1234xrs234... (haplotypes?)
+            # TODO deal with rs1234 x rs234... (haplotypes?)
             logger.warning(
                 "Cannot parse variant groups of this format: %s",
                 variant_id)
@@ -612,6 +614,8 @@ class GWASCatalog(Source):
             variant_type = "snp"
         elif re.match(r'chr', variant_id):
             # like: chr10:106180121-G
+            # 
+            variant_id = re.sub(r'-?', '-N', variant_id)
             curie = ':gwas-' + \
                          re.sub(
                              r':', '-', variant_id.strip())
