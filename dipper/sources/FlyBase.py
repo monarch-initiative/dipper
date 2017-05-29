@@ -164,7 +164,7 @@ class FlyBase(PostgreSQLSource):
 
         # create the connection details for Flybase
         cxn = {
-            'host': 'flybase.org', 'database': 'flybase', 'port': 5432,
+            'host': 'chado.flybase.org', 'database': 'flybase', 'port': 5432,
             'user': 'flybase', 'password': 'no password'}
 
         self.dataset.setFileAccessUrl(
