@@ -540,18 +540,19 @@ class MGI(PostgreSQLSource):
         model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
-        logger.info("getting alleles with labels and descriptions from all_summary_view")
+        logger.info(
+            "alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as f:
             col_count = len(f.readline())  # read the header row; skip
-            # head -1  workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
+            # head -1 workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
             # tr '\t' '\n' | grep -n . | \
             # awk -F':' '{col=$1;$1="";print $0,",\t  #" col}'
             for line in f:
                 line_counter += 1
                 # bail if the row is malformed
                 if len(line) != col_count:
-                    logger.warning('Expected ' + col_count + ' columns.')
-                    logger.warning('Recieved ' + len(line) + ' columns.')
+                    logger.warning('Expected ' + str(col_count) + ' columns.')
+                    logger.warning('Recieved ' + str(len(line)) + ' columns.')
                     logger.warning(line.format())
                     continue
                 # no stray tab in the description column
