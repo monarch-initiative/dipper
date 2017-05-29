@@ -543,16 +543,17 @@ class MGI(PostgreSQLSource):
         logger.info(
             "alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as f:
-            col_count = len(f.readline())  # read the header row; skip
+            col_count = f.readline().count('\t')  # read the header row; skip
             # head -1 workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
             # tr '\t' '\n' | grep -n . | \
             # awk -F':' '{col=$1;$1="";print $0,",\t  #" col}'
             for line in f:
                 line_counter += 1
+                cols = line.count('\t')
                 # bail if the row is malformed
-                if len(line) != col_count:
+                if cols != col_count:
                     logger.warning('Expected ' + str(col_count) + ' columns.')
-                    logger.warning('Recieved ' + str(len(line)) + ' columns.')
+                    logger.warning('Recieved ' + str(cols) + ' columns.')
                     logger.warning(line.format())
                     continue
                 # no stray tab in the description column
