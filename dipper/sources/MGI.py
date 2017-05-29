@@ -540,16 +540,40 @@ class MGI(PostgreSQLSource):
         model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
-        logger.info("getting alleles and their labels and descriptions")
+        logger.info("getting alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
+            col_count = len(f.readline())  # read the header row; skip
+            # head -1  workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
+            # tr '\t' '\n' | grep -n . | \
+            # awk -F':' '{col=$1;$1="";print $0,",\t  #" col}'
             for line in f:
                 line_counter += 1
-
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, createdby_key,
-                 modifiedby_key, creation_date, modification_date, mgiid,
-                 subtype, description, short_description) = line.split('\t')
+                # bail if the row is malformed
+                if len(line) != col_count:
+                    logger.warning('Expected ' + col_count + ' columns.')
+                    logger.warning('Recieved ' + len(line) + ' columns.')
+                    logger.warning(line.format())
+                    continue
+                # no stray tab in the description column
+                (
+                    accession_key,
+                    accid,
+                    prefixpart,
+                    numericpart,
+                    logicaldb_key,
+                    object_key,
+                    mgitype_key,
+                    private,
+                    preferred,
+                    createdby_key,
+                    modifiedby_key,
+                    creation_date,
+                    modification_date,
+                    mgiid,
+                    subtype,
+                    description,
+                    short_description
+                ) = line.split('\t')
                 # NOTE: May want to filter alleles based on the preferred field
                 # (preferred = 1) or will get duplicates
                 # (24288, to be exact...
