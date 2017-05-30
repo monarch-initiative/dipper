@@ -418,6 +418,7 @@ class MGI(PostgreSQLSource):
                                 'strain', re.sub(r':', '', str(strain_id)))
                         strain_id += re.sub(r':', '', str(mgiid))
                         strain_id = re.sub(r'^_', '_:', strain_id)
+                        strain_id = re.sub(r'::', ':', strain_id)
                         model.addDescription(
                             strain_id,
                             "This genomic background is unknown.  " +
@@ -643,12 +644,20 @@ class MGI(PostgreSQLSource):
         line_counter = 0
         logger.info(
             "adding alleles, mapping to markers, " +
-            "extracting their sequence alterations")
+            "extracting their sequence alterations " +
+            "from all_allele_view")
         raw = '/'.join((self.rawdir, 'all_allele_view'))
         with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
+            col_count = f.readline().count('\t')  # read the header row; skip
             for line in f:
                 line_counter += 1
+                                cols = line.count('\t')
+                # bail if the row is malformed
+                if cols != col_count:
+                    logger.warning('Expected ' + str(col_count) + ' columns.')
+                    logger.warning('Recieved ' + str(cols) + ' columns.')
+                    logger.warning(line.format())
+                    continue
 
                 (allele_key, marker_key, strain_key, mode_key, allele_type_key,
                  allele_status_key, transmission_key, collection_key, symbol,
