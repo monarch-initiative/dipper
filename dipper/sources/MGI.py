@@ -418,6 +418,7 @@ class MGI(PostgreSQLSource):
                                 'strain', re.sub(r':', '', str(strain_id)))
                         strain_id += re.sub(r':', '', str(mgiid))
                         strain_id = re.sub(r'^_', '_:', strain_id)
+                        strain_id = re.sub(r'::', ':', strain_id)
                         model.addDescription(
                             strain_id,
                             "This genomic background is unknown.  " +
@@ -540,16 +541,42 @@ class MGI(PostgreSQLSource):
         model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
-        logger.info("getting alleles and their labels and descriptions")
+        logger.info(
+            "alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
+            col_count = f.readline().count('\t')  # read the header row; skip
+            # head -1 workspace/build-mgi-ttl/dipper/raw/mgi/all_summary_view|\
+            # tr '\t' '\n' | grep -n . | \
+            # awk -F':' '{col=$1;$1="";print $0,",\t  #" col}'
             for line in f:
                 line_counter += 1
-
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, createdby_key,
-                 modifiedby_key, creation_date, modification_date, mgiid,
-                 subtype, description, short_description) = line.split('\t')
+                cols = line.count('\t')
+                # bail if the row is malformed
+                if cols != col_count:
+                    logger.warning('Expected ' + str(col_count) + ' columns.')
+                    logger.warning('Recieved ' + str(cols) + ' columns.')
+                    logger.warning(line.format())
+                    continue
+                # no stray tab in the description column
+                (
+                    accession_key,
+                    accid,
+                    prefixpart,
+                    numericpart,
+                    logicaldb_key,
+                    object_key,
+                    mgitype_key,
+                    private,
+                    preferred,
+                    createdby_key,
+                    modifiedby_key,
+                    creation_date,
+                    modification_date,
+                    mgiid,
+                    subtype,
+                    description,
+                    short_description
+                ) = line.split('\t')
                 # NOTE: May want to filter alleles based on the preferred field
                 # (preferred = 1) or will get duplicates
                 # (24288, to be exact...
@@ -617,12 +644,20 @@ class MGI(PostgreSQLSource):
         line_counter = 0
         logger.info(
             "adding alleles, mapping to markers, " +
-            "extracting their sequence alterations")
+            "extracting their sequence alterations " +
+            "from all_allele_view")
         raw = '/'.join((self.rawdir, 'all_allele_view'))
         with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
+            col_count = f.readline().count('\t')  # read the header row; skip
             for line in f:
                 line_counter += 1
+                cols = line.count('\t')
+                # bail if the row is malformed
+                if cols != col_count:
+                    logger.warning('Expected ' + str(col_count) + ' columns.')
+                    logger.warning('Recieved ' + str(cols) + ' columns.')
+                    logger.warning(line.format())
+                    continue
 
                 (allele_key, marker_key, strain_key, mode_key, allele_type_key,
                  allele_status_key, transmission_key, collection_key, symbol,
