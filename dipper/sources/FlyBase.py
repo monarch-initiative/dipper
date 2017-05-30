@@ -1449,8 +1449,9 @@ class FlyBase(PostgreSQLSource):
                             if not re.match(r'OMIM', did):
                                 # these are only omim diseases, not genes;
                                 # we shouldn't be adding these here anyway
-                                model.addClassToGraph(did, dlabel)
-                                model.addXref(feature_id, did)
+                                # model.addClassToGraph(did, dlabel)
+                                # model.addXref(feature_id, did)
+                                True  # that
                         else:
                             model.addIndividualToGraph(did, dlabel)
                             model.addXref(feature_id, did)
