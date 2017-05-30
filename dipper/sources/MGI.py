@@ -554,7 +554,7 @@ class MGI(PostgreSQLSource):
                 # bail if the row is malformed
                 if cols != col_count:
                     logger.warning('Expected ' + str(col_count) + ' columns.')
-                    logger.warning('Recieved ' + str(cols) + ' columns.')
+                    logger.warning('Received ' + str(cols) + ' columns.')
                     logger.warning(line.format())
                     continue
                 # no stray tab in the description column
@@ -655,7 +655,7 @@ class MGI(PostgreSQLSource):
                 # bail if the row is malformed
                 if cols != col_count:
                     logger.warning('Expected ' + str(col_count) + ' columns.')
-                    logger.warning('Recieved ' + str(cols) + ' columns.')
+                    logger.warning('Received ' + str(cols) + ' columns.')
                     logger.warning(line.format())
                     continue
 
