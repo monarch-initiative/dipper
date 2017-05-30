@@ -651,7 +651,7 @@ class MGI(PostgreSQLSource):
             col_count = f.readline().count('\t')  # read the header row; skip
             for line in f:
                 line_counter += 1
-                                cols = line.count('\t')
+                cols = line.count('\t')
                 # bail if the row is malformed
                 if cols != col_count:
                     logger.warning('Expected ' + str(col_count) + ' columns.')
