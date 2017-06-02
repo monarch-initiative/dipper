@@ -580,8 +580,8 @@ class Source:
         # add timestamp as version info
 
         t = datetime.now()
-        t_string = t.strftime("%Y%m")
-        ontology_version = self.name+'-' + t_string
+        t_string = t.strftime("%Y-%m-%d")
+        ontology_version = t_string
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
 

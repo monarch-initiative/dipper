@@ -29,6 +29,7 @@ class Bgee(Source):
     homology relationships across anatomies, and comparison criteria
     between developmental stages, are designed.
     """
+
     BGEE_FTP = 'ftp.bgee.org'
     DEFAULT_TAXA = [10090, 10116, 13616, 28377, 6239,
                     7227, 7955, 8364, 9031, 9258,
@@ -36,12 +37,12 @@ class Bgee(Source):
                     9823, 9913]
     files = {
         'anat_entity': {
-            'path': 'current/download/ranks/anat_entity/',
+            'path': '/download/ranks/anat_entity/',
             'pattern': re.compile(r'.*_all_data_.*')
         }
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
         """
         :param tax_ids: [int,], List of taxa
         :return:
@@ -56,6 +57,11 @@ class Bgee(Source):
         self.dataset = Dataset(
             'Bgee', 'Bgee Gene expression data in animals',
             'http://bgee.org/')
+
+        if version is None:
+            self.version = 'current'
+        else:
+            self.version = version
 
     def fetch(self, is_dl_forced=False):
         """
@@ -194,6 +200,8 @@ class Bgee(Source):
         if ftp is None:
             ftp = ftplib.FTP(Bgee.BGEE_FTP)
             ftp.login("anonymous", "info@monarchinitiative.edu")
+
+        working_dir = "{}{}".format(self.version, working_dir)
 
         ftp.cwd(working_dir)
 

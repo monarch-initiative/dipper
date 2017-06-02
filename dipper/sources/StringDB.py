@@ -24,17 +24,9 @@ class StringDB(Source):
     From: http://string-db.org/cgi/help.pl
     """
     STRING_BASE = "http://string-db.org/download/"
-    STRING_VERSION = "v10.5"
     DEFAULT_TAXA = [9606, 10090, 7955, 7227, 6239]
 
-    files = {
-        'protein_links': {
-            'path': '{}protein.links.detailed.{}/'.format(STRING_BASE, STRING_VERSION),
-            'pattern': 'protein.links.detailed.{}.txt.gz'.format(STRING_VERSION)
-        }
-    }
-
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
         super().__init__(graph_type, are_bnodes_skolemized, 'string')
         self.dataset = Dataset(
             'string', 'String', 'http://string-db.org/', None,
@@ -45,6 +37,17 @@ class StringDB(Source):
         else:
             logger.info("Filtering on taxa {}".format(tax_ids))
             self.tax_ids = tax_ids
+
+        if version is None:
+            self.version = 'v10.5'
+
+        self.files = {
+            'protein_links': {
+                'path': '{}protein.links.detailed.{}/'.format(
+                    StringDB.STRING_BASE, self.version),
+                'pattern': 'protein.links.detailed.{}.txt.gz'.format(self.version)
+            }
+        }
 
     def fetch(self, is_dl_forced=False):
         """
