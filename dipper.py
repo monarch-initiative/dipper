@@ -128,6 +128,11 @@ def main():
         help='serialization format: turtle (default), xml, n3, nt, raw',
         type=str)
 
+    parser.add_argument(
+        '--version', '-v',
+        help='version of source',
+        type=str)
+
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
@@ -195,11 +200,17 @@ def main():
         imported_module = importlib.import_module(module)
         source_class = getattr(imported_module, src)
         mysource = None
-        are_bnodes_skolemized = not args.use_bnodes
+        # arg factory
+        source_args = dict(
+            graph_type=args.graph
+        )
+        source_args['are_bnodes_skolemized'] = not args.use_bnodes
         if src in taxa_supported:
-            mysource = source_class(args.graph, are_bnodes_skolemized, tax_ids)
-        else:
-            mysource = source_class(args.graph, are_bnodes_skolemized)
+            source_args['tax_ids'] = tax_ids
+        if args.version:
+            source_args['version'] = args.version
+
+        mysource = source_class(**source_args)
         if args.parse_only is False:
             start_fetch = time.clock()
             mysource.fetch(args.force)

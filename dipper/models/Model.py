@@ -102,6 +102,11 @@ class Model():
         else:
             raise ValueError("{} is not a graph".graph)
 
+    def addTriple(self, subject_id, predicate_id, obj,
+                  object_is_literal=False, literal_type=None):
+        self.graph.addTriple(subject_id, predicate_id, obj,
+                             object_is_literal, literal_type)
+
     def addType(self, subject_id, subject_type):
         self.graph.addTriple(subject_id, self.object_properties['type'],
                              subject_type)
