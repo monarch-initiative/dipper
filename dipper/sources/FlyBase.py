@@ -587,6 +587,7 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    # todo make singular
     def _process_features(self, limit):
         """
         These are all of the genomic features genes, variations,
@@ -611,7 +612,7 @@ class FlyBase(PostgreSQLSource):
             for line in filereader:
                 (feature_id, dbxref_id, organism_id, name, uniquename,
                  residues, seqlen, md5checksum, type_id, is_analysis,
-                 timeaccessioned, timelastmodified, is_obsolete) = line
+                 timeaccessioned, timelastmodified) = line
 
                 feature_key = feature_id
                 if re.search(r'[\|\s\[\]\{\}\\<\>]', uniquename):
@@ -721,13 +722,14 @@ class FlyBase(PostgreSQLSource):
                         if re.search('FBa[lb]', feature_id):
                             type_id = Genotype.genoparts['allele']
                         model.addIndividualToGraph(feature_id, name, type_id)
-
-                    if is_obsolete == 't':
-                        if is_gene:
-                            model.addDeprecatedClass(feature_id)
-                        else:
-                            model.addDeprecatedIndividual(feature_id)
-                        self.deprecated_features.add(feature_key)
+                        
+                    # stop adding what we do not appreciate
+                    # if is_obsolete == 't':
+                    #    if is_gene:
+                    #        model.addDeprecatedClass(feature_id)
+                    #    else:
+                    #        model.addDeprecatedIndividual(feature_id)
+                    #    self.deprecated_features.add(feature_key)
 
                     model.addClassToGraph(tax_id)
                     if tax_id != tax_internal_id:
