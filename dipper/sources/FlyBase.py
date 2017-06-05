@@ -1480,7 +1480,7 @@ class FlyBase(PostgreSQLSource):
                         if did == feature_id:
                             continue
                         dlabel = self.label_hash.get(did)
-                        if re.search(r'FB(gn|og)', feature_id):
+                        if re.search(r'FB(gn|og|pp)', feature_id):
                             # only want to add equivalences for fly things
                             if not re.match(r'OMIM', did):
                                 # these are only omim diseases, not genes;
