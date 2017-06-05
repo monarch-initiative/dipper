@@ -270,7 +270,7 @@ class FlyBase(PostgreSQLSource):
         #    "FROM feature WHERE is_analysis = false"
 
         self.fetch_query_from_pgdb(
-            'feature', querys['feature'], None, cxn, None, is_dl_forced)
+            'feature', self.querys['feature'], None, cxn, None, is_dl_forced)
 
         self._get_human_models_file()
         self.get_files(False)
