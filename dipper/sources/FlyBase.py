@@ -7,7 +7,7 @@ import hashlib
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
-from dipper.models.assoc.Association import Assoc
+# from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -64,9 +64,9 @@ class FlyBase(PostgreSQLSource):
         # itself  (watch out for is_not)
     ]
 
-    querys {    # WIP: start filtering closer to the source,
-                # move towards joining there as well.
-
+    querys = {
+        # WIP: start filtering closer to the source,
+        # move towards joining there as well.
         # instead of pulling full tables accross the wire
         # then rejoining them here in python, take advantages of
         # the indexes and mature relational engine to the the
@@ -400,7 +400,7 @@ class FlyBase(PostgreSQLSource):
                             and int(stock_num) not in self.test_keys['strain']:
                         continue
 
-                    tax_label = self.label_hash[taxon]
+                    # tax_label = self.label_hash[taxon]  # unused
                     # add the tax in case it hasn't been already
                     model.addClassToGraph(taxon)
                     model.addIndividualToGraph(stock_id, stock_label, taxon)
@@ -862,7 +862,7 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
+        # model = Model(g)  # unused
         raw = '/'.join((self.rawdir, 'stock_genotype'))
         logger.info("processing stock genotype")
         geno = Genotype(g)
@@ -951,7 +951,8 @@ class FlyBase(PostgreSQLSource):
 
                         if dbxref_id is not None:
                             reference = Reference(
-                                g, dbxref_id, Reference.ref_types['publication'])
+                                g, dbxref_id,
+                                Reference.ref_types['publication'])
                             reference.addRefToGraph()
                             model.addSameIndividual(pub_id, dbxref_id)
                             line_counter += 1
