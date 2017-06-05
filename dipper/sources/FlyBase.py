@@ -4,7 +4,7 @@ import csv
 import gzip
 import io
 import hashlib
-inport string
+import strings
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
