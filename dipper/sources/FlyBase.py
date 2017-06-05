@@ -145,7 +145,7 @@ class FlyBase(PostgreSQLSource):
             SELECT feature_id, dbxref_id, organism_id, name, uniquename,
                 null as residues, seqlen, md5checksum, type_id, is_analysis,
                 timeaccessioned, timelastmodified
-            FROM feature WHERE is_analysis = false and is_obsolete == 'f'
+            FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         """
     }
 
