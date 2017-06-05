@@ -4,7 +4,6 @@ import csv
 import gzip
 import io
 import hashlib
-import strings
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
@@ -1468,13 +1467,14 @@ class FlyBase(PostgreSQLSource):
                 feature_id = self.idhash['feature'][feature_key]
                 dbxref_key = dbxref_id
                 dbxrefs = self.dbxrefs.get(dbxref_key)
-                if dbxrefs.endswith('&class=protein'):
-                    dbxrefs = dbxrefs[0:len(dbxrefs)-14]
+
                 if dbxrefs is not None:
                     for d in dbxrefs:
+                        if d.endswith('&class=protein'):
+                            d = d[0:len(dbxrefs)-14]
 
                         # need to filter based on db ?
-                        # TODO should we make other species' identifiers primary
+                        # TODO make other species' identifiers primary??
                         # instead of flybase?
                         did = dbxrefs.get(d)
                         # don't make something sameAs itself
