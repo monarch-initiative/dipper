@@ -64,6 +64,39 @@ class FlyBase(PostgreSQLSource):
         # itself  (watch out for is_not)
     ]
 
+    querys {    # WIP: start filtering closer to the source,
+                # move towards joining there as well.
+
+        # instead of pulling full tables accross the wire
+        # then rejoining them here in python, take advantages of
+        # the indexes and mature relational engine to the the
+        # work on someone elses machine.
+        # we can call it "in the cloud"
+        'feature_dbxref_WIP': """  -- 17M rows in ~2 minutes
+            SELECT
+            feature.name feature_name, feature.uniquename feature_id,
+            organism.abbreviation abbrev, organism.genus, organism.species,
+            cvterm.name frature_type, db.name db, dbxref.accession
+            FROM feature_dbxref
+            JOIN dbxref ON  feature_dbxref.dbxref_id = dbxref.dbxref_id
+            JOIN db ON  dbxref.db_id = db.db_id
+            JOIN feature ON feature_dbxref.feature_id  = feature.feature_id
+            JOIN organism ON feature.organism_id = organism.organism_id
+            JOIN cvterm ON feature.type_id = cvterm.cvterm_id
+            WHERE feature_dbxref.is_current = true
+            AND feature.is_analysis = false
+            AND feature.is_obsolete = false
+            AND cvterm.is_obsolete = 0
+            ;
+        """,
+        'feature': """
+            SELECT feature_id, dbxref_id, organism_id, name, uniquename,
+                null as residues, seqlen, md5checksum, type_id, is_analysis,
+                timeaccessioned, timelastmodified
+            FROM feature WHERE is_analysis = false and is_obsolete == 'f';
+        """
+    }
+
     files = {
         'disease_models': {
             'file': 'allele_human_disease_model_data.tsv.gz',
@@ -1400,7 +1433,7 @@ class FlyBase(PostgreSQLSource):
         model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'feature_dbxref'))
-        logger.info("processing feature dbxref mappings")
+        logger.info("processing feature_dbxref mappings")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1422,7 +1455,7 @@ class FlyBase(PostgreSQLSource):
 
                 if self.testMode \
                         and int(feature_key) not in \
-                        self.test_keys['gene']+self.test_keys['allele']:
+                        self.test_keys['gene'] + self.test_keys['allele']:
                     continue
 
                 if feature_key not in self.idhash['feature']:
@@ -1431,11 +1464,13 @@ class FlyBase(PostgreSQLSource):
                     # logger.debug("Feature %s not found in hash", feature_key)
                     continue
                 feature_id = self.idhash['feature'][feature_key]
-
                 dbxref_key = dbxref_id
                 dbxrefs = self.dbxrefs.get(dbxref_key)
+                if dbxrefs.endswith('&class=protein'):
+                    dbxrefs = dbxrefs[0:len(dbxrefs)-14]
                 if dbxrefs is not None:
                     for d in dbxrefs:
+
                         # need to filter based on db ?
                         # TODO should we make other species' identifiers primary
                         # instead of flybase?
