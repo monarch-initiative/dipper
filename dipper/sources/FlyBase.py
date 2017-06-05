@@ -64,6 +64,58 @@ class FlyBase(PostgreSQLSource):
         # itself  (watch out for is_not)
     ]
 
+    columns = {
+        'genotype': (
+            feature_genotype_id, feature_id, genotype_id, chromosome_id, rank,
+            cgroup, cvterm_id),
+        'feature_genotype': (
+            feature_genotype_id, feature_id, genotype_id, chromosome_id,
+            rank, cgroup, cvterm_id),
+        'pub': (
+            pub_id, title, volumetitle, volume, series_name, issue, pyear,
+            pages, miniref, type_id, is_obsolete, publisher, pubplace,
+            uniquename),
+        'feature_pub': (
+            feature_pub_id, feature_id, pub_id),
+        'pub_dbxref': (
+            pub_dbxref_id, pub_id, dbxref_id, is_current),
+        'feature_dbxref': (
+            feature_dbxref_id, feature_id, dbxref_id, is_current),
+        'feature_relationship': (
+            feature_relationship_id, subject_id, object_id, type_id, rank,
+            value),
+        'cvterm': (
+            cvterm_id, cv_id, definition, dbxref_id, is_obsolete,
+            is_relationshiptype, name),
+        'stock_genotype': (
+            stock_genotype_id, stock_id, genotype_id),
+        'stock': (
+            stock_id, dbxref_id, organism_id, name, uniquename, description,
+            type_id, is_obsolete),
+        'organism': (
+            organism_id, abbreviation, genus, species, common_name, comment),
+        'organism_dbxref': (
+            organism_dbxref_id, organism_id, dbxref_id, is_current),
+        'environment': (
+            environment_id, uniquename, description),
+        'phenotype': (
+            phenotype_id, uniquename, observable_id, attr_id, value, cvalue_id,
+            assay_id),
+        'phenstatement': (
+            phenstatement_id, genotype_id, environment_id, phenotype_id,
+            type_id, pub_id),
+        'dbxref': (
+            dbxref_id, db_id, accession, version, description, url),
+        'phenotype_cvterm': (
+            phenotype_cvterm_id, phenotype_id, cvterm_id, rank),
+        'phendesc':  (
+            phendesc_id, genotype_id, environment_id, description, type_id,
+            pub_id),
+        'environment_cvterm': (
+            environment_cvterm_id, environment_id, cvterm_id),
+        'stockprop': (stockprop_id, stock_id, type_id, value, rank)
+    }
+
     querys = {
         # WIP: start filtering closer to the source,
         # move towards joining there as well.
@@ -210,15 +262,15 @@ class FlyBase(PostgreSQLSource):
 
         # we want to fetch the features,
         # but just a subset to reduce the processing time
-        query = \
-            "SELECT " \
-            " feature_id, dbxref_id, organism_id, name, uniquename, " \
-            " null as residues, seqlen, md5checksum, type_id, is_analysis," \
-            " timeaccessioned, timelastmodified, is_obsolete " \
-            "FROM feature WHERE is_analysis = false"
+        # query = \
+        #    "SELECT " \
+        #    " feature_id, dbxref_id, organism_id, name, uniquename, " \
+        #    " null as residues, seqlen, md5checksum, type_id, is_analysis," \
+        #    " timeaccessioned, timelastmodified, is_obsolete " \
+        #    "FROM feature WHERE is_analysis = false"
 
         self.fetch_query_from_pgdb(
-            'feature', query, None, cxn, None, is_dl_forced)
+            'feature', querys['feature'], None, cxn, None, is_dl_forced)
 
         self._get_human_models_file()
         self.get_files(False)
@@ -352,6 +404,7 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    # todo moke singular
     def _process_stocks(self, limit):
         """
         Stock definitions.
@@ -408,7 +461,7 @@ class FlyBase(PostgreSQLSource):
                         model.addDeprecatedIndividual(stock_id)
 
         return
-
+    # todo moke singular
     def _process_pubs(self, limit):
         """
         Flybase publications.
@@ -469,7 +522,7 @@ class FlyBase(PostgreSQLSource):
                         reference.addRefToGraph()
 
         return
-
+    # todo make singular
     def _process_environments(self):
         """
         There's only about 30 environments in which the phenotypes
@@ -1475,12 +1528,12 @@ class FlyBase(PostgreSQLSource):
                         # instead of flybase?
                         did = dbxrefs.get(d)
                         if did.endswith('&class=protein'):
-                            did = did[0:len(dbxrefs)-14]
+                            did = did[0:len(dbxrefs)-15]
                         # don't make something sameAs itself
                         if did == feature_id:
                             continue
                         dlabel = self.label_hash.get(did)
-                        if re.search(r'FB(gn|og|pp)', feature_id):
+                        if re.search(r'FB(gn|og)', feature_id):
                             # only want to add equivalences for fly things
                             if not re.match(r'OMIM', did):
                                 # these are only omim diseases, not genes;
@@ -1776,6 +1829,7 @@ class FlyBase(PostgreSQLSource):
                     break
         return
 
+    # todo make singular
     def _process_organisms(self, limit):
         """
         The internal identifiers for the organisms in flybase
