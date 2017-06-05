@@ -1470,13 +1470,12 @@ class FlyBase(PostgreSQLSource):
 
                 if dbxrefs is not None:
                     for d in dbxrefs:
-                        if d.endswith('&class=protein'):
-                            d = d[0:len(dbxrefs)-14]
-
                         # need to filter based on db ?
                         # TODO make other species' identifiers primary??
                         # instead of flybase?
                         did = dbxrefs.get(d)
+                        if did.endswith('&class=protein'):
+                            did = did[0:len(dbxrefs)-14]
                         # don't make something sameAs itself
                         if did == feature_id:
                             continue
