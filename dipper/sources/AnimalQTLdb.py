@@ -310,7 +310,7 @@ class AnimalQTLdb(Source):
 
                     # we assume if no src is provided
                     # and gene_id is an integer, it's NCBI
-                    if (gene_id_src == 'NCBIgene' or gene_id_src == '') AND \
+                    if (gene_id_src == 'NCBIgene' or gene_id_src == '') and \
                             gene_id.strip().isdigit() :
                         gene_id = 'NCBIGene:' + gene_id.strip()
                         # we will expect that these labels provided elsewhere
