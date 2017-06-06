@@ -1673,7 +1673,7 @@ class FlyBase(PostgreSQLSource):
                             logger.error(
                                 "The gene_id for object_id is None: %s \t %s",
                                 str(subject_id), str(object_id))
-                        if not (gene_id in self.label_hash):
+                        if not gene_id not in self.label_hash:
                             logger.error(
                                 "gene_id's label missing for: %s\t%s\t%s",
                                 str(subject_id), str(object_id), str(object_id))
