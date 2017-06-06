@@ -420,12 +420,13 @@ with gzip.open(FILENAME, 'rt') as fh:
         # <MeasureSet  ID="242681" Type="Variant">
         # <Measure     ID="46900"  Type="single nucleotide variant">
 
-
         RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
         # Note: it is a "set" but have only seen a half dozen with two,
         # all of type:  copy number gain  SO:0001742
 
         if RCV_MeasureSet is None:
+            #  201705 introduced GenotypeSet a CompoundHeterozygote
+            #  with multiple variants 
             RCV_GenotypeSet = RCVAssertion.find('./GenotypeSet')
             rcv_variant_supertype = RCV_GenotypeSet.get('Type')
             for RCV_MeasureSet in RCV_GenotypeSet.findall('./MeasureSet'):
