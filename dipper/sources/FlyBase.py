@@ -461,7 +461,8 @@ class FlyBase(PostgreSQLSource):
                         model.addDeprecatedIndividual(stock_id)
 
         return
-    # todo moke singular
+
+    # todo make singular
     def _process_pubs(self, limit):
         """
         Flybase publications.
@@ -765,7 +766,10 @@ class FlyBase(PostgreSQLSource):
                 # 1	23273518	2	23159230	0	0	60468
 
                 feature_key = feature_id
-                feature_id = self.idhash['feature'][feature_key]
+                if feature_key in self.idhash['feature']:
+                    feature_id = self.idhash['feature'][feature_key]
+                else:
+                    feature_id = None
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
