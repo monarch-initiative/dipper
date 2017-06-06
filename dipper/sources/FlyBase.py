@@ -695,11 +695,11 @@ class FlyBase(PostgreSQLSource):
                 # deal with the taxonomy
                 # only get taxa for features that are actually used in our set
                 tax_internal_id = self._makeInternalIdentifier(
-                    'organism', organism_id)
+                    'organism', organism_id(organism_id)
                 if organism_id not in self.checked_organisms:
                     # will get the NCBITax if necessary
                     tax_id = self._get_organism_id(organism_id)
-                    self.checked_organisms.add(organism_id)
+                    self.checked_organisms.add)
                 else:
                     tax_id = self.idhash['organism'][organism_id]
 
@@ -1825,8 +1825,9 @@ class FlyBase(PostgreSQLSource):
                     # FIXME i don't know if this is correct
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
-                    if object_id in self.idhash['feature']:
-                        tp_id = self.idhash['feature'][object_id]
+                    if object_id not in self.idhash['feature']:
+                        continue
+                    tp_id = self.idhash['feature'][object_id]
                     if not re.search(r'FBtp', tp_id):
                         tp_id = None
                         # TODO there are FBmc features here;
