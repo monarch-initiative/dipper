@@ -1543,7 +1543,7 @@ class FlyBase(PostgreSQLSource):
                                 # model.addClassToGraph(did, dlabel)
                                 # model.addXref(feature_id, did)
                                 True  # that
-                        else if did is not None and dlabel is not None \
+                        elif did is not None and dlabel is not None \
                                 and feature_id is not None:
                             model.addIndividualToGraph(did, dlabel)
                             model.addXref(feature_id, did)
