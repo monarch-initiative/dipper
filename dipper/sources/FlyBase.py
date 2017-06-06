@@ -695,11 +695,11 @@ class FlyBase(PostgreSQLSource):
                 # deal with the taxonomy
                 # only get taxa for features that are actually used in our set
                 tax_internal_id = self._makeInternalIdentifier(
-                    'organism', organism_id(organism_id)
+                    'organism', organism_id)
                 if organism_id not in self.checked_organisms:
                     # will get the NCBITax if necessary
                     tax_id = self._get_organism_id(organism_id)
-                    self.checked_organisms.add)
+                    self.checked_organisms.add(organism_id)
                 else:
                     tax_id = self.idhash['organism'][organism_id]
 
