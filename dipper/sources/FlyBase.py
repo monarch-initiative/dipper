@@ -520,8 +520,8 @@ class FlyBase(PostgreSQLSource):
                         model.addDeprecatedIndividual(pub_id)
                     else:
                         reference.addRefToGraph()
-
         return
+
     # todo make singular
     def _process_environments(self):
         """
@@ -722,7 +722,7 @@ class FlyBase(PostgreSQLSource):
                         if re.search('FBa[lb]', feature_id):
                             type_id = Genotype.genoparts['allele']
                         model.addIndividualToGraph(feature_id, name, type_id)
-                        
+
                     # stop adding what we do not appreciate
                     # if is_obsolete == 't':
                     #    if is_gene:
@@ -1543,7 +1543,8 @@ class FlyBase(PostgreSQLSource):
                                 # model.addClassToGraph(did, dlabel)
                                 # model.addXref(feature_id, did)
                                 True  # that
-                        else:
+                        else if did is not None and dlabel is not None \
+                                and feature_id is not None:
                             model.addIndividualToGraph(did, dlabel)
                             model.addXref(feature_id, did)
                         line_counter += 1
