@@ -766,10 +766,10 @@ class FlyBase(PostgreSQLSource):
                 # 1	23273518	2	23159230	0	0	60468
 
                 feature_key = feature_id
-                if feature_key in self.idhash['feature']:
-                    feature_id = self.idhash['feature'][feature_key]
-                else:
-                    feature_id = None
+                if feature_key not in self.idhash['feature']:
+                    continue
+                feature_id = self.idhash['feature'][feature_key]
+
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
@@ -785,10 +785,10 @@ class FlyBase(PostgreSQLSource):
                 # rank is the order that they appear in the label
                 # sometimes the same feature is listed twice;
                 # not sure if this is a mistake, or zygosity, or?
-
-                geno.addParts(
-                    feature_id, genotype_id,
-                    geno.object_properties['has_alternate_part'])
+                if feature_id is not None and genotype_id is not None:
+                    geno.addParts(
+                        feature_id, genotype_id,
+                        geno.object_properties['has_alternate_part'])
 
                 # TODO we will build up the genotypes here... lots to do
 
@@ -1701,11 +1701,13 @@ class FlyBase(PostgreSQLSource):
                             # assume that the gene is in the same species
                             geno.addAlleleOfGene(allele_id, gene_id)
                     else:
-                        if allele_id is None:
+                        if allele_id is None \
+                                and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
                             logger.debug(
                                 "this thing %s is not an allele", feature_id)
-                        if gene_id is None:
+                        if gene_id is None \
+                                and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
                             logger.debug(
                                 "this thing %s is not a gene", feature_id)
@@ -1768,6 +1770,8 @@ class FlyBase(PostgreSQLSource):
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
+                    if object_id not in self.idhash['feature']:
+                        continue
                     tp_id = self.idhash['feature'][object_id]
                     # if allele_id is not None and tp_id is not None:
                     #     geno.addParts(
