@@ -42,12 +42,17 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                     (self._getNode(subject_id), self._getNode(predicate_id),
                      Literal(obj)))
             else:
-                logger.warn("None as object for subj: %s and pred: %s",
+                logger.warn(
+                    "None as literal object for subj: %s and pred: %s",
                     subject_id, predicate_id)
-        else:
+        elif obj is not None and obj != '':
             self.add(
                 (self._getNode(subject_id), self._getNode(predicate_id),
                  self._getNode(obj)))
+        else:
+            logger.warn(
+                "None/empty object IRI for subj: %s and pred: %s",
+                subject_id, predicate_id)
         return
 
     def skolemizeBlankNode(self, curie):

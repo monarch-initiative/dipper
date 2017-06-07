@@ -7,7 +7,7 @@ import hashlib
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
-from dipper.models.assoc.Association import Assoc
+# from dipper.models.assoc.Association import Assoc
 from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -63,6 +63,91 @@ class FlyBase(PostgreSQLSource):
         # TODO to get better feature types than (what) is in the feature table
         # itself  (watch out for is_not)
     ]
+
+    #columns = { WIP
+        #'genotype': (
+            #feature_genotype_id, feature_id, genotype_id, chromosome_id, rank,
+            #cgroup, cvterm_id),
+        #'feature_genotype': (
+            #feature_genotype_id, feature_id, genotype_id, chromosome_id,
+            #rank, cgroup, cvterm_id),
+        #'pub': (
+            #pub_id, title, volumetitle, volume, series_name, issue, pyear,
+            #pages, miniref, type_id, is_obsolete, publisher, pubplace,
+            #uniquename),
+        #'feature_pub': (
+            #feature_pub_id, feature_id, pub_id),
+        #'pub_dbxref': (
+            #pub_dbxref_id, pub_id, dbxref_id, is_current),
+        #'feature_dbxref': (
+            #feature_dbxref_id, feature_id, dbxref_id, is_current),
+        #'feature_relationship': (
+            #feature_relationship_id, subject_id, object_id, type_id, rank,
+            #value),
+        #'cvterm': (
+            #cvterm_id, cv_id, definition, dbxref_id, is_obsolete,
+            #is_relationshiptype, name),
+        #'stock_genotype': (
+            #stock_genotype_id, stock_id, genotype_id),
+        #'stock': (
+            #stock_id, dbxref_id, organism_id, name, uniquename, description,
+            #type_id, is_obsolete),
+        #'organism': (
+            #organism_id, abbreviation, genus, species, common_name, comment),
+        #'organism_dbxref': (
+            #organism_dbxref_id, organism_id, dbxref_id, is_current),
+        #'environment': (
+            #environment_id, uniquename, description),
+        #'phenotype': (
+            #phenotype_id, uniquename, observable_id, attr_id, value, cvalue_id,
+            #assay_id),
+        #'phenstatement': (
+            #phenstatement_id, genotype_id, environment_id, phenotype_id,
+            #type_id, pub_id),
+        #'dbxref': (
+            #dbxref_id, db_id, accession, version, description, url),
+        #'phenotype_cvterm': (
+            #phenotype_cvterm_id, phenotype_id, cvterm_id, rank),
+        #'phendesc':  (
+            #phendesc_id, genotype_id, environment_id, description, type_id,
+            #pub_id),
+        #'environment_cvterm': (
+            #environment_cvterm_id, environment_id, cvterm_id),
+        #'stockprop': (stockprop_id, stock_id, type_id, value, rank)
+    #}
+
+    querys = {
+        # WIP: start filtering closer to the source,
+        # move towards joining there as well.
+        # instead of pulling full tables accross the wire
+        # then rejoining them here in python, take advantages of
+        # the indexes and mature relational engine to the the
+        # work on someone elses machine.
+        # we can call it "in the cloud"
+        'feature_dbxref_WIP': """  -- 17M rows in ~2 minutes
+            SELECT
+            feature.name feature_name, feature.uniquename feature_id,
+            organism.abbreviation abbrev, organism.genus, organism.species,
+            cvterm.name frature_type, db.name db, dbxref.accession
+            FROM feature_dbxref
+            JOIN dbxref ON  feature_dbxref.dbxref_id = dbxref.dbxref_id
+            JOIN db ON  dbxref.db_id = db.db_id
+            JOIN feature ON feature_dbxref.feature_id  = feature.feature_id
+            JOIN organism ON feature.organism_id = organism.organism_id
+            JOIN cvterm ON feature.type_id = cvterm.cvterm_id
+            WHERE feature_dbxref.is_current = true
+            AND feature.is_analysis = false
+            AND feature.is_obsolete = false
+            AND cvterm.is_obsolete = 0
+            ;
+        """,
+        'feature': """
+            SELECT feature_id, dbxref_id, organism_id, name, uniquename,
+                null as residues, seqlen, md5checksum, type_id, is_analysis,
+                timeaccessioned, timelastmodified
+            FROM feature WHERE is_analysis = false and is_obsolete = 'f'
+        """
+    }
 
     files = {
         'disease_models': {
@@ -177,15 +262,15 @@ class FlyBase(PostgreSQLSource):
 
         # we want to fetch the features,
         # but just a subset to reduce the processing time
-        query = \
-            "SELECT " \
-            " feature_id, dbxref_id, organism_id, name, uniquename, " \
-            " null as residues, seqlen, md5checksum, type_id, is_analysis," \
-            " timeaccessioned, timelastmodified, is_obsolete " \
-            "FROM feature WHERE is_analysis = false"
+        # query = \
+        #    "SELECT " \
+        #    " feature_id, dbxref_id, organism_id, name, uniquename, " \
+        #    " null as residues, seqlen, md5checksum, type_id, is_analysis," \
+        #    " timeaccessioned, timelastmodified, is_obsolete " \
+        #    "FROM feature WHERE is_analysis = false"
 
         self.fetch_query_from_pgdb(
-            'feature', query, None, cxn, None, is_dl_forced)
+            'feature', self.querys['feature'], None, cxn, None, is_dl_forced)
 
         self._get_human_models_file()
         self.get_files(False)
@@ -319,6 +404,7 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    # todo moke singular
     def _process_stocks(self, limit):
         """
         Stock definitions.
@@ -367,7 +453,7 @@ class FlyBase(PostgreSQLSource):
                             and int(stock_num) not in self.test_keys['strain']:
                         continue
 
-                    tax_label = self.label_hash[taxon]
+                    # tax_label = self.label_hash[taxon]  # unused
                     # add the tax in case it hasn't been already
                     model.addClassToGraph(taxon)
                     model.addIndividualToGraph(stock_id, stock_label, taxon)
@@ -376,6 +462,7 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    # todo make singular
     def _process_pubs(self, limit):
         """
         Flybase publications.
@@ -434,9 +521,9 @@ class FlyBase(PostgreSQLSource):
                         model.addDeprecatedIndividual(pub_id)
                     else:
                         reference.addRefToGraph()
-
         return
 
+    # todo make singular
     def _process_environments(self):
         """
         There's only about 30 environments in which the phenotypes
@@ -501,6 +588,7 @@ class FlyBase(PostgreSQLSource):
 
         return
 
+    # todo make singular
     def _process_features(self, limit):
         """
         These are all of the genomic features genes, variations,
@@ -525,7 +613,7 @@ class FlyBase(PostgreSQLSource):
             for line in filereader:
                 (feature_id, dbxref_id, organism_id, name, uniquename,
                  residues, seqlen, md5checksum, type_id, is_analysis,
-                 timeaccessioned, timelastmodified, is_obsolete) = line
+                 timeaccessioned, timelastmodified) = line
 
                 feature_key = feature_id
                 if re.search(r'[\|\s\[\]\{\}\\<\>]', uniquename):
@@ -636,12 +724,13 @@ class FlyBase(PostgreSQLSource):
                             type_id = Genotype.genoparts['allele']
                         model.addIndividualToGraph(feature_id, name, type_id)
 
-                    if is_obsolete == 't':
-                        if is_gene:
-                            model.addDeprecatedClass(feature_id)
-                        else:
-                            model.addDeprecatedIndividual(feature_id)
-                        self.deprecated_features.add(feature_key)
+                    # stop adding what we do not appreciate
+                    # if is_obsolete == 't':
+                    #    if is_gene:
+                    #        model.addDeprecatedClass(feature_id)
+                    #    else:
+                    #        model.addDeprecatedIndividual(feature_id)
+                    #    self.deprecated_features.add(feature_key)
 
                     model.addClassToGraph(tax_id)
                     if tax_id != tax_internal_id:
@@ -677,7 +766,10 @@ class FlyBase(PostgreSQLSource):
                 # 1	23273518	2	23159230	0	0	60468
 
                 feature_key = feature_id
+                if feature_key not in self.idhash['feature']:
+                    continue
                 feature_id = self.idhash['feature'][feature_key]
+
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
@@ -693,10 +785,10 @@ class FlyBase(PostgreSQLSource):
                 # rank is the order that they appear in the label
                 # sometimes the same feature is listed twice;
                 # not sure if this is a mistake, or zygosity, or?
-
-                geno.addParts(
-                    feature_id, genotype_id,
-                    geno.object_properties['has_alternate_part'])
+                if feature_id is not None and genotype_id is not None:
+                    geno.addParts(
+                        feature_id, genotype_id,
+                        geno.object_properties['has_alternate_part'])
 
                 # TODO we will build up the genotypes here... lots to do
 
@@ -829,7 +921,7 @@ class FlyBase(PostgreSQLSource):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
+        # model = Model(g)  # unused
         raw = '/'.join((self.rawdir, 'stock_genotype'))
         logger.info("processing stock genotype")
         geno = Genotype(g)
@@ -918,7 +1010,8 @@ class FlyBase(PostgreSQLSource):
 
                         if dbxref_id is not None:
                             reference = Reference(
-                                g, dbxref_id, Reference.ref_types['publication'])
+                                g, dbxref_id,
+                                Reference.ref_types['publication'])
                             reference.addRefToGraph()
                             model.addSameIndividual(pub_id, dbxref_id)
                             line_counter += 1
@@ -1400,7 +1493,7 @@ class FlyBase(PostgreSQLSource):
         model = Model(g)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'feature_dbxref'))
-        logger.info("processing feature dbxref mappings")
+        logger.info("processing feature_dbxref mappings")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1422,7 +1515,7 @@ class FlyBase(PostgreSQLSource):
 
                 if self.testMode \
                         and int(feature_key) not in \
-                        self.test_keys['gene']+self.test_keys['allele']:
+                        self.test_keys['gene'] + self.test_keys['allele']:
                     continue
 
                 if feature_key not in self.idhash['feature']:
@@ -1431,15 +1524,17 @@ class FlyBase(PostgreSQLSource):
                     # logger.debug("Feature %s not found in hash", feature_key)
                     continue
                 feature_id = self.idhash['feature'][feature_key]
-
                 dbxref_key = dbxref_id
                 dbxrefs = self.dbxrefs.get(dbxref_key)
+
                 if dbxrefs is not None:
                     for d in dbxrefs:
                         # need to filter based on db ?
-                        # TODO should we make other species' identifiers primary
+                        # TODO make other species' identifiers primary??
                         # instead of flybase?
                         did = dbxrefs.get(d)
+                        if did.endswith('&class=protein'):
+                            did = did[0:len(dbxrefs)-15]
                         # don't make something sameAs itself
                         if did == feature_id:
                             continue
@@ -1452,7 +1547,8 @@ class FlyBase(PostgreSQLSource):
                                 # model.addClassToGraph(did, dlabel)
                                 # model.addXref(feature_id, did)
                                 True  # that
-                        else:
+                        elif did is not None and dlabel is not None \
+                                and feature_id is not None:
                             model.addIndividualToGraph(did, dlabel)
                             model.addXref(feature_id, did)
                         line_counter += 1
@@ -1577,7 +1673,7 @@ class FlyBase(PostgreSQLSource):
                             logger.error(
                                 "The gene_id for object_id is None: %s \t %s",
                                 str(subject_id), str(object_id))
-                        if not (gene_id in self.label_hash):
+                        if not gene_id not in self.label_hash:
                             logger.error(
                                 "gene_id's label missing for: %s\t%s\t%s",
                                 str(subject_id), str(object_id), str(object_id))
@@ -1605,11 +1701,13 @@ class FlyBase(PostgreSQLSource):
                             # assume that the gene is in the same species
                             geno.addAlleleOfGene(allele_id, gene_id)
                     else:
-                        if allele_id is None:
+                        if allele_id is None \
+                                and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
                             logger.debug(
                                 "this thing %s is not an allele", feature_id)
-                        if gene_id is None:
+                        if gene_id is None \
+                                and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
                             logger.debug(
                                 "this thing %s is not a gene", feature_id)
@@ -1672,6 +1770,8 @@ class FlyBase(PostgreSQLSource):
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
 
+                    if object_id not in self.idhash['feature']:
+                        continue
                     tp_id = self.idhash['feature'][object_id]
                     # if allele_id is not None and tp_id is not None:
                     #     geno.addParts(
@@ -1725,8 +1825,9 @@ class FlyBase(PostgreSQLSource):
                     # FIXME i don't know if this is correct
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
-                    if object_id in self.idhash['feature']:
-                        tp_id = self.idhash['feature'][object_id]
+                    if object_id not in self.idhash['feature']:
+                        continue
+                    tp_id = self.idhash['feature'][object_id]
                     if not re.search(r'FBtp', tp_id):
                         tp_id = None
                         # TODO there are FBmc features here;
@@ -1740,6 +1841,7 @@ class FlyBase(PostgreSQLSource):
                     break
         return
 
+    # todo make singular
     def _process_organisms(self, limit):
         """
         The internal identifiers for the organisms in flybase

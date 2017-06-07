@@ -308,8 +308,10 @@ class AnimalQTLdb(Source):
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
                         and re.fullmatch(r'[^ ]*', gene_id) is not None:
 
-                    # we assume if no src is provided, it's NCBI
-                    if gene_id_src == 'NCBIgene' or gene_id_src == '':
+                    # we assume if no src is provided
+                    # and gene_id is an integer, it's NCBI
+                    if (gene_id_src == 'NCBIgene' or gene_id_src == '') and \
+                            gene_id.strip().isdigit() :
                         gene_id = 'NCBIGene:' + gene_id.strip()
                         # we will expect that these labels provided elsewhere
                         geno.addGene(gene_id, None)
