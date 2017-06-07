@@ -659,15 +659,48 @@ class MGI(PostgreSQLSource):
                     logger.warning(line.format())
                     continue
 
-                (allele_key, marker_key, strain_key, mode_key, allele_type_key,
-                 allele_status_key, transmission_key, collection_key, symbol,
-                 name, nomensymbol, iswildtype, isextinct, ismixed, refs_key,
-                 markerallele_status_key, createdby_key, modifiedby_key,
-                 approvedby_key, approval_date, creation_date,
-                 modification_date, markersymbol, term, statusnum, strain,
-                 collection, createdby, modifiedby, approvedby,
-                 markerallele_status, jnum, jnumid, citation,
-                 short_citation) = line.split('\t')
+                # raw=workspace/build-mgi-ttl/dipper/raw/mgi/
+                # head -1  ${raw}/all_allele_view|tr '\t' '\n'|\
+                # awk '{sub(/^_/,"",$1);print $1 ",\t  # " NR}'
+                (
+                allele_key,         # 1
+                marker_key,         # 2
+                strain_key,	        # 3
+                mode_key,           # 4
+                allele_type_key,    # 5
+                allele_status_key,  # 6
+                transmission_key,   # 7
+                collection_key,     # 8
+                symbol,             # 9
+                name,               # 10
+                iswildtype,         # 11
+                isextinct,          # 12
+                ismixed,            # 13
+                refs_key,           # 14
+                markerallele_status_key, # 15
+                createdby_key,      # 16
+                modifiedby_key,     # 17
+                approvedby_key,     # 18
+                approval_date,      # 19
+                creation_date,      # 20
+                modification_date,  # 21
+                markersymbol,       # 22
+                term,               # 23
+                statusnum,          # 24
+                strain,             # 25
+                collection,         # 26
+                createdby,          # 27
+                modifiedby,         # 28
+                approvedby,         # 29
+                markerallele_status,  # 30
+                jnum,               # 31
+                jnumid,             # 32
+                citation,           # 33
+                short_citation,     # 34
+                ) = line.split('\t')
+
+
+
 
                 # TODO update processing to use this view better
                 # including jnums!
