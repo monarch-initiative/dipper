@@ -27,7 +27,7 @@ class StringTestFakeData(unittest.TestCase):
         ]
 
         ensembl = Ensembl('rdf_graph', True)
-        self.protein_list = ensembl.fetch_protein_list(9606)
+        self.protein_list = ensembl.fetch_protein_gene_map(9606)
 
         return
 
@@ -38,22 +38,22 @@ class StringTestFakeData(unittest.TestCase):
         string_db = StringDB('rdf_graph', True)
         string_db.graph.bind_all_namespaces()
         ensembl = Ensembl('rdf_graph', True)
-        protein_list = ensembl.fetch_protein_list(9606)
+        prot_map = ensembl.fetch_protein_gene_map(9606)
         print("Finished fetching ENSP IDs, "
-              "fetched {} proteins".format(len(protein_list)))
+              "fetched {} proteins".format(len(prot_map.keys())))
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
-        string_db._process_protein_links(dataframe, protein_list, 9606)
+        string_db._process_protein_links(dataframe, prot_map, 9606)
 
         sparql_query = """
                       SELECT ?prot
                       WHERE {
-                          ?prot RO:0002434 ENSEMBL:ENSP00000003084 .
+                          ?prot RO:0002434 ENSEMBL:ENSG00000001626 .
                       }
                       """
         sparql_output = string_db.graph.query(sparql_query)
         results = list(sparql_output)
-        expected = [(URIRef(string_db.graph._getNode("ENSEMBL:ENSP00000000233")),)]
+        expected = [(URIRef(string_db.graph._getNode("ENSEMBL:ENSG00000004059")),)]
         self.assertEqual(results, expected)
 
     def testFakeDataSet2(self):
