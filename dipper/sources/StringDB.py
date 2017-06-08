@@ -88,17 +88,17 @@ class StringDB(Source):
             dataframe = pd.read_csv(fh, sep='\s+')
             logger.info("Fetching ensembl proteins "
                         "for taxon {}".format(taxon))
-            protein_list = ensembl.fetch_protein_list(taxon)
+            p2gene_map = ensembl.fetch_protein_gene_map(taxon)
 
             logger.info("Finished fetching ENSP IDs, "
-                        "fetched {} proteins".format(len(protein_list)))
+                        "fetched {} proteins".format(len(p2gene_map)))
 
             logger.info("Fetching protein protein interactions "
                         "for taxon {}".format(taxon))
 
-            self._process_protein_links(dataframe, protein_list, taxon, limit)
+            self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
-    def _process_protein_links(self, dataframe, prot_list, taxon,
+    def _process_protein_links(self, dataframe, p2gene_map, taxon,
                                limit=None, rank_min=10):
         filtered_df = dataframe[dataframe['experimental'] > rank_min]
         filtered_out_count = 0
@@ -106,18 +106,22 @@ class StringDB(Source):
             # Check if proteins are in same species
             protein1 = row['protein1'].replace('{}.'.format(str(taxon)), '')
             protein2 = row['protein2'].replace('{}.'.format(str(taxon)), '')
-            
-            if protein1 not in prot_list \
-                    or protein2 not in prot_list:
+
+            gene1_curie = None
+            gene2_curie = None
+            try:
+                gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
+                gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
+            except KeyError:
                 filtered_out_count += 1
-            else:
-                protein1_curie = "ENSEMBL:{}".format(protein1)
-                protein2_curie = "ENSEMBL:{}".format(protein2)
+
+            if gene1_curie is not None and gene2_curie is not None:
                 # RO:0002434 ! interacts_with
                 interacts_with = 'RO:0002434'
-                self.graph.addTriple(protein1_curie, interacts_with, protein2_curie)
+                self.graph.addTriple(gene1_curie, interacts_with, gene2_curie)
                 if limit is not None and index >= limit:
                     break
+
         logger.info("Finished parsing p-p interactions for {},"
                     " {} rows filtered out based on checking"
                     " ensembl proteins".format(taxon, filtered_out_count))

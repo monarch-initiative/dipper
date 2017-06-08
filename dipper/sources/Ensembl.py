@@ -128,8 +128,33 @@ class Ensembl(Source):
              description, gene_biotype, entrezgene,
              peptide_id) = row[0:6]
             protein_list.append(peptide_id)
-
+        conn.close()
         return protein_list
+
+    def fetch_protein_gene_map(self, taxon_id):
+        """
+        Fetch a list of proteins for a species in biomart
+        :param taxid:
+        :return: dict
+        """
+        protein_dict = dict()
+        params = urllib.parse.urlencode(
+            {'query': self._build_biomart_gene_query(str(taxon_id))})
+        conn = http.client.HTTPConnection('www.ensembl.org')
+        conn.request("GET", '/biomart/martservice?' + params)
+        response = conn.getresponse()
+        for line in response:
+            line = line.decode('utf-8').rstrip()
+            row = line.split('\t')
+            if len(row) < 6:
+                logger.warn("Data error for query on %d", taxon_id)
+                continue
+            (ensembl_gene_id, external_gene_name,
+             description, gene_biotype, entrezgene,
+             peptide_id) = row[0:6]
+            protein_dict[peptide_id] = ensembl_gene_id
+        conn.close()
+        return protein_dict
 
     def _build_biomart_gene_query(self, taxid):
         """
@@ -244,6 +269,7 @@ class Ensembl(Source):
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
                 model.addIndividualToGraph(peptide_curie, None, self._get_gene_type("polypeptide"))
+                model.addIndividualToGraph(uniprot_curie, None, self._get_gene_type("polypeptide"))
 
                 if entrezgene != '':
                     model.addEquivalentClass(gene_id, entrez_curie)
