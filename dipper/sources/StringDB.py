@@ -99,7 +99,7 @@ class StringDB(Source):
             self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
     def _process_protein_links(self, dataframe, p2gene_map, taxon,
-                               limit=None, rank_min=10):
+                               limit=None, rank_min=200):
         filtered_df = dataframe[dataframe['experimental'] > rank_min]
         filtered_out_count = 0
         for index, row in filtered_df.iterrows():
@@ -107,11 +107,19 @@ class StringDB(Source):
             protein1 = row['protein1'].replace('{}.'.format(str(taxon)), '')
             protein2 = row['protein2'].replace('{}.'.format(str(taxon)), '')
 
+            prot1_id = protein1.replace('ENSP', '')
+            prot2_id = protein2.replace('ENSP', '')
+
             gene1_curie = None
             gene2_curie = None
             try:
-                gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
-                gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
+                # Keep orientation the same since RO:0002434 is symmetric
+                if prot1_id > prot2_id:
+                    gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
+                    gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
+                else:
+                    gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
+                    gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
             except KeyError:
                 filtered_out_count += 1
 

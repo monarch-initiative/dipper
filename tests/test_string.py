@@ -13,12 +13,12 @@ class StringTestFakeData(unittest.TestCase):
         # Test set with two proteins from same species
         self.test_set_1 = \
             [['9606.ENSP00000000233', '9606.ENSP00000003084',
-             0, 0, 0, 0, 50, 0, 150, 150]]
+             0, 0, 0, 0, 300, 0, 150, 150]]
 
         # Test set with deprecated protein id
         self.test_set_2 = \
             [['9606.ENSP00000000233', '9606.ENSP00000006101',
-             0, 0, 0, 0, 50, 0, 150, 150]]
+             0, 0, 0, 0, 300, 0, 150, 150]]
 
         self.columns = [
             'protein1', 'protein2', 'neighborhood', 'fusion',
@@ -48,12 +48,12 @@ class StringTestFakeData(unittest.TestCase):
         sparql_query = """
                       SELECT ?prot
                       WHERE {
-                          ?prot RO:0002434 ENSEMBL:ENSG00000001626 .
+                          ?prot RO:0002434 ENSEMBL:ENSG00000004059 .
                       }
                       """
         sparql_output = string_db.graph.query(sparql_query)
         results = list(sparql_output)
-        expected = [(URIRef(string_db.graph._getNode("ENSEMBL:ENSG00000004059")),)]
+        expected = [(URIRef(string_db.graph._getNode("ENSEMBL:ENSG00000001626")),)]
         self.assertEqual(results, expected)
 
     def testFakeDataSet2(self):
