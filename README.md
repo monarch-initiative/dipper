@@ -131,9 +131,13 @@ import Dipper as a python package, write your own wrapper, and add your own sour
    ctd,genereviews,eom,coriell,clinvar,monochrom,kegg,animalqtldb,
    ensembl,hgnc,orphanet,omia,flybase,mmrrc,wormbase,mpd,gwascatalog,go
    ``` 
+
+* Each source also has a corresponding **concept map** diagram that documents modeling patterns implemented in SciGraph, via Dipper-mediated transformation into Monarch's common target model. These are stored in the ingest-artifacts repo at https://github.com/monarch-initiative/ingest-artifacts/tree/master/sources.
+
 * Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
 Please see our [best-practices documentation](sources/README.md) for details on writing new Source parsers 
 using Dipper code, and make a Pull request.  
+
 
 ## License (Under consideration)
 
