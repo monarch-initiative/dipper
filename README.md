@@ -1,3 +1,4 @@
+[![PyPI](https://img.shields.io/pypi/v/dipper.svg)](https://pypi.python.org/pypi/dipper)
 [![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
 [![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
 
