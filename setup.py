@@ -2,6 +2,7 @@
 
 from setuptools import setup, find_packages
 import os
+import subprocess
 
 directory = os.path.dirname(os.path.abspath(__file__))
 
