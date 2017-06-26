@@ -25,7 +25,7 @@ except Exception as error:
 
 setup(
     name='dipper',
-    version='0.1.0',
+    version='0.1.1',
     author='Kent Shefchek',
     author_email='kshefchek@gmail.com',
     url='https://github.com/monarch-initiative/dipper',
@@ -46,6 +46,6 @@ setup(
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Visualization'
     ],
-    scripts=['./dipper.py']
+    scripts=['./dipper-etl.py']
 )
 
