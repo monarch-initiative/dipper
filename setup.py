@@ -25,7 +25,7 @@ except Exception as error:
 
 setup(
     name='dipper',
-    version='0.1.1',
+    version='0.1.2',
     author='Kent Shefchek',
     author_email='kshefchek@gmail.com',
     url='https://github.com/monarch-initiative/dipper',
