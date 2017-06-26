@@ -10,7 +10,7 @@ import time
 # Unable to import 'tests.test_general'
 # No name 'utils' in module 'dipper'
 # Invalid constant name "test_suite"
-#from tests.test_general import GeneralGraphTestCase
+from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
 from dipper.utils.GraphUtils import GraphUtils
 
@@ -19,7 +19,7 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.ERROR)
 
 
-#test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
+test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 
 
 def main():
@@ -173,8 +173,8 @@ def main():
         exit(0)
 
     # run initial tests
-    #if (args.no_verify or args.skip_tests) is not True:
-    #    unittest.TextTestRunner(verbosity=2).run(test_suite)
+    if (args.no_verify or args.skip_tests) is not True:
+        unittest.TextTestRunner(verbosity=2).run(test_suite)
 
     # set serializer
     if args.format is not None:

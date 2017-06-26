@@ -75,7 +75,7 @@ first N number of rows or data elements
 * you can also run the stand-alone tests in ```tests/test_*``` to generate subsets of the data and run unittests
 * other commandline parameters are explained if you request help:
 
-    ```./dipper.py --help```
+    ```./dipper-etl.py --help```
 
 ## Installing Dipper as an external python package:
 You can also write your own dipper packages outside of this project, using the framework we've set up here.  Simply
