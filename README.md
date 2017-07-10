@@ -1,3 +1,4 @@
+[![PyPI](https://img.shields.io/pypi/v/dipper.svg)](https://pypi.python.org/pypi/dipper)
 [![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
 [![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
 
@@ -75,7 +76,7 @@ first N number of rows or data elements
 * you can also run the stand-alone tests in ```tests/test_*``` to generate subsets of the data and run unittests
 * other commandline parameters are explained if you request help:
 
-    ```./dipper.py --help```
+    ```./dipper-etl.py --help```
 
 ## Installing Dipper as an external python package:
 You can also write your own dipper packages outside of this project, using the framework we've set up here.  Simply
@@ -131,11 +132,13 @@ import Dipper as a python package, write your own wrapper, and add your own sour
    ctd,genereviews,eom,coriell,clinvar,monochrom,kegg,animalqtldb,
    ensembl,hgnc,orphanet,omia,flybase,mmrrc,wormbase,mpd,gwascatalog,go
    ``` 
+
+* Each source also has a corresponding **concept map** diagram that documents modeling patterns implemented in SciGraph, via Dipper-mediated transformation into Monarch's common target model. These are stored in the ingest-artifacts repo at https://github.com/monarch-initiative/ingest-artifacts/tree/master/sources.
+
 * Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
 Please see our [best-practices documentation](sources/README.md) for details on writing new Source parsers 
 using Dipper code, and make a Pull request.  
 
-## License (Under consideration)
 
 ## About this project
 The DIPper data pipeline was born out of the need for a uniform representation of human and model organism
@@ -148,22 +151,4 @@ get started transforming these standard data sources.
 
 A manuscript is in preparation.  In the mean time, if you use any of our code or derived data, please cite 
 this repository and the [Monarch Initiative](https://monarchinitiative.org).
-
-## Identifiers
-Throughout the Monarch web application, we display external entities using their human-friendly labels
-(eg. ontology term label 'polydactyly' or gene symbol 'KNG1') as issued by the original data sources;
-however, while such labels aid human understanding, they often overlap between sources.
-Therefore, in Monarch, we never rely on the labels to integrate data and never display labels alone without a
-corresponding prefixed identifier (wherein the local part is exactly as issued by the original data sources and the
-prefix is as established by convention or as registered. eg. NCBIGene:3827).
-
-For each prefix we display in Monarch, we have [documented a 1-to-1 relationship with a resolving namespace](https://github.com/monarch-initiative/dipper/blob/master/dipper/curie_map.yaml),
-and the prefixed notation (aka CURIE) is usually hyperlinked to its HTTP URI.
-For more information regarding identifiers terminology and notation, see McMurry et al. https://zenodo.org/record/31765.
-
-More detailed identifier documentation for Monarch is a work in progress, available [here:](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit)
-Please feel free to pose any questions or concerns to info@monarchinitiative.org.
-
-
-![in action](https://github.com/monarch-initiative/dipper/blob/master/docs/curies-and-uris-in-action.png)
 

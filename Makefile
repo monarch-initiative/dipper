@@ -2,7 +2,7 @@
 ### Environment variables.
 ###
 
-DIPPER_BIN = ./dipper.py
+DIPPER_BIN = ./dipper-etl.py
 NOSE = nosetests
 
 ###
