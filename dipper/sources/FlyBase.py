@@ -64,7 +64,7 @@ class FlyBase(PostgreSQLSource):
         # itself  (watch out for is_not)
     ]
 
-    #columns = { WIP
+    # columns = { WIP
         #'genotype': (
             #feature_genotype_id, feature_id, genotype_id, chromosome_id, rank,
             #cgroup, cvterm_id),
@@ -124,6 +124,8 @@ class FlyBase(PostgreSQLSource):
         # the indexes and mature relational engine to the the
         # work on someone elses machine.
         # we can call it "in the cloud"
+        # from Lilly: http://gmod.org/wiki/FlyBase_Field_Mapping_Tables
+
         'feature_dbxref_WIP': """  -- 17M rows in ~2 minutes
             SELECT
             feature.name feature_name, feature.uniquename feature_id,
