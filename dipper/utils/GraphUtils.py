@@ -1,4 +1,5 @@
 import logging
+import hashlib
 from rdflib import URIRef, ConjunctiveGraph
 from rdflib import util as rdflib_util
 from rdflib.namespace import DC, RDF, OWL
@@ -59,14 +60,15 @@ class GraphUtils:
     @staticmethod
     def add_property_axioms(graph, properties):
         ontology_graph = ConjunctiveGraph()
-
+        GH = 'https://raw.githubusercontent.com'
+        MI = '/monarch-initiative'
         ontologies = [
-            'https://raw.githubusercontent.com/monarch-initiative/SEPIO-ontology/master/src/ontology/sepio.owl',
-            'https://raw.githubusercontent.com/monarch-initiative/GENO-ontology/develop/src/ontology/geno.owl',
-            'https://raw.githubusercontent.com/oborel/obo-relations/master/ro.owl',
+            GH + MI + '/SEPIO-ontology/master/src/ontology/sepio.owl',
+            GH + MI + '/GENO-ontology/develop/src/ontology/geno.owl',
+            GH + '/oborel/obo-relations/master/ro.owl',
             'http://purl.obolibrary.org/obo/iao.owl',
             'http://purl.obolibrary.org/obo/ero.owl',
-            'https://raw.githubusercontent.com/jamesmalone/OBAN/master/ontology/oban_core.ttl',
+            GH + '/jamesmalone/OBAN/master/ontology/oban_core.ttl',
             'http://purl.obolibrary.org/obo/pco.owl',
             'http://purl.obolibrary.org/obo/xco.owl'
         ]
@@ -78,7 +80,8 @@ class GraphUtils:
         for ontology in ontologies:
             logger.info("parsing: " + ontology)
             try:
-                ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
+                ontology_graph.parse(
+                    ontology, format=rdflib_util.guess_format(ontology))
             except SAXParseException as e:
                 logger.error(e)
                 logger.error('Retrying as turtle: ' + ontology)
@@ -87,7 +90,8 @@ class GraphUtils:
                 # simple retry
                 logger.error(e)
                 logger.error('Retrying: ' + ontology)
-                ontology_graph.parse(ontology, format=rdflib_util.guess_format(ontology))
+                ontology_graph.parse(
+                    ontology, format=rdflib_util.guess_format(ontology))
 
         # Get object properties
         graph = GraphUtils.add_property_to_graph(
@@ -106,12 +110,14 @@ class GraphUtils:
 
         for row in graph.predicates(DC['source'], OWL['AnnotationProperty']):
             if row == RDF['type']:
-                graph.remove((DC['source'], RDF['type'], OWL['AnnotationProperty']))
+                graph.remove(
+                    (DC['source'], RDF['type'], OWL['AnnotationProperty']))
         graph.add((DC['source'], RDF['type'], OWL['ObjectProperty']))
 
         # Hardcoded properties
-        graph.add((URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'),
-                  RDF['type'], OWL['AnnotationProperty']))
+        graph.add((
+            URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'),
+            RDF['type'], OWL['AnnotationProperty']))
 
         graph.add((URIRef('https://monarchinitiative.org/MONARCH_anonymous'),
                   RDF['type'], OWL['AnnotationProperty']))
@@ -120,11 +126,11 @@ class GraphUtils:
 
     @staticmethod
     def add_property_to_graph(results, graph, property_type, property_list):
+
         for row in results:
             if row in property_list:
                 graph.add((row, RDF['type'], property_type))
         return graph
-
 
     def digest_id(wordage):
         '''
@@ -135,6 +141,6 @@ class GraphUtils:
         char to be a digit
 
         : param str wordage arbitrary string
-        : return str 
+        : return str
         '''
         return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
