@@ -41,23 +41,23 @@ class MPD(Source):
     the sex-qualified genotype/strain.
 
     """
-    mdpdl = 'http://phenomedoc.jax.org/MPD_downloads'
+    MPDDL = 'http://phenomedoc.jax.org/MPD_downloads'
     files = {
         'ontology_mappings': {
             'file': 'ontology_mappings.csv',
-            'url': mdpdl+'/ontology_mappings.csv'},
+            'url': MPDDL + '/ontology_mappings.csv'},
         'straininfo': {
             'file': 'straininfo.csv',
-            'url': mdpdl+'/straininfo.csv'},
+            'url': MPDDL + '/straininfo.csv'},
         'assay_metadata': {
             'file': 'measurements.csv',
-            'url': mdpdl+'/measurements.csv'},
+            'url': MPDDL + '/measurements.csv'},
         'strainmeans': {
             'file': 'strainmeans.csv.gz',
-            'url': mdpdl+'/strainmeans.csv.gz'},
+            'url': MPDDL + '/strainmeans.csv.gz'},
         # 'mpd_datasets_metadata': { #TEC does not seem to be used
         #    'file': 'mpd_datasets_metadata.xml.gz',
-        #    'url': mdpdl+'/mpd_datasets_metadata.xml.gz'},
+        #    'url': MPDDL + '/mpd_datasets_metadata.xml.gz'},
     }
 
     # the following are strain ids for testing
@@ -185,9 +185,9 @@ class MPD(Source):
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
                 # create the strain as an instance of the taxon
                 if self.testMode and \
-                        'MPD:'+str(mpd_strainid) not in self.test_ids:
+                        'MPD:' + str(mpd_strainid) not in self.test_ids:
                     continue
-                strain_id = 'MPD-strain:'+str(mpd_strainid)
+                strain_id = 'MPD-strain:' + str(mpd_strainid)
                 model.addIndividualToGraph(strain_id, strain_name, tax_id)
                 if mpdshortname.strip() != '':
                     model.addSynonym(strain_id, mpdshortname.strip())
@@ -411,7 +411,7 @@ class MPD(Source):
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
         genotype_id = '_'+'-'.join((re.sub(r':', '', strain_id), 'genotype'))
-        genotype_label = '['+strain_label+']'
+        genotype_label = '[' + strain_label + ']'
 
         sex_specific_genotype_id = '_'+'-'.join((re.sub(r':', '', strain_id),
                                                  sex, 'genotype'))
