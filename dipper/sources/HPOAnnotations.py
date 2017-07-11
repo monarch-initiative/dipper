@@ -149,19 +149,22 @@ class HPOAnnotations(Source):
         # scrub file of the oddities...lots of publication rewriting
         f = '/'.join((self.rawdir, self.files['annot']['file']))
         logger.info('scrubbing PubMed:12345 --> PMID:12345')
-        pysed.replace("PubMed", 'PMID', f)
+        pysed.replace(r'PubMed:', 'PMID:', f)
 
         logger.info('scrubbing pmid:12345 --> PMID:12345')
-        pysed.replace("pmid", 'PMID', f)
+        pysed.replace(r'pmid:', 'PMID:', f)
+
+        logger.info('scrubbing PMID:    12345 --> PMID:12345')
+        pysed.replace(r'PMID:  *', 'PMID:', f)
 
         logger.info('scrubbing PMID12345 --> PMID:12345')
-        pysed.replace("PMID([0-9][0-9]*)", 'PMID:\\1', f)
+        pysed.replace(r'PMID([0-9][0-9]*)', r'PMID:\1', f)
 
         logger.info('scrubbing MIM12345 --> OMIM:12345')
-        pysed.replace('MIM([0-9][0-9]*)', 'OMIM:\\1', f)
+        pysed.replace(r'MIM([0-9][0-9]*)', r'OMIM:\1', f)
 
         logger.info('scrubbing MIM:12345 --> OMIM:12345')
-        pysed.replace(";MIM", ";OMIM", f)
+        pysed.replace(r";MIM", ";OMIM", f)
 
         logger.info('scrubbing ORPHANET --> Orphanet')
         pysed.replace("ORPHANET", "Orphanet", f)
@@ -227,15 +230,16 @@ class HPOAnnotations(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
+                row = [str(col).strip() for col in row]
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w,
                  asp, syn, date, curator) = row
-                disease_id = db + ":" + str(num)
+                disease_id = db + ":" + num
 
                 if self.testMode:
                     try:
                         id_list = self.test_ids
                         if id_list is None \
-                                or disease_id.strip() not in id_list:
+                                or disease_id not in id_list:
                             continue
                     except AttributeError:
                         continue
@@ -246,7 +250,7 @@ class HPOAnnotations(Source):
                 model.addClassToGraph(pheno_id, None)
                 eco_id = self._map_evidence_to_codes(eco)
                 model.addClassToGraph(eco_id, None)
-                if onset is not None and onset.strip() != '':
+                if onset is not None and onset != '':
                     model.addClassToGraph(onset, None)
 
                 # we want to do things differently depending on
@@ -302,7 +306,7 @@ class HPOAnnotations(Source):
                             if re.match(r'OMIM', pub):
                                 omimnum = re.sub(r'OMIM:', '', pub)
                                 omimurl = '/'.join(('http://omim.org/entry',
-                                                    str(omimnum)))
+                                                    str(omimnum).strip()))
                                 pub = omimurl
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
@@ -408,9 +412,8 @@ class HPOAnnotations(Source):
                 continue
             common_file_count += 1
             raw = self.files[f]['file']
-            total_processed += self.process_common_disease_file(raw,
-                                                                unpadded_doids,
-                                                                limit)
+            total_processed += self.process_common_disease_file(
+                raw, unpadded_doids, limit)
             if not self.testMode \
                     and limit is not None and total_processed > limit:
                 break
@@ -491,13 +494,16 @@ class HPOAnnotations(Source):
                      phenotype_id, phenotype_name, age_of_onset_id,
                      age_of_onset_name, eid, evidence_name, frequency, sex_id,
                      sex_name, negation_id, negation_name, description,
-                     pub_ids, assigned_by, date_created) = row
+                     pub_ids, assigned_by,
+                     date_created) = [str(col).strip() for col in row]
                 else:
                     logger.warning(
                         "Wrong number of columns! expected 21, got: %s in: %s",
                         len(row), raw)
                     logger.warning("%s", row)
                     continue
+                # b/c "PMID:    17223397"
+                pub_ids = re.sub(r'  *', '', pub_ids)
 
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
@@ -510,7 +516,7 @@ class HPOAnnotations(Source):
                     unpadded_num = re.sub(r'DOID:', '', disease_id)
                     unpadded_num = unpadded_num.lstrip('0')
                     if unpadded_num in unpadded_doids:
-                        fixed_id = 'DOID:'+unpadded_num
+                        fixed_id = 'DOID:' + unpadded_num
                         replace_id_flag = True
                         disease_id = fixed_id.strip()
 
@@ -525,7 +531,8 @@ class HPOAnnotations(Source):
                     continue  # TODO add negative associations
 
                 if disease_id != '' and phenotype_id != '':
-                    assoc = D2PAssoc(g, self.name, disease_id, phenotype_id)
+                    assoc = D2PAssoc(
+                        g, self.name, disease_id, phenotype_id.strip())
                     if age_of_onset_id != '':
                         assoc.onset = age_of_onset_id
                     if frequency != '':
@@ -539,6 +546,7 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for p in pub_ids.split(';'):
+                            p = re.sub(r'  *', '', p)
                             if re.search(r'(DOID|MESH)', p) \
                                     or re.search(r'Disease name contained',
                                                  description):
@@ -551,8 +559,8 @@ class HPOAnnotations(Source):
                     assoc.add_association_to_graph()
                     assoc_count += 1
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None\
+                        and line_counter > limit:
                     break
 
             if replace_id_flag:
