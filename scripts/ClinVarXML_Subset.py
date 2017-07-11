@@ -105,12 +105,12 @@ with gzip.open(FILENAME, 'rt') as fh:
         keep = False
 
         # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/MeasureSet/@ID
-        RCVAssertion = ClinVarSet.find('ReferenceClinVarAssertion')
+        RCVAssertion = ClinVarSet.find('./ReferenceClinVarAssertion')
 
         # rcv_variants are not unique to a single ClinVarSet
-        rcv_variant = int(RCVAssertion.find('MeasureSet').get('ID'))
+        # rcv_variant = int(RCVAssertion.find('./MeasureSet').get('ID'))
 
-        rcv_acc = RCVAssertion.find('ClinVarAccession').get('Acc')
+        rcv_acc = RCVAssertion.find('./ClinVarAccession').get('Acc')
 
         # Disease
         for RCV_TraitSet in RCVAssertion.findall('TraitSet'):
@@ -123,19 +123,24 @@ with gzip.open(FILENAME, 'rt') as fh:
                         keep = True
         # Gene
         # /RCV/MeasureSet/Measure/MeasureRelationship[@Type]/XRef[@DB="Gene"]/@ID
-        for RCV_Measure in RCVAssertion.find('MeasureSet').findall('Measure'):
-            RCV_MRel = RCV_Measure.find('MeasureRelationship')
-            if RCV_MRel is not None and not keep:
-                RCV_Gene = RCV_MRel.find('XRef[@DB="Gene"]')
-                if RCV_Gene is not None:
-                    rcv_ncbigene_id = RCV_Gene.get('ID')
-                    if rcv_ncbigene_id is not None \
-                            and rcv_ncbigene_id in GENE:
-                        LOG.warning(rcv_ncbigene_id + ' in GENE')
-                        keep = True
+        RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
+        if RCV_MeasureSet is None:
+            #GenotypeSet
+        else
+            for rms in RCV_MeasureSet:
+                RCV_Measure = rms.findall('./Measure')
+                RCV_MRel = rms.find('./MeasureRelationship')
+                if RCV_MRel is not None and not keep:
+                    RCV_Gene = RCV_MRel.find('./XRef[@DB="Gene"]')
+                    if RCV_Gene is not None:
+                        rcv_ncbigene_id = RCV_Gene.get('ID')
+                        if rcv_ncbigene_id is not None \
+                                and rcv_ncbigene_id in GENE:
+                            LOG.warning(rcv_ncbigene_id + ' in GENE')
+                            keep = True
 
         # check if we caught anything
-        if not (keep or rcv_acc in RCV or rcv_variant in VARIANT):
+        if not (keep or rcv_acc in RCV):  # or rcv_variant in VARIANT):
             ClinVarSet.clear()  # can not clear itself
             ReleaseSet.remove(ClinVarSet)
         else:

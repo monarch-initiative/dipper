@@ -426,7 +426,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
         if RCV_MeasureSet is None:
             #  201705 introduced GenotypeSet a CompoundHeterozygote
-            #  with multiple variants 
+            #  with multiple variants
             RCV_GenotypeSet = RCVAssertion.find('./GenotypeSet')
             rcv_variant_supertype = RCV_GenotypeSet.get('Type')
             for RCV_MeasureSet in RCV_GenotypeSet.findall('./MeasureSet'):
@@ -975,7 +975,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('./Method/MethodType'):
-                    if SCV_OIMT.text != 'not provided':
+                    if SCV_OIMT.text != 'not provided' and \
+                            SCV_OIMT.text != 'phenotyping only':
+                        # TODO till we get a SEPIO term for "phenotyping only"
                         scv_evidence_type = resolve(SCV_OIMT.text, LTT)
                         # blank node
                         _provenance_id = '_:' + digest_id(
