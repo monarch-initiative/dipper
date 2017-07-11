@@ -69,10 +69,12 @@ class DipperUtil:
             result = request.json()['esearchresult']
 
         tax_num = None
-        if str(result['count']) == '1':
+        if 'count' in result and str(result['count']) == '1':
             tax_num = result['idlist'][0]
         else:
             # TODO throw errors
+            logger.warning(
+                'ESEARCH for taxon label "%s"  returns %s', label, str(result))
             pass
 
         return tax_num
