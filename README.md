@@ -66,7 +66,7 @@ If you encounter any errors installing these packages using Homebrew, it could b
 ## Running Dipper:
 * you can run the code by supplying a list of one or more sources on the command line.  some examples:
 
-      ```dipper --sources omim,ncbigene```
+    ```dipper --sources omim,ncbigene```
 
 * furthermore, you can check things out by supplying a limit.  this will only process the
 first N number of rows or data elements
@@ -151,4 +151,3 @@ get started transforming these standard data sources.
 
 A manuscript is in preparation.  In the mean time, if you use any of our code or derived data, please cite 
 this repository and the [Monarch Initiative](https://monarchinitiative.org).
-
