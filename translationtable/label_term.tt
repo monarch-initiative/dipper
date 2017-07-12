@@ -1,7 +1,7 @@
 # Format:
 # the label to match, some tabs, the ontology identifier to return.
 # post octothorp comments and empty lines are ignored
-# both columns should be unique 
+# both columns should be unique
 
 
 # Variant (Subject) Sequence Types
@@ -53,6 +53,7 @@ curation						SEPIO:0000081
 in vitro						SEPIO:0000073
 in vivo							SEPIO:0000074
 case-control					SEPIO:0000071
+phenotyping only				SEPIO:0000186
 
 # provenance  unused now? (2016 06 03)
 # ENIGMA BRCA1/2 Classification Criteria (2015)						SEPIO:1000001
