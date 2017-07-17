@@ -160,8 +160,7 @@ class NCBIGene(Source):
             # label added elsewhere
             model.addClassToGraph(tax_id, None)
         with gzip.open(gene_info, 'rb') as f:
-            header = line.decode().strip()
-            row = line.split('\t')
+            row = f.readline().split('\t')
             logger.info("Header has %i columns", len(row))
             for line in f:
                 # skip comments
