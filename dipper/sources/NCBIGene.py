@@ -148,11 +148,10 @@ class NCBIGene(Source):
         model = Model(g)
 
         # not unzipping the file
-        logger.info("Processing Gene records")
+        logger.info("Processing 'Gene Info' records")
         line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene_info']['file']))
-        logger.info("FILE: %s", myfile)
-
+        gene_info = '/'.join((self.rawdir, self.files['gene_info']['file']))
+        logger.info("FILE: %s", gene_info)
         # Add taxa and genome classes for those in our filter
         for tax_num in self.tax_ids:
             tax_id = ':'.join(('NCBITaxon', str(tax_num)))
@@ -160,7 +159,10 @@ class NCBIGene(Source):
             geno.addGenome(tax_id, str(tax_num))
             # label added elsewhere
             model.addClassToGraph(tax_id, None)
-        with gzip.open(myfile, 'rb') as f:
+        with gzip.open(gene_info, 'rb') as f:
+            header = line.decode().strip()
+            row = line.split('\t')
+            logger.info("Header has %i columns", len(row))
             for line in f:
                 # skip comments
                 line = line.decode().strip()
@@ -169,7 +171,7 @@ class NCBIGene(Source):
                 (tax_num, gene_num, symbol, locustag, synonyms, xrefs, chrom,
                  map_loc, desc, gtype, authority_symbol, name,
                  nomenclature_status, other_designations,
-                 modification_date) = line.split('\t')
+                 modification_date, feature_type) = line.split('\t')
 
                 # ##set filter=None in init if you don't want to have a filter
                 # if self.filter is not None:
