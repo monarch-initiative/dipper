@@ -343,6 +343,7 @@ def resolve(label, local_tt):
             term_id = label
     else:
         LOG.error('Do not have any mapping for label: ' + label)
+        
         term_id = None
     return term_id
 
@@ -449,6 +450,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'variant single locus complement', LTT)
                 # this resolve('has_zygosity', LTT)
                 # resolve('complex heterozygous', LTT)
+            elif rcv_variant_supertype == "Phase unknown":  # get blessing for this
+                rcv_variant_type = resolve( RCV_Measure.get('Type'), LTT)    
             else:
                 rcv_variant_id = None
                 LOG.warning(
@@ -975,9 +978,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('./Method/MethodType'):
-                    if SCV_OIMT.text != 'not provided' and \
-                            SCV_OIMT.text != 'phenotyping only':
-                        # TODO till we get a SEPIO term for "phenotyping only"
+                    if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = resolve(SCV_OIMT.text, LTT)
                         # blank node
                         _provenance_id = '_:' + digest_id(
