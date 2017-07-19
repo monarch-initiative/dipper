@@ -52,26 +52,83 @@ class MGI(PostgreSQLSource):
     #    eventually i think we want this because
     # it has other relevant markers that are affected
 
-    tables = [
-        'mgi_dbinfo',
-        'gxd_genotype_view',
-        'gxd_genotype_summary_view',
-        'gxd_allelepair_view',
-        'all_summary_view',
-        'all_allele_view',
-        'all_allele_mutation_view',
-        'mrk_marker_view',
-        'voc_annot_view',
-        'voc_evidence_view',
-        'bib_acc_view',
-        'prb_strain_view',
-        'mrk_summary_view',
-        'mrk_acc_view',
-        'prb_strain_acc_view',
-        'prb_strain_genotype_view',
-        'mgi_note_vocevidence_view',
-        'mgi_note_allele_view',
-        'mrk_location_cache',  # gene locations
+    resources = [
+        {
+          'query': '../../resources/sql/mgi_dbinfo.sql',
+          'outfile': 'mgi_dbinfo'
+        },
+        {
+          'query': '../../resources/sql/gxd_genotype_view.sql',
+          'outfile': 'gxd_genotype_view'
+        },
+        {
+          'query': '../../resources/sql/gxd_genotype_summary_view.sql',
+          'outfile': 'gxd_genotype_summary_view'
+        },
+        {
+          'query': '../../resources/sql/gxd_allelepair_view.sql',
+          'outfile': 'gxd_allelepair_view'
+        },
+        {
+          'query': '../../resources/sql/all_summary_view.sql',
+          'outfile': 'all_summary_view'
+        },
+        {
+          'query': '../../resources/sql/all_allele_view.sql',
+          'outfile': 'all_allele_view'
+        },
+        {
+          'query': '../../resources/sql/all_allele_mutation_view.sql',
+          'outfile': 'all_allele_mutation_view'
+        },
+        {
+          'query': '../../resources/sql/mrk_marker_view.sql',
+          'outfile': 'mrk_marker_view'
+        },
+        {
+          'query': '../../resources/sql/voc_annot_view.sql',
+          'outfile': 'voc_annot_view'
+        },
+        {
+          'query': '../../resources/sql/voc_evidence_view.sql',
+          'outfile': 'voc_evidence_view'
+        },
+        {
+          'query': '../../resources/sql/bib_acc_view.sql',
+          'outfile': 'bib_acc_view'
+        },
+        {
+           'query': '../../resources/sql/prb_strain_view.sql',
+           'outfile': 'prb_strain_view'
+        },
+        {
+          'query': '../../resources/sql/mrk_summary_view.sql',
+          'outfile': 'mrk_summary_view'
+        },
+        {
+          'query': '../../resources/sql/mrk_acc_view.sql',
+          'outfile': 'mrk_acc_view'
+        },
+        {
+          'query': '../../resources/sql/prb_strain_acc_view.sql',
+          'outfile': 'prb_strain_acc_view'
+        },
+        {
+          'query': '../../resources/sql/prb_strain_genotype_view.sql',
+          'outfile': 'prb_strain_genotype_view'
+        },
+        {
+          'query': '../../resources/sql/mgi_note_vocevidence_view.sql',
+          'outfile': 'mgi_note_vocevidence_view'
+        },
+        {
+          'query': '../../resources/sql/mgi_note_allele_view.sql',
+          'outfile': 'mgi_note_allele_view'
+        },
+        {
+          'query': '../../resources/sql/mrk_location_cache.sql',
+          'outfile': 'mrk_location_cache' # gene locations
+        }
     ]
 
     # for testing purposes, this is a list of internal db keys
@@ -221,9 +278,14 @@ class MGI(PostgreSQLSource):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
-        self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        #self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+
+        for query_map in self.resources:
+            query_fh = open(os.path.join(
+                os.path.dirname(__file__), query_map['query']), 'r')
+            query = query_fh.read()
+            self.fetch_query_from_pgdb(query_map['outfile'], query, None, cxn)
         # always get this - it has the verion info
-        self.fetch_from_pgdb(['mgi_dbinfo'], cxn, None, True)
         self.fetch_transgene_genes_from_db(cxn)
 
         datestamp = ver = None
@@ -242,7 +304,7 @@ class MGI(PostgreSQLSource):
                 # use it instead of the download date
                 # datestamp in the table: 2014-12-23 00:14:20[.12345]
                 # modification date without micro seconds
-                (d, ms) = cols[7].strip().split('.')
+                (d, ms) = cols[1].strip().split('.')
                 datestamp = \
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
@@ -380,11 +442,9 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
             for line in f1:
+                line = line.rstrip("\n")
                 line_counter += 1
-                (genotype_key, strain_key, isconditional, note, existsas_key,
-                 createdby_key, modifiedby_key, creation_date,
-                 modification_date, strain, mgiid, dbname, createdbymodifiedby,
-                 existsas, empty) = line.split('\t')
+                (genotype_key, strain_key, strain, mgiid) = line.split('\t')
 
                 if self.testMode is True:
                     if int(genotype_key) not in self.test_keys.get('genotype'):
@@ -475,13 +535,11 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, createdby_key,
-                 modifiedby_key, creation_date, modification_date, mgiid,
-                 subtype, description, short_description,
-                 logicaldb) = line.split('\t')
+                (object_key, preferred, mgiid, subtype,
+                 short_description) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('genotype'):
@@ -549,6 +607,7 @@ class MGI(PostgreSQLSource):
             # tr '\t' '\n' | grep -n . | \
             # awk -F':' '{col=$1;$1="";print $0,",\t  #" col}'
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
                 cols = line.count('\t')
                 # bail if the row is malformed
@@ -558,25 +617,8 @@ class MGI(PostgreSQLSource):
                     logger.warning(line.format())
                     continue
                 # no stray tab in the description column
-                (
-                    accession_key,
-                    accid,
-                    prefixpart,
-                    numericpart,
-                    logicaldb_key,
-                    object_key,
-                    mgitype_key,
-                    private,
-                    preferred,
-                    createdby_key,
-                    modifiedby_key,
-                    creation_date,
-                    modification_date,
-                    mgiid,
-                    subtype,
-                    description,
-                    short_description
-                ) = line.split('\t')
+                (object_key, preferred, mgiid, description,
+                 short_description) = line.split('\t')
                 # NOTE: May want to filter alleles based on the preferred field
                 # (preferred = 1) or will get duplicates
                 # (24288, to be exact...
@@ -650,6 +692,7 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             col_count = f.readline().count('\t')  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
                 cols = line.count('\t')
                 # bail if the row is malformed
@@ -659,48 +702,8 @@ class MGI(PostgreSQLSource):
                     logger.warning(line.format())
                     continue
 
-                # raw=workspace/build-mgi-ttl/dipper/raw/mgi/
-                # head -1  ${raw}/all_allele_view|tr '\t' '\n'|\
-                # awk '{sub(/^_/,"",$1);print $1 ",\t  # " NR}'
-                (
-                allele_key,         # 1
-                marker_key,         # 2
-                strain_key,	        # 3
-                mode_key,           # 4
-                allele_type_key,    # 5
-                allele_status_key,  # 6
-                transmission_key,   # 7
-                collection_key,     # 8
-                symbol,             # 9
-                name,               # 10
-                iswildtype,         # 11
-                isextinct,          # 12
-                ismixed,            # 13
-                refs_key,           # 14
-                markerallele_status_key, # 15
-                createdby_key,      # 16
-                modifiedby_key,     # 17
-                approvedby_key,     # 18
-                approval_date,      # 19
-                creation_date,      # 20
-                modification_date,  # 21
-                markersymbol,       # 22
-                term,               # 23
-                statusnum,          # 24
-                strain,             # 25
-                collection,         # 26
-                createdby,          # 27
-                modifiedby,         # 28
-                approvedby,         # 29
-                markerallele_status,  # 30
-                jnum,               # 31
-                jnumid,             # 32
-                citation,           # 33
-                short_citation,     # 34
-                ) = line.split('\t')
-
-
-
+                (allele_key, marker_key, strain_key, symbol,
+                 name, iswildtype) = line.split('\t')
 
                 # TODO update processing to use this view better
                 # including jnums!
@@ -715,6 +718,8 @@ class MGI(PostgreSQLSource):
                         "what to do! can't find allele_id. skipping %s %s",
                         allele_key, symbol)
                     continue
+
+                marker_id = None
 
                 if marker_key is not None and marker_key != '':
                     # we make the assumption here that the markers
@@ -835,14 +840,11 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
                 (allelepair_key, genotype_key, allele_key_1, allele_key_2,
-                 marker_key, mutantcellline_key_1, mutantcellline_key_2,
-                 pairstate_key, compound_key, sequencenum, createdby_key,
-                 modifiedby_key, creation_date, modification_date, symbol,
-                 chromosome, allele1, allele2, allelestate,
-                 compound) = line.split('\t')
+                 allele1, allele2, allelestate) = line.split('\t')
                 # NOTE: symbol = gene/marker,
                 # allele1 + allele2 = VSLC,
                 # allele1/allele2 = variant locus,
@@ -995,10 +997,10 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
-                (allele_key, mutation_key, creation_date, modification_date,
-                 mutation) = line.split('\t')
+                (allele_key, mutation) = line.split('\t')
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
                     iseqalt_id = \
@@ -1063,12 +1065,10 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
 
-                (annot_key, annot_type_key, object_key, term_key,
-                 qualifier_key, creation_date, modification_date, qualifier,
-                 term, sequence_num, accid, logicaldb_key, vocab_key,
-                 mgi_type_key, evidence_vocab_key,
-                 anot_type) = line.split('\t')
+                (annot_key, annot_type, object_key, term_key,
+                 qualifier_key, qualifier, term, accid) = line.split('\t')
 
                 if self.testMode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
@@ -1079,7 +1079,7 @@ class MGI(PostgreSQLSource):
 
                 assoc_id = None
                 # Mammalian Phenotype/Genotype are curated G2P assoc
-                if annot_type_key == '1002':
+                if annot_type == 'Mammalian Phenotype/Genotype':
                     line_counter += 1
 
                     # TODO add NOT annotations
@@ -1102,12 +1102,11 @@ class MGI(PostgreSQLSource):
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 # OMIM/Genotype are disease-models
-                elif annot_type_key == '1005':
+                elif annot_type == 'DO/Genotype':
                     # skip NOT annotations for now FIXME
                     if qualifier_key == '1614157':
                         continue
                     genotype_id = self.idhash['genotype'].get(object_key)
-                    omim_id = 'OMIM:'+str(accid)
                     if genotype_id is None:
                         logger.error("can't find genotype id for %s",
                                      object_key)
@@ -1119,12 +1118,12 @@ class MGI(PostgreSQLSource):
                         # dipper.models.assoc.G2PAssoc.G2PAssoc to
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
-                        assoc.set_object(omim_id)
+                        assoc.set_object(accid)
                         assoc.set_relationship(
                             model.object_properties['model_of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
-                elif annot_type_key == '1011':
+                elif annot_type == 'MCV/Marker':
                     # marker category == type
                     marker_id = self.idhash['marker'].get(object_key)
                     term_id = self._map_marker_category(str(term_key))
@@ -1134,9 +1133,8 @@ class MGI(PostgreSQLSource):
                         # do something special for transgenics -
                         # make sure these are transgenic insertions
                         model.addType(marker_id, term_id)
-                elif annot_type_key == '1012':  # allele/Disease
+                elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
-                    omim_id = 'OMIM:'+str(accid)
                     if allele_id is None:
                         logger.error("can't find genotype id for %s",
                                      object_key)
@@ -1144,7 +1142,7 @@ class MGI(PostgreSQLSource):
                         # add the association
                         assoc = Assoc(g, self.name)
                         assoc.set_subject(allele_id)
-                        assoc.set_object(omim_id)
+                        assoc.set_object(accid)
                         assoc.set_relationship(
                             model.object_properties['model_of'])
                         assoc.add_association_to_graph()
@@ -1188,13 +1186,11 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
-                (annot_evidence_key, annot_key, evidence_term_key, refs_key,
-                 inferred_from, created_by_key, modified_by_key, creation_date,
-                 modification_date, evidence_code, evidence_seq_num, jnumid,
-                 jnum, short_citation, created_by,
-                 modified_by) = line.split('\t')
+                (annot_evidence_key, annot_key,
+                 evidence_code, jnumid) = line.split('\t')
 
                 if self.testMode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
@@ -1260,10 +1256,8 @@ class MGI(PostgreSQLSource):
                 line_counter += 1
                 if line_counter == 1:
                     continue  # skip header
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, created_by_key,
-                 modified_by_key, creation_date, modification_date,
-                 logical_db) = line
+                (accid, prefixpart, numericpart, object_key,
+                 logical_db, logicaldb_key) = line
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
@@ -1290,10 +1284,8 @@ class MGI(PostgreSQLSource):
                 line_counter += 1
                 if line_counter == 1:
                     continue  # skip header
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, created_by_key,
-                 modified_by_key, creation_date, modification_date,
-                 logical_db) = line
+                (accid, prefixpart, numericpart, object_key,
+                 logical_db, logicaldb_key) = line
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
@@ -1375,10 +1367,7 @@ class MGI(PostgreSQLSource):
                 line_counter += 1
                 if line_counter == 1:
                     continue
-                (strain_key, species_key, strain_type_key, strain, standard,
-                 private, genetic_background, created_by_key, modified_by_key,
-                 creation_date, modification_date, species, strain_type,
-                 created_by, modified_by) = line
+                (strain_key, strain, species) = line
 
                 if self.testMode is True:
                     if int(strain_key) not in self.test_keys.get('strain'):
@@ -1431,13 +1420,11 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
-                (marker_key, organism_key, marker_status_key, marker_type_key,
-                 symbol, name, chromosome, cytogenetic_offset, createdby_key,
-                 modifiedby_key, creation_date, modification_date, organism,
-                 common_name, latin_name, status, marker_type, created_by,
-                 modified_by) = line.split('\t')
+                (marker_key, organism_key, marker_status_key,
+                 symbol, name, latin_name, marker_type) = line.split('\t')
 
                 if self.testMode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
@@ -1516,12 +1503,11 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
 
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgi_type_key, private, preferred, created_by_key,
-                 modified_by_key, creation_date, modification_date, mgiid,
-                 subtype, description, short_description) = line.split('\t')
+                (accid, logicaldb_key, object_key, preferred,
+                 mgiid, subtype, short_description) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
@@ -1584,11 +1570,10 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip('\n')
                 line_counter += 1
-                (accession_key, accid, prefix_part, numeric_part,
-                 logicaldb_key, object_key, mgi_type_key, private, preferred,
-                 created_by_key, modified_by_key, creation_date,
-                 modification_date, logicaldb, organism_key) = line.split('\t')
+                (accid, prefix_part, logicaldb_key, object_key,
+                 preferred, organism_key) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
@@ -1625,11 +1610,10 @@ class MGI(PostgreSQLSource):
         with open('/'.join((self.rawdir, 'mrk_acc_view')), 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
-                (accession_key, accid, prefix_part, numeric_part,
-                 logicaldb_key, object_key, mgi_type_key, private, preferred,
-                 created_by_key, modified_by_key, creation_date,
-                 modification_date, logicaldb, organism_key) = line.split('\t')
+                (accid, prefix_part, logicaldb_key, object_key,
+                 preferred, organism_key) = line.split('\t')
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
@@ -1703,11 +1687,10 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, createdby_key,
-                 modifiedby_key, creation_date, modification_date,
-                 logicaldb) = line.split('\t')
+                (accid, prefixpart, logicaldb_key,
+                 object_key, preferred) = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1757,11 +1740,10 @@ class MGI(PostgreSQLSource):
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
+                line = line.rstrip("\n")
                 line_counter += 1
-                (accession_key, accid, prefixpart, numericpart, logicaldb_key,
-                 object_key, mgitype_key, private, preferred, createdby_key,
-                 modifiedby_key, creation_date, modification_date,
-                 logicaldb) = line.split('\t')
+                (accid, prefixpart, logicaldb_key,
+                 object_key, preferred) = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1863,9 +1845,7 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (note_key, object_key, mgitype_key, notetype_key,
-                 createdby_key, modifiedby_key, creation_date,
-                 modification_date, notetype, note, sequencenum) = line
+                (object_key, note) = line
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('notes'):
@@ -1903,11 +1883,8 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (cache_key, marker_key, marker_type_key, organism_key,
-                 chromosome, sequencenum, cytogeneticoffset, cmoffset,
-                 genomicchromosome, startcoordinate, endcoordinate, strand,
-                 mapunits, provider, version, createdby_key, modifiedby_key,
-                 creation_date, modification_date) = line
+                (marker_key, organism_key, chromosome, startcoordinate,
+                 endcoordinate, strand, version) = line
 
                 # only get the location information for mouse
                 if str(organism_key) != '1' or str(chromosome) == 'UN':
@@ -2044,9 +2021,7 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (note_key, object_key, mgitype_key, notetype_key,
-                 createdby_key, modifiedby_key, creation_date,
-                 modification_date, notetype, note, sequencenum) = line
+                (object_key, notetype, note, sequencenum) = line
 
                 # read all the notes into a hash to concatenate
                 if object_key not in notehash:
@@ -2111,10 +2086,7 @@ class MGI(PostgreSQLSource):
                 if line_counter == 1:
                     continue
 
-                (straingenotype_key, strain_key, genotype_key, qualifier_key,
-                 createdby_key, modifiedby_key, creation_date,
-                 modification_date, strain, description, mgiid, qualifier,
-                 modifiedby) = line
+                (strain_key, genotype_key) = line
 
                 if self.testMode is True:
                     if int(genotype_key) not in \
@@ -2310,7 +2282,7 @@ class MGI(PostgreSQLSource):
             # sequence_feature. Or sequence_motif=SO:0001683?
             'Other Genome Feature': 'SO:0000110',
             # BAC_end: SO:0000999, YAC_end: SO:00011498; using parent term
-            'BAC/YAC end': 'SO:0000150',
+            'BAC/YAC end': 'SO:0000150'
         }
         if marker_type.strip() in type_map:
             marktype = type_map.get(marker_type)

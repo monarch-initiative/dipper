@@ -137,9 +137,12 @@ class PostgreSQLSource(Source):
                 cur.copy_expert(outputquery, f)
             # Regenerate row count to check integrity
             filerowcount = self.file_len(outfile)
-            if (filerowcount-1) != tablerowcount:
+            if (filerowcount-1) < tablerowcount:
                 raise Exception("Download from MGI failed, %s != %s",
                                 (filerowcount-1), tablerowcount)
+            elif (filerowcount-1) > tablerowcount:
+                logger.warn("Download from MGI larger than count, %s != %s",
+                            (filerowcount-1), tablerowcount)
         else:
             logger.info("local data same as remote; reusing.")
 
