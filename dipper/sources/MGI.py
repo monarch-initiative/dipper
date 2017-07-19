@@ -52,28 +52,6 @@ class MGI(PostgreSQLSource):
     #    eventually i think we want this because
     # it has other relevant markers that are affected
 
-    tables = [
-        'mgi_dbinfo',
-        'gxd_genotype_view',
-        'gxd_genotype_summary_view',
-        'gxd_allelepair_view',
-        'all_summary_view',
-        'all_allele_view',
-        'all_allele_mutation_view',
-        'mrk_marker_view',
-        'voc_annot_view',
-        'voc_evidence_view',
-        'bib_acc_view',
-        'prb_strain_view',
-        'mrk_summary_view',
-        'mrk_acc_view',
-        'prb_strain_acc_view',
-        'prb_strain_genotype_view',
-        'mgi_note_vocevidence_view',
-        'mgi_note_allele_view',
-        'mrk_location_cache',  # gene locations
-    ]
-
     resources = [
         {
           'query': '../../resources/sql/mgi_dbinfo.sql',
@@ -741,6 +719,8 @@ class MGI(PostgreSQLSource):
                         allele_key, symbol)
                     continue
 
+                marker_id = None
+
                 if marker_key is not None and marker_key != '':
                     # we make the assumption here that the markers
                     # have already been added to the table
@@ -1087,7 +1067,7 @@ class MGI(PostgreSQLSource):
             for line in f:
                 line = line.rstrip("\n")
 
-                (annot_key, annot_type_key, object_key, term_key,
+                (annot_key, annot_type, object_key, term_key,
                  qualifier_key, qualifier, term, accid) = line.split('\t')
 
                 if self.testMode is True:
@@ -1099,7 +1079,7 @@ class MGI(PostgreSQLSource):
 
                 assoc_id = None
                 # Mammalian Phenotype/Genotype are curated G2P assoc
-                if annot_type_key == '1002':
+                if annot_type == 'Mammalian Phenotype/Genotype':
                     line_counter += 1
 
                     # TODO add NOT annotations
@@ -1122,12 +1102,11 @@ class MGI(PostgreSQLSource):
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 # OMIM/Genotype are disease-models
-                elif annot_type_key == '1005':
+                elif annot_type == 'DO/Genotype':
                     # skip NOT annotations for now FIXME
                     if qualifier_key == '1614157':
                         continue
                     genotype_id = self.idhash['genotype'].get(object_key)
-                    omim_id = 'OMIM:'+str(accid)
                     if genotype_id is None:
                         logger.error("can't find genotype id for %s",
                                      object_key)
@@ -1139,12 +1118,12 @@ class MGI(PostgreSQLSource):
                         # dipper.models.assoc.G2PAssoc.G2PAssoc to
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
-                        assoc.set_object(omim_id)
+                        assoc.set_object(accid)
                         assoc.set_relationship(
                             model.object_properties['model_of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
-                elif annot_type_key == '1011':
+                elif annot_type == 'MCV/Marker':
                     # marker category == type
                     marker_id = self.idhash['marker'].get(object_key)
                     term_id = self._map_marker_category(str(term_key))
@@ -1154,9 +1133,8 @@ class MGI(PostgreSQLSource):
                         # do something special for transgenics -
                         # make sure these are transgenic insertions
                         model.addType(marker_id, term_id)
-                elif annot_type_key == '1012':  # allele/Disease
+                elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
-                    omim_id = 'OMIM:'+str(accid)
                     if allele_id is None:
                         logger.error("can't find genotype id for %s",
                                      object_key)
@@ -1164,7 +1142,7 @@ class MGI(PostgreSQLSource):
                         # add the association
                         assoc = Assoc(g, self.name)
                         assoc.set_subject(allele_id)
-                        assoc.set_object(omim_id)
+                        assoc.set_object(accid)
                         assoc.set_relationship(
                             model.object_properties['model_of'])
                         assoc.add_association_to_graph()
