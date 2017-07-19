@@ -1,0 +1,2 @@
+SELECT _strain_key, _genotype_key
+FROM prb_strain_genotype_view
