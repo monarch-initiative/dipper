@@ -11,9 +11,10 @@ There are some odd bugs, see https://github.com/monarch-initiative/dipper/issues
 
 This script ensures we are getting the full set of model_of relationships
 """
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 EXPECTED_PAIRS = 175
+
 
 def main():
     parser = argparse.ArgumentParser(
