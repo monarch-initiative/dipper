@@ -1,0 +1,26 @@
+## this is a woefully incomplete start at what classes and sources of entities are served as pages within the monarch app
+
+## Diseases
+### Clique leader:
+'OMIM' : 'http://monarchinitiative.org/OMIM:'  # OMIM: Online Mendelian Inheritance in Man (human disease and variants)
+
+### Redirection from equivalent disease ids to OMIM, where available and appropriate
+'Orphanet' : ' http://monarchinitiative.org/Orphanet:' # Orphanet: rare diseases and orphan drugs
+'UMLS' : 'http://monarchinitiative.org/UMLS:'  # UMLS: unified medical language system
+'MESH' : ' http://monarchinitiative.org/MESH:' # Medical Subject Headings
+'DOID' : ' http://monarchinitiative.org/DOID:' # Disease Ontology ID
+
+## Phenotypes
+'HP': 'http://monarchinitiative.org/HP:'  # HP: Human Phenotype Ontology
+'MP': 'http://monarchinitiative.org/MP:'  # MP: Mammalian Phenotype Ontology
+#'UBERON': 'http://monarchinitiative.org/UBERON:$idPHENO'  # Uberpheno NOTE this can be used deterministically, but you have to substitute '$id` for the numeric fragment
+
+## Genes and gene features
+
+### Gene Clique leader
+'NCBIGene': 'http://monarchinitiative.org/NCBIGene:'
+
+### Redirection from equivalent gene ids to to the NCBIGene, where available and appropriate
+'ENSEMBL': 'http://monarchinitiative.org/ENSEMBL:'
+'HGNC': 'http://monarchinitiative.org/HGNC:'
+'KEGG-hsa': 'http://monarchinitiative.org/KEGG-hsa:'
