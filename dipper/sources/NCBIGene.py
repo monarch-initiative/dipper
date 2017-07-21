@@ -68,6 +68,10 @@ class NCBIGene(Source):
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz'}
     }
 
+    resources = {
+        'clique_leader': '../../resources/clique_leader.yaml'
+    }
+
     def __init__(self, graph_type, are_bnodes_skolemized,
                  tax_ids=None, gene_ids=None):
         super().__init__(graph_type, are_bnodes_skolemized, 'ncbigene')
@@ -229,60 +233,8 @@ class NCBIGene(Source):
                         model.addSynonym(
                             gene_id, s.strip(),
                             Assoc.annotation_properties['hasRelatedSynonym'])
-
-                # deal with the xrefs
-                # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
                 if xrefs.strip() != '-':
-                    for r in xrefs.strip().split('|'):
-                        fixedr = self._cleanup_id(r)
-                        if fixedr is not None and fixedr.strip() != '':
-                            if re.match(r'HPRD', fixedr):
-                                # proteins are not == genes.
-                                g.addTriple(
-                                    gene_id,
-                                    self.properties[
-                                        'has_gene_product'], fixedr)
-                            else:
-                                # skip some of these for now
-                                if fixedr.split(':')[0] not in [
-                                        'Vega', 'IMGT/GENE-DB', 'Araport']:
-                                    if self.class_or_indiv.get(gene_id) == 'C':
-                                        if re.match(r'^OMIM', fixedr):
-                                            isOmimDisease = self._check_if_disease(fixedr)
-                                            if not isOmimDisease:
-                                                try:
-                                                    model.addEquivalentClass(
-                                                        gene_id, fixedr)
-                                                except AssertionError as e:
-                                                    logger.warn(
-                                                        "Error parsing {0}: {1}"
-                                                        .format(gene_id, e))
-                                        else:
-                                            try:
-                                                model.addEquivalentClass(
-                                                    gene_id, fixedr)
-                                            except AssertionError as e:
-                                                logger.warn(
-                                                    "Error parsing {0}: {1}"
-                                                    .format(gene_id, e))
-                                    else:
-                                        if re.match(r'^OMIM', fixedr):
-                                            isOmimDisease = self._check_if_disease(fixedr)
-                                            if not isOmimDisease:
-                                                try:
-                                                    model.addSameIndividual(gene_id, fixedr)
-                                                except AssertionError as e:
-                                                    logger.warn(
-                                                        "Error parsing {0}: {1}"
-                                                        .format(gene_id, e))
-                                        else:
-                                            try:
-                                                model.addSameIndividual(
-                                                    gene_id, fixedr)
-                                            except AssertionError as e:
-                                                    logger.warn(
-                                                        "Error parsing {0}: {1}"
-                                                        .format(gene_id, e))
+                    self._add_gene_equivalencies(xrefs, gene_id, tax_num)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -380,6 +332,57 @@ class NCBIGene(Source):
 
                 geno.addTaxon(tax_id, gene_id)
 
+        return
+
+    def _add_gene_equivalencies(self, xrefs, gene_id, taxon):
+        """
+        Add equivalentClass and sameAs relationships
+
+        Uses external resource map located in
+        /resources/clique_leader.yaml to determine
+        if an ID space is a clique leader
+        """
+
+        clique_map = self.open_and_parse_yaml(self.resources['clique_leader'])
+
+        if self.testMode:
+            graph = self.testgraph
+        else:
+            graph = self.graph
+
+        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
+
+        model = Model(graph)
+        # deal with the xrefs
+        # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
+        for ref in xrefs.strip().split('|'):
+            xref_curie = self._cleanup_id(ref)
+            if xref_curie is not None and xref_curie.strip() != '':
+                if re.match(r'HPRD', xref_curie):
+                    # proteins are not == genes.
+                    model.addTriple(
+                        gene_id,
+                        self.properties['has_gene_product'], xref_curie)
+                    continue
+                    # skip some of these for now
+                if xref_curie.split(':')[0] in filter_out:
+                    continue
+                if re.match(r'^OMIM', xref_curie):
+                    if self._is_omim_disease(xref_curie):
+                        continue
+                try:
+                    if self.class_or_indiv.get(gene_id) == 'C':
+                        model.addEquivalentClass(
+                            gene_id, xref_curie)
+                        if int(taxon) in clique_map:
+                            if clique_map[int(taxon)] == xref_curie.split(':')[0]:
+                                model.makeLeader(xref_curie)
+                            elif clique_map[int(taxon)] == gene_id.split(':')[0]:
+                                model.makeLeader(gene_id)
+                    else:
+                        model.addSameIndividual(gene_id, xref_curie)
+                except AssertionError as e:
+                    logger.warn("Error parsing {0}: {1}".format(gene_id, e))
         return
 
     def _get_gene_history(self, limit):
@@ -690,7 +693,7 @@ class NCBIGene(Source):
         return
 
     @staticmethod
-    def _check_if_disease(gene_id):
+    def _is_omim_disease(gene_id):
         """
         Process omim equivalencies by examining the monarch ontology scigraph
         As an alternative we could examine mondo.owl, since the ontology
