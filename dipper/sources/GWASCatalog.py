@@ -47,10 +47,12 @@ class GWASCatalog(Source):
         'collection': 'ERO:0002190'
     }
 
+    GWASFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest'
+    GWASFILE = 'gwas-catalog-associations_ontology-annotated.tsv'
     files = {
         'catalog': {
-            'file': 'gwas-catalog-associations_ontology-annotated.tsv',
-            'url': 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/gwas-catalog-associations_ontology-annotated.tsv'},
+            'file': GWASFILE,
+            'url': GWASFTP + '/' + GWASFILE},
         'efo': {
             'file': 'efo.owl',
             'url': 'http://www.ebi.ac.uk/efo/efo.owl'},
@@ -171,11 +173,13 @@ class GWASCatalog(Source):
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
                     variant_curie, variant_type = \
-                        self._get_curie_and_type_from_id(strongest_snp_risk_allele)
+                        self._get_curie_and_type_from_id(
+                            strongest_snp_risk_allele)
 
                     if strongest_snp_risk_allele.strip() == '':
-                        logger.debug("No strongest SNP risk allele for %s:\n%s",
-                                     pubmed_num, str(row))
+                        logger.debug(
+                            "No strongest SNP risk allele for %s:\n%s",
+                            pubmed_num, str(row))
                         # still consider adding in the EFO terms
                         # for what the study measured?
                         continue
@@ -296,14 +300,16 @@ class GWASCatalog(Source):
 
                 query_result = so_ontology.query(so_query)
                 if len(list(query_result)) > 0:
-                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(
+                        mapped_genes[index])
                     if gene_id is not None:
                         geno.addAffectedLocus(snp_curie, gene_id)
                         geno.addAffectedLocus(hap_id, gene_id)
                         variant_in_gene_count += 1
 
                 if context_list[index] == 'upstream_gene_variant':
-                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(
+                        mapped_genes[index])
                     if gene_id is not None:
                         g.addTriple(
                             snp_curie,
@@ -311,7 +317,8 @@ class GWASCatalog(Source):
                                 'upstream_of_sequence_of'],
                             gene_id)
                 elif context_list[index] == 'downstream_gene_variant':
-                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    gene_id = DipperUtil.get_ncbi_id_from_symbol(
+                        mapped_genes[index])
                     if gene_id is not None:
                         g.addTriple(
                             snp_curie,
@@ -535,7 +542,7 @@ class GWASCatalog(Source):
             'synonymous_variant': 'SO:0001819',       # synonymous variant
             'frameshift_variant': 'SO:0001589',       # frameshift
             'intergenic_variant': 'SO:0001628',       # intergenic_variant
-            'non_coding_transcript_exon_variant': 'SO:0001619',  # noncoding transcript variant
+            'non_coding_transcript_exon_variant': 'SO:0001619', # noncoding transcript variant
             'splice_acceptor_variant': 'SO:0001574',  # splice acceptor variant
             'splice_donor_variant': 'SO:0001575',     # splice donor variant
             'missense_variant': 'SO:0001583',         # missense variant
@@ -614,7 +621,7 @@ class GWASCatalog(Source):
             # like: chr10:106180121-G
             #
             variant_id = re.sub(r'-?', '-N', variant_id)
-            variant_id.replace(" ", "")
+            variant_id = re.sub(r' ', '', variant_id)
             curie = ':gwas-' + re.sub(
                 r':', '-', variant_id.strip())
             variant_type = "snp"
