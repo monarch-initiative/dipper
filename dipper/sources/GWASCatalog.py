@@ -224,9 +224,9 @@ class GWASCatalog(Source):
                 logger.info("%s has >1 snp id: %s", l, str(snp_ids))
         return
 
-    def _process_haplotype(self, hap_id, hap_label, chrom_num, chrom_pos,
-                           context, risk_allele_frequency, mapped_gene,
-                           so_ontology):
+    def _process_haplotype(
+            self, hap_id, hap_label, chrom_num, chrom_pos, context,
+            risk_allele_frequency, mapped_gene, so_ontology):
         tax_id = 'NCBITaxon:9606'
 
         if self.testMode:
@@ -267,11 +267,10 @@ class GWASCatalog(Source):
         # courtesy http://stackoverflow.com/a/16720915
         length = len(snp_labels)
         if not all(len(lst) == length
-                   for lst in [chrom_nums, chrom_positions,
-                               context_list]):
-            logger.warn("Unexpected data field"
-                        " for haplotype {} \n will not add snp details"
-                        .format(hap_label))
+                   for lst in [chrom_nums, chrom_positions, context_list]):
+            logger.warn(
+                "Unexpected data field for haplotype {} \n "
+                "will not add snp details".format(hap_label))
             return
 
         variant_in_gene_count = 0
@@ -332,9 +331,9 @@ class GWASCatalog(Source):
 
         return
 
-    def _add_snp_to_graph(self, snp_id, snp_label,
-                          chrom_num, chrom_pos, context,
-                          risk_allele_frequency=None):
+    def _add_snp_to_graph(
+            self, snp_id, snp_label, chrom_num, chrom_pos, context,
+            risk_allele_frequency=None):
         # constants
         tax_id = 'NCBITaxon:9606'
         genome_version = 'GRCh38'
@@ -525,7 +524,6 @@ class GWASCatalog(Source):
                 # assoc.set_score(pvalue)
                 assoc.add_association_to_graph()
 
-
     @staticmethod
     def _map_variant_type(sample_type):
         ctype = None
@@ -614,11 +612,11 @@ class GWASCatalog(Source):
             variant_type = "snp"
         elif re.match(r'chr', variant_id):
             # like: chr10:106180121-G
-            # 
+            #
             variant_id = re.sub(r'-?', '-N', variant_id)
-            curie = ':gwas-' + \
-                         re.sub(
-                             r':', '-', variant_id.strip())
+            variant_id.replace(" ", "")
+            curie = ':gwas-' + re.sub(
+                r':', '-', variant_id.strip())
             variant_type = "snp"
         elif variant_id.strip() == '':
             pass
