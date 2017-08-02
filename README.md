@@ -139,6 +139,9 @@ import Dipper as a python package, write your own wrapper, and add your own sour
 Please see our [best-practices documentation](sources/README.md) for details on writing new Source parsers 
 using Dipper code, and make a Pull request.  
 
+## Identifiers
+Our identifier documentation as referenced in our recent paper on identifiers(doi:10.1371/journal.pbio.2001414)[https://doi.org/10.1371/journal.pbio.2001414] has been moved to https://github.com/monarch-initiative/monarch-app/blob/master/README.md#identifiers
+
 
 ## About this project
 The DIPper data pipeline was born out of the need for a uniform representation of human and model organism
