@@ -108,8 +108,8 @@ class PostgreSQLSource(Source):
         if limit is not None:
             countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
-        # check local copy.  assume that if the # rows are the same,
-        # that the table is the same
+        # check local copy.
+        # assume that if the # rows are the same, that the table is the same
         # TEC - opinion:
         # the only thing to assume is that if the counts are different
         # is the data could not be the same.
@@ -132,8 +132,9 @@ class PostgreSQLSource(Source):
             if force:
                 logger.info("Forcing download of %s", qname)
             else:
-                logger.info("%s local (%s) different from remote (%s); fetching.",
-                            qname, filerowcount, tablerowcount)
+                logger.info(
+                    "%s local (%s) different from remote (%s); fetching.",
+                    qname, filerowcount, tablerowcount)
             # download the file
             logger.debug("COMMAND:%s", query)
             outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -148,7 +149,8 @@ class PostgreSQLSource(Source):
                     (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
                 logger.warn(
-                    "Download from %s larger than count, %s != %s",
+                    "Download from %s more rows in file (%s) " + \
+                    "than reported in count(%s)",
                     cxn['host'] + ':'+cxn['database'],
                     (filerowcount-1), tablerowcount)
         else:
