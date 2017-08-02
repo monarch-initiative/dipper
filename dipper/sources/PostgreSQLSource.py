@@ -34,16 +34,16 @@ class PostgreSQLSource(Source):
                                    port=cxn['port'], user=cxn['user'],
                                    password=cxn['password'])
             cur = con.cursor()
-            for t in tables:
-                logger.info("Fetching data from table %s", t)
-                self._getcols(cur, t)
-                query = ' '.join(("SELECT * FROM", t))
-                countquery = ' '.join(("SELECT COUNT(*) FROM", t))
+            for tab in tables:
+                logger.info("Fetching data from table %s", tab)
+                self._getcols(cur, tab)
+                query = ' '.join(("SELECT * FROM", tab))
+                countquery = ' '.join(("SELECT COUNT(*) FROM", tab))
                 if limit is not None:
                     query = ' '.join((query, "LIMIT", str(limit)))
                     countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
-                outfile = '/'.join((self.rawdir, t))
+                outfile = '/'.join((self.rawdir, tab))
 
                 filerowcount = -1
                 tablerowcount = -1
@@ -54,7 +54,9 @@ class PostgreSQLSource(Source):
                     if os.path.exists(outfile):
                         # get rows in the file
                         filerowcount = self.file_len(outfile)
-                        logger.info("rows in local file: %s", filerowcount)
+                        logger.info(
+                            "(%s) rows in local file vor table %s",
+                            filerowcount, tab)
 
                     # get rows in the table
                     # tablerowcount=cur.rowcount
@@ -64,10 +66,10 @@ class PostgreSQLSource(Source):
                 # rowcount-1 because there's a header
                 if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:
                     if force:
-                        logger.info("Forcing download of %s", t)
+                        logger.info("Forcing download of %s", tab)
                     else:
                         logger.info("%s local (%d) different from remote (%d); fetching.",
-                                    t, filerowcount, tablerowcount)
+                                    tab, filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
