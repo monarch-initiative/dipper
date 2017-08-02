@@ -110,6 +110,10 @@ class PostgreSQLSource(Source):
 
         # check local copy.  assume that if the # rows are the same,
         # that the table is the same
+        # TEC - opinion:
+        # the only thing to assume is that if the counts are different
+        # is the data could not be the same.
+        # to check if they are the same compare digests.
         filerowcount = -1
         tablerowcount = -1
         if not force:
@@ -138,11 +142,15 @@ class PostgreSQLSource(Source):
             # Regenerate row count to check integrity
             filerowcount = self.file_len(outfile)
             if (filerowcount-1) < tablerowcount:
-                raise Exception("Download from MGI failed, %s != %s",
-                                (filerowcount-1), tablerowcount)
+                raise Exception(
+                    "Download from %s failed, %s != %s",
+                    cxn['host'] + ':'+cxn['database'],
+                    (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
-                logger.warn("Download from MGI larger than count, %s != %s",
-                            (filerowcount-1), tablerowcount)
+                logger.warn(
+                    "Download from %s larger than count, %s != %s",
+                    cxn['host'] + ':'+cxn['database'],
+                    (filerowcount-1), tablerowcount)
         else:
             logger.info("local data same as remote; reusing.")
 
