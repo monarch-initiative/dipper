@@ -56,6 +56,7 @@ class MGI(PostgreSQLSource):
         {
           'query': '../../resources/sql/mgi_dbinfo.sql',
           'outfile': 'mgi_dbinfo'
+          'Force' : True
         },
         {
           'query': '../../resources/sql/gxd_genotype_view.sql',
@@ -284,7 +285,11 @@ class MGI(PostgreSQLSource):
             query_fh = open(os.path.join(
                 os.path.dirname(__file__), query_map['query']), 'r')
             query = query_fh.read()
-            self.fetch_query_from_pgdb(query_map['outfile'], query, None, cxn)
+            force = False
+            if 'Force' in query_map;
+               force = query_map['Force']
+            self.fetch_query_from_pgdb(
+                query_map['outfile'], query, None, cxn, force)
         # always get this - it has the verion info
         self.fetch_transgene_genes_from_db(cxn)
 
