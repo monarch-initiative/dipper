@@ -55,7 +55,7 @@ class PostgreSQLSource(Source):
                         # get rows in the file
                         filerowcount = self.file_len(outfile)
                         logger.info(
-                            "(%s) rows in local file vor table %s",
+                            "(%s) rows in local file for table %s",
                             filerowcount, tab)
 
                     # get rows in the table
@@ -113,9 +113,11 @@ class PostgreSQLSource(Source):
         # check local copy.
         # assume that if the # rows are the same, that the table is the same
         # TEC - opinion:
-        # the only thing to assume is that if the counts are different
-        # is the data could not be the same.
-        # to check if they are the same compare digests.
+        #    the only thing to assume is that if the counts are different
+        #    is the data could not be the same.
+        #
+        #    i.e: for MGI, the dbinfo table has a single row that changes
+        #    to check if they are the same sort & compare digests. (
         filerowcount = -1
         tablerowcount = -1
         if not force:
