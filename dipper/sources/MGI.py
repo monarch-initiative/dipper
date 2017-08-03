@@ -1257,7 +1257,7 @@ class MGI(PostgreSQLSource):
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = filereader.readline()
+            header = next(filereader)
             if len(header) != 6:
                 logger.error('bib_acc_view expected 6 columns got: %s', header)
             for line in filereader:
@@ -1286,7 +1286,7 @@ class MGI(PostgreSQLSource):
         line_counter = 1
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = filereader.readline()
+            header = next(filereader)
 
             for line in filereader:
                 line_counter += 1
@@ -1316,8 +1316,8 @@ class MGI(PostgreSQLSource):
                     # some DOIs have un-urlencoded brackets <>
                     accid = re.sub(r'<', '%3C', accid)
                     accid = re.sub(r'>', '%3E', accid)
-                    pub_id = 'DOI:'+ accid
-                    
+                    pub_id = 'DOI:' + accid
+
                 elif logicaldb_key == '1' and re.match(r'J:', prefixpart):
                     # we can skip the J numbers
                     continue
