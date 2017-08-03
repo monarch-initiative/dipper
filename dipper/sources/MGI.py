@@ -55,7 +55,7 @@ class MGI(PostgreSQLSource):
     resources = [
         {
           'query': '../../resources/sql/mgi_dbinfo.sql',
-          'outfile': 'mgi_dbinfo'
+          'outfile': 'mgi_dbinfo',
           'Force' : True
         },
         {
