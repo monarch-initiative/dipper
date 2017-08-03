@@ -56,7 +56,7 @@ class MGI(PostgreSQLSource):
         {
           'query': '../../resources/sql/mgi_dbinfo.sql',
           'outfile': 'mgi_dbinfo',
-          'Force' : True
+          'Force': True
         },
         {
           'query': '../../resources/sql/gxd_genotype_view.sql',
@@ -128,7 +128,7 @@ class MGI(PostgreSQLSource):
         },
         {
           'query': '../../resources/sql/mrk_location_cache.sql',
-          'outfile': 'mrk_location_cache' # gene locations
+          'outfile': 'mrk_location_cache'  # gene locations
         }
     ]
 
@@ -279,15 +279,15 @@ class MGI(PostgreSQLSource):
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
-        #self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
+        # self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
         for query_map in self.resources:
             query_fh = open(os.path.join(
                 os.path.dirname(__file__), query_map['query']), 'r')
             query = query_fh.read()
             force = False
-            if 'Force' in query_map;
-               force = query_map['Force']
+            if 'Force' in query_map:
+                force = query_map['Force']
             self.fetch_query_from_pgdb(
                 query_map['outfile'], query, None, cxn, force)
         # always get this - it has the verion info
