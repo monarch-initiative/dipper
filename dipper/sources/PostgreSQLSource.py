@@ -34,16 +34,16 @@ class PostgreSQLSource(Source):
                                    port=cxn['port'], user=cxn['user'],
                                    password=cxn['password'])
             cur = con.cursor()
-            for t in tables:
-                logger.info("Fetching data from table %s", t)
-                self._getcols(cur, t)
-                query = ' '.join(("SELECT * FROM", t))
-                countquery = ' '.join(("SELECT COUNT(*) FROM", t))
+            for tab in tables:
+                logger.info("Fetching data from table %s", tab)
+                self._getcols(cur, tab)
+                query = ' '.join(("SELECT * FROM", tab))
+                countquery = ' '.join(("SELECT COUNT(*) FROM", tab))
                 if limit is not None:
                     query = ' '.join((query, "LIMIT", str(limit)))
                     countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
-                outfile = '/'.join((self.rawdir, t))
+                outfile = '/'.join((self.rawdir, tab))
 
                 filerowcount = -1
                 tablerowcount = -1
@@ -54,7 +54,9 @@ class PostgreSQLSource(Source):
                     if os.path.exists(outfile):
                         # get rows in the file
                         filerowcount = self.file_len(outfile)
-                        logger.info("rows in local file: %s", filerowcount)
+                        logger.info(
+                            "(%s) rows in local file for table %s",
+                            filerowcount, tab)
 
                     # get rows in the table
                     # tablerowcount=cur.rowcount
@@ -64,10 +66,10 @@ class PostgreSQLSource(Source):
                 # rowcount-1 because there's a header
                 if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:
                     if force:
-                        logger.info("Forcing download of %s", t)
+                        logger.info("Forcing download of %s", tab)
                     else:
                         logger.info("%s local (%d) different from remote (%d); fetching.",
-                                    t, filerowcount, tablerowcount)
+                                    tab, filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -108,8 +110,14 @@ class PostgreSQLSource(Source):
         if limit is not None:
             countquery = ' '.join((countquery, "LIMIT", str(limit)))
 
-        # check local copy.  assume that if the # rows are the same,
-        # that the table is the same
+        # check local copy.
+        # assume that if the # rows are the same, that the table is the same
+        # TEC - opinion:
+        #    the only thing to assume is that if the counts are different
+        #    is the data could not be the same.
+        #
+        #    i.e: for MGI, the dbinfo table has a single row that changes
+        #    to check if they are the same sort & compare digests. (
         filerowcount = -1
         tablerowcount = -1
         if not force:
@@ -128,8 +136,9 @@ class PostgreSQLSource(Source):
             if force:
                 logger.info("Forcing download of %s", qname)
             else:
-                logger.info("%s local (%s) different from remote (%s); fetching.",
-                            qname, filerowcount, tablerowcount)
+                logger.info(
+                    "%s local (%s) different from remote (%s); fetching.",
+                    qname, filerowcount, tablerowcount)
             # download the file
             logger.debug("COMMAND:%s", query)
             outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -138,11 +147,16 @@ class PostgreSQLSource(Source):
             # Regenerate row count to check integrity
             filerowcount = self.file_len(outfile)
             if (filerowcount-1) < tablerowcount:
-                raise Exception("Download from MGI failed, %s != %s",
-                                (filerowcount-1), tablerowcount)
+                raise Exception(
+                    "Download from %s failed, %s != %s",
+                    cxn['host'] + ':'+cxn['database'],
+                    (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
-                logger.warn("Download from MGI larger than count, %s != %s",
-                            (filerowcount-1), tablerowcount)
+                logger.warn(
+                    "Download from %s more rows in file (%s) " + \
+                    "than reported in count(%s)",
+                    cxn['host'] + ':'+cxn['database'],
+                    (filerowcount-1), tablerowcount)
         else:
             logger.info("local data same as remote; reusing.")
 
