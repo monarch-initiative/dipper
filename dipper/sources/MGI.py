@@ -1252,15 +1252,16 @@ class MGI(PostgreSQLSource):
             g = self.graph
         model = Model(g)
         # firstpass, get the J number mapping, and add to the global hash
-        line_counter = 0
+        line_counter = 1
         logger.info('populating pub id hash')
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            header = filereader.getline()
+            if len(header) != 6:
+                logger.error('bib_acc_view expected 6 columns got: %s', header)
             for line in filereader:
                 line_counter += 1
-                if line_counter == 1:
-                    continue  # skip header
                 (accid, prefixpart, numericpart, object_key,
                  logical_db, logicaldb_key) = line
 
@@ -1282,13 +1283,13 @@ class MGI(PostgreSQLSource):
 
         # 2nd pass, look up the MGI identifier in the hash
         logger.info("getting pub equivalent ids")
-        line_counter = 0
+        line_counter = 1
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            header = filereader.getline()
+
             for line in filereader:
                 line_counter += 1
-                if line_counter == 1:
-                    continue  # skip header
                 (accid, prefixpart, numericpart, object_key,
                  logical_db, logicaldb_key) = line
 
@@ -1311,7 +1312,12 @@ class MGI(PostgreSQLSource):
                     # some DOIs seem to have spaces
                     # FIXME MGI needs to FIX THESE UPSTREAM!!!!
                     # we'll scrub them here for the time being
-                    pub_id = 'DOI:'+re.sub(r'\s+', '', accid)
+                    accid = re.sub(r'\s+', '', accid)
+                    # some DOIs have un-urlencoded brackets <>
+                    accid = re.sub(r'<', '%3C', accid)
+                    accid = re.sub(r'>', '%3E', accid)
+                    pub_id = 'DOI:'+ accid
+                    
                 elif logicaldb_key == '1' and re.match(r'J:', prefixpart):
                     # we can skip the J numbers
                     continue
