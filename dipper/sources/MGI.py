@@ -1257,7 +1257,7 @@ class MGI(PostgreSQLSource):
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = filereader.getline()
+            header = filereader.readline()
             if len(header) != 6:
                 logger.error('bib_acc_view expected 6 columns got: %s', header)
             for line in filereader:
@@ -1286,7 +1286,7 @@ class MGI(PostgreSQLSource):
         line_counter = 1
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = filereader.getline()
+            header = filereader.readline()
 
             for line in filereader:
                 line_counter += 1
