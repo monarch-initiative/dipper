@@ -586,14 +586,12 @@ class ZFIN(Source):
 
             # build the fish label
             if extrinsic_id is None:
-                # fish == intrinsic
-                model.addSameIndividual(fish_id, intrinsic_genotype_id)
                 fish_label = intrinsic_genotype_label
-                fish_type = intrinsic_type
             else:
                 fish_label = '; '.join((str(intrinsic_genotype_label),
                                         extrinsic_label))
-                fish_type = geno.genoparts['effective_genotype']
+
+            fish_type = geno.genoparts['effective_genotype']
 
             geno.addGenotype(fish_id, fish_label, fish_type)
             geno.addTaxon(taxon_id, fish_id)
