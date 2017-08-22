@@ -46,7 +46,8 @@ class Provenance:
         'created_with_resource': 'SEPIO:0000022',
         'measures': 'SEPIO:0000114',
         'has_supporting_study': 'SEPIO:0000085',
-        'asserted_by': 'SEPIO:0000130'
+        'asserted_by': 'SEPIO:0000130',
+        'created_on': 'pav:createdOn'
     }
 
     def __init__(self, graph):
@@ -56,6 +57,14 @@ class Provenance:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
 
+        return
+
+    def add_date_created(self, prov_type, date):
+        self.graph.addTriple(object_is_literal=True,
+                             subject_id=prov_type,
+                             predicate_id=Provenance.object_properties['created_on'],
+                             obj=date
+                             )
         return
 
     def add_study_parts(self, study, study_parts):
