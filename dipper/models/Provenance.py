@@ -47,7 +47,7 @@ class Provenance:
         'measures': 'SEPIO:0000114',
         'has_supporting_study': 'SEPIO:0000085',
         'asserted_by': 'SEPIO:0000130',
-        'created_on': 'PAV:createdOn'
+        'created_on': 'pav:createdOn'
     }
 
     def __init__(self, graph):
@@ -62,7 +62,7 @@ class Provenance:
     def add_date_created(self, prov_type, date):
         self.graph.addTriple(object_is_literal=True,
                              subject_id=prov_type,
-                             predicate_id=Provenance.object_properties['date_created'],
+                             predicate_id=Provenance.object_properties['created_on'],
                              obj=date
                              )
         return
