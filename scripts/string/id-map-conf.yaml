@@ -1,0 +1,58 @@
+database:
+    host: ensembldb.ensembl.org
+    username: anonymous
+    port: 3306
+
+taxa_specific:
+    mouse:
+        intermine: "http://www.mousemine.org/mousemine/service"
+        ensembl: mus_musculus_core_90_38
+        tax_id: 10090
+        output_file: "10090.string2mgi.tsv"
+    zebrafish:
+        intermine: "http://www.zebrafishmine.org/service"
+        ensembl: danio_rerio_core_90_10
+        tax_id: 7955
+        output_file: "7955.string2zfin.tsv"
+    fly:
+        intermine: "http://www.flymine.org/flymine/service"
+        ensembl: drosophila_melanogaster_core_90_6
+        tax_id: 7227
+        output_file: "7227.string2ensembl_gene.tsv"
+    worm:
+        uniprot_mappings: "https://string-db.org/mapping_files/uniprot_mappings/6239_reviewed_uniprot_2_string.04_2015.tsv.gz"
+        uniprot_file: "6239_reviewed_uniprot_2_string.04_2015.tsv.gz"
+        tax_id: 6239
+        output_file: "6239.string2ensembl_gene.tsv"
+
+queries:
+    id_mapping: |
+                 SELECT   old_db_name
+                 FROM     stable_id_event
+                 JOIN     mapping_session USING (mapping_session_id)
+                 WHERE    old_stable_id = '{}'
+                 ORDER BY old_version DESC
+                 LIMIT    1;
+    protein2gene: |
+                   SELECT gene_stable_id.stable_id
+                   FROM   gene_stable_id
+                   INNER  JOIN gene on gene_stable_id.gene_id = gene.gene_id
+                   INNER  JOIN transcript on transcript.gene_id = gene.gene_id
+                   INNER  JOIN translation on translation.transcript_id = transcript.transcript_id
+                   INNER  JOIN translation_stable_id on translation_stable_id.translation_id = translation.translation_id
+                   WHERE  translation_stable_id.stable_id = '{}';
+    p2g_two: |
+                   SELECT gene.stable_id
+                   FROM   gene
+                   INNER  JOIN transcript on transcript.gene_id = gene.gene_id
+                   INNER  JOIN translation on translation.transcript_id = transcript.transcript_id
+                   WHERE  translation.stable_id = '{}';
+
+    protein2xref: |
+                   SELECT DISTINCT xref.dbprimary_acc, gene.stable_id
+                   FROM xref
+                   INNER JOIN object_xref on object_xref.xref_id = xref.xref_id
+                   INNER JOIN translation on translation.translation_id = object_xref.ensembl_id
+                   INNER JOIN transcript on translation.transcript_id = transcript.transcript_id
+                   INNER JOIN gene on transcript.gene_id = gene.gene_id
+                   WHERE xref.dbprimary_acc = '{}';

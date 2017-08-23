@@ -1,0 +1,5 @@
+dipper
+PyMySQL
+pyyaml
+requests
+pandas
