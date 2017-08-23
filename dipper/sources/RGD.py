@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class RGD(Source):
+    """
+    Ingest of Rat Genome Database gene to mammalian phenotype gaf file
+
+    """
     RGD_BASE = 'ftp://ftp.rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/'
     files = {
         'rat_gene2mammalian_phenotype': {
@@ -64,24 +68,25 @@ class RGD(Source):
             logger.info("Only parsing first %d rows", limit)
 
         rgd_file = '/'.join((self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))
+
+        # ontobio gafparser implemented here
         p = GafParser()
         assocs = p.parse(open(rgd_file, "r"))
 
         for i, assoc in enumerate(assocs):
-            if assoc['date'] is None:
-                print(assoc)
             if assoc['relation']['id'] is None:
                 assoc['relation']['id'] = 'RO:0002200'
             self.make_association(assoc)
             if limit is not None and i > limit:
                 break
-
         return
 
     def make_association(self, record):
         model = Model(self.graph)
         provenance_model = Provenance(self.graph)
         redate = record['date'].replace('-', '')
+
+        # date created is currently modeled as assertion but this is up for review
         assertion_bnode = self.make_id("{0}{1}{2}".format(record['subject']['label'],
                                                           record['subject']['id'],
                                                           record['object']['id']
@@ -93,6 +98,7 @@ class RGD(Source):
             assertion_bnode, None,
             provenance_model.provenance_types['assertion'])
 
+        # define the triple
         gene = record['subject']['id']
         relation = record['relation']['id']
         phenotype = record['object']['id']
@@ -112,23 +118,3 @@ class RGD(Source):
         return
 
 
-example_assoc = {'aspect': 'N',
-                 'date': '2006-10-17',
-                 'evidence': {'has_supporting_reference': ['RGD:1581602', 'PMID:16368876'],
-                              'type': 'IAGP',
-                              'with_support_from': []},
-                 'negated': False,
-                 'object': {'id': 'MP:0005211', 'taxon': 'NCBITaxon:10116'},
-                 'provided_by': 'RGD',
-                 'qualifiers': [],
-                 'relation': {'id': None},
-                 'source_line': 'RGD\t621503\tKcnq1\t\tMP:0005211\tRGD:1581602|PMID:16368876\t'
-                                'IAGP\t\tN\tpotassium voltage-gated channel subfamily Q member '
-                                '1\t\tgene\ttaxon:10116\t20061017\tRGD\t\t\n',
-                 'subject': {'fullname': 'potassium voltage-gated channel subfamily Q member 1',
-                             'id': 'RGD:621503',
-                             'label': 'Kcnq1',
-                             'synonyms': [],
-                             'taxon': {'id': 'NCBITaxon:10116'},
-                             'type': 'gene'},
-                 'subject_extensions': [{'filler': '\n', 'property': 'isoform'}]}
