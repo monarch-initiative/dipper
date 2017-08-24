@@ -356,7 +356,6 @@ class NCBIGene(Source):
         }
         if taxon in taxon_spec_filters:
             filter_out += taxon_spec_filters[taxon]
-            print(filter_out)
 
         model = Model(graph)
         # deal with the xrefs
