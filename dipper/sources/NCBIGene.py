@@ -352,7 +352,7 @@ class NCBIGene(Source):
 
         filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
         taxon_spec_filters = {
-            '10090:': ['ENSEMBL']
+            '10090': ['ENSEMBL']
         }
         if taxon in taxon_spec_filters:
             filter_out += taxon_spec_filters[taxon]

@@ -287,14 +287,14 @@ def main():
     logger.info("ID Map Finished")
 
 
-class Intermine_Result(object):
+class IntermineResult(object):
     def __init__(self, is_successful: bool, gene_id: str=None,  msg: str=None):
         self.is_successful = is_successful
         self.gene_id = gene_id
         self.msg = msg
 
 
-def query_fishmine(intermine_url: str, protein_id: str, query: str="Gene") -> Intermine_Result:
+def query_fishmine(intermine_url: str, protein_id: str, query: str="Gene") -> IntermineResult:
     service = Service(intermine_url)
     query = service.new_query(query)
     query.add_view("primaryIdentifier")
@@ -304,7 +304,7 @@ def query_fishmine(intermine_url: str, protein_id: str, query: str="Gene") -> In
     return intermine_response_factory(result_list, protein_id)
 
 
-def query_mousemine(intermine_url: str, gene_id: str) -> Intermine_Result:
+def query_mousemine(intermine_url: str, gene_id: str) -> IntermineResult:
     """
     :param intermine_url: intermine server, eg
                           http://www.mousemine.org/mousemine/service
@@ -320,21 +320,21 @@ def query_mousemine(intermine_url: str, gene_id: str) -> Intermine_Result:
     return intermine_response_factory(result_list, gene_id)
 
 
-def intermine_response_factory(result_list: List[str], input_id: str) -> Intermine_Result:
+def intermine_response_factory(result_list: List[str], input_id: str) -> IntermineResult:
     if len(result_list) == 1:
         gene = result_list[0]
         is_successful = True
-        intermine_res = Intermine_Result(is_successful, gene)
+        intermine_res = IntermineResult(is_successful, gene)
     elif len(result_list) > 1:
         msg = "Intermine: Ambiguous gene mapping"
         logger.warn(msg + " for {}: {}".format(input_id, result_list))
         is_successful = False
-        intermine_res = Intermine_Result(is_successful, msg=msg)
+        intermine_res = IntermineResult(is_successful, msg=msg)
     else:
         msg = "Intermine: No mapping found"
         logger.warn(msg + " for {}".format(input_id))
         is_successful = False
-        intermine_res = Intermine_Result(is_successful, msg=msg)
+        intermine_res = IntermineResult(is_successful, msg=msg)
 
     return intermine_res
 
@@ -387,6 +387,7 @@ def get_xref_protein_gene_rel(cursor: Cursor, protein: str,
     else:
         gene = query_res[0][1]
     return gene
+
 
 def get_deprecated_protein_gene_rel(cursor: Cursor, protein: str,
                                     database: str, config: dict) -> str:
