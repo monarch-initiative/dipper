@@ -305,4 +305,4 @@ class Assoc:
         byte_string = '+'.join(items_to_hash).encode("utf-8")
 
         # TODO put this in a util?
-        return ':'.join(('MONARCH', hashlib.sha1(byte_string).hexdigest()[0:10]))
+        return ':'.join(('MONARCH', hashlib.sha1(byte_string).hexdigest()[0:16]))

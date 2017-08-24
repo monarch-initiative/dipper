@@ -205,7 +205,7 @@ class Source:
         :return: str hash of id
         """
         byte_string = long_string.encode("utf-8")
-        return hashlib.sha1(byte_string).hexdigest()[0:10]
+        return hashlib.sha1(byte_string).hexdigest()[0:16]
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
