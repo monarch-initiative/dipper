@@ -123,9 +123,15 @@ class StringDB(Source):
                     self.rawdir, self.id_map_files[taxon]['file']))
 
                 mfile_handle = open(map_file, 'r')
-                for line in mfile_handle.readlines():
-                    prot, gene = line.rstrip("\n").split("\t")
-                    p2gene_map[prot] = gene
+                if taxon == 9606:
+                    for line in mfile_handle.readlines():
+                        gene, prot = line.rstrip("\n").split("\t")
+                        p2gene_map[prot.replace('9606.', '')] \
+                            = "NCBIGene:{}".format(gene)
+                else:
+                    for line in mfile_handle.readlines():
+                        prot, gene = line.rstrip("\n").split("\t")
+                        p2gene_map[prot] = gene
                 mfile_handle.close()
             else:
                 logger.info("Fetching ensembl proteins "
