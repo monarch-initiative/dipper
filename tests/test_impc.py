@@ -158,7 +158,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # This will fail if we change our approach for
         # making blank node iris, it might be better
         # to check the length of the output (see test_provenance_mode)
-        study = BNode('bdd05a8')
+        study = BNode('bdd05a8ca1')
         expected_output = [(study,)]
 
         self.assertEqual(list(sparql_output), expected_output)
