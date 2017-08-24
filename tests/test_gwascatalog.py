@@ -196,7 +196,7 @@ class TestGwasSNPModel(unittest.TestCase):
         sparql_query = """
             SELECT ?snp
             WHERE {{
-                <https://monarchinitiative.org/MONARCH_630ef6046547f10c8b8572c0ac3466023b8d22d7> a OBAN:association ;
+                <https://monarchinitiative.org/MONARCH_630ef60> a OBAN:association ;
                     dc:description "{}" ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
@@ -204,7 +204,7 @@ class TestGwasSNPModel(unittest.TestCase):
                     OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
-                <https://monarchinitiative.org/MONARCH_70a05d8eb1c3d4b037d7cc04ffa625a7d85b5c46> a OBAN:association ;
+                <https://monarchinitiative.org/MONARCH_70a05d8> a OBAN:association ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
                     OBAN:association_has_object EFO:0006995 ;
@@ -285,7 +285,7 @@ class TestGwasHaplotypeModel(unittest.TestCase):
         sparql_query = """
             SELECT ?snp
             WHERE {
-                :haplotype_cb627b1f64039b0f751a734ad00c4500487464f4 a OBO:GENO_0000871 ;
+                :haplotype_cb627b1 a OBO:GENO_0000871 ;
                     rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
                     OBO:GENO_0000382 ?snp,
                         dbSNP:rs3758171,
