@@ -351,6 +351,12 @@ class NCBIGene(Source):
             graph = self.graph
 
         filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
+        taxon_spec_filters = {
+            '10090:': ['ENSEMBL']
+        }
+        if taxon in taxon_spec_filters:
+            filter_out += taxon_spec_filters[taxon]
+            print(filter_out)
 
         model = Model(graph)
         # deal with the xrefs
