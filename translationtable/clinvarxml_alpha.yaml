@@ -7,12 +7,6 @@
 # ALL items in the the internal_label column MUST appear 
 # exactly once in the first column of the global_terms.yaml file
 
-# Note well. 
-# Sooner or later this means we will have to namespace our labels
-# because a different ontologist (or one of their personalities)
-# will insist on using a label that is already taken 
-# to represent something else.
-
 ### RCV variant to gene relationship types type
 #########################################################
 "within single gene": "has_affected_locus"

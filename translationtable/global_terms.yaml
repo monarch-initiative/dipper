@@ -4,6 +4,12 @@
 # post octothorp comments and empty lines are ignored
 # both columns should be unique
 
+# Note well. 
+# Sooner or later this means we will have to namespace our labels
+# because a different ontologist (or one of their personalities)
+# will insist on using a label that is already taken 
+# to represent something else.
+
 # Variant (Subject) Sequence Types
 "SNV": "SO:0001483"
 "deletion": "SO:0000159"
