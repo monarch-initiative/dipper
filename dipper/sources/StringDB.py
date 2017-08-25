@@ -139,6 +139,11 @@ class StringDB(Source):
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in p2gene_map.keys():
                     p2gene_map[key] = "ENSEMBL:{}".format(p2gene_map[key])
+            if taxon == 9606:
+                temp_map = ensembl.fetch_protein_gene_map(taxon)
+                for key in temp_map:
+                    if key not in p2gene_map:
+                        p2gene_map[key] = "ENSEMBL:{}".format(temp_map[key])
 
             logger.info("Finished fetching ENSP ID mappings, "
                         "fetched {} proteins".format(len(p2gene_map)))

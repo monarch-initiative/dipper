@@ -13,7 +13,7 @@ class StringTestFakeData(unittest.TestCase):
         # Test set with two proteins from same species
         self.test_set_1 = \
             [['9606.ENSP00000000233', '9606.ENSP00000003084',
-             0, 0, 0, 0, 300, 0, 150, 150]]
+             0, 0, 0, 0, 300, 0, 150, 800]]
 
         self.columns = [
             'protein1', 'protein2', 'neighborhood', 'fusion',
@@ -34,6 +34,9 @@ class StringTestFakeData(unittest.TestCase):
         string_db.graph.bind_all_namespaces()
         ensembl = Ensembl('rdf_graph', True)
         prot_map = ensembl.fetch_protein_gene_map(9606)
+        for key in prot_map.keys():
+            prot_map[key] = "ENSEMBL:{}".format(prot_map[key])
+
         print("Finished fetching ENSP IDs, "
               "fetched {} proteins".format(len(prot_map.keys())))
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
