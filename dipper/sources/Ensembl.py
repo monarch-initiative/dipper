@@ -152,7 +152,31 @@ class Ensembl(Source):
             (ensembl_gene_id, external_gene_name,
              description, gene_biotype, entrezgene,
              peptide_id) = row[0:6]
-            protein_dict[peptide_id] = ensembl_gene_id
+            protein_dict[str(peptide_id)] = ensembl_gene_id
+        conn.close()
+        return protein_dict
+
+    def fetch_uniprot_gene_map(self, taxon_id):
+        """
+        Fetch a dict of uniprot-gene  for a species in biomart
+        :param taxid:
+        :return: dict
+        """
+        protein_dict = dict()
+        params = urllib.parse.urlencode(
+            {'query': self._build_biomart_gene_query(str(taxon_id))})
+        conn = http.client.HTTPConnection('www.ensembl.org')
+        conn.request("GET", '/biomart/martservice?' + params)
+        response = conn.getresponse()
+        for line in response:
+            line = line.decode('utf-8').rstrip()
+            row = line.split('\t')
+            if len(row) < 7:
+                continue
+            (ensembl_gene_id, external_gene_name,
+             description, gene_biotype, entrezgene,
+             peptide_id, uniprot_swissprot) = row[0:7]
+            protein_dict[str(uniprot_swissprot)] = ensembl_gene_id
         conn.close()
         return protein_dict
 
@@ -279,6 +303,7 @@ class Ensembl(Source):
                 if peptide_id != '':
                     geno.addGeneProduct(gene_id, peptide_curie)
                     if uniprot_swissprot != '':
+                        geno.addGeneProduct(gene_id, uniprot_curie)
                         model.addXref(peptide_curie, uniprot_curie)
 
                 if not self.testMode \

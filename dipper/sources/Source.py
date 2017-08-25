@@ -101,7 +101,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def parse(self):
+    def parse(self, limit):
         """
         abstract method to parse all data from an external resource,
         that was fetched in fetch() this should be overridden by subclasses
@@ -205,7 +205,7 @@ class Source:
         :return: str hash of id
         """
         byte_string = long_string.encode("utf-8")
-        return hashlib.sha1(byte_string).hexdigest()
+        return hashlib.sha1(byte_string).hexdigest()[0:16]
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
