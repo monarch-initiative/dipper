@@ -291,8 +291,9 @@ def scv_link(scv_sig, rcv_trip):
 # non numeric but valid hex
 # which is in no way required for RDF
 # but can help when using the identifier in other contexts
+# which do not allow identifiers to begin with a digit
 def digest_id(wordage):
-    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
+    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[0:15]
 
 
 # Global translation table
