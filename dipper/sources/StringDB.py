@@ -49,6 +49,34 @@ class StringDB(Source):
             }
         }
 
+        self.id_map_files = {
+            9606: {
+                'url': 'https://string-db.org/mapping_files/entrez_mappings/'
+                       'entrez_gene_id.vs.string.v10.28042015.tsv',
+                'file': 'entrez_gene_id.vs.string.v10.28042015.tsv'
+            },
+            10090: {
+                'url': 'https://data.monarchinitiative.org/dipper/'
+                       'cache/10090.string2mgi.tsv',
+                'file': '10090.string2mgi.tsv'
+            },
+            6239: {
+                'url': 'https://data.monarchinitiative.org/dipper/'
+                       'cache/6239.string2ensembl_gene.tsv',
+                'file': '6239.string2ensembl_gene.tsv'
+            },
+            7227: {
+                'url': 'https://data.monarchinitiative.org/dipper/'
+                       'cache/7227.string2ensembl_gene.tsv',
+                'file': '7227.string2ensembl_gene.tsv'
+            },
+            7955: {
+                'url': 'https://data.monarchinitiative.org/dipper/'
+                       'cache/7955.string2zfin.tsv',
+                'file': '7955.string2zfin.tsv'
+            }
+        }
+
     def fetch(self, is_dl_forced=False):
         """
         Override Source.fetch()
@@ -63,6 +91,7 @@ class StringDB(Source):
         """
         file_paths = self._get_file_paths(self.tax_ids, 'protein_links')
         self.get_files(is_dl_forced, file_paths)
+        self.get_files(is_dl_forced, self.id_map_files)
 
         return
 
@@ -86,11 +115,37 @@ class StringDB(Source):
 
             fh = gzip.open(string_file_path, 'rb')
             dataframe = pd.read_csv(fh, sep='\s+')
-            logger.info("Fetching ensembl proteins "
-                        "for taxon {}".format(taxon))
-            p2gene_map = ensembl.fetch_protein_gene_map(taxon)
+            fh.close()
+            p2gene_map = dict()
 
-            logger.info("Finished fetching ENSP IDs, "
+            if taxon in self.id_map_files:
+                map_file = '/'.join((
+                    self.rawdir, self.id_map_files[taxon]['file']))
+
+                mfile_handle = open(map_file, 'r')
+                if taxon == 9606:
+                    for line in mfile_handle.readlines():
+                        gene, prot = line.rstrip("\n").split("\t")
+                        p2gene_map[prot.replace('9606.', '')] \
+                            = "NCBIGene:{}".format(gene)
+                else:
+                    for line in mfile_handle.readlines():
+                        prot, gene = line.rstrip("\n").split("\t")
+                        p2gene_map[prot] = gene
+                mfile_handle.close()
+            else:
+                logger.info("Fetching ensembl proteins "
+                            "for taxon {}".format(taxon))
+                p2gene_map = ensembl.fetch_protein_gene_map(taxon)
+                for key in p2gene_map.keys():
+                    p2gene_map[key] = "ENSEMBL:{}".format(p2gene_map[key])
+            if taxon == 9606:
+                temp_map = ensembl.fetch_protein_gene_map(taxon)
+                for key in temp_map:
+                    if key not in p2gene_map:
+                        p2gene_map[key] = "ENSEMBL:{}".format(temp_map[key])
+
+            logger.info("Finished fetching ENSP ID mappings, "
                         "fetched {} proteins".format(len(p2gene_map)))
 
             logger.info("Fetching protein protein interactions "
@@ -99,27 +154,25 @@ class StringDB(Source):
             self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
     def _process_protein_links(self, dataframe, p2gene_map, taxon,
-                               limit=None, rank_min=200):
-        filtered_df = dataframe[dataframe['experimental'] > rank_min]
+                               limit=None, rank_min=700):
+        filtered_df = dataframe[dataframe['combined_score'] > rank_min]
         filtered_out_count = 0
         for index, row in filtered_df.iterrows():
             # Check if proteins are in same species
             protein1 = row['protein1'].replace('{}.'.format(str(taxon)), '')
             protein2 = row['protein2'].replace('{}.'.format(str(taxon)), '')
 
-            prot1_id = protein1.replace('ENSP', '')
-            prot2_id = protein2.replace('ENSP', '')
-
             gene1_curie = None
             gene2_curie = None
+
             try:
                 # Keep orientation the same since RO:0002434 is symmetric
-                if prot1_id > prot2_id:
-                    gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
-                    gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
+                if protein1 > protein1:
+                    gene1_curie = p2gene_map[protein1]
+                    gene2_curie = p2gene_map[protein2]
                 else:
-                    gene1_curie = "ENSEMBL:{}".format(p2gene_map[protein2])
-                    gene2_curie = "ENSEMBL:{}".format(p2gene_map[protein1])
+                    gene1_curie = p2gene_map[protein2]
+                    gene2_curie = p2gene_map[protein1]
             except KeyError:
                 filtered_out_count += 1
 
