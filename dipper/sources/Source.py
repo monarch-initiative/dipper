@@ -192,20 +192,20 @@ class Source:
         :return:
 
         """
-        # note other digests available:
-        # sha1(), sha224(), sha256(), sha384(), and sha512()
-        # (md5 has no collision insurance)
         return ':'.join((prefix, Source.hash_id(long_string)))
 
     @staticmethod
     def hash_id(long_string):
         """
-        return sha1 hash of id or string
+        prepend 'b' to avoid leading with digit
+        truncate to 64bit sized word
+        return sha1 hash of string
         :param long_string: str string to be hashed
         :return: str hash of id
         """
-        byte_string = long_string.encode("utf-8")
-        return hashlib.sha1(byte_string).hexdigest()
+
+        return r'b' + hashlib.sha1(
+            long_string.encode('utf-8')).hexdigest()[0:15]
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
