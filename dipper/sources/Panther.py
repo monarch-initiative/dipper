@@ -395,8 +395,11 @@ class Panther(Source):
         # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
         geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
+        # TODO this would be much better done as
+        # if foo not in curie_map:
         if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
-                re.match(r'Gene_ORFName', geneid):
+                re.match(r'Gene_ORFName', geneid) or \
+                re.match(r'Gene_Name', geneid):
             # logger.warning(
             #   "Found an identifier I don't know how to fix (species %s): %s",
             #   sp, geneid)
