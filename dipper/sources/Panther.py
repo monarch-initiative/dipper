@@ -179,7 +179,9 @@ class Panther(Source):
                     line = line.decode().strip()
 
                     # parse each row. ancestor_taxon is unused
-                    # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6	LDO	Euarchontoglires	PTHR15964
+                    # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83
+                    #   	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6
+                    #       	LDO	Euarchontoglires	PTHR15964
                     (a, b, orthology_class, ancestor_taxon,
                      panther_id) = line.split('\t')
                     (species_a, gene_a, protein_a) = a.split('|')
@@ -208,11 +210,13 @@ class Panther(Source):
                     # gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where
                     # gene1 OR gene2 are in the taxid list (some-filter)
-                    if (self.tax_ids is not None and
-                            (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip())) not in
-                             self.tax_ids) and
-                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip())) not in
-                             self.tax_ids)):
+                    if (
+                        self.tax_ids is not None and
+                        (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
+                            not in self.tax_ids) and
+                        (int(re.sub(
+                            r'NCBITaxon:', '', taxon_b.rstrip())) not in
+                            self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
@@ -391,7 +395,8 @@ class Panther(Source):
         # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
         geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
-        if re.match(r'(Gene|ENSEMBLGenome):', geneid):
+        if re.match(r'(Gene|ENSEMBLGenome):', geneid) or
+                re.match(r'Gene_ORFName':, geneid):
             # logger.warning(
             #   "Found an identifier I don't know how to fix (species %s): %s",
             #   sp, geneid)
@@ -403,6 +408,7 @@ class Panther(Source):
         import unittest
         from tests.test_panther import PantherTestCase
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(PantherTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(
+            PantherTestCase)
 
         return test_suite
