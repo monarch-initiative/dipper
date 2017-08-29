@@ -231,12 +231,13 @@ class Source:
             return True
 
         # get remote file details
-        if headers is not None:
+        if headers is not None and headers != []:
             req = urllib.request.Request(remote, headers=headers)
         else:
             req = urllib.request.Request(remote)
 
         logger.info("Request header: %s", str(req.header_items()))
+
         response = urllib.request.urlopen(req)
 
         try:
