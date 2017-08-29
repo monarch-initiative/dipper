@@ -395,8 +395,8 @@ class Panther(Source):
         # rewrite Gene:<Xenbase ids> --> Xenbase:<id>
         geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
-        if re.match(r'(Gene|ENSEMBLGenome):', geneid) or
-                re.match(r'Gene_ORFName':, geneid):
+        if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
+                re.match(r'Gene_ORFName', geneid):
             # logger.warning(
             #   "Found an identifier I don't know how to fix (species %s): %s",
             #   sp, geneid)
