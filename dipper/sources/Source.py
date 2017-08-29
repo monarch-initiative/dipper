@@ -224,11 +224,12 @@ class Source:
 
         # check if local file exists
         # if no local file, then remote is newer
-        if not os.path.exists(local):
+        if os.path.exists(local):
+            logger.info("File does exist locally")
+        else:
             logger.info("File does not exist locally")
             return True
-        else:
-            logger.info("File does exist locally")
+
         # get remote file details
         if headers is not None:
             req = urllib.request.Request(remote, headers=headers)
