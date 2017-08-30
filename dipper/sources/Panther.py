@@ -405,7 +405,8 @@ class Panther(Source):
         #    #"Found an identifier I don't know how to fix (species %s): %s",
         #    #   sp, geneid)
 
-        (pfx, lclid) = re.split(r':', geneid)
+        pfxlcl = re.split(r':', geneid)
+        pfx = pfxlcl[0]
         if pfx is None or pfx not in curie_map.get():
             logger.warning("No curie prefix for (species %s): %s", sp, geneid)
             geneid = None
