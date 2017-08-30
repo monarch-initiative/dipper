@@ -7,6 +7,7 @@ from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 from dipper import config
+from dipper import curie_map
 
 __author__ = 'nicole'
 
@@ -397,14 +398,17 @@ class Panther(Source):
 
         # TODO this would be much better done as
         # if foo not in curie_map:
-        if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
-                re.match(r'Gene_ORFName', geneid) or \
-                re.match(r'Gene_Name', geneid):
-            # logger.warning(
-            #   "Found an identifier I don't know how to fix (species %s): %s",
-            #   sp, geneid)
-            geneid = None
+        # if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
+        #        re.match(r'Gene_ORFName', geneid) or \
+        #        re.match(r'Gene_Name', geneid):
+        #    # logger.warning(
+        #    #"Found an identifier I don't know how to fix (species %s): %s",
+        #    #   sp, geneid)
 
+        (pfx, lclid) = re.split(r':', geneid)
+        if pfx is None or curie_map.prefix_exists(pfx) is None:
+            logger.warning("No curie prefix (species %s): %s", sp, geneid)
+            geneid = None
         return geneid
 
     def getTestSuite(self):

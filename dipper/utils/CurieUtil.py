@@ -54,3 +54,6 @@ class CurieUtil(object):
                              curie[(curie.index(':') + 1):])
         logger.error("Curie prefix not defined for %s", curie)
         return None
+
+    def prefix_exists(self, pfx):
+        return pfx in self.curie_map
