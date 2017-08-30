@@ -19,7 +19,7 @@ class CurieUtil(object):
         '''
         self.curie_map = curie_map
         self.uri_map = {}
-        if curie_map is not None:
+        if curie_map is not None:  # inverse the map
             for key, value in curie_map.items():
                 self.uri_map[value] = key
         return
