@@ -406,8 +406,8 @@ class Panther(Source):
         #    #   sp, geneid)
 
         (pfx, lclid) = re.split(r':', geneid)
-        if pfx is None or curie_map.get()[pfx] is None:
-            logger.warning("No curie prefix (species %s): %s", sp, geneid)
+        if pfx is None or pfx not in curie_map.get():
+            logger.warning("No curie prefix for (species %s): %s", sp, geneid)
             geneid = None
         return geneid
 
