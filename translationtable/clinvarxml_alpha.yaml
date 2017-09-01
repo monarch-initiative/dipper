@@ -1,0 +1,92 @@
+---
+# YAML format for a Python dict 
+# external_string to internal_label translation table
+# quoted external_string, a colon, quoted internal_label.
+# post octothorp comments and empty lines are ignored
+# only the external_string column should be checked for uniqueness
+# ALL items in the the internal_label column MUST appear 
+# exactly once in the first column of the global_terms.yaml file
+
+### RCV variant to gene relationship types type
+#########################################################
+"within single gene": "has_affected_locus"
+"genes overlapped by variant": "has_affected_locus"
+"within multiple genes by overlap": "has_affected_locus"
+"variant in gene": "has_affected_locus"
+"near gene, upstream": "is upstream of sequence of"
+"near gene, downstream": "is downstream of sequence of"
+# asserted, but not computed  (MB no idea what this means) punting
+"asserted, but not computed": "has_affected_locus"
+### Pathos Association types
+###########################################################
+"Benign": "benign"
+"conflicting data from submitters": "uncertain significance"
+"Likely benign": "likely benign"
+"Likely Benign": "likely benign"
+"likely pathogenic": "likely pathogenic"
+"Likely pathogenic": "likely pathogenic"
+"no known pathogenicity": "uncertain significance"
+"non-pathogenic": "uncertain significance"
+"pathogenic": "pathogenic"
+"Pathogenic": "pathogenic"
+"Pathogenic/Likely pathogenic": "pathogenic"
+"pathologic": "pathogenic"
+"probable-non-pathogenic": "likely benign"
+"probable-pathogenic": "likely pathogenic"
+"probably pathogenic": "likely pathogenic"
+"probably not pathogenic": "likely benign"
+"Suspected Benign": "likely benign"
+"Suspected Pathogenic": "likely pathogenic"
+"uncertain": "uncertain significance"
+"Uncertain": "uncertain significance"
+"Uncertain significance": "uncertain significance"
+"Uncertain Significance": "uncertain significance"
+"unknown": "uncertain significance"
+"Unknown": "uncertain significance"
+"variant of unknown significance": "uncertain significance"
+"MUT": "uncertain significance"
+"Unknown significance": "uncertain significance"
+"likely pathogenic - adrenal pheochromocytoma": "likely pathogenic"
+"pathogenic variant for Bardet-Biedl Syndrome": "pathogenic"
+"untested": "uncertain significance"
+"other": "uncertain significance"
+"not provided": "uncertain significance"
+"cancer": "pathogenic"
+"risk factor": "likely pathogenic"
+"drug response": "uncertain significance"
+"drug-response": "uncertain significance"
+"association": "uncertain significance"
+"Affects": "uncertain significance"
+"Moderate": "uncertain significance"
+"protective": "likely benign"
+"unknown significance": "uncertain significance"
+"likely pathogenic - adrenal bilateral pheochromocy": "likely pathogenic"
+"Associated with leiomyomas": "likely benign"
+# this next set are still unmapped
+# Pathologic
+# VSB
+# POLY
+# VOUS
+###  Variant (Subject) Sequence Types
+#############################################################
+"single nucleotide variant": "SNV"
+"Deletion": "deletion"
+"copy number gain": "copy_number_gain"
+"copy number loss": "copy_number_loss"
+"Duplication": "duplication"
+"Insertion": "insertion"
+"Indel": "indel"
+"Variation": "sequence_alteration"
+"Translocation": "translocation"
+"Tandem duplication": "tandem_duplication"
+"Complex": "complex_structural_alteration"
+"fusion": "feature_fusion"
+"Structural variant": "structural_alteration"
+"NT expansion": "direct_tandem_duplication"
+"undetermined variant": "sequence_alteration"
+"Inversion": "inversion"
+"Microsatellite": "microsatellite"
+"protein only": "coding sequence alteration"
+"CompoundHeterozygote": "variant single locus complement"
+#############################################################
+"patient phenotyping study": "phenotyping only"

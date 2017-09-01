@@ -101,7 +101,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def parse(self):
+    def parse(self, limit):
         """
         abstract method to parse all data from an external resource,
         that was fetched in fetch() this should be overridden by subclasses
@@ -192,20 +192,19 @@ class Source:
         :return:
 
         """
-        # note other digests available:
-        # sha1(), sha224(), sha256(), sha384(), and sha512()
-        # (md5 has no collision insurance)
         return ':'.join((prefix, Source.hash_id(long_string)))
 
     @staticmethod
     def hash_id(long_string):
         """
-        return sha1 hash of id or string
+        prepend 'b' to avoid leading with digit
+        truncate to 64bit sized word
+        return sha1 hash of string
         :param long_string: str string to be hashed
         :return: str hash of id
         """
-        byte_string = long_string.encode("utf-8")
-        return hashlib.sha1(byte_string).hexdigest()
+        return r'b' + hashlib.sha1(
+            long_string.encode('utf-8')).hexdigest()[0:15]
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
@@ -225,18 +224,20 @@ class Source:
 
         # check if local file exists
         # if no local file, then remote is newer
-        if not os.path.exists(local):
+        if os.path.exists(local):
+            logger.info("File does exist locally")
+        else:
             logger.info("File does not exist locally")
             return True
-        else:
-            logger.info("File does exist locally")
+
         # get remote file details
-        if headers is not None:
+        if headers is not None and headers != []:
             req = urllib.request.Request(remote, headers=headers)
         else:
             req = urllib.request.Request(remote)
 
         logger.info("Request header: %s", str(req.header_items()))
+
         response = urllib.request.urlopen(req)
 
         try:

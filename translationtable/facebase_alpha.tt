@@ -1,6 +1,9 @@
 # Mappings from Facebase wordage to ontology CURI
+# note this is a standalone translation table
+# bypassing the global/local strategy used in dipper
+# need to split up before merging
 
-# Life cycle stages for Mus Musculus 
+# Life cycle stages for Mus Musculus
 # http://purl.obolibrary.org/obo/MmusDv_
 
 TS17/E10.5		MmusDv:0000024

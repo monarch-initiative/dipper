@@ -25,7 +25,7 @@
     python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 '''
-
+import yaml
 import os
 import re
 import gzip
@@ -69,15 +69,15 @@ ARGPARSER.add_argument(
 
 ARGPARSER.add_argument(
     '-l', "--localtt",
-    default=RPATH + '/translationtable/' + INAME + '.tt',
+    default=RPATH + '/translationtable/' + INAME + '.yaml',
     help="'spud'\t'potato'   default: " +
-    RPATH + '/translationtable/' + INAME + '.tt')
+    RPATH + '/translationtable/' + INAME + '.yaml')
 
 ARGPARSER.add_argument(
     '-g', "--globaltt",
-    default=RPATH + '/translationtable/label_term.tt',
+    default=RPATH + '/translationtable/global_terms.yaml',
     help="'potato'\t'PREFIX:p123'   default: " +
-    RPATH + '/translationtable/label_term.tt')
+    RPATH + '/translationtable/global_term.yaml')
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(
@@ -184,7 +184,8 @@ def make_spo(sub, prd, obj):
     Decorates the three given strings as a line of ntriples
 
     '''
-    # To establish string as a curi and expand we use a global curie_map(.yaml)
+    # To establish string as a curie and expand,
+    # we use a global curie_map(.yaml)
     # sub are allways uri  (unless a bnode)
     # prd are allways uri (unless prd is 'a')
     # should fail loudly if curie does not exist
@@ -196,6 +197,7 @@ def make_spo(sub, prd, obj):
     objt = ''
 
     # object is a curie or bnode or literal [string|number]
+
     match = re.match(CURIERE, obj)
     objcuri = None
     if match is not None:
@@ -289,31 +291,24 @@ def scv_link(scv_sig, rcv_trip):
 # non numeric but valid hex
 # which is in no way required for RDF
 # but can help when using the identifier in other contexts
+# which do not allow identifiers to begin with a digit
 def digest_id(wordage):
-    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
+    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[0:15]
 
 
 # Global translation table
 # Translate labels found in ontologies
 # to the terms they are for
 GTT = {}
-with open(ARGS.globaltt) as f:
-    for line in f:
-        line = line.partition('#')[0].strip()  # no comment
-        if line != "":
-            (key, val) = re.split(r'\t+', line, 2)
-            GTT[key.strip()] = val.strip()
+with open(ARGS.globaltt) as fh:
+    GTT = yaml.safe_load(fh)
 
 # Local translation table
 # Translate external strings found in datasets
 # to specific labels found in ontologies
 LTT = {}
-with open(ARGS.localtt) as f:
-    for line in f:
-        line = line.partition('#')[0].strip()  # no comment
-        if line != "":
-            (key, val) = re.split(r'\t+', line, 2)
-            LTT[key.strip()] = val.strip()
+with open(ARGS.localtt) as fh:
+    LTT = yaml.safe_load(fh)
 
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
@@ -343,7 +338,7 @@ def resolve(label, local_tt):
             term_id = label
     else:
         LOG.error('Do not have any mapping for label: ' + label)
-        
+
         term_id = None
     return term_id
 
@@ -432,7 +427,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             rcv_variant_supertype = RCV_GenotypeSet.get('Type')
             for RCV_MeasureSet in RCV_GenotypeSet.findall('./MeasureSet'):
                 if rcv_variant_id is not None:
-                    rcv_variant_id += ',' +  RCV_MeasureSet.get('ID')
+                    rcv_variant_id += ',' + RCV_MeasureSet.get('ID')
                 else:
                     rcv_variant_id = RCV_MeasureSet.get('ID')
         else:
@@ -450,8 +445,9 @@ with gzip.open(FILENAME, 'rt') as fh:
                     'variant single locus complement', LTT)
                 # this resolve('has_zygosity', LTT)
                 # resolve('complex heterozygous', LTT)
-            elif rcv_variant_supertype == "Phase unknown":  # get blessing for this
-                rcv_variant_type = resolve( RCV_Measure.get('Type'), LTT)    
+            # get blessing for this
+            elif rcv_variant_supertype == "Phase unknown":
+                rcv_variant_type = resolve(RCV_Measure.get('Type'), LTT)
             else:
                 rcv_variant_id = None
                 LOG.warning(
@@ -521,8 +517,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 if rcv_gene_symbol is None and RCV_Symbol is not None:
                     rcv_gene_symbol = RCV_Symbol.text
 
-                # if rcv_gene_symbol is None:
-                #    LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
+                if rcv_gene_symbol is None:
+                    LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
 
         #######################################################################
         # the Object is the Disease, here is called a "trait"
@@ -638,13 +634,8 @@ with gzip.open(FILENAME, 'rt') as fh:
                 continue
 
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-            write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
-
-            # STOPGAP till we create more granular relationship types
-            # RCV  "is about" a type of gene variant
-            # write_spo(
-            #    'ClinVar:' + rcv_acc,
-            #    'IAO:0000136', rcv_variant_relationship_type)
+            if rcv_gene_symbol is not None:
+                write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV

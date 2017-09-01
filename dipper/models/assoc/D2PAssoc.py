@@ -64,7 +64,7 @@ class D2PAssoc(Assoc):
             # FIXME what is the real predicate here?
             self.graph.addTriple(self.assoc_id,
                                  self.d2p_object_properties['frequency'],
-                                 self.frequency, True)
+                                 self.frequency)
         if self.onset is not None and self.onset != '':
             # FIXME what is the real predicate here?
             self.graph.addTriple(self.assoc_id,
