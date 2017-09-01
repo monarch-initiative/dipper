@@ -6,3 +6,4 @@ GitPython
 intermine
 numpy
 pandas
+ontobio
