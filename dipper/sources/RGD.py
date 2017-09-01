@@ -4,8 +4,8 @@ from dipper.models.Model import Model
 from dipper.models.Provenance import Provenance
 from dipper.models.Dataset import Dataset
 from ontobio.io.gafparser import GafParser
-from pprint import pprint
 import logging
+
 
 __author__ = 'timputman'
 
@@ -24,25 +24,13 @@ class RGD(Source):
             'url': RGD_BASE + 'rattus_genes_mp'},
     }
 
-    map_files = {
-        'eco_map': {'IEA': 'ECO:0000501',
-                    'IAGP': 'ECO:0005613',
-                    'IDA': 'ECO:0000314',
-                    'IMP': 'ECO:0000315',
-                    'IED': 'ECO:0005611',
-                    'TAS': 'ECO:0000304',
-                    'QTM': 'ECO:0000061',
-                    'ISS': 'ECO:0000250',
-                    'NAS': 'ECO:0000303',
-                    'IPM': 'ECO:0005612',
-                    'IEP': 'ECO:0000270'}
-    }
-
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(graph_type, are_bnodes_skolemized, 'rat_genome_database')
         self.dataset = Dataset(
             'rat_genome_database', 'Rat_Genome_Database', 'http://rgd.mcw.edu/', None,
             None)
+
+        self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
 
     def fetch(self, is_dl_forced=False):
         """
@@ -74,14 +62,18 @@ class RGD(Source):
         assocs = p.parse(open(rgd_file, "r"))
 
         for i, assoc in enumerate(assocs):
-            if assoc['relation']['id'] is None:
-                assoc['relation']['id'] = 'RO:0002200'
+            assoc['relation']['id'] = 'RO:0002200'
             self.make_association(assoc)
             if limit is not None and i > limit:
                 break
         return
 
     def make_association(self, record):
+        """
+        contstruct the association
+        :param record:
+        :return: modeled association of  genotype to mammalian phenotype
+        """
         model = Model(self.graph)
         provenance_model = Provenance(self.graph)
         redate = record['date'].replace('-', '')
@@ -107,12 +99,15 @@ class RGD(Source):
         references = record['evidence']['has_supporting_reference']
 
         if len(references) > 0:
+            # make first ref in list the source
             g2p_assoc.add_source(identifier=references[0])
         if len(references) > 1:
+            # create equivalent source for any other refs in list
+            # This seems to be specific to this source and there could be non-equivalent references in this list
             for ref in references[1:]:
                 model.addSameIndividual(sub=references[0], obj=ref)
 
-        g2p_assoc.add_evidence(RGD.map_files['eco_map'][record['evidence']['type']])
+        g2p_assoc.add_evidence(self.global_terms[record['evidence']['type']])
         g2p_assoc.add_association_to_graph()
 
         return
