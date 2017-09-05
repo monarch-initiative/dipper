@@ -25,9 +25,9 @@ class RGD(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'rat_genome_database')
+        super().__init__(graph_type, are_bnodes_skolemized, 'rgd')
         self.dataset = Dataset(
-            'rat_genome_database', 'Rat_Genome_Database', 'http://rgd.mcw.edu/', None,
+            'rgd', 'RGD', 'http://rgd.mcw.edu/', None,
             None)
 
         self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
