@@ -14,6 +14,7 @@ from dipper.models.Genotype import Genotype
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Reference import Reference
+from dipper.utils.DipperUtil import DipperUtil
 
 
 logger = logging.getLogger(__name__)
@@ -373,7 +374,7 @@ class NCBIGene(Source):
                 if xref_curie.split(':')[0] in filter_out:
                     continue
                 if re.match(r'^OMIM', xref_curie):
-                    if self._is_omim_disease(xref_curie):
+                    if DipperUtil.is_omim_disease(xref_curie):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
@@ -696,39 +697,3 @@ class NCBIGene(Source):
             "Made %d orthology relationships for %d genes",
             found_counter, len(gene_ids))
         return
-
-    @staticmethod
-    def _is_omim_disease(gene_id):
-        """
-        Process omim equivalencies by examining the monarch ontology scigraph
-        As an alternative we could examine mondo.owl, since the ontology
-        scigraph imports the output of this script which creates an odd circular
-        dependency (even though we're querying mondo.owl through scigraph)
-
-        :param graph: rdfLib graph object
-        :param gene_id: ncbi gene id as curie
-        :param omim_id: omim id as curie
-        :return: None
-        """
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=10)
-        session.mount('https://', adapter)
-
-        requests_log = logging.getLogger("requests.packages.urllib3")
-        requests_log.setLevel(logging.ERROR)
-
-        isOmimDisease = False
-        url = NCBIGene.SCIGRAPH_BASE + gene_id + '.json'
-        response = session.get(url)
-        try:
-            results = response.json()
-            if 'nodes' in results and len(results['nodes']) > 0:
-                if 'meta' in results['nodes'][0] \
-                        and 'category' in results['nodes'][0]['meta'] \
-                        and 'disease' in results['nodes'][0]['meta']['category']:
-                    logger.info("{0} is a disease, skipping".format(gene_id))
-                    isOmimDisease = True
-        except ValueError:
-            pass
-
-        return isOmimDisease

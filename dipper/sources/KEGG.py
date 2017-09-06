@@ -12,6 +12,7 @@ from dipper.models.Reference import Reference
 from dipper.models.Pathway import Pathway
 from dipper.models.Model import Model
 from dipper import config
+from dipper.utils.DipperUtil import DipperUtil
 
 
 logger = logging.getLogger(__name__)
@@ -603,7 +604,8 @@ class KEGG(Source):
                     # so add them as a class then make equivalence
                     model.addClassToGraph(omim_id, None)
                     geno.addGene(kegg_gene_id, None)
-                    model.addEquivalentClass(kegg_gene_id, omim_id)
+                    if not DipperUtil.is_omim_disease(omim_id):
+                        model.addEquivalentClass(kegg_gene_id, omim_id)
                 elif link_type == 'reverse':
                     # make an association between an OMIM ID & the KEGG gene ID
                     # we do this with omim ids because
