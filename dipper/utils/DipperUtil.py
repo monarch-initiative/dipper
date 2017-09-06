@@ -110,6 +110,44 @@ class DipperUtil:
         return homologs
 
     @staticmethod
+    def is_omim_disease(gene_id):
+        """
+        Process omim equivalencies by examining the monarch ontology scigraph
+        As an alternative we could examine mondo.owl, since the ontology
+        scigraph imports the output of this script which creates an odd circular
+        dependency (even though we're querying mondo.owl through scigraph)
+
+        :param graph: rdfLib graph object
+        :param gene_id: ncbi gene id as curie
+        :param omim_id: omim id as curie
+        :return: None
+        """
+        SCIGRAPH_BASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
+
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=10)
+        session.mount('https://', adapter)
+
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.ERROR)
+
+        isOmimDisease = False
+        url = SCIGRAPH_BASE + gene_id + '.json'
+        response = session.get(url)
+        try:
+            results = response.json()
+            if 'nodes' in results and len(results['nodes']) > 0:
+                if 'meta' in results['nodes'][0] \
+                        and 'category' in results['nodes'][0]['meta'] \
+                        and 'disease' in results['nodes'][0]['meta']['category']:
+                    logger.info("{0} is a disease, skipping".format(gene_id))
+                    isOmimDisease = True
+        except ValueError:
+            pass
+
+        return isOmimDisease
+
+    @staticmethod
     def get_ncbi_id_from_symbol(gene_symbol):
         """
         Get ncbi gene id from symbol using monarch and mygene services
