@@ -5,7 +5,7 @@ from dipper.models.Provenance import Provenance
 from dipper.models.Dataset import Dataset
 from ontobio.io.gafparser import GafParser
 import logging
-
+from pprint import pprint
 
 __author__ = 'timputman'
 
@@ -75,28 +75,20 @@ class RGD(Source):
         :return: modeled association of  genotype to mammalian phenotype
         """
         model = Model(self.graph)
-        provenance_model = Provenance(self.graph)
-        redate = record['date'].replace('-', '')
 
-        # date created is currently modeled as assertion but this is up for review
-        assertion_bnode = self.make_id("{0}{1}{2}".format(record['subject']['label'],
-                                                          record['subject']['id'],
-                                                          record['object']['id']
-                                                          ), '_')
-
-        provenance_model.add_date_created(prov_type=assertion_bnode, date=redate)
-
-        model.addIndividualToGraph(
-            assertion_bnode, None,
-            provenance_model.provenance_types['assertion'])
 
         # define the triple
         gene = record['subject']['id']
         relation = record['relation']['id']
         phenotype = record['object']['id']
 
+        # instantiate the association
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
+
+        # add the references
         references = record['evidence']['has_supporting_reference']
+        # created RGDRef prefix in curie map to route to proper reference URL in RGD
+        references = [x.replace('RGD', 'RGDRef') for x in references if 'RGD' in x]
 
         if len(references) > 0:
             # make first ref in list the source
@@ -107,6 +99,8 @@ class RGD(Source):
             for ref in references[1:]:
                 model.addSameIndividual(sub=references[0], obj=ref)
 
+        # add the date created on
+        g2p_assoc.add_date(date=record['date'])
         g2p_assoc.add_evidence(self.global_terms[record['evidence']['type']])
         g2p_assoc.add_association_to_graph()
 
