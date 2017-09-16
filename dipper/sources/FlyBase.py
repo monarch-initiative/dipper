@@ -4,6 +4,7 @@ import csv
 import gzip
 import io
 import hashlib
+import os
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
@@ -45,7 +46,6 @@ class FlyBase(PostgreSQLSource):
         'feature_pub',          # done
         'pub_dbxref',
         'feature_dbxref',
-        'feature_relationship',
         'cvterm',               # done
         'stock_genotype',       # done
         'stock',                # done
@@ -62,6 +62,13 @@ class FlyBase(PostgreSQLSource):
         # 'feature_cvterm'
         # TODO to get better feature types than (what) is in the feature table
         # itself  (watch out for is_not)
+    ]
+
+    resources = [
+        {
+            'query': '../../resources/sql/fb/feature_relationship.sql',
+            'outfile': 'feature_relationship'
+        }
     ]
 
     # columns = { WIP
@@ -262,6 +269,13 @@ class FlyBase(PostgreSQLSource):
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
+        for query_map in self.resources:
+            query_fh = open(os.path.join(
+                os.path.dirname(__file__), query_map['query']), 'r')
+            query = query_fh.read()
+            self.fetch_query_from_pgdb(
+                query_map['outfile'], query, None, cxn)
+
         # we want to fetch the features,
         # but just a subset to reduce the processing time
         # query = \
@@ -303,6 +317,7 @@ class FlyBase(PostgreSQLSource):
         self._process_cvterm()
         self._process_genotypes(limit)
         self._process_pubs(limit)
+
         # do this before environments to get the external ids
         self._process_environment_cvterm()
         self._process_environments()
@@ -1628,7 +1643,7 @@ class FlyBase(PostgreSQLSource):
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             for line in filereader:
-                (feature_relationship_id, subject_id, object_id, type_id, rank,
+                (feature_relationship_id, subject_id, object_id, name, rank,
                  value) = line
                 # 7253191 11713123        3177614 27      0
                 # 18513040        23683101        11507545        26      0
@@ -1651,15 +1666,26 @@ class FlyBase(PostgreSQLSource):
                         str(subject_id), str(object_id))
                     continue
 
-                if int(type_id) in [  # allele of, etc
-                        60384, 60410, 60409, 60413, 60414, 60401, 60399, 60400,
-                        60401, 60402, 60415, 60417, 60418, 60420]:
-                    # TODO move this out of the if later
-                    # allele of gene
-                    # in sql, we limited the
-                    # subject to type_id = 219,33 object type_id  219  #??? TEC
-                    # subject = variation
-                    # object = gene
+                # TODO move this out of the if later
+                # allele of gene
+                # in sql, we limited the
+                # subject to type_id = 219,33 object type_id  219  #??? TEC
+                # subject = variation
+                # object = gene
+                if name in [
+                        'alleleof',
+                        'molec_dups',
+                        'molec_deletes',
+                        'molec_partdeletes',
+                        'molec_partdups',
+                        'useful_Df_from_cyto',
+                        'useful_Df_direct',
+                        'useful_Dp_direct',
+                        'useful_Dp_from_cyto',
+                        'deletes',
+                        'part_deletes',
+                        'duplicates',
+                        'part_duplicates']:
                     allele_id = None
                     gene_id = None
                     if subject_id in self.idhash['allele']:
@@ -1713,7 +1739,7 @@ class FlyBase(PostgreSQLSource):
                             feature_id = self.idhash['feature'][subject_id]
                             logger.debug(
                                 "this thing %s is not a gene", feature_id)
-                elif int(type_id) == 59983:  # associated_with
+                elif name == 'associated_with':
 
                     allele_id = None
                     gene_id = None
@@ -1761,7 +1787,7 @@ class FlyBase(PostgreSQLSource):
                             reagent_id)
 
                 # derived_tp_assoc_alleles
-                elif int(type_id) == 133526 or int(type_id) == 129784:
+                elif name == 'derived_tp_assoc_alleles':
                     # note that the internal type id changed
                     # from 129784 --> 133526 around 02.2016
                     # note that this relationship is only specified between
@@ -1782,7 +1808,7 @@ class FlyBase(PostgreSQLSource):
                     model.addComment(allele_id, tp_id)
 
                 # derived_sf_assoc_alleles
-                elif int(type_id) == 133533 or int(type_id) == 129791:
+                elif name == 'derived_sf_assoc_alleles':
                     # note the internal type_id changed
                     # from 129791 --> 133533 around 02.2016
                     # the relationship between
@@ -1806,7 +1832,7 @@ class FlyBase(PostgreSQLSource):
                             geno.object_properties['targeted_by'], reagent_id)
 
                 # produced by
-                elif int(type_id) == 27:
+                elif name == 'producedby':
                     # i'm looking just for the relationships between
                     # ti and tp features... so doing a bit of a hack
                     ti_id = None
@@ -1823,7 +1849,7 @@ class FlyBase(PostgreSQLSource):
                         geno.addSequenceDerivesFrom(ti_id, tp_id, )
 
                 # gets_expression_data_from
-                elif int(type_id) == 60095:
+                elif name == 'gets_expression_data_from':
                     # FIXME i don't know if this is correct
                     if subject_id in self.idhash['allele']:
                         allele_id = self.idhash['allele'][subject_id]
@@ -2086,7 +2112,7 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 133551 and re.match(r'FBim', value):
+                if int(type_id) == 'linked_image' and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'
