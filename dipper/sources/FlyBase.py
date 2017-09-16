@@ -2112,7 +2112,7 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 'linked_image' and re.match(r'FBim', value):
+                if int(type_id) == 136340 and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'
