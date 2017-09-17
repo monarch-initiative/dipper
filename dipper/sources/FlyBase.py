@@ -1604,16 +1604,16 @@ class FlyBase(PostgreSQLSource):
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             for line in filereader:
-                (feature_relationship_id, subject_id, object_id, type_id, rank,
+                (feature_relationship_id, subject_id, object_id, name, rank,
                  value) = line
 
-                if int(type_id) in [133526, 129784]:
+                if name == 'derived_tp_assoc_alleles':
                     # derived_tp_assoc_alleles
                     self.feature_types[subject_id] = \
                         Genotype.genoparts['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
                     model.addType(sid, self.feature_types[subject_id])
-                elif int(type_id) in [133533, 129791]:
+                elif name == 'derived_sf_assoc_alleles':
                     # only take the derived_sf_assoc_alleles
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
