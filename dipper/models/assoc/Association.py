@@ -46,13 +46,14 @@ class Assoc:
         'has_evidence': 'RO:0002558',
         'has_source': 'dc:source',
         'has_provenance': 'OBAN:has_provenance',
-        'causes_or_contributes': 'RO:0003302',
+        'causes_or_contributes': 'RO:0003302'
     }
 
     datatype_properties = {
         'position': 'faldo:position',
         'has_measurement': 'IAO:0000004',
-        'has_quantifier': 'GENO:0000866'
+        'has_quantifier': 'GENO:0000866',
+        'created_on': 'pav:createdOn'
     }
 
     properties = annotation_properties.copy()
@@ -76,9 +77,10 @@ class Assoc:
         self.description = None
         self.source = []
         self.evidence = []
+        self.date = []
+
         # this is going to be used for the refactored evidence/provenance
         self.provenance = []
-
         self.score = None
         self.score_type = None
         self.score_unit = None
@@ -143,6 +145,14 @@ class Assoc:
             for p in self.provenance:
                 self.graph.addTriple(
                     self.assoc_id, self.object_properties['has_provenance'], p)
+
+        if self.date is not None and len(self.date) > 0:
+            for d in self.date:
+                self.graph.addTriple(
+                    object_is_literal=True,
+                    subject_id=self.assoc_id,
+                    predicate_id=self.datatype_properties['created_on'],
+                    obj=d)
 
         if self.score is not None:
             self.graph.addTriple(
@@ -255,6 +265,12 @@ class Assoc:
 
         if identifier is not None and identifier.strip() != '':
             self.source += [identifier]
+
+        return
+
+    def add_date(self, date):
+        if date is not None and date.strip() != '':
+            self.date += [date]
 
         return
 

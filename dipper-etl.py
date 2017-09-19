@@ -63,7 +63,8 @@ def main():
         'zfin-slim': 'ZFINSlim',
         'bgee': 'Bgee',
         'mydrug': 'MyDrug',
-        'stringdb': 'StringDB'
+        'stringdb': 'StringDB',
+        'rgd': 'RGD'
     }
 
     logger = logging.getLogger(__name__)

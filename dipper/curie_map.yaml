@@ -164,6 +164,7 @@
 'PomBase' : 'http://identifiers.org/PomBase:'
 'RefSeq' : 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'RGD' : 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
+'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
 'SGD' : 'http://identifiers.org/SGD:'
 'TAIR' : 'http://identifiers.org/TAIR:'
 'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
