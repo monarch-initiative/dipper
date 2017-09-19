@@ -15,7 +15,7 @@ with open(readme_path) as read_file:
 
 setup(
     name='dipper',
-    version='0.2.0',
+    version='0.2.3',
     author='Kent Shefchek',
     author_email='kshefchek@gmail.com',
     url='https://github.com/monarch-initiative/dipper',
