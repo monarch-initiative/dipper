@@ -32,7 +32,11 @@ class Dataset:
         self.identifier = ':' + identifier
         self.version = None
         self.date_issued = None
-        self.date_accessed = datetime.now().strftime('%Y-%m-%d-%H-%M')
+
+	# The data_accesed value is later used as an object literal of properties such as dct:issued, which needs to conform xsd:dateTime format.
+        # self.date_accessed = datetime.now().strftime('%Y-%m-%d-%H-%M')
+        self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+
         self.citation = set()
         self.license = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
