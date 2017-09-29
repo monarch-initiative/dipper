@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 '''
+    clinvarxml_alpha
     First pass at converting ClinVar XML into
     RDF triples to be ingested by SciGraph.
     These triples comform to the core of the
@@ -36,6 +37,7 @@ import xml.etree.ElementTree as ET
 
 # import Requests
 # from dipper.sources.Source import Source
+#
 # from dipper import curie_map  # hangs on to stale data?
 
 LOG = logging.getLogger(__name__)
@@ -121,12 +123,21 @@ REJECT = open(REJECT, 'a')
 
 # default to /dev/stdout if anything amiss
 
-# CURIEMAP = curie_map.get()
-# print("\n".join(CURIEMAP))
-# this still fails miserably and returns a copy
-# other than the one in this tree that I am updating. i.e.
-# print(CURIEMAP['SEPIO']) -> key error
-# after it is added to the .yaml
+# class ClinVarXML_alpha(Source):
+#    def fetch():
+#        # wget --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
+#
+#   def parse():
+#        pass
+#
+#    CURIEMAP = curie_map.get()
+#
+#    # print("\n".join(CURIEMAP))
+#    # this still fails miserably and returns a copy
+#    # other than the one in this tree that I am updating. i.e.
+#    print(CURIEMAP['SEPIO']) # -> key error
+#    # after it is added to the .yaml
+
 
 # hardcoding this while my loading from curie_map.yaml is wonky
 CURIEMAP = {
@@ -164,11 +175,6 @@ CURIEMAP = {
     'ClinVarVariant':    'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
     'ClinVar':           'http://www.ncbi.nlm.nih.gov/clinvar/',
 }
-
-# def fetch():
-# wget --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
-
-# def parse()
 
 
 # Buffer to store the triples below a MONARCH_association
@@ -971,6 +977,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                 for SCV_OIMT in SCV_ObsIn.findall('./Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
                         scv_evidence_type = resolve(SCV_OIMT.text, LTT)
+                        if scv_evidence_type is None:
+                            LOG.warning(
+                                'No mapping for scv_evidence_type: ',
+                                SCV_OIMT.text)
+                            continue
                         # blank node
                         _provenance_id = '_:' + digest_id(
                             _evidence_id + scv_evidence_type)
