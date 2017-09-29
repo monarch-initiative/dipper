@@ -78,7 +78,7 @@ class Pathway():
             gene_product, None, self.pathway_parts['gene_product'])
         self.graph.addTriple(
             gene_id, self.object_properties['has_gene_product'], gene_product)
-        self.addComponentToPathway(pathway_id, gene_product)
+        self.addComponentToPathway(gene_product, pathway_id)
 
         return
 
