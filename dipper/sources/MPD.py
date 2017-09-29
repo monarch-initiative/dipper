@@ -147,7 +147,7 @@ class MPD(Source):
         with open(raw, 'r') as f:
             reader = csv.reader(f)
             # read the header row; skip
-            f.readline()
+            self.check_header(self.files['ontology_mappings']['file'], f.readline())
             for row in reader:
                 try:
                     (assay_id, ont_term, descrip) = row
@@ -178,7 +178,7 @@ class MPD(Source):
 
         with open(raw, 'r') as f:
             reader = csv.reader(f, delimiter=',', quotechar='\"')
-            f.readline()  # read the header row; skip
+            self.check_header(self.files['straininfo']['file'], f.readline())
             for row in reader:
                 (strain_name, vendor, stocknum, panel, mpd_strainid,
                  straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
@@ -227,20 +227,14 @@ class MPD(Source):
         with open(raw, 'r') as f:
             reader = csv.reader(f)
             # read the header row; skip
-            header = f.readline()
-            logger.info("HEADER: %s", header)
+            self.check_header(
+                self.files['assay_metadata']['file'], f.readline())
             for row in reader:
-                # measnum,projsym,varname,descrip,units,cat1,cat2,cat3,
-                # intervention,intparm,appmeth,panelsym,datatype,sextested,
-                # nstrainstested,ageweeks
-                # Again the last row has changed. contains: '(4486 rows)'
-                if len(row) != 16:
-                    continue
                 line_counter += 1
                 assay_id = int(row[0])
-                assay_label = row[3]
-                assay_units = row[4]
-                assay_type = row[10] if row[10] is not '' else None
+                assay_label = row[4]
+                assay_units = row[5]
+                assay_type = row[6] if row[6] is not '' else None
 
                 if assay_id not in self.assayhash:
                     self.assayhash[assay_id] = {}
@@ -275,7 +269,7 @@ class MPD(Source):
         with gzip.open(raw, 'rb') as f:
             f = io.TextIOWrapper(f)
             reader = csv.reader(f)
-            f.readline()  # read the header row; skip
+            self.check_header(self.files['strainmeans']['file'], f.readline())
             score_means_by_measure = {}
             strain_scores_by_measure = {}
             for row in reader:
@@ -473,9 +467,19 @@ class MPD(Source):
 
     @staticmethod
     def build_measurement_description(row):
-        (assay_id, projsym, varname, descrip, units, cat1, cat2, cat3,
-         intervention, intparm, appmeth, panelsym, datatype, sextested,
-         nstrainstested, ageweeks) = row
+        (measnum,
+         mpdsector,
+         projsym,
+         varname,
+         descrip,
+         units,
+         method,
+         intervention,
+         paneldesc,
+         datatype,
+         sextested,
+         nstrainstested,
+         ageweeks,) = row
 
         if sextested == 'f':
             sextested = 'female'
@@ -490,11 +494,14 @@ class MPD(Source):
 
         if intervention is not None and intervention != "":
             description += " in response to [" + intervention + "]"
+        """
+        As of 9/28/2017 intparm is no longer in the measurements.tsv
         if intparm is not None and intervention != "":
             description += \
                 ". This represents the [" + intparm + \
-                "] arm, using materials and methods that included [" +\
-                appmeth + "]"
+                "] arm, using materials and methods that included [" + \
+                method + "]"
+        """
 
         description += \
             ".  The overall experiment is entitled [" + projsym + "].  "
@@ -503,9 +510,12 @@ class MPD(Source):
             "It was conducted in [" + sextested + "] mice at [" + \
             ageweeks + "] of age in" + " [" + nstrainstested + \
             "] different mouse strains. "
+        """
+        As of 9/28/2017 cat1-3 are no longer in the measurements.tsv
         description += "Keywords: " + cat1 + \
                        ((", " + cat2) if cat2.strip() is not "" else "") + \
                        ((", " + cat3) if cat3.strip() is not "" else "") + "."
+        """
         return description
 
     # def _log_missing_ids(self, missing_id, name_of_file_from_which_missing):
@@ -514,3 +524,27 @@ class MPD(Source):
     #     self.missing_assay_hash[missing_id].add(name_of_file_from_which_missing)
     #     # todo: remove the offending ids from the hash
     #     return
+    @staticmethod
+    def check_header(filename, header):
+        header = header.rstrip("\n")
+        header_map = {
+            'strainmeans.csv.gz':
+                'measnum,varname,strain,strainid,sex,mean,'
+                'nmice,sd,sem,cv,minval,maxval,logmean,'
+                'logsd,zscore,logzscore',
+            'straininfo.csv':
+                'strainname,vendor,stocknum,panel,mpd_strainid,'
+                'straintype,n_proj,n_snp_datasets,mpd_shortname,url',
+            'measurements.csv':
+                'measnum,mpdsector,projsym,varname,descrip,units,'
+                'method,intervention,paneldesc,datatype,sextested,'
+                'nstrainstested,ageweeks',
+            'ontology_mappings.csv':
+                'measnum,ont_term,descrip'
+        }
+        if header != header_map[filename]:
+            raise ValueError(
+                "header in {} \n {}\n"
+                "does not match expected:\n {}"
+                .format(filename, header, header_map[filename])
+            )
