@@ -225,11 +225,19 @@ class GeneReviews(Source):
         line_counter = 0
         with open(raw, 'r', encoding='latin-1') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            header = next(filereader)
+            line_counter = 1
+            colcount = len(header)
+            if colcount != 4:  # ('GR_shortname', 'GR_Title', 'NBK_id', 'PMID')
+                logger.error("Unexpected Header ", header)
+                exit(-1)
             for row in filereader:
                 line_counter += 1
-                if line_counter == 1:  # skip header
-                    continue
-                (shortname, title, nbk_num) = row
+                if len(row) != colcount:
+                    logger.error("Unexpected row. got: ", row)
+                    logger.error("Expected data for: ", header)
+                    exit(-1)
+                (shortname, title, nbk_num, pmid) = row
                 gr_id = 'GeneReviews:'+nbk_num
 
                 self.book_ids.add(nbk_num)  # a global set of the book nums
@@ -237,6 +245,7 @@ class GeneReviews(Source):
                 if limit is None or line_counter < limit:
                     model.addClassToGraph(gr_id, title)
                     model.addSynonym(gr_id, shortname)
+                # TODO include the new PMID?
 
         return
 
