@@ -3,6 +3,7 @@ from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Provenance import Provenance
 from dipper.models.Dataset import Dataset
+from dipper.models.Reference import Reference
 from ontobio.io.gafparser import GafParser
 import logging
 from pprint import pprint
@@ -62,7 +63,6 @@ class RGD(Source):
         assocs = p.parse(open(rgd_file, "r"))
 
         for i, assoc in enumerate(assocs):
-            assoc['relation']['id'] = 'RO:0002200'
             self.make_association(assoc)
             if limit is not None and i > limit:
                 break
@@ -76,7 +76,7 @@ class RGD(Source):
         """
         model = Model(self.graph)
 
-
+        record['relation']['id'] = 'RO:0002200'
         # define the triple
         gene = record['subject']['id']
         relation = record['relation']['id']
@@ -88,11 +88,17 @@ class RGD(Source):
         # add the references
         references = record['evidence']['has_supporting_reference']
         # created RGDRef prefix in curie map to route to proper reference URL in RGD
-        references = [x.replace('RGD', 'RGDRef') for x in references if 'RGD' in x]
+        references = [x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
 
         if len(references) > 0:
             # make first ref in list the source
             g2p_assoc.add_source(identifier=references[0])
+            ref_model = Reference(
+                self.graph, references[0],
+                Reference.ref_types['publication']
+            )
+            ref_model.addRefToGraph()
+
         if len(references) > 1:
             # create equivalent source for any other refs in list
             # This seems to be specific to this source and there could be non-equivalent references in this list
