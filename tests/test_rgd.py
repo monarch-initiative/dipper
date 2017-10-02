@@ -2,7 +2,7 @@
 
 import unittest
 from dipper.sources.RGD import RGD
-from pprint import pprint
+
 
 class RGDTestCase(unittest.TestCase):
     def setUp(self):
@@ -32,7 +32,7 @@ class RGDTestCase(unittest.TestCase):
     def tearDown(self):
         return
 
-    def testEnsemblReactomeParser(self):
+    def testRGDParser(self):
         rgd = RGD('rdf_graph', True)
         rgd.make_association(record=self.test_set_1)
         sparql_query = """
