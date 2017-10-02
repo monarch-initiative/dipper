@@ -63,7 +63,6 @@ class RGD(Source):
         assocs = p.parse(open(rgd_file, "r"))
 
         for i, assoc in enumerate(assocs):
-            assoc['relation']['id'] = 'RO:0002200'
             self.make_association(assoc)
             if limit is not None and i > limit:
                 break
@@ -77,6 +76,7 @@ class RGD(Source):
         """
         model = Model(self.graph)
 
+        record['relation']['id'] = 'RO:0002200'
         # define the triple
         gene = record['subject']['id']
         relation = record['relation']['id']
@@ -93,11 +93,11 @@ class RGD(Source):
         if len(references) > 0:
             # make first ref in list the source
             g2p_assoc.add_source(identifier=references[0])
-            r = Reference(
+            ref_model = Reference(
                 self.graph, references[0],
                 Reference.ref_types['publication']
             )
-            r.addRefToGraph()
+            ref_model.addRefToGraph()
 
         if len(references) > 1:
             # create equivalent source for any other refs in list
@@ -111,4 +111,5 @@ class RGD(Source):
         g2p_assoc.add_association_to_graph()
 
         return
+
 
