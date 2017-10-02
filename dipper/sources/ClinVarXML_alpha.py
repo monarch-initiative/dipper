@@ -212,9 +212,9 @@ def make_spo(sub, prd, obj):
         except ValueError:
             match = None
     if match is not None and objcuri in CURIEMAP:
-        objt = CURIEMAP[objcuri] + objid
+        objt = CURIEMAP[objcuri] + objid.strip()
         # allow unexpanded bnodes in object
-        if objcuri != '_' or CURIEMAP[objcuri] != '_:B':
+        if objcuri != '_' or CURIEMAP[objcuri] != '_:b':
             objt = '<' + objt + '>'
     elif obj.isnumeric():
         objt = '"' + obj + '"'
@@ -228,11 +228,11 @@ def make_spo(sub, prd, obj):
     # allow unexpanded bnodes in subject
     if subcuri is not None and subcuri in CURIEMAP and \
             prdcuri is not None and prdcuri in CURIEMAP:
-        subjt = CURIEMAP[subcuri] + subid
-        if subcuri != '_' or CURIEMAP[subcuri] != '_:B':
+        subjt = CURIEMAP[subcuri] + subid.strip()
+        if subcuri != '_' or CURIEMAP[subcuri] != '_:b':
             subjt = '<' + subjt + '>'
 
-        return subjt + ' <' + CURIEMAP[prdcuri] + prdid + '> ' + objt + ' .'
+        return subjt + ' <' + CURIEMAP[prdcuri] + prdid.strip() + '> ' + objt + ' .'
     else:
         LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
         return None
