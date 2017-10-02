@@ -35,8 +35,6 @@ class RGDTestCase(unittest.TestCase):
     def testEnsemblReactomeParser(self):
         rgd = RGD('rdf_graph', True)
         rgd.make_association(record=self.test_set_1)
-        print(rgd.graph.serialize(format="turtle").decode("utf-8"))
-
         sparql_query = """
         SELECT ?assoc WHERE {
         ?assoc a OBAN:association ;
@@ -53,7 +51,6 @@ class RGDTestCase(unittest.TestCase):
         """
         #
         sparql_output = rgd.graph.query(sparql_query)
-        print(list(sparql_output))
         self.assertEqual(len(list(sparql_output)), 1)
 
 
