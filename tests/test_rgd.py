@@ -46,10 +46,14 @@ class RGDTestCase(unittest.TestCase):
         OBAN:association_has_predicate OBO:RO_0002200 ;
         OBAN:association_has_subject <http://rgd.mcw.edu/rgdweb/report/gene/main.html?id=2535> ;
         pav:createdOn "2006-10-26" .
+        <http://rgd.mcw.edu/rgdweb/report/gene/main.html?id=2535> OBO:RO_0002200 OBO:MP_0003340 .
+        <http://rgd.mcw.edu/rgdweb/report/reference/main.html?id=1581841> a OBO:IAO_0000311 ;
+                owl:sameAs <http://www.ncbi.nlm.nih.gov/pubmed/12799311> .
         }
         """
         #
         sparql_output = rgd.graph.query(sparql_query)
+        print(list(sparql_output))
         self.assertEqual(len(list(sparql_output)), 1)
 
 
