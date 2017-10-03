@@ -196,7 +196,7 @@ class TestGwasSNPModel(unittest.TestCase):
         sparql_query = """
             SELECT ?snp
             WHERE {{
-                <https://monarchinitiative.org/MONARCH_b630ef6046547f10> a OBAN:association ;
+                <https://monarchinitiative.org/MONARCH_630ef6046547f10c> a OBAN:association ;
                     dc:description "{}" ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
@@ -204,7 +204,7 @@ class TestGwasSNPModel(unittest.TestCase):
                     OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
-                <https://monarchinitiative.org/MONARCH_b70a05d8eb1c3d4b> a OBAN:association ;
+                <https://monarchinitiative.org/MONARCH_70a05d8eb1c3d4b0> a OBAN:association ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
                     OBAN:association_has_object EFO:0006995 ;

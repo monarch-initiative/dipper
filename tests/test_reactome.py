@@ -21,8 +21,8 @@ class ReactomeTestCase(unittest.TestCase):
         eco_map = Reactome.get_eco_map(Reactome.map_files['eco_map'])
         (gene, pathway_id, pathway_iri, pathway_label,
          go_ecode, species_name) = self.test_set_1
-        reactome._add_gene_pathway_association(eco_map, gene, pathway_id,
-                                               pathway_label, go_ecode)
+        reactome._add_component_pathway_association(eco_map, gene, 'ENSEMBL', pathway_id,
+                                                    'REACT', pathway_label, go_ecode)
 
         sparql_query = """
                       SELECT ?assoc
