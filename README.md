@@ -1,5 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/dipper.svg)](https://pypi.python.org/pypi/dipper)
-[![Build Status](http://ci.monarchinitiative.org//buildStatus/icon?job=test-dipper)](http://ci.monarchinitiative.org/view/dipper/job/test-dipper/)
+[![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
 
 # DIPPER
 
