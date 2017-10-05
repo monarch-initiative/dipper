@@ -85,7 +85,7 @@ class IMPC(Source):
     # or by web crawling, see /scripts/README.md
     map_files = {
         # Procedures
-        'impress_map': 'http://data.monarchinitiative.org/dipper/cache/impress_codes.json',
+        'impress_map': 'https://data.monarchinitiative.org/dipper/cache/impress_codes.json',
         # All other curated mappings
         'impc_map': '../../resources/impc_mappings.yaml'
     }
