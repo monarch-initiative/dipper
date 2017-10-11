@@ -310,10 +310,10 @@ class Panther(Source):
             'PANTR': 9598,   # chimp
             'PIG': 9823,
             'RAT': 10116,
-            'SCHPO': 559292,   # yeast
+            'SCHPO': 4896,   # yeast
             'TAKRU': 31033,  # pufferfish
             'XENTR': 8364,   # xenopus
-            'YEAST': 4932,   # yeast
+            'YEAST': 559292,   # yeast
         }
 
         if ptax in ptax_to_taxid_map:
