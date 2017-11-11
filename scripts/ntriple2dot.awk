@@ -10,8 +10,8 @@
 
 #  This may over generalize in some cases because I do not have
 #  a handy way to differentiate uri for subjects and objects
-#  which may belong to a "structural" ontology as opposed to
-#  a data uri.
+#  which may belong to a "structural" ontology (t-box) as opposed to
+#  a data uri (a-box).
 
 #  Post processing to augment predicate identifiers
 #  with their labels seems to improve usefulness.
@@ -20,8 +20,6 @@
 function usage(){
 	print "usage: ntriple2dot.awk curie_map.yaml rdf.nt > rdf.dot"
 }
-
-
 
 ##########################################################
 # remove first and last chars from input string <>
@@ -59,7 +57,7 @@ function stripid(uri){
 
 # keep underscore, letters & numbers
 # change the rest to (a single) underscore sans leading & trailing
-# this passes valid node labels from dot's perspective
+# this passes valid node labels from dot's perspective (C-lang identifier rules)
 function simplify(str){
 	gsub(/[^[:alpha:][:digit:]_]+/,"_",str)
 	gsub(/^_*|_*$/, "",str)
@@ -94,32 +92,24 @@ function final(uri){
 BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
-	# prefix["https://monarchinitiative.org/_"]="BNODE"
-	# just until skolemized bnodes get in the curie map?
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
 	############################################################
-	# revisit whether these exceptions are still necessary often
-	# they may have been moved into the  prefix mapping file
-	prefix["http://www.w3.org/1999/02/22-rdf-syntax-ns#"]="rdf"
-	prefix["http://www.w3.org/2000/01/rdf-schema#"]="rdfs"
-	prefix["http://www.w3.org/2002/07/owl#"]="owl"
+	# re-visit whether these exceptions are still necessary often
+	# they may have been moved into the curie prefix mapping file
+    # https://raw.githubusercontent.com/monarch-initiative/dipper/master/dipper/curie_map.yaml
+
 	# in mgi
 	prefix["https://www.mousephenotype.org"]="IMPC"
+    	# in IMPC
+	prefix["http://www.mousephenotype.org"]="IMPC"
+
     # http://www.mousephenotype.org/data/genes
 	# in panther
-	prefix["http://identifiers.org/wormbase"]="WormBase"
-	# in IMPC
-	prefix["http://www.mousephenotype.org"]="IMPC"
+	# prefix["http://identifiers.org/wormbase/"]="WormBase"
+
 	# in GWAScatalog
 	prefix["http://www.ncbi.nlm.nih.gov/SNP/"]="dbSNP"
-	# till all non httpS: are purged
-	prefix["http://monarchinitiative.org/"]="BASE"
-	prefix["http://www.monarchinitiative.org/"]="BASE"
-	prefix["http://monarchinitiative.org/MONARCH_"]="MONARCH"
-	prefix["http://www.monarchinitiative.org/MONARCH"]=""
-	prefix["http://www.monarchinitiative.org/MONARCH_"]="MONARCH"
-	prefix["http://data.monarchinitiative.org/ttl"]="MonarchData"
-	prefix["http://archive.monarchinitiative.org/ttl"]="MonarchArchive"
+
 }
 
 # main loop
