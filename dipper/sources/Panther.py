@@ -152,7 +152,7 @@ class Panther(Source):
         else:
             g = self.graph
         model = Model(g)
-        unprocessed_gene_ids = set()
+        unprocessed_gene_ids = set()  # may be faster to make a set after
 
         for k in self.files.keys():
             f = '/'.join((self.rawdir, self.files[k]['file']))
@@ -274,6 +274,7 @@ class Panther(Source):
                     if not self.testMode \
                             and limit is not None and line_counter > limit:
                         break
+                # make report on unprocessed_gene_ids
 
             logger.info("finished processing %s", f)
             logger.warning(
@@ -408,7 +409,8 @@ class Panther(Source):
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
         if pfx is None or pfx not in curie_map.get():
-            logger.warning("No curie prefix for (species %s): %s", sp, geneid)
+            # logger.warning(
+            #    "No curie prefix for (species %s): %s", sp, geneid)
             geneid = None
         return geneid
 
