@@ -365,6 +365,7 @@ class GeneOntology(Source):
                         uniprotkb_ac.strip()] = [
                             'NCBIGene:'+i.strip() for i in idlist]
                 elif ensembl.strip() != '':
+                    idlist = re.split(r';', ensembl)
                     id_map[
                         uniprotkb_ac.strip()] = [
                             'ENSEMBL:'+i.strip() for i in idlist]
