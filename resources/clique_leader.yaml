@@ -1,4 +1,4 @@
-9606: "NCBIGene"
+9606: "HGNC"
 10116: "RGD"
 10090: "MGI"
 7955: "ZFIN"
@@ -6,3 +6,4 @@
 7227: "FlyBase"
 4932: "SGD"
 8364: "Xenbase"
+559292: "SGD"
