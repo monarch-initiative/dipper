@@ -54,7 +54,10 @@ class OMIA(Source):
     files = {
         'data': {
             'file': 'omia.xml.gz',
-            'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'},
+            # CNAME broken? urllib not following redirects??
+            # 'url': 'http://omia.angis.org.au/dumps/omia.xml.gz'
+            'url': 'http://compldb.angis.org.au/dumps/omia.xml.gz'
+        },
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -187,7 +190,6 @@ class OMIA(Source):
         # TEC I do not like this at all. original data must be preserved as is.
         # also may be heavy handed as chars which do not break the parser
         # are stripped as well (i.e. tabs and newlines)
-        
         # move the temp file
         logger.info("Replacing the original data with the scrubbed file.")
         shutil.move(tmpfile, myfile)
