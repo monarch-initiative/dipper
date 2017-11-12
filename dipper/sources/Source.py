@@ -78,9 +78,9 @@ class Source:
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
         else:
-            logger.error("{} graph type not supported\n"
-                         "valid types: rdf_graph, streamed_graph"
-                         .format(graph_type))
+            logger.error(
+                "{} graph type not supported\n"
+                "valid types: rdf_graph, streamed_graph" .format(graph_type))
 
         # will be set to True if the intention is
         # to only process and write the test data
@@ -110,7 +110,7 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, format='rdfxml', stream=None):
+    def write(self, fmt='turtle', stream=None):
         """
         This convenience method will write out all of the graphs
         associated with the source.
@@ -123,25 +123,24 @@ class Source:
         :return: None
 
         """
-        format_to_xtn = {
-            'rdfxml': 'xml', 'turtle': 'ttl'
+        fmt_ext = {
+            'rdfxml': 'xml',
+            'turtle': 'ttl',
+            'nt': 'nt',        # ntriples
+            'nquads':  'nq'
         }
 
         # make the regular graph output file
-        file = None
+        dest = None
         if self.name is not None:
-            file = '/'.join((self.outdir, self.name))
-            if format in format_to_xtn:
-                file = '.'.join((file, format_to_xtn.get(format)))
+            dest = '/'.join((self.outdir, self.name))
+            if fmt in fmt_ext:
+                dest = '.'.join((dest, fmt_ext.get(fmt)))
             else:
-                file = '.'.join((file, format))
-            # make the datasetfile name
-            datasetfile = '/'.join((self.outdir, self.name+'_dataset'))
-            if format in format_to_xtn:
-                datasetfile = '.'.join((datasetfile,
-                                        format_to_xtn.get(format)))
-            else:
-                datasetfile = '.'.join((datasetfile, format))
+                dest = '.'.join((dest, fmt))
+
+            # make the datasetfile name, always format as turtle
+            datasetfile = '/'.join((self.outdir, self.name+'_dataset.ttl'))
 
             logger.info(
                 "No version set for this datasource; setting to date issued.")
@@ -152,20 +151,20 @@ class Source:
             logger.warning("No output file set. Using stdout")
             stream = 'stdout'
 
-        # start off with only the dataset descriptions
-        graphs = [
-            {'g': self.dataset.getGraph(), 'file': datasetfile},
-        ]
-
-        # add the other graphs to the set to write, if not in the test mode
+        # add the non _dataset graphs to the set to write,
+        # if not in the test mode
+        graphs = []
         if self.testMode:
             graphs += [{'g': self.testgraph, 'file': self.testfile}]
         else:
-            graphs += [{'g': self.graph, 'file': file}]
+            graphs += [{'g': self.graph, 'file': dest}]
 
         gu = GraphUtils(None)
-        # loop through each of the graphs and print them out
 
+        # start off with only the dataset descriptions
+        gu.write(self.dataset.getGraph(), 'turtle', file=datasetfile)
+
+        # loop through each of the graphs and print them out
         for g in graphs:
             f = None
             if stream is None:
@@ -175,7 +174,7 @@ class Source:
             else:
                 logger.error("I don't understand your stream.")
                 return
-            gu.write(g['g'], format, file=f)
+            gu.write(g['g'], fmt, file=f)
 
         return
 
