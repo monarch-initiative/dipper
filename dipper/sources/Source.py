@@ -242,8 +242,8 @@ class Source:
 
         try:
             resp_headers = response.info()
-            size = resp_headers.get('Content-length')
-            last_modified = resp_headers.get('last-modified')  # check me
+            size = resp_headers.get('Content-Length')
+            last_modified = resp_headers.get('Last-Modified')
         except OSError as e:  # URLError?
             resp_headers = None
             size = 0
@@ -264,12 +264,16 @@ class Source:
             # check date on local vs remote file
             if dt_obj > datetime.utcfromtimestamp(st[ST_CTIME]):
                 # check if file size is different
-                if st[ST_SIZE] != size:
-                    logger.info("Newer file exists on remote server")
+                if st[ST_SIZE] < size:
+                    logger.info("New Remote file exists")
+                    return True
+                if st[ST_SIZE] > size:
+                    logger.warning(
+                        "New Remote file existsbut it is SMALLER")
                     return True
                 else:
                     logger.info(
-                        "Remote file has same filesize--will not download")
+                        "New Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
             logger.info(
                 "Object on server is difference size to local file")
