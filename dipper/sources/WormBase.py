@@ -86,13 +86,14 @@ class WormBase(Source):
         #   'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #   'url': wbdev + species +
         #   '/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
-        # 'xrefs': { # no longer exists 2017-11-10
-        #    'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
-        #    'url': wbprod + species +
-        #    '/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+          'xrefs': { # moved under 'annotation' 2017-11-10
+            'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
+            'url': wbprod + species +
+            '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         # 'letter': { # no longer exists 2016-11-18
         #    'file': 'letter.WSNUMBER',
         #    'url': wbprod + '/letter.WSNUMBER'},
+
         'checksums': {
             'file': 'CHECKSUMS',
             'url':  wbprod + '/CHECKSUMS'}
