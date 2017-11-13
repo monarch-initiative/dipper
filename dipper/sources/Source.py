@@ -116,7 +116,8 @@ class Source:
         """
         This convenience method will write out all of the graphs
         associated with the source.
-        Right now these are hardcoded to be a single "graph" and a "dataset".
+        Right now these are hardcoded to be a single "graph"
+        and a "src_dataset.ttl" and a "src_test.ttl"
         If you do not supply stream='stdout'
         it will default write these to files.
 
