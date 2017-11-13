@@ -126,7 +126,7 @@ def main():
 
     parser.add_argument(
         '--dest_fmt',
-        help='serialization format: turtle (default), xml, n3, nt, nq, raw',
+        help='serialization format: [turtle], nt, nquads, rdfxml, n3, raw',
         type=str)
 
     parser.add_argument(
@@ -143,7 +143,12 @@ def main():
         'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology',
         'Bgee', 'Ensembl', 'StringDB']
 
-    formats_supported = ['xml', 'n3', 'turtle', 'nt', 'nq', 'ttl', 'raw']
+    formats_supported = [
+        'turtle', 'ttl',
+        'ntriples', 'nt',
+        'nquads', 'nq',
+        'rdfxml',  'xml',
+        'notation3', 'n3',  'raw']
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
@@ -182,13 +187,21 @@ def main():
         if args.dest_fmt in formats_supported:
             if args.dest_fmt == 'ttl':
                 args.dest_fmt = 'turtle'
+            elif args.dest_fmt == 'ntriples':
+                args.dest_fmt = 'nt'
+            elif args.dest_fmt == 'nq':
+                args.dest_fmt = 'nquads'
+            elif args.dest_fmt == 'xml':
+                args.dest_fmt = 'rdfxml'
+            elif args.dest_fmt == 'notation3':
+                args.dest_fmt = 'n3'
         else:
             logger.error(
-                "You have specified an invalid serializer: %s", args.format)
+                "You have specified an invalid serializer: %s", args.dest_fmt)
 
             exit(0)
     else:
-        args.format = 'turtle'
+        args.dest_fmt = 'turtle'
 
     # iterate through all the sources
     for source in args.sources.split(','):
