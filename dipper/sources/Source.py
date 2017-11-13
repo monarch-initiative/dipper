@@ -271,7 +271,7 @@ class Source:
                         "New Remote file existsbut it is SMALLER")
                     return True
                 else:
-                    logger.info(
+                    logger.info(  # filesize is a fairly imperfect metric here
                         "New Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
             logger.info(
