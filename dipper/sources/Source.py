@@ -45,17 +45,19 @@ class Source:
         self.rawdir = 'raw'
         self.dataset = None
         # set to True if you want to materialze identifiers for BNodes
+
         if self.name is not None:
             self.rawdir = '/'.join((self.rawdir, self.name))
-            self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
-            logger.info("Setting outfile to %s", self.outfile)
+            # This is redundant when it is not wrong see write()
+            # self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
+            # logger.info("Setting outfile to %s", self.outfile)
+
+            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
+            logger.info("Setting testfile to %s", self.testfile)
 
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
             logger.info("Setting dataset file to %s", self.datasetfile)
-
-            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
-            logger.info("Setting testfile to %s", self.testfile)
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -70,7 +72,7 @@ class Source:
             logger.info("created output directory %s", p)
 
         if graph_type == 'rdf_graph':
-            self.graph = RDFGraph(are_bnodes_skized)
+            self.graph = RDFGraph(are_bnodes_skized)  # TODO named graph IRI?
             self.testgraph = RDFGraph(True)
         elif graph_type == 'streamed_graph':
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
@@ -127,7 +129,8 @@ class Source:
             'rdfxml': 'xml',
             'turtle': 'ttl',
             'nt': 'nt',        # ntriples
-            'nquads':  'nq'
+            'nquads':  'nq',
+            'n3': 'n3'
         }
 
         # make the regular graph output file
@@ -138,44 +141,38 @@ class Source:
                 dest = '.'.join((dest, fmt_ext.get(fmt)))
             else:
                 dest = '.'.join((dest, fmt))
+            logger.info("Setting outfile to %s", dest)
 
             # make the datasetfile name, always format as turtle
             datasetfile = '/'.join((self.outdir, self.name+'_dataset.ttl'))
 
-            logger.info(
-                "No version set for this datasource; setting to date issued.")
-
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
+                logger.info(
+                    "No version for " + self.name + " setting to date issued.")
         else:
             logger.warning("No output file set. Using stdout")
             stream = 'stdout'
 
-        # add the non _dataset graphs to the set to write,
-        # if not in the test mode
-        graphs = []
-        if self.testMode:
-            graphs += [{'g': self.testgraph, 'file': self.testfile}]
-        else:
-            graphs += [{'g': self.graph, 'file': dest}]
-
         gu = GraphUtils(None)
 
-        # start off with only the dataset descriptions
+        # the  _dataset descriptions is always turtle
         gu.write(self.dataset.getGraph(), 'turtle', file=datasetfile)
 
-        # loop through each of the graphs and print them out
-        for g in graphs:
-            f = None
-            if stream is None:
-                f = g['file']
-            elif stream.lower().strip() == 'stdout':
-                f = None
-            else:
-                logger.error("I don't understand your stream.")
-                return
-            gu.write(g['g'], fmt, file=f)
+        # unless we stop hardcoding above, the test dataset is always turtle
+        if self.testMode:
+            gu.write(self.testgraph, 'turtle', file=self.testfile)
 
+        # print graph out
+        if stream is None:
+            f = dest
+        elif stream.lower().strip() == 'stdout':
+            f = None
+        else:
+            logger.error("I don't understand your stream.")
+            return
+
+        gu.write(self.graph, fmt, file=f)
         return
 
     def whoami(self):
