@@ -301,9 +301,9 @@ class OMIM(Source):
             # so wait the remaining time, if necessary
             dt = datetime.now() - request_time
             rem = 0.25 - dt.total_seconds()
-            if rem > 0:
-                logger.info("waiting %d sec", rem)
-                time.sleep(rem/1000)
+            if rem > 0.0:
+                logger.info("waiting %f seconds", rem)  # %d results in zero
+                time.sleep(rem)  # time.sleep() takes seconds, not microseconds
 
         return processed_entries
 
@@ -1218,7 +1218,7 @@ def get_omim_id_from_entry(entry):
         omimid = None
     return omimid
 
-
+#  used in OMIA.py
 def filter_keep_phenotype_entry_ids(entry, graph=None):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'])
