@@ -43,7 +43,9 @@ class SourceTestCase(unittest.TestCase):
             try:
                 properties = GraphUtils.get_properties_from_graph(self.source.graph)
                 GraphUtils.add_property_axioms(self.source.graph, properties)
-                self.source.write(format='turtle')
+                self.source.write()  # default to  fmt='turtle'
+                #self.source.write(fmt='nt')
+                #self.source.write(fmt='nquads')
             except Exception as WriteException:
                 logger.error(WriteException)
                 self.assertFalse(True, "Write failed")

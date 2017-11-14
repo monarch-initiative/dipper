@@ -45,17 +45,19 @@ class Source:
         self.rawdir = 'raw'
         self.dataset = None
         # set to True if you want to materialze identifiers for BNodes
+
         if self.name is not None:
             self.rawdir = '/'.join((self.rawdir, self.name))
-            self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
-            logger.info("Setting outfile to %s", self.outfile)
+            # This is redundant when it is not wrong see write()
+            # self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
+            # logger.info("Setting outfile to %s", self.outfile)
+
+            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
+            logger.info("Setting testfile to %s", self.testfile)
 
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
             logger.info("Setting dataset file to %s", self.datasetfile)
-
-            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
-            logger.info("Setting testfile to %s", self.testfile)
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -70,7 +72,7 @@ class Source:
             logger.info("created output directory %s", p)
 
         if graph_type == 'rdf_graph':
-            self.graph = RDFGraph(are_bnodes_skized)
+            self.graph = RDFGraph(are_bnodes_skized)  # TODO named graph IRI?
             self.testgraph = RDFGraph(True)
         elif graph_type == 'streamed_graph':
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
@@ -78,9 +80,9 @@ class Source:
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
         else:
-            logger.error("{} graph type not supported\n"
-                         "valid types: rdf_graph, streamed_graph"
-                         .format(graph_type))
+            logger.error(
+                "{} graph type not supported\n"
+                "valid types: rdf_graph, streamed_graph" .format(graph_type))
 
         # will be set to True if the intention is
         # to only process and write the test data
@@ -110,11 +112,12 @@ class Source:
         """
         raise NotImplementedError
 
-    def write(self, format='rdfxml', stream=None):
+    def write(self, fmt='turtle', stream=None):
         """
         This convenience method will write out all of the graphs
         associated with the source.
-        Right now these are hardcoded to be a single "graph" and a "dataset".
+        Right now these are hardcoded to be a single "graph"
+        and a "src_dataset.ttl" and a "src_test.ttl"
         If you do not supply stream='stdout'
         it will default write these to files.
 
@@ -123,60 +126,54 @@ class Source:
         :return: None
 
         """
-        format_to_xtn = {
-            'rdfxml': 'xml', 'turtle': 'ttl'
+        fmt_ext = {
+            'rdfxml': 'xml',
+            'turtle': 'ttl',
+            'nt': 'nt',        # ntriples
+            'nquads':  'nq',
+            'n3': 'n3'
         }
 
         # make the regular graph output file
-        file = None
+        dest = None
         if self.name is not None:
-            file = '/'.join((self.outdir, self.name))
-            if format in format_to_xtn:
-                file = '.'.join((file, format_to_xtn.get(format)))
+            dest = '/'.join((self.outdir, self.name))
+            if fmt in fmt_ext:
+                dest = '.'.join((dest, fmt_ext.get(fmt)))
             else:
-                file = '.'.join((file, format))
-            # make the datasetfile name
-            datasetfile = '/'.join((self.outdir, self.name+'_dataset'))
-            if format in format_to_xtn:
-                datasetfile = '.'.join((datasetfile,
-                                        format_to_xtn.get(format)))
-            else:
-                datasetfile = '.'.join((datasetfile, format))
+                dest = '.'.join((dest, fmt))
+            logger.info("Setting outfile to %s", dest)
 
-            logger.info(
-                "No version set for this datasource; setting to date issued.")
+            # make the datasetfile name, always format as turtle
+            datasetfile = '/'.join((self.outdir, self.name+'_dataset.ttl'))
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
+                logger.info(
+                    "No version for " + self.name + " setting to date issued.")
         else:
             logger.warning("No output file set. Using stdout")
             stream = 'stdout'
 
-        # start off with only the dataset descriptions
-        graphs = [
-            {'g': self.dataset.getGraph(), 'file': datasetfile},
-        ]
-
-        # add the other graphs to the set to write, if not in the test mode
-        if self.testMode:
-            graphs += [{'g': self.testgraph, 'file': self.testfile}]
-        else:
-            graphs += [{'g': self.graph, 'file': file}]
-
         gu = GraphUtils(None)
-        # loop through each of the graphs and print them out
 
-        for g in graphs:
+        # the  _dataset descriptions is always turtle
+        gu.write(self.dataset.getGraph(), 'turtle', file=datasetfile)
+
+        # unless we stop hardcoding above, the test dataset is always turtle
+        if self.testMode:
+            gu.write(self.testgraph, 'turtle', file=self.testfile)
+
+        # print graph out
+        if stream is None:
+            f = dest
+        elif stream.lower().strip() == 'stdout':
             f = None
-            if stream is None:
-                f = g['file']
-            elif stream.lower().strip() == 'stdout':
-                f = None
-            else:
-                logger.error("I don't understand your stream.")
-                return
-            gu.write(g['g'], format, file=f)
+        else:
+            logger.error("I don't understand your stream.")
+            return
 
+        gu.write(self.graph, fmt, file=f)
         return
 
     def whoami(self):
@@ -242,8 +239,8 @@ class Source:
 
         try:
             resp_headers = response.info()
-            size = resp_headers.get('Content-length')
-            last_modified = resp_headers.get('last-modified')  # check me
+            size = int(resp_headers.get('Content-Length'))
+            last_modified = resp_headers.get('Last-Modified')
         except OSError as e:  # URLError?
             resp_headers = None
             size = 0
@@ -264,12 +261,16 @@ class Source:
             # check date on local vs remote file
             if dt_obj > datetime.utcfromtimestamp(st[ST_CTIME]):
                 # check if file size is different
-                if st[ST_SIZE] != size:
-                    logger.info("Newer file exists on remote server")
+                if st[ST_SIZE] < size:
+                    logger.info("New Remote file exists")
+                    return True
+                if st[ST_SIZE] > size:
+                    logger.warning(
+                        "New Remote file existsbut it is SMALLER")
                     return True
                 else:
-                    logger.info(
-                        "Remote file has same filesize--will not download")
+                    logger.info(  # filesize is a fairly imperfect metric here
+                        "New Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
             logger.info(
                 "Object on server is difference size to local file")

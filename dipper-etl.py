@@ -125,8 +125,8 @@ def main():
         action="store_true")
 
     parser.add_argument(
-        '--format',
-        help='serialization format: turtle (default), xml, n3, nt, raw',
+        '--dest_fmt',
+        help='serialization format: [turtle], nt, nquads, rdfxml, n3, raw',
         type=str)
 
     parser.add_argument(
@@ -139,11 +139,16 @@ def main():
     if args.taxon is not None:
         tax_ids = [int(t) for t in args.taxon.split(',')]
 
-    taxa_supported = [
+    taxa_supported = [  # these are not taxa
         'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology',
         'Bgee', 'Ensembl', 'StringDB']
 
-    formats_supported = ['xml', 'n3', 'turtle', 'nt', 'ttl', 'raw']
+    formats_supported = [
+        'turtle', 'ttl',
+        'ntriples', 'nt',
+        'nquads', 'nq',
+        'rdfxml',  'xml',
+        'notation3', 'n3',  'raw']
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
@@ -178,17 +183,25 @@ def main():
         unittest.TextTestRunner(verbosity=2).run(test_suite)
 
     # set serializer
-    if args.format is not None:
-        if args.format in formats_supported:
-            if args.format == 'ttl':
-                args.format = 'turtle'
+    if args.dest_fmt is not None:
+        if args.dest_fmt in formats_supported:
+            if args.dest_fmt == 'ttl':
+                args.dest_fmt = 'turtle'
+            elif args.dest_fmt == 'ntriples':
+                args.dest_fmt = 'nt'
+            elif args.dest_fmt == 'nq':
+                args.dest_fmt = 'nquads'
+            elif args.dest_fmt == 'xml':
+                args.dest_fmt = 'rdfxml'
+            elif args.dest_fmt == 'notation3':
+                args.dest_fmt = 'n3'
         else:
             logger.error(
-                "You have specified an invalid serializer: %s", args.format)
+                "You have specified an invalid serializer: %s", args.dest_fmt)
 
             exit(0)
     else:
-        args.format = 'turtle'
+        args.dest_fmt = 'turtle'
 
     # iterate through all the sources
     for source in args.sources.split(','):
@@ -250,7 +263,7 @@ def main():
                             end_axiom_exp-start_axiom_exp)
 
                 start_write = time.clock()
-                mysource.write(format=args.format)
+                mysource.write(fmt=args.dest_fmt)
                 end_write = time.clock()
                 logger.info("Writing time: %d sec", end_write-start_write)
         # if args.no_verify is not True:
