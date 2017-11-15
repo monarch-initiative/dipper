@@ -1,8 +1,8 @@
 '''
     Acroname central
 
-    Load the curie mapping file 'curie_map.yaml', if it exists.
-    it isn't required, but is necessary for most resources
+    Load the curie mapping file 'curie_map.yaml',
+    it is necessary for most resources
 
 '''
 import os.path
