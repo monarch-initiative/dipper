@@ -1,7 +1,5 @@
 import logging
 import re
-import time
-from datetime import datetime
 import json
 import urllib
 
@@ -278,7 +276,6 @@ class OMIM(Source):
             url = OMIMAPI + urllib.parse.urlencode(omimparams)
             logger.info('fetching: %s', url)
 
-            request_time = datetime.now()
             try:
                 d = urllib.request.urlopen(url)
             except OSError as e:  # URLError?
@@ -286,7 +283,6 @@ class OMIM(Source):
                 break
 
             resp = d.read().decode()
-            request_time = datetime.now()
             it += groupsize
 
             myjson = json.loads(resp)
@@ -303,15 +299,6 @@ class OMIM(Source):
                     processed_entries.append(processed_entry)
 
                 # ### end iterating over batch of entries
-
-            # can't have more than 4 req per sec,
-            # so wait the remaining time, if necessary
-            dt = datetime.now() - request_time
-            rem = 0.25 - dt.total_seconds()
-            if rem > 0.0:
-                logger.info("waiting %f seconds", rem)  # %d results in zero
-                time.sleep(rem)  # time.sleep() takes seconds, not microseconds
-
         return processed_entries
 
     def _process_all(self, limit):
@@ -1224,6 +1211,7 @@ def get_omim_id_from_entry(entry):
     else:
         omimid = None
     return omimid
+
 
 #  used in OMIA.py
 def filter_keep_phenotype_entry_ids(entry, graph=None):
