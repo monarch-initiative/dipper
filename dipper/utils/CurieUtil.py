@@ -12,14 +12,17 @@ class CurieUtil(object):
     '''
     def __init__(self, curie_map):
         '''
-        curie_map should be in the form URI -> prefix:
-        ie: 'http://foo.org/bar_' -> 'bar'
-        this class will not currently handle
-        multiple URIs with different prefixes
+        curie_map format is: curie_prefix -> URI_prefix:
+        ie: 'bar': 'http://foo.org/bar_'
+
         '''
         self.curie_map = curie_map
-        self.uri_map = {}
         if curie_map is not None:  # inverse the map
+            if len(set(curie_map.keys)) < len(set(curie_map.values)):
+                logger.warrning("Curie map is NOT one to one!")
+                logger.warrning(
+                "`get_curie_prefix(IRI)` will return the same prefix for different base IRI")
+            self.uri_map = {}
             for key, value in curie_map.items():
                 self.uri_map[value] = key
         return
