@@ -88,6 +88,7 @@
 'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_' # EMAPA: Mouse gross anatomy and development, timed
 'XAO': 'http://purl.obolibrary.org/obo/XAO_' # XAO: Xenopus anatomy and development
 'MONDO': 'http://purl.obolibrary.org/obo/MONDO_' # MONDO; Monarch disease ontology
+'NCIT': 'http://purl.obolibrary.org/obo/NCIT_' # NCI Thesaurus
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
