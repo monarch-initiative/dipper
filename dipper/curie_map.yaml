@@ -87,6 +87,7 @@
 'WBbt': 'http://purl.obolibrary.org/obo/WBbt_' #WBbt:  C. elegans gross anatomy
 'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_' # EMAPA: Mouse gross anatomy and development, timed
 'XAO': 'http://purl.obolibrary.org/obo/XAO_' # XAO: Xenopus anatomy and development
+'MONDO': 'http://purl.obolibrary.org/obo/MONDO_' # MONDO; Monarch disease ontology
 
 # publication/reference sources
 'DOI' : 'http://dx.doi.org/'
