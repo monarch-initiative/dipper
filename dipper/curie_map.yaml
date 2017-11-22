@@ -105,7 +105,7 @@
 'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
 'HPO' : 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
-
+'APO' : 'http://purl.obolibrary.org/obo/APO_'
 # strains, lines, or organismal reagents
 'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
 'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='
