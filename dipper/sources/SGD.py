@@ -119,14 +119,19 @@ class SGD(Source):
 
         # define the triple
         gene = 'SGD:{}'.format(record['SGDID'])
-        relation = 'RO:0002200'  # has phenotype
+        relation = Model.object_properties['has_phenotype']  # has phenotype
         phenotype = record['pheno_obj']['entity']['apo_id']
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
-        # if record['pheno_obj']['has_quality']:
-        #     # add quality to association
-        #     quality = record['pheno_obj']['quality']['apo_id']
-        #     g2p_assoc.add_predicate_object(predicate='RO:0000080', object_node=quality) # this is where it is breaking
-        #     g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
+        g2p_assoc.make_association_id(definedby='http://identifiers.org/SGD',
+                                      subject=gene,
+                                      predicate=relation,
+                                      object=phenotype)
+        g2p_assoc.set_association_id()
+        if record['pheno_obj']['has_quality']:
+            # add quality to association
+            quality = record['pheno_obj']['quality']['apo_id']
+            has_quality = Model.object_properties['has_quality']
+            g2p_assoc.add_predicate_object(predicate=has_quality, object_node=quality) # this is where it is breaking
 
         # # # add the references
         references = record['Reference']
@@ -146,7 +151,6 @@ class SGD(Source):
         #
         # # if len(references) > 1:
             # create equivalent source for any other refs in list
-            # current prefix is SGD_REF: S000180603, this is omitted until proper prefix is located/minted
             for ref in references[1:]:
                 ref = ref.replace('SGD_REF', 'SGD')
                 model.addSameIndividual(sub=references[0], obj=ref)
