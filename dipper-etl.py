@@ -147,8 +147,9 @@ def main():
         'turtle', 'ttl',
         'ntriples', 'nt',
         'nquads', 'nq',
-        'rdfxml',  'xml',
-        'notation3', 'n3',  'raw']
+        'rdfxml', 'xml',
+        'notation3', 'n3',
+        'raw']
 
     if args.quiet:
         logging.basicConfig(level=logging.ERROR)
