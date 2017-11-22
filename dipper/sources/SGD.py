@@ -6,7 +6,6 @@ from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.ontol_factory import OntologyFactory
 import logging
-from pprint import pprint
 import pandas as pd
 
 __author__ = 'timputman'
@@ -75,37 +74,37 @@ class SGD(Source):
         for index, assoc in enumerate(records):
             if limit is not None and index > limit:
                 break
-            if index < 10:
-                # removed description and mapp Experiment Type to apo term
-                experiment_type = assoc['Experiment Type'].split('(')[0]
-                assoc['experiment_type'] = apo_term_id[experiment_type]
-                sgd_phenotype = assoc['Phenotype']
-                pheno_obj = {
-                    'entity': {
-                        'term': None,
-                        'apo_id': None
-                    },
-                    'quality': {
-                        'term': None,
-                        'apo_id': None
-                    },
-                    'has_quality': False  # False = phenotype was descriptive and don't bother looking for a quality
-                }
-                phenotype = assoc['Phenotype']
-                if ':' in phenotype:
-                    pheno_obj['has_quality'] = True
-                    ent_qual = sgd_phenotype.split(': ')
-                    entity = ent_qual[0]
-                    quality = ent_qual[1]
-                    pheno_obj['entity']['term'] = entity
-                    pheno_obj['entity']['apo_id'] = apo_term_id[entity]
-                    pheno_obj['quality']['term'] = quality
-                    pheno_obj['quality']['apo_id'] = apo_term_id[quality]
-                else:
-                    pheno_obj['entity']['term'] = phenotype
-                    pheno_obj['entity']['apo_id'] = apo_term_id[phenotype]
-                assoc['pheno_obj'] = pheno_obj
-                self.make_association(assoc)
+
+            # removed description and mapp Experiment Type to apo term
+            experiment_type = assoc['Experiment Type'].split('(')[0]
+            assoc['experiment_type'] = apo_term_id[experiment_type]
+            sgd_phenotype = assoc['Phenotype']
+            pheno_obj = {
+                'entity': {
+                    'term': None,
+                    'apo_id': None
+                },
+                'quality': {
+                    'term': None,
+                    'apo_id': None
+                },
+                'has_quality': False  # False = phenotype was descriptive and don't bother looking for a quality
+            }
+            phenotype = assoc['Phenotype']
+            if ':' in phenotype:
+                pheno_obj['has_quality'] = True
+                ent_qual = sgd_phenotype.split(': ')
+                entity = ent_qual[0]
+                quality = ent_qual[1]
+                pheno_obj['entity']['term'] = entity
+                pheno_obj['entity']['apo_id'] = apo_term_id[entity]
+                pheno_obj['quality']['term'] = quality
+                pheno_obj['quality']['apo_id'] = apo_term_id[quality]
+            else:
+                pheno_obj['entity']['term'] = phenotype
+                pheno_obj['entity']['apo_id'] = apo_term_id[phenotype]
+            assoc['pheno_obj'] = pheno_obj
+            self.make_association(assoc)
 
         return
 
