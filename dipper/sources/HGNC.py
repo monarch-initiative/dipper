@@ -30,7 +30,7 @@ class HGNC(Source):
 
     def __init__(self, graph_type, are_bnodes_skolemized,
                  tax_ids=None, gene_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'hgnc')
+        super().__init__(graph_type, are_bnodes_skolemized)
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
