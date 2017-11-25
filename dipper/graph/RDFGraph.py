@@ -7,6 +7,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# have yet to notice a feature of conjunctive graph used
+# perhaps it was more aspirational
+# I thing droping to a single graph per ingest
+# and leaving more complicated processes to dedicated graph engines
+# would be better. TEC
+
 
 class RDFGraph(ConjunctiveGraph, DipperGraph):
     """
@@ -17,10 +23,10 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     """
 
     curie_util = CurieUtil(curie_map.get())
-    curie_map = curie_map
 
-    def __init__(self, are_bnodes_skized=True):
-        super().__init__()
+    def __init__(self, are_bnodes_skized=True, identifier=None):
+        print("in RDFGraph  with id: ", identifier)
+        super().__init__('IOMemory', identifier)
         self.are_bnodes_skized = are_bnodes_skized
 
         # Can be removed when this is resolved
