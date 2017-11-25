@@ -22,7 +22,7 @@ class Source:
     Abstract class for any data sources that we'll import and process.
     Each of the subclasses will fetch() the data, scrub() it as necessary,
     then parse() it into a graph.  The graph will then be written out to
-    a single self.name().ttl file.
+    a single self.name().<dest_fmt>  file.
     """
 
     namespaces = {}
@@ -58,6 +58,9 @@ class Source:
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
             logger.info("Setting dataset file to %s", self.datasetfile)
+        else:
+            logger.warning("I do not know who I am")
+            self.name = self.whoami()
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -71,14 +74,20 @@ class Source:
             p = os.path.abspath(self.outdir)
             logger.info("created output directory %s", p)
 
+        logger.info("Creating Test graph ", self.tesfile)
+        self.testgraph = RDFGraph(True,  self.tesfile)
+
         if graph_type == 'rdf_graph':
-            self.graph = RDFGraph(are_bnodes_skized)  # TODO named graph IRI?
-            self.testgraph = RDFGraph(True)
+            graph_id = ':MONARCH_' + str(self.name) + "_" + \
+                datetime.now().isoformat(' ').split()[0]
+
+            logger.info("Creating graph ", graph_id)
+            self.graph = RDFGraph(are_bnodes_skized, graph_id)
+
         elif graph_type == 'streamed_graph':
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
-            test_file = open(self.testfile.replace(".ttl", ".nt"), 'w')
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
-            self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
+            # leave test files as turtle (better human readibility)
         else:
             logger.error(
                 "{} graph type not supported\n"
@@ -145,7 +154,8 @@ class Source:
             logger.info("Setting outfile to %s", dest)
 
             # make the datasetfile name, always format as turtle
-            datasetfile = '/'.join((self.outdir, self.name+'_dataset.ttl'))
+            # ??? was done in init()
+            # datasetfile = '/'.join((self.outdir, self.name + '_dataset.ttl'))
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
@@ -158,7 +168,7 @@ class Source:
         gu = GraphUtils(None)
 
         # the  _dataset descriptions is always turtle
-        gu.write(self.dataset.getGraph(), 'turtle', file=datasetfile)
+        gu.write(self.dataset.getGraph(), 'turtle', file=self.datasetfile)
 
         # unless we stop hardcoding above, the test dataset is always turtle
         if self.testMode:
@@ -587,7 +597,8 @@ class Source:
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
 
-        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
+        yrmth = str(datetime.now().year) + str(datetime.now().month)
+        archive_url = 'MonarchArchive:' + yrmth + '/ttl/' + self.name + '.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
 
