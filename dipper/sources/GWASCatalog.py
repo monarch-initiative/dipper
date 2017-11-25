@@ -116,13 +116,13 @@ class GWASCatalog(Source):
         """
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         logger.info("Processing Data from %s", raw)
-        efo_ontology = RDFGraph()
+        efo_ontology = RDFGraph(false, "EFO")
         logger.info("Loading EFO ontology in separate rdf graph")
         efo_ontology.parse(self.files['efo']['url'], format='xml')
         efo_ontology.bind_all_namespaces()
         logger.info("Finished loading EFO ontology")
 
-        so_ontology = RDFGraph()
+        so_ontology = RDFGraph(false, "SO")
         logger.info("Loading SO ontology in separate rdf graph")
         so_ontology.parse(self.files['so']['url'], format='xml')
         so_ontology.bind_all_namespaces()
