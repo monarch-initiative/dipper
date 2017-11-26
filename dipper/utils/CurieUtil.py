@@ -18,7 +18,7 @@ class CurieUtil(object):
         '''
         self.curie_map = curie_map
         if curie_map is not None:  # inverse the map
-            if len(set(curie_map.keys)) < len(set(curie_map.values)):
+            if len(set(curie_map.keys())) < len(set(curie_map.values())):
                 logger.warrning("Curie map is NOT one to one!")
                 logger.warrning(
                 "`get_curie_prefix(IRI)` will return the same prefix for different base IRI")
