@@ -1,7 +1,6 @@
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
-from dipper.models.Provenance import Provenance
 from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.ontol_factory import OntologyFactory
@@ -32,6 +31,7 @@ class SGD(Source):
             None)
 
         self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        self.apo_term_id = SGD.make_apo_map()
 
     def fetch(self, is_dl_forced=False):
         """
@@ -61,50 +61,11 @@ class SGD(Source):
                    'Allele', 'Strain Background', 'Phenotype', 'Chemical', 'Condition', 'Details', 'Reporter']
         sgd_df = pd.read_csv(sgd_file, sep='\t', names=columns)
         records = sgd_df.to_dict(orient='records')
-
-        # load apo for term mapping
-        ofactory = OntologyFactory()
-        apo_ont = ofactory.create("apo")
-        apo_nodes = apo_ont.nodes()
-        # dict schema { 'term': 'apo_id' }
-        apo_term_id = dict()
-        for node in apo_nodes:
-            apo_term_id[apo_ont.label(node)] = node
-
         for index, assoc in enumerate(records):
-            if limit is not None and index > limit:
-                break
-
-            # removed description and mapp Experiment Type to apo term
-            experiment_type = assoc['Experiment Type'].split('(')[0]
-            assoc['experiment_type'] = apo_term_id[experiment_type]
-            sgd_phenotype = assoc['Phenotype']
-            pheno_obj = {
-                'entity': {
-                    'term': None,
-                    'apo_id': None
-                },
-                'quality': {
-                    'term': None,
-                    'apo_id': None
-                },
-                'has_quality': False  # False = phenotype was descriptive and don't bother looking for a quality
-            }
-            phenotype = assoc['Phenotype']
-            if ':' in phenotype:
-                pheno_obj['has_quality'] = True
-                ent_qual = sgd_phenotype.split(': ')
-                entity = ent_qual[0]
-                quality = ent_qual[1]
-                pheno_obj['entity']['term'] = entity
-                pheno_obj['entity']['apo_id'] = apo_term_id[entity]
-                pheno_obj['quality']['term'] = quality
-                pheno_obj['quality']['apo_id'] = apo_term_id[quality]
-            else:
-                pheno_obj['entity']['term'] = phenotype
-                pheno_obj['entity']['apo_id'] = apo_term_id[phenotype]
-            assoc['pheno_obj'] = pheno_obj
-            self.make_association(assoc)
+            if isinstance(assoc['Gene Name'], str):
+                if limit is not None and index > limit:
+                    break
+                self.make_association(assoc)
 
         return
 
@@ -114,31 +75,105 @@ class SGD(Source):
         :param record:
         :return: modeled association of  genotype to mammalian phenotype
         """
+        # prep record
+        # remove description and mapp Experiment Type to apo term
+        experiment_type = record['Experiment Type'].split('(')[0]
+        experiment_type = experiment_type.split(',')
+        record['experiment_type'] = list()
+        for exp_type in experiment_type:
+            exp_type = exp_type.lstrip().rstrip()
+            record['experiment_type'].append(
+                {
+                    'id': self.apo_term_id[exp_type],
+                    'term': exp_type,
+                })
+        sgd_phenotype = record['Phenotype']
+        pheno_obj = {
+            'entity': {
+                'term': None,
+                'apo_id': None
+            },
+            'quality': {
+                'term': None,
+                'apo_id': None
+            },
+            'has_quality': False  # False = phenotype was descriptive and don't bother looking for a quality
+        }
+        phenotype = record['Phenotype']
+        if ':' in phenotype:
+            pheno_obj['has_quality'] = True
+            ent_qual = sgd_phenotype.split(': ')
+            entity = ent_qual[0]
+            quality = ent_qual[1]
+            pheno_obj['entity']['term'] = entity
+            pheno_obj['entity']['apo_id'] = self.apo_term_id[entity]
+            pheno_obj['quality']['term'] = quality
+            pheno_obj['quality']['apo_id'] = self.apo_term_id[quality]
+        else:
+            pheno_obj['entity']['term'] = phenotype
+            pheno_obj['entity']['apo_id'] = self.apo_term_id[phenotype]
+        record['pheno_obj'] = pheno_obj
+
+        # begin modeling
         model = Model(self.graph)
 
         # define the triple
         gene = 'SGD:{}'.format(record['SGDID'])
         relation = Model.object_properties['has_phenotype']  # has phenotype
-        phenotype = record['pheno_obj']['entity']['apo_id']
-        g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
-        g2p_assoc.make_association_id(definedby='http://identifiers.org/SGD',
-                                      subject=gene,
-                                      predicate=relation,
-                                      object=phenotype)
-        g2p_assoc.set_association_id()
-        if record['pheno_obj']['has_quality']:
-            # add quality to association
-            quality = record['pheno_obj']['quality']['apo_id']
-            has_quality = Model.object_properties['has_quality']
-            g2p_assoc.add_predicate_object(predicate=has_quality, object_node=quality) # this is where it is breaking
 
-        # # # add the references
+        if record['pheno_obj']['has_quality']:
+            pheno_label = '{0}:{1}'.format(
+                record['pheno_obj']['entity']['term'],
+                record['pheno_obj']['quality']['term'])
+            pheno_id = 'MONARCH:{0}{1}'.format(
+                record['pheno_obj']['entity']['apo_id'].replace(':', '_'),
+                record['pheno_obj']['quality']['apo_id'].replace(':', '_')
+            )
+            g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+        else:
+            pheno_label = record['pheno_obj']['entity']['term']
+            pheno_id = record['pheno_obj']['entity']['apo_id']
+            g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+            assoc_id = g2p_assoc.make_association_id(definedby='yeastgenome.org', subject=gene, predicate=relation,
+                                                     object=pheno_id)
+            g2p_assoc.set_association_id(assoc_id=assoc_id)
+
+        # add to graph to mint assoc id
+        g2p_assoc.add_association_to_graph()
+
+        model.addLabel(subject_id=gene, label=record['Gene Name'])
+
+        # add the association triple
+        model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id)
+
+        # make pheno subclass of UPHENO:0001001
+        model.addTriple(subject_id=pheno_id, predicate_id=Model.object_properties['subclass_of'], obj='UPHENO:0001001')
+
+        # label nodes
+        # pheno label
+        model.addLabel(subject_id=pheno_id, label=pheno_label)
+
+
+        # add the descripiton: all the unmodeled data in a '|' delimited list
+        description = [
+            'genomic_background: {}'.format(record['Strain Background']),
+            'allele: {}'.format(record['Allele']),
+            'chemical: {}'.format(record['Chemical']),
+            'condition: {}'.format(record['Condition']),
+            'details: {}'.format(record['Details']),
+            'feature_name: {}'.format(record['Feature Name']),
+            'gene_name: {}'.format(record['Gene Name']),
+            'mutant_type: {}'.format(record['Mutant Type']),
+            'reporter: {}'.format(record['Reporter']),
+        ]
+        g2p_assoc.description = " | ".join(description)
+
+        # add the references
         references = record['Reference']
         references = references.replace(' ', '')
         references = references.split('|')
-        #
-        # # # created RGDRef prefix in curie map to route to proper reference URL in RGD
-        # references = [x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
+
+        #  created RGDRef prefix in curie map to route to proper reference URL in RGD
         if len(references) > 0:
             # make first ref in list the source
             g2p_assoc.add_source(identifier=references[0])
@@ -147,14 +182,16 @@ class SGD(Source):
                 Reference.ref_types['publication']
             )
             ref_model.addRefToGraph()
-        #
-        # # if len(references) > 1:
+
+        if len(references) > 1:
             # create equivalent source for any other refs in list
             for ref in references[1:]:
-                ref = ref.replace('SGD_REF', 'SGD')
                 model.addSameIndividual(sub=references[0], obj=ref)
-        #
-        g2p_assoc.add_evidence(record['experiment_type'])
+
+        # add experiment type as evidence
+        for exp_type in record['experiment_type']:
+            g2p_assoc.add_evidence(exp_type['id'])
+            model.addLabel(subject_id=exp_type['id'], label=exp_type['term'])
 
         try:
             g2p_assoc.add_association_to_graph()
@@ -162,22 +199,15 @@ class SGD(Source):
             print(e)
         return
 
-
-example_record = {'Allele': ' ',
-                  'Chemical': ' ',
-                  'Condition': ' ',
-                  'Details': ' ',
-                  'Experiment Type': 'classical genetics',
-                  'Feature Name': 'IMI1',
-                  'Feature Type': 'not in systematic sequence of S288C',
-                  'Gene Name': 'IMI1',
-                  'Mutant Type': None,
-                  'Phenotype': 'mitochondrial genome maintenance: abnormal',
-                  'Reference': 'PMID: 26091838|SGD_REF: S000180603',
-                  'Reporter': ' ',
-                  'SGDID': 'S000149345',
-                  'Strain Background': 'W303',
-                  'pheno_obj': {'entity': {'apo_id': 'APO:0000105',
-                                           'term': 'mitochondrial genome maintenance'},
-                                'has_quality': True,
-                                'quality': {'apo_id': 'APO:0000002', 'term': 'abnormal'}}}
+    @staticmethod
+    def make_apo_map():
+        # load apo for term mapping
+        ofactory = OntologyFactory()
+        apo_ont = ofactory.create("apo")
+        apo_nodes = apo_ont.nodes()
+        # dict schema { 'term': 'apo_id' }
+        apo_term_id = dict()
+        for node in apo_nodes:
+            label = apo_ont.label(node)
+            apo_term_id[label] = node
+        return apo_term_id
