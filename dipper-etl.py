@@ -64,7 +64,8 @@ def main():
         'bgee': 'Bgee',
         'mydrug': 'MyDrug',
         'stringdb': 'StringDB',
-        'rgd': 'RGD'
+        'rgd': 'RGD',
+        'sgd': 'SGD'
     }
 
     logger = logging.getLogger(__name__)

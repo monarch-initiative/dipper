@@ -101,10 +101,12 @@
 'MPD': 'http://phenome.jax.org/'
 'MPD-assay': 'http://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
-'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'
-'AQTLPub': 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
-'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
-'HPO': 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
+
+'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
+'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
+'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
+'HPO' : 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
+'APO' : 'http://purl.obolibrary.org/obo/APO_'
 
 # strains, lines, or organismal reagents
 'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
@@ -167,11 +169,13 @@
 'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
-'SGD': 'http://identifiers.org/SGD:'
-'TAIR': 'http://identifiers.org/TAIR:'
-'WormBase': 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
-'Xenbase': 'http://identifiers.org/xenbase/'
-'ZFIN': 'http://zfin.org/'  # also variants, pubs, genotypes
+
+'SGD' : 'http://identifiers.org/SGD:'
+'SGD_Ref': 'https://www.yeastgenome.org/reference/'
+'TAIR' : 'http://identifiers.org/TAIR:'
+'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
+'Xenbase' : 'http://identifiers.org/xenbase/'
+'ZFIN' : 'http://zfin.org/'  # also variants, pubs, genotypes
 
 # proteins
 'EC': 'http://identifiers.org/ec-code/'
