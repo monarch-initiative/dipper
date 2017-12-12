@@ -34,5 +34,8 @@ reactome-test:
 RGD-test:
 	$(TEST) tests/test_rgd.py
 
+SGD-test:
+	$(TEST) tests/test_sgd.py
+
 trans-test:
 	$(TEST) tests/test_trtable.py
