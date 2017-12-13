@@ -171,7 +171,7 @@
 'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
 
 'SGD' : 'http://identifiers.org/SGD:'
-'SGD_Ref': 'https://www.yeastgenome.org/reference/'
+'SGD_REF': 'https://www.yeastgenome.org/reference/'
 'TAIR' : 'http://identifiers.org/TAIR:'
 'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
 'Xenbase' : 'http://identifiers.org/xenbase/'
