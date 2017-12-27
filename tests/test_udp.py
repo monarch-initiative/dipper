@@ -126,4 +126,4 @@ class UDPTestCase(unittest.TestCase):
         sparql_output = udp.graph.query(sparql_query)
         results = list(sparql_output)
         expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
-        #self.assertEqual(results, expected)
+        self.assertEqual(results, expected)

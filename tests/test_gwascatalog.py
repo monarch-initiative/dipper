@@ -291,35 +291,35 @@ class TestGwasHaplotypeModel(unittest.TestCase):
                         dbSNP:rs3758171,
                         dbSNP:rs3824344,
                         dbSNP:rs7020413 ;
-                OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                 OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 ?snp a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs1329573-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs3758171 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs3758171-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs3824344 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs3824344-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs7020413 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs7020413-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> a faldo:Region ;
