@@ -272,7 +272,7 @@ class MMRRC(Source):
                 # make variant loci for each gene
                 if len(variants) > 0:
                     for v in variants:
-                        vl_id = v
+                        vl_id = v.strip()
                         vl_symbol = self.id_label_hash[vl_id]
                         geno.addAllele(vl_id, vl_symbol,
                                        geno.genoparts['variant_locus'])

@@ -57,8 +57,7 @@ class FlyBase(PostgreSQLSource):
         'dbxref',               # done
         'phenotype_cvterm',     # done
         'phendesc',             # done
-        'environment_cvterm',   # done
-        'stockprop'
+        'environment_cvterm'   # done
         # 'feature_cvterm'
         # TODO to get better feature types than (what) is in the feature table
         # itself  (watch out for is_not)
@@ -68,6 +67,10 @@ class FlyBase(PostgreSQLSource):
         {
             'query': '../../resources/sql/fb/feature_relationship.sql',
             'outfile': 'feature_relationship'
+        },
+        {
+            'query': '../../resources/sql/fb/stockprop.sql',
+            'outfile': 'stockprop'
         }
     ]
 
@@ -2101,7 +2104,7 @@ class FlyBase(PostgreSQLSource):
                 # skip comments
                 if re.match(r'#', ''.join(line)) or ''.join(line) == '':
                     continue
-                (stockprop_id, stock_id, type_id, value, rank) = line
+                (stockprop_id, stock_id, cvterm, value, rank) = line
 
                 line_counter += 1
 
@@ -2112,7 +2115,7 @@ class FlyBase(PostgreSQLSource):
 
                 sid = self.idhash['stock'].get(stock_id)
                 # linked_image
-                if int(type_id) == 136340 and re.match(r'FBim', value):
+                if cvterm == "linked_image" and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
                     image_url = \
                         'http://flybase.org/tmp-shared/reports/'+value+'.png'

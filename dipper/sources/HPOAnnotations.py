@@ -231,8 +231,11 @@ class HPOAnnotations(Source):
             for row in filereader:
                 line_counter += 1
                 row = [str(col).strip() for col in row]
+                # Note from Seb in Dec 2017, a 15th column was added
+                # inadverterntly and will be removed in the winter 2018
+                # release of hpo data
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w,
-                 asp, syn, date, curator) = row
+                 asp, syn, date, curator, extra) = row
                 disease_id = db + ":" + num
 
                 if self.testMode:
