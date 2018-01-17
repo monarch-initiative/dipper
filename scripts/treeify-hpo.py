@@ -62,7 +62,6 @@ def get_lay_person(cls, hpo_graph):
     lay_person_query = """
         SELECT ?lp
         WHERE {{
-            {0} oboInOwl:hasExactSynonym ?lp .
             ?bnode owl:annotatedSource {0} .
             ?bnode oboInOwl:hasSynonymType <http://purl.obolibrary.org/obo/hp.owl#layperson> .
             ?bnode owl:annotatedTarget ?lp .
