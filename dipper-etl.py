@@ -35,6 +35,7 @@ def main():
         'impc': 'IMPC',
         # Panther takes ~1hr to map 7 species-worth of associations
         'panther': 'Panther',
+        'oma': 'OMA',
         'ncbigene': 'NCBIGene',  # takes about 4 minutes to process 2 species
         'ucscbands': 'UCSCBands',
         'ctd': 'CTD',
@@ -142,7 +143,7 @@ def main():
 
     taxa_supported = [  # these are not taxa
         'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology',
-        'Bgee', 'Ensembl', 'StringDB']
+        'Bgee', 'Ensembl', 'StringDB', 'OMA']
 
     formats_supported = [
         'turtle', 'ttl',
