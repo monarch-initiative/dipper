@@ -121,47 +121,31 @@ class OrthoXML(Source):
                 "Only the following taxa will be dumped: %s",
                 str(self.tax_ids))
 
-        self._get_orthologs(limit)
+        self._get_relations(limit)
 
         return
 
-    def _get_orthologs(self, limit):
+    def _get_relations(self, limit):
         """
-        This will process each of the specified pairwise orthology files,
-        creating orthology associations based on the specified orthology code.
-        this currently assumes that each of the orthology files is identically
-        formatted. Relationships are made between genes here.
+        This will process each of the specified orthoxml files, and
+        extracting the induced orthology and paralogy associations
+        based on the specified xml group nodes.
 
-        There is also a nominal amount of identifier re-formatting:
-        MGI:MGI --> MGI
-        Ensembl --> ENSEMBL
+        The specs for orthoxml can be found here: http://orthoxml.org
 
-        we skip any genes where we don't know how to map the gene identifiers.
-        For example, Gene:Huwe1 for RAT is not an identifier, so we skip any
-        mappings to this identifier.  Often, the there are two entries for the
-        same gene (base on equivalent Uniprot id), and so we are not actually
-        losing any information.
-
-        We presently have a hard-coded filter to select only orthology
-        relationships where one of the pair is in our species of interest
-        (Mouse and Human, for the moment).
-        This will be added as a configurable parameter in the future.
-
-        Genes are also added to a grouping class defined with a PANTHER id.
+        We currently extract tripples for orthologous relations,
+        paralogous relations and in_taxon relations to NCBITaxonId
+        attributes, e.g.
 
         Triples:
-        <gene1_id> RO:othologous <gene2_id>
-        <assoc_id> :hasSubject <gene1_id>
-        <assoc_id> :hasObject <gene2_id>
+        <protein1_id> RO:othologous <protein2_id>
+        <assoc_id> :hasSubject <protein1_id>
+        <assoc_id> :hasObject <protein2_id>
         <assoc_id> :hasPredicate <RO:orthologous>
         <assoc_id> dc:evidence ECO:phylogenetic_evidence
 
-        <panther_id> a DATA:gene_family
-        <panther_id> RO:has_member <gene1_id>
-        <panther_id> RO:has_member <gene2_id>
-
-        :param limit:
-        :return:
+        :param limit: limit the number of induced pairwise relations
+        :return: None
 
         """
         logger.info("getting orthologs and paralog relations")
@@ -177,40 +161,40 @@ class OrthoXML(Source):
             xml = lxml.etree.parse(f)
             parser = OrthoXMLParser(xml)
 
-            for gene_nr_a, gene_nr_b, rel_type in parser.extract_pairwise_relations():
-                gene_a = parser.gene_mapping[gene_nr_a]
-                gene_b = parser.gene_mapping[gene_nr_b]
+            for protein_nr_a, protein_nr_b, rel_type in parser.extract_pairwise_relations():
+                protein_a = parser.gene_mapping[protein_nr_a]
+                protein_b = parser.gene_mapping[protein_nr_b]
 
-                gene_id_a = gene_a.get('protId')
-                gene_id_b = gene_b.get('protId')
+                protein_id_a = protein_a.get('protId')
+                protein_id_b = protein_b.get('protId')
 
                 if self.testMode and not \
-                        (gene_id_a in self.test_ids or gene_id_b in self.test_ids):
+                        (protein_id_a in self.test_ids or protein_id_b in self.test_ids):
                     continue
 
                 matchcounter += 1
-                taxon_a = self.extract_taxon_info(gene_a)
-                taxon_b = self.extract_taxon_info(gene_b)
+                taxon_a = self.extract_taxon_info(protein_a)
+                taxon_b = self.extract_taxon_info(protein_b)
 
                 rel = self._map_orthology_code_to_RO[rel_type]
                 evidence_id = 'ECO:0000080'  # phylogenetic evidence
 
                 # add genes to graph;
                 # assume labels will be taken care of elsewhere
-                gene_id_a = "UniProtKB:" + gene_id_a
-                gene_id_b = "UniProtKB:" + gene_id_b
-                model.addClassToGraph(gene_id_a, None)
-                model.addClassToGraph(gene_id_b, None)
+                protein_id_a = self.clean_protein_id(protein_id_a)
+                protein_id_b = self.clean_protein_id(protein_id_b)
+                model.addClassToGraph(protein_id_a, None)
+                model.addClassToGraph(protein_id_b, None)
 
                 # add the association and relevant nodes to graph
-                assoc = OrthologyAssoc(g, self.name, gene_id_a, gene_id_b, rel)
+                assoc = OrthologyAssoc(g, self.name, protein_id_a, protein_id_b, rel)
                 assoc.add_evidence(evidence_id)
 
                 # might as well add the taxon info for completeness
                 g.addTriple(
-                    gene_id_a, model.object_properties['in_taxon'], taxon_a)
+                    protein_id_a, model.object_properties['in_taxon'], taxon_a)
                 g.addTriple(
-                    gene_id_b, model.object_properties['in_taxon'], taxon_b)
+                    protein_id_b, model.object_properties['in_taxon'], taxon_b)
 
                 assoc.add_association_to_graph()
 
