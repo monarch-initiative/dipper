@@ -181,6 +181,13 @@ class OrthoXML(Source):
 
                 rel = self._map_orthology_code_to_RO[rel_type]
                 evidence_id = 'ECO:0000080'  # phylogenetic evidence
+                # check if both protein belong to taxa that are selected
+                if (self.tax_ids is not None and
+                    (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
+                            not in self.tax_ids) and
+                    (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
+                            not in self.tax_ids)):
+                        continue
 
                 # add genes to graph;
                 # assume labels will be taken care of elsewhere
