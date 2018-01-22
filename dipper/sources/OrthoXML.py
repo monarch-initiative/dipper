@@ -1,12 +1,14 @@
 import logging
 import itertools
 import re
+import functools
 import lxml.etree
 import os
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
+from dipper.models.Genotype import Genotype
 from dipper import config
 
 __author__ = "Adrian Altenhoff"
@@ -179,8 +181,6 @@ class OrthoXML(Source):
                 taxon_a = self.extract_taxon_info(protein_a)
                 taxon_b = self.extract_taxon_info(protein_b)
 
-                rel = self._map_orthology_code_to_RO[rel_type]
-                evidence_id = 'ECO:0000080'  # phylogenetic evidence
                 # check if both protein belong to taxa that are selected
                 if (self.tax_ids is not None and
                     (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
@@ -189,23 +189,18 @@ class OrthoXML(Source):
                             not in self.tax_ids)):
                         continue
 
-                # add genes to graph;
-                # assume labels will be taken care of elsewhere
                 protein_id_a = self.clean_protein_id(protein_id_a)
                 protein_id_b = self.clean_protein_id(protein_id_b)
-                model.addClassToGraph(protein_id_a, None)
-                model.addClassToGraph(protein_id_b, None)
+                # add genes to graph if needed;
+                # assume labels will be taken care of elsewhere
+                self.add_protein_to_graph(protein_id_a, taxon_a, model)
+                self.add_protein_to_graph(protein_id_b, taxon_b, model)
 
+                rel = self._map_orthology_code_to_RO[rel_type]
+                evidence_id = 'ECO:0000080'  # phylogenetic evidence
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(g, self.name, protein_id_a, protein_id_b, rel)
                 assoc.add_evidence(evidence_id)
-
-                # might as well add the taxon info for completeness
-                g.addTriple(
-                    protein_id_a, model.object_properties['in_taxon'], taxon_a)
-                g.addTriple(
-                    protein_id_b, model.object_properties['in_taxon'], taxon_b)
-
                 assoc.add_association_to_graph()
 
                 if not self.testMode \
@@ -216,6 +211,16 @@ class OrthoXML(Source):
 
             logger.info("finished processing %s", f)
         return
+
+    @functools.lru_cache(2**15)
+    def add_protein_to_graph(self, protein_id, taxon, model):
+        """adds protein nodes to the graph and adds a "in_taxon" triple.
+
+        for efficency reasons, we cache which proteins we have already
+        added using a least recently used cache."""
+        model.addClassToGraph(protein_id, None, Genotype.genoparts['polypeptide'])
+        model.graph.addTriple(
+            protein_id, model.object_properties['in_taxon'], taxon)
 
     def extract_taxon_info(self, gene_node):
         """extract the ncbi taxon id from a gene_node
