@@ -1,5 +1,6 @@
 import logging
 import itertools
+import re
 import lxml.etree
 import os
 
@@ -82,6 +83,8 @@ class OrthoXML(Source):
     and a method name.
     """
     files = {}
+    # regex to match UniProtKB Identifiers. taken from https://www.uniprot.org/help/accession_numbers
+    _up_re = re.compile(r'[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}')
 
     def __init__(self, graph_type, are_bnodes_skolemized, method, tax_ids=None):
         super().__init__(graph_type, are_bnodes_skolemized, method)
@@ -148,7 +151,7 @@ class OrthoXML(Source):
         :return: None
 
         """
-        logger.info("getting orthologs and paralog relations")
+        logger.info("getting ortholog and paralog relations")
 
         g = self.testgraph if self.testMode else self.graph
         model = Model(g)
@@ -223,7 +226,8 @@ class OrthoXML(Source):
 
         if protein_id.startswith('ENS'):
             return "ENSEMBL:" + protein_id
-        elif protein_id.startswith('FB'):
-            return "FlyBase:" + protein_id
-        else:
+        elif self._up_re.match(protein_id):
             return "UniProtKB:" + protein_id
+        else:
+            logger.warning("namespace of protein id is not known: "+protein_id)
+            return "UNKNOWN:" + protein_id
