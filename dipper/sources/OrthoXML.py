@@ -5,6 +5,8 @@ import functools
 import lxml.etree
 import os
 
+import time
+
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
@@ -163,15 +165,27 @@ class OrthoXML(Source):
             matchcounter = 0
             logger.info("Parsing %s", f)
 
+            time_start = time.time()
             xml = lxml.etree.parse(f)
             parser = OrthoXMLParser(xml)
+            logger.info("loaded {} into memory. Took {}sec to load. Starting to extract relations..."
+                        .format(f, time.time()-time_start))
 
-            for protein_nr_a, protein_nr_b, rel_type in parser.extract_pairwise_relations():
+            time0, last_cnt = time.time(), 0
+            for cnts, (protein_nr_a, protein_nr_b, rel_type) in enumerate(parser.extract_pairwise_relations()):
                 protein_a = parser.gene_mapping[protein_nr_a]
                 protein_b = parser.gene_mapping[protein_nr_b]
 
                 protein_id_a = protein_a.get('protId')
                 protein_id_b = protein_b.get('protId')
+
+                if cnts % 100 == 0 and time.time()-time0 > 30:
+                    logger.info("processed {0:d} rels in {1:.1f}sec: {2:.3f}/sec; overall {3:d} in "
+                                "{4:1f}sec ({5:.3f}/sec); cache ratio: {6.hits}/{6.misses}"
+                                .format(cnts-last_cnt, time.time()-time0, (cnts-last_cnt)/(time.time()-time0),
+                                        cnts, time.time()-time_start, cnts/(time.time()-time_start),
+                                        self.add_protein_to_graph.cache_info()))
+                    time0, last_cnt = time.time(), cnts
 
                 if self.testMode and not \
                         (protein_id_a in self.test_ids or protein_id_b in self.test_ids):
