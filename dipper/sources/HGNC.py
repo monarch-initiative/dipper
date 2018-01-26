@@ -8,6 +8,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
+from dipper.utils.DipperUtil import DipperUtil
 
 
 logger = logging.getLogger(__name__)
@@ -153,12 +154,19 @@ class HGNC(Source):
                 model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
+                else:
+                    model.makeLeader(hgnc_id)
                 if entrez_id != '':
                     model.addEquivalentClass(
                         hgnc_id, 'NCBIGene:' + entrez_id)
                 if ensembl_gene_id != '':
                     model.addEquivalentClass(
                         hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
+                if omim_id != '' and "|" not in omim_id:
+                    omim_curie = 'OMIM:' + omim_id
+                    if not DipperUtil.is_omim_disease(omim_curie):
+                        model.addEquivalentClass(hgnc_id, omim_curie)
+
                 geno.addTaxon('NCBITaxon:9606', hgnc_id)
 
                 # add pubs as "is about"
