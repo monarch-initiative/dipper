@@ -4,6 +4,8 @@ import requests
 
 __author__ = ('nlw', 'tec')
 logger = logging.getLogger(__name__)
+urllib3_log = logging.getLogger("urllib3")
+urllib3_log.setLevel(logging.ERROR)
 
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(max_retries=3)
@@ -127,9 +129,6 @@ class DipperUtil:
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=10)
         session.mount('https://', adapter)
-
-        requests_log = logging.getLogger("requests.packages.urllib3")
-        requests_log.setLevel(logging.ERROR)
 
         isOmimDisease = False
         url = SCIGRAPH_BASE + gene_id + '.json'

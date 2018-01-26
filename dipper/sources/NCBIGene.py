@@ -352,8 +352,10 @@ class NCBIGene(Source):
             graph = self.graph
 
         filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
+        # These will be made xrefs
         taxon_spec_filters = {
-            '10090': ['ENSEMBL']
+            '10090': ['ENSEMBL'],
+            '9606': ['ENSEMBL']
         }
         if taxon in taxon_spec_filters:
             filter_out += taxon_spec_filters[taxon]
@@ -372,7 +374,7 @@ class NCBIGene(Source):
                     continue
                     # skip some of these for now
                 if xref_curie.split(':')[0] in filter_out:
-                    continue
+                    model.addXref(gene_id, xref_curie)
                 if re.match(r'^OMIM', xref_curie):
                     if DipperUtil.is_omim_disease(xref_curie):
                         continue
