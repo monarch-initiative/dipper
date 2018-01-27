@@ -296,7 +296,11 @@ class Ensembl(Source):
                 model.addIndividualToGraph(uniprot_curie, None, self._get_gene_type("polypeptide"))
 
                 if entrezgene != '':
-                    model.addEquivalentClass(gene_id, entrez_curie)
+                    if taxid == '9606':
+                        # Use HGNC for eq in human data
+                        model.addXref(gene_id, entrez_curie)
+                    else:
+                        model.addEquivalentClass(gene_id, entrez_curie)
                 if hgnc_id is not None and hgnc_id != '':
                     model.addEquivalentClass(gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
