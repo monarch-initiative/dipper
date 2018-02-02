@@ -105,6 +105,7 @@
 'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
 'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
 'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
+'PAINT': 'http://www.geneontology.org/gene-associations/submission/paint/'
 'HPO' : 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
 'APO' : 'http://purl.obolibrary.org/obo/APO_'
 
