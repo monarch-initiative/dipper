@@ -196,11 +196,11 @@ class OrthoXML(Source):
                 taxon_b = self.extract_taxon_info(protein_b)
 
                 # check if both protein belong to taxa that are selected
-                if (self.tax_ids is not None and
+                if (self.tax_ids is not None and (
                     (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
-                            not in self.tax_ids) and
+                            not in self.tax_ids) or
                     (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
-                            not in self.tax_ids)):
+                            not in self.tax_ids))):
                         continue
 
                 protein_id_a = self.clean_protein_id(protein_id_a)
