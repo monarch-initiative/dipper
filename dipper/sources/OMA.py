@@ -8,10 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 class OMA(OrthoXML):
-    BENCHMARK_BASE = "http://orthology.benchmarkservice.org/raw"
+    BENCHMARK_BASE = "https://omabrowser.org/ReferenceProteomes"
     files = {'oma_hogs': {
-        'file': 'GETHOGs_2.0-.996.rels.raw.gz',
-        'url': BENCHMARK_BASE + "/GETHOGs_2.0-.996.rels.raw.gz"},
+        'file': 'OMA_GETHOGs-2_2017-04.orthoxml.gz',
+        'url': BENCHMARK_BASE + "/OMA_GETHOGs-2_2017-04.orthoxml.gz"},
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
