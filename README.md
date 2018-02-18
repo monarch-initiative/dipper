@@ -123,6 +123,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * Orphanet (gene-disease associations)
     * UCSCBands (RDF representation of chromosomal bands using FALDO an Monochrom)
     * String (direct protein-protein interactions from experimental data)
+    * OMA (orthologs from QfO reference proteomes 2017 (79 species))
     
     Each source has a corresponding script at https://github.com/monarch-initiative/dipper/tree/master/dipper/sources
 
