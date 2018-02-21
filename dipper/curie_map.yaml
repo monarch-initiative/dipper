@@ -207,3 +207,7 @@
 'BT': 'http://c.biothings.io/#'
 'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
 'GINAS': 'http://tripod.nih.gov/ginas/app/substance#'
+
+#Wikidata
+'WD_Prop': 'https://www.wikidata.org/wiki/Property:'
+'WD_Entity': 'https://www.wikidata.org/wiki/'
