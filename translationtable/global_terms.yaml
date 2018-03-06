@@ -26,7 +26,6 @@
 "fusion": "SO:0001882"
 "structural_alteration": "SO:0001785"
 "direct_tandem_duplication": "SO:1000039"
-"sequence_alteration": "SO:000105"
 # microsatellite	SO:0000289
 "# microsatellite": "SO:0000289"
 # here Matt has overridden the sequence ontology

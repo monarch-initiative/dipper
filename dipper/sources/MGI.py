@@ -54,80 +54,80 @@ class MGI(PostgreSQLSource):
 
     resources = [
         {
-          'query': '../../resources/sql/mgi_dbinfo.sql',
+          'query': '../../resources/sql/mgi/mgi_dbinfo.sql',
           'outfile': 'mgi_dbinfo',
           'Force': True
         },
         {
-          'query': '../../resources/sql/gxd_genotype_view.sql',
+          'query': '../../resources/sql/mgi/gxd_genotype_view.sql',
           'outfile': 'gxd_genotype_view'
         },
         {
-          'query': '../../resources/sql/gxd_genotype_summary_view.sql',
+          'query': '../../resources/sql/mgi/gxd_genotype_summary_view.sql',
           'outfile': 'gxd_genotype_summary_view'
         },
         {
-          'query': '../../resources/sql/gxd_allelepair_view.sql',
+          'query': '../../resources/sql/mgi/gxd_allelepair_view.sql',
           'outfile': 'gxd_allelepair_view'
         },
         {
-          'query': '../../resources/sql/all_summary_view.sql',
+          'query': '../../resources/sql/mgi/all_summary_view.sql',
           'outfile': 'all_summary_view'
         },
         {
-          'query': '../../resources/sql/all_allele_view.sql',
+          'query': '../../resources/sql/mgi/all_allele_view.sql',
           'outfile': 'all_allele_view'
         },
         {
-          'query': '../../resources/sql/all_allele_mutation_view.sql',
+          'query': '../../resources/sql/mgi/all_allele_mutation_view.sql',
           'outfile': 'all_allele_mutation_view'
         },
         {
-          'query': '../../resources/sql/mrk_marker_view.sql',
+          'query': '../../resources/sql/mgi/mrk_marker_view.sql',
           'outfile': 'mrk_marker_view'
         },
         {
-          'query': '../../resources/sql/voc_annot_view.sql',
+          'query': '../../resources/sql/mgi/voc_annot_view.sql',
           'outfile': 'voc_annot_view'
         },
         {
-          'query': '../../resources/sql/voc_evidence_view.sql',
+          'query': '../../resources/sql/mgi/voc_evidence_view.sql',
           'outfile': 'voc_evidence_view'
         },
         {
-          'query': '../../resources/sql/bib_acc_view.sql',
+          'query': '../../resources/sql/mgi/bib_acc_view.sql',
           'outfile': 'bib_acc_view'
         },
         {
-           'query': '../../resources/sql/prb_strain_view.sql',
+           'query': '../../resources/sql/mgi/prb_strain_view.sql',
            'outfile': 'prb_strain_view'
         },
         {
-          'query': '../../resources/sql/mrk_summary_view.sql',
+          'query': '../../resources/sql/mgi/mrk_summary_view.sql',
           'outfile': 'mrk_summary_view'
         },
         {
-          'query': '../../resources/sql/mrk_acc_view.sql',
+          'query': '../../resources/sql/mgi/mrk_acc_view.sql',
           'outfile': 'mrk_acc_view'
         },
         {
-          'query': '../../resources/sql/prb_strain_acc_view.sql',
+          'query': '../../resources/sql/mgi/prb_strain_acc_view.sql',
           'outfile': 'prb_strain_acc_view'
         },
         {
-          'query': '../../resources/sql/prb_strain_genotype_view.sql',
+          'query': '../../resources/sql/mgi/prb_strain_genotype_view.sql',
           'outfile': 'prb_strain_genotype_view'
         },
         {
-          'query': '../../resources/sql/mgi_note_vocevidence_view.sql',
+          'query': '../../resources/sql/mgi/mgi_note_vocevidence_view.sql',
           'outfile': 'mgi_note_vocevidence_view'
         },
         {
-          'query': '../../resources/sql/mgi_note_allele_view.sql',
+          'query': '../../resources/sql/mgi/mgi_note_allele_view.sql',
           'outfile': 'mgi_note_allele_view'
         },
         {
-          'query': '../../resources/sql/mrk_location_cache.sql',
+          'query': '../../resources/sql/mgi/mrk_location_cache.sql',
           'outfile': 'mrk_location_cache'  # gene locations
         }
     ]

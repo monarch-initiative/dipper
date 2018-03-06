@@ -106,9 +106,9 @@ def make_property_graph(properties, args):
             RDF['type'], OWL['AnnotationProperty']))
 
     # Check monarch data triple
-    data_url = "http://data.monarchinitiative.org/ttl/{0}".format(
+    data_url = "https://data.monarchinitiative.org/ttl/{0}".format(
         re.sub(r".*/", "", args.input))
-    new_url = "http://data.monarchinitiative.org/ttl/{0}".format(
+    new_url = "https://data.monarchinitiative.org/ttl/{0}".format(
         re.sub(r".*/", "", args.output))
     if (URIRef(data_url), RDF.type, OWL['Ontology']) in output_graph:
         output_graph.remove(URIRef(data_url), RDF.type, OWL['Ontology'])

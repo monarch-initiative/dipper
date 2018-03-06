@@ -3,84 +3,39 @@
 ###
 
 DIPPER_BIN = ./dipper-etl.py
-NOSE = nosetests
+TEST = python3 -m unittest
 
 ###
 ### Tests
 ###
 
-test: UDP-test IMPC-fetch IMPC-test BioGrid-fetch   \
-BioGrid-test ncbi-fetch ncbi-test Panther-fetch Panther-test ucscBands-fetch   \
-ucscBands-test GWAS-fetch GWAS-test string-test
+test: UDP-test IMPC-fetch IMPC-test GWAS-test reactome-test RGD-test \
+      string-test trans-test
 
 string-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_string.py
+	$(TEST) tests/test_string.py
 
 UDP-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_udp.py
+	$(TEST) tests/test_udp.py
 
 IMPC-fetch:
 	$(DIPPER_BIN) --sources impc --no_verify --fetch_only
 
 IMPC-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_impc.py
-
-GWAS-fetch:
-	$(DIPPER_BIN) --sources gwascatalog --no_verify --fetch_only
+	$(TEST) tests/test_impc.py
 
 GWAS-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_gwascatalog.py
+	$(TEST) tests.test_gwascatalog.TestGwasSNPModel
+	$(TEST) tests.test_gwascatalog.TestGwasHaplotypeModel
 
-BioGrid-fetch:
-	$(DIPPER_BIN) --sources biogrid --no_verify --fetch_only
+reactome-test:
+	$(TEST) tests/test_reactome.py
 
-BioGrid-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_biogrid.py
+RGD-test:
+	$(TEST) tests/test_rgd.py
 
-#ClinVar-fetch:
-#	$(DIPPER_BIN) --sources clinvar --no_verify --fetch_only
+SGD-test:
+	$(TEST) tests/test_sgd.py
 
-#ClinVar-test:
-#	$(NOSE) --with-coverage --cover-package=dipper tests/test_clinvar.py
-
-GeneReviews-fetch:
-	$(DIPPER_BIN) --sources genereviews --no_verify --fetch_only
-
-GeneReviews-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_genereviews.py
-
-hpoa-fetch:
-	$(DIPPER_BIN) --sources hpoa --no_verify --fetch_only
-
-hpoa-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_hpoa.py
-
-ncbi-fetch:
-	$(DIPPER_BIN) --sources ncbigene --no_verify --fetch_only
-
-ncbi-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_ncbi.py
-
-Panther-fetch:
-	$(DIPPER_BIN) --sources panther --no_verify --fetch_only
-
-Panther-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_panther.py
-
-ucscBands-fetch:
-	$(DIPPER_BIN) --sources ucscbands --no_verify --fetch_only
-
-ucscBands-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_ucscbands.py
-
-zfin-fetch:
-	$(DIPPER_BIN) --sources zfin --no_verify --fetch_only
-
-zfin-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_zfin.py
-
-kegg-fetch:
-	$(DIPPER_BIN) --sources kegg --no_verify --fetch_only
-
-kegg-test:
-	$(NOSE) --with-coverage --cover-package=dipper tests/test_kegg.py
+trans-test:
+	$(TEST) tests/test_trtable.py

@@ -86,13 +86,14 @@ class WormBase(Source):
         #   'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #   'url': wbdev + species +
         #   '/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
-        'xrefs': {
+          'xrefs': { # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
-            '/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+            '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         # 'letter': { # no longer exists 2016-11-18
         #    'file': 'letter.WSNUMBER',
         #    'url': wbprod + '/letter.WSNUMBER'},
+
         'checksums': {
             'file': 'CHECKSUMS',
             'url':  wbprod + '/CHECKSUMS'}
@@ -214,7 +215,7 @@ class WormBase(Source):
         # self.process_gene_desc(limit)   #TEC imput file is mia 2016-Mar-03
         self.process_allele_phenotype(limit)
         self.process_rnai_phenotypes(limit)
-        self.process_pub_xrefs(limit)
+        # self.process_pub_xrefs(limit) 
         self.process_feature_loc(limit)
         self.process_disease_association(limit)
         # TODO add this when when complete

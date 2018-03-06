@@ -40,8 +40,17 @@ def main():
                      " {} expected {} check omia log for"
                      " warnings".format(model_len, EXPECTED_PAIRS))
         exit(1)
-    else:
-        logger.info("PASSED")
+
+    omim_diseases = graph.objects(
+        subject=URIRef('https://monarchinitiative.org/model/OMIA-breed:18'),
+        predicate=model_of
+    )
+
+    if list(omim_diseases) != [URIRef('http://purl.obolibrary.org/obo/OMIM_275220')]:
+        logger.error("Missing breed to omim triple for {}".format('OMIA-breed:18'))
+        exit(1)
+    
+    logger.info("PASSED")
 
 if __name__ == "__main__":
     main()

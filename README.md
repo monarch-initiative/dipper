@@ -1,6 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/dipper.svg)](https://pypi.python.org/pypi/dipper)
 [![Build Status](https://travis-ci.org/monarch-initiative/dipper.svg?branch=master)](https://travis-ci.org/monarch-initiative/dipper)
-[![Coverage Status](https://coveralls.io/repos/monarch-initiative/dipper/badge.svg)](https://coveralls.io/r/monarch-initiative/dipper)
 
 # DIPPER
 
@@ -124,6 +123,7 @@ import Dipper as a python package, write your own wrapper, and add your own sour
     * Orphanet (gene-disease associations)
     * UCSCBands (RDF representation of chromosomal bands using FALDO an Monochrom)
     * String (direct protein-protein interactions from experimental data)
+    * OMA (orthologs from QfO reference proteomes 2017 (79 species))
     
     Each source has a corresponding script at https://github.com/monarch-initiative/dipper/tree/master/dipper/sources
 

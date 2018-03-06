@@ -1,7 +1,5 @@
 import logging
 import re
-import time
-from datetime import datetime
 import json
 import urllib
 
@@ -20,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 # omimftp key EXPIRES MAY 2018
 # get a new one here: http://omim.org/help/api
-# note they forbid more than one call per two seconds
+
+
 OMIMFTP = 'http://data.omim.org/downloads/' + \
     config.get_config()['keys']['omim']
 
@@ -31,17 +30,21 @@ OMIMAPI = 'http://api.omim.org/api/entry?format=json&apiKey=' + \
 class OMIM(Source):
     """
     OMIM is an unusual source.
-    We get lots of the disease-gene associations, including allelic variants
-    from their ftp site, which is obtainable anonymously.
+    The only anonymously obtainable data from the ftp site is mim2gene.
     However, more detailed information is available via their API.
-    So, we pull the basic files from their ftp site,
-    extract the omim identifiers, then query their API in batch.
-    (Note this requires an apiKey, which is not stored in the repo,
-    but in a separate conf.json file.)
+    So, we pull the omim identifiers from their ftp site,
+    then query their API in batchs of 20.
+    Their prescribed rate limits have been mecurial
+     one per two seconds or  four per second,
+     in  2017 November all mention of api rate limits have vanished
+     (save 20 IDs per call if any include is used)
+
+    Note this ingest requires an apiKey which is not stored in the repo,
+    but in a separate conf.json file.
+
     Processing this source serves two purposes:
-    1.  enables the creation of the OMIM classes for the purposes of merging
-    into the disease ontology
-    2.  adds annotations such as disease-gene associations
+    1.  the creation of the OMIM classes for merging into the disease ontology
+    2.  add annotations such as disease-gene associations
 
     When creating the disease classes, we pull from their REST-api
     id/label/definition information.
@@ -74,6 +77,7 @@ class OMIM(Source):
     }
 
     # the following test ids are in the config.json
+    # (they do not belong there either  -TEC)
     test_ids = [
         119600, 120160, 157140, 158900, 166220, 168600, 219700,
         # coriell
@@ -279,7 +283,6 @@ class OMIM(Source):
                 break
 
             resp = d.read().decode()
-            request_time = datetime.now()
             it += groupsize
 
             myjson = json.loads(resp)
@@ -296,15 +299,6 @@ class OMIM(Source):
                     processed_entries.append(processed_entry)
 
                 # ### end iterating over batch of entries
-
-            # can't have more than 4 req per sec,
-            # so wait the remaining time, if necessary
-            dt = datetime.now() - request_time
-            rem = 0.25 - dt.total_seconds()
-            if rem > 0:
-                logger.info("waiting %d sec", rem)
-                time.sleep(rem/1000)
-
         return processed_entries
 
     def _process_all(self, limit):
@@ -1219,6 +1213,7 @@ def get_omim_id_from_entry(entry):
     return omimid
 
 
+#  used in OMIA.py
 def filter_keep_phenotype_entry_ids(entry, graph=None):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'])
