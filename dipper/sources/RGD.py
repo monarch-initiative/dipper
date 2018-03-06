@@ -1,12 +1,10 @@
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
-from dipper.models.Provenance import Provenance
 from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
-from ontobio.io.gafparser import GafParser
+import csv
 import logging
-from pprint import pprint
 
 __author__ = 'timputman'
 
@@ -28,8 +26,7 @@ class RGD(Source):
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(graph_type, are_bnodes_skolemized, 'rgd')
         self.dataset = Dataset(
-            'rgd', 'RGD', 'http://rgd.mcw.edu/', None,
-            None)
+            'rgd', 'RGD', 'http://rgd.mcw.edu/', None, None)
 
         self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
 
@@ -57,15 +54,35 @@ class RGD(Source):
             logger.info("Only parsing first %d rows", limit)
 
         rgd_file = '/'.join((self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))
+        with open(rgd_file, 'r') as file:
+            rgd_reader = csv.reader(file, delimiter='\t')
+            for x in range(3):
+                next(rgd_reader)
+            headers = [
+                'db',
+                'db_object_id',
+                'db_object_symbol',
+                'qualifier',
+                'ontology_id',
+                'db_reference',
+                'evidence_code',
+                'with_or_from',
+                'aspect',
+                'db_object_name',
+                'db_object_synonym',
+                'db_object_type',
+                'taxon',
+                'date',
+                'assigned_by',
+                'annotation_extension',
+                'gene_product_form_id',
+            ]
 
-        # ontobio gafparser implemented here
-        p = GafParser()
-        assocs = p.parse(open(rgd_file, "r"))
-
-        for i, assoc in enumerate(assocs):
-            self.make_association(assoc)
-            if limit is not None and i > limit:
-                break
+            for i, row in enumerate(rgd_reader):
+                assoc = dict(zip(headers, row))
+                self.make_association(record=assoc)
+                if limit is not None and i > limit:
+                    break
         return
 
     def make_association(self, record):
@@ -76,17 +93,16 @@ class RGD(Source):
         """
         model = Model(self.graph)
 
-        record['relation']['id'] = 'RO:0002200'
         # define the triple
-        gene = record['subject']['id']
-        relation = record['relation']['id']
-        phenotype = record['object']['id']
+        gene = '{0}:{1}'.format(record['db'], str(record['db_object_id']))
+        relation = 'RO:0002200'
+        phenotype = record['ontology_id']
 
         # instantiate the association
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
 
         # add the references
-        references = record['evidence']['has_supporting_reference']
+        references = record['db_reference'].split('|')
         # created RGDRef prefix in curie map to route to proper reference URL in RGD
         references = [x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
 
@@ -107,9 +123,7 @@ class RGD(Source):
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])
-        g2p_assoc.add_evidence(self.global_terms[record['evidence']['type']])
+        g2p_assoc.add_evidence(self.global_terms[record['evidence_code']])
         g2p_assoc.add_association_to_graph()
 
         return
-
-
