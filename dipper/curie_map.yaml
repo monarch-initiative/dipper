@@ -3,7 +3,7 @@
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'
-'MonarchArchive': 'https://archive.monarchinitiative.org/201711/'
+'MonarchArchive': 'https://archive.monarchinitiative.org/201803/'
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
