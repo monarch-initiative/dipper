@@ -76,7 +76,7 @@
 'STATO': 'http://purl.obolibrary.org/obo/STATO_'  # Statistics Ontology
 'UBERON': 'http://purl.obolibrary.org/obo/UBERON_'  # UBERON: integrated anatomy ontology (metazoans, mostly) [y]
 'UPHENO': 'http://purl.obolibrary.org/obo/UPHENO_'  # UPHENO: integrated phenotype ontology, and normal traits [y]
-'UMLS': 'http://purl.obolibrary.org/obo/UMLS_'  # UMLS: unified medical language system
+'UMLS': 'http://linkedlifedata.com/resource/umls/id/'  # UMLS: unified medical language system
 'UO': 'http://purl.obolibrary.org/obo/UO_'  # UO: units of measurements
 'VT': 'http://purl.obolibrary.org/obo/VT_'  # VT: Vertebrate Trait Ontology
 'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_' # WBPhenotype: WormBase phenotypes (nematode) [y]
