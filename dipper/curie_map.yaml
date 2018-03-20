@@ -3,7 +3,7 @@
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'
-'MonarchArchive': 'https://archive.monarchinitiative.org/201711/'
+'MonarchArchive': 'https://archive.monarchinitiative.org/201803/'
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
@@ -76,7 +76,7 @@
 'STATO': 'http://purl.obolibrary.org/obo/STATO_'  # Statistics Ontology
 'UBERON': 'http://purl.obolibrary.org/obo/UBERON_'  # UBERON: integrated anatomy ontology (metazoans, mostly) [y]
 'UPHENO': 'http://purl.obolibrary.org/obo/UPHENO_'  # UPHENO: integrated phenotype ontology, and normal traits [y]
-'UMLS': 'http://purl.obolibrary.org/obo/UMLS_'  # UMLS: unified medical language system
+'UMLS': 'http://linkedlifedata.com/resource/umls/id/'  # UMLS: unified medical language system
 'UO': 'http://purl.obolibrary.org/obo/UO_'  # UO: units of measurements
 'VT': 'http://purl.obolibrary.org/obo/VT_'  # VT: Vertebrate Trait Ontology
 'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_' # WBPhenotype: WormBase phenotypes (nematode) [y]
@@ -101,10 +101,13 @@
 'MPD': 'http://phenome.jax.org/'
 'MPD-assay': 'http://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
-'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'
-'AQTLPub': 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
-'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
-'HPO': 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
+
+'PMCID' : 'http://www.ncbi.nlm.nih.gov/pmc/'
+'AQTLPub' : 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
+'GO_REF' : 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
+'PAINT_REF': 'http://www.geneontology.org/gene-associations/submission/paint/'
+'HPO' : 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
+'APO' : 'http://purl.obolibrary.org/obo/APO_'
 
 # strains, lines, or organismal reagents
 'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
@@ -167,11 +170,13 @@
 'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
-'SGD': 'http://identifiers.org/SGD:'
-'TAIR': 'http://identifiers.org/TAIR:'
-'WormBase': 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
-'Xenbase': 'http://identifiers.org/xenbase/'
-'ZFIN': 'http://zfin.org/'  # also variants, pubs, genotypes
+
+'SGD' : 'http://identifiers.org/SGD:'
+'SGD_REF': 'https://www.yeastgenome.org/reference/'
+'TAIR' : 'http://identifiers.org/TAIR:'
+'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
+'Xenbase' : 'http://identifiers.org/xenbase/'
+'ZFIN' : 'http://zfin.org/'  # also variants, pubs, genotypes
 
 # proteins
 'EC': 'http://identifiers.org/ec-code/'
@@ -202,3 +207,7 @@
 'BT': 'http://c.biothings.io/#'
 'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
 'GINAS': 'http://tripod.nih.gov/ginas/app/substance#'
+
+#Wikidata
+'WD_Prop': 'https://www.wikidata.org/wiki/Property:'
+'WD_Entity': 'https://www.wikidata.org/wiki/'

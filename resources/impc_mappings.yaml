@@ -10,6 +10,8 @@ project:
     Phenomin: 'http://www.phenomin.fr/'
     RIKEN BioResource Center: 'http://en.brc.riken.jp/'
     Wellcome Trust Sanger Institute Mouse Genetics Project: 'http://www.sanger.ac.uk/science/data/mouse-genomes-project'
+    Korea Mouse Phenotyping Center: 'http://mousephenotype.kr/'
+
 
 phenotyping_center:
     BCM: 'https://www.bcm.edu/'
@@ -23,11 +25,17 @@ phenotyping_center:
     TCP: 'http://www.phenogenomics.ca/'
     UC Davis: 'https://mbp.mousebiology.org/'
     WTSI: 'http://www.sanger.ac.uk/'
+    MARC: 'http://www.nbri-nju.com/en-us/'
+    KMPC: 'http://mousephenotype.kr/'
+
 
 statistical_method:
     "Fisher's exact test": 'STATO:0000073'
     "Mixed Model framework, generalized least squares, equation withoutWeight": 'STATO:0000372'
     "Mixed Model framework, linear mixed-effects model, equation withoutWeight": 'STATO:0000107'
+    "Mixed Model framework, linear mixed-effects model, equation withWeight": 'STATO:0000107'
+    "Mixed Model framework, generalized least squares, equation withWeight": 'STATO:0000372'
+    "Fisher Exact Test framework": 'STATO:0000073'
     Unknown: 'STATO:0000107'
     Wilcoxon rank sum test with continuity correction: 'STATO:0000076'
 

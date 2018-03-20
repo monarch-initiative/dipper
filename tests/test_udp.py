@@ -110,8 +110,6 @@ class UDPTestCase(unittest.TestCase):
         mock_file = mock_open(mock=mock_data)
         udp = UDP('rdf_graph', False)
 
-        # Fails 20161118 see issue 386?
-
         udp._parse_patient_variants(mock_file)
         sparql_query = """
             SELECT ?patient
@@ -120,7 +118,7 @@ class UDPTestCase(unittest.TestCase):
                     rdfs:label "patient_1 genotype" ;
                     OBO:GENO_0000382 [ a OBO:SO_0001059 ;
                         rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
-                        OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/1196> ;
+                        OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:2069> ;
                         OBO:RO_0002162 OBO:NCBITaxon_9606 ;
                         owl:sameAs dbSNP:rs11557757 ] ] .
             }

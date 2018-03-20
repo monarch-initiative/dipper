@@ -40,7 +40,7 @@ class TestGwasSNPModel(unittest.TestCase):
             'context': 'intergenic_variant',
             'allele_freq': '0.013',
             'trait': 'Diisocyanate-induced asthma',
-            'trait_uri': 'http://www.ebi.ac.uk/efo/EFO_0006995, http://www.ebi.ac.uk/efo/EFO_0000270',
+            'trait_uri': 'http://www.ebi.ac.uk/efo/EFO_0006995, http://www.ebi.ac.uk/efo/EFO_0003949',
             'pvalue': '0.0000007',
             'merged': '0',
             'snp_id_current': '1491921',
@@ -196,11 +196,11 @@ class TestGwasSNPModel(unittest.TestCase):
         sparql_query = """
             SELECT ?snp
             WHERE {{
-                <https://monarchinitiative.org/MONARCH_630ef6046547f10c> a OBAN:association ;
+                <https://monarchinitiative.org/MONARCH_b46cdf48950cb00d> a OBAN:association ;
                     dc:description "{}" ;
                     OBO:RO_0002558 OBO:ECO_0000213 ;
                     dc:source PMID:25918132 ;
-                    OBAN:association_has_object EFO:0000270 ;
+                    OBAN:association_has_object EFO:0003949 ;
                     OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
@@ -211,11 +211,11 @@ class TestGwasSNPModel(unittest.TestCase):
                     OBAN:association_has_predicate OBO:RO_0002326 ;
                     OBAN:association_has_subject ?snp .
 
-                EFO:0000270 a owl:Class ;
-                    rdfs:label "asthma"^^xsd:string ;
-                    rdfs:subClassOf OBO:DOID_4 .
+                EFO:0003949 a owl:Class ;
+                    rdfs:label "eye color"^^xsd:string ;
+                    rdfs:subClassOf UPHENO:0001001 .
 
-                ?snp OBO:RO_0002326 EFO:0000270,
+                ?snp OBO:RO_0002326 EFO:0003949,
                         EFO:0006995 .
 
                 PMID:25918132 a OBO:IAO_0000013 .
@@ -291,35 +291,35 @@ class TestGwasHaplotypeModel(unittest.TestCase):
                         dbSNP:rs3758171,
                         dbSNP:rs3824344,
                         dbSNP:rs7020413 ;
-                OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                 OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 ?snp a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs1329573-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs3758171 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs3758171-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs3824344 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs3824344-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 dbSNP:rs7020413 a OBO:SO_0000694,
                         OBO:SO_0001627 ;
                     rdfs:label "rs7020413-?" ;
                     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> ;
-                    OBO:GENO_0000418 <http://www.ncbi.nlm.nih.gov/gene/5079> ;
+                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
                     OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
                 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> a faldo:Region ;

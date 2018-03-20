@@ -158,11 +158,7 @@ class GWASCatalog(Source):
                      platform_with_snps_passing_qc, cnv_flag, mapped_trait,
                      mapped_trait_uri, study_accession) = row
 
-                    intersect = list(
-                        set([str(i) for i in self.test_ids['gene']]) &
-                        set(re.split(r',', snp_gene_nums)))
-                    # skip if no matches found in test set
-                    if self.testMode and len(intersect) == 0:
+                    if self.testMode:
                         continue
 
 # 06-May-2015	25917933	Zai CC	20-Nov-2014	J Psychiatr Res	http://europepmc.org/abstract/MED/25917933
@@ -476,36 +472,21 @@ class GWASCatalog(Source):
             for trait in re.split(r',', mapped_trait_uri):
                 trait = trait.strip()
 
-                cu = CurieUtil(curie_map.get())
-                trait_id = cu.get_curie(trait)
-
-                dis_query = """
-                    SELECT ?trait
-                    WHERE {{
-                        {0} rdfs:subClassOf+ EFO:0000408 .
-                        {0} rdfs:label ?trait .
-                    }}
-                """.format(trait_id)
-
-                query_result = efo_ontology.query(dis_query)
-                if len(list(query_result)) > 0:
-                    if re.match(r'^EFO', trait_id):
-                        model.addClassToGraph(trait_id, list(
-                            query_result)[0][0], 'DOID:4')
+                trait_curie = trait.replace("http://www.ebi.ac.uk/efo/EFO_", "EFO:")
 
                 phenotype_query = """
                     SELECT ?trait
                     WHERE {{
-                        {0} rdfs:subClassOf+ EFO:0000651 .
-                        {0} rdfs:label ?trait .
+                        <{0}> rdfs:subClassOf+ <http://www.ebi.ac.uk/efo/EFO_0000651> .
+                        <{0}> rdfs:label ?trait .
                     }}
-                """.format(trait_id)
+                """.format(trait)
 
                 query_result = efo_ontology.query(phenotype_query)
                 if len(list(query_result)) > 0:
-                    if re.match(r'^EFO', trait_id):
+                    if re.match(r'^EFO', trait_curie):
                         model.addClassToGraph(
-                            trait_id,
+                            trait_curie,
                             list(query_result)[0][0],
                             'UPHENO:0001001')
 
@@ -516,7 +497,7 @@ class GWASCatalog(Source):
                 ref.addRefToGraph()
 
                 assoc = G2PAssoc(
-                    g, self.name, variant_id, trait_id,
+                    g, self.name, variant_id, trait_curie,
                     model.object_properties['contributes_to'])
                 assoc.add_source(pubmed_curie)
                 # combinatorial evidence
@@ -529,7 +510,8 @@ class GWASCatalog(Source):
 
                 # FIXME score should get added to provenance/study
                 # assoc.set_score(pvalue)
-                assoc.add_association_to_graph()
+                if trait_curie is not None:
+                    assoc.add_association_to_graph()
 
     @staticmethod
     def _map_variant_type(sample_type):
