@@ -14,7 +14,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
-CHUNK = 16 * 1024
+CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
 
 
 class Source:
@@ -37,6 +37,7 @@ class Source:
             logger.info("Processing Source \"%s\"", name)
         self.testOnly = False
         self.name = name
+        self.testname = name + "_test"
         self.path = ""
         # to be used to store a subset of data for testing downstream.
         self.triple_count = 0
@@ -52,7 +53,7 @@ class Source:
             # self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
             # logger.info("Setting outfile to %s", self.outfile)
 
-            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
+            self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
             logger.info("Setting testfile to %s", self.testfile)
 
             self.datasetfile = '/'.join(
@@ -74,8 +75,8 @@ class Source:
             p = os.path.abspath(self.outdir)
             logger.info("created output directory %s", p)
 
-        logger.info("Creating Test graph ", self.tesfile)
-        self.testgraph = RDFGraph(True,  self.tesfile)
+        logger.info("Creating Test graph ", self.testname)
+        self.testgraph = RDFGraph(True,  self.testname)
 
         if graph_type == 'rdf_graph':
             graph_id = ':MONARCH_' + str(self.name) + "_" + \
@@ -85,6 +86,7 @@ class Source:
             self.graph = RDFGraph(are_bnodes_skized, graph_id)
 
         elif graph_type == 'streamed_graph':
+            # insufficient
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             # leave test files as turtle (better human readibility)
@@ -307,7 +309,12 @@ class Source:
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))
-            self.dataset.setFileAccessUrl(filesource['url'])
+            # if the key 'clean' exists in the sources `files` dict
+            # expose that value instead of the url's
+            if filesource['clean'] is not None:
+                self.dataset.setFileAccessUrl(filesource['clean'])
+            else:
+                self.dataset.setFileAccessUrl(filesource['url'])
 
             st = os.stat('/'.join((self.rawdir, filesource['file'])))
 
