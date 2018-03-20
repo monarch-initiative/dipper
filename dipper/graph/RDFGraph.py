@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 # have yet to notice a feature of conjunctive graph used
 # perhaps it was more aspirational
-# I thing droping to a single graph per ingest
+# I think dropping to a single graph per ingest
 # and leaving more complicated processes to dedicated graph engines
-# would be better. TEC
+# would be possible here. TEC
 
 
 class RDFGraph(ConjunctiveGraph, DipperGraph):
@@ -61,11 +61,13 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 subject_id, predicate_id)
         return
 
+    # TEC ??? sko bnodes have transient IRIs not stable curies
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
-        node = BNode(stripped_id).skolemize(self.curie_map.get_base())
+        node = BNode(stripped_id).skolemize(self.curie_util.get_base())
         node = re.sub(r'rdflib/', '', node)
         return URIRef(node)
+
 
     def _getNode(self, curie):
         """
@@ -84,8 +86,9 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
         if re.match(r'^_', curie):
             if self.are_bnodes_skized is True:
                 node = self.skolemizeBlankNode(curie)
-            else:  # replace the leading underscore to make it cleaner
+            else:  # delete the leading underscore to make it cleaner
                 node = BNode(re.sub(r'^_:|^_', '', curie, 1))
+
         # Check if curie actually an IRI
         elif re.match(r'^http|^ftp', curie):
             node = URIRef(curie)
@@ -101,6 +104,20 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
             else:
                 logger.error("couldn't make URI for %s", curie)
         return node
+
+    # helper f(x) to encourage better bnode hygine
+    def makeBnode(self, bnode_identifier, rdfs_label, rdf_type, skolemize=True):
+
+        node = None
+
+        #bnode_id = blank
+        #addTriple(
+        #    self, bnode_id, "rdfs:label", rdfs_label,
+        #    object_is_literal=True, literal_type="String")
+        #addTriple(
+        #    self, bnode_id, "rdf:type", rdfs_type,
+        #    object_is_literal=False, literal_type="IRI")
+
 
     def bind_all_namespaces(self):
         for prefix in curie_map.get().keys():
