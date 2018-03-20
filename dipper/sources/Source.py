@@ -311,7 +311,7 @@ class Source:
                 is_dl_forced, filesource.get('headers'))
             # if the key 'clean' exists in the sources `files` dict
             # expose that value instead of the url's
-            if filesource['clean'] is not None:
+            if 'clean' in filesource and filesource['clean'] is not None:
                 self.dataset.setFileAccessUrl(filesource['clean'])
             else:
                 self.dataset.setFileAccessUrl(filesource['url'])
