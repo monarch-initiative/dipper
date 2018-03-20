@@ -58,23 +58,17 @@ class OMIM(Source):
     files = {
         'all': {
             'file': 'mim2gene.txt',
-            'url': 'http://omim.org/static/omim/data/mim2gene.txt'},
+            'url': 'https://omim.org/static/omim/data/mim2gene.txt'},
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url':  OMIMFTP + '/morbidmap.txt',
-            'clean': OMIMURL},
+            'clean': OMIMURL
+        },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
-            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tsv',
-            'headers': {'User-Agent': 'Mozilla/5.0'}}
-
-        # FTP files
-        # /mimTitles.txt
-        # /genemap.txt
-        # /genemap2.txt
-        # /omim.txt.Z                   replaced by mim2gene.txt
-        # Download from a page not FTP
-        # /phenotypic_series_title_all.txt
+            'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
+            'headers': {'User-Agent': 'Mozilla/5.0'}
+        }
     }
 
     # the following test ids are in the config.json
