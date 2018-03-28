@@ -6,6 +6,7 @@ from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.io.gafparser import GafParser
 import logging
+import csv
 from pprint import pprint
 
 __author__ = 'timputman'
@@ -57,13 +58,13 @@ class RGD(Source):
             logger.info("Only parsing first %d rows", limit)
 
         rgd_file = '/'.join((self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))
-
         # ontobio gafparser implemented here
         p = GafParser()
         assocs = p.parse(open(rgd_file, "r"))
 
         for i, assoc in enumerate(assocs):
-            self.make_association(assoc)
+            if 'relation' in assoc.keys():
+                self.make_association(assoc)
             if limit is not None and i > limit:
                 break
         return
