@@ -6,7 +6,6 @@ from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.io.gafparser import GafParser
 import logging
-import csv
 from pprint import pprint
 
 __author__ = 'timputman'
