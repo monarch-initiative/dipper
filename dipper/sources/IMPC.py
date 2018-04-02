@@ -281,8 +281,8 @@ class IMPC(Source):
                 # (and it's relationship to the marker, etc.) later
                 # FIXME is it really necessary to create this vslc
                 # when we always know it's unknown zygosity?
-                vslc_colony = \
-                    '_:'+re.sub(r':', '', allele_accession_id+geno.zygosity['indeterminate'])
+                vslc_colony = '_:'+re.sub(
+                    r':', '', allele_accession_id+geno.zygosity['indeterminate'])
                 vslc_colony_label = allele_symbol+'/<?>'
                 # for ease of reading, we make the colony genotype variables.
                 # in the future, it might be desired to keep the vslcs

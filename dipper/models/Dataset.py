@@ -23,7 +23,7 @@ class Dataset:
                  license_url=None, data_rights=None, graph_type=None,
                  file_handle=None):
         if graph_type is None:
-            self.graph = RDFGraph()
+            self.graph = RDFGraph(None, title)
         elif graph_type == 'streamed_graph':
             self.graph = StreamedGraph(True, file_handle=file_handle)
         elif graph_type == 'rdf_graph':

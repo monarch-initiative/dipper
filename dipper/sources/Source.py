@@ -14,7 +14,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
-CHUNK = 16 * 1024
+CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
 
 
 class Source:
@@ -22,7 +22,7 @@ class Source:
     Abstract class for any data sources that we'll import and process.
     Each of the subclasses will fetch() the data, scrub() it as necessary,
     then parse() it into a graph.  The graph will then be written out to
-    a single self.name().ttl file.
+    a single self.name().<dest_fmt>  file.
     """
 
     namespaces = {}
@@ -32,11 +32,13 @@ class Source:
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
-
+        # set to True if you want to materialze identifiers for BNodes
         if name is not None:
-            logger.info("Processing Source \"%s\"", name)
+            self.name = name
+        else:
+            self.name = self.whoami()
+        logger.info("Processing Source \"%s\"", name)
         self.testOnly = False
-        self.name = name
         self.path = ""
         # to be used to store a subset of data for testing downstream.
         self.triple_count = 0
@@ -44,20 +46,10 @@ class Source:
         self.testdir = 'tests'
         self.rawdir = 'raw'
         self.dataset = None
-        # set to True if you want to materialze identifiers for BNodes
 
-        if self.name is not None:
-            self.rawdir = '/'.join((self.rawdir, self.name))
-            # This is redundant when it is not wrong see write()
-            # self.outfile = '/'.join((self.outdir, self.name + ".ttl"))
-            # logger.info("Setting outfile to %s", self.outfile)
-
-            self.testfile = '/'.join((self.outdir, self.name + "_test.ttl"))
-            logger.info("Setting testfile to %s", self.testfile)
-
-            self.datasetfile = '/'.join(
-                (self.outdir, self.name + '_dataset.ttl'))
-            logger.info("Setting dataset file to %s", self.datasetfile)
+        self.rawdir = '/'.join((self.rawdir, self.name))
+        self.testname = name + "_test"
+        self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -71,14 +63,22 @@ class Source:
             p = os.path.abspath(self.outdir)
             logger.info("created output directory %s", p)
 
+        logger.info("Creating Test graph %s", self.testname)
+        # note: tools such as protoge need slolemized blank nodes
+        self.testgraph = RDFGraph(True,  self.testname)
+
         if graph_type == 'rdf_graph':
-            self.graph = RDFGraph(are_bnodes_skized)  # TODO named graph IRI?
-            self.testgraph = RDFGraph(True)
+            graph_id = ':MONARCH_' + str(self.name) + "_" + \
+                datetime.now().isoformat(' ').split()[0]
+
+            logger.info("Creating graph  %s", graph_id)
+            self.graph = RDFGraph(are_bnodes_skized, graph_id)
+
         elif graph_type == 'streamed_graph':
+            # insufficient
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
-            test_file = open(self.testfile.replace(".ttl", ".nt"), 'w')
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
-            self.testgraph = StreamedGraph(are_bnodes_skized, test_file)
+            # leave test files as turtle (better human readibility)
         else:
             logger.error(
                 "{} graph type not supported\n"
@@ -144,8 +144,10 @@ class Source:
                 dest = '.'.join((dest, fmt))
             logger.info("Setting outfile to %s", dest)
 
-            # make the datasetfile name, always format as turtle
-            datasetfile = '/'.join((self.outdir, self.name+'_dataset.ttl'))
+            # make the dataset_file name, always format as turtle
+            self.datasetfile = '/'.join(
+                (self.outdir, self.name + '_dataset.ttl'))
+            logger.info("Setting dataset file to %s", self.datasetfile)
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
@@ -158,10 +160,11 @@ class Source:
         gu = GraphUtils(None)
 
         # the  _dataset descriptions is always turtle
-        gu.write(self.dataset.getGraph(), 'turtle', file=datasetfile)
+        gu.write(self.dataset.getGraph(), 'turtle', file=self.datasetfile)
 
-        # unless we stop hardcoding above, the test dataset is always turtle
         if self.testMode:
+            # unless we stop hardcoding, the test dataset is always turtle
+            logger.info("Setting testfile to %s", self.testfile)
             gu.write(self.testgraph, 'turtle', file=self.testfile)
 
         # print graph out
@@ -170,7 +173,7 @@ class Source:
         elif stream.lower().strip() == 'stdout':
             f = None
         else:
-            logger.error("I don't understand your stream.")
+            logger.error("I don't understand our stream.")
             return
 
         gu.write(self.graph, fmt, file=f)
@@ -297,7 +300,12 @@ class Source:
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
                 is_dl_forced, filesource.get('headers'))
-            self.dataset.setFileAccessUrl(filesource['url'])
+            # if the key 'clean' exists in the sources `files` dict
+            # expose that instead of the longer url
+            if 'clean' in filesource and filesource['clean'] is not None:
+                self.dataset.setFileAccessUrl(filesource['clean'])
+            else:
+                self.dataset.setFileAccessUrl(filesource['url'])
 
             st = os.stat('/'.join((self.rawdir, filesource['file'])))
 
@@ -546,6 +554,7 @@ class Source:
         """
         return None
 
+    # TODO: pramaterising the release date
     def declareAsOntology(self, graph):
         """
         The file we output needs to be declared as an ontology,
@@ -562,7 +571,8 @@ class Source:
         in a store such as SciGraph.
 
         Including more than the minimal ontological terms in dipper's RDF
-        output constitutes a liability as it allows divergence.
+        output constitutes a liability as it allows greater divergence
+        between dipper artifacts and the proper ontologies.
 
         Further information will be augmented in the dataset object.
         :param version:
@@ -587,7 +597,8 @@ class Source:
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
 
-        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
+        yrmth = str(datetime.now().year) + str(datetime.now().month)
+        archive_url = 'MonarchArchive:' + yrmth + '/ttl/' + self.name + '.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
 

@@ -126,7 +126,8 @@ with gzip.open(FILENAME, 'rt') as fh:
         RCV_MeasureSet = RCVAssertion.find('./MeasureSet')
         if RCV_MeasureSet is None:
             #GenotypeSet
-        else
+            continue
+        else:
             for rms in RCV_MeasureSet:
                 RCV_Measure = rms.findall('./Measure')
                 RCV_MRel = rms.find('./MeasureRelationship')

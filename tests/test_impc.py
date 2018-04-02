@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class IMPCTestCase(SourceTestCase):
 
     def setUp(self):
-        self.source = IMPC('rdf_graph', True)
+        self.source = IMPC('rdf_graph', True)  # Skolem Yes
         self.source.settestonly(True)
         self._setDirToSource()
         return
@@ -41,19 +41,21 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         self.assoc_curie = 'MONARCH:test_association'
         self.eco_id = 'ECO:0000015'
 
-        self.test_set_1 = ('MGI:1920145', 'Setd5', 'WTSI', 'MEFW', 'male',
-                           'heterozygote', 'MGI:4432631', 'Setd5<tm1a(EUCOMM)Wtsi>',
-                           'targeted mutation 1a, Wellcome Trust Sanger Institute',
-                           'MGI:2159965', 'C57BL/6N', 'MGP',
-                           'Wellcome Trust Sanger Institute Mouse Genetics Project',
-                           'MGP Select Pipeline', 'MGP_001', 'MGP_XRY_001', 'X-ray',
-                           'IMPC_XRY_008_001', 'Number of ribs right', 'MP:0005390',
-                           'skeleton phenotype', 'MP:0000480', 'increased rib number',
-                           '1.637023E-010', '', '8.885439E-007',
-                           'Wilcoxon rank sum test with continuity correction', 'IMPC')
+        self.test_set_1 = (
+            'MGI:1920145', 'Setd5', 'WTSI', 'MEFW', 'male',
+            'heterozygote', 'MGI:4432631', 'Setd5<tm1a(EUCOMM)Wtsi>',
+            'targeted mutation 1a, Wellcome Trust Sanger Institute',
+            'MGI:2159965', 'C57BL/6N', 'MGP',
+            'Wellcome Trust Sanger Institute Mouse Genetics Project',
+            'MGP Select Pipeline', 'MGP_001', 'MGP_XRY_001', 'X-ray',
+            'IMPC_XRY_008_001', 'Number of ribs right', 'MP:0005390',
+            'skeleton phenotype', 'MP:0000480', 'increased rib number',
+            '1.637023E-010', '', '8.885439E-007',
+            'Wilcoxon rank sum test with continuity correction', 'IMPC')
 
         # Generate test curies, these are otherwise generated
         # within _add_evidence() and _add_study_provenance()
+        # these blank nodes are hardcoded as NOT Skolemized  ...
         self.study_curie = "_:study"
         self.evidence_curie = "_:evidence"
 
@@ -68,7 +70,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_evidence()
         """
-        impc = IMPC('rdf_graph', False)
+        impc = IMPC('rdf_graph', False)  # not Skolem
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
@@ -77,24 +79,23 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
                            percentage_change, effect_size, self.study_curie)
 
         sparql_query = """
-                      SELECT ?assoc
-                      WHERE {
-                            ?assoc OBO:SEPIO_0000007 ?evidenceline .
-                            ?evidenceline a OBO:ECO_0000015 ;
-                                OBO:SEPIO_0000084 ?measure1 ;
-                                OBO:SEPIO_0000084 ?measure2 ;
-                                OBO:SEPIO_0000085 _:study  .
+SELECT ?assoc
+WHERE {
+    ?assoc OBO:SEPIO_0000007 ?evidenceline .
+    ?evidenceline a OBO:ECO_0000015 ;
+        OBO:SEPIO_0000084 ?measure1 ;
+        OBO:SEPIO_0000084 ?measure2 ;
+        OBO:SEPIO_0000085 _:study .
 
-                            ?measure1 a OBO:OBI_0000175 ;
-                                OBO:RO_0002353 _:study ;
-                                OBO:STATO_0000129 1.637023e-10 .
+    ?measure1 a OBO:OBI_0000175 ;
+        OBO:RO_0002353 _:study ;
+        OBO:STATO_0000129 1.637023e-10 .
 
-                            ?measure2 a OBO:STATO_0000085 ;
-                                OBO:RO_0002353 _:study ;
-                                OBO:STATO_0000129 "8.885439E-007" .
-
-                      }
-                      """
+    ?measure2 a OBO:STATO_0000085 ;
+        OBO:RO_0002353 _:study ;
+        OBO:STATO_0000129 "8.885439E-007" .
+}
+"""
         sparql_output = impc.graph.query(sparql_query)
         expected_results = [(self.assoc_iri,)]
 
@@ -104,10 +105,11 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC('rdf_graph', False)
+        impc = IMPC('rdf_graph', False)  # Not Skolem
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
         impress_map = json.loads(
-            impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
+            impc.fetch_from_url(
+                impc.map_files['impress_map']).read().decode('utf-8'))
 
         (phenotyping_center, colony) = self.test_set_1[2:4]
         (project_fullname, pipeline_name, pipeline_stable_id,
@@ -122,42 +124,54 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             parameter_stable_id, parameter_name,
             statistical_method, resource_name)
 
+        # test graph does not know about curie_map.yaml
+        impc.graph.bind(
+            "IMPRESS-procedure",
+            "https://www.mousephenotype.org/impress/procedures/")
+        impc.graph.bind(
+            "IMPRESS-protocol",
+            "https://www.mousephenotype.org/impress/protocol/")
+        impc.graph.bind(
+            "IMPRESS-parameter",
+            "https://www.mousephenotype.org/impress/parameterontologies/")
+
+        # note '/' not allowed in curie so urlencode as '%2F'
+
         sparql_query = """
-                      SELECT ?study
-                      WHERE {
-                          <https://www.mousephenotype.org/impress/procedures/15> a owl:NamedIndividual ;
-                              rdfs:label "MGP Select Pipeline" .
+SELECT ?study
+  WHERE {
+    ?study a OBO:OBI_0000471 ;
+      OBO:BFO_0000051 OBO:STATO_0000076 ;
+      OBO:BFO_0000050  IMPRESS-procedure:15 ;
+      OBO:BFO_0000051  IMPRESS-protocol:175%2F15 ;
+      OBO:SEPIO_0000114 IMPRESS-parameter:1867%2F91 ;
+      OBO:BFO_0000050   <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
+      OBO:SEPIO_0000017 <http://www.sanger.ac.uk/>  .
+  }
+"""
+        # ???!!
+        # none of this is related to this ?study query
+        # but was all in the where clause
 
-                          <https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
-                              rdfs:label "X-ray" .
-
-                          <http://www.sanger.ac.uk/> a foaf:organization ;
-                              rdfs:label "WTSI" .
-
-                          <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
-                              rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
-
-                          <https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
-                              rdfs:label "Number of ribs right (X-ray)" .
-
-                          ?study a OBO:OBI_0000471 ;
-                              OBO:BFO_0000051 OBO:STATO_0000076 ;
-                              OBO:BFO_0000050 <https://www.mousephenotype.org/impress/procedures/15> ;
-                              OBO:BFO_0000051 <https://www.mousephenotype.org/impress/protocol/175/15> ;
-                              OBO:SEPIO_0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
-                              OBO:BFO_0000050 <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-                              OBO:SEPIO_0000017 <http://www.sanger.ac.uk/> .
-
-                          ?colony a owl:NamedIndividual ;
-                              rdfs:label "MEFW" .
-                      }
-                      """
+        # <HTTPS://WWW.MOUSEPHENOTYPE.ORG/IMPRESS/PROCEDURES/15> A OWL:NAMEDINDIVIDUAL ;
+        #  RDFS:LABEL "MGP SELECT PIPELINE" .
+        # <HTTPS://WWW.MOUSEPHENOTYPE.ORG/IMPRESS/PROTOCOL/175/15> A OWL:NAMEDINDIVIDUAL ;
+        #   RDFS:LABEL "X-RAY" .
+        # <HTTP://WWW.SANGER.AC.UK/> A FOAF:ORGANIZATION ;
+        #   RDFS:LABEL "WTSI" .
+        # <HTTP://WWW.SANGER.AC.UK/SCIENCE/DATA/MOUSE-GENOMES-PROJECT> A VIVO:PROJECT ;
+        #   RDFS:LABEL "WELLCOME TRUST SANGER INSTITUTE MOUSE GENETICS PROJECT" .
+        # <HTTPS://WWW.MOUSEPHENOTYPE.ORG/IMPRESS/PARAMETERONTOLOGIES/1867/91> A OWL:NAMEDINDIVIDUAL ;
+        #  RDFS:LABEL "NUMBER OF RIBS RIGHT (X-RAY)" .
+        # ?COLONY A OWL:NAMEDINDIVIDUAL ;
+        #  RDFS:LABEL "MEFW" .
 
         sparql_output = impc.graph.query(sparql_query)
 
         # This will fail if we change our approach for
         # making blank node iris, it might be better
         # to check the length of the output (see test_provenance_mode)
+        # TEC: did this get updated in digest move from md5 to sha1?
         study = BNode('bbdd05a8ca155dda')
         expected_output = [(study,)]
 
@@ -167,26 +181,31 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         Functional test for _add_study_provenance()
         """
-        impc = IMPC('rdf_graph', True)
+
+        impc = IMPC('rdf_graph', False)  # Not Skolem
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
-        impc._add_assertion_provenance(self.assoc_curie,
-                                       self.evidence_curie, impc_map)
-
+        impc._add_assertion_provenance(
+            self.assoc_curie, self.evidence_curie, impc_map)
+        # @prefix _: https://monarchinitiative.org/.well-known/genid/
         sparql_query = """
-                      SELECT *
-                      WHERE {
-                          MONARCH:test_association OBO:SEPIO_0000015 ?assertion.
-                          ?assertion a OBO:SEPIO_0000001 ;
-                              OBO:SEPIO_0000018 <http://www.mousephenotype.org/> ;
-                              OBO:SEPIO_0000111 <https://monarchinitiative.org/.well-known/genid/evidence>  .
+SELECT *
+WHERE {
+    MONARCH:test_association OBO:SEPIO_0000015 ?assertion.
+    ?assertion a OBO:SEPIO_0000001 ;
+        OBO:SEPIO_0000018 <http://www.mousephenotype.org/> ;
+        OBO:SEPIO_0000111 _:evidence  .
 
-                          <http://www.mousephenotype.org/> a foaf:organization ;
-                              rdfs:label "International Mouse Phenotyping Consortium" .
-                      }
-                      """
+    <http://www.mousephenotype.org/> a foaf:organization ;
+        rdfs:label "International Mouse Phenotyping Consortium" .
+}
+"""
 
         sparql_output = impc.graph.query(sparql_query)
+
+        # dbg
+        logger.error("Sparql returned: %s", str(sparql_output))
+
         # Test that query passes and returns one row
         self.assertEqual(len(list(sparql_output)), 1)
 
@@ -199,10 +218,10 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         """
         line_to_test = 1129
         count = 0
-        # init impc (make this a function?)
-        impc = IMPC('rdf_graph', True)
+        impc = IMPC('rdf_graph', False)   # Not Skolem
         impress_map = json.loads(
-            impc.fetch_from_url(impc.map_files['impress_map']).read().decode('utf-8'))
+            impc.fetch_from_url(
+                impc.map_files['impress_map']).read().decode('utf-8'))
         impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         # fetch file
@@ -213,7 +232,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             for row in filereader:
                 count += 1
                 if count == line_to_test:
-                    test_set = row
                     self.test_set_1 = row
                     break
 
@@ -240,17 +258,17 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # multiple part_of  and has_part links to individuals
         # which results in ambiguity = hard to test
         sparql_query = """
-                      SELECT *
-                      WHERE {
-                          ?assoc OBO:SEPIO_0000007 ?evidenceline .
-                          ?evidenceline a OBO:ECO_0000015 ;
-                              OBO:SEPIO_0000085 <https://monarchinitiative.org/.well-known/genid/study> .
+SELECT *
+WHERE {
+    ?assoc OBO:SEPIO_0000007 ?evidenceline .
+    ?evidenceline a OBO:ECO_0000015 ;
+        OBO:SEPIO_0000085 _:study .
 
-                          ?study a OBO:OBI_0000471 ;
-                              OBO:SEPIO_0000114 ?param ;
-                              OBO:SEPIO_0000017 ?agent .
-                      }
-                      """
+    ?study a OBO:OBI_0000471 ;
+        OBO:SEPIO_0000114 ?param ;
+        OBO:SEPIO_0000017 ?agent .
+}
+"""
 
         sparql_output = impc.graph.query(sparql_query)
         # Test that query passes and returns one row
