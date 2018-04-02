@@ -25,7 +25,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     curie_util = CurieUtil(curie_map.get())
 
     def __init__(self, are_bnodes_skized=True, identifier=None):
-        print("in RDFGraph  with id: ", identifier)
+        # print("in RDFGraph  with id: ", identifier)
         super().__init__('IOMemory', identifier)
         self.are_bnodes_skized = are_bnodes_skized
 
@@ -61,11 +61,11 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 subject_id, predicate_id)
         return
 
-    # TEC ??? sko bnodes have transient IRIs not stable curies
+
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
         node = BNode(stripped_id).skolemize(self.curie_util.get_base())
-        node = re.sub(r'rdflib/', '', node)
+        node = re.sub(r'rdflib/', '', node)  # where does this come in??
         return URIRef(node)
 
 
