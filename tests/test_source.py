@@ -41,7 +41,8 @@ class SourceTestCase(unittest.TestCase):
                 self.assertFalse(True, "Parsing failed")
             """
             try:
-                properties = GraphUtils.get_properties_from_graph(self.source.graph)
+                properties = GraphUtils.get_properties_from_graph(
+                    self.source.graph)
                 GraphUtils.add_property_axioms(self.source.graph, properties)
                 self.source.write()  # default to  fmt='turtle'
                 #self.source.write(fmt='nt')
@@ -55,7 +56,6 @@ class SourceTestCase(unittest.TestCase):
     def test_readGraph(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
-            # p = os.path.abspath(f)  # TODO unused
             self.assertTrue(
                 os.path.exists(f), "path does not exist for {0}".format(f))
             test_general.GeneralGraphTestCase().readGraphFromTurtleFile(f)
@@ -66,7 +66,6 @@ class SourceTestCase(unittest.TestCase):
     def test_readGraphIntoOWL(self):
         if self.source is not None:  # don't test the abstract class
             f = self.source.testfile
-            # p = os.path.abspath(f) # tec unused
             self.assertTrue(os.path.exists(f), "path does not exist for " + f)
             test_general.GeneralGraphTestCase().readGraphIntoOWL(f)
 
@@ -82,8 +81,8 @@ class SourceTestCase(unittest.TestCase):
         return
 
     def _get_conf(self):
-        if os.path.exists(os.path.join(os.path.dirname(__file__),
-                                       'test_ids.json')):
+        if os.path.exists(
+                os.path.join(os.path.dirname(__file__), 'test_ids.json')):
             with open(
                 os.path.join(
                     os.path.dirname(__file__), 'test_ids.json')) as json_file:
