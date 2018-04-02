@@ -82,25 +82,25 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['allele_freq'])
 
         sparql_query = """
-            SELECT ?snp
-            WHERE {
-                ?snp a OBO:SO_0000694,
-                    OBO:SO_0001628 ;
-                    rdfs:label "rs1491921-C" ;
-                    faldo:location
-                    <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029-21259029-Region> ;
-                    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
-                    dc:description "0.013 [risk allele frequency]" .
+SELECT ?snp
+WHERE {
+    ?snp a OBO:SO_0000694, OBO:SO_0001628 ;
+        rdfs:label "rs1491921-C" ;
+        faldo:location  _:GRCh38chr5-21259029-21259029-Region ;
+        OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+        dc:description "0.013 [risk allele frequency]" .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029-21259029-Region> a faldo:Region ;
-                    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> ;
-                    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> .
+    _:GRCh38chr5-21259029-21259029-Region a faldo:Region ;
+        faldo:begin _:GRCh38chr5-21259029 ;
+        faldo:end _:GRCh38chr5-21259029 .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> a faldo:Position ;
-                    faldo:position 21259029 ;
-                    faldo:reference OBO:CHR_GRCh38chr5 .
-            }
-        """
+    _:GRCh38chr5-21259029 a faldo:Position ;
+        faldo:position 21259029 ;
+        faldo:reference OBO:CHR_GRCh38chr5 .
+}
+"""
+        # <https://monarchinitiative.org/.well-known/genid/
+
         # To debug
         #print(self.source.graph.serialize(format="turtle").decode("utf-8"))
         #self.assertTrue(False)
@@ -118,20 +118,23 @@ class TestGwasSNPModel(unittest.TestCase):
         """
 
         variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+            self.source._get_curie_and_type_from_id(
+                self.test_data['snp_label'])
 
         self.source._add_snp_gene_relation(
             variant_curie, self.test_data['snp_gene_nums'],
             self.test_data['upstream_gene_num'],
             self.test_data['downstream_gene_num'])
 
+        self.source.graph.bind("NCBIGene", "http://www.ncbi.nlm.nih.gov/gene/")
+
         sparql_query = """
-            SELECT ?snp
-            WHERE {
-                ?snp OBO:RO_0002528 <http://www.ncbi.nlm.nih.gov/gene/107986180> ;
-                     OBO:RO_0002529 <http://www.ncbi.nlm.nih.gov/gene/107986179> .
-            }
-        """
+SELECT ?snp
+WHERE {
+    ?snp OBO:RO_0002528 NCBIGene:107986180 ;
+         OBO:RO_0002529 NCBIGene:107986179 .
+}
+"""
         sparql_output = self.source.graph.query(sparql_query)
         # Test that query passes and returns one row
         results = list(sparql_output)
@@ -155,15 +158,15 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['chrom_num'], self.test_data['chrom_pos'])
 
         sparql_query = """
-            SELECT ?snp
-            WHERE {
-                ?snp a owl:NamedIndividual ;
-                    OBO:IAO_0100001 dbSNP:rs12345 ;
-                    owl:deprecated true .
+SELECT ?snp
+    WHERE {
+        ?snp a owl:NamedIndividual ;
+            OBO:IAO_0100001 dbSNP:rs12345 ;
+            owl:deprecated true .
 
-                dbSNP:rs12345 MONARCH:cliqueLeader true .
-            }
-        """
+        dbSNP:rs12345 MONARCH:cliqueLeader true .
+    }
+"""
         sparql_output = self.source.graph.query(sparql_query)
         # Test that query passes and returns one row
         results = list(sparql_output)
@@ -194,32 +197,32 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['pubmed'], description)
 
         sparql_query = """
-            SELECT ?snp
-            WHERE {{
-                <https://monarchinitiative.org/MONARCH_b46cdf48950cb00d> a OBAN:association ;
-                    dc:description "{}" ;
-                    OBO:RO_0002558 OBO:ECO_0000213 ;
-                    dc:source PMID:25918132 ;
-                    OBAN:association_has_object EFO:0003949 ;
-                    OBAN:association_has_predicate OBO:RO_0002326 ;
-                    OBAN:association_has_subject ?snp .
+SELECT ?snp
+WHERE {{
+    MONARCH:b46cdf48950cb00d a OBAN:association ;
+        dc:description "{}" ;
+        OBO:RO_0002558 OBO:ECO_0000213 ;
+        dc:source PMID:25918132 ;
+        OBAN:association_has_object EFO:0003949 ;
+        OBAN:association_has_predicate OBO:RO_0002326 ;
+        OBAN:association_has_subject ?snp .
 
-                <https://monarchinitiative.org/MONARCH_70a05d8eb1c3d4b0> a OBAN:association ;
-                    OBO:RO_0002558 OBO:ECO_0000213 ;
-                    dc:source PMID:25918132 ;
-                    OBAN:association_has_object EFO:0006995 ;
-                    OBAN:association_has_predicate OBO:RO_0002326 ;
-                    OBAN:association_has_subject ?snp .
+    MONARCH:70a05d8eb1c3d4b0 a OBAN:association ;
+        OBO:RO_0002558 OBO:ECO_0000213 ;
+        dc:source PMID:25918132 ;
+        OBAN:association_has_object EFO:0006995 ;
+        OBAN:association_has_predicate OBO:RO_0002326 ;
+        OBAN:association_has_subject ?snp .
 
-                EFO:0003949 a owl:Class ;
-                    rdfs:label "eye color"^^xsd:string ;
-                    rdfs:subClassOf UPHENO:0001001 .
+    EFO:0003949 a owl:Class ;
+        rdfs:label "eye color"^^xsd:string ;
+        rdfs:subClassOf UPHENO:0001001 .
 
-                ?snp OBO:RO_0002326 EFO:0003949,
-                        EFO:0006995 .
+    ?snp OBO:RO_0002326 EFO:0003949,
+            EFO:0006995 .
 
-                PMID:25918132 a OBO:IAO_0000013 .
-            }}
+    PMID:25918132 a OBO:IAO_0000013 .
+}}
         """.format(description)
         sparql_output = self.source.graph.query(sparql_query)
         # Test that query passes and returns one row
@@ -282,79 +285,86 @@ class TestGwasHaplotypeModel(unittest.TestCase):
             self.test_data['chrom_pos'], self.test_data['context'],
             self.test_data['allele_freq'], self.test_data['mapped_gene'], so_ontology)
 
+            # bind('HGNC', 'http://identifiers.org/hgnc/HGNC:')
+
         sparql_query = """
-            SELECT ?snp
-            WHERE {
-                :haplotype_bcb627b1f64039b0 a OBO:GENO_0000871 ;
-                    rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
-                    OBO:GENO_0000382 ?snp,
-                        dbSNP:rs3758171,
-                        dbSNP:rs3824344,
-                        dbSNP:rs7020413 ;
-                OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
-                OBO:RO_0002162 OBO:NCBITaxon_9606 .
+SELECT ?snp
+    WHERE {
+        ?snp a OBO:SO_0000694, OBO:SO_0001627 ;
+            rdfs:label "rs1329573-?" ;
+            faldo:location _:GRCh38chr9-36998996-36998996-Region ;
+            OBO:GENO_0000418 HGNC:8619 ;
+            OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    }
+"""
 
-                ?snp a OBO:SO_0000694,
-                        OBO:SO_0001627 ;
-                    rdfs:label "rs1329573-?" ;
-                    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> ;
-                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
-                    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+        # the rest of this looks impressive but matters little
+        # requesting something which does not exist
+        # does not generate an error
 
-                dbSNP:rs3758171 a OBO:SO_0000694,
-                        OBO:SO_0001627 ;
-                    rdfs:label "rs3758171-?" ;
-                    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> ;
-                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
-                    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+        #MONARCH:haplotype_bcb627b1f64039b0 a OBO:GENO_0000871 ;
+            #rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
+            #OBO:GENO_0000382 ?snp,
+                #dbSNP:rs3758171,
+                #dbSNP:rs3824344,
+                #dbSNP:rs7020413 ;
+        #OBO:GENO_0000418 HGNC:8619 ;
+        #OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
-                dbSNP:rs3824344 a OBO:SO_0000694,
-                        OBO:SO_0001627 ;
-                    rdfs:label "rs3824344-?" ;
-                    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> ;
-                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
-                    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+        #dbSNP:rs3758171 a OBO:SO_0000694,
+                #OBO:SO_0001627 ;
+            #rdfs:label "rs3758171-?" ;
+            #faldo:location _:GRCh38chr9-36997420-36997420-Region ;
+            #OBO:GENO_0000418 HGNC:8619 ;
+            #OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
-                dbSNP:rs7020413 a OBO:SO_0000694,
-                        OBO:SO_0001627 ;
-                    rdfs:label "rs7020413-?" ;
-                    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> ;
-                    OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:8619> ;
-                    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+        #dbSNP:rs3824344 a OBO:SO_0000694,
+                #OBO:SO_0001627 ;
+            #rdfs:label "rs3824344-?" ;
+            #faldo:location :_GRCh38chr9-37000690-37000690-Region ;
+            #OBO:GENO_0000418 HGNC:8619 ;
+            #OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> a faldo:Region ;
-                    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> ;
-                    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> .
+        #dbSNP:rs7020413 a OBO:SO_0000694,
+                #OBO:SO_0001627 ;
+            #rdfs:label "rs7020413-?" ;
+            #faldo:location _:GRCh38chr9-37002118-37002118-Region ;
+            #OBO:GENO_0000418 HGNC:8619 ;
+            #OBO:RO_0002162 OBO:NCBITaxon_9606 .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> a faldo:Region ;
-                    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> ;
-                    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> .
+        #_:GRCh38chr9-36997420-36997420-Region a faldo:Region ;
+            #faldo:begin _:GRCh38chr9-36997420> ;
+            #faldo:end _:GRCh38chr9-36997420> .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> a faldo:Region ;
-                    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> ;
-                    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> .
+        #_:GRCh38chr9-36998996-36998996-Region a faldo:Region ;
+            #faldo:begin _:GRCh38chr9-36998996> ;
+            #faldo:end _:GRCh38chr9-36998996> .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> a faldo:Region ;
-                    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> ;
-                    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> .
+        #_:GRCh38chr9-37000690-37000690-Region a faldo:Region ;
+            #faldo:begin _:GRCh38chr9-37000690> ;
+            #faldo:end _:GRCh38chr9-37000690> .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> a faldo:Position ;
-                    faldo:position 36997420 ;
-                    faldo:reference OBO:CHR_GRCh38chr9 .
+        #_:GRCh38chr9-37002118-37002118-Region> a faldo:Region ;
+            #faldo:begin _:GRCh38chr9-37002118> ;
+            #faldo:end _:GRCh38chr9-37002118> .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> a faldo:Position ;
-                    faldo:position 36998996 ;
-                    faldo:reference OBO:CHR_GRCh38chr9 .
+        #_:GRCh38chr9-36997420 a faldo:Position ;
+            #faldo:position 36997420 ;
+            #faldo:reference OBO:CHR_GRCh38chr9 .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> a faldo:Position ;
-                    faldo:position 37000690 ;
-                    faldo:reference OBO:CHR_GRCh38chr9 .
+        #_:GRCh38chr9-36998996 a faldo:Position ;
+            #faldo:position 36998996 ;
+            #faldo:reference OBO:CHR_GRCh38chr9 .
 
-                <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> a faldo:Position ;
-                    faldo:position 37002118 ;
-                    faldo:reference OBO:CHR_GRCh38chr9 .
-            }
-        """
+        #_:GRCh38chr9-37000690 a faldo:Position ;
+            #faldo:position 37000690 ;
+            #faldo:reference OBO:CHR_GRCh38chr9 .
+
+        #_:GRCh38chr9-37002118 a faldo:Position ;
+            #faldo:position 37002118 ;
+            #faldo:reference OBO:CHR_GRCh38chr9 .
+    #}
+        #"""
         sparql_output = self.source.graph.query(sparql_query)
         # Test that query passes and returns one row
         results = list(sparql_output)
