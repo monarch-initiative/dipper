@@ -48,7 +48,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                     (self._getNode(subject_id), self._getNode(predicate_id),
                      Literal(obj)))
             else:
-                logger.warn(
+                logger.warning(
                     "None as literal object for subj: %s and pred: %s",
                     subject_id, predicate_id)
         elif obj is not None and obj != '':
@@ -56,7 +56,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 (self._getNode(subject_id), self._getNode(predicate_id),
                  self._getNode(obj)))
         else:
-            logger.warn(
+            logger.warning(
                 "None/empty object IRI for subj: %s and pred: %s",
                 subject_id, predicate_id)
         return
@@ -65,7 +65,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
         node = BNode(stripped_id).skolemize(self.curie_util.get_base())
-        node = re.sub(r'rdflib/', '', node)  # where does this come in??
+        node = re.sub(r'rdflib/', '', node)  # remove string added by rdflib
         return URIRef(node)
 
 

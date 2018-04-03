@@ -147,19 +147,15 @@ class MyChem(Source):
         return
 
     def fetch_from_mychem(self):
-        count = 0
         for k in self.inchikeys:
-            count +=1
-            if count < 10:
-                ids = ",".join(k)
-                fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,drugcentral.drug_use,drugcentral.bioactivity'
-                records = MyChem.get_drug_record(ids=ids, fields=fields)
-                for record in records:
-                    if 'drugbank' in record.keys():
-                        self.drugbank_targets.append(record)
-                    if 'drugcentral' in record.keys():
-                        self.drugcentral_interactors.append(record)
-            return
+            ids = ",".join(k)
+            fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,drugcentral.drug_use,drugcentral.bioactivity'
+            records = MyChem.get_drug_record(ids=ids, fields=fields)
+            for record in records:
+                if 'drugbank' in record.keys():
+                    self.drugbank_targets.append(record)
+                if 'drugcentral' in record.keys():
+                    self.drugcentral_interactors.append(record)
 
     @staticmethod
     def add_relation(results, relation):

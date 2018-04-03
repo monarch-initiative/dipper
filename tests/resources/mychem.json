@@ -1,0 +1,27 @@
+{
+   "drugbank":{
+      "_license":"https://goo.gl/kvVASD",
+      "drugbank_id":"DB13259"
+   },
+   "query":"HRYZWHHZPQKTII-UHFFFAOYSA-N",
+   "drugcentral":{
+      "_license":"https://goo.gl/QDNyNe",
+      "drug_use":[
+         {
+            "relation":"contraindication",
+            "snomed_id":"30911005",
+            "snomed_name":"Cryoglobulinemia"
+         },
+         {
+            "relation":"indication",
+            "snomed_id":"386761002",
+            "snomed_name":"Local anesthesia"
+         }
+      ]
+   },
+   "_id":"HRYZWHHZPQKTII-UHFFFAOYSA-N",
+   "unii":{
+      "_license":"?",
+      "unii":"46U771ERWK"
+   }
+}

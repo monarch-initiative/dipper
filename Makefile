@@ -37,5 +37,8 @@ RGD-test:
 SGD-test:
 	$(TEST) tests/test_sgd.py
 
+CTD-test:
+	$(TEST) tests/test_ctd.py
+
 trans-test:
 	$(TEST) tests/test_trtable.py
