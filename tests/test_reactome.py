@@ -43,7 +43,7 @@ class ReactomeTestCase(unittest.TestCase):
         REACT:R-BTA-3000480 a owl:Class ;
             rdfs:label "Scavenging by Class A Receptors" ;
             rdfs:subClassOf GO:0009987,
-            PW:0000001 .
+                PW:0000001 .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             triples, reactome.graph))

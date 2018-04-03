@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import unittest
+import logging
 from dipper.sources.SGD import SGD
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class SGDTestCase(unittest.TestCase):
@@ -36,18 +40,7 @@ class SGDTestCase(unittest.TestCase):
         record = self.test_set_1
         sgd.make_association(record)
 
-        description = [
-            'genomic_background: {}'.format(record['Strain Background']),
-            'allele: {}'.format(record['Allele']),
-            'chemical: {}'.format(record['Chemical']),
-            'condition: {}'.format(record['Condition']),
-            'details: {}'.format(record['Details']),
-            'feature_name: {}'.format(record['Feature Name']),
-            'gene_name: {}'.format(record['Gene Name']),
-            'mutant_type: {}'.format(record['Mutant Type']),
-            'reporter: {}'.format(record['Reporter']),
-        ]
-        description = " | ".join(description).strip()
+        description = sgd._make_description(record)
 
         triples = """
         :MONARCH_95158d413dd73476 a OBAN:association ;

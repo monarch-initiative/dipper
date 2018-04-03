@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
 import unittest
+import logging
 from dipper.sources.RGD import RGD
+from dipper.graph.RDFGraph import RDFGraph
+from dipper.utils.TestUtils import TestUtils
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class RGDTestCase(unittest.TestCase):
     def setUp(self):
+        self.test_util = TestUtils()
         self.test_set_1 = {'aspect': 'N',
                            'date': '2006-10-26',
                            'evidence': {'has_supporting_reference': ['RGD:1581841', 'PMID:12799311'],
@@ -34,24 +41,31 @@ class RGDTestCase(unittest.TestCase):
 
     def testRGDParser(self):
         rgd = RGD('rdf_graph', True)
+        rgd.graph = RDFGraph(True)
+
+        self.assertTrue(len(list(rgd.graph)) == 0)
+
         rgd.make_association(record=self.test_set_1)
-        sparql_query = """
-        SELECT ?assoc WHERE {
-        ?assoc a OBAN:association ;
-        OBO:RO_0002558 OBO:ECO_0005611 ;
-        dc:source <http://rgd.mcw.edu/rgdweb/report/reference/main.html?id=1581841> ;
+        triples = """
+    :MONARCH_64650e8c3d865f11 a OBAN:association ;
+        RO:0002558 ECO:0005611 ;
+        dc:source RGDRef:1581841 ;
         OBAN:association_has_object OBO:MP_0003340 ;
         OBAN:association_has_predicate OBO:RO_0002200 ;
-        OBAN:association_has_subject <http://rgd.mcw.edu/rgdweb/report/gene/main.html?id=2535> ;
+        OBAN:association_has_subject RGD:2535 ;
         pav:createdOn "2006-10-26" .
-        <http://rgd.mcw.edu/rgdweb/report/gene/main.html?id=2535> OBO:RO_0002200 OBO:MP_0003340 .
-        <http://rgd.mcw.edu/rgdweb/report/reference/main.html?id=1581841> a OBO:IAO_0000311 ;
-                owl:sameAs <http://www.ncbi.nlm.nih.gov/pubmed/12799311> .
-        }
+    
+    RGD:2535 OBO:RO_0002200 MP:0003340 .
+        RGDRef:1581841 a IAO:0000311 ;
+        owl:sameAs PMID:12799311 .
         """
-        #
-        sparql_output = rgd.graph.query(sparql_query)
-        self.assertEqual(len(list(sparql_output)), 1)
+        # dbg
+        logger.error("Reference graph: %s",
+                     rgd.graph.serialize(format="turtle")
+                              .decode("utf-8")
+        )
+        self.assertTrue(self.test_util.test_graph_equality(
+            triples, rgd.graph))
 
 
 

@@ -2,7 +2,6 @@
 
 import unittest
 import logging
-from tests.test_source import SourceTestCase
 from dipper.sources.GWASCatalog import GWASCatalog
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.utils.TestUtils import TestUtils
