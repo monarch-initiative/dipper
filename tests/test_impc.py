@@ -5,6 +5,7 @@ import logging
 import csv
 import gzip
 import json
+from tests.test_source import SourceTestCase
 from dipper.sources.IMPC import IMPC
 from rdflib import URIRef, BNode
 from dipper.utils.CurieUtil import CurieUtil
@@ -16,6 +17,19 @@ from dipper.graph.RDFGraph import RDFGraph
 logging.basicConfig()
 logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+
+class IMPCTestCase(SourceTestCase):
+
+    def setUp(self):
+        self.source = IMPC('rdf_graph', True)  # Skolem Yes
+        self.source.settestonly(True)
+        self._setDirToSource()
+        return
+
+    def tearDown(self):
+        self.source = None
+        return
 
 
 class EvidenceProvenanceTestCase(unittest.TestCase):
@@ -85,7 +99,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         self.assertTrue(self.test_util.test_graph_equality(
             triples, impc.graph))
-
 
     def test_provenance_model(self):
         """

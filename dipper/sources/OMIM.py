@@ -2,6 +2,7 @@ import logging
 import re
 import json
 import urllib
+from urllib.error import HTTPError
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -29,7 +30,6 @@ OMIMAPI = 'https://api.omim.org/api/entry?format=json&apiKey=' + \
 
 class OMIM(Source):
     """
-    OMIM is an unusual source.
     The only anonymously obtainable data from the ftp site is mim2gene.
     However, more detailed information is available via their API.
     So, we pull the omim identifiers from their ftp site,
@@ -272,12 +272,17 @@ class OMIM(Source):
             logger.info('fetching: %s', url)
 
             try:
-                d = urllib.request.urlopen(url)
-            except OSError as e:  # URLError?
-                logger.error(e)
-                break
+                req = urllib.request.urlopen(url)
+            except HTTPError as e:  # URLError?
+                error_msg = e.read()
+                if re.search(r'The API key: .* is invalid', str(error_msg)):
+                    msg = "API Key not valid"
+                    raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
+                else:
+                    logger.warning("url {} returned 404, skipping".format(url))
+                    continue
 
-            resp = d.read().decode()
+            resp = req.read().decode()
             it += groupsize
 
             myjson = json.loads(resp)
