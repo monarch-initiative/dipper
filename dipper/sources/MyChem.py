@@ -23,7 +23,8 @@ class MyChem(Source):
         self.drugcentral_interactors = list()
 
     def fetch(self, is_dl_forced=False):
-        self.fetch_from_mychem()
+        for key_Set in self.inchikeys:
+            self.fetch_from_mychem(key_Set)
         return
 
     def parse(self, limit=None):
@@ -146,20 +147,16 @@ class MyChem(Source):
 
         return
 
-    def fetch_from_mychem(self):
-        count = 0
-        for k in self.inchikeys:
-            count +=1
-            if count < 10:
-                ids = ",".join(k)
-                fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,drugcentral.drug_use,drugcentral.bioactivity'
-                records = MyChem.get_drug_record(ids=ids, fields=fields)
-                for record in records:
-                    if 'drugbank' in record.keys():
-                        self.drugbank_targets.append(record)
-                    if 'drugcentral' in record.keys():
-                        self.drugcentral_interactors.append(record)
-            return
+    def fetch_from_mychem(self, key_set):
+        ids = ",".join(key_set)
+        fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,drugcentral.drug_use,drugcentral.bioactivity'
+        records = MyChem.get_drug_record(ids=ids, fields=fields)
+        for record in records:
+            if 'drugbank' in record.keys():
+                self.drugbank_targets.append(record)
+            if 'drugcentral' in record.keys():
+                self.drugcentral_interactors.append(record)
+        return
 
     @staticmethod
     def add_relation(results, relation):
@@ -195,7 +192,7 @@ class MyChem(Source):
         for identifier in r['results']['bindings']:
             all_ids.append(identifier['inchi']['value'])
         return all_ids
-
+    #
     @staticmethod
     def get_drug_record(ids, fields):
         url = 'http://mychem.info/v1/drug'
