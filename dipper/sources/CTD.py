@@ -96,7 +96,6 @@ class CTD(Source):
         else:
             self.test_diseaseids = config.get_config()['test_ids']['disease']
 
-        self.g = self.graph
         self.geno = Genotype(self.graph)
         self.pathway = Pathway(self.graph)
 
@@ -143,12 +142,8 @@ class CTD(Source):
         if self.testOnly:
             self.testMode = True
 
-        if self.testMode:
-            self.g = self.testgraph
-        else:
-            self.g = self.graph
-        self.geno = Genotype(self.g)
-        self.pathway = Pathway(self.g)
+        self.geno = Genotype(self.graph)
+        self.pathway = Pathway(self.graph)
 
         self._parse_ctd_file(
             limit, self.files['chemical_disease_interactions']['file'])
@@ -213,7 +208,7 @@ class CTD(Source):
         Returns:
             :return None
         """
-        model = Model(self.g)
+        model = Model(self.graph)
         self._check_list_len(row, 4)
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
 
@@ -339,7 +334,7 @@ class CTD(Source):
         Returns:
             :return None
         """
-        model = Model(self.g)
+        model = Model(self.graph)
         self._check_list_len(row, 10)
         (chem_name, chem_id, cas_rn, disease_name, disease_id, direct_evidence,
          inferred_gene_symbol, inference_score, omim_ids, pubmed_ids) = row
@@ -404,7 +399,7 @@ class CTD(Source):
         # self._check_list_len(row, 9)
         # geno = Genotype(g)
         # gu = GraphUtils(curie_map.get())
-        model = Model(self.g)
+        model = Model(self.graph)
         (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,
          inference_chemical_name, inference_score, omim_ids, pubmed_ids) = row
 
@@ -520,12 +515,12 @@ class CTD(Source):
         """
 
         # TODO pass in the relevant Assoc class rather than relying on G2P
-        assoc = G2PAssoc(self.g, self.name, subject_id, object_id, rel_id)
+        assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
             eco = self._get_evidence_code('TAS')
             for pmid in pubmed_ids:
                 r = Reference(
-                    self.g, pmid, Reference.ref_types['journal_article'])
+                    self.graph, pmid, Reference.ref_types['journal_article'])
                 r.addRefToGraph()
                 assoc.add_source(pmid)
                 assoc.add_evidence(eco)
@@ -600,7 +595,7 @@ class CTD(Source):
         return class_map[clslab]
 
     def _parse_curated_chem_disease(self, limit):
-        model = Model(self.g)
+        model = Model(self.graph)
         line_counter = 0
         file_path = '/'.join(
             (self.rawdir, self.static_files['publications']['file']))
@@ -626,7 +621,7 @@ class CTD(Source):
                     pub_id = 'PMID:' + pub_id
                     r = Reference(
                         pub_id, Reference.ref_types['journal_article'])
-                    r.addRefToGraph(self.g)
+                    r.addRefToGraph(self.graph)
                     pubids = [pub_id]
                 else:
                     pubids = None

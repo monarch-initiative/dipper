@@ -153,20 +153,7 @@ class SGD(Source):
         # pheno label
         model.addLabel(subject_id=pheno_id, label=pheno_label)
 
-
-        # add the descripiton: all the unmodeled data in a '|' delimited list
-        description = [
-            'genomic_background: {}'.format(record['Strain Background']),
-            'allele: {}'.format(record['Allele']),
-            'chemical: {}'.format(record['Chemical']),
-            'condition: {}'.format(record['Condition']),
-            'details: {}'.format(record['Details']),
-            'feature_name: {}'.format(record['Feature Name']),
-            'gene_name: {}'.format(record['Gene Name']),
-            'mutant_type: {}'.format(record['Mutant Type']),
-            'reporter: {}'.format(record['Reporter']),
-        ]
-        g2p_assoc.description = " | ".join(description)
+        g2p_assoc.description = self._make_description(record)
 
         # add the references
         references = record['Reference']
@@ -211,3 +198,17 @@ class SGD(Source):
             label = apo_ont.label(node)
             apo_term_id[label] = node
         return apo_term_id
+
+    @staticmethod
+    def _make_description(record):
+        return " | ".join([
+            'genomic_background: {}'.format(record['Strain Background']),
+            'allele: {}'.format(record['Allele']),
+            'chemical: {}'.format(record['Chemical']),
+            'condition: {}'.format(record['Condition']),
+            'details: {}'.format(record['Details']),
+            'feature_name: {}'.format(record['Feature Name']),
+            'gene_name: {}'.format(record['Gene Name']),
+            'mutant_type: {}'.format(record['Mutant Type']),
+            'reporter: {}'.format(record['Reporter']),
+        ]).strip()

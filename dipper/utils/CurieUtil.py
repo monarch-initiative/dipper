@@ -63,4 +63,4 @@ class CurieUtil(object):
 
     # what to do if the default base curie ":" does not exist??
     def get_base(self):
-        self.curie_map.get("")
+        return self.curie_map.get("")

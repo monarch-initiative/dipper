@@ -160,7 +160,7 @@
 'ENSEMBL': 'http://identifiers.org/ensembl/'
 'FlyBase': 'http://flybase.org/reports/'  # also variants, pubs, genotypes, strains
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'
-'HGNC': 'http://identifiers.org/hgnc/HGNC:'
+'HGNC': 'http://purl.obolibrary.org/obo/HGNC_'
 'IMPC': 'http://www.mousephenotype.org/data/genes/'  # FIXME
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # also variants, pubs, genotypes
@@ -171,7 +171,7 @@
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
 'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
 
-'SGD' : 'http://identifiers.org/SGD:'
+'SGD' : 'http://identifiers.org/sgd/'
 'SGD_REF': 'https://www.yeastgenome.org/reference/'
 'TAIR' : 'http://identifiers.org/TAIR:'
 'WormBase' : 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes

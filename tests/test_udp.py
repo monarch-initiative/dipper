@@ -6,8 +6,12 @@ from unittest.mock import MagicMock
 import logging
 from dipper.sources.UDP import UDP
 from rdflib import URIRef
+from dipper.utils.TestUtils import TestUtils
+from dipper.graph.RDFGraph import RDFGraph
 
-logging.basicConfig(level=logging.WARNING)
+
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +21,7 @@ class UDPTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        self.test_util = TestUtils()
         return
 
     def tearDown(self):
@@ -68,6 +73,12 @@ class UDPTestCase(unittest.TestCase):
         """
         functional test for _parse_patient_phenotypes()
         """
+        udp = UDP('rdf_graph', True)
+        udp.graph = RDFGraph(True)
+
+        # test that graph is empty
+        self.assertTrue(len(list(udp.graph)) == 0)
+
         mock_lines = [
             'patient_1\tHP:000001\tyes',
             'patient_1\tHP:000002\tno'
@@ -76,54 +87,71 @@ class UDPTestCase(unittest.TestCase):
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP('rdf_graph', True)
         udp._parse_patient_phenotypes(mock_file)
-        sparql_query = """
-            SELECT ?patient
-            WHERE {
-                ?patient a foaf:Person ;
-                    rdfs:label "patient_1" ;
-                    OBO:RO_0002200 OBO:DOID_4,
-                         OBO:HP_000001 .
-            }
+        triples = """
+        :patient_1 a foaf:Person ;
+            rdfs:label "patient_1" ;
+            RO:0002200 DOID:4,
+              HP:000001 .
         """
-        sparql_output = udp.graph.query(sparql_query)
-        # Test that query passes and returns one row
-        results = list(sparql_output)
-        expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
-        self.assertEqual(results, expected)
+
+        self.assertTrue(self.test_util.test_graph_equality(
+            triples, udp.graph))
 
     def test_variant_model(self):
         """
         functional test for _parse_patient_variants()
         """
-        data = ['patient_1', 'family_1', '1', 'HG19', '155230432',
-                'G', 'A', 'Maternal', 'Biallelic',
-                'Non-synonymous;DOWNSTREAM', 'CLK2',
-                '', '', '', '', '', '', '', 'Compound heterozygous',
-                'Heterozygous', '', '0.002747253', '']
+        udp = UDP('rdf_graph', True)
+        udp.graph = RDFGraph(True)
+        # test that graph is empty
+        self.assertTrue(len(list(udp.graph)) == 0)
+
+        data = ['patient_1',
+                'family_1',
+                '1',
+                'HG19',
+                '155230432',
+                'G',
+                'A',
+                'Maternal',
+                'Biallelic',
+                'Non-synonymous;DOWNSTREAM',
+                'CLK2',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Compound heterozygous',
+                'Heterozygous',
+                '',
+                '0.002747253',
+                '']
         test_data = "\t".join(data)
         mock_lines = [test_data]
         mock_data = MagicMock()
         mock_data.__iter__.return_value = iter(mock_lines)
 
         mock_file = mock_open(mock=mock_data)
-        udp = UDP('rdf_graph', False)
 
         udp._parse_patient_variants(mock_file)
-        sparql_query = """
-            SELECT ?patient
-            WHERE {
-                ?patient OBO:GENO_0000222 [ a OBO:GENO_0000000 ;
-                    rdfs:label "patient_1 genotype" ;
-                    OBO:GENO_0000382 [ a OBO:SO_0001059 ;
-                        rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
-                        OBO:GENO_0000418 <http://identifiers.org/hgnc/HGNC:2069> ;
-                        OBO:RO_0002162 OBO:NCBITaxon_9606 ;
-                        owl:sameAs dbSNP:rs11557757 ] ] .
-            }
+
+        triples = """
+        :patient_1 GENO:0000222 <https://monarchinitiative.org/.well-known/genid/b8a5f377fc8c95d4> .
+
+        <https://monarchinitiative.org/.well-known/genid/b641e8da0787b45e> a SO:0001059 ;
+            rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
+            GENO:0000418 HGNC:2069 ;
+            RO:0002162 NCBITaxon:9606 ;
+            owl:sameAs dbSNP:rs11557757 .
+
+        <https://monarchinitiative.org/.well-known/genid/b8a5f377fc8c95d4> a GENO:0000000 ;
+            rdfs:label "patient_1 genotype" ;
+            GENO:0000382 <https://monarchinitiative.org/.well-known/genid/b641e8da0787b45e> .
         """
-        sparql_output = udp.graph.query(sparql_query)
-        results = list(sparql_output)
-        expected = [(URIRef(udp.graph._getNode(":patient_1")),)]
-        self.assertEqual(results, expected)
+
+        self.assertTrue(self.test_util.test_graph_equality(
+            triples, udp.graph))
