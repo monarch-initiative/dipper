@@ -13,7 +13,8 @@ from dipper import curie_map
 from dipper.graph.RDFGraph import RDFGraph
 
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -140,7 +141,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         rdfs:label "X-ray" .
 """
         # dbg
-        logger.error("Reference graph: %s",
+        logger.debug("Reference graph: %s",
                      impc.graph.serialize(format="turtle")
                                .decode("utf-8")
         )
@@ -173,7 +174,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         """
         # dbg
-        logger.error("Reference graph: %s",
+        logger.debug("Reference graph: %s",
                      impc.graph.serialize(format="turtle")
                                       .decode("utf-8")
         )

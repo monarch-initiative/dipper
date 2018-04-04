@@ -90,7 +90,8 @@ class MyChem(Source):
                     drug_use = record['drugcentral']['drug_use']
                     drug_use = MyChem.return_target_list(drug_use)
                     for dr_record in drug_use:
-                        if dr_record['relation'] != 'contraindication' and 'snomed_id' in dr_record.keys():
+                        if dr_record['relation'] != 'contraindication' \
+                                and 'snomed_id' in dr_record.keys():
                             record_data['indications'].append({
                                 'snomed_id': 'SNOMED:{}'.format(dr_record['snomed_id']),
                                 'snomed_name': dr_record['snomed_name'],
@@ -107,7 +108,9 @@ class MyChem(Source):
         model = Model(self.graph)
         if source == 'drugbank':
             for target in package['targets']:
-                model.addTriple(subject_id=package['unii'],predicate_id=target['action'],obj=target['uniprot'])
+                model.addTriple(subject_id=package['unii'],
+                                predicate_id=target['action'],
+                                obj=target['uniprot'])
                 model.addLabel(subject_id=target['uniprot'], label=target['name'])
                 model.addTriple(subject_id=target['uniprot'],
                                 predicate_id=Model.object_properties['subclass_of'],
@@ -123,7 +126,9 @@ class MyChem(Source):
                                 obj='CHEBI:23367')
         if source == 'drugcentral':
             for indication in package['indications']:
-                model.addTriple(subject_id=package['unii'], predicate_id='RO:0002606', obj=indication['snomed_id'])
+                model.addTriple(subject_id=package['unii'],
+                                predicate_id='RO:0002606',
+                                obj=indication['snomed_id'])
                 model.addTriple(subject_id=package['unii'],
                                 predicate_id=Model.object_properties['subclass_of'],
                                 obj='CHEBI:23367')
@@ -132,7 +137,9 @@ class MyChem(Source):
                                 obj='DOID:4')
                 model.addLabel(subject_id=indication['snomed_id'], label=indication['snomed_name'])
             for interaction in package['interactions']:
-                model.addTriple(subject_id=package['unii'], predicate_id='RO:0002436', obj=interaction['uniprot'])
+                model.addTriple(subject_id=package['unii'],
+                                predicate_id='RO:0002436',
+                                obj=interaction['uniprot'])
                 # model.addLabel(subject_id=interaction['uniprot'], label='Protein_{}'.format(interaction['uniprot']))
                 model.addLabel(subject_id=interaction['uniprot'], label=interaction['target_name'])
                 model.addTriple(subject_id=package['unii'],
@@ -149,7 +156,8 @@ class MyChem(Source):
     def fetch_from_mychem(self):
         for k in self.inchikeys:
             ids = ",".join(k)
-            fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,drugcentral.drug_use,drugcentral.bioactivity'
+            fields = 'drugbank.targets,drugbank.drugbank_id,unii.unii,' \
+                     'drugcentral.drug_use,drugcentral.bioactivity'
             records = MyChem.get_drug_record(ids=ids, fields=fields)
             for record in records:
                 if 'drugbank' in record.keys():
@@ -182,9 +190,10 @@ class MyChem(Source):
     def get_inchikeys():
         all_ids = list()
         query = '''
-        SELECT ?drug ?inchi WHERE {
-        ?drug wdt:P235 ?inchi;
-              wdt:P652 ?unii.
+        SELECT ?drug ?inchi
+        WHERE {
+            ?drug wdt:P235 ?inchi;
+                wdt:P652 ?unii.
         }
         '''
         r = MyChem.execute_query(query=query)

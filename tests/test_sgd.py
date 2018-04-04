@@ -6,7 +6,8 @@ from dipper.sources.SGD import SGD
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 

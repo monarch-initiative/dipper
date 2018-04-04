@@ -10,7 +10,7 @@ TEST = python3 -m unittest
 ###
 
 test: UDP-test IMPC-fetch IMPC-test GWAS-test reactome-test RGD-test \
-      string-test trans-test
+      string-test trans-test CTD-test mychem-test
 
 string-test:
 	$(TEST) tests/test_string.py
@@ -39,6 +39,9 @@ SGD-test:
 
 CTD-test:
 	$(TEST) tests/test_ctd.py
+
+mychem-test:
+	$(TEST) tests/test_mychem.py
 
 trans-test:
 	$(TEST) tests/test_trtable.py

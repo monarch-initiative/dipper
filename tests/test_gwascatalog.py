@@ -6,7 +6,8 @@ from dipper.sources.GWASCatalog import GWASCatalog
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.utils.TestUtils import TestUtils
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -89,6 +90,12 @@ class TestGwasSNPModel(unittest.TestCase):
         # To debug
         #print(self.source.graph.serialize(format="turtle").decode("utf-8"))
         #self.assertTrue(False)
+
+        # dbg
+        logger.debug("Reference graph: %s",
+                     self.source.graph.serialize(format="turtle")
+                                      .decode("utf-8")
+        )
 
         self.assertTrue(self.test_util.test_graph_equality(
             triples, self.source.graph))
@@ -193,6 +200,11 @@ class TestGwasSNPModel(unittest.TestCase):
     PMID:25918132 a OBO:IAO_0000013 .
         """.format(description)
 
+        # dbg
+        logger.debug("Reference graph: %s",
+                     self.source.graph.serialize(format="turtle")
+                                      .decode("utf-8")
+        )
         self.assertTrue(self.test_util.test_graph_equality(
             triples, self.source.graph))
 
@@ -324,6 +336,13 @@ dbSNP:rs7020413 a OBO:SO_0000694,
     faldo:position 37002118 ;
     faldo:reference OBO:CHR_GRCh38chr9 .
         """
+
+        # dbg
+        logger.debug("Reference graph: %s",
+                     self.source.graph.serialize(format="turtle")
+                                      .decode("utf-8")
+        )
+
         self.assertTrue(self.test_util.test_graph_equality(
             triples, self.source.graph))
 

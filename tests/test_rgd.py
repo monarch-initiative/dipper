@@ -6,7 +6,8 @@ from dipper.sources.RGD import RGD
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.utils.TestUtils import TestUtils
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
@@ -60,7 +61,7 @@ class RGDTestCase(unittest.TestCase):
         owl:sameAs PMID:12799311 .
         """
         # dbg
-        logger.error("Reference graph: %s",
+        logger.debug("Reference graph: %s",
                      rgd.graph.serialize(format="turtle")
                               .decode("utf-8")
         )
