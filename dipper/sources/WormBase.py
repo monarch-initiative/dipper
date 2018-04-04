@@ -71,7 +71,8 @@ class WormBase(Source):
             '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
-            'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/WSNUMBER/ONTOLOGY/disease_association.WSNUMBER.wb'},
+            'url': 'ftp://ftp.sanger.ac.uk/pub/wormbase/releases/'
+                   'current-production-release/ONTOLOGY/disease_association.WSNUMBER.wb'},
         # 'genes_during_development': {
         #   'file': 'development_association.wb',
         #   'url wbdev+'/ONTOLOGY/development_association.WS249.wb'},
