@@ -192,7 +192,7 @@ class MyChem(Source):
         for identifier in r['results']['bindings']:
             all_ids.append(identifier['inchi']['value'])
         return all_ids
-    #
+
     @staticmethod
     def get_drug_record(ids, fields):
         url = 'http://mychem.info/v1/drug'
