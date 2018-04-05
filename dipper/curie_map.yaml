@@ -160,7 +160,7 @@
 'ENSEMBL': 'http://identifiers.org/ensembl/'
 'FlyBase': 'http://flybase.org/reports/'  # also variants, pubs, genotypes, strains
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'
-'HGNC': 'http://purl.obolibrary.org/obo/HGNC_'
+'HGNC': 'http://identifiers.org/hgnc/HGNC:'
 'IMPC': 'http://www.mousephenotype.org/data/genes/'  # FIXME
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # also variants, pubs, genotypes
