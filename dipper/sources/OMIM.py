@@ -280,7 +280,7 @@ class OMIM(Source):
                     raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
                 else:
                     logger.warning("url {} returned 404, skipping".format(url))
-                    continue
+                    break
 
             resp = req.read().decode()
             it += groupsize
