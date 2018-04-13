@@ -71,8 +71,11 @@ class GeneOntology(Source):
             'file': 'goa_cow.gaf.gz',
             'url': GOGA+'/goa_cow.gaf.gz'},
         '559292': {
-            'file': 'goa_cow.gaf.gz',
-            'url': GOGA+'/goa_sgd.gaf.gz'}
+            'file': 'gene_association.sgd.gz',
+            'url': GOGA+'/gene_association.sgd.gz'},
+        '4896': {
+            'file': 'gene_association.pombase.gz',
+            'url': GOGA+'/gene_association.pombase.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
