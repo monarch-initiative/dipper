@@ -166,7 +166,7 @@ class GeneOntology(Source):
 
         if 7955 in self.tax_ids:
             zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
-        elif 6239 in self.tax_ids:
+        if 6239 in self.tax_ids:
             wbase = WormBase(self.graph_type, self.are_bnodes_skized)
 
         with gzip.open(file, 'rb') as csvfile:
