@@ -14,10 +14,10 @@ from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
 from dipper.utils.GraphUtils import GraphUtils
 
+logging.basicConfig()
 
 requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.ERROR)
-
 
 test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneralGraphTestCase)
 
@@ -155,12 +155,12 @@ def main():
         'raw']
 
     if args.quiet:
-        logging.basicConfig(level=logging.ERROR)
+        logging.getLogger().setLevel(logging.WARNING)
     else:
         if args.debug:
-            logging.basicConfig(level=logging.DEBUG)
+            logging.getLogger().setLevel(logging.DEBUG)
         else:
-            logging.basicConfig(level=logging.INFO)
+            logging.getLogger().setLevel(logging.INFO)
 
     if not args.use_bnodes:
         logger.info("Will Skolemize Blank Nodes")

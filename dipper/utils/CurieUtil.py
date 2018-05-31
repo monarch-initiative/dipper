@@ -21,7 +21,7 @@ class CurieUtil(object):
             if len(set(curie_map.keys())) < len(set(curie_map.values())):
                 logger.warrning("Curie map is NOT one to one!")
                 logger.warrning(
-                "`get_curie_prefix(IRI)` will return the same prefix for different base IRI")
+                    "`get_curie_prefix(IRI)` may return the same prefix for different base IRI")
             self.uri_map = {}
             for key, value in curie_map.items():
                 self.uri_map[value] = key
@@ -60,3 +60,7 @@ class CurieUtil(object):
 
     def prefix_exists(self, pfx):
         return pfx in self.curie_map
+
+    # what to do if the default base curie ":" does not exist??
+    def get_base(self):
+        return self.curie_map.get("")

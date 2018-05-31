@@ -2,6 +2,7 @@ import logging
 import re
 import json
 import urllib
+from urllib.error import HTTPError
 
 from dipper.sources.Source import Source
 from dipper.models.Dataset import Dataset
@@ -17,19 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 # omimftp key EXPIRES MAY 2018
-# get a new one here: http://omim.org/help/api
+# get a new one here: https://omim.org/help/api
 
+OMIMURL = 'https://data.omim.org/downloads/'
 
-OMIMFTP = 'http://data.omim.org/downloads/' + \
-    config.get_config()['keys']['omim']
+OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
 
-OMIMAPI = 'http://api.omim.org/api/entry?format=json&apiKey=' + \
+OMIMAPI = 'https://api.omim.org/api/entry?format=json&apiKey=' + \
     config.get_config()['keys']['omim'] + '&'
 
 
 class OMIM(Source):
     """
-    OMIM is an unusual source.
     The only anonymously obtainable data from the ftp site is mim2gene.
     However, more detailed information is available via their API.
     So, we pull the omim identifiers from their ftp site,
@@ -39,7 +39,7 @@ class OMIM(Source):
      in  2017 November all mention of api rate limits have vanished
      (save 20 IDs per call if any include is used)
 
-    Note this ingest requires an apiKey which is not stored in the repo,
+    Note this ingest requires an api Key which is not stored in the repo,
     but in a separate conf.json file.
 
     Processing this source serves two purposes:
@@ -58,22 +58,17 @@ class OMIM(Source):
     files = {
         'all': {
             'file': 'mim2gene.txt',
-            'url': 'http://omim.org/static/omim/data/mim2gene.txt'},
+            'url': 'https://omim.org/static/omim/data/mim2gene.txt'},
         'morbidmap': {
             'file': 'morbidmap.txt',
-            'url':  OMIMFTP + '/morbidmap.txt'},
+            'url':  OMIMFTP + '/morbidmap.txt',
+            'clean': OMIMURL
+        },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
-            'url': 'http://www.omim.org/phenotypicSeriesTitle/all?format=tsv',
-            'headers': {'User-Agent': 'Mozilla/5.0'}}
-
-        # FTP files
-        # /mimTitles.txt
-        # /genemap.txt
-        # /genemap2.txt
-        # /omim.txt.Z                   replaced by mim2gene.txt
-        # Download from a page not FTP
-        # /phenotypic_series_title_all.txt
+            'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
+            'headers': {'User-Agent': 'Mozilla/5.0'}
+        }
     }
 
     # the following test ids are in the config.json
@@ -277,12 +272,17 @@ class OMIM(Source):
             logger.info('fetching: %s', url)
 
             try:
-                d = urllib.request.urlopen(url)
-            except OSError as e:  # URLError?
-                logger.error(e)
-                break
+                req = urllib.request.urlopen(url)
+            except HTTPError as e:  # URLError?
+                error_msg = e.read()
+                if re.search(r'The API key: .* is invalid', str(error_msg)):
+                    msg = "API Key not valid"
+                    raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
+                else:
+                    logger.warning("url {} returned 404, skipping".format(url))
+                    break
 
-            resp = d.read().decode()
+            resp = req.read().decode()
             it += groupsize
 
             myjson = json.loads(resp)

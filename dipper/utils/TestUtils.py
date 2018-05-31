@@ -1,57 +1,40 @@
-import os
 import logging
-import sys
-from rdflib import Graph
+import io
+from dipper.graph.RDFGraph import RDFGraph
+from unittest.mock import patch, mock_open
 
 logger = logging.getLogger(__name__)
 
 
 class TestUtils:
 
-    def __init__(self, graph=None):
-        # instantiate source object
-        self.graph = graph
-        if self.graph is None:
-            self.graph = Graph()
+    def test_graph_equality(self, turtlish, graph):
+        """
 
-        return
+        :param turtlish: String of triples in turtle
+                         format without prefix header
+        :param graph: Graph object to test against
+        :return: Boolean, True if graphs contain same
+                          set of triples
+        """
+        turtle_graph = RDFGraph()
+        turtle_graph.bind_all_namespaces()
+        prefixes = "\n".join(
+            ["@prefix {}: <{}> .".format(n[0], n[1])
+            for n in turtle_graph.namespace_manager.namespaces()]
+        )
 
-    def query_graph(self, query, is_formatted=False):
-        query_result = self.graph.query(query)
-        output = []
-        for row in query_result:
-            result_set = []
-            for val in row:
-                if val is None:
-                    val = 'null'
-                result_set.append(val)
-            if is_formatted:
-                output.append(", ".join(result_set))
-            else:
-                output.append(result_set)
-
-        return output
-
-    def check_query_syntax(self, query, source):
-        source.graph.query(query)
-        return
-
-    def load_graph_from_turtle(self, source):
-        file = source.outdir+'/'+source.name+'.ttl'
-        if not os.path.exists(file):
-            logger.error("file: %s does not exist", file)
-            sys.exit(1)
-        # load turtle file into graph
-        self.graph.parse(file, format="turtle")
-
-        return
-
-    def load_testgraph_from_turtle(self, source):
-        file = source.outdir+'/'+source.name+'_test.ttl'
-        if not os.path.exists(file):
-            logger.error("file: %s does not exist", file)
-            sys.exit(1)
-        # load turtle file into graph
-        self.graph.parse(file, format="turtle")
-
-        return
+        turtle_string = prefixes + turtlish
+        mock_file = io.StringIO(turtle_string)
+        turtle_graph.parse(mock_file, format="turtle")
+        turtle_triples = set(list(turtle_graph))
+        ref_triples = set(list(graph))
+        equality = turtle_triples == ref_triples
+        if not equality:
+            logger.warning("Triples do not match\n"
+                           "Left hand difference: {}\n"
+                           "Right hand difference:{}".format(
+                turtle_triples - ref_triples,
+                ref_triples - turtle_triples
+            ))
+        return equality

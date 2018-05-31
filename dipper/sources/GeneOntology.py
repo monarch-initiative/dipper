@@ -70,6 +70,12 @@ class GeneOntology(Source):
         '9913': {
             'file': 'goa_cow.gaf.gz',
             'url': GOGA+'/goa_cow.gaf.gz'},
+        '559292': {
+            'file': 'gene_association.sgd.gz',
+            'url': GOGA+'/gene_association.sgd.gz'},
+        '4896': {
+            'file': 'gene_association.pombase.gz',
+            'url': GOGA+'/gene_association.pombase.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
@@ -81,6 +87,10 @@ class GeneOntology(Source):
             'file': 'idmapping_selected.tab.gz',
             'url': 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
         }
+    }
+
+    map_files = {
+        'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
@@ -122,6 +132,8 @@ class GeneOntology(Source):
         if self.testOnly:
             self.testMode = True
 
+        eco_map = self.get_eco_map(self.map_files['eco_map'])
+
         # build the id map for mapping uniprot ids to genes
         uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
 
@@ -134,13 +146,13 @@ class GeneOntology(Source):
                 continue
 
             file = '/'.join((self.rawdir, self.files.get(s)['file']))
-            self.process_gaf(file, limit, uniprot_entrez_id_map)
+            self.process_gaf(file, limit, uniprot_entrez_id_map, eco_map)
 
         logger.info("Finished parsing.")
 
         return
 
-    def process_gaf(self, file, limit, id_map=None):
+    def process_gaf(self, file, limit, id_map=None, eco_map=None):
 
         if self.testMode:
             g = self.testgraph
@@ -154,7 +166,7 @@ class GeneOntology(Source):
 
         if 7955 in self.tax_ids:
             zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
-        elif 6239 in self.tax_ids:
+        if 6239 in self.tax_ids:
             wbase = WormBase(self.graph_type, self.are_bnodes_skized)
 
         with gzip.open(file, 'rb') as csvfile:
@@ -165,9 +177,33 @@ class GeneOntology(Source):
                 # comments start with exclamation
                 if re.match(r'!', ''.join(row)):
                     continue
-                (db, gene_num, gene_symbol, qualifier, go_id, ref, eco_symbol,
-                 with_or_from, aspect, gene_name, gene_synonym, object_type,
-                 taxon, date, assigned_by, annotation_extension,
+
+                if len(row) > 17 or len(row) < 15:
+                    logger.warning(
+                        "Wrong number of columns {},"
+                        " expected 15 or 17\n{}".format(len(row), row)
+                    )
+                    continue
+
+                if 17 > len(row) >= 15:
+                    row += [""] * (17 - len(row))
+
+                (db,
+                 gene_num,
+                 gene_symbol,
+                 qualifier,
+                 go_id,
+                 ref,
+                 eco_symbol,
+                 with_or_from,
+                 aspect,
+                 gene_name,
+                 gene_synonym,
+                 object_type,
+                 taxon,
+                 date,
+                 assigned_by,
+                 annotation_extension,
                  gene_product_form_id) = row
 
                 # test for required fields
@@ -234,9 +270,11 @@ class GeneOntology(Source):
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
 
-                eco_id = self.map_go_evidence_code_to_eco(eco_symbol)
-                if eco_id is not None:
+                try:
+                    eco_id = eco_map[eco_symbol]
                     assoc.add_evidence(eco_id)
+                except KeyError:
+                    logger.error("Evidence code (%s) not mapped", eco_symbol)
 
                 refs = re.split(r'\|', ref)
                 for r in refs:
@@ -374,47 +412,6 @@ class GeneOntology(Source):
 
         return id_map
 
-    @staticmethod
-    def map_go_evidence_code_to_eco(evidence_code):
-        """
-        The following are valid GO evidence codes
-        and mapped to ECO, as documented here:
-        http://geneontology.org/page/guide-go-evidence-codes
-        :param evidence_code:
-        :return:
-
-        """
-
-        ecotype = None
-        type_map = {
-            'EXP': 'ECO:0000006',
-            'IBA': 'ECO:0000318',
-            'IBD': 'ECO:0000319',
-            'IC': 'ECO:0000001',
-            'IDA': 'ECO:0000314',
-            'IEA': 'ECO:0000501',
-            'IEP': 'ECO:0000008',
-            'IGC': 'ECO:0000317',
-            'IGI': 'ECO:0000316',
-            'IKR': 'ECO:0000320',
-            'IMP': 'ECO:0000315',
-            'IPI': 'ECO:0000353',
-            'IRD': 'ECO:0000321',
-            'ISA': 'ECO:0000200',
-            'ISM': 'ECO:0000202',
-            'ISO': 'ECO:0000201',
-            'ISS': 'ECO:0000250',
-            'NAS': 'ECO:0000303',
-            'ND': 'ECO:0000035',
-            'RCA': 'ECO:0000245',
-            'TAS': 'ECO:0000304'
-        }
-        if evidence_code.strip() in type_map:
-            ecotype = type_map.get(evidence_code)
-        else:
-            logger.error("Evidence code (%s) not mapped", evidence_code)
-
-        return ecotype
 
     def clean_db_prefix(self, db):
         """
@@ -429,7 +426,8 @@ class GeneOntology(Source):
             'WB': 'WormBase',
             'WB_REF': 'WormBase',
             'FB': 'FlyBase',
-            'Reactome': 'REACT'
+            'Reactome': 'REACT',
+            'Ensembl': 'ENSEMBL'
         }
 
         clean_prefix = db

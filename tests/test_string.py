@@ -3,13 +3,15 @@
 import unittest
 from dipper.sources.StringDB import StringDB
 from dipper.sources.Ensembl import Ensembl
+from dipper.graph.RDFGraph import RDFGraph
+from dipper.utils.TestUtils import TestUtils
 import pandas as pd
-from rdflib import URIRef
 
 
 class StringTestFakeData(unittest.TestCase):
 
     def setUp(self):
+        self.test_util = TestUtils()
         # Test set with two proteins from same species
         self.test_set_1 = \
             [['9606.ENSP00000000233', '9606.ENSP00000003084',
@@ -36,7 +38,9 @@ class StringTestFakeData(unittest.TestCase):
 
     def testFakeDataSet1(self):
         string_db = StringDB('rdf_graph', True)
-        string_db.graph.bind_all_namespaces()
+        string_db.graph = RDFGraph(True)
+        self.assertEqual(len(string_db.graph), 0)
+
         ensembl = Ensembl('rdf_graph', True)
         prot_map = ensembl.fetch_protein_gene_map(9606)
         for key in prot_map.keys():
@@ -48,29 +52,24 @@ class StringTestFakeData(unittest.TestCase):
 
         string_db._process_protein_links(dataframe, prot_map, 9606)
 
-        sparql_query = """
-                      SELECT ?prot
-                      WHERE {
-                          ?prot RO:0002434 ENSEMBL:ENSG00000004059 .
-                      }
-                      """
-        sparql_output = string_db.graph.query(sparql_query)
-        results = list(sparql_output)
-        expected = [(URIRef(string_db.graph._getNode("ENSEMBL:ENSG00000001626")),)]
-        self.assertEqual(results, expected)
+        triples = """
+            ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
+        """
+        self.assertTrue(self.test_util.test_graph_equality(
+            triples, string_db.graph))
 
     def testFakeDataSet2(self):
         """
         Dataset contains a deprecated protein ID
         that we expect if filtered out by ensembl biomart
-        We test that this returns a graph with 3 triples:
-        MonarchData:string.ttl a owl:Ontology ;
-        owl:versionIRI <https://archive.monarchinitiative.org/.../string.ttl> ;
-        owl:versionInfo "some version"
+        We test that this returns an empty graph
         :return:
         """
         string_db = StringDB('rdf_graph', True)
+        string_db.graph = RDFGraph()
+        self.assertEqual(len(string_db.graph), 0)
+
         dataframe = pd.DataFrame(data=self.test_set_2, columns=self.columns)
         string_db._process_protein_links(dataframe, self.protein_list, 9606)
-        self.assertEqual(len(string_db.graph), 3)
+        self.assertEqual(len(string_db.graph), 0)
 

@@ -65,7 +65,7 @@ class GWASCatalog(Source):
         super().__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
 
         if graph_type != 'rdf_graph':
-            raise ValueError("UDP requires a rdf_graph")
+            raise ValueError("GWAS Catalog requires a rdf_graph")
 
         self.dataset = Dataset(
             'gwascatalog', 'GWAS Catalog', 'http://www.ebi.ac.uk/gwas/',
@@ -116,13 +116,13 @@ class GWASCatalog(Source):
         """
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         logger.info("Processing Data from %s", raw)
-        efo_ontology = RDFGraph()
+        efo_ontology = RDFGraph(False, "EFO")
         logger.info("Loading EFO ontology in separate rdf graph")
         efo_ontology.parse(self.files['efo']['url'], format='xml')
         efo_ontology.bind_all_namespaces()
         logger.info("Finished loading EFO ontology")
 
-        so_ontology = RDFGraph()
+        so_ontology = RDFGraph(False, "SO")
         logger.info("Loading SO ontology in separate rdf graph")
         so_ontology.parse(self.files['so']['url'], format='xml')
         so_ontology.bind_all_namespaces()
@@ -145,18 +145,48 @@ class GWASCatalog(Source):
                         logger.error(
                             'BadRow: %i has %i columns', line_counter, row)
                         pass
-                    (date_added_to_catalog, pubmed_num, first_author,
-                     pub_date, journal, link, study_name, disease_or_trait,
-                     initial_sample_description, replicate_sample_description,
-                     region, chrom_num, chrom_pos, reported_gene_nums,
-                     mapped_gene, upstream_gene_num, downstream_gene_num,
-                     snp_gene_nums, upstream_gene_distance,
-                     downstream_gene_distance, strongest_snp_risk_allele, snps,
-                     merged, snp_id_current, context, intergenic_flag,
-                     risk_allele_frequency, pvalue, pvalue_mlog, pvalue_text,
-                     or_or_beta, confidence_interval_95,
-                     platform_with_snps_passing_qc, cnv_flag, mapped_trait,
-                     mapped_trait_uri, study_accession) = row
+
+
+                        
+                    (date_added_to_catalog,
+                     pubmed_num,
+                     first_author,
+                     pub_date,
+                     journal,
+                     link,
+                     study_name,
+                     disease_or_trait,
+                     initial_sample_description,
+                     replicate_sample_description,
+                     region,
+                     chrom_num,
+                     chrom_pos,
+                     reported_gene_nums,
+                     mapped_gene,
+                     upstream_gene_num,
+                     downstream_gene_num,
+                     snp_gene_nums,
+                     upstream_gene_distance,
+                     downstream_gene_distance,
+                     strongest_snp_risk_allele,
+                     snps,
+                     merged,
+                     snp_id_current,
+                     context,
+                     intergenic_flag,
+                     risk_allele_frequency,
+                     pvalue,
+                     pvalue_mlog,
+                     pvalue_text,
+                     or_or_beta,
+                     confidence_interval_95,
+                     platform_with_snps_passing_qc,
+                     cnv_flag,
+                     mapped_trait,
+                     mapped_trait_uri,
+                     study_accession,
+                     GENOTYPING_TECHNOLOGY
+                     ) = row
 
                     if self.testMode:
                         continue
