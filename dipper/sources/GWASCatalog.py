@@ -145,18 +145,48 @@ class GWASCatalog(Source):
                         logger.error(
                             'BadRow: %i has %i columns', line_counter, row)
                         pass
-                    (date_added_to_catalog, pubmed_num, first_author,
-                     pub_date, journal, link, study_name, disease_or_trait,
-                     initial_sample_description, replicate_sample_description,
-                     region, chrom_num, chrom_pos, reported_gene_nums,
-                     mapped_gene, upstream_gene_num, downstream_gene_num,
-                     snp_gene_nums, upstream_gene_distance,
-                     downstream_gene_distance, strongest_snp_risk_allele, snps,
-                     merged, snp_id_current, context, intergenic_flag,
-                     risk_allele_frequency, pvalue, pvalue_mlog, pvalue_text,
-                     or_or_beta, confidence_interval_95,
-                     platform_with_snps_passing_qc, cnv_flag, mapped_trait,
-                     mapped_trait_uri, study_accession) = row
+
+
+                        
+                    (date_added_to_catalog,
+                     pubmed_num,
+                     first_author,
+                     pub_date,
+                     journal,
+                     link,
+                     study_name,
+                     disease_or_trait,
+                     initial_sample_description,
+                     replicate_sample_description,
+                     region,
+                     chrom_num,
+                     chrom_pos,
+                     reported_gene_nums,
+                     mapped_gene,
+                     upstream_gene_num,
+                     downstream_gene_num,
+                     snp_gene_nums,
+                     upstream_gene_distance,
+                     downstream_gene_distance,
+                     strongest_snp_risk_allele,
+                     snps,
+                     merged,
+                     snp_id_current,
+                     context,
+                     intergenic_flag,
+                     risk_allele_frequency,
+                     pvalue,
+                     pvalue_mlog,
+                     pvalue_text,
+                     or_or_beta,
+                     confidence_interval_95,
+                     platform_with_snps_passing_qc,
+                     cnv_flag,
+                     mapped_trait,
+                     mapped_trait_uri,
+                     study_accession,
+                     GENOTYPING_TECHNOLOGY
+                     ) = row
 
                     if self.testMode:
                         continue

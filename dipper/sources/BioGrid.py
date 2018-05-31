@@ -401,7 +401,6 @@ class BioGrid(Source):
             'ORDERED LOCUS': None,
             'UNIPROT-ISOFORM': 'UniprotKB',
             'ENSEMBL GENE': 'ENSEMBL',
-            'CGD': None,  # Not sure what this is?
             'WORMBASE-OLD': 'WormBase'
 
         }
