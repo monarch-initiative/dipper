@@ -426,7 +426,9 @@ class ZFIN(Source):
                 (fish_num, fish_name, gene_num, gene_symbol, affector_num,
                  affector_symbol, construct_num, construct_symbol,
                  background_num, background_symbol, genotype_num,
-                 genotype_name, other) = row
+                 genotype_name
+                 # , empty
+                 ) = row
 
                 # fish have the following components:
                 #  *  genotype, which is the intrinsic genotype;
