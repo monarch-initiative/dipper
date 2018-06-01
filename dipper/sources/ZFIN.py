@@ -2519,7 +2519,9 @@ class ZFIN(Source):
                 # TAS, ECO:0000033
                 # <tab>
                 (fish, environment, rel, disease_id, disease_label,
-                 zfin_pub_id, pubmed_id, evidence_code, terminaltab) = row
+                 zfin_pub_id, pubmed_id, evidence_code
+                 # , empty
+                 ) = row
 
                 if self.testMode \
                         and (fish not in self.test_ids['fish'] and
