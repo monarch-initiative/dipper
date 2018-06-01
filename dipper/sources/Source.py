@@ -233,22 +233,25 @@ class Source:
         # get remote file details
         if headers is not None and headers != []:
             req = urllib.request.Request(remote, headers=headers)
+            logger.info("Request header: %s", str(req.header_items()))
         else:
             req = urllib.request.Request(remote)
-
-        logger.info("Request header: %s", str(req.header_items()))
+            logger.info("Alternate Request header not specified")
 
         response = urllib.request.urlopen(req)
 
         try:
             resp_headers = response.info()
-            size = int(resp_headers.get('Content-Length'))
+            size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
         except OSError as e:  # URLError?
             resp_headers = None
             size = 0
             last_modified = None
             logger.error(e)
+
+        if size is not None and size != '':
+            size = int(size)
 
         st = os.stat(local)
         logger.info(
@@ -321,15 +324,18 @@ class Source:
             self, remotefile, localfile=None, is_dl_forced=False,
             headers=None):
         """
-        Given a remote url and a local filename, this will first verify
+        Given a remote url and a local filename, attempt to determine
         if the remote file is newer; if it is,
-        this will pull the remote file and save it to the specified localfile,
+        fetch the remote file and save it to the specified localfile,
         reporting the basic file information once it is downloaded
         :param remotefile: URL of remote file to fetch
         :param localfile: pathname of file to save locally
         :return: None
 
         """
+        # The 'file' dict in the ingest script is where 'headers' may be found
+        # e.g.  OMIM.py has:  'headers': {'User-Agent': 'Mozilla/5.0'}
+
         response = None
         if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
