@@ -61,7 +61,7 @@ def main():
         'reactome': 'Reactome',
         'udp': 'UDP',
         'mgi-slim': 'MGISlim',
-        'zfin-slim': 'ZFINSlim',
+        'zfinslim': 'ZFINSlim',
         'bgee': 'Bgee',
         'mydrug': 'MyDrug',
         'stringdb': 'StringDB',

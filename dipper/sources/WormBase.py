@@ -86,7 +86,7 @@ class WormBase(Source):
         #   'file': 'c_elegans.PRJNA13758.orthologs.txt.gz',
         #   'url': wbdev + species +
         #   '/annotation/c_elegans.PRJNA13758.WS249.orthologs.txt.gz'},
-          'xrefs': { # moved under 'annotation' 2017-11-10
+        'xrefs': {  # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
             '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
@@ -193,11 +193,6 @@ class WormBase(Source):
         if self.testOnly:
             self.testMode = True
 
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-        model = Model(g)
         # to hold any label for a given id
         self.id_label_map = {}
         # to hold the mappings between genotype and background
@@ -215,7 +210,7 @@ class WormBase(Source):
         # self.process_gene_desc(limit)   #TEC imput file is mia 2016-Mar-03
         self.process_allele_phenotype(limit)
         self.process_rnai_phenotypes(limit)
-        # self.process_pub_xrefs(limit) 
+        # self.process_pub_xrefs(limit)
         self.process_feature_loc(limit)
         self.process_disease_association(limit)
         # TODO add this when when complete
@@ -233,7 +228,7 @@ class WormBase(Source):
             g = self.graph
 
         model = Model(g)
-        logger.info("Processing Gene IDs")
+        logger.info("Processing: %s", self.files['gene_ids']['file'])
         line_counter = 0
         geno = Genotype(g)
         with gzip.open(raw, 'rb') as csvfile:
@@ -242,8 +237,13 @@ class WormBase(Source):
                 quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (taxon_num, gene_num, gene_symbol, gene_synonym, live) = row
-                # 6239,WBGene00000001,aap-1,Y110A7A.10,Live
+                (taxon_num,
+                 gene_num,
+                 gene_symbol,
+                 gene_synonym,
+                 live,
+                 gene_type) = row
+                # 6239,WBGene00000001,aap-1,Y110A7A.10,Live,protein_coding_gene
 
                 if self.testMode and gene_num not in self.test_ids['gene']:
                     continue
@@ -276,7 +276,7 @@ class WormBase(Source):
         else:
             g = self.graph
         model = Model(g)
-        logger.info("Processing Gene descriptions")
+        logger.info("Processing: %s", self.files['gene_desc']['file'])
         line_counter = 0
         # geno = Genotype(g)  # TODO unused
         with gzip.open(raw, 'rb') as csvfile:
@@ -461,8 +461,6 @@ class WormBase(Source):
             g = self.testgraph
         else:
             g = self.graph
-        model = Model(g)
-
         logger.info("Processing RNAi phenotype associations")
         line_counter = 0
         geno = Genotype(g)
@@ -551,11 +549,10 @@ class WormBase(Source):
 
                 ref_id = 'WormBase:'+wb_ref
                 xref_id = None
-                r = None
                 xref = re.sub(r'<BR>', '', xref)
                 xref = xref.strip()
                 if re.match(r'pmid', xref):
-                    xref_id = 'PMID:'+re.sub(r'pmid\s*', '', xref)
+                    xref_id = 'PMID:' + re.sub(r'pmid\s*', '', xref)
                     reference = Reference(
                         g, xref_id, Reference.ref_types['journal_article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):

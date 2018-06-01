@@ -19,6 +19,7 @@ class ZFINSlim(Source):
         'g2p_clean': {
             'file': 'phenoGeneCleanData_fish.txt.txt',
             'url': 'https://zfin.org/downloads/phenoGeneCleanData_fish.txt'
+            # https://zfin.org/downloads#  header Documentation is hidden in crap
         },
         'zpmap': {
             'file': 'zp-mapping.txt',
@@ -27,7 +28,7 @@ class ZFINSlim(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'zfin_slim')
+        super().__init__(graph_type, are_bnodes_skolemized, 'zfinslim')
         self.dataset = Dataset(
             'zfin_slim', 'ZFINSlim', 'http://zfin.org/')
 
@@ -45,12 +46,33 @@ class ZFINSlim(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
 
-                (internal_id, symbol, gene_id, subterm1_id, subterm1_label,
-                 pc_rel_id, pc_rel_label, superterm1_id, superterm1_label,
-                 quality_id, quality_name, modifier, subterm2_id,
-                 subterm2_label, pc_rel2_id, pc_rel2_id, superterm2_id,
-                 superterm2_label, fish_id, fish_label, start_stage, end_stage,
-                 environment, pub_id, figure_id, unknown_field) = row
+                (internal_id,
+                 symbol,
+                 gene_id,
+                 subterm1_id,
+                 subterm1_label,
+                 pc_rel_id,
+                 pc_rel_label,
+                 superterm1_id,
+                 superterm1_label,
+                 quality_id,
+                 quality_name,
+                 modifier,
+                 subterm2_id,
+                 subterm2_label,
+                 pc_rel2_id,
+                 pc_rel2_id,
+                 superterm2_id,
+                 superterm2_label,
+                 fish_id,
+                 fish_label,
+                 start_stage,
+                 end_stage,
+                 environment,
+                 pub_id,
+                 figure_id
+                 # ,unknown_field   # just leave this here for next time
+                 ) = row
 
                 zp_id = zfin_parser._map_sextuple_to_phenotype(
                     superterm1_id, subterm1_id, quality_id, superterm2_id,
@@ -69,6 +91,3 @@ class ZFINSlim(Source):
 
                     assoc.add_evidence('ECO:0000059')
                     assoc.add_association_to_graph()
-
-
-
