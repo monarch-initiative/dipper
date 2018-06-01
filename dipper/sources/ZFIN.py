@@ -323,7 +323,7 @@ class ZFIN(Source):
 
         # pubs has control characters!
         # not detecting any onntrol chars in pubs 2017 May
-        #self.remove_backslash_r(
+        # self.remove_backslash_r(
         #    '/'.join((self.rawdir, self.files['pubs']['file'])), 'latin-1')
 
         return
@@ -402,7 +402,7 @@ class ZFIN(Source):
         :return:
 
         """
-        
+
         logger.info("Processing Fish Parts")
 
         raw = '/'.join((self.rawdir, self.files['fish_components']['file']))
@@ -1455,7 +1455,9 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (gene_id, gene_so_id, gene_symbol, ncbi_gene_id, empty) = row
+                (gene_id, gene_so_id, gene_symbol, ncbi_gene_id
+                 # , empty  # till next time
+                 ) = row
 
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
