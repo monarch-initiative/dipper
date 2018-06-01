@@ -690,7 +690,9 @@ class ZFIN(Source):
                 (genotype_num, genotype_name, genotype_unique_name, allele_num,
                  allele_name, allele_ab, allele_type, allele_disp_type,
                  gene_symbol, gene_num, zygosity, construct_name,
-                 construct_num, other) = row
+                 construct_num
+                 # , empty
+                 ) = row
 
                 if self.testMode and \
                         genotype_num not in self.test_ids['genotype']:
