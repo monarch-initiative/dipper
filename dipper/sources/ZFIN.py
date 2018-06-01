@@ -323,7 +323,7 @@ class ZFIN(Source):
 
         # pubs has control characters!
         # not detecting any onntrol chars in pubs 2017 May
-        #self.remove_backslash_r(
+        # self.remove_backslash_r(
         #    '/'.join((self.rawdir, self.files['pubs']['file'])), 'latin-1')
 
         return
@@ -402,7 +402,7 @@ class ZFIN(Source):
         :return:
 
         """
-        
+
         logger.info("Processing Fish Parts")
 
         raw = '/'.join((self.rawdir, self.files['fish_components']['file']))
@@ -426,7 +426,9 @@ class ZFIN(Source):
                 (fish_num, fish_name, gene_num, gene_symbol, affector_num,
                  affector_symbol, construct_num, construct_symbol,
                  background_num, background_symbol, genotype_num,
-                 genotype_name, other) = row
+                 genotype_name
+                 # , empty
+                 ) = row
 
                 # fish have the following components:
                 #  *  genotype, which is the intrinsic genotype;
@@ -690,7 +692,9 @@ class ZFIN(Source):
                 (genotype_num, genotype_name, genotype_unique_name, allele_num,
                  allele_name, allele_ab, allele_type, allele_disp_type,
                  gene_symbol, gene_num, zygosity, construct_name,
-                 construct_num, other) = row
+                 construct_num
+                 # , empty
+                 ) = row
 
                 if self.testMode and \
                         genotype_num not in self.test_ids['genotype']:
@@ -1106,8 +1110,9 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
                 # Genotype_ID 	Genotype_Name 	Background 	Background_Name
-                (genotype_id, genotype_name, background_id, unused,
-                 empty) = row
+                (genotype_id, genotype_name, background_id, unused
+                 # , empty
+                 ) = row
 
                 if self.testMode \
                         and genotype_id not in self.test_ids['genotype']:
@@ -1172,8 +1177,9 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (fish_num, fish_name, fish_abbreviation, genotype_num,
-                 empty) = row
+                (fish_num, fish_name, fish_abbreviation, genotype_num
+                 # , empty
+                 ) = row
                 # ZDB-FISH-150901-10750	INDO	INDO	ZDB-GENO-980210-32
                 fish_id = 'ZFIN:'+fish_num
                 genotype_id = 'ZFIN:' + genotype_num.strip()
@@ -1229,8 +1235,9 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (stage_id, stage_obo_id, stage_name, begin_hours, end_hours,
-                 empty) = row
+                (stage_id, stage_obo_id, stage_name, begin_hours, end_hours
+                 # ,empty  # till next time
+                 ) = row
 
                 # Add the stage as a class, and it's obo equivalent
                 stage_id = 'ZFIN:' + stage_id.strip()
@@ -1290,7 +1297,9 @@ class ZFIN(Source):
                  superterm1_name, quality_id, quality_name, modifier,
                  subterm2_id, subterm2_name, postcomp2_rel_id,
                  postcomp2_rel_name, superterm2_id, superterm2_name, pub_id,
-                 env_id, empty) = row
+                 env_id
+                 # , empty  # till next time
+                 ) = row
 
                 if self.testMode and (
                         fish_num not in self.test_ids['fish'] or
@@ -1455,7 +1464,9 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (gene_id, gene_so_id, gene_symbol, ncbi_gene_id, empty) = row
+                (gene_id, gene_so_id, gene_symbol, ncbi_gene_id
+                 # , empty  # till next time
+                 ) = row
 
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
@@ -1508,7 +1519,9 @@ class ZFIN(Source):
                  genomic_feature_abbreviation, genomic_feature_name,
                  genomic_feature_type, mutagen, mutagee, construct_id,
                  construct_name, construct_so_id, talen_crispr_id,
-                 talen_crispr_nam, empty) = row
+                 talen_crispr_nam
+                 # , empty
+                 ) = row
 
                 if self.testMode and (
                         genomic_feature_id not in self.test_ids['allele']):
@@ -1717,7 +1730,9 @@ class ZFIN(Source):
                 line_counter += 1
 
                 (gene_id, gene_so_id, gene_symbol, marker_id, marker_so_id,
-                 marker_symbol, relationship, empty) = row
+                 marker_symbol, relationship
+                 # , empty
+                 ) = row
 
                 if self.testMode and not (
                         gene_id in self.test_ids['gene'] or
@@ -1851,7 +1866,9 @@ class ZFIN(Source):
                 except ValueError:
                     try:
                         (pub_id, pubmed_id, authors, title,
-                         journal, year, vol, pages, empty) = row
+                         journal, year, vol, pages
+                         # , empty
+                         ) = row
                     except ValueError:
                         logger.warn("Error parsing row {0}: ".format(row))
 
@@ -1923,7 +1940,9 @@ class ZFIN(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
-                (pub_id, pubmed_id, empty) = row
+                (pub_id, pubmed_id
+                 # , empty
+                 ) = row
 
                 if self.testMode and \
                         ('ZFIN:' + pub_id not in self.test_ids['pub'] and
@@ -2230,7 +2249,9 @@ class ZFIN(Source):
                 line_counter += 1
 
                 (zfin_num, symbol, so_id, panel_symbol,
-                 chromosome, location, metric, empty) = row
+                 chromosome, location, metric
+                 # , empty
+                 ) = row
 
                 if self.testMode and zfin_num not in\
                         self.test_ids['gene'] + self.test_ids['allele']:
@@ -2315,7 +2336,9 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
 
-                (gene_id, gene_so_id, gene_symbol, uniprot_id, empty) = row
+                (gene_id, gene_so_id, gene_symbol, uniprot_id
+                 # , empty
+                 ) = row
 
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
@@ -2375,7 +2398,9 @@ class ZFIN(Source):
             for row in filereader:
                 line_counter += 1
                 (zfin_id, zfin_symbol, zfin_name, human_symbol, human_name,
-                 omim_id, gene_id, hgnc_id, evidence_code, pub_id, empty) = row
+                 omim_id, gene_id, hgnc_id, evidence_code, pub_id
+                 # , empty
+                 ) = row
                 if self.testMode and zfin_id not in self.test_ids['gene']:
                     continue
 
@@ -2494,7 +2519,9 @@ class ZFIN(Source):
                 # TAS, ECO:0000033
                 # <tab>
                 (fish, environment, rel, disease_id, disease_label,
-                 zfin_pub_id, pubmed_id, evidence_code, terminaltab) = row
+                 zfin_pub_id, pubmed_id, evidence_code
+                 # , empty
+                 ) = row
 
                 if self.testMode \
                         and (fish not in self.test_ids['fish'] and
