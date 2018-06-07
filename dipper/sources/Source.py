@@ -233,12 +233,11 @@ class Source:
             return True
 
         # get remote file details
-        if headers is not None and headers != []:
-            req = urllib.request.Request(remote, headers=headers)
-            logger.info("Request header: %s", str(req.header_items()))
-        else:
-            req = urllib.request.Request(remote)
-            logger.info("Alternate Request header not specified")
+        if headers is None:
+            headers = self._get_default_request_headers()
+
+        req = urllib.request.Request(remote, headers=headers)
+        logger.debug("Request header: %s", str(req.header_items()))
 
         response = urllib.request.urlopen(req)
 
@@ -343,11 +342,10 @@ class Source:
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
             # TODO url verification, etc
-            if headers is not None:
-                request = urllib.request.Request(remotefile, headers=headers)
-            else:
-                request = urllib.request.Request(remotefile)
+            if headers is None:
+                headers = self._get_default_request_headers()
 
+            request = urllib.request.Request(remotefile, headers=headers)
             response = urllib.request.urlopen(request)
 
             if localfile is not None:
@@ -450,10 +448,10 @@ class Source:
         :return: size of remote file
         """
 
-        if headers is not None:
-            req = urllib.request.Request(remote, headers=headers)
-        else:
-            req = urllib.request.Request(remote)
+        if headers is None:
+            headers = self._get_default_request_headers()
+
+        req = urllib.request.Request(remote, headers=headers)
 
         try:
             response = urllib.request.urlopen(req)
@@ -675,3 +673,9 @@ class Source:
                     id_map[label] = id
 
         return id_map
+
+    @staticmethod
+    def _get_default_request_headers():
+        return {
+            'User-Agent': USER_AGENT
+        }
