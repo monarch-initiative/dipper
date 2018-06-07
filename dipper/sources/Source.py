@@ -357,7 +357,7 @@ class Source:
                         fd.write(chunk)
 
                 logger.info("Finished.  Wrote file to %s", localfile)
-                if self.compare_local_remote_bytes(remotefile, localfile):
+                if self.compare_local_remote_bytes(remotefile, localfile, headers):
                     logger.debug(
                         "local file is same size as remote after download")
                 else:
@@ -471,14 +471,15 @@ class Source:
         byte_size = os.stat(localfile)
         return byte_size[ST_SIZE]
 
-    def compare_local_remote_bytes(self, remotefile, localfile):
+    def compare_local_remote_bytes(
+            self, remotefile, localfile, remote_headers=None):
         """
         test to see if fetched file is the same size as the remote file
         using information in the content-length field in the HTTP header
         :return: True or False
         """
         is_equal = True
-        remote_size = self.get_remote_content_len(remotefile)
+        remote_size = self.get_remote_content_len(remotefile, remote_headers)
         local_size = self.get_local_file_size(localfile)
         if remote_size is not None and local_size != int(remote_size):
             is_equal = False
