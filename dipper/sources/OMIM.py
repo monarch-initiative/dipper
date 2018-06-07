@@ -4,7 +4,7 @@ import json
 import urllib
 from urllib.error import HTTPError
 
-from dipper.sources.Source import Source
+from dipper.sources.Source import Source, USER_AGENT
 from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -67,7 +67,7 @@ class OMIM(Source):
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
             'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
-            'headers': {'User-Agent': 'Mozilla/5.0'}
+            'headers': {'User-Agent': USER_AGENT}
         }
     }
 

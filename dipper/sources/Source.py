@@ -15,6 +15,8 @@ from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
+USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
+             "info@monarchinitiative.org)"
 
 
 class Source:
