@@ -15,6 +15,8 @@ from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
+USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
+             "info@monarchinitiative.org)"
 
 
 class Source:
@@ -231,12 +233,11 @@ class Source:
             return True
 
         # get remote file details
-        if headers is not None and headers != []:
-            req = urllib.request.Request(remote, headers=headers)
-            logger.info("Request header: %s", str(req.header_items()))
-        else:
-            req = urllib.request.Request(remote)
-            logger.info("Alternate Request header not specified")
+        if headers is None:
+            headers = self._get_default_request_headers()
+
+        req = urllib.request.Request(remote, headers=headers)
+        logger.debug("Request header: %s", str(req.header_items()))
 
         response = urllib.request.urlopen(req)
 
@@ -341,11 +342,10 @@ class Source:
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
             logger.info("Fetching from %s", remotefile)
             # TODO url verification, etc
-            if headers is not None:
-                request = urllib.request.Request(remotefile, headers=headers)
-            else:
-                request = urllib.request.Request(remotefile)
+            if headers is None:
+                headers = self._get_default_request_headers()
 
+            request = urllib.request.Request(remotefile, headers=headers)
             response = urllib.request.urlopen(request)
 
             if localfile is not None:
@@ -357,7 +357,7 @@ class Source:
                         fd.write(chunk)
 
                 logger.info("Finished.  Wrote file to %s", localfile)
-                if self.compare_local_remote_bytes(remotefile, localfile):
+                if self.compare_local_remote_bytes(remotefile, localfile, headers):
                     logger.debug(
                         "local file is same size as remote after download")
                 else:
@@ -448,10 +448,10 @@ class Source:
         :return: size of remote file
         """
 
-        if headers is not None:
-            req = urllib.request.Request(remote, headers=headers)
-        else:
-            req = urllib.request.Request(remote)
+        if headers is None:
+            headers = self._get_default_request_headers()
+
+        req = urllib.request.Request(remote, headers=headers)
 
         try:
             response = urllib.request.urlopen(req)
@@ -471,14 +471,15 @@ class Source:
         byte_size = os.stat(localfile)
         return byte_size[ST_SIZE]
 
-    def compare_local_remote_bytes(self, remotefile, localfile):
+    def compare_local_remote_bytes(
+            self, remotefile, localfile, remote_headers=None):
         """
         test to see if fetched file is the same size as the remote file
         using information in the content-length field in the HTTP header
         :return: True or False
         """
         is_equal = True
-        remote_size = self.get_remote_content_len(remotefile)
+        remote_size = self.get_remote_content_len(remotefile, remote_headers)
         local_size = self.get_local_file_size(localfile)
         if remote_size is not None and local_size != int(remote_size):
             is_equal = False
@@ -672,3 +673,9 @@ class Source:
                     id_map[label] = id
 
         return id_map
+
+    @staticmethod
+    def _get_default_request_headers():
+        return {
+            'User-Agent': USER_AGENT
+        }
