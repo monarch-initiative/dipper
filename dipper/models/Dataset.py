@@ -23,7 +23,7 @@ class Dataset:
                  license_url=None, data_rights=None, graph_type=None,
                  file_handle=None):
         if graph_type is None:
-            self.graph = RDFGraph(None, title)
+            self.graph = RDFGraph(None, identifier)  # 
         elif graph_type == 'streamed_graph':
             self.graph = StreamedGraph(True, file_handle=file_handle)
         elif graph_type == 'rdf_graph':
@@ -33,8 +33,9 @@ class Dataset:
         self.version = None
         self.date_issued = None
 
-	# The data_accesed value is later used as an object literal of properties such as dct:issued, which needs to conform xsd:dateTime format.
-        # self.date_accessed = datetime.now().strftime('%Y-%m-%d-%H-%M')
+        # The data_accesed value is later used as an literal of properties
+        # such as dct:issued, which needs to conform xsd:dateTime format.
+        # TODO ... we need to have a talk about typed literals and SPARQL
         self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
         self.citation = set()
