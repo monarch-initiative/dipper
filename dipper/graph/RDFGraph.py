@@ -4,6 +4,7 @@ from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
 import re
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 logger.warning(
                     "None as literal object for subj: %s and pred: %s",
                     subject_id, predicate_id)
+                # magic number 2 here is "steps up the stack"
+                logger.warning(sys._getframe(2).f_code.co_name)
         elif obj is not None and obj != '':
             self.add(
                 (self._getNode(subject_id), self._getNode(predicate_id),
@@ -61,13 +64,11 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 subject_id, predicate_id)
         return
 
-
     def skolemizeBlankNode(self, curie):
         stripped_id = re.sub(r'^_:|^_', '', curie, 1)
         node = BNode(stripped_id).skolemize(self.curie_util.get_base())
         node = re.sub(r'rdflib/', '', node)  # remove string added by rdflib
         return URIRef(node)
-
 
     def _getNode(self, curie):
         """
@@ -104,20 +105,6 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
             else:
                 logger.error("couldn't make URI for %s", curie)
         return node
-
-    # helper f(x) to encourage better bnode hygine
-    def makeBnode(self, bnode_identifier, rdfs_label, rdf_type, skolemize=True):
-
-        node = None
-
-        #bnode_id = blank
-        #addTriple(
-        #    self, bnode_id, "rdfs:label", rdfs_label,
-        #    object_is_literal=True, literal_type="String")
-        #addTriple(
-        #    self, bnode_id, "rdf:type", rdfs_type,
-        #    object_is_literal=False, literal_type="IRI")
-
 
     def bind_all_namespaces(self):
         for prefix in curie_map.get().keys():
