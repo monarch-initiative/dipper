@@ -222,7 +222,6 @@ class MGI(PostgreSQLSource):
             'mgi', 'MGI', 'http://www.informatics.jax.org/', None,
             'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
 
-        # source-specific warnings.  will be cleared when resolved.
         self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
 
         # so that we don't have to deal with BNodes,
