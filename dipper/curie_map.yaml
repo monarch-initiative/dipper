@@ -151,6 +151,7 @@
 # pathways
 'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'
 'REACT': 'http://www.reactome.org/PathwayBrowser/#/'
+'SMPDB': 'http://smpdb.ca/view/'
 
 # genes (and RNAs and transcripts)
 'BIOGRID': 'http://thebiogrid.org/'  # also interactions
@@ -207,6 +208,7 @@
 'BT': 'http://c.biothings.io/#'
 'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
 'GINAS': 'http://tripod.nih.gov/ginas/app/substance#'
+'HMDB': 'http://www.hmdb.ca/metabolites/'
 
 #Wikidata
 'WD_Prop': 'https://www.wikidata.org/wiki/Property:'
