@@ -222,11 +222,6 @@ class MGI(PostgreSQLSource):
             'mgi', 'MGI', 'http://www.informatics.jax.org/', None,
             'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
 
-        # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and \
-                'mgi' not in config.get_config()['dbauth']:
-            logger.error("not configured with PG user/password.")
-
         # source-specific warnings.  will be cleared when resolved.
         self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
 
@@ -267,6 +262,11 @@ class MGI(PostgreSQLSource):
         We'll check the local table versions against the remote version
         :return:
         """
+
+        # check if config exists; if it doesn't, error out and let user know
+        if 'dbauth' not in config.get_config() and \
+                'mgi' not in config.get_config()['dbauth']:
+            logger.error("not configured with PG user/password.")
 
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
