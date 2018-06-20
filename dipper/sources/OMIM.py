@@ -17,7 +17,7 @@ from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 logger = logging.getLogger(__name__)
 
 
-# omimftp key EXPIRES MAY 2018
+# omimftp key EXPIRES
 # get a new one here: https://omim.org/help/api
 
 OMIMURL = 'https://data.omim.org/downloads/'
@@ -58,16 +58,19 @@ class OMIM(Source):
     files = {
         'all': {
             'file': 'mim2gene.txt',
-            'url': 'https://omim.org/static/omim/data/mim2gene.txt'},
+            'url': 'https://omim.org/static/omim/data/mim2gene.txt',
+            'clean': OMIMURL
+        },
         'morbidmap': {
             'file': 'morbidmap.txt',
-            'url':  OMIMFTP + '/morbidmap.txt',
+            'url': OMIMFTP + '/morbidmap.txt',
             'clean': OMIMURL
         },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
             'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
-            'headers': {'User-Agent': USER_AGENT}
+            'headers': {'User-Agent': USER_AGENT},
+            'clean': OMIMURL
         }
     }
 
@@ -412,7 +415,9 @@ class OMIM(Source):
                 model.addSynonym(omimid, l, 'OIO:hasRelatedSynonym')
 
             # for OMIM, we're adding the description as a definition
-            model.addDefinition(omimid, description)
+            if description is not None:
+                model.addDefinition(omimid, description)
+
             if abbrev is not None:
                 model.addSynonym(omimid, abbrev, 'OIO:hasRelatedSynonym')
 
@@ -589,16 +594,21 @@ class OMIM(Source):
             # Generated: 2016-04-11
             # See end of file for additional documentation on specific fields
             # Phenotype	Gene Symbols	MIM Number	Cyto Location
-            #
             # since there are comments at the end of the file as well,
             # filter both header & footer as lines beginning with octothorp
 
             for line in f:
                 line = line.strip()
-                if line.startswith('#'):
-                    continue  # header/footer
+                if line.startswith(r'#') or line.startswith(r'\t'):
+                    continue  # header/footer/ empty phenotype
+                row = line.split('\t')
+                if len(row) != 4:
+                    logger.warning(
+                        "Expected 4 columns got ",  len(row), " columns.")
+                    logger.warning(row)
+                    continue
 
-                (disorder, gene_symbols, gene_num, loc) = line.split('\t')
+                (disorder, gene_symbols, gene_num, loc) = row
                 line_counter += 1
 
                 logger.info("morbidmap disorder:  %s", disorder)
@@ -751,22 +761,21 @@ class OMIM(Source):
         :return:
 
         """
-        d = None
-        if entry is not None:
-            if 'textSectionList' in entry:
-                textSectionList = entry['textSectionList']
-                for ts in textSectionList:
-                    if ts['textSection']['textSectionName'] == 'description':
-                        d = ts['textSection']['textSectionContent']
-                        # there are internal references to OMIM identifiers in
-                        # the description, I am formatting them in our style.
-                        d = re.sub(r'{(\d+)}', r'OMIM:\1', d)
+        description = None
+        if entry is not None and 'textSectionList' in entry:
+            textSectionList = entry['textSectionList']
+            for ts in textSectionList:
+                if ts['textSection']['textSectionName'] == 'description':
+                    description = ts['textSection']['textSectionContent']
+                    # there are internal references to OMIM identifiers in
+                    # the description, I am formatting them in our style.
+                    description = re.sub(r'{(\d+)}', r'OMIM:\1', description)
 
-                        # TODO
-                        # reformat the citations in the description with PMIDs
-                        break
+                    # TODO
+                    # reformat the citations in the description with PMIDs
+                    break
 
-        return d
+        return description
 
     def _get_process_allelic_variants(self, entry, g):
         model = Model(g)
