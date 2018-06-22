@@ -9,8 +9,11 @@ TEST = python3 -m unittest
 ### Tests
 ###
 
-test: UDP-test IMPC-fetch IMPC-test GWAS-test reactome-test RGD-test \
+test: MGI-test UDP-test IMPC-fetch IMPC-test GWAS-test reactome-test RGD-test \
       string-test trans-test CTD-test mychem-test
+
+MGI-test:
+	$(TEST) tests.test_mgi.EvidenceTestCase
 
 string-test:
 	$(TEST) tests/test_string.py
