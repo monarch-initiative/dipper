@@ -19,17 +19,26 @@ class Dataset:
 
     """
 
-    def __init__(self, identifier, title, url, description=None,
-                 license_url=None, data_rights=None, graph_type=None,
-                 file_handle=None):
+    def __init__(
+            self,
+            identifier,
+            title,
+            url,
+            description=None,
+            license_url=None,
+            data_rights=None,
+            graph_type=None,     # rdf_graph, streamed_graph  
+            file_handle=None):
+
         if graph_type is None:
-            self.graph = RDFGraph(None, identifier)  # 
+            self.graph = RDFGraph(None, identifier)
         elif graph_type == 'streamed_graph':
             self.graph = StreamedGraph(True, file_handle=file_handle)
         elif graph_type == 'rdf_graph':
-            self.graph = RDFGraph()
+            self.graph = RDFGraph(True, identifier)
+            
         self.model = Model(self.graph)
-        self.identifier = ':' + identifier
+        #self.identifier = ':' + identifier 
         self.version = None
         self.date_issued = None
 
@@ -41,9 +50,9 @@ class Dataset:
         self.citation = set()
         self.license = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
-        self.graph.addTriple(self.identifier, 'dct:title', title, True)
+        self.graph.addTriple(self.identifier, 'dcterms:title', title, True)
         self.graph.addTriple(
-            self.identifier, 'dct:identifier',
+            self.identifier, 'dcterms:identifier',
             identifier, object_is_literal=True)
         self.graph.addTriple(self.identifier, 'foaf:page', url)
         # maybe in the future add the logo here:
@@ -54,12 +63,12 @@ class Dataset:
         #  can revert after all current resources are updated.
         if license_url is not None:
             self.graph.addTriple(
-                self.identifier, 'dct:license', license_url)
+                self.identifier, 'dcterms:license', license_url)
         else:
             logger.debug('No license provided.')
         if data_rights is not None:
             self.graph.addTriple(
-                self.identifier, 'dct:rights',
+                self.identifier, 'dcterms:rights',
                 data_rights, object_is_literal=True)
         else:
             logger.debug('No rights provided.')
@@ -74,17 +83,17 @@ class Dataset:
             should use the other set_* for version and date
 
         as of 2016-10-20  used in:
-        
+
         dipper/sources/HPOAnnotations.py 139:
         dipper/sources/CTD.py             99:
-        dipper/sources/BioGrid.py        100:        
+        dipper/sources/BioGrid.py        100:
         dipper/sources/MGI.py            255:
         dipper/sources/EOM.py             93:
         dipper/sources/Coriell.py        200:
         dipper/sources/MMRRC.py           77:
 
         # TODO set as deprecated
-        
+
         :param date_issued:
         :param version_id:
         :return:
@@ -114,7 +123,8 @@ class Dataset:
 
         self.date_issued = date_issued
         self.graph.addTriple(
-            self.identifier, 'dct:issued', date_issued, object_is_literal=True)
+            self.identifier, 'dcterms:issued', date_issued,
+            object_is_literal=True)
         logger.info("setting date to %s", date_issued)
 
         return
@@ -146,9 +156,10 @@ class Dataset:
     def set_version_by_num(self, version_num):
 
         self.version = self.identifier+version_num
-        self.graph.addTriple(self.version, 'dct:isVersionOf', self.identifier)
-        self.graph.addTriple(self.version, 'pav:version', version_num,
-                             object_is_literal=True)
+        self.graph.addTriple(
+            self.version, 'dcterms:isVersionOf', self.identifier)
+        self.graph.addTriple(
+            self.version, 'pav:version', version_num, object_is_literal=True)
 
         logger.info("setting version to %s", self.version)
 
@@ -157,21 +168,18 @@ class Dataset:
         if version_num != self.date_accessed:
             dipperized_version = ':' + str(self.date_accessed)
             self.graph.addTriple(
-                dipperized_version, 'dct:isVersionOf',
-                self.version)
+                dipperized_version, 'dcterms:isVersionOf', self.version)
             self.graph.addTriple(
                 dipperized_version, 'pav:version',
                 self.date_accessed, object_is_literal=True)
             self.graph.addTriple(
-                dipperized_version, 'dct:issued',
-                self.date_accessed, object_is_literal=True,
-                literal_type="xsd:dateTime")
+                dipperized_version, 'dct:issued', self.date_accessed,
+                object_is_literal=True, literal_type="xsd:dateTime")
         return
 
-
     def setFileAccessUrl(self, url, is_object_literal=False):
-        self.graph.addTriple(self.identifier, 'dcat:accessURL',
-                             url, is_object_literal)
+        self.graph.addTriple(
+            self.identifier, 'dcat:accessURL', url, is_object_literal)
 
     def getGraph(self):
         return self.graph
