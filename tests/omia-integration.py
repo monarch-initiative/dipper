@@ -33,25 +33,36 @@ def main():
     model_of = URIRef('http://purl.obolibrary.org/obo/RO_0003301')
 
     models = graph.subject_objects(model_of)
-    model_len = len(list(models))
+    model_len = len(set(list(models)))
 
     if model_len < EXPECTED_PAIRS:
-        logger.error("Not enough model_of predicates in graph:"
-                     " {} expected {} check omia log for"
-                     " warnings".format(model_len, EXPECTED_PAIRS))
+        logger.error(
+            "Not enough model_of predicates in graph: found {}, "
+            "expected {} check omia log for warnings".format(
+                model_len, EXPECTED_PAIRS))
         exit(1)
+    # else:
+    #    logger.info(
+    #        "Found {} model_of predicates in graph, expected at least: {}".format(
+    #            model_len, EXPECTED_PAIRS))
+
+
+
+    breed = 'https://monarchinitiative.org/model/OMIA-breed:758' 
+    disease = 'http://purl.obolibrary.org/obo/OMIM_305100'
 
     omim_diseases = graph.objects(
-        subject=URIRef('https://monarchinitiative.org/model/OMIA-breed:18'),
-        predicate=model_of
+        subject = URIRef(breed),
+        predicate = model_of
     )
 
-    if list(omim_diseases) != [URIRef('http://purl.obolibrary.org/obo/OMIM_275220')]:
-        logger.error("Missing breed to omim triple for {}".format('OMIA-breed:18'))
+    if list(omim_diseases) != [URIRef(disease)]:
+        logger.error("Missing breed to omim triple for ".format(breed))
+        logger.error(list(omim_diseases))
         exit(1)
-    
+
     logger.info("PASSED")
+
 
 if __name__ == "__main__":
     main()
-
