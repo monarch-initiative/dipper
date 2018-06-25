@@ -37,7 +37,6 @@ class Evidence:
     object_properties = {
         'has_evidence': 'SEPIO:0000006',
         'has_supporting_evidence': 'SEPIO:0000007',
-        'has_evidence': 'SEPIO:0000006',
         'has_supporting_data': 'SEPIO:0000084',
         'is_evidence_for': 'SEPIO:0000031',
         'is_refuting_evidence_for': 'SEPIO:0000033',
@@ -58,7 +57,7 @@ class Evidence:
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.association = association
 

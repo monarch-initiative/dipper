@@ -108,6 +108,8 @@ class IMPC(Source):
             'impc', 'IMPC', 'http://www.mousephenotype.org', None,
             'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
 
+        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+
         # TODO add a citation for impc dataset as a whole
         # :impc cito:citesAsAuthority PMID:24194600
 
@@ -414,8 +416,14 @@ class IMPC(Source):
                     sq_type_id = geno.genoparts['male_genotype']
                 elif sex == 'female':
                     sq_type_id = geno.genoparts['female_genotype']
-                else:
+                elif sex == 'both':
                     sq_type_id = geno.genoparts['sex_qualified_genotype']
+                elif sex == 'no_data':
+                    sq_type_id = geno.genoparts['intrinsic_genotype']
+                else:
+                    sq_type_id = geno.genoparts['intrinsic_genotype']
+                    logger.WARNING("Unknown sex qualifier {}, "
+                                   "adding as intrinsic_genotype".format(sex))
 
                 geno.addGenotype(
                     sex_qualified_genotype_id,
@@ -464,6 +472,13 @@ class IMPC(Source):
 
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
+
+                if sex == 'male':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['male'])
+                elif sex == 'female':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['female'])
 
                 # add a free-text description
                 try:

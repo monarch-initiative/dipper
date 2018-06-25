@@ -56,6 +56,7 @@
 "in vivo": "SEPIO:0000074"
 "case-control": "SEPIO:0000071"
 "phenotyping only": "SEPIO:0000186"
+"has_sex_specificty": ":has_sex_specificity"
 # provenance  unused now? (2016 06 03)
 # ENIGMA BRCA1/2 Classification Criteria (2015)	SEPIO:1000001
 # ENIGMA BRCA1/2 Classification Criteria (2015)": "SEPIO:1000001"
@@ -92,3 +93,7 @@
 "NAS": "ECO:0000303"
 "IPM": "ECO:0005612"
 "IEP": "ECO:0000270"
+
+# PATO
+"male": "PATO:0000384"
+"female": "PATO:0000383"
