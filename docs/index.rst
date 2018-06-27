@@ -6,20 +6,24 @@
 Welcome to Dipper's documentation!
 ==================================
 
-Dipper is a pure Python package to generate RDF triples from common scientific resources.
+Dipper is a Python package to generate RDF triples from common scientific resources.
 Dipper includes subpackages and modules to create graphical models of this data, including:
 
-* Models for ternary associations and complex partonomies
+* Models package for generating common sets of triples, including common OWL axioms, complex genotypes, associations, evidence and provenance models.
 
-* Graph utilities to create common relationships using a variety of ontologies
+* Graph package for building graphs with RDFLib or streaming n-triples
 
-* Fetchers and Parsers that interface with remote databases and web services
-
-
-Contents:
+* Source package containing fetchers and parsers that interface with remote databases and web services
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
+
+   installation
+   quickstart
+   notebooks
+   best_practices
+   schemas
 
 
 For developers
@@ -28,7 +32,8 @@ For developers
 .. toctree::
    :maxdepth: 1
 
-   apidocs/modules
+   modules
+   sources
 
 
 Indices and tables
