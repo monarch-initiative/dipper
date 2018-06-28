@@ -40,17 +40,17 @@ Dipper requires [Python 3.5](https://www.python.org/downloads/) or higher.
 ## Getting started:
 * you can run the code by supplying a list of one or more sources on the command line.  some examples:
 
-    ```dipper --sources omim,ncbigene```
+    ```dipper-etl.py --sources omim,ncbigene```
 
 * furthermore, you can check things out by supplying a limit.  this will only process the
 first N number of rows or data elements
 
-    ```dipper --sources hpoa --limit 100```
+    ```dipper-etl.py --sources hpoa --limit 100```
 
 * you can also run the stand-alone tests in ```tests/test_*``` to generate subsets of the data and run unittests
 * other commandline parameters are explained if you request help:
 
-    ```./dipper-etl.py --help```
+    ```dipper-etl.py --help```
 
 
 ## Building locally
@@ -77,6 +77,10 @@ If you encounter any errors installing these packages using Homebrew, it could b
 
 * Some of the parsers require login and/or connection credentials with the remote system.  In those cases
  you will need to add the credentials to a conf.json file.  Please see individual parsers for details.
+
+## Documentation:
+
+The full documentation, including API docs, can be found on [read the docs](https://dipper.readthedocs.io).
 
 
 ## Sources:
@@ -121,9 +125,9 @@ If you encounter any errors installing these packages using Homebrew, it could b
     
     Each source has a corresponding script at https://github.com/monarch-initiative/dipper/tree/master/dipper/sources
 
-* Each source also has a corresponding **concept map** diagram that documents modeling patterns implemented in SciGraph, via Dipper-mediated transformation into Monarch's common target model. These are stored in the [ingest-artifacts repo](https://github.com/monarch-initiative/ingest-artifacts/tree/master/sources).
+* Many sources have a corresponding **concept map** diagram that documents modeling patterns implemented in SciGraph, via Dipper-mediated transformation into Monarch's common target model. These are stored in the [ingest-artifacts repo](https://github.com/monarch-initiative/ingest-artifacts/tree/master/sources).
 
-* Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!  
+* Don't see a parser you want?  Feel free to request a new one, or you could contribute a Source parser to our suite!
 Please see our [best-practices documentation](dipper/sources/README.md) for details on writing new Source parsers
 using Dipper code, and make a pull request.
 

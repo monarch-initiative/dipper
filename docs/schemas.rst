@@ -18,5 +18,5 @@ While not yet implemented, in the future we plan on defining our schemas
 and constraints using the `BioLink model specification <https://biolink.github.io/biolink-model/>`_.
 
 The cypher queries that we use to cache inferred and direct relationships between entities
-is `stored in GitHub <https://github.com/monarch-initiative/monarch-cypher-queries/tree/master/src/main/cypher/golr-loader>`_.
+are `stored in GitHub <https://github.com/monarch-initiative/monarch-cypher-queries/tree/master/src/main/cypher/golr-loader>`_.
 

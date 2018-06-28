@@ -1,5 +1,5 @@
-Sources
-===============
+Source APIs
+===========
 
 .. toctree::
    :maxdepth: 4

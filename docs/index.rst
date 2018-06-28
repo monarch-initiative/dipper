@@ -1,8 +1,3 @@
-.. Dipper documentation master file, created by
-   sphinx-quickstart on Fri Feb 27 15:32:06 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Dipper's documentation!
 ==================================
 
@@ -15,16 +10,35 @@ Dipper includes subpackages and modules to create graphical models of this data,
 
 * Source package containing fetchers and parsers that interface with remote databases and web services
 
+Getting started
+---------------
+
+Installing, running, and the basics
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    installation
    quickstart
    notebooks
-   best_practices
-   schemas
+   downloads
+   status
+   applications
 
+Deeper into Dipper
+--------------
+
+A look into the structure of the codebase and how to write ingests
+
+.. toctree::
+   :maxdepth: 1
+
+   graphs
+   models
+   writing_ingests
+   testing
+   configuration
+   schemas
 
 For developers
 --------------

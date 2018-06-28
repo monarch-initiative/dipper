@@ -11,7 +11,7 @@ Install with pip:
 
     pip install dipper
 
-Development Version
+Development version
 -------------------
 
 The development version can be pulled from GitHub.
@@ -21,7 +21,7 @@ The development version can be pulled from GitHub.
     pip3 install git+git://github.com/monarch-initiative/dipper.git
 
 
-Building Locally
+Building locally
 -------------------
 
 ::
