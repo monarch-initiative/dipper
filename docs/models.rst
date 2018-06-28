@@ -11,7 +11,7 @@ Basics
 ------
 The models class provides methods for building common RDF and OWL statements
 
-For a list of methods, `see the API docs <dipper.utils.TestUtils.html#dipper.utils.TestUtils.TestUtils.test_graph_equality>`_.
+For a list of methods, `see the API docs <dipper.models.html>`_.
 
 
 Building associations

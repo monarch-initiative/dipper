@@ -79,8 +79,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Dipper'
-copyright = '2018, Tom Conlin, Kent Shefchek, Tim Putman, Matthew Brush, ' \
-            'Lilly Winfree, Nicole Washington, Bryan Laraway'
+copyright = '2018, The Monarch Initiative'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
