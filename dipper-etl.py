@@ -67,7 +67,7 @@ def main():
         'stringdb': 'StringDB',
         'rgd': 'RGD',
         'sgd': 'SGD',
-	'mychem': 'MyChem'
+        'mychem': 'MyChem'
     }
 
     logger = logging.getLogger(__name__)

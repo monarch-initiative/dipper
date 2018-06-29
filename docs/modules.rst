@@ -1,4 +1,4 @@
-Dipper API Docs
+API Docs
 ===============
 
 .. toctree::

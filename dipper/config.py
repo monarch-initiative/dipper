@@ -6,8 +6,13 @@ __author__ = 'nicole'
 
 logger = logging.getLogger(__name__)
 
-# read configuration file
-conf = {}
+# default configuration
+conf = {
+  "keys": {
+    "omim" : ''
+  }
+}
+
 
 '''
     Load the configuration file 'conf.json', if it exists.
@@ -20,7 +25,7 @@ if os.path.exists(os.path.join(os.path.dirname(__file__), 'conf.json')):
         os.path.join(
             os.path.dirname(__file__), 'conf.json')) as json_file:
         conf = json.load(json_file)
-        logger.debug("Finished loading dipper/config.json")
+        logger.debug("Finished loading dipper/conf.json")
 else:
     logger.warning("'dipper/conf.json' not found in '%s'", os.path.dirname(__file__))
     logger.warning("Sources that depend on 'conf.json' will fail")
