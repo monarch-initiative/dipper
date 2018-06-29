@@ -40,7 +40,7 @@ Dipper requires [Python 3.5](https://www.python.org/downloads/) or higher.
 ## Getting started:
 * you can run the code by supplying a list of one or more sources on the command line.  some examples:
 
-    ```dipper-etl.py --sources omim,ncbigene```
+    ```dipper-etl.py --sources impc,hpoa```
 
 * furthermore, you can check things out by supplying a limit.  this will only process the
 first N number of rows or data elements

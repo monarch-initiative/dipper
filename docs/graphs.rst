@@ -20,7 +20,8 @@ to RDFLib URIRefs.  Triples are added via the addTriple method, for example:
    graph.addTriple('foaf:John', 'foaf:knows', 'foaf:Joseph')
 
 
-The graph can then be serialized in a variety of formats using RDFLib [3]_:
+The graph can then be serialized in a variety of formats using the serialize method
+inherited from the parent RDFLib graph class [3]_:
 
 .. code-block:: python
 

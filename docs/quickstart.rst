@@ -13,7 +13,7 @@ You can run the code by supplying a list of one or more sources on the command l
 
 ::
 
-   dipper-etl.py --sources omim,ncbigene
+   dipper-etl.py --sources impc,hpoa
 
 Furthermore, you can check things out by supplying a limit. this will only process the first N number of rows or data elements:
 
