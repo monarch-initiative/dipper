@@ -93,6 +93,7 @@ class Bgee(Source):
         """
         Given the input taxa, expects files in the raw directory
         with the name {tax_id}_anat_entity_all_data_Pan_troglodytes.tsv.zip
+
         :param limit: int Limit to top ranked anatomy associations per group
         :return: None
         """
@@ -113,6 +114,7 @@ class Bgee(Source):
         Process anat_entity files with columns:
         Ensembl gene ID,gene name, anatomical entity ID,
         anatomical entity name, rank score, XRefs to BTO
+
         :param fh: filehandle
         :param limit: int, limit per group
         :return: None
@@ -160,6 +162,7 @@ class Bgee(Source):
     def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
         """
         Overrides checkIfRemoteIsNewer in Source class
+
         :param localfile: str file path
         :param remote_size: str bytes
         :param remote_modify: str last modify date in the form 20160705042714
@@ -185,6 +188,7 @@ class Bgee(Source):
     def _convert_ftp_time_to_iso(ftp_time):
         """
         Convert datetime in the format 20160705042714 to a datetime object
+
         :return: datetime object
         """
         date_time = datetime(int(ftp_time[:4]), int(ftp_time[4:6]),
