@@ -21,44 +21,48 @@ class Dataset:
 
     def __init__(
             self,
-            identifier,
+            identifier,       # name? should be Archive url via Source
             title,
             url,
-            description=None,
+            ingest_desc=None,
             license_url=None,
             data_rights=None,
-            graph_type=None,     # rdf_graph, streamed_graph  
+            graph_type='rdf_graph',     # rdf_graph, streamed_graph
             file_handle=None):
 
         if graph_type is None:
             self.graph = RDFGraph(None, identifier)
         elif graph_type == 'streamed_graph':
-            self.graph = StreamedGraph(True, file_handle=file_handle)
+            self.graph = StreamedGraph(
+                True, identifier, file_handle=file_handle)
         elif graph_type == 'rdf_graph':
             self.graph = RDFGraph(True, identifier)
-            
+
         self.model = Model(self.graph)
-        #self.identifier = ':' + identifier 
+        self.identifier = identifier
+        if title is None:
+            self.title = identifier
+        else:
+            self.title = title
         self.version = None
         self.date_issued = None
 
         # The data_accesed value is later used as an literal of properties
-        # such as dct:issued, which needs to conform xsd:dateTime format.
+        # such as dcterms:issued, which needs to conform xsd:dateTime format.
         # TODO ... we need to have a talk about typed literals and SPARQL
         self.date_accessed = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
         self.citation = set()
-        self.license = license_url
+        self.license_url = license_url
         self.model.addType(self.identifier, 'dctypes:Dataset')
         self.graph.addTriple(self.identifier, 'dcterms:title', title, True)
         self.graph.addTriple(
-            self.identifier, 'dcterms:identifier',
-            identifier, object_is_literal=True)
-        self.graph.addTriple(self.identifier, 'foaf:page', url)
+            self.identifier, 'dcterms:identifier', identifier, True)
+        if url is not None:
+            self.graph.addTriple(self.identifier, 'foaf:page', url)
         # maybe in the future add the logo here:
-        # schemaorg:logo <http://www.ebi.ac.uk/rdf/sites/ebi.ac.uk.rdf/files/resize/images/rdf/chembl_service_logo-146x48.gif> .
-
-        # TODO add the licence info
+        # schemaorg:logo  <uri>
+        # TODO add the license info
         # FIXME:Temporarily making this in IF statement,
         #  can revert after all current resources are updated.
         if license_url is not None:
@@ -73,8 +77,8 @@ class Dataset:
         else:
             logger.debug('No rights provided.')
 
-        if description is not None:
-            self.model.addDescription(self.identifier, description)
+        if ingest_desc is not None:
+            self.model.addDescription(self.identifier, ingest_desc)
         return
 
     def setVersion(self, date_issued, version_id=None):
@@ -168,12 +172,13 @@ class Dataset:
         if version_num != self.date_accessed:
             dipperized_version = ':' + str(self.date_accessed)
             self.graph.addTriple(
-                dipperized_version, 'dcterms:isVersionOf', self.version)
+                dipperized_version, 'dcterms:isVersionOf',
+                "MonarchData:" + self.identifier + ".ttl")  # fix suffix
             self.graph.addTriple(
                 dipperized_version, 'pav:version',
                 self.date_accessed, object_is_literal=True)
             self.graph.addTriple(
-                dipperized_version, 'dct:issued', self.date_accessed,
+                dipperized_version, 'dcterms:issued', self.date_accessed,
                 object_is_literal=True, literal_type="xsd:dateTime")
         return
 
@@ -184,13 +189,12 @@ class Dataset:
     def getGraph(self):
         return self.graph
 
-    def set_license(self, license):
-        self.license = license
+    def set_license(self, license_url):
+        self.license_url = license_url
         return
 
     def get_license(self):
-
-        return self.license
+        return self.license_url
 
     def set_citation(self, citation_id):
 
