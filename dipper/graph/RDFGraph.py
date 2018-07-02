@@ -35,6 +35,9 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
         obo_map = curie_map.get()['OBO']
         self.bind('OBO', Namespace(obo_map))
 
+        # try adding them all
+        # self.bind_all_namespaces()  # too much
+
     def addTriple(self, subject_id, predicate_id, obj,
                   object_is_literal=False, literal_type=None):
 
