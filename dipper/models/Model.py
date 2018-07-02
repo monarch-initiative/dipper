@@ -144,7 +144,8 @@ class Model():
                 object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(class_id, self.object_properties['subclass_of'], class_type)
+            self.graph.addTriple(
+                class_id, self.object_properties['subclass_of'], class_type)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.annotation_properties['description'], description,
@@ -272,7 +273,6 @@ class Model():
                              self.object_properties['subclass_of'],
                              parent_id)
         return
-
 
     def addSynonym(self, class_id, synonym, synonym_type=None):
         """
