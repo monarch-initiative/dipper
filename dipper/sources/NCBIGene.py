@@ -73,19 +73,28 @@ class NCBIGene(Source):
         'clique_leader': '../../resources/clique_leader.yaml'
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized,
-                 tax_ids=None, gene_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ncbigene')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized,
+        tax_ids=None,
+        gene_ids=None
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'ncbigene',
+            ingest_title='National Center for Biotechnology Information',
+            ingest_url='http://ncbi.nih.nlm.gov/gene',
+            # ingest_desc=None,
+            license_url='https://creativecommons.org/publicdomain/mark/1.0/',
+            data_rights='http://www.ncbi.nlm.nih.gov/About/disclaimer.html'
+            # file_handle=None
+        )
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
-        self.filter = 'taxids'
-
-        self.dataset = Dataset(
-            'ncbigene', 'National Center for Biotechnology Information',
-            'http://ncbi.nih.nlm.gov/gene', None,
-            'http://www.ncbi.nlm.nih.gov/About/disclaimer.html',
-            'https://creativecommons.org/publicdomain/mark/1.0/')
+        self.id_filter = 'taxids'   # 'geneids
 
         # Defaults
         if self.tax_ids is None:
@@ -178,10 +187,10 @@ class NCBIGene(Source):
                  modification_date, feature_type) = line.split('\t')
 
                 # ##set filter=None in init if you don't want to have a filter
-                # if self.filter is not None:
-                #     if ((self.filter == 'taxids' and \
+                # if self.id_filter is not None:
+                #     if ((self.id_filter == 'taxids' and \
                 #          (int(tax_num) not in self.tax_ids))
-                #           or (self.filter == 'geneids' and \
+                #           or (self.id_filter == 'geneids' and \
                 #               (int(gene_num) not in self.gene_ids))):
                 #         continue
                 # #### end filter
@@ -425,10 +434,10 @@ class NCBIGene(Source):
                  discontinued_date) = line.split('\t')
 
                 # set filter=None in init if you don't want to have a filter
-                # if self.filter is not None:
-                #     if ((self.filter == 'taxids' and \
+                # if self.id_filter is not None:
+                #     if ((self.id_filter == 'taxids' and \
                 #          (int(tax_num) not in self.tax_ids))
-                #             or (self.filter == 'geneids' and \
+                #             or (self.id_filter == 'geneids' and \
                 #                 (int(gene_num) not in self.gene_ids))):
                 #         continue
                 #  end filter
@@ -500,11 +509,11 @@ class NCBIGene(Source):
                     continue
                 (tax_num, gene_num, pubmed_num) = line.split('\t')
 
-                # ## set filter=None in init if you don't want to have a filter
-                # if self.filter is not None:
-                #     if ((self.filter == 'taxids' and \
+                # ## set id_filter=None in init if you don't want to have a filter
+                # if self.id_filter is not None:
+                #     if ((self.id_filter == 'taxids' and \
                 #          (int(tax_num) not in self.tax_ids))
-                #        or (self.filter == 'geneids' and \
+                #        or (self.id_filter == 'geneids' and \
                 #            (int(gene_num) not in self.gene_ids))):
                 #         continue
                 # #### end filter
