@@ -39,7 +39,8 @@ class EvidenceTestCase(unittest.TestCase):
         """
         self.test_util = TestUtils()
         self.mgi = MGI('rdf_graph', True)
-        self.mgi.rawdir = os.path.join(os.path.dirname(__file__), 'resources/mgi')
+        self.mgi.rawdir = os.path.join(
+            os.path.dirname(__file__), 'resources/mgi')
         self.mgi.idhash['annot']['6901981'] = ':association'
 
     def tearDown(self):
@@ -49,10 +50,9 @@ class EvidenceTestCase(unittest.TestCase):
     def test_sex_specificity_model(self):
         self.mgi.graph = RDFGraph(True)  # Reset graph
         self.mgi._process_evidence_view(limit=None)
-        logger.debug("Reference graph: %s",
-                     self.mgi.graph.serialize(format="turtle")
-                                   .decode("utf-8")
-        )
+        logger.debug(
+            "Reference graph: %s", self.mgi.graph.serialize(
+                format="turtle").decode("utf-8"))
         expected_triples = """
         :association RO:0002558 ECO:0000006 ;
             dc:source J:74619 ;

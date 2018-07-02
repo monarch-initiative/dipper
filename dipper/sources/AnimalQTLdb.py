@@ -110,7 +110,7 @@ class AnimalQTLdb(Source):
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warning(
-            "No licences or rights exist for the raw data from this resource.")
+            "No licenses or rights exist for the raw data from this resource.")
 
         return
 

@@ -18,10 +18,15 @@ class StreamedGraph(DipperGraph):
 
     curie_util = CurieUtil(curie_map.get())
 
-    def __init__(self, are_bnodes_skized=True, file_handle=None, fmt='nt'):
+    def __init__(self,
+                are_bnodes_skized=True,
+                identifier=None,
+                file_handle=None,
+                fmt='nt'):
         self.are_bnodes_skized = are_bnodes_skized
         self.fmt = fmt
         self.file_handle = file_handle
+        self.identifier = identifier
 
     def addTriple(self, subject_id, predicate_id, object_id,
                   object_is_literal=False, literal_type=None):

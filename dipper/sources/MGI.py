@@ -6,7 +6,6 @@ import re
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
@@ -214,15 +213,23 @@ class MGI(PostgreSQLSource):
             107251870, 107255383, 107256603]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mgi')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            name='mgi',
+            ingest_title='Mouse Genome Informatics',
+            ingest_url='http://www.informatics.jax.org/',
+            license_url='http://www.informatics.jax.org/mgihome/other/copyright.shtml',
+            data_rights=None,
+            file_handle=None)
 
-        # update the dataset object with details about this resource
-        self.dataset = Dataset(
-            'mgi', 'MGI', 'http://www.informatics.jax.org/', None,
-            'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
-
-        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        self.global_terms = self.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
 
         # so that we don't have to deal with BNodes,
         # we will create hash lookups
@@ -272,7 +279,7 @@ class MGI(PostgreSQLSource):
         cxn.update(
             {'host': 'mgi-adhoc.jax.org', 'database': 'mgd', 'port': 5432})
 
-        self.dataset.setFileAccessUrl(
+        super.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                     '/', cxn['database'])), is_object_literal=True)
 
@@ -313,8 +320,8 @@ class MGI(PostgreSQLSource):
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-
-        self.dataset.setVersion(datestamp, ver)
+        # self.dataset.setVersion(datestamp, ver)
+        super.dataset.setVersion(datestamp, ver)
 
         return
 
