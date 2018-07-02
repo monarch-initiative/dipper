@@ -39,7 +39,7 @@ See the :ref:`notebooks` section for more details.
 Building models
 ------
 
-This code example shows some of the basics of building RDF graphs using the models API:
+This code example shows some of the basics of building RDF graphs using the model API:
 
 .. code-block:: python
 
