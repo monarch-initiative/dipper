@@ -72,12 +72,24 @@ class UDP(Source):
 
     UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'udp')
-        self.dataset = Dataset(
-            'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'udp',
+            ingest_title='Undiagnosed Diseases Program',
+            ingest_url='https://rarediseases.info.nih.gov/'
+            # license_url=None,
+            # data_rights=None,
+            # file_handle=None
+        )
         if graph_type != 'rdf_graph':
             raise ValueError("UDP requires a rdf_graph")
+
 
     def fetch(self, is_dl_forced=True):
         """
@@ -98,17 +110,18 @@ class UDP(Source):
         phenotype_fields = ['Patient', 'HPID', 'Present']
 
         # Get phenotype ids for each patient
-        phenotype_params = {'method': 'search_subjects',
-                            'subject_type': 'Phenotype',
-                            'search_mode': 'DEEP',
-                            'fields': 'Patient',
-                            'conditions': 'equals',
-                            'values': ','.join(udp_internal_ids),
-                            'user_fields': ','.join(phenotype_fields)
-                            }
+        phenotype_params = {
+            'method': 'search_subjects',
+            'subject_type': 'Phenotype',
+            'search_mode': 'DEEP',
+            'fields': 'Patient',
+            'conditions': 'equals',
+            'values': ','.join(udp_internal_ids),
+            'user_fields': ','.join(phenotype_fields)
+        }
 
-        prioritized_variants = ['Patient', 'Gene', 'Chromosome Position',
-                                'Variant Allele', 'Transcript']
+        prioritized_variants = [
+            'Patient', 'Gene', 'Chromosome Position', 'Variant Allele', 'Transcript']
 
         prioritized_params = {'method': 'search_subjects',
                               'subject_type': 'Variant Prioritization',
@@ -293,12 +306,12 @@ class UDP(Source):
                 if len(label_list) == 0:
                     model.addLabel(variant_bnode, variant_label)
 
-                self.graph.addTriple(variant_bnode,
-                                     model.object_properties['in_taxon'],
-                                     'NCBITaxon:9606')
-                self.graph.addTriple(intrinsic_geno_bnode,
-                                     genotype.object_properties['has_alternate_part'],
-                                     variant_bnode)
+                self.graph.addTriple(
+                    variant_bnode, model.object_properties['in_taxon'],
+                    'NCBITaxon:9606')
+                self.graph.addTriple(
+                    intrinsic_geno_bnode, genotype.object_properties['has_alternate_part'],
+                    variant_bnode)
                 if rs_id:
                     dbsnp_curie = 'dbSNP:{0}'.format(rs_id)
                     model.addSameIndividual(variant_bnode, dbsnp_curie)
