@@ -1,7 +1,6 @@
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.utils.DipperUtil import DipperUtil
 from rdflib import RDFS, BNode
 from dipper import config
