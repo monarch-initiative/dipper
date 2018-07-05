@@ -839,8 +839,8 @@ class OMIM(Source):
                                 model.addSameIndividual(al_id, did)
 
                         # Note that RCVs are variant to disease associations
-                        # in ClinVar, rather than SCVs (variants/genotypes)
-                        # in other words, make these xrefs instead of equivalents
+                        # in ClinVar, rather than variant entries
+                        # so we make these xrefs instead of equivalents
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each >1 like RCV000020059;;;
