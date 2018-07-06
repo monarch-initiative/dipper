@@ -1,0 +1,10 @@
+# Creating a separate global terms so in case something
+# is updated the test does not break
+
+"has_phenotype": "RO:0002200"
+"contributes_to": "RO:0002326"
+"is_marker_for": "RO:0002607"
+"has_functional_consequence": ":has_functional_consequence"
+"has_molecular_consequence": ":has_molecular_consequence"
+"has_cell_origin": ":has_cell_origin"
+"has_allelic_requirement": ":has_allelic_requirement"

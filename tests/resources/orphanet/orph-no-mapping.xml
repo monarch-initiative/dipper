@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<JDBOR date="2018-07-01 04:09:15" version="1.2.11 / 4.1.6 [2018-04-12] (orientdb version)">
+  <DisorderList count="4">
+    <Disorder id="1">
+      <OrphaNumber>938475</OrphaNumber>
+      <Name lang="en">too much unit testing disorder</Name>
+      <GeneList count="1">
+        <Gene id="20160">
+          <SynonymList count="1">
+            <Synonym lang="en">KS1</Synonym>
+          </SynonymList>
+          <GeneType id="25993">
+            <OrphaNumber>410298</OrphaNumber>
+            <Name lang="en">gene with protein product</Name>
+          </GeneType>
+          <LocusList count="1">
+            <Locus id="16859">
+              <GeneLocus>15q26.1</GeneLocus>
+              <LocusKey>1</LocusKey>
+            </Locus>
+          </LocusList>
+        </Gene>
+      </GeneList>
+      <DisorderGeneAssociationList count="1">
+        <DisorderGeneAssociation>
+          <Gene id="20160">
+            <OrphaNumber>268061</OrphaNumber>
+            <Name lang="en">kinesin family member 7</Name>
+            <Symbol>KS1</Symbol>
+            <SynonymList count="1">
+              <Synonym lang="en">KAS1</Synonym>
+            </SynonymList>
+            <ExternalReferenceList count="6">
+              <ExternalReference id="57240">
+                <Source>Ensembl</Source>
+                <Reference>ENSG00000166813</Reference>
+              </ExternalReference>
+              <ExternalReference id="51756">
+                <Source>HGNC</Source>
+                <Reference>30497</Reference>
+              </ExternalReference>
+            </ExternalReferenceList>
+          </Gene>
+          <DisorderGeneAssociationType id="17949">
+            <Name lang="en">Some unmapped association type</Name>
+          </DisorderGeneAssociationType>
+          <DisorderGeneAssociationStatus id="17991">
+            <Name lang="en">Assessed</Name>
+          </DisorderGeneAssociationStatus>
+        </DisorderGeneAssociation>
+      </DisorderGeneAssociationList>
+    </Disorder>
+  </DisorderList>
+</JDBOR>
