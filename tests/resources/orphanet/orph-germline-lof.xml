@@ -13,12 +13,6 @@
             <OrphaNumber>410298</OrphaNumber>
             <Name lang="en">gene with protein product</Name>
           </GeneType>
-          <LocusList count="1">
-            <Locus id="16859">
-              <GeneLocus>15q26.1</GeneLocus>
-              <LocusKey>1</LocusKey>
-            </Locus>
-          </LocusList>
         </Gene>
       </GeneList>
       <DisorderGeneAssociationList count="1">
@@ -31,14 +25,6 @@
               <Synonym lang="en">KAS1</Synonym>
             </SynonymList>
             <ExternalReferenceList count="6">
-              <ExternalReference id="57240">
-                <Source>Ensembl</Source>
-                <Reference>ENSG00000166813</Reference>
-              </ExternalReference>
-              <ExternalReference id="51756">
-                <Source>HGNC</Source>
-                <Reference>30497</Reference>
-              </ExternalReference>
             </ExternalReferenceList>
           </Gene>
           <DisorderGeneAssociationType id="17949">

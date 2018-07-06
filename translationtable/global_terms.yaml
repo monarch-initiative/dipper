@@ -28,6 +28,19 @@
 "direct_tandem_duplication": "SO:1000039"
 "loss_of_function_variant": "SO:0002054"
 "gain_of_function_variant": "SO:0002053"
+"activating_mutation": ":activating"
+"dominant_negative_variant": "SO:0002052"
+"inframe_variant": "SO:0001650"
+"missense_variant": "SO:0001583"
+"UTR_variant": "SO:0001622"
+"transcriptional_cis_regulatory_region": "SO:0001055"
+
+# TODO review theses
+# Intersection of increased amount and gene dosage?
+# PATO_0000470 and GENO:0000876
+"increased_gene_dosage": ":increased_gene_dosage"
+"part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication"
+"all_missense_or_inframe": ":all_missense_or_inframe"
 
 # Sequence ontology
 "# microsatellite": "SO:0000289"
@@ -119,5 +132,18 @@
 "has_cell_origin": ":has_cell_origin"
 "has_allelic_requirement": ":has_allelic_requirement"
 
-
+# Inheritance, allelic requirement
+"x_linked_dominant": "HP:0001423"
+"mitochondrial_inheritance": "HP:0001427"
+"genomically_imprinted": "SO:0000134"
+"hemizygous": "GENO:0000134"
+"digenic_inheritance": "HP:0010984"
+# TODO decide on these
+# we do not currently ingest NCIT into scigraph
+#"biallelic_mutation": "NCIT:C129830"
+#"monoallelic_mutation": "NCIT:C129829"
+#"mosaic_indiviual": "NCIT:C88144"
+"biallelic": ":biallelic"
+"monoallelic": ":monoallelic"
+"mosaic": ":mosaic"
 

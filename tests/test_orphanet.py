@@ -99,17 +99,11 @@ ENSEMBL:ENSG00000166813 a owl:Class .
     OBAN:association_has_predicate OBO:RO_0002200 ;
     OBAN:association_has_subject <https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> .
 
-ENSEMBL:ENSG00000166813 a owl:Class .
-
-<http://identifiers.org/hgnc/HGNC:30497> a owl:Class .
-
 <http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
     rdfs:label "KS1" ;
     dc:description "kinesin family member 7" ;
     OIO:hasExactSynonym "KAS1" ;
-    rdfs:subClassOf OBO:SO_0001217 ;
-    owl:equivalentClass ENSEMBL:ENSG00000166813,
-        <http://identifiers.org/hgnc/HGNC:30497> .
+    rdfs:subClassOf OBO:SO_0001217 .
 
 <https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> a OBO:GENO_0000002 ;
     rdfs:label "germline loss of function variant of KS1" ;
@@ -141,18 +135,12 @@ ENSEMBL:ENSG00000166813 a owl:Class .
     OBAN:association_has_predicate OBO:RO_0002326 ;
     OBAN:association_has_subject <http://www.orpha.net/ORDO/Orphanet_268061> .
 
-ENSEMBL:ENSG00000166813 a owl:Class .
-
-<http://identifiers.org/hgnc/HGNC:30497> a owl:Class .
-
 <http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
     rdfs:label "KS1" ;
     OBO:RO_0002326 <http://www.orpha.net/ORDO/Orphanet_938475> ;
     dc:description "kinesin family member 7" ;
     OIO:hasExactSynonym "KAS1" ;
-    rdfs:subClassOf OBO:SO_0001217 ;
-    owl:equivalentClass ENSEMBL:ENSG00000166813,
-        <http://identifiers.org/hgnc/HGNC:30497> .
+    rdfs:subClassOf OBO:SO_0001217 .
 
 <http://www.orpha.net/ORDO/Orphanet_938475> a owl:Class ;
     rdfs:label "too much unit testing disorder" .
@@ -168,7 +156,8 @@ ENSEMBL:ENSG00000166813 a owl:Class .
         """
         self.orphanet.graph = RDFGraph()  # Reset graph
         self.orphanet.files['disease-gene']['file'] = 'orph-no-mapping.xml'
-        self.assertRaises(ValueError, lambda: self.orphanet._process_diseasegene(limit=None))
+        self.assertRaises(ValueError,
+                          lambda: self.orphanet._process_diseasegene(limit=None))
 
 
 if __name__ == '__main__':

@@ -13,12 +13,6 @@
             <OrphaNumber>410298</OrphaNumber>
             <Name lang="en">gene with protein product</Name>
           </GeneType>
-          <LocusList count="1">
-            <Locus id="16859">
-              <GeneLocus>15q26.1</GeneLocus>
-              <LocusKey>1</LocusKey>
-            </Locus>
-          </LocusList>
         </Gene>
       </GeneList>
       <DisorderGeneAssociationList count="1">
