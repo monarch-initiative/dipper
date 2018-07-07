@@ -118,6 +118,7 @@ ARGS = ARGPARSER.parse_args()
 
 BASENAME = re.sub(r'\.xml.gz$', '', ARGS.filename)
 FILENAME = ARGS.inputdir + '/' + ARGS.filename
+MAPFILE = ARGS.inputdir + '/' + ARGS.mapfile
 
 # avoid clobbering existing output until we are finished
 OUTFILE = ARGS.destination + '/TMP_' + ARGS.output + '_PART'
@@ -322,7 +323,7 @@ def digest_id(wordage):
 
 
 G2PMAP = {}
-with open(ARGS.mapfile, 'rt') as tsvfile:
+with open(MAPFILE, 'rt') as tsvfile:
     reader = csv.reader(tsvfile, delimiter="\t")
     next(reader) #header
     for row in reader:
