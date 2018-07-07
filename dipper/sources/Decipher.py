@@ -15,9 +15,13 @@ from dipper.models.Genotype import Genotype
 
 logger = logging.getLogger(__name__)
 
-
 class Decipher(Source):
     """
+    Deprecated - please see the EBIGene2Phen class, which parses the same
+    file but fetches it from EBI which has clearer terms for redistribution,
+    while Decipher has restrictive terms due to containing patient data in
+    password protected datasets.
+
     The Decipher group curates and assembles the Development Disorder Genotype
     Phenotype Database (DDG2P) which is a curated list of genes reported to be
     associated with developmental disorders, compiled by clinicians as part of

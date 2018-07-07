@@ -32,6 +32,9 @@ class EBIGene2Phen(Source):
 
     Disclaimer: https://www.ebi.ac.uk/gene2phenotype/disclaimer
     Terms of Use: https://www.ebi.ac.uk/about/terms-of-use#general
+    Documentation: https://www.ebi.ac.uk/gene2phenotype/documentation
+                   https://www.clinicalgenome.org/site/assets/files/
+                   2757/fitzpatrick_ddg2p.pdf
 
     This script operates on the Developmental Disorders (DDG2P.csv) file
     In the future we may update to include the cancer gene disease pairs
@@ -53,7 +56,7 @@ class EBIGene2Phen(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ebi')
+        super().__init__(graph_type, are_bnodes_skolemized, 'ebi_g2p')
 
         self.dataset = Dataset(
             'ebi',
@@ -126,12 +129,9 @@ class EBIGene2Phen(Source):
 
         with gzip.open(file_path, 'rt') as csvfile:
             reader = csv.reader(csvfile)
+            next(reader) # header
             for row in reader:
-                # header
-                if row_count == 0:
-                    row_count += 1
-                    continue
-                elif limit is None or row_count <= (limit + 1):
+                if limit is None or row_count <= (limit + 1):
                     self._add_gene_disease(row)
                 else:
                     break
@@ -203,7 +203,10 @@ class EBIGene2Phen(Source):
         else:
             requirement_curie = None
 
-        pmid_list = ['PMID:'+pmid for pmid in pmids.split(';')]
+        if pmids != '':
+            pmid_list = ['PMID:'+pmid for pmid in pmids.split(';')]
+        else:
+            pmid_list = []
 
         # build the model
         # Should we build a reusable object and/or tuple that
@@ -279,7 +282,7 @@ class EBIGene2Phen(Source):
                                        variant_label,
                                        geno.genoparts['variant_locus'])
             geno.addAffectedLocus(variant_bnode, gene_id)
-
+            model.addBlankNodeAnnotation(variant_bnode)
 
         assoc = G2PAssoc(
             self.graph, self.name, variant_or_gene, disease_id, relation_id)
@@ -310,4 +313,3 @@ class EBIGene2Phen(Source):
                 consequence_type = typ
 
         return consequence_type
-

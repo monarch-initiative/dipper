@@ -4,8 +4,17 @@
     clinvarxml_alpha
     First pass at converting ClinVar XML into
     RDF triples to be ingested by SciGraph.
-    These triples comform to the core of the
+    These triples conform to the core of the
     SEPIO Evidence & Provenance model 2016 Apr
+
+    We also use the clinvar curated gene to disease
+    mappings to discern the functional consequence of
+    a variant on a gene in cases where this is ambiguous.
+    For example, some variants are located in two
+    genes overlapping on different strands, and may
+    only have a functional consequence on one gene.
+    This is suboptimal and we should look for a source
+    that directly provides this.
 
     creating a test set.
         get a full dataset   default ClinVarFullRelease_00-latest.xml.gz
@@ -30,6 +39,7 @@ import yaml
 import os
 import re
 import gzip
+import csv
 import hashlib
 import logging
 import argparse
@@ -49,7 +59,12 @@ RPATH = '/' + '/'.join(IPATH[1:-3])
 files = {
     'f1': {
         'file': 'ClinVarFullRelease_00-latest.xml.gz',
-        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'}
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'
+    },
+    'f2': {
+        'file': 'gene_condition_source_id',
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id'
+    }
 }
 
 # regular expression to limit what is found in the CURIE identifier
@@ -63,6 +78,10 @@ ARGPARSER = argparse.ArgumentParser()
 ARGPARSER.add_argument(
     '-f', '--filename', default=files['f1']['file'],
     help="input filename. default: '" + files['f1']['file'] + "'")
+
+ARGPARSER.add_argument(
+    '-m', '--mapfile', default=files['f2']['file'],
+    help="input g2d mapping file. default: '" + files['f2']['file'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
@@ -300,6 +319,17 @@ def scv_link(scv_sig, rcv_trip):
 # which do not allow identifiers to begin with a digit
 def digest_id(wordage):
     return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[0:15]
+
+
+G2PMAP = {}
+with open(ARGS.mapfile, 'rt') as tsvfile:
+    reader = csv.reader(tsvfile, delimiter="\t")
+    next(reader) #header
+    for row in reader:
+        if row[0] in G2PMAP:
+            G2PMAP[int(row[0])].append(row[3])
+        else:
+            G2PMAP[int(row[0])] = [row[3]]
 
 
 # Global translation table
@@ -573,17 +603,19 @@ with gzip.open(FILENAME, 'rt') as fh:
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
 
-            # Otherwise go with MedGen
-            if rcv_disease_db is None or rcv_disease_id is None:
-                for RCV_Trait in \
-                        RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
-                    if rcv_disease_db is not None:
-                        break
-                    for RCV_TraitXRef in RCV_Trait.findall(
-                            './XRef[@DB="MedGen"]'):
-                        rcv_disease_db = RCV_TraitXRef.get('DB')
-                        rcv_disease_id = RCV_TraitXRef.get('ID')
-                        break
+            # Always get medgen for g2p mapping file
+            for RCV_Trait in RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
+                if rcv_disease_db is not None:
+                    break
+                for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="MedGen"]'):
+                    medgen_db = RCV_TraitXRef.get('DB')
+                    medgen_id = RCV_TraitXRef.get('ID')
+                    break
+
+            if rcv_disease_db is None and medgen_db is not None:
+                rcv_disease_db = medgen_db
+            if rcv_disease_id is None and medgen_id is not None:
+                rcv_disease_id = medgen_id
 
             # See if there are any leftovers. Possibilities include:
             # EFO, Gene, Human Phenotype Ontology
@@ -629,11 +661,24 @@ with gzip.open(FILENAME, 'rt') as fh:
             #           RCV only TRIPLES
             term_id = resolve(rcv_variant_relationship_type, LTT)
             if term_id is not None:
-                # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
-                write_spo(
-                    rcv_variant_id,
-                    term_id,
-                    rcv_ncbigene_curi)
+                if medgen_id is not None \
+                        and rcv_ncbigene_id in G2PMAP \
+                        and medgen_id in rcv_ncbigene_id[rcv_ncbigene_id]:
+                    # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
+                    write_spo(
+                        rcv_variant_id,
+                        term_id,
+                        rcv_ncbigene_curi)
+                elif LTT[rcv_variant_relationship_type] == 'has_affected_locus':
+                    write_spo(
+                        rcv_variant_id,
+                        GTT['has_reference_part'],
+                        rcv_ncbigene_curi)
+                else:
+                    write_spo(
+                        rcv_variant_id,
+                        term_id,
+                        rcv_ncbigene_curi)
             else:
                 # LOG.warning(
                 # 'Check relationship type: ' + rcv_variant_relationship_type)

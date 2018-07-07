@@ -89,6 +89,7 @@
 
 # mutation, usually missense that results in a constitutive
 # functional activation of the gene product
+# TODO this was previously mapped to gain of function in the decipher script
 "activating": "activating_mutation"
 
 # mutation within one allele of a gene that creates a significantly greater
@@ -117,7 +118,6 @@
 # TODO these don't seem right
 "cis-regulatory or promotor mutation": "transcriptional_cis_regulatory_region"
 "part of contiguous gene duplication": "part_of_contiguous_gene_duplication"
-
 
 # where the exact nature of the mutation is unclear or not recorded
 # "uncertain": ""

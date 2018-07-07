@@ -81,6 +81,7 @@
 "has_affected_locus": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
 "is downstream of sequence of": "RO:0002529"
+"has_reference_part": "GENO:0000385"
 # asserted, but not computed (MB no idea what this means)
 "in taxon": "RO:0002162"
 "Homo sapiens": "NCBITaxon:9606"
@@ -126,6 +127,7 @@
 # Place holder predicates: predicates
 # while we wait for relation (or other) ontology
 # tickets (link tickets url where appropriate)
+"does_not_have_phenotype": ":does_not_have_phenotype"
 "has_sex_specificty": ":has_sex_specificity"
 "has_functional_consequence": ":has_functional_consequence"
 "has_molecular_consequence": ":has_molecular_consequence"
