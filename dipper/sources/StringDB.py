@@ -1,6 +1,5 @@
 from dipper.sources.Source import Source
 from dipper.sources.Ensembl import Ensembl
-from dipper.models.Dataset import Dataset
 import logging
 import gzip
 import pandas as pd
@@ -27,10 +26,16 @@ class StringDB(Source):
     DEFAULT_TAXA = [9606, 10090, 7955, 7227, 6239]
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'string')
-        self.dataset = Dataset(
-            'string', 'String', 'http://string-db.org/', None,
-            'http://string-db.org/cgi/access.pl?footer_active_subpage=licensing')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'string',
+            ingest_title='Known and predicted protein-protein interactions',
+            ingest_url='https://string-db.org/',
+            license_url='https://string-db.org/cgi/access.pl?footer_active_subpage=licensing'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         if tax_ids is None:
             self.tax_ids = StringDB.DEFAULT_TAXA
@@ -107,7 +112,7 @@ class StringDB(Source):
             logger.info("Only parsing first %d rows", limit)
 
         protein_paths = self._get_file_paths(self.tax_ids, 'protein_links')
-        
+
         for taxon in protein_paths:
             ensembl = Ensembl(self.graph_type, self.are_bnodes_skized)
             string_file_path = '/'.join((

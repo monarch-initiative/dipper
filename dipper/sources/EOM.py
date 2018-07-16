@@ -6,7 +6,6 @@ import logging
 import csv
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper import config
 from dipper.models.Reference import Reference
@@ -39,23 +38,25 @@ class EOM(PostgreSQLSource):
     tables = [
         'dvp.pr_nlx_157874_1'
     ]
-
+    GHRAW = 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
     files = {
         'map': {
             'file': 'hp-to-eom-mapping.tsv',
-            'url': 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
+            'url': 'obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
         }
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'eom')
-
-        # update the dataset object with details about this resource
-        # TODO put this into a conf file?
-        self.dataset = Dataset(
-            'eom', 'EOM', 'http://elementsofmorphology.nih.gov', None,
-            'http://www.genome.gov/copyright.cfm',
-            'https://creativecommons.org/publicdomain/mark/1.0/')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'eom',
+            ingest_title='Elements of Morphology',
+            ingest_url='http://elementsofmorphology.nih.gov',
+            data_rights='http://www.genome.gov/copyright.cfm',
+            license_url='https://creativecommons.org/publicdomain/mark/1.0/'
+            # file_handle=None
+        )
 
         # check if config exists; if it doesn't, error out and let user know
         if 'dbauth' not in config.get_config() or \
@@ -74,7 +75,7 @@ class EOM(PostgreSQLSource):
             {'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
              'port': 5432})
 
-        self.dataset.setFileAccessUrl(
+        PostgreSQLSource.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                     '/', cxn['database'])), is_object_literal=True)
 
@@ -87,7 +88,7 @@ class EOM(PostgreSQLSource):
         # FIXME: Everything needed for data provenance?
         st = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-        self.dataset.setVersion(filedate)
+        PostgreSQLSource.dataset.setVersion(filedate)
 
         return
 

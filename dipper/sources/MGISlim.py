@@ -1,7 +1,6 @@
 from intermine.webservice import Service
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 import logging
 import datetime
@@ -16,9 +15,15 @@ class MGISlim(Source):
     """
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mgi_slim')
-        self.dataset = Dataset(
-            'mgi_slim', 'MGISlim', 'http://www.mousemine.org/mousemine/service')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'mgi_slim',
+            'Simplified Mouse Genome Informatics',
+            'http://www.mousemine.org/mousemine/service'
+            # data_rights=None,
+            # file_handle=None
+        )
 
     def fetch(self, is_dl_forced):
         return
@@ -44,7 +49,8 @@ class MGISlim(Source):
             query.add_sort_order("OntologyAnnotation.ontologyTerm.name", "ASC")
             query.add_constraint("subject.organism.taxonId", "=", "10090", code="A")
             query.add_constraint("subject", "LOOKUP", fuzzy_gene, code="B")
-            query.add_constraint("subject.primaryIdentifier", "CONTAINS", gene, code="C")
+            query.add_constraint(
+                "subject.primaryIdentifier", "CONTAINS", gene, code="C")
             query.outerjoin("evidence.comments")
 
             for row in query.rows():
@@ -71,4 +77,3 @@ class MGISlim(Source):
                 break
 
         return
-

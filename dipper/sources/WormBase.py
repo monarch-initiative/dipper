@@ -4,10 +4,8 @@ import logging
 import gzip
 import io
 from ftplib import FTP
-
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.GenomicFeature import makeChromID, Feature
 from dipper.models.Reference import Reference
@@ -111,14 +109,19 @@ class WormBase(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'wormbase')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'wormbase',
+            ingest_title='WormBase',
+            ingest_url='http://www.wormbase.org',
+            # license_url=None,
+            data_rights='https://wormbase.org/about/citing_wormbase#012--10'
+            # file_handle=None
+        )
 
         # update the dataset object with details about this resource
         # NO LICENSE for this resource
-        self.dataset = Dataset(
-            'wormbase', 'WormBase', 'http://www.wormbase.org', None, None,
-            'http://www.wormbase.org/about/policies#012')
-
         self.version_num = None
         return
 
@@ -145,7 +148,7 @@ class WormBase(Source):
 
             self.update_wsnum_in_files(wsver.group(1))
 
-        self.dataset.set_version_by_num(self.version_num)
+        super.dataset.set_version_by_num(self.version_num)
         # fetch all the files
         self.get_files(is_dl_forced)
         return

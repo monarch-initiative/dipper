@@ -2,7 +2,6 @@ from dipper.models.Reference import Reference
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 import csv
 import logging
@@ -28,9 +27,18 @@ class ZFINSlim(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'zfinslim')
-        self.dataset = Dataset(
-            'zfin_slim', 'ZFINSlim', 'http://zfin.org/')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'zfinslim',
+            ingest_title='Simplified ZFIN',
+            ingest_url='https://zfin.org/',
+            license_url='http://zfin.org/warranty.html'
+            # data_rights=None,
+            # file_handle=None
+        )
+        Source.dataset.set_citation(
+            'https://wiki.zfin.org/display/general/ZFIN+db+information')
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)

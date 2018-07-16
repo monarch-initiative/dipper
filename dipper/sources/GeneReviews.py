@@ -5,7 +5,6 @@ import logging
 from bs4 import BeautifulSoup
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
@@ -58,12 +57,18 @@ class GeneReviews(Source):
         }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'genereviews')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'genereviews',
+            ingest_title='Gene Reviews',
+            ingest_url='http://genereviews.org/',
+            license_url='http://www.ncbi.nlm.nih.gov/books/NBK138602/',
+            data_rights=None,
+            file_handle=None
+        )
 
-        self.dataset = Dataset(
-            'genereviews', 'Gene Reviews', 'http://genereviews.org/',
-            None, 'http://www.ncbi.nlm.nih.gov/books/NBK138602/')
-        self.dataset.set_citation('GeneReviews:NBK1116')
+        super.dataset.set_citation('GeneReviews:NBK1116')
 
         self.book_ids = set()
         self.all_books = {}

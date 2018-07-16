@@ -1,7 +1,6 @@
 import logging
 import requests
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Evidence import Evidence
 from dipper.models.Provenance import Provenance
@@ -26,11 +25,18 @@ class MyDrug(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mydrug')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'mydrug',
+            ingest_title='Drugs and Compounds in BioThings',
+            ingest_url='http://c.biothings.io/'
+            # license_url=None,
+            # data_rights=None,
+            # file_handle=None
+        )
 
-        self.dataset = Dataset(
-            'MyDrug', 'Drugs and Compounds in BioThings',
-            'http://c.biothings.io/')
+    Source.dataset.set_citation('http://mychem.info/citation/')
 
     def fetch(self, is_dl_forced=False):
         """

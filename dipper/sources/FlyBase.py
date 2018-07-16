@@ -9,7 +9,6 @@ import os
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.Model import Model
 # from dipper.models.assoc.Association import Assoc
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
@@ -75,56 +74,56 @@ class FlyBase(PostgreSQLSource):
     ]
 
     # columns = { WIP
-        #'genotype': (
-            #feature_genotype_id, feature_id, genotype_id, chromosome_id, rank,
-            #cgroup, cvterm_id),
-        #'feature_genotype': (
-            #feature_genotype_id, feature_id, genotype_id, chromosome_id,
-            #rank, cgroup, cvterm_id),
-        #'pub': (
-            #pub_id, title, volumetitle, volume, series_name, issue, pyear,
-            #pages, miniref, type_id, is_obsolete, publisher, pubplace,
-            #uniquename),
-        #'feature_pub': (
-            #feature_pub_id, feature_id, pub_id),
-        #'pub_dbxref': (
-            #pub_dbxref_id, pub_id, dbxref_id, is_current),
-        #'feature_dbxref': (
-            #feature_dbxref_id, feature_id, dbxref_id, is_current),
-        #'feature_relationship': (
-            #feature_relationship_id, subject_id, object_id, type_id, rank,
-            #value),
-        #'cvterm': (
-            #cvterm_id, cv_id, definition, dbxref_id, is_obsolete,
-            #is_relationshiptype, name),
-        #'stock_genotype': (
-            #stock_genotype_id, stock_id, genotype_id),
-        #'stock': (
-            #stock_id, dbxref_id, organism_id, name, uniquename, description,
-            #type_id, is_obsolete),
-        #'organism': (
-            #organism_id, abbreviation, genus, species, common_name, comment),
-        #'organism_dbxref': (
-            #organism_dbxref_id, organism_id, dbxref_id, is_current),
-        #'environment': (
-            #environment_id, uniquename, description),
-        #'phenotype': (
-            #phenotype_id, uniquename, observable_id, attr_id, value, cvalue_id,
-            #assay_id),
-        #'phenstatement': (
-            #phenstatement_id, genotype_id, environment_id, phenotype_id,
-            #type_id, pub_id),
-        #'dbxref': (
-            #dbxref_id, db_id, accession, version, description, url),
-        #'phenotype_cvterm': (
-            #phenotype_cvterm_id, phenotype_id, cvterm_id, rank),
-        #'phendesc':  (
-            #phendesc_id, genotype_id, environment_id, description, type_id,
-            #pub_id),
-        #'environment_cvterm': (
-            #environment_cvterm_id, environment_id, cvterm_id),
-        #'stockprop': (stockprop_id, stock_id, type_id, value, rank)
-    #}
+        # 'genotype': (
+            # feature_genotype_id, feature_id, genotype_id, chromosome_id, rank,
+             # cgroup, cvterm_id),
+        # 'feature_genotype': (
+            # feature_genotype_id, feature_id, genotype_id, chromosome_id,
+            # rank, cgroup, cvterm_id),
+        # 'pub': (
+            # pub_id, title, volumetitle, volume, series_name, issue, pyear,
+            # pages, miniref, type_id, is_obsolete, publisher, pubplace,
+            # uniquename),
+        # 'feature_pub': (
+            # feature_pub_id, feature_id, pub_id),
+        # 'pub_dbxref': (
+            # pub_dbxref_id, pub_id, dbxref_id, is_current),
+        # 'feature_dbxref': (
+            # feature_dbxref_id, feature_id, dbxref_id, is_current),
+        # 'feature_relationship': (
+            # feature_relationship_id, subject_id, object_id, type_id, rank,
+            # value),
+        # 'cvterm': (
+            # cvterm_id, cv_id, definition, dbxref_id, is_obsolete,
+            # is_relationshiptype, name),
+        # 'stock_genotype': (
+            # stock_genotype_id, stock_id, genotype_id),
+        # 'stock': (
+            # stock_id, dbxref_id, organism_id, name, uniquename, description,
+            # type_id, is_obsolete),
+        # 'organism': (
+            # organism_id, abbreviation, genus, species, common_name, comment),
+        # 'organism_dbxref': (
+            # organism_dbxref_id, organism_id, dbxref_id, is_current),
+        # 'environment': (
+            # environment_id, uniquename, description),
+        # 'phenotype': (
+            # phenotype_id, uniquename, observable_id, attr_id, value, cvalue_id,
+            # assay_id),
+        # 'phenstatement': (
+            # phenstatement_id, genotype_id, environment_id, phenotype_id,
+            # type_id, pub_id),
+        # 'dbxref': (
+            # dbxref_id, db_id, accession, version, description, url),
+        # 'phenotype_cvterm': (
+            # phenotype_cvterm_id, phenotype_id, cvterm_id, rank),
+        # 'phendesc':  (
+            # phendesc_id, genotype_id, environment_id, description, type_id,
+            # pub_id),
+        # 'environment_cvterm': (
+            # environment_cvterm_id, environment_id, cvterm_id),
+        # 'stockprop': (stockprop_id, stock_id, type_id, value, rank)
+    # }
 
     querys = {
         # WIP: start filtering closer to the source,
@@ -199,15 +198,20 @@ class FlyBase(PostgreSQLSource):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'flybase')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'flybase',
+            ingest_title='FlyBase',
+            ingest_url='http://www.flybase.org/',
+            license_url=None,  # 'https://wiki.flybase.org/wiki/Main_Page'
+            data_rights='https://wiki.flybase.org/wiki/FlyBase_Wiki:General_disclaimer',
+            file_handle=None
+            )
+
         logger.setLevel(logging.INFO)
         # to be used to store the version number to be acquired later
         self.version_num = None
-
-        # update the dataset object with details about this resource
-        self.dataset = Dataset(
-            'flybase', 'FlyBase', 'http://www.flybase.org/', None, None,
-            'http://flybase.org/wiki/FlyBase:FilesOverview')
 
         # source-specific warnings.  will be cleared when resolved.
         logger.warning("we are ignoring normal phenotypes for now")
@@ -264,12 +268,12 @@ class FlyBase(PostgreSQLSource):
             'host': 'chado.flybase.org', 'database': 'flybase', 'port': 5432,
             'user': 'flybase', 'password': 'no password'}
 
-        self.dataset.setFileAccessUrl(
+        super.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                      '/', cxn['database'])), is_object_literal=True)
 
         # process the tables
-        # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
+        # self.fetch_from_pgdb(self.tables,cxn,100)  # for testing
         self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
         for query_map in self.resources:
@@ -293,7 +297,7 @@ class FlyBase(PostgreSQLSource):
 
         self._get_human_models_file()
         self.get_files(False)
-        self.dataset.set_version_by_num(self.version_num)
+        super.dataset.set_version_by_num(self.version_num)
 
         return
 
@@ -1672,7 +1676,7 @@ class FlyBase(PostgreSQLSource):
                 # TODO move this out of the if later
                 # allele of gene
                 # in sql, we limited the
-                # subject to type_id = 219,33 object type_id  219  #??? TEC
+                # subject to type_id = 219,33 object type_id  219  # ??? TEC
                 # subject = variation
                 # object = gene
                 if name in [

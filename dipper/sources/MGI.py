@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 import logging
 import re
-
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -320,7 +319,6 @@ class MGI(PostgreSQLSource):
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-        # self.dataset.setVersion(datestamp, ver)
         super.dataset.setVersion(datestamp, ver)
 
         return
