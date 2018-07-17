@@ -152,7 +152,7 @@ class Ensembl(Source):
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
             if len(row) < 6:
-                logger.warn("Data error for query on %d", taxon_id)
+                logger.warning("Data error for query on %d", taxon_id)
                 continue
             (ensembl_gene_id, external_gene_name,
              description, gene_biotype, entrezgene,
