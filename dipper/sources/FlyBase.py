@@ -268,7 +268,7 @@ class FlyBase(PostgreSQLSource):
             'host': 'chado.flybase.org', 'database': 'flybase', 'port': 5432,
             'user': 'flybase', 'password': 'no password'}
 
-        super.dataset.setFileAccessUrl(
+        self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                      '/', cxn['database'])), is_object_literal=True)
 
@@ -297,7 +297,7 @@ class FlyBase(PostgreSQLSource):
 
         self._get_human_models_file()
         self.get_files(False)
-        super.dataset.set_version_by_num(self.version_num)
+        self.dataset.set_version_by_num(self.version_num)
 
         return
 

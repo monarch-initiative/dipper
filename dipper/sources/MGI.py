@@ -278,7 +278,7 @@ class MGI(PostgreSQLSource):
         cxn.update(
             {'host': 'mgi-adhoc.jax.org', 'database': 'mgd', 'port': 5432})
 
-        super.dataset.setFileAccessUrl(
+        self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                     '/', cxn['database'])), is_object_literal=True)
 
@@ -319,7 +319,7 @@ class MGI(PostgreSQLSource):
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-        super.dataset.setVersion(datestamp, ver)
+        self.dataset.setVersion(datestamp, ver)
 
         return
 

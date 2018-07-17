@@ -89,7 +89,6 @@ class UDP(Source):
         if graph_type != 'rdf_graph':
             raise ValueError("UDP requires a rdf_graph")
 
-
     def fetch(self, is_dl_forced=True):
         """
         Fetches data from udp collaboration server,
@@ -131,12 +130,13 @@ class UDP(Source):
                               'user_fields': ','.join(prioritized_variants),
                               'format': 'json'}
 
-        variant_fields = ['Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
-                          'Reference Allele', 'Variant Allele', 'Parent of origin',
-                          'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
-                          'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
-                          'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID', '1K Frequency',
-                          'Number of Alleles']
+        variant_fields = [
+            'Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
+            'Reference Allele', 'Variant Allele', 'Parent of origin',
+            'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
+            'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
+            'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID',
+            '1K Frequency', 'Number of Alleles']
 
         variant_params = {'method': 'search_subjects',
                           'subject_type': 'Exome Analysis Results',
@@ -146,8 +146,10 @@ class UDP(Source):
                           'user_fields': ','.join(variant_fields),
                           'format': 'json'}
 
-        pheno_file = open('/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
-        variant_file = open('/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
+        pheno_file = open(
+            '/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
+        variant_file = open(
+            '/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
 
         pheno_file.write('{0}\n'.format('\t'.join(phenotype_fields)))
         variant_file.write('{0}\n'.format('\t'.join(variant_fields)))
@@ -545,7 +547,8 @@ class UDP(Source):
                 variant_id = '-'.join(variant_info)
 
             if variant_id in patient_variant_map[patient]:
-                patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
+                patient_variant_map[patient][variant_id]['genes_of_interest'].append(
+                    gene_symbol)
             else:
                 patient_variant_map[patient][variant_id] = {
                     'build': formatted_build,
@@ -605,7 +608,8 @@ class UDP(Source):
         """
         id_map = {}
         if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+            with open(
+                    os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
                     (gene_curie, start, end, strand, build) = row
@@ -781,12 +785,14 @@ class UDP(Source):
                 if len(rs_candidates) == 1:
                     rs_id = rs_candidates[0]
                 elif len(rs_candidates) > 1:
-                    logger.info("ambiguous rs mapping for:"
-                                " {0}\n candidate ids: {1}".format(variant, rs_candidates))
+                    logger.info(
+                        "ambiguous rs mapping for: {0}\n"
+                        "candidate ids: {1}".format(variant, rs_candidates))
                 else:
-                    logger.info("rs at coordinate but no match found"
-                                " for variant {0}\n candidate ids: {1}".format
-                                (variant, rs_map[variant_key]))
+                    logger.info(
+                        "rs at coordinate but no match found"
+                        " for variant {0}\n candidate ids: {1}".format(
+                            variant, rs_map[variant_key]))
         else:
             logger.warn("type: {0} unsupported".format(variant_type))
         return rs_id

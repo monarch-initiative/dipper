@@ -184,7 +184,7 @@ class CTD(Source):
                     if match:
                         version = re.sub(r'\s|:', '-', match.group(1))
                         # TODO convert this timestamp to a proper timestamp
-                        super.dataset.setVersion(version)
+                        self.dataset.setVersion(version)
                         is_versioned = True
                 elif re.match(r'^#', ' '.join(row)):
                     pass

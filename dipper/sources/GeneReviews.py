@@ -68,7 +68,7 @@ class GeneReviews(Source):
             file_handle=None
         )
 
-        super.dataset.set_citation('GeneReviews:NBK1116')
+        self.dataset.set_citation('GeneReviews:NBK1116')
 
         self.book_ids = set()
         self.all_books = {}

@@ -34,7 +34,7 @@ class RGD(Source):
             # data_rights=None
             # file_handle=None
         )
-        Source.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
+        self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
 
         self.global_terms = Source.open_and_parse_yaml(
             '../../translationtable/global_terms.yaml')

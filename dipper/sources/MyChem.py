@@ -27,8 +27,7 @@ class MyChem(Source):
         self.inchikeys = MyChem.chunks(l=MyChem.get_inchikeys(), n=10)
         self.drugbank_targets = list()
         self.drugcentral_interactors = list()
-
-    Source.dataset.set_citation('http://mychem.info/citation/')
+        self.dataset.set_citation('http://mychem.info/citation/')
 
     def fetch(self, is_dl_forced=False):
         self.fetch_from_mychem()

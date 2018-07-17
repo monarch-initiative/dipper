@@ -91,7 +91,7 @@ class HPOAnnotations(Source):
             # data_rights=None,
             # file_handle=None
         )
-        super.dataset.set_citation('https://hpo.jax.org/app/citation')
+        self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
 
         if 'test_ids' not in config.get_config()\

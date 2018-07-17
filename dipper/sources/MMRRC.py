@@ -75,7 +75,7 @@ class MMRRC(Source):
         # first line like:
         # This MMRRC catalog data file was generated on 2015-04-22
 
-        super.dataset.setVersion(filedate)
+        self.dataset.setVersion(filedate)
 
         return
 

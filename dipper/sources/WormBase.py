@@ -148,7 +148,7 @@ class WormBase(Source):
 
             self.update_wsnum_in_files(wsver.group(1))
 
-        super.dataset.set_version_by_num(self.version_num)
+        self.dataset.set_version_by_num(self.version_num)
         # fetch all the files
         self.get_files(is_dl_forced)
         return
