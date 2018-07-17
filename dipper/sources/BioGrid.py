@@ -95,7 +95,7 @@ class BioGrid(Source):
                 r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
         myzip.close()
 
-        Source.dataset.setVersion(filedate, str(version.groups()[0]))
+        self.dataset.setVersion(filedate, str(version.groups()[0]))
 
         return
 

@@ -93,7 +93,7 @@ class MPD(Source):
         self.stdevthreshold = 2
 
         # TODO add a citation for mpd dataset as a whole
-        Source.dataset.set_citation('PMID:15619963')
+        self.dataset.set_citation('PMID:15619963')
 
         self.assayhash = {}
         self.idlabel_hash = {}

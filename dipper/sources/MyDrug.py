@@ -36,7 +36,7 @@ class MyDrug(Source):
             # file_handle=None
         )
 
-    Source.dataset.set_citation('http://mychem.info/citation/')
+        self.dataset.set_citation('http://mychem.info/citation/')
 
     def fetch(self, is_dl_forced=False):
         """

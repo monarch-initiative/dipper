@@ -274,7 +274,7 @@ class ZFIN(Source):
             # file_handle=None
         )
 
-        Source.dataset.set_citation(
+        self.dataset.set_citation(
             'https://wiki.zfin.org/display/general/ZFIN+db+information')
 
         self.fish_parts = {}

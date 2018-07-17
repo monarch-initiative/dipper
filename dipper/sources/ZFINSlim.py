@@ -37,7 +37,7 @@ class ZFINSlim(Source):
             # data_rights=None,
             # file_handle=None
         )
-        Source.dataset.set_citation(
+        self.dataset.set_citation(
             'https://wiki.zfin.org/display/general/ZFIN+db+information')
 
     def fetch(self, is_dl_forced=False):
