@@ -5,7 +5,6 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper import curie_map
 
@@ -52,20 +51,23 @@ class Panther(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'panther')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'panther',
+            ingest_title='Protein ANalysis THrough Evolutionary Relationships',
+            ingest_url='http://pantherdb.org',
+            license_url='http://www.pantherdb.org/terms/disclaimer.jsp',
+            data_rights='http://pantherdb.org/publications.jsp#HowToCitePANTHER'
+            # file_handle=None
+        )
         self.tax_ids = tax_ids
-
-        self.dataset = Dataset(
-            'panther', 'Protein ANalysis THrough Evolutionary Relationships',
-            'http://pantherdb.org/', None,
-            'http://www.pantherdb.org/terms/disclaimer.jsp')
-
         # # Defaults
         # if self.tax_ids is None:
         #     self.tax_ids = [9606, 10090, 7955]
 
-        if 'test_ids' not in config.get_config() \
-                or 'protein' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or \
+                'protein' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['protein']

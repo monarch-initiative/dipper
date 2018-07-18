@@ -1,8 +1,6 @@
 import logging
 import xml.etree.ElementTree as ET
-
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
@@ -25,12 +23,16 @@ class Orphanet(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'orphanet')
-
-        self.dataset = Dataset(
-            'orphanet', 'Orphanet', 'http://www.orpha.net', None,
-            'http://creativecommons.org/licenses/by-nd/3.0/',
-            'http://omim.org/help/agreement')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'orphanet',
+            ingest_title='Orphanet',
+            ingest_url='http://www.orpha.net',
+            license_url='http://creativecommons.org/licenses/by-nd/3.0/',
+            data_rights='http://omim.org/help/agreement'
+            # file_handle=None
+        )
 
         self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
         self.translation_table = self.open_and_parse_yaml('../../translationtable/orphanet.yaml')

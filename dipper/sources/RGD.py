@@ -1,12 +1,10 @@
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
-from dipper.models.Provenance import Provenance
-from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.io.gafparser import GafParser
 import logging
-from pprint import pprint
+
 
 __author__ = 'timputman'
 
@@ -26,17 +24,25 @@ class RGD(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'rgd')
-        self.dataset = Dataset(
-            'rgd', 'RGD', 'http://rgd.mcw.edu/', None,
-            None)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'rgd',
+            ingest_title='Rat Genome Database',
+            ingest_url='http://rgd.mcw.edu/',
+            license_url='https://rgd.mcw.edu/wg/disclaimer/'
+            # data_rights=None
+            # file_handle=None
+        )
+        self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
 
-        self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        self.global_terms = Source.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
 
     def fetch(self, is_dl_forced=False):
         """
         Override Source.fetch()
-        Fetches resources from rat_genome_database using the rat_genome_database ftp site
+        Fetches resources from rat_genome_database via the rat_genome_database ftp site
         Args:
             :param is_dl_forced (bool): Force download
         Returns:
@@ -56,7 +62,8 @@ class RGD(Source):
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
 
-        rgd_file = '/'.join((self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))
+        rgd_file = '/'.join(
+            (self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))
 
         # ontobio gafparser implemented here
         p = GafParser()
@@ -88,7 +95,8 @@ class RGD(Source):
         # add the references
         references = record['evidence']['has_supporting_reference']
         # created RGDRef prefix in curie map to route to proper reference URL in RGD
-        references = [x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
+        references = [
+            x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
 
         if len(references) > 0:
             # make first ref in list the source
@@ -101,7 +109,8 @@ class RGD(Source):
 
         if len(references) > 1:
             # create equivalent source for any other refs in list
-            # This seems to be specific to this source and there could be non-equivalent references in this list
+            # This seems to be specific to this source and
+            # there could be non-equivalent references in this list
             for ref in references[1:]:
                 model.addSameIndividual(sub=references[0], obj=ref)
 
@@ -111,5 +120,3 @@ class RGD(Source):
         g2p_assoc.add_association_to_graph()
 
         return
-
-

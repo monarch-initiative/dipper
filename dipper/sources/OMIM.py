@@ -90,13 +90,23 @@ class OMIM(Source):
         # disease with known locus
         102480]
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'omim')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
 
-        self.dataset = Dataset(
-            'omim', 'Online Mendelian Inheritance in Man',
-            'http://www.omim.org', None,
-            'http://omim.org/help/agreement')
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'omim',
+            ingest_title= 'Online Mendelian Inheritance in Man',
+            ingest_url= 'http://www.omim.org',
+            # ingest_desc=None,
+            # data_rights=None,
+            license_url='http://omim.org/help/agreement'
+            # file_handle=None
+        )
 
         self.omim_ncbigene_idmap = {}
 

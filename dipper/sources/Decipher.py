@@ -5,7 +5,6 @@ import csv
 from zipfile import ZipFile
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
 from dipper import config
@@ -41,12 +40,16 @@ class Decipher(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'decipher')
-
-        self.dataset = Dataset(
-            'decipher', 'Development Disorder Genotype – Phenotype Database',
-            'https://decipher.sanger.ac.uk/', None,
-            'https://decipher.sanger.ac.uk/legal')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'decipher',
+            ingest_title='Development Disorder Genotype Phenotype Database',
+            ingest_url='https://decipher.sanger.ac.uk/',
+            license_url='https://decipher.sanger.ac.uk/legal',
+            data_rights='https://decipher.sanger.ac.uk/datasharing',
+            # file_handle=None
+        )
 
         if 'test_ids' not in config.get_config() \
                 or 'disease' not in config.get_config()['test_ids']:
@@ -171,22 +174,23 @@ class Decipher(Source):
                     # assume this is declared elsewhere in ontology
                     self.model.addClassToGraph(omim_id, None)
 
-                    if category.strip() == 'Confirmed DD gene':
-                        rel = self.model.object_properties['has_phenotype']
-                    elif category.strip() == 'Probable DD gene':
-                        rel = self.model.object_properties['has_phenotype']
-                    elif category.strip() == 'Possible DD gene':
-                        rel = self.model.object_properties['contributes_to']
-                    elif category.strip() == 'Not DD gene':
-                        # TODO negative annotation
-                        continue
+                    # ??? rel is never used
+                    # if category.strip() == 'Confirmed DD gene':
+                    #     rel = self.model.object_properties['has_phenotype']
+                    # elif category.strip() == 'Probable DD gene':
+                    #    rel = self.model.object_properties['has_phenotype']
+                    # elif category.strip() == 'Possible DD gene':
+                    #    rel = self.model.object_properties['contributes_to']
+                    # elif category.strip() == 'Not DD gene':
+                    #    # TODO negative annotation
+                    #    continue
                     assoc = G2PAssoc(g, self.name, allele_id, omim_id)
                     # TODO 'rel' is assigned to but never used
 
                     for p in re.split(r';', pubmed_ids):
                         p = p.strip()
                         if p != '':
-                            pmid = 'PMID:'+str(p)
+                            pmid = 'PMID:' + str(p)
                             r = Reference(
                                 g, pmid, Reference.ref_types['journal_article'])
                             r.addRefToGraph()

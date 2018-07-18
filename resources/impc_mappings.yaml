@@ -11,7 +11,8 @@ project:
     RIKEN BioResource Center: 'http://en.brc.riken.jp/'
     Wellcome Trust Sanger Institute Mouse Genetics Project: 'http://www.sanger.ac.uk/science/data/mouse-genomes-project'
     Korea Mouse Phenotyping Center: 'http://mousephenotype.kr/'
-
+    International Mouse Phenotyping Consortium: 'http://www.mousephenotype.org/'
+    Infection and Immunity Immunophenotyping (3i) consortium: 'http://www.immunophenotype.org/'
 
 phenotyping_center:
     BCM: 'https://www.bcm.edu/'
@@ -27,7 +28,7 @@ phenotyping_center:
     WTSI: 'http://www.sanger.ac.uk/'
     MARC: 'http://www.nbri-nju.com/en-us/'
     KMPC: 'http://mousephenotype.kr/'
-
+    International Mouse Phenotyping Consortium: 'http://www.mousephenotype.org/'
 
 statistical_method:
     "Fisher's exact test": 'STATO:0000073'
@@ -38,6 +39,7 @@ statistical_method:
     "Fisher Exact Test framework": 'STATO:0000073'
     Unknown: 'STATO:0000107'
     Wilcoxon rank sum test with continuity correction: 'STATO:0000076'
+    Manual: 'NCIT:C63513'
 
 measurements:
     'p_value': 'OBI:0000175'
@@ -45,5 +47,5 @@ measurements:
     'percentage_change': 'STATO:0000169'
 
 asserted_by:
-    'IMPC': 'http://www.mousephenotype.org/'
+    IMPC: 'http://www.mousephenotype.org/'
 

@@ -7,7 +7,6 @@ import logging
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
-from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
@@ -51,14 +50,18 @@ class MMRRC(Source):
     ]
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mmrrc')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'mmrrc',
+            ingest_title='Mutant Mouse Regional Resource Centers',
+            ingest_url='https://www.mmrrc.org',
+            # license_url=None,
+            data_rights='https://www.mmrrc.org/about/data_download.php'
+            # file_handle=None
+        )
         self.strain_hash = {}
         self.id_label_hash = {}
-        self.dataset = Dataset(
-            'mmrrc', 'Mutant Mouse Regional Resource Centers',
-            'https://www.mmrrc.org', None,
-            'https://www.mmrrc.org/about/data_download.php')
-
         return
 
     def fetch(self, is_dl_forced=False):

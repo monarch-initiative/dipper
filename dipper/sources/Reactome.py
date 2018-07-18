@@ -1,7 +1,6 @@
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Pathway import Pathway
-from dipper.models.Dataset import Dataset
 import logging
 import csv
 
@@ -28,10 +27,16 @@ class Reactome(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'reactome')
-        self.dataset = Dataset(
-            'reactome', 'Reactome', 'http://reactome.org/', None,
-            'http://reactome.org/pages/about/license-agreement/')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'reactome',
+            ingest_title='Reactome',
+            ingest_url='http://reactome.org/',
+            license_url='https://reactome.org/license/'
+            # data_rights=None,
+            # file_handle=None
+        )
 
     def fetch(self, is_dl_forced=False):
         """
@@ -110,7 +115,3 @@ class Reactome(Source):
         association.add_evidence(eco_curie)
         association.add_association_to_graph()
         return
-
-
-
-

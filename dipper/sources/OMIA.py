@@ -61,12 +61,18 @@ class OMIA(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'omia')
-
-        self.dataset = Dataset(
-            'omia', 'Online Mendelian Inheritance in Animals',
-            'http://omia.angis.org.au', None, None,
-            'http://sydney.edu.au/disclaimer.shtml')
+        
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'omia',
+            ingest_title='Online Mendelian Inheritance in Animals',
+            ingest_url='http://omia.angis.org.au',
+            # ingest_desc=None,
+            license_url='http://sydney.edu.au/disclaimer.shtml'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         self.id_hash = {
             'article': {},
