@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 class OrthoXMLParser(object):
     def __init__(self, xml):
         if not (hasattr(xml, 'docinfo') and xml.docinfo.root_name == "orthoXML"):
-            raise ValueError('Expecting an lxml.etree object of an orthoXML file as input')
+            raise ValueError(
+                'Expecting an lxml.etree object of an orthoXML file as input')
         self.obj = xml
         self.relations = []
         self.gene_mapping = self._build_gene_mapping()
@@ -48,7 +49,8 @@ class OrthoXMLParser(object):
         if self.is_leaf(node):
             return {self.leaf_label(node)}
         elif self.is_internal_node(node):
-            nodes_of_children = [self._extract_pw(child) for child in self.get_children(node)]
+            nodes_of_children = [
+                self._extract_pw(child) for child in self.get_children(node)]
             rel = lxml.etree.QName(node).localname
             for child1, child2 in itertools.combinations(nodes_of_children, 2):
                 for gId1, gId2 in itertools.product(child1, child2):
@@ -87,11 +89,24 @@ class OrthoXML(Source):
     and a method name.
     """
     files = {}
-    # regex to match UniProtKB Identifiers. taken from https://www.uniprot.org/help/accession_numbers
-    _up_re = re.compile(r'[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}')
+    # regex to match UniProtKB Identifiers. taken from
+    # https://www.uniprot.org/help/accession_numbers
+    _up_re = re.compile(
+        r'[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}')
 
     def __init__(self, graph_type, are_bnodes_skolemized, method, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, method)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            # method ??? this should be lowercase ingest name/identifier
+            'oma',
+            'Ortholgous MAtrix Hierarchical Orthologous Groups',
+            'https://omabrowser.org/',
+            license_url="https://creativecommons.org/licenses/by-sa/2.5/"
+            # data_rights=None,
+            # file_handle=None
+        )
+
         self.tax_ids = tax_ids
         self._map_orthology_code_to_RO = {
             'orthologGroup': OrthologyAssoc.ortho_rel['orthologous'],
@@ -168,11 +183,14 @@ class OrthoXML(Source):
             time_start = time.time()
             xml = lxml.etree.parse(f)
             parser = OrthoXMLParser(xml)
-            logger.info("loaded {} into memory. Took {}sec to load. Starting to extract relations..."
-                        .format(f, time.time()-time_start))
+            logger.info(
+                "loaded {} into memory. Took {}sec. Starting to extract relations..."
+                .format(f, time.time()-time_start))
 
             time0, last_cnt = time.time(), 0
-            for cnts, (protein_nr_a, protein_nr_b, rel_type) in enumerate(parser.extract_pairwise_relations()):
+            for cnts, (
+                    protein_nr_a, protein_nr_b, rel_type) in enumerate(
+                        parser.extract_pairwise_relations()):
                 protein_a = parser.gene_mapping[protein_nr_a]
                 protein_b = parser.gene_mapping[protein_nr_b]
 
@@ -180,15 +198,20 @@ class OrthoXML(Source):
                 protein_id_b = protein_b.get('protId')
 
                 if cnts % 100 == 0 and time.time()-time0 > 30:
-                    logger.info("processed {0:d} rels in {1:.1f}sec: {2:.3f}/sec; overall {3:d} in "
-                                "{4:1f}sec ({5:.3f}/sec); cache ratio: {6.hits}/{6.misses}"
-                                .format(cnts-last_cnt, time.time()-time0, (cnts-last_cnt)/(time.time()-time0),
-                                        cnts, time.time()-time_start, cnts/(time.time()-time_start),
-                                        self.add_protein_to_graph.cache_info()))
+                    logger.info(
+                        "processed {0:d} rels in {1:.1f}sec: "
+                        "{2:.3f}/sec; overall {3:d} in {4:1f}sec "
+                        "({5:.3f}/sec); cache ratio: {6.hits}/{6.misses}"
+                        .format(
+                            cnts-last_cnt, time.time()-time0,
+                            (cnts-last_cnt)/(time.time()-time0),
+                            cnts, time.time()-time_start,
+                            cnts/(time.time()-time_start),
+                            self.add_protein_to_graph.cache_info()))
                     time0, last_cnt = time.time(), cnts
 
-                if self.testMode and not \
-                        (protein_id_a in self.test_ids or protein_id_b in self.test_ids):
+                if self.testMode and not (
+                        protein_id_a in self.test_ids or protein_id_b in self.test_ids):
                     continue
 
                 matchcounter += 1
@@ -196,11 +219,11 @@ class OrthoXML(Source):
                 taxon_b = self.extract_taxon_info(protein_b)
 
                 # check if both protein belong to taxa that are selected
-                if (self.tax_ids is not None and (
-                    (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
+                if (self.tax_ids is not None and
+                        ((int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
                             not in self.tax_ids) or
-                    (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
-                            not in self.tax_ids))):
+                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
+                                not in self.tax_ids))):
                         continue
 
                 protein_id_a = self.clean_protein_id(protein_id_a)
@@ -219,7 +242,8 @@ class OrthoXML(Source):
 
                 if not self.testMode \
                         and limit is not None and matchcounter > limit:
-                    logger.warning("reached limit of relations to extract. Stopping early...")
+                    logger.warning(
+                        "reached limit of relations to extract. Stopping early...")
                     break
                     # make report on unprocessed_gene_ids
 

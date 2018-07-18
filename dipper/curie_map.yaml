@@ -1,215 +1,225 @@
 # Monarch-specific
-'': 'https://monarchinitiative.org/'
-'MONARCH': 'https://monarchinitiative.org/MONARCH_'
+'': 'https://monarchinitiative.org/'                                # local BASE IRI
+'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
+'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # Local RDF Skolemized Blank Node
 
-'MonarchData': 'https://data.monarchinitiative.org/ttl/'
-'MonarchArchive': 'https://archive.monarchinitiative.org/201806/'
+'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201806/'   # Release RDF data
 
 # other semantic-web items
-'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'
-'dc': 'http://purl.org/dc/elements/1.1/'
-'foaf': 'http://xmlns.com/foaf/0.1/'
-'xml': 'http://www.w3.org/XML/1998/namespace'
-'xsd': 'http://www.w3.org/2001/XMLSchema#'
-'owl': 'http://www.w3.org/2002/07/owl#'
-'skos': 'https://www.w3.org/TR/skos-reference/#'
-'Annotation': 'http://www.w3.org/ns/oa#Annotation'  # FIXME - i don't think we're using this
+'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
+'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'                     # Resource Description Framework Schema
+'dc': 'http://purl.org/dc/elements/1.1/'                            # Dublin Core (metadata)
+'foaf': 'http://xmlns.com/foaf/0.1/'                                # Friend Of A Friend (social)
+'xml': 'http://www.w3.org/XML/1998/namespace'                       # Extensible Markup Language
+'xsd': 'http://www.w3.org/2001/XMLSchema#'                          # XML Schema Definition
+'owl': 'http://www.w3.org/2002/07/owl#'                             # Web Ontology Language
+'skos': 'https://www.w3.org/TR/skos-reference/#'                    # Simple Knowledge Organization System
+# 'Annotation': 'http://www.w3.org/ns/oa#Annotation'                # Web annotation
 
 # dataset description
-'dcat': 'http://www.w3.org/ns/dcat#'
-'dct': 'http://purl.org/dc/terms/'
-'dctypes': 'http://purl.org/dc/dcmitype/'
-'pav': 'http://purl.org/pav/'
+'dcat': 'http://www.w3.org/ns/dcat#'                                # Data Catalog Vocabulary
+'dctypes': 'http://purl.org/dc/dcmitype/'                           # Dublin Core Metadata Initiative (types)
+'dcterms': 'http://purl.org/dc/terms/'                              # Dublin Core (addtional terms)
+'pav': 'http://purl.org/pav/'                                       # Provenance, Authoring and Versioning
 
 # ontologies
-# [y] indicates those that the monarch team contributes to
-'AQTLTrait': 'http://identifiers.org/animalqtltrait/'  # FIXME - should get integrated into Upheno
-'BFO': 'http://purl.obolibrary.org/obo/BFO_' # BFO: Basic Formal Ontology
-'CHEBI': 'http://purl.obolibrary.org/obo/CHEBI_' # ChEBI: Chemicals of Biological Interest
-'CHR': 'http://purl.obolibrary.org/obo/CHR_'  # CHR: Chromosome Ontology
-'CL': 'http://purl.obolibrary.org/obo/CL_'  # CL: Cell Ontology (cell types)  [y]
-'CLO': 'http://purl.obolibrary.org/obo/CLO_'  # CLO: Cell Line Ontology  [y]
-'CMO': 'http://purl.obolibrary.org/obo/CMO_'  # CMO: Clinical Measurements Ontology
-'DATA': 'http://edamontology.org/data_'  # EDAM: Data and Methods Ontology (data artifacts)
-'DC': 'http://purl.obolibrary.org/obo/DC_'  # TODO
-'DECIPHER': 'http://purl.obolibrary.org/obo/DECIPHER_'  # DECIPHER: Deciphering Developmental Disease
-'DOID': 'http://purl.obolibrary.org/obo/DOID_'  # DOID: Human Disease Ontology  [y]
-'ECO': 'http://purl.obolibrary.org/obo/ECO_'  # ECO: Evidence Code Ontology [y]
-'EFO': 'http://purl.obolibrary.org/obo/EFO_'  # EFO: Experimental Factor Ontology (all kinds of stuff) [y]
-'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'  # ENVO: Environment Ontology
-'EOM': 'http://purl.obolibrary.org/obo/EOM_'  # elements of morphology phentoypes
-'ERO': 'http://purl.obolibrary.org/obo/ERO_' # ERO: eagle-i resource ontology  [y]
-'faldo': 'http://biohackathon.org/resource/faldo#'  # FALDO: Feature Annotation Location Description Ontology (genomic feature properties)  [y]
-'FBcv': 'http://purl.obolibrary.org/obo/FBcv_'  # FBcv: flybase CV (includes phenotypes)
-'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'  # FBbt: flybase anatomy
-'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'  # FBdv: flybase developmental stages
-# till we get a purl? `FBgn': 'http://flybase.org/reports/'           # flybase gene?
-'GENO': 'http://purl.obolibrary.org/obo/GENO_'  # GENO: Genotype Partonomy Ontology [y]
-'GO': 'http://purl.obolibrary.org/obo/GO_'  # GO: Gene Ontology [y]
-'HP': 'http://purl.obolibrary.org/obo/HP_'  # HP: Human Phenotype Ontology [y]
-'IAO': 'http://purl.obolibrary.org/obo/IAO_'  # IAO: Information Artifact Ontology [y]
-'KEGG-ds': 'http://purl.obolibrary.org/KEGG-ds_'  # KEGG-ds: KEGG Disease Ontology
-'LPT': 'http://purl.obolibrary.org/obo/LPT_'  # LPT: Livestock Phenotypic Trait Ontology
-'MA': 'http://purl.obolibrary.org/obo/MA_'  # MA: Mouse Anatomy Ontology [y]
-'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/'  # a vocabulary - should this be in purl?
-'MESH': 'http://purl.obolibrary.org/obo/MESH_'  # MeSH: Medical Subject Headings (medical diseases, phenotypes, and drugs)
-'MP': 'http://purl.obolibrary.org/obo/MP_'  # MP: Mammalian Phenotype Ontology [y]
-'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'  # MPATH: Mammalian Pathology Ontology
-'NBO': 'http://purl.obolibrary.org/obo/NBO_'  # NBO: NeuroBehavior Ontology [y]
-'OBA': 'http://purl.obolibrary.org/obo/OBA_'  # OBA: Ontology of Biological Attributes (traits)
-'OBAN': 'http://purl.org/oban/'  # OBAN: Open Biomedical Annotation Model [y]
-'OBI': 'http://purl.obolibrary.org/obo/OBI_'  # OBI: Ontology of Biomedical Investigations [y]
-'OBO': 'http://purl.obolibrary.org/obo/'  # all ontologies in the OBO namespace (this is not itself an ontology)
-'OIO': 'http://www.geneontology.org/formats/oboInOwl#'  # oboInOwl: obo-specific annotation properties, like synonym types
-'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'  # OMIA: Online Mendelian Inheritance in Animals (animal diseases)
-'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'  # OMIM: Online Mendelian Inheritance in Man (human disease and variants)
-'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_'  # Orphanet: rare diseases and orphan drugs
-'PATO': 'http://purl.obolibrary.org/obo/PATO_'  # PATO: Phenotypic Quality Ontology [y]
-'PCO': 'http://purl.obolibrary.org/obo/PCO_'  # PCO: Population and Community Ontology [y]
-'PR': 'http://purl.obolibrary.org/obo/PR_'  # PRO: protein ontology
-'PW': 'http://purl.obolibrary.org/obo/PW_'  # PW: pathway ontology
-'RO': 'http://purl.obolibrary.org/obo/RO_'  # RO: Relationship Ontology [y]
-'SIO': 'http://semanticscience.org/resource/SIO_'  # SIO: SemanticScience Integrated Ontology (information artifacts)
-'SNOMED': 'http://purl.obolibrary.org/obo/SNOMED_'  # SNOMED:diseases and phenotypes
-'SO': 'http://purl.obolibrary.org/obo/SO_'  # SO: Sequence Ontology [y]
-'STATO': 'http://purl.obolibrary.org/obo/STATO_'  # Statistics Ontology
-'UBERON': 'http://purl.obolibrary.org/obo/UBERON_'  # UBERON: integrated anatomy ontology (metazoans, mostly) [y]
-'UPHENO': 'http://purl.obolibrary.org/obo/UPHENO_'  # UPHENO: integrated phenotype ontology, and normal traits [y]
-'UMLS': 'http://linkedlifedata.com/resource/umls/id/'  # UMLS: unified medical language system
-'UO': 'http://purl.obolibrary.org/obo/UO_'  # UO: units of measurements
-'VT': 'http://purl.obolibrary.org/obo/VT_'  # VT: Vertebrate Trait Ontology
-'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_' # WBPhenotype: WormBase phenotypes (nematode) [y]
-'XCO': 'http://purl.obolibrary.org/obo/XCO_'  # XCO: Experimental Conditions Ontology
-'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'  # ZFA: Zebrafish Anatomy Ontology [y]
-'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'  # ZFS: Zebrafish Staging [y]
-'ZP': 'http://purl.obolibrary.org/obo/ZP_'  # ZP: Zebrafish Phenotype Ontology [y]
-'WBbt': 'http://purl.obolibrary.org/obo/WBbt_' #WBbt:  C. elegans gross anatomy
-'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_' # EMAPA: Mouse gross anatomy and development, timed
-'XAO': 'http://purl.obolibrary.org/obo/XAO_' # XAO: Xenopus anatomy and development
-'MONDO': 'http://purl.obolibrary.org/obo/MONDO_' # MONDO; Monarch disease ontology
-'NCIT': 'http://purl.obolibrary.org/obo/NCIT_' # NCI Thesaurus
+'AQTLTrait': 'http://identifiers.org/animalqtltrait/'               # Animal Quantitative Trait Loci Database
+# FIXME - should get integrated into Upheno
+
+'BFO': 'http://purl.obolibrary.org/obo/BFO_'                        # Basic Formal Ontology
+'CHEBI': 'http://purl.obolibrary.org/obo/CHEBI_'                    # Chemicals of Biological Interest
+'CHR': 'http://purl.obolibrary.org/obo/CHR_'                        # Chromosome Ontology
+'CL': 'http://purl.obolibrary.org/obo/CL_'                          # Cell Ontology (cell types)
+'CLO': 'http://purl.obolibrary.org/obo/CLO_'                        # Cell Line Ontology
+'CMO': 'http://purl.obolibrary.org/obo/CMO_'                        # Clinical Measurements Ontology
+'DATA': 'http://edamontology.org/data_'                             # Data and Methods Ontology (data artifacts)
+'DC_CL': 'http://purl.obolibrary.org/obo/DC_CL'                     #  *** seeing it fixed in github but not yet live was `DC`
+'DECIPHER': 'http://purl.obolibrary.org/obo/DECIPHER_'              # Deciphering Developmental Disease
+'DOID': 'http://purl.obolibrary.org/obo/DOID_'                      # Human Disease Ontology
+'ECO': 'http://purl.obolibrary.org/obo/ECO_'                        # Evidence Code Ontology
+'EFO': 'http://purl.obolibrary.org/obo/EFO_'                        # Experimental Factor Ontology (all kinds of stuff)
+'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'                      # Environment Ontology
+'EOM': 'http://purl.obolibrary.org/obo/EOM_'                        # Elements of Morphology phentoypes
+'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource ontology
+'faldo': 'http://biohackathon.org/resource/faldo#'                  # Feature Annotation Location Description Ontology
+'FBcv': 'http://purl.obolibrary.org/obo/FBcv_'                      # FlyBase Controled Vocabulary (includes phenotypes)
+'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'                      # FlyBase anatomy
+'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'                      # Flybase developmental stages
+# till we get a purl? `FBgn': 'http://flybase.org/reports/'         # flybase gene?
+'GENO': 'http://purl.obolibrary.org/obo/GENO_'                      # Genotype Partonomy Ontology
+'GO': 'http://purl.obolibrary.org/obo/GO_'                          # Gene Ontology
+'HP': 'http://purl.obolibrary.org/obo/HP_'                          # Human Phenotype Ontology
+'IAO': 'http://purl.obolibrary.org/obo/IAO_'                        # Information Artifact Ontology
+'KEGG-ds': 'http://purl.obolibrary.org/KEGG-ds_'                    # Kyoto Encyclopedia of Genes and Genomes Disease Ontology
+'LPT': 'http://purl.obolibrary.org/obo/LPT_'                        # Livestock Phenotypic Trait Ontology
+'MA': 'http://purl.obolibrary.org/obo/MA_'                          # Mouse Anatomy Ontology
+'MedGen': 'http://www.ncbi.nlm.nih.gov/medgen/'                     # Human Medical Genetics vocabulary
+'MESH': 'http://purl.obolibrary.org/obo/MESH_'                      # Medical Subject Headings (medical diseases, phenotypes, and drugs)
+'MP': 'http://purl.obolibrary.org/obo/MP_'                          # Mammalian Phenotype Ontology
+'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'                    # Mammalian Pathology Ontology
+'NBO': 'http://purl.obolibrary.org/obo/NBO_'                        # NeuroBehavior Ontology
+'OBA': 'http://purl.obolibrary.org/obo/OBA_'                        # Ontology of Biological Attributes (traits)
+'OBAN': 'http://purl.org/oban/'                                     # OBAN: Open Biomedical Annotation Model
+'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # OBI: Ontology of Biomedical Investigations
+'OBO': 'http://purl.obolibrary.org/obo/'                            # Biological Ontology namespace (this is not itself an ontology)
+'OIO': 'http://www.geneontology.org/formats/oboInOwl#'              # obo-specific annotation properties, like synonym types
+'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
+'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'                      # Online Mendelian Inheritance in Man (human disease and variants)
+'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_'                   # Rare diseases and Orphan drugs
+'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology
+'PCO': 'http://purl.obolibrary.org/obo/PCO_'                        # Population and Community Ontology
+'PR': 'http://purl.obolibrary.org/obo/PR_'                          # Protein ontology
+'PW': 'http://purl.obolibrary.org/obo/PW_'                          # PathWay ontology
+'RO': 'http://purl.obolibrary.org/obo/RO_'                          # Relationship Ontology
+'SIO': 'http://semanticscience.org/resource/SIO_'                   # SemanticScience Integrated Ontology (information artifacts)
+'SNOMED': 'http://purl.obolibrary.org/obo/SNOMED_'                  # Diseases and Phenotypes
+'SO': 'http://purl.obolibrary.org/obo/SO_'                          # Sequence Ontology
+'STATO': 'http://purl.obolibrary.org/obo/STATO_'                    # Statistics Ontology
+'UBERON': 'http://purl.obolibrary.org/obo/UBERON_'                  # Integrated anatomy ontology (metazoans, mostly)
+'UPHENO': 'http://purl.obolibrary.org/obo/UPHENO_'                  # Integrated phenotype ontology, and normal traits
+'UMLS': 'http://linkedlifedata.com/resource/umls/id/'               # Unified Medical Language system
+'UO': 'http://purl.obolibrary.org/obo/UO_'                          # Units of measurements
+'VT': 'http://purl.obolibrary.org/obo/VT_'                          # Vertebrate Trait Ontology
+'WBPhenotype': 'http://purl.obolibrary.org/obo/WBPhenotype_'        # WormBase Phenotypes (nematode)
+'XCO': 'http://purl.obolibrary.org/obo/XCO_'                        # Experimental Conditions Ontology
+'ZFA': 'http://purl.obolibrary.org/obo/ZFA_'                        # Zebrafish Anatomy Ontology
+'ZFS': 'http://purl.obolibrary.org/obo/ZFS_'                        # Zebrafish Staging
+'ZP': 'http://purl.obolibrary.org/obo/ZP_'                          # Zebrafish Phenotype Ontology
+'WBbt': 'http://purl.obolibrary.org/obo/WBbt_'                      # C. elegans gross anatomy
+'EMAPA': 'http://purl.obolibrary.org/obo/EMAPA_'                    # Mouse gross anatomy and development, timed
+'XAO': 'http://purl.obolibrary.org/obo/XAO_'                        # Xenopus Anatomy and development
+'MONDO': 'http://purl.obolibrary.org/obo/MONDO_'                    # Monarch Disease Ontology
+'NCIT': 'http://purl.obolibrary.org/obo/NCIT_'                      # National Cancer Institute Thesaurus
+'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'                    # Scientific Evidence and Provenance Information Ontology
+'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
+
 
 # publication/reference sources
-'DOI': 'http://dx.doi.org/'
-'GeneReviews': 'http://www.ncbi.nlm.nih.gov/books/'  # diseases too
-'ISBN': 'https://monarchinitiative.org/ISBN_'
-'ISBN-10': 'https://monarchinitiative.org/ISBN10_'
-'ISBN-13': 'https://monarchinitiative.org/ISBN13_'
-'ISBN-15': 'https://monarchinitiative.org/ISBN15_'
-'J': 'http://www.informatics.jax.org/reference/J:'  # MGI-internal identifiers for pubs
-'MPD': 'http://phenome.jax.org/'
-'MPD-assay': 'http://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='
-'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'
+'DOI': 'http://dx.doi.org/'                                         # Digital Object identifier
+'GeneReviews': 'http://www.ncbi.nlm.nih.gov/books/'                 # NCBI gene and diseases
+# more bogus IRIs
+'ISBN': 'https://monarchinitiative.org/ISBN_'                       # International Standard Book Number
+'ISBN-10': 'https://monarchinitiative.org/ISBN10_'                  # Same as ISBN has 10 digits pre 2007
+'ISBN-13': 'https://monarchinitiative.org/ISBN13_'                  # International Standard Book Number with 13 digits starts w/ 978 or 979
+#'ISBN-15': 'https://monarchinitiative.org/ISBN15_'                 # I would like to think it is a typo blindly propagated   ***
+'J': 'http://www.informatics.jax.org/reference/J:'                  # MGI-internal identifiers for pubs (Journals)
+'MPD': 'https://phenome.jax.org/'                                   # Mouse Phenome Database
+'MPD-assay': 'https://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='  #
+'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'                       # PubMed Identifier
+'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'                         # PubMed Central Identifier
 
-'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'
-'AQTLPub': 'http://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID='
-'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'
-'PAINT_REF': 'http://www.geneontology.org/gene-associations/submission/paint/'
-'HPO': 'http://human-phenotype-ontology.org/'  # to be used for persons, though they don't resolve with this
-'APO': 'http://purl.obolibrary.org/obo/APO_'
+'AQTLPub': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID=' # Animal Quantitative Trait Locus Publication
+'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'          # GO Reference Collection
+'PAINT_REF': 'http://www.geneontology.org/gene-associations/submission/paint/'  # Phylogenetic Annotation INference Tool
+'HPO': 'http://human-phenotype-ontology.org/'                                   # Human Phenotype Ontology
+'APO': 'http://purl.obolibrary.org/obo/APO_'                                    # Ascomycete phenotype ontolog
 
 # strains, lines, or organismal reagents
-'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='
-'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='
-'Coriell': 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='
+'APB': 'http://pb.apf.edu.au/phenbank/strain.html?id='                          # Australian Phenome Bank
+'CMMR': 'http://www.cmmr.ca/order.php?t=m&id='                                  # Canadian Mouse Mutant Repository
+'Coriell': 'https://catalog.coriell.org/0/Sections/Search/Sample_Detail.aspx?Ref='  # Coriell Institute for Medical Research
 'CoriellCollection': 'https://catalog.coriell.org/1/'
 'CoriellFamily': 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 'CoriellIndividual': 'https://catalog.coriell.org/Search?q='
-'dbSNPIndividual': 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='  # FIXME
-'EMMA': 'https://www.infrafrontier.eu/search?keyword=EM:'
-'JAX': 'http://jaxmice.jax.org/strain/'
-'MMRRC': 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='
-'MPD-strain': 'http://phenome.jax.org/db/q?rtn=strains/details&strainid='
-'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='
-'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='
-'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'
+# 'dbSNPIndividual': 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='      # FIXME (form only has 'sub_id')
+# https://www.ncbi.nlm.nih.gov/mailman/pipermail/dbsnp-announce/2018q2/000186.html
 
-# organisms and genome builds (also NCBITaxon)
-'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'
-'NCBIGenome': 'http://www.ncbi.nlm.nih.gov/genome/'
-'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'
-'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'
-'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'
+'EMMA': 'https://www.infrafrontier.eu/search?keyword=EM:'                       # European Mouse Mutant Archive
+'JAX': 'http://jaxmice.jax.org/strain/'                                         # The Jackson Laboratory
+'MMRRC': 'https://www.mmrrc.org/catalog/sds.php?mmrrc_id='                      # Mutant Mouse Resource & Research Centers
+'MPD-strain': 'http://phenome.jax.org/db/q?rtn=strains/details&strainid='       # Mouse Phenome Database
+'MUGEN': 'http://bioit.fleming.gr/mugen/Controller?workflow=ViewModel&expand_all=true&name_begins=model.block&eid='  # Mouse Genetics
+'NCIMR': 'https://mouse.ncifcrf.gov/available_details.asp?ID='                  # link rot?
+'RBRC': 'http://www2.brc.riken.jp/lab/animal/detail.php?brc_no=RBRC'            # RIKEN BioResource Research Center
+
+# organisms and genome builds
+                                                                        # National Center for Biotechnology Information
+'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'                 #   Assembly
+'NCBIGenome': 'http://www.ncbi.nlm.nih.gov/genome/'                     #   Genome
+'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon
+'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'         # Local IRI for Online Inheritance In Animal breeds
+'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz Assembly
 
 # homology
-'HOMOLOGENE': 'http://www.ncbi.nlm.nih.gov/homologene/'
-'KEGG-ko': 'http://www.kegg.jp/dbget-bin/www_bget?ko:'
-'PANTHER': 'http://www.pantherdb.org/panther/family.do?clsAccession='   # protein/orthologous families
+'HOMOLOGENE': 'http://www.ncbi.nlm.nih.gov/homologene/'                 # Putative Homology Groups
+'KEGG-ko': 'http://www.kegg.jp/dbget-bin/www_bget?ko:'                  # Kyoto Encyclopedia of Genes and Genomes (KEGG Orthology)
+'PANTHER': 'http://www.pantherdb.org/panther/family.do?clsAccession='   # Protein ANalysis THrough Evolutionary Relationships
 
-# variants
-'AQTL': 'http://identifiers.org/animalqtl/'  # FIXME temporary  # traits
+# variants / traits
+# 'AQTL': 'http://identifiers.org/animalqtl/'  # does not exist   		#
+# 'AQTL-BT': https://www.animalgenome.org/cgi-bin/QTLdb/BT/search       # maybe?
+'horseQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
+'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_D='
+'catfishQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/IP/qdetails?QTL_ID='
+'chickenQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
+'pigQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
+'troutQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
+'sheepQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
 
-'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'  # variant+condition
-'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'
-'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'
-'COSMIC': 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='
-'HGMD': 'http://identifiers.org/hgmd/'
-'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
-'dbVar': 'http://www.ncbi.nlm.nih.gov/dbvar/'
+'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'                       # Clinical Variation in Human
+'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'      #   ClinVar cooked variants
+'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'  #   ClinVar raw variants
+'COSMIC': 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='     # Catalogue Of Somatic Mutations In Cancer
+'HGMD': 'http://www.hgmd.cf.ac.uk/ac/gene.php?gene='                    # Human Gene Mutation Database
+'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='     # Small Variation
+'dbVar': 'http://www.ncbi.nlm.nih.gov/dbvar/'                           # Large Variation
 
 # pathways
-'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'
-'REACT': 'http://www.reactome.org/PathwayBrowser/#/'
-'SMPDB': 'http://smpdb.ca/view/'
+'KEGG-path': 'http://www.kegg.jp/dbget-bin/www_bget?path:'              # Kyoto Encyclopedia of Genes and Genomes (pathways)
+'REACT': 'http://www.reactome.org/PathwayBrowser/#/'                    # Manually curated pathway database
+'SMPDB': 'http://smpdb.ca/view/'                                        # Small Molecule Pathway Database
 
 # genes (and RNAs and transcripts)
-'BIOGRID': 'http://thebiogrid.org/'  # also interactions
-'CCDS': 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='  # transcripty things
-'dictyBase': 'http://dictybase.org/gene/'
-'EcoGene': 'http://ecogene.org/gene/'
-'ENSEMBL': 'http://identifiers.org/ensembl/'
-'FlyBase': 'http://flybase.org/reports/'  # also variants, pubs, genotypes, strains
-'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'
-'HGNC': 'http://identifiers.org/hgnc/HGNC:'
-'IMPC': 'http://www.mousephenotype.org/data/genes/'  # FIXME
-'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'
-'MGI': 'http://www.informatics.jax.org/accession/MGI:'  # also variants, pubs, genotypes
-'miRBase': 'http://identifiers.org/mirbase/'  # microRNA genes
-'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/'
-'PomBase': 'http://identifiers.org/PomBase:'
-'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='
-'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='
-'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='
-
-'SGD': 'http://identifiers.org/sgd/'
-'SGD_REF': 'https://www.yeastgenome.org/reference/'
-'TAIR': 'http://identifiers.org/TAIR:'
-'WormBase': 'http://identifiers.org/wormbase/'  # also variants, pubs, genotypes
-'Xenbase': 'http://identifiers.org/xenbase/'
-'ZFIN': 'http://zfin.org/'  # also variants, pubs, genotypes
+'BIOGRID': 'http://thebiogrid.org/'                                             # Biological General Repository for Interaction Datasets
+'CCDS': 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='    # Consensus CDS (CoDing Sequence)
+'dictyBase': 'http://dictybase.org/gene/'                                       # Dictyostelium discoideum database (social amoebae)
+'EcoGene': 'http://ecogene.org/gene/'                                           # Escherichia coli K-1
+'ENSEMBL': 'http://ensembl.org/id/'                                             # joint EMBL, EBI, Sanger Institute central resource
+'FlyBase': 'http://flybase.org/reports/'                                        # Fruitfly database
+'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences
+'HGNC': 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id='          # HUGO Gene Nomenclature Committee (Human) *** chk pfx
+'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
+'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
+'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
+'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
+'PomBase': 'https://www.pombase.org/spombe/result/'                             # Database for fission yeast Schizosaccharomyces pombe  ***
+'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='                           # NCBI Reference Sequence Database
+'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='                    # Rat Genome Database
+'RGDRef': 'http://rgd.mcw.edu/rgdweb/report/reference/main.html?id='            # Rat Genome Database Reference publications
+'SGD': 'https://www.yeastgenome.org/locus/'                                     # Saccharomyces Genome Database
+'SGD_REF': 'https://www.yeastgenome.org/reference/'                             # Saccharomyces Genome Database Reference publications
+'TAIR': 'https://www.arabidopsis.org/servlets/TairObject?type=locus&id='        # The Arabidopsis Information Resource
+'WormBase': 'https://www.wormbase.org/get?name='                                # Caenorhabditis elegans Database (nematodes) ie WBGene00000001
+'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
+'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
 # proteins
-'EC': 'http://identifiers.org/ec-code/'
-'HPRD': 'http://www.hprd.org/protein/'
-'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'
-'PDB': 'http://identifiers.org/PDB:'
-'SwissProt': 'http://identifiers.org/SwissProt:'
-'TrEMBL': 'http://www.uniprot.org/uniprot/'
-'UniProtKB': 'http://identifiers.org/uniprot/'
+'EC': 'http://www.enzyme-database.org/query.php?ec='                            # Enzyme Nomenclature
+'HPRD': 'http://www.hprd.org/protein/'                                          # Human Protein Reference Database
+'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
+'PDB': 'http://www.ebi.ac.uk/pdbsum/'                                           # Protein Data Bank
 
-# SEPIO: Scientific Evidence and Provenance Information Ontology
-'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'
-'VIVO': 'http://vivoweb.org/ontology/core#'
+'SwissProt': 'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Manual
+'TrEMBL':    'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Automated
+'UniProtKB': 'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Both
 
-#Procedures/protocols
+                                                            # International Mouse Phenotyping Resource of Standardised Screens
 'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'
 'IMPRESS-protocol': 'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
 
 #Drugs, chemicals, compounds
-'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'
-'DrugBank': 'http://www.drugbank.ca/drugs/'
-'SIO': 'http://semanticscience.org/resource/SIO_'
-'OAE': 'http://purl.obolibrary.org/obo/OAE_'
-'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'
-'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'
-'FDADrug': 'http://www.fda.gov/Drugs/InformationOnDrugs/'
-'BT': 'http://c.biothings.io/#'
-'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'
-'GINAS': 'http://tripod.nih.gov/ginas/app/substance#'
-'HMDB': 'http://www.hmdb.ca/metabolites/'
-
-#Wikidata
-'WD_Prop': 'https://www.wikidata.org/wiki/Property:'
-'WD_Entity': 'https://www.wikidata.org/wiki/'
+'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound
+'DrugBank': 'http://www.drugbank.ca/drugs/'                 # DrugBank database (drugs and drug targets)
+'SIO': 'http://semanticscience.org/resource/SIO_'           # Semanticscience Integrated Ontology
+'OAE': 'http://purl.obolibrary.org/obo/OAE_'                # Ontology of Adverse Events
+'RXCUI': 'http://purl.bioontology.org/ontology/RXNORM/'     # Normalized names for clinical drugs (from Unified Medical Language System)
+'MEDDRA': 'http://purl.bioontology.org/ontology/MEDDRA/'    # Medical Dictionary for Regulatory Activities
+'FDADrug': 'http://www.fda.gov/Drugs/InformationOnDrugs/'   # U.S. Food & Drug Administration Drug  (*** what uses? seems useless)
+'BT': 'http://c.biothings.io/#'                             # MyChem (BioThings)
+'UNII': 'http://fdasis.nlm.nih.gov/srs/unii/'               # Unique Ingredient Identifier (from FDA Substance Registration System)
+'GINAS': 'http://tripod.nih.gov/ginas/app/substance#'       # Global Ingredient Archival System (National Institute of Health)
+'HMDB': 'http://www.hmdb.ca/metabolites/'                   # Human Metabolome Database
+'WD_Prop': 'https://www.wikidata.org/wiki/Property:'        # Wikidata Property
+'WD_Entity': 'https://www.wikidata.org/wiki/'               # Wikidata

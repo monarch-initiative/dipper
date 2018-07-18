@@ -6,7 +6,6 @@ import xml.etree.ElementTree as etree
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper import config
 from dipper.models.GenomicFeature import Feature
@@ -49,13 +48,19 @@ class Ensembl(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ensembl')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'ensembl',
+            ingest_title='ENSEMBL',
+            ingest_url='http://uswest.ensembl.org'
+            # license_url=None,
+            # data_rights=None,
+            # file_handle=None
+        )
 
         self.tax_ids = tax_ids
         self.gene_ids = gene_ids
-
-        self.dataset = Dataset(
-            'ensembl', 'ENSEMBL', 'http://uswest.ensembl.org', None)
 
         # Defaults
         if self.tax_ids is None:
@@ -147,7 +152,7 @@ class Ensembl(Source):
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
             if len(row) < 6:
-                logger.warn("Data error for query on %d", taxon_id)
+                logger.warning("Data error for query on %d", taxon_id)
                 continue
             (ensembl_gene_id, external_gene_name,
              description, gene_biotype, entrezgene,
@@ -230,15 +235,14 @@ class Ensembl(Source):
             return None
         q = etree.Element("Query", query_attributes)
 
-        object_attributes = {
-            "name": ensembl_taxon_to_db_map[taxid],
-            "interface": "default"
-        }
-        d = etree.SubElement(q, "Dataset", object_attributes)
-
         # TODO unused?
-        for i in cols_to_fetch:
-            a = etree.SubElement(d, "Attribute", {"name": i})
+        # object_attributes = {
+        #    "name": ensembl_taxon_to_db_map[taxid],
+        #    "interface": "default"
+        # }
+        # d = etree.SubElement(q, "Dataset", object_attributes)
+        # for i in cols_to_fetch:
+        #    a = etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
         prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'
@@ -292,8 +296,10 @@ class Ensembl(Source):
                 gene_type_id = None
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
-                model.addIndividualToGraph(peptide_curie, None, self._get_gene_type("polypeptide"))
-                model.addIndividualToGraph(uniprot_curie, None, self._get_gene_type("polypeptide"))
+                model.addIndividualToGraph(
+                    peptide_curie, None, self._get_gene_type("polypeptide"))
+                model.addIndividualToGraph(
+                    uniprot_curie, None, self._get_gene_type("polypeptide"))
 
                 if entrezgene != '':
                     if taxid == '9606':

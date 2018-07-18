@@ -1,11 +1,9 @@
 import re
 import gzip
 import logging
-
 from dipper.sources.Source import Source
 from dipper.sources.Monochrom import Monochrom, getChrPartTypeByNotation
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
-from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 
@@ -120,8 +118,17 @@ class UCSCBands(Source):
         # TODO rainbow trout, 8022, when available
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ucscbands')
+    def __init__(self,  graph_type, are_bnodes_skolemized, tax_ids=None):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'ucscbands',
+            ingest_title='UCSC Cytogenic Bands',
+            ingest_url='http://hgdownload.cse.ucsc.edu',
+            license_url='http://genome.ucsc.edu/license/'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         self.tax_ids = tax_ids
 
@@ -133,10 +140,6 @@ class UCSCBands(Source):
         # TODO add other species as defaults
 
         self._check_tax_ids()
-
-        self.dataset = Dataset('ucscbands', 'UCSC Cytogenic Bands',
-                               'http://hgdownload.cse.ucsc.edu', None,
-                               'http://genome.ucsc.edu/license/')
 
         # data-source specific warnings
         # (will be removed when issues are cleared)

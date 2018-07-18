@@ -1,6 +1,5 @@
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 import logging
 from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
@@ -12,15 +11,23 @@ logger = logging.getLogger(__name__)
 
 class MyChem(Source):
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mychem')
-        self.dataset = Dataset(
-            'mychem', 'MYCHEM', 'https://mychem.info/', None,
-            None)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'mychem',
+            ingest_title='BioThings chemical and drug annotation data',
+            ingest_url='http://mychem.info/',
+            license_url='http://mychem.info/terms'
+            # data_rights=None,
+            # file_handle=None
+        )
 
-        self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        self.global_terms = Source.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
         self.inchikeys = MyChem.chunks(l=MyChem.get_inchikeys(), n=10)
         self.drugbank_targets = list()
         self.drugcentral_interactors = list()
+        self.dataset.set_citation('http://mychem.info/citation/')
 
     def fetch(self, is_dl_forced=False):
         self.fetch_from_mychem()
@@ -30,7 +37,8 @@ class MyChem(Source):
         try:
             for index, record in enumerate(self.drugbank_targets):
                 record_data = {
-                    'drugbank_id': 'DrugBank:{}'.format(record['drugbank']['drugbank_id']),
+                    'drugbank_id': 'DrugBank:{}'.format(
+                        record['drugbank']['drugbank_id']),
                     'unii': None,
                     'targets': [],
 
@@ -108,22 +116,25 @@ class MyChem(Source):
         model = Model(self.graph)
         if source == 'drugbank':
             for target in package['targets']:
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id=target['action'],
-                                obj=target['uniprot'])
+                model.addTriple(
+                    subject_id=package['unii'], predicate_id=target['action'],
+                    obj=target['uniprot'])
                 model.addLabel(subject_id=target['uniprot'], label=target['name'])
-                model.addTriple(subject_id=target['uniprot'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='SO:0000104')
-                model.addTriple(subject_id=package['drugbank_id'],
-                                predicate_id=Model.object_properties['equivalent_class'],
-                                obj=package['unii'])
-                model.addTriple(subject_id=target['action'],
-                                predicate_id='rdfs:subPropertyOf',
-                                obj='RO:0002436')
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='CHEBI:23367')
+                model.addTriple(
+                    subject_id=target['uniprot'],
+                    predicate_id=Model.object_properties['subclass_of'],
+                    obj='SO:0000104')
+                model.addTriple(
+                    subject_id=package['drugbank_id'],
+                    predicate_id=Model.object_properties['equivalent_class'],
+                    obj=package['unii'])
+                model.addTriple(
+                    subject_id=target['action'], predicate_id='rdfs:subPropertyOf',
+                    obj='RO:0002436')
+                model.addTriple(
+                    subject_id=package['unii'],
+                    predicate_id=Model.object_properties['subclass_of'],
+                    obj='CHEBI:23367')
         if source == 'drugcentral':
             for indication in package['indications']:
                 model.addTriple(subject_id=package['unii'],
@@ -135,22 +146,26 @@ class MyChem(Source):
                 model.addTriple(subject_id=indication['snomed_id'],
                                 predicate_id=Model.object_properties['subclass_of'],
                                 obj='DOID:4')
-                model.addLabel(subject_id=indication['snomed_id'], label=indication['snomed_name'])
+                model.addLabel(
+                    subject_id=indication['snomed_id'], label=indication['snomed_name'])
             for interaction in package['interactions']:
                 model.addTriple(subject_id=package['unii'],
                                 predicate_id='RO:0002436',
                                 obj=interaction['uniprot'])
-                # model.addLabel(subject_id=interaction['uniprot'], label='Protein_{}'.format(interaction['uniprot']))
-                model.addLabel(subject_id=interaction['uniprot'], label=interaction['target_name'])
+                # model.addLabel(
+                #    subject_id=interaction['uniprot'],
+                #    label='Protein_{}'.format(interaction['uniprot']))
+                model.addLabel(
+                    subject_id=interaction['uniprot'], label=interaction['target_name'])
                 model.addTriple(subject_id=package['unii'],
                                 predicate_id=Model.object_properties['subclass_of'],
                                 obj='CHEBI:23367')
-                model.addDescription(subject_id=interaction['uniprot'], description=interaction['target_class'])
+                model.addDescription(
+                    subject_id=interaction['uniprot'],
+                    description=interaction['target_class'])
                 model.addTriple(subject_id=interaction['uniprot'],
                                 predicate_id=Model.object_properties['subclass_of'],
                                 obj='SO:0000104')
-
-
         return
 
     def fetch_from_mychem(self):
@@ -247,4 +262,3 @@ class MyChem(Source):
         if isinstance(targ_in, list):
             targ_list = targ_list + targ_in
         return targ_list
-

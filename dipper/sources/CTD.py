@@ -10,7 +10,6 @@ import urllib.request
 from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Pathway import Pathway
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -77,10 +76,16 @@ class CTD(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ctd')
-        self.dataset = Dataset(
-            'ctd', 'CTD', 'http://ctdbase.org', None,
-            'http://ctdbase.org/about/legal.jsp')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'ctd',
+            ingest_title='Comparative Toxicogenomics Database',
+            ingest_url='http://ctdbase.org',
+            license_url='http://ctdbase.org/about/legal.jsp'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         if 'test_ids' not in config.get_config() \
                 or 'gene' not in config.get_config()['test_ids']:

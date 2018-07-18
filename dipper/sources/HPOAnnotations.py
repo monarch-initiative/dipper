@@ -12,7 +12,6 @@ from dipper.utils import pysed
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.assoc.DispositionAssoc import DispositionAssoc
-from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper import config
@@ -82,13 +81,17 @@ class HPOAnnotations(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'hpoa')
-
-        self.dataset = Dataset(
-            'hpoa', 'Human Phenotype Ontology',
-            'http://www.human-phenotype-ontology.org', None,
-            'http://www.human-phenotype-ontology.org/contao/index.php/legal-issues.html')
-
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'hpoa',
+            ingest_title='Human Phenotype Ontology',
+            ingest_url='https://hpo.jax.org/app/',
+            license_url='https://hpo.jax.org/app/license'
+            # data_rights=None,
+            # file_handle=None
+        )
+        self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
 
         if 'test_ids' not in config.get_config()\
@@ -328,8 +331,8 @@ class HPOAnnotations(Source):
                         elif re.match(r'http', pub):
                             pass
                         else:
-                            logger.error('Unknown pub type for %s: %s',
-                                         disease_id, pub)
+                            logger.error(
+                                'Unknown pub type for %s: %s', disease_id, pub)
                             print(disease_id, 'pubs:', str(publist))
                             continue
 

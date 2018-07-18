@@ -8,7 +8,6 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Environment import Environment
 from dipper.models.GenomicFeature import makeChromID
@@ -264,10 +263,19 @@ class ZFIN(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'zfin')
-        # update the dataset object with details about this resource
-        self.dataset = Dataset('zfin', 'ZFIN', 'http://www.zfin.org', None,
-                               'http://zfin.org/warranty.html')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'zfin',
+            ingest_title='Zebra Fish Information Network',
+            ingest_url='https://zfin.org',
+            license_url='http://zfin.org/warranty.html'
+            # data_rights=None,
+            # file_handle=None
+        )
+
+        self.dataset.set_citation(
+            'https://wiki.zfin.org/display/general/ZFIN+db+information')
 
         self.fish_parts = {}
         self.geno_alleles = {}

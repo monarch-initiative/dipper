@@ -6,7 +6,6 @@ from os.path import isfile, join
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 
 logger = logging.getLogger(__name__)
@@ -21,11 +20,16 @@ class Monarch(Source):
     """
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'monarch')
-
-        self.dataset = Dataset(
-            'monarch', 'MonarchInitiative', 'https://monarchinitiative.org',
-            None, 'https://creativecommons.org/licenses/by/4.0/', None)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'monarch',
+            ingest_title='The Monarch Initiative',
+            ingest_url='https://monarchinitiative.org',
+            license_url='https://creativecommons.org/licenses/by/4.0/'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         return
 
@@ -47,11 +51,6 @@ class Monarch(Source):
         if self.testOnly:
             self.testMode = True
 
-        if self.testMode:
-            g = self.testgraph
-        else:
-            g = self.graph
-
         self.process_omia_phenotypes(limit)
         logger.info("Finished parsing.")
 
@@ -62,11 +61,11 @@ class Monarch(Source):
         # process the whole directory
         # TODO get the file listing
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
 
         logger.info(
             "Processing Monarch OMIA Animal disease-phenotype associations")
@@ -113,7 +112,7 @@ class Monarch(Source):
                     species_id = species_id.strip()
                     if species_id != '':
                         disease_id = '-'.join((disease_id, species_id))
-                    assoc = D2PAssoc(g, self.name, disease_id, phenotype_id)
+                    assoc = D2PAssoc(graph, self.name, disease_id, phenotype_id)
                     if pubmed_id != '':
                         for p in re.split(r'[,;]', pubmed_id):
                             pmid = 'PMID:'+p.strip()

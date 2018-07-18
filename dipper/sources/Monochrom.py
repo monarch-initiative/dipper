@@ -1,10 +1,8 @@
 import re
 import gzip
 import logging
-
 from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
-from dipper.models.Dataset import Dataset
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.Family import Family
@@ -37,7 +35,10 @@ class Monochrom(Source):
 
     Because this is a universal framework to represent the chromosomal
     structure of any species, we must mint identifiers for each chromosome
-    and part. We differentiate species by first creating a species-specific
+    and part.
+    (note: in truth we create blank nodes and then pretend they are something else. TEC)
+
+    We differentiate species by first creating a species-specific
     genome, then for each species-specific chromosome we include the NCBI taxon
     number together with the chromosome number, like:
     ```<species number>chr<num><band>```.  For 13q21.31, this would be
@@ -54,7 +55,7 @@ class Monochrom(Source):
     since each alphanumeric is a significant "place", we can split it with the
     shorter strings being parents of the longer string
 
-    Since this is small, and we have not limited other items in our test set to
+    Since this is small, and we have limited other items in our test set to
     a small region, we simply use the whole graph (genome)
     for testing purposes, and copy the main graph to the test graph.
 
@@ -145,7 +146,16 @@ class Monochrom(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'monochrom')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'monochrom',
+            ingest_title='Monarch Chromosome Ontology',
+            ingest_url='https://monarchinitiative.org',   # TODO can we be more specific
+            license_url='http://creativecommons.org/licenses/by/4.0/'  # make our lic
+            # data_rights=None,
+            # file_handle=None
+        )
 
         self.tax_ids = tax_ids
         # Defaults
@@ -154,12 +164,6 @@ class Monochrom(Source):
                 9606, 10090, 7955, 10116, 9913, 9031, 9823, 9940, 9796]
 
         self._check_tax_ids()
-
-        # TODO add license
-        self.dataset = Dataset(
-            'monochrom', 'Monarch Chromosome Ontology',
-            'http://monarchinitiative.org', None,
-            'http://creativecommons.org/licenses/by/4.0/')
 
         return
 
