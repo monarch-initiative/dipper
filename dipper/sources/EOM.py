@@ -75,7 +75,7 @@ class EOM(PostgreSQLSource):
             {'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
              'port': 5432})
 
-        PostgreSQLSource.dataset.setFileAccessUrl(
+        self.dataset.setFileAccessUrl(
             ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
                     '/', cxn['database'])), is_object_literal=True)
 
@@ -88,7 +88,7 @@ class EOM(PostgreSQLSource):
         # FIXME: Everything needed for data provenance?
         st = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
         filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-        PostgreSQLSource.dataset.setVersion(filedate)
+        self.dataset.setVersion(filedate)
 
         return
 
