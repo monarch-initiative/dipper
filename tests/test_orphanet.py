@@ -53,16 +53,16 @@ class GeneVariantDiseaseTest(unittest.TestCase):
         )
         expected_triples = """
 :MONARCH_a37b628d8347ddb0 a OBAN:association ;
-    OBO:RO_0002558 OBO:ECO_0000322 ;
-    OBAN:association_has_object <http://www.orpha.net/ORDO/Orphanet_938475> ;
-    OBAN:association_has_predicate OBO:RO_0002200 ;
+    RO:0002558 ECO:0000322 ;
+    OBAN:association_has_object Orphanet:938475 ;
+    OBAN:association_has_predicate RO:0002200 ;
     OBAN:association_has_subject <https://monarchinitiative.org/.well-known/genid/b56f798350412a34> .
 
 ENSEMBL:ENSG00000166813 a owl:Class .
 
 HGNC:30497 a owl:Class .
 
-<http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
+Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
     dc:description "kinesin family member 7" ;
     OIO:hasExactSynonym "KAS1" ;
@@ -70,14 +70,14 @@ HGNC:30497 a owl:Class .
     owl:equivalentClass ENSEMBL:ENSG00000166813,
         HGNC:30497 .
 
-<https://monarchinitiative.org/.well-known/genid/b56f798350412a34> a OBO:GENO_0000002 ;
+<https://monarchinitiative.org/.well-known/genid/b56f798350412a34> a GENO:0000002 ;
     rdfs:label "germline variant of KS1" ;
-    OBO:GENO_0000418 <http://www.orpha.net/ORDO/Orphanet_268061> ;
-    OBO:RO_0002200 <http://www.orpha.net/ORDO/Orphanet_938475> ;
+    GENO:0000418 Orphanet:268061 ;
+    RO:0002200 Orphanet:938475 ;
     :MONARCH_anonymous true ;
-    :has_cell_origin OBO:GENO_0000900 .
+    :has_cell_origin GENO:0000900 .
 
-<http://www.orpha.net/ORDO/Orphanet_938475> a owl:Class ;
+Orphanet:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
         """
         self.assertTrue(self.test_util.test_graph_equality(
@@ -94,24 +94,24 @@ HGNC:30497 a owl:Class .
         )
         expected_triples = """
 :MONARCH_f3a74695c7999465 a OBAN:association ;
-    OBO:RO_0002558 OBO:ECO_0000322 ;
-    OBAN:association_has_object <http://www.orpha.net/ORDO/Orphanet_938475> ;
-    OBAN:association_has_predicate OBO:RO_0002200 ;
+    RO:0002558 ECO:0000322 ;
+    OBAN:association_has_object Orphanet:938475 ;
+    OBAN:association_has_predicate RO:0002200 ;
     OBAN:association_has_subject <https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> .
 
-<http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
+Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
     dc:description "kinesin family member 7" ;
     OIO:hasExactSynonym "KAS1" ;
-    rdfs:subClassOf OBO:SO_0001217 .
+    rdfs:subClassOf SO:0001217 .
 
-<https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> a OBO:GENO_0000002 ;
+<https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> a GENO:0000002 ;
     rdfs:label "germline loss of function variant of KS1" ;
-    OBO:GENO_0000418 <http://www.orpha.net/ORDO/Orphanet_268061> ;
-    OBO:RO_0002200 <http://www.orpha.net/ORDO/Orphanet_938475> ;
+    GENO:0000418 Orphanet:268061 ;
+    RO:0002200 Orphanet:938475 ;
     :MONARCH_anonymous true ;
-    :has_cell_origin OBO:GENO_0000900 ;
-    :has_functional_consequence OBO:SO_0002054 .
+    :has_cell_origin GENO:0000900 ;
+    :has_functional_consequence SO:0002054 .
 
 <http://www.orpha.net/ORDO/Orphanet_938475> a owl:Class ;
     rdfs:label "too much unit testing disorder" .
@@ -129,20 +129,20 @@ HGNC:30497 a owl:Class .
                                   .decode("utf-8")
         )
         expected_triples = """
-<https://monarchinitiative.org/MONARCH_2ee6feba4c6269aa> a OBAN:association ;
-    OBO:RO_0002558 OBO:ECO_0000322 ;
-    OBAN:association_has_object <http://www.orpha.net/ORDO/Orphanet_938475> ;
-    OBAN:association_has_predicate OBO:RO_0002326 ;
-    OBAN:association_has_subject <http://www.orpha.net/ORDO/Orphanet_268061> .
+MONARCH:2ee6feba4c6269aa a OBAN:association ;
+    RO:0002558 ECO:0000322 ;
+    OBAN:association_has_object Orphanet:938475 ;
+    OBAN:association_has_predicate RO:0002326 ;
+    OBAN:association_has_subject Orphanet:268061 .
 
-<http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
+Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
-    OBO:RO_0002326 <http://www.orpha.net/ORDO/Orphanet_938475> ;
+    RO:0002326 Orphanet:938475 ;
     dc:description "kinesin family member 7" ;
     OIO:hasExactSynonym "KAS1" ;
-    rdfs:subClassOf OBO:SO_0001217 .
+    rdfs:subClassOf SO:0001217 .
 
-<http://www.orpha.net/ORDO/Orphanet_938475> a owl:Class ;
+Orphanet:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
         """
         self.assertTrue(self.test_util.test_graph_equality(
