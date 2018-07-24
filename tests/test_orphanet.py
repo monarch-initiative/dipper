@@ -60,7 +60,7 @@ class GeneVariantDiseaseTest(unittest.TestCase):
 
 ENSEMBL:ENSG00000166813 a owl:Class .
 
-<http://identifiers.org/hgnc/HGNC:30497> a owl:Class .
+HGNC:30497 a owl:Class .
 
 <http://www.orpha.net/ORDO/Orphanet_268061> a owl:Class ;
     rdfs:label "KS1" ;
@@ -68,7 +68,7 @@ ENSEMBL:ENSG00000166813 a owl:Class .
     OIO:hasExactSynonym "KAS1" ;
     rdfs:subClassOf OBO:SO_0001217 ;
     owl:equivalentClass ENSEMBL:ENSG00000166813,
-        <http://identifiers.org/hgnc/HGNC:30497> .
+        HGNC:30497 .
 
 <https://monarchinitiative.org/.well-known/genid/b56f798350412a34> a OBO:GENO_0000002 ;
     rdfs:label "germline variant of KS1" ;
