@@ -127,7 +127,7 @@ class Ensembl(Source):
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
             if len(row) < 6:
-                logger.warn("Data error for query on %d", taxon_id)
+                logger.warning("Data error for query on %d", taxon_id)
                 continue
             (ensembl_gene_id, external_gene_name,
              description, gene_biotype, entrezgene,
@@ -235,14 +235,13 @@ class Ensembl(Source):
             return None
         q = etree.Element("Query", query_attributes)
 
-        # TODO unused?
-        # object_attributes = {
-        #    "name": ensembl_taxon_to_db_map[taxid],
-        #    "interface": "default"
-        # }
-        # d = etree.SubElement(q, "Dataset", object_attributes)
-        # for i in cols_to_fetch:
-        #    a = etree.SubElement(d, "Attribute", {"name": i})
+        object_attributes = {
+            "name": ensembl_taxon_to_db_map[taxid],
+            "interface": "default"
+        }
+        d = etree.SubElement(q, "Dataset", object_attributes)
+        for i in cols_to_fetch:
+            etree.SubElement(d, "Attribute", {"name": i})
 
         # prepend the query
         prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'

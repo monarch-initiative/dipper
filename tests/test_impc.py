@@ -49,7 +49,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             'skeleton phenotype', 'MP:0000480', 'increased rib number',
             '1.637023E-010', '', '8.885439E-007',
             'Wilcoxon rank sum test with continuity correction',
-            'International Mouse Phenotyping Consortium')
+            'IMPC')
 
         # Generate test curies, these are otherwise generated
         # within _add_evidence() and _add_study_provenance()
@@ -157,9 +157,8 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         logger.debug(
             "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
         )
-        # bitrot test
-        #self.assertTrue(
-        #    self.test_util.test_graph_equality(triples, impc.graph))
+        self.assertTrue(
+            self.test_util.test_graph_equality(triples, impc.graph))
 
     def test_assertion_model(self):
         """
