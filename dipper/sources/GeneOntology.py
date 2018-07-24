@@ -427,7 +427,8 @@ class GeneOntology(Source):
             'WB_REF': 'WormBase',
             'FB': 'FlyBase',
             'Reactome': 'REACT',
-            'Ensembl': 'ENSEMBL'
+            'Ensembl': 'ENSEMBL',
+            'GOC': 'GO_REF'
         }
 
         clean_prefix = db

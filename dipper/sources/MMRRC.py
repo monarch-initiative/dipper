@@ -151,7 +151,7 @@ class MMRRC(Source):
                 # MMRRC:00001-UNC --> MMRRC:00001
                 strain_id = re.sub(r'-\w+$', '', strain_id)
 
-                self.id_label_hash[strain_id] = strain_label
+                self.id_label_hash[strain_id.strip()] = strain_label
 
                 # get the variant or gene to save for later building of
                 # the genotype
@@ -166,7 +166,7 @@ class MMRRC(Source):
 
                 if mgi_allele_id != '':
                     self.strain_hash[strain_id]['variants'].add(mgi_allele_id)
-                    self.id_label_hash[mgi_allele_id] = mgi_allele_symbol
+                    self.id_label_hash[mgi_allele_id.strip()] = mgi_allele_symbol
 
                     # use the following if needing to add the
                     # sequence alteration types
@@ -194,7 +194,7 @@ class MMRRC(Source):
                             mgi_gene_id = 'MGI:'+str(mgi_gene_id)
                             logger.info("Assuming numerics are MGI.")
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
-                    self.id_label_hash[mgi_gene_id] = mgi_gene_symbol
+                    self.id_label_hash[mgi_gene_id.strip()] = mgi_gene_symbol
 
                 # catch some errors -
                 # some things have gene labels, but no identifiers - report
@@ -205,7 +205,7 @@ class MMRRC(Source):
                     genes_with_no_ids.add(mgi_gene_symbol.strip())
                     # make a temp id for genes that aren't identified
                     # tmp_gene_id = '_'+mgi_gene_symbol
-                    # self.id_label_hash[tmp_gene_id] = mgi_gene_symbol
+                    # self.id_label_hash[tmp_gene_id.strip()] = mgi_gene_symbol
                     # self.strain_hash[strain_id]['genes'].add(tmp_gene_id)
 
                 # split apart the mp ids
@@ -277,8 +277,8 @@ class MMRRC(Source):
                     for v in variants:
                         vl_id = v.strip()
                         vl_symbol = self.id_label_hash[vl_id]
-                        geno.addAllele(vl_id, vl_symbol,
-                                       geno.genoparts['variant_locus'])
+                        geno.addAllele(
+                            vl_id, vl_symbol, geno.genoparts['variant_locus'])
                         vl_set.add(vl_id)
                         if len(variants) == 1 and len(genes) == 1:
                             for gene in genes:

@@ -628,28 +628,23 @@ class Coriell(Source):
                         # add the gvc to the genotype
                         if genotype_id is not None:
                             if affected == 'unaffected':
-                                rel = \
-                                    geno.object_properties[
-                                        'has_reference_part']
+                                rel = geno.object_properties['has_reference_part']
                             else:
-                                rel = \
-                                    geno.object_properties[
-                                        'has_alternate_part']
+                                rel = geno.object_properties['has_alternate_part']
                             geno.addParts(gvc_id, genotype_id, rel)
+
                         if karyotype_id is not None \
                                 and self._is_normal_karyotype(karyotype):
                             if gvc_label is not None and gvc_label != '':
-                                genotype_label = \
-                                    '; '.join((gvc_label, karyotype))
-                            else:
+                                genotype_label = '; '.join((gvc_label, karyotype))
+                            elif karyotype is not None:
                                 genotype_label = karyotype
                             if genotype_id is None:
                                 genotype_id = karyotype_id
                             else:
                                 geno.addParts(
                                     karyotype_id, genotype_id,
-                                    geno.object_properties[
-                                        'has_reference_part'])
+                                    geno.object_properties['has_reference_part'])
                         else:
                             genotype_label = gvc_label
                             # use the catalog id as the background
