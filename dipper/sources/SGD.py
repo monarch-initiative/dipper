@@ -68,7 +68,7 @@ class SGD(Source):
         sgd_file = '/'.join((self.rawdir, self.files['sgd_phenotype']['file']))
         columns = [
             'Feature Name', 'Feature Type', 'Gene Name', 'SGDID', 'Reference',
-            'Experi ment Type', 'Mutant Type', 'Allele', 'Strain Background',
+            'Experiment Type', 'Mutant Type', 'Allele', 'Strain Background',
             'Phenotype', 'Chemical', 'Condition', 'Details', 'Reporter']
         sgd_df = pd.read_csv(sgd_file, sep='\t', names=columns)
         records = sgd_df.to_dict(orient='records')

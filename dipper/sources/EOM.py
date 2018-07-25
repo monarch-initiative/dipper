@@ -42,7 +42,7 @@ class EOM(PostgreSQLSource):
     files = {
         'map': {
             'file': 'hp-to-eom-mapping.tsv',
-            'url': 'obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
+            'url': 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
         }
     }
 

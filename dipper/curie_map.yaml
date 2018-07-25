@@ -122,7 +122,7 @@
 'CoriellCollection': 'https://catalog.coriell.org/1/'
 'CoriellFamily': 'https://catalog.coriell.org/0/Sections/BrowseCatalog/FamilyTypeSubDetail.aspx?fam='
 'CoriellIndividual': 'https://catalog.coriell.org/Search?q='
-# 'dbSNPIndividual': 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='      # FIXME (form only has 'sub_id')
+'dbSNPIndividual': 'http://www.ncbi.nlm.nih.gov/SNP/snp_ind.cgi?ind_id='      # FIXME (form only has 'sub_id')
 # https://www.ncbi.nlm.nih.gov/mailman/pipermail/dbsnp-announce/2018q2/000186.html
 
 'EMMA': 'https://www.infrafrontier.eu/search?keyword=EM:'                       # European Mouse Mutant Archive
@@ -158,8 +158,8 @@
 'sheepQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
 
 'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'                       # Clinical Variation in Human
-'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'      #   ClinVar cooked variants
-'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'  #   ClinVar raw variants
+'ClinVarVariant': 'http://www.ncbi.nlm.nih.gov/clinvar/variation/'      # ClinVar cooked variants
+'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/'  # ClinVar raw variants
 'COSMIC': 'http://cancer.sanger.ac.uk/cosmic/mutation/overview?id='     # Catalogue Of Somatic Mutations In Cancer
 'HGMD': 'http://www.hgmd.cf.ac.uk/ac/gene.php?gene='                    # Human Gene Mutation Database
 'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='     # Small Variation
@@ -200,9 +200,9 @@
 'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
 'PDB': 'http://www.ebi.ac.uk/pdbsum/'                                           # Protein Data Bank
 
-'SwissProt': 'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Manual
+'SwissProt': 'http://identifiers.org/SwissProt:'                                # UniProt Knowledgebase UniProtKB  Manual
 'TrEMBL':    'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Automated
-'UniProtKB': 'http://purl.uniprot.org/uniprot/'                                 # UniProt Knowledgebase UniProtKB  Both
+'UniProtKB': 'http://identifiers.org/uniprot/'                                  # UniProt Knowledgebase UniProtKB  Both
 
                                                             # International Mouse Phenotyping Resource of Standardised Screens
 'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'

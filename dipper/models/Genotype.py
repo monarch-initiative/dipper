@@ -383,8 +383,14 @@ class Genotype():
 
         """
 
-        if part_relationship is None:
+        # Fail loudly if parent or child identifiers are None
+        if parent_id is None:
+            raise TypeError('Attempt to pass None as parent')
+        elif part_id is None:
+            raise TypeError('Attempt to pass None as child')
+        elif part_relationship is None:
             part_relationship = self.properties['has_part']
+
 
         self.graph.addTriple(parent_id, part_relationship, part_id)
 
