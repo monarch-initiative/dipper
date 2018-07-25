@@ -586,10 +586,10 @@ class OMIM(Source):
         <some_anonymous_variant_locus>
             is_sequence_variant_instance_of
                     <omim_gene_id>
-        <some_anonymous_variant_locus> has_phenotype <omim_disease_id>
+        <some_anonymous_variant_locus> causes_condition <omim_disease_id>
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
-        <assoc> hasPredicate <has_phenotype>
+        <assoc> hasPredicate <causes_condition>
         <assoc> DC:evidence <eco_id>
         :param limit:
         :return:
@@ -751,7 +751,7 @@ class OMIM(Source):
         geno = Genotype(graph)
         model = Model(graph)
         disorder_id = ':'.join(('OMIM', disorder_num))
-        rel_id = model.object_properties['has_phenotype']  # default
+        rel_id = model.object_properties['causes_condition']  # default
         rel_label = 'causes'
         if disorder_label.startswith('['):
             rel_id = model.object_properties['is_marker_for']

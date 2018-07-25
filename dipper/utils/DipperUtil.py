@@ -153,7 +153,7 @@ class DipperUtil:
         :param gene_symbol:
         :return:
         """
-        monarch_url = 'https://solr-dev.monarchinitiative.org/solr/search/select'
+        monarch_url = 'https://solr.monarchinitiative.org/solr/search/select'
         params = DipperUtil._get_solr_weight_settings()
         params["q"] = "{0} \"{0}\"".format(gene_symbol)
         params["fq"] = ["taxon:\"NCBITaxon:9606\"", "category:\"gene\""]

@@ -13,22 +13,22 @@
     "cell origin": null
 
 "Disease-causing germline mutation(s) (gain of function) in":
-    "gene phenotype": "has_phenotype"
+    "gene phenotype": "causes_condition"
     "function consequence": "gain_of_function_variant"
     "cell origin": "germline"
 
 "Disease-causing germline mutation(s) in":
-    "gene phenotype": "has_phenotype"
+    "gene phenotype": "causes_condition"
     "function consequence": null
     "cell origin": "germline"
 
 "Disease-causing germline mutation(s) (loss of function) in":
-    "gene phenotype": "has_phenotype"
+    "gene phenotype": "causes_condition"
     "function consequence": "loss_of_function_variant"
     "cell origin": "germline"
 
 "Disease-causing somatic mutation(s) in":
-    "gene phenotype": "has_phenotype"
+    "gene phenotype": "causes_condition"
     "function consequence": null
     "cell origin": "somatic"
 

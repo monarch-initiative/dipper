@@ -2,7 +2,8 @@
 # is updated the test does not break
 
 "has_phenotype": "RO:0002200"
-"contributes_to": "RO:0002326"
+"causes_condition": "RO:0003303"
+"contributes_to": "RO:0003304"
 "is_marker_for": "RO:0002607"
 "has_functional_consequence": ":has_functional_consequence"
 "has_molecular_consequence": ":has_molecular_consequence"
