@@ -4,7 +4,6 @@ import re
 import gzip
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -99,18 +98,22 @@ class AnimalQTLdb(Source):
         1798, 32133
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'animalqtldb')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
 
-        # update the dataset object with details about this resource
-        self.dataset = Dataset(
-            'animalqtldb', 'Animal QTL db',
-            'http://www.animalgenome.org/cgi-bin/QTLdb/index', None, None,
-            AQDL + '/faq#23', graph_type=graph_type)
-
-        # source-specific warnings.  will be cleared when resolved.
-        logger.warning(
-            "No licenses or rights exist for the raw data from this resource.")
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'animalqtldb',
+            ingest_title='Animal QTL db',
+            ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
+            license_url=AQDL + '/faq#32'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         return
 
@@ -136,41 +139,40 @@ class AnimalQTLdb(Source):
         else:
             g = self.graph
 
-        tmap = '/'.join((self.rawdir, self.files['trait_mappings']['file']))
-        self._process_trait_mappings(tmap, limit)
+        traitmap = '/'.join((self.rawdir, self.files['trait_mappings']['file']))
+        self._process_trait_mappings(traitmap, limit)
 
         geno = Genotype(g)
         # organisms  = ['chicken']
-        organisms = [
-            'chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
+        animals = ['chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
 
-        for o in organisms:
-            tax_id = self._get_tax_by_common_name(o)
-            geno.addGenome(tax_id, o)
+        for common_name in animals:
+            tax_id = self._get_tax_by_common_name(common_name)
+            geno.addGenome(tax_id, common_name)
             build_id = None
             build = None
 
-            k = o + '_bp'
+            k = common_name + '_bp'
             if k in self.files:
-                file = self.files[k]['file']
-                m = re.search(r'QTL_([\w\.]+)\.gff.txt.gz', file)
-                if m is None:
+                bpfile = self.files[k]['file']
+                mch = re.search(r'QTL_([\w\.]+)\.gff.txt.gz', bpfile)
+                if mch is None:
                     logger.error("Can't match a gff build")
                 else:
-                    build = m.group(1)
+                    build = mch.group(1)
                     build_id = self._map_build_by_abbrev(build)
                     logger.info("Build = %s", build_id)
                     geno.addReferenceGenome(build_id, build, tax_id)
                 if build_id is not None:
                     self._process_QTLs_genomic_location(
-                        '/'.join((self.rawdir, file)), tax_id, build_id, build,
-                        limit)
+                        '/'.join((self.rawdir, bpfile)), tax_id, build_id, build,
+                        common_name, limit)
 
-            k = o+'_cm'
+            k = common_name + '_cm'
             if k in self.files:
-                file = self.files[k]['file']
+                cmfile = self.files[k]['file']
                 self._process_QTLs_genetic_location(
-                    '/'.join((self.rawdir, file)), tax_id, o, limit)
+                    '/'.join((self.rawdir, cmfile)), tax_id, common_name, limit)
 
         logger.info("Finished parsing")
         return
@@ -236,8 +238,8 @@ class AnimalQTLdb(Source):
                 if self.testMode and int(qtl_id) not in self.test_ids:
                     continue
 
-                qtl_id = 'AQTL:'+qtl_id.strip()
-                trait_id = 'AQTLTrait:'+trait_id.strip()
+                qtl_id = common_name + 'QTL:' + qtl_id.strip()
+                trait_id = 'AQTLTrait:' + trait_id.strip()
 
                 # Add QTL to graph
                 feature = Feature(g, qtl_id, qtl_symbol, geno.genoparts['QTL'])
@@ -251,8 +253,7 @@ class AnimalQTLdb(Source):
                 build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
                 geno.addReferenceGenome(build_id, build_label, taxon_id)
-                chrom_in_build_id = makeChromID(
-                    chromosome, build_id, 'MONARCH')
+                chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
                 start = stop = None
@@ -267,8 +268,7 @@ class AnimalQTLdb(Source):
                     # check for poorly formed ranges
                     if len(range_parts) == 2 and\
                             range_parts[0] != '' and range_parts[1] != '':
-                        (start, stop) = \
-                            [int(float(x.strip()))
+                        (start, stop) = [int(float(x.strip()))
                              for x in re.split(r'-', range_cm)]
                     else:
                         logger.info(
@@ -311,7 +311,7 @@ class AnimalQTLdb(Source):
                     # we assume if no src is provided
                     # and gene_id is an integer, it's NCBI
                     if (gene_id_src == 'NCBIgene' or gene_id_src == '') and \
-                            gene_id.strip().isdigit() :
+                            gene_id.strip().isdigit():
                         gene_id = 'NCBIGene:' + gene_id.strip()
                         # we will expect that these labels provided elsewhere
                         geno.addGene(gene_id, None)
@@ -337,8 +337,8 @@ class AnimalQTLdb(Source):
                     reference = Reference(g, pub_id)
                 elif pubmed_id != '':
                     pub_id = 'PMID:'+pubmed_id.strip()
-                    reference = Reference(g,
-                        pub_id, Reference.ref_types['journal_article'])
+                    reference = Reference(
+                        g, pub_id, Reference.ref_types['journal_article'])
 
                 if reference is not None:
                     reference.addRefToGraph()
@@ -405,7 +405,7 @@ class AnimalQTLdb(Source):
         return
 
     def _process_QTLs_genomic_location(
-            self, raw, taxon_id, build_id, build_label, limit=None):
+            self, raw, taxon_id, build_id, build_label, common_name, limit=None):
         """
         This method
 
@@ -428,7 +428,6 @@ class AnimalQTLdb(Source):
         logger.info("Processing QTL locations for %s", taxon_id)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
-            # bad_attr_flag = False  # TODO unused
             for row in reader:
                 line_counter += 1
                 if re.match(r'^#', ' '.join(row)):
@@ -472,13 +471,13 @@ class AnimalQTLdb(Source):
                 qtl_num = attribute_dict.get('QTL_ID')
                 if self.testMode and int(qtl_num) not in self.test_ids:
                     continue
+                # make association between QTL and trait based on taxon
 
-                # make association between QTL and trait
-                qtl_id = 'AQTL:' + str(qtl_num)
+                qtl_id = common_name + 'QTL:' + str(qtl_num)
                 model.addIndividualToGraph(qtl_id, None, geno.genoparts['QTL'])
                 geno.addTaxon(taxon_id, qtl_id)
 
-                trait_id = 'AQTLTrait:'+attribute_dict.get('trait_ID')
+                trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
 
                 # if pub is in attributes, add it to the association
                 pub_id = None
@@ -557,11 +556,6 @@ class AnimalQTLdb(Source):
         line_counter = 0
         model = Model(g)
 
-        # with open(raw, 'r') as csvfile:
-        #     filereader = csv.reader(csvfile, delimiter=',')
-        #     row_count = sum(1 for row in filereader)
-        #     row_count = row_count - 1
-
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             next(filereader, None)  # skip header line
@@ -582,26 +576,6 @@ class AnimalQTLdb(Source):
 
                 ato_label = re.sub(r'.*\]\s*', '', ato_column)
 
-                # if species == 'Cattle':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitCattle:', ato_id)
-                # elif species == 'Chicken':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitChicken:', ato_id)
-                # elif species == 'Sheep':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitSheep:', ato_id)
-                # elif species == 'Horse':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitHorse:', ato_id)
-                # elif species == 'Pig':
-                #     ato_id = re.sub(r'ATO:', 'AQTLTraitPig:', ato_id)
-                # elif species == 'Rainbow trout':
-                #     ato_id = re.sub(
-                #       r'ATO:', 'AQTLTraitRainbowTrout:', ato_id)
-                # else:
-                #     logger.warning(
-                #       'Unknown species %s foufnd in trait mapping file.',
-                #       species)
-                #     continue
-                # print(ato_label)
-
                 model.addClassToGraph(ato_id, ato_label.strip())
 
                 if re.match(r'VT:.*', vto_id):
@@ -617,7 +591,7 @@ class AnimalQTLdb(Source):
         logger.info("Done with trait mappings")
         return
 
-    # TODO consider static functions
+    # TODO move to translation tables
     def _get_tax_by_common_name(self, common_name):
 
         tax_map = {
@@ -628,7 +602,7 @@ class AnimalQTLdb(Source):
             'horse': 9796,
             'rainbow_trout': 8022}
 
-        return 'NCBITaxon:'+str(tax_map[common_name])
+        return 'NCBITaxon:' + str(tax_map[common_name])
 
     def _map_build_by_abbrev(self, build):
 
