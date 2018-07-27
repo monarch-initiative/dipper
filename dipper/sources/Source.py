@@ -26,10 +26,17 @@ class Source:
     Each of the subclasses will fetch() the data, scrub() it as necessary,
     then parse() it into a graph.  The graph will then be written out to
     a single self.name().<dest_fmt>  file.
+
+    Also provides a means to marshal metadata in a consistant fashion
+
+    Houses the global translstion table (from ontology label to ontology term)
+    so it may as well be used everywhere.
+
     """
 
     namespaces = {}
     files = {}
+    globaltt = {}
 
     def __init__(
         self,
@@ -121,6 +128,8 @@ class Source:
 
         for g in [self.graph, self.testgraph]:
             self.declareAsOntology(g)
+
+        self.globaltt = self.load_global_translationtable()
 
         return
 
@@ -708,3 +717,9 @@ class Source:
         return {
             'User-Agent': USER_AGENT
         }
+
+    @staticmethod
+    def load_global_translationtable(
+            globaltt='translationtable/global_terms.yaml'):
+        with open(globaltt) as fh:
+            return yaml.safe_load(fh)

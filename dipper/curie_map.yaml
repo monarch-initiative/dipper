@@ -154,7 +154,7 @@
 'catfishQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/IP/qdetails?QTL_ID='
 'chickenQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
 'pigQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
-'troutQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
+'rainbow_troutQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OM/qdetails?QTL_ID='
 'sheepQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/OA/qdetails?QTL_ID='
 
 'ClinVar': 'http://www.ncbi.nlm.nih.gov/clinvar/'                       # Clinical Variation in Human
