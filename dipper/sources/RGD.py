@@ -36,9 +36,6 @@ class RGD(Source):
         )
         self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
 
-        self.global_terms = Source.open_and_parse_yaml(
-            '../../translationtable/global_terms.yaml')
-
     def fetch(self, is_dl_forced=False):
         """
         Override Source.fetch()
@@ -116,7 +113,7 @@ class RGD(Source):
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])
-        g2p_assoc.add_evidence(self.global_terms[record['evidence']['type']])
+        g2p_assoc.add_evidence(self.resolve(record['evidence']['type']))
         g2p_assoc.add_association_to_graph()
 
         return
