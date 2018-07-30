@@ -36,7 +36,13 @@ class Source:
 
     namespaces = {}
     files = {}
+
+    # translation table, mapping, dict... one stop shopping for labels to identifiers
     globaltt = {}
+    # external to internal mapping.
+    # note: generating both external to internal & internal to external
+    localtt = {}    # e->i useful for direct mapping
+    localtcid = {}  # i->e useful for remapping external keys for human comprehension
 
     def __init__(
         self,
@@ -54,11 +60,14 @@ class Source:
         self.are_bnodes_skized = are_bnodes_skized
         self.ingest_url = ingest_url
         self.ingest_title = ingest_title
+        self.globaltt = self.load_global_translationtable()
+        self.localtt = self.load_local_translationtable(self, name)
 
         if name is not None:
             self.name = name
         else:
-            self.name = self.whoami()
+            self.name = self.whoami().lower()
+
         logger.info("Processing Source \"%s\"", self.name)
         self.testOnly = False
         self.path = ""
@@ -67,8 +76,6 @@ class Source:
         self.outdir = 'out'
         self.testdir = 'tests'
         self.rawdir = 'raw'
-        self.dataset = None
-
         self.rawdir = '/'.join((self.rawdir, self.name))
         self.testname = name + "_test"
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
@@ -79,14 +86,14 @@ class Source:
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
-            p = os.path.abspath(self.rawdir)
-            logger.info("creating raw directory for %s at %s", self.name, p)
+            pth = os.path.abspath(self.rawdir)
+            logger.info("creating raw directory for %s at %s", self.name, pth)
 
         # if output dir doesn't exist, create it
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
-            p = os.path.abspath(self.outdir)
-            logger.info("created output directory %s", p)
+            pth = os.path.abspath(self.outdir)
+            logger.info("created output directory %s", pth)
 
         logger.info("Creating Test graph %s", self.testname)
         # note: tools such as protoge need slolemized blank nodes
@@ -719,7 +726,81 @@ class Source:
         }
 
     @staticmethod
-    def load_global_translationtable(
-            globaltt='translationtable/global_terms.yaml'):
-        with open(globaltt) as fh:
-            return yaml.safe_load(fh)
+    def load_global_translationtable(  # wip
+            globaltt_file='translationtable/global_terms.yaml'):
+        '''
+        Load common mapping from ontology lables to ontology identifiers
+        affords a set of human readable terms to aid understanding within
+        and between ingests
+        '''
+        with open(globaltt_file) as fh:
+            globaltt = yaml.safe_load(fh)
+        return globaltt
+
+    @staticmethod
+    def load_local_translationtable(self, name):  # wip
+        '''
+        Load "ingest specific" translation from whatever they called something
+        to the ontology label we need to map it to.
+        To facilitate seeing more ontology lables in dipper ingests
+        a reverse mapping from ontology lables to external strings is also generated
+        and available as a dict localtcid
+
+        '''
+
+        localtt_file = 'translationtable/' + name + '.yaml'
+
+        try:
+            with open(localtt_file):
+                pass
+        except IOError:
+            # write a stub file as a place holder if none exists
+            with open(localtt_file, 'w') as fh:
+                yaml.dump({name: name}, fh)
+        finally:
+            with open(localtt_file, 'r') as fh:
+                localtt = yaml.safe_load(fh)
+
+        # inverse local translation.
+        # note keeping this invertable will be work
+        self.localtcid = {v: k for k, v in localtt.items()}
+
+        return localtt
+
+    @staticmethod
+    def resolve(self, word, mandatory=False):  # wip
+        '''
+        composite mapping
+        given f(x) and g(x)
+        here:  globaltt & localtt respectivly
+        return g(x)|g(f(x))|f(x)|x in order of preference
+        returning x on fall through
+        : return word's mapping, if any
+
+        :param word:  the srting to find as a key in translation tables
+        :pram  mandatory: boolean to cauaes failure when no key exists
+
+        :return
+            value from global translation table,
+            or value from local translation table,
+            or the query key if finding a value is not mandatory in this order
+
+        '''
+
+        if word is not None and word in self.globaltt:
+            term_id = self.globaltt[word]
+        elif word is not None and word in self.localtt:
+            label = self.localtt[word]
+            if label in self.globaltt:
+                term_id = self.globaltt[label]
+            else:
+                logging.warning(
+                    'Translated to "' + label + '" but no global term_id for: ' + word)
+                term_id = label
+        else:
+            if mandatory:
+                raise KeyError('Mapping required for: ' + word)
+            else:
+                logging.warning('We have no translation for: ' + word)
+                term_id = word
+        return term_id

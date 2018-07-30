@@ -2,13 +2,13 @@
 # YAML format for a Python dict
 # the label to match, a colon, the ontology identifier to return.
 # post octothorp comments and empty lines are ignored
-# both columns should be unique
+# both columns should be unique (invertable function)
 
 # Note well. 
-# Sooner or later this means we will have to namespace our labels
-# because a different ontologist (or one of their personalities)
-# will insist on using a label that is already taken 
-# to represent something else.
+# Sooner or later we will have to namespace our labels
+# due to ontologist's rebranding of existing terms.
+
+# Read: http://precedings.nature.com/documents/3576/version/1/files/npre20093576-1.pdf
 
 # Variant (Subject) Sequence Types
 "SNV": "SO:0001483"
@@ -26,9 +26,7 @@
 "fusion": "SO:0001882"
 "structural_alteration": "SO:0001785"
 "direct_tandem_duplication": "SO:1000039"
-# microsatellite	SO:0000289
-"# microsatellite": "SO:0000289"
-# here Matt has overridden the sequence ontology
+# "microsatellite": "SO:0000289"
 "microsatellite": "GENO:0000847"
 "short repeat": "GENO:0000846"
 "complex heterozygous": "GENO:0000402"
