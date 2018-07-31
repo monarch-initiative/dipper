@@ -61,7 +61,7 @@ class Source:
         self.ingest_url = ingest_url
         self.ingest_title = ingest_title
         self.globaltt = self.load_global_translationtable()
-        self.localtt = self.load_local_translationtable(self, name)
+        self.localtt = self.load_local_translationtable(name)
 
         if name is not None:
             self.name = name
@@ -737,7 +737,7 @@ class Source:
             globaltt = yaml.safe_load(fh)
         return globaltt
 
-    @staticmethod
+
     def load_local_translationtable(self, name):  # wip
         '''
         Load "ingest specific" translation from whatever they called something
@@ -767,7 +767,7 @@ class Source:
 
         return localtt
 
-    @staticmethod
+
     def resolve(self, word, mandatory=False):  # wip
         '''
         composite mapping

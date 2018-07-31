@@ -80,7 +80,7 @@ class RGD(Source):
         """
         model = Model(self.graph)
 
-        record['relation']['id'] = 'RO:0002200'
+        record['relation']['id'] = self.resolve("has phenotype", mandatory=True)
         # define the triple
         gene = record['subject']['id']
         relation = record['relation']['id']
