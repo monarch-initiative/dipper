@@ -4,10 +4,8 @@ import logging
 import io
 import gzip
 from dipper.models.Provenance import Provenance
-
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
 
@@ -79,14 +77,20 @@ class MPD(Source):
     mgd_agent_type = "foaf:organization"
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        Source.__init__(self, graph_type, are_bnodes_skolemized, 'mpd')
+        Source.__init__(
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            'mpd',
+            ingest_title='Mouse Phenome Database',
+            ingest_url='https://phenome.jax.org/',
+            # license_url=None,
+            data_rights='https://phenome.jax.org/about/termsofuse'
+            # file_handle=None
+        )
+
         # @N, not sure if this step is required
         self.stdevthreshold = 2
-
-        # update the dataset object with details about this resource
-        # @N: Note that there is no license as far as I can tell
-        self.dataset = Dataset(
-            'mpd', 'MPD', 'http://phenome.jax.org', None, None)
 
         # TODO add a citation for mpd dataset as a whole
         self.dataset.set_citation('PMID:15619963')

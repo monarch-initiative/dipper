@@ -1,7 +1,6 @@
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.utils.DipperUtil import DipperUtil
 from rdflib import RDFS, BNode
 from dipper import config
@@ -72,10 +71,21 @@ class UDP(Source):
 
     UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'udp')
-        self.dataset = Dataset(
-            'udp', 'UDP', 'https://rarediseases.info.nih.gov/')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'udp',
+            ingest_title='Undiagnosed Diseases Program',
+            ingest_url='https://rarediseases.info.nih.gov/'
+            # license_url=None,
+            # data_rights=None,
+            # file_handle=None
+        )
         if graph_type != 'rdf_graph':
             raise ValueError("UDP requires a rdf_graph")
 
@@ -98,17 +108,18 @@ class UDP(Source):
         phenotype_fields = ['Patient', 'HPID', 'Present']
 
         # Get phenotype ids for each patient
-        phenotype_params = {'method': 'search_subjects',
-                            'subject_type': 'Phenotype',
-                            'search_mode': 'DEEP',
-                            'fields': 'Patient',
-                            'conditions': 'equals',
-                            'values': ','.join(udp_internal_ids),
-                            'user_fields': ','.join(phenotype_fields)
-                            }
+        phenotype_params = {
+            'method': 'search_subjects',
+            'subject_type': 'Phenotype',
+            'search_mode': 'DEEP',
+            'fields': 'Patient',
+            'conditions': 'equals',
+            'values': ','.join(udp_internal_ids),
+            'user_fields': ','.join(phenotype_fields)
+        }
 
-        prioritized_variants = ['Patient', 'Gene', 'Chromosome Position',
-                                'Variant Allele', 'Transcript']
+        prioritized_variants = [
+            'Patient', 'Gene', 'Chromosome Position', 'Variant Allele', 'Transcript']
 
         prioritized_params = {'method': 'search_subjects',
                               'subject_type': 'Variant Prioritization',
@@ -119,12 +130,13 @@ class UDP(Source):
                               'user_fields': ','.join(prioritized_variants),
                               'format': 'json'}
 
-        variant_fields = ['Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
-                          'Reference Allele', 'Variant Allele', 'Parent of origin',
-                          'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
-                          'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
-                          'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID', '1K Frequency',
-                          'Number of Alleles']
+        variant_fields = [
+            'Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
+            'Reference Allele', 'Variant Allele', 'Parent of origin',
+            'Allele Type', 'Mutation Type', 'Gene', 'Transcript', 'Original Amino Acid',
+            'Variant Amino Acid', 'Amino Acid Change', 'Segregates with',
+            'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID',
+            '1K Frequency', 'Number of Alleles']
 
         variant_params = {'method': 'search_subjects',
                           'subject_type': 'Exome Analysis Results',
@@ -134,8 +146,10 @@ class UDP(Source):
                           'user_fields': ','.join(variant_fields),
                           'format': 'json'}
 
-        pheno_file = open('/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
-        variant_file = open('/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
+        pheno_file = open(
+            '/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
+        variant_file = open(
+            '/'.join((self.rawdir, self.files['patient_variants']['file'])), 'w')
 
         pheno_file.write('{0}\n'.format('\t'.join(phenotype_fields)))
         variant_file.write('{0}\n'.format('\t'.join(variant_fields)))
@@ -293,12 +307,12 @@ class UDP(Source):
                 if len(label_list) == 0:
                     model.addLabel(variant_bnode, variant_label)
 
-                self.graph.addTriple(variant_bnode,
-                                     model.object_properties['in_taxon'],
-                                     'NCBITaxon:9606')
-                self.graph.addTriple(intrinsic_geno_bnode,
-                                     genotype.object_properties['has_alternate_part'],
-                                     variant_bnode)
+                self.graph.addTriple(
+                    variant_bnode, model.object_properties['in_taxon'],
+                    'NCBITaxon:9606')
+                self.graph.addTriple(
+                    intrinsic_geno_bnode, genotype.object_properties['has_alternate_part'],
+                    variant_bnode)
                 if rs_id:
                     dbsnp_curie = 'dbSNP:{0}'.format(rs_id)
                     model.addSameIndividual(variant_bnode, dbsnp_curie)
@@ -533,7 +547,8 @@ class UDP(Source):
                 variant_id = '-'.join(variant_info)
 
             if variant_id in patient_variant_map[patient]:
-                patient_variant_map[patient][variant_id]['genes_of_interest'].append(gene_symbol)
+                patient_variant_map[patient][variant_id]['genes_of_interest'].append(
+                    gene_symbol)
             else:
                 patient_variant_map[patient][variant_id] = {
                     'build': formatted_build,
@@ -593,7 +608,8 @@ class UDP(Source):
         """
         id_map = {}
         if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+            with open(
+                    os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
                     (gene_curie, start, end, strand, build) = row
@@ -769,12 +785,14 @@ class UDP(Source):
                 if len(rs_candidates) == 1:
                     rs_id = rs_candidates[0]
                 elif len(rs_candidates) > 1:
-                    logger.info("ambiguous rs mapping for:"
-                                " {0}\n candidate ids: {1}".format(variant, rs_candidates))
+                    logger.info(
+                        "ambiguous rs mapping for: {0}\n"
+                        "candidate ids: {1}".format(variant, rs_candidates))
                 else:
-                    logger.info("rs at coordinate but no match found"
-                                " for variant {0}\n candidate ids: {1}".format
-                                (variant, rs_map[variant_key]))
+                    logger.info(
+                        "rs at coordinate but no match found"
+                        " for variant {0}\n candidate ids: {1}".format(
+                            variant, rs_map[variant_key]))
         else:
             logger.warn("type: {0} unsupported".format(variant_type))
         return rs_id

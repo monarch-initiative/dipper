@@ -4,12 +4,9 @@ import re
 from datetime import datetime
 import stat
 import os
-
 import pysftp
 
 from dipper.sources.Source import Source
-# from dipper.models.assoc.Association import Assoc unused
-from dipper.models.Dataset import Dataset
 from dipper import config
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
@@ -94,17 +91,25 @@ class Coriell(Source):
         'GM13707', 'AG00780']
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'coriell')
-
-        self.dataset = Dataset(
-            'coriell', 'Coriell', 'http://ccr.coriell.org/', None)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'coriell',
+            ingest_title='Coriell Institute for Medical Research',
+            ingest_url='https://ccr.coriell.org/'
+            # website disclaimer 'https://www.coriell.org/1/About-Us/Legal-Notice'
+            # wet material https://www.coriell.org/1/NINDS/About/Shared-Usage-Guidelines
+            # license_url=None,
+            # data_rights=None,
+            # file_handle=None
+        )
 
         # data-source specific warnings
         # (will be removed when issues are cleared)
 
         logger.warning(
             'We assume that if a species is not provided, '
-            'that it is a Human-derived cell line')
+            'that it is a Human-derived cell line')  # wow
         logger.warning(
             'We map all omim ids as a disease/phenotype entity, '
             'but should be fixed in the future')  # TODO
@@ -292,10 +297,12 @@ class Coriell(Source):
                      family_member, variant_id, dbsnp_id, species) = row
 
                     # example:
-                    # GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,,Female,26 YR,Caucasian,,,,
+                    # GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,
+                    #       ,Female,26 YR,Caucasian,,,,
                     # parent,,,39,NIGMS Human Genetic Cell Repository,
                     # http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM00003,
-                    # 46;XX; clinically normal mother of a child with Hurler syndrome; proband not in Repository,,
+                    # 46;XX; clinically normal mother of a child with Hurler syndrome;
+                    #       proband not in Repository,,
                     # 2,,18343,Homo sapiens
 
                     if self.testMode and catalog_id not in self.test_lines:
@@ -621,28 +628,23 @@ class Coriell(Source):
                         # add the gvc to the genotype
                         if genotype_id is not None:
                             if affected == 'unaffected':
-                                rel = \
-                                    geno.object_properties[
-                                        'has_reference_part']
+                                rel = geno.object_properties['has_reference_part']
                             else:
-                                rel = \
-                                    geno.object_properties[
-                                        'has_alternate_part']
+                                rel = geno.object_properties['has_alternate_part']
                             geno.addParts(gvc_id, genotype_id, rel)
+
                         if karyotype_id is not None \
                                 and self._is_normal_karyotype(karyotype):
                             if gvc_label is not None and gvc_label != '':
-                                genotype_label = \
-                                    '; '.join((gvc_label, karyotype))
-                            else:
+                                genotype_label = '; '.join((gvc_label, karyotype))
+                            elif karyotype is not None:
                                 genotype_label = karyotype
                             if genotype_id is None:
                                 genotype_id = karyotype_id
                             else:
                                 geno.addParts(
                                     karyotype_id, genotype_id,
-                                    geno.object_properties[
-                                        'has_reference_part'])
+                                    geno.object_properties['has_reference_part'])
                         else:
                             genotype_label = gvc_label
                             # use the catalog id as the background

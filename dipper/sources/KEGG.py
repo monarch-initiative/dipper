@@ -3,7 +3,6 @@ import logging
 import re
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
@@ -105,12 +104,16 @@ class KEGG(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'kegg')
-
-        # update the dataset object with details about this resource
-        self.dataset = Dataset('kegg', 'KEGG', 'http://www.genome.jp/kegg/',
-                               None, None,
-                               'http://www.kegg.jp/kegg/legal.html')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'kegg',
+            ingest_title='Kyoto Encyclopedia of Genes and Genomes',
+            ingest_url='http://www.genome.jp/kegg/',
+            license_url='http://www.kegg.jp/kegg/legal.html'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         # check to see if there are any ids configured in the config;
         # otherwise, warn
@@ -945,7 +948,8 @@ class KEGG(Source):
         :return:
 
         """
-        alt_locus_id = '_:'+re.sub(r':', '', gene_id) +'-'+re.sub(r':', '', disease_id)+'VL'
+        alt_locus_id = '_:'+re.sub(
+            r':', '', gene_id) + '-' + re.sub(r':', '', disease_id) + 'VL'
         alt_label = self.label_hash.get(gene_id)
         disease_label = self.label_hash.get(disease_id)
         if alt_label is not None and alt_label != '':

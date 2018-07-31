@@ -7,7 +7,6 @@ from datetime import datetime
 import time
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Genotype import Genotype
 import ftplib
@@ -47,16 +46,22 @@ class Bgee(Source):
         :param tax_ids: [int,], List of taxa
         :return:
         """
-        super().__init__(graph_type, are_bnodes_skolemized, 'bgee')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'bgee',
+            ingest_title='Bgee Gene expression data in animals',
+            ingest_url='http://bgee.org/',
+            # license_url=None,
+            data_rights='https://bgee.org/?page=about'
+            # file_handle=None
+        )
+
         if tax_ids is None:
             self.tax_ids = Bgee.DEFAULT_TAXA
         else:
             logger.info("Filtering on taxa {}".format(tax_ids))
             self.tax_ids = tax_ids
-
-        self.dataset = Dataset(
-            'Bgee', 'Bgee Gene expression data in animals',
-            'http://bgee.org/')
 
         if version is None:
             self.version = 'current'
@@ -93,6 +98,7 @@ class Bgee(Source):
         """
         Given the input taxa, expects files in the raw directory
         with the name {tax_id}_anat_entity_all_data_Pan_troglodytes.tsv.zip
+
         :param limit: int Limit to top ranked anatomy associations per group
         :return: None
         """
@@ -113,6 +119,7 @@ class Bgee(Source):
         Process anat_entity files with columns:
         Ensembl gene ID,gene name, anatomical entity ID,
         anatomical entity name, rank score, XRefs to BTO
+
         :param fh: filehandle
         :param limit: int, limit per group
         :return: None
@@ -160,6 +167,7 @@ class Bgee(Source):
     def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
         """
         Overrides checkIfRemoteIsNewer in Source class
+
         :param localfile: str file path
         :param remote_size: str bytes
         :param remote_modify: str last modify date in the form 20160705042714
@@ -185,6 +193,7 @@ class Bgee(Source):
     def _convert_ftp_time_to_iso(ftp_time):
         """
         Convert datetime in the format 20160705042714 to a datetime object
+
         :return: datetime object
         """
         date_time = datetime(int(ftp_time[:4]), int(ftp_time[4:6]),
@@ -195,7 +204,8 @@ class Bgee(Source):
     def _get_file_list(self, working_dir, file_regex=re.compile(r'.*'), ftp=None):
         """
         Get file list from ftp server filtered by taxon
-        :return: Tuple of (Generator object with Tuple(file name, info object), ftp object)
+        :return: Tuple of (Generator object with Tuple(
+            file name, info object), ftp object)
         """
         if ftp is None:
             ftp = ftplib.FTP(Bgee.BGEE_FTP)
@@ -207,8 +217,8 @@ class Bgee(Source):
 
         directory = ftp.mlsd()
         files = (value for value in directory if value[1]['type'] == 'file')
-        files_to_download = (value for value in files
-                             if re.match(file_regex, value[0])
-                             and int(re.findall(r'^\d+', value[0])[0]) in self.tax_ids)
+        files_to_download = (
+            value for value in files if re.match(file_regex, value[0]) and
+            int(re.findall(r'^\d+', value[0])[0]) in self.tax_ids)
 
         return files_to_download, ftp

@@ -12,6 +12,7 @@ from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
+from dipper.models.Dataset import Dataset
 
 logger = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
@@ -25,21 +26,40 @@ class Source:
     Each of the subclasses will fetch() the data, scrub() it as necessary,
     then parse() it into a graph.  The graph will then be written out to
     a single self.name().<dest_fmt>  file.
+
+    Also provides a means to marshal metadata in a consistant fashion
+
+    Houses the global translstion table (from ontology label to ontology term)
+    so it may as well be used everywhere.
+
     """
 
     namespaces = {}
     files = {}
+    globaltt = {}
 
-    def __init__(self, graph_type, are_bnodes_skized=False, name=None):
+    def __init__(
+        self,
+        graph_type='rdf_graph',     # or streamed_graph
+        are_bnodes_skized=False,    # typically True
+        name=None,                  # identifier; make an IRI for nquads
+        ingest_title=None,
+        ingest_url=None,
+        license_url=None,
+        data_rights=None,
+        file_handle=None
+    ):
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
-        # set to True if you want to materialze identifiers for BNodes
+        self.ingest_url = ingest_url
+        self.ingest_title = ingest_title
+
         if name is not None:
             self.name = name
         else:
             self.name = self.whoami()
-        logger.info("Processing Source \"%s\"", name)
+        logger.info("Processing Source \"%s\"", self.name)
         self.testOnly = False
         self.path = ""
         # to be used to store a subset of data for testing downstream.
@@ -52,6 +72,9 @@ class Source:
         self.rawdir = '/'.join((self.rawdir, self.name))
         self.testname = name + "_test"
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
+
+        # still need to pull in file suffix
+        self.archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
 
         # if raw data dir doesn't exist, create it
         if not os.path.exists(self.rawdir):
@@ -91,8 +114,22 @@ class Source:
         self.testOnly = False
         self.testMode = False
 
+        # this may eventually support Bagits
+        self.dataset = Dataset(
+            self.archive_url,
+            self.ingest_title,
+            self.ingest_url,
+            None,    # description
+            license_url,
+            data_rights,
+            graph_type,
+            file_handle
+        )
+
         for g in [self.graph, self.testgraph]:
             self.declareAsOntology(g)
+
+        self.globaltt = self.load_global_translationtable()
 
         return
 
@@ -161,7 +198,7 @@ class Source:
 
         gu = GraphUtils(None)
 
-        # the  _dataset descriptions is always turtle
+        # the  _dataset description is always turtle
         gu.write(self.dataset.getGraph(), 'turtle', file=self.datasetfile)
 
         if self.testMode:
@@ -593,6 +630,7 @@ class Source:
 
         model = Model(graph)
 
+        # is self.outfile suffix set yet???
         ontology_file_id = 'MonarchData:' + self.name + ".ttl"
         model.addOntologyDeclaration(ontology_file_id)
 
@@ -604,8 +642,8 @@ class Source:
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
 
-        yrmth = str(datetime.now().year) + str(datetime.now().month)
-        archive_url = 'MonarchArchive:' + yrmth + '/ttl/' + self.name + '.ttl'
+        # should not hardcode the suffix as it may change
+        archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
 
@@ -679,3 +717,9 @@ class Source:
         return {
             'User-Agent': USER_AGENT
         }
+
+    @staticmethod
+    def load_global_translationtable(
+            globaltt='translationtable/global_terms.yaml'):
+        with open(globaltt) as fh:
+            return yaml.safe_load(fh)

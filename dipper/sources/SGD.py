@@ -1,7 +1,6 @@
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
 from dipper.models.Reference import Reference
 from ontobio.ontol_factory import OntologyFactory
 import logging
@@ -25,18 +24,28 @@ class SGD(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'sgd')
-        self.dataset = Dataset(
-            'sgd', 'SGD', 'https://www.yeastgenome.org/', None,
-            None)
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'sgd',
+            ingest_title='Saccharomyces Genome Database',
+            ingest_url='https://www.yeastgenome.org/',
+            license_url='https://sites.google.com/view/yeastgenome-help/about',
+            data_rights=None,
+            file_handle=None
+        )
 
-        self.global_terms = Source.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        self.global_terms = Source.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
         self.apo_term_id = SGD.make_apo_map()
 
     def fetch(self, is_dl_forced=False):
         """
         Override Source.fetch()
-        Fetches resources from rat_genome_database using the rat_genome_database ftp site
+        Fetches resources from yeast_genome_database
+        using the yeast_genome_doenload site.
+
+
         Args:
             :param is_dl_forced (bool): Force download
         Returns:
@@ -57,8 +66,10 @@ class SGD(Source):
             logger.info("Only parsing first %d rows", limit)
 
         sgd_file = '/'.join((self.rawdir, self.files['sgd_phenotype']['file']))
-        columns = ['Feature Name', 'Feature Type', 'Gene Name', 'SGDID', 'Reference', 'Experiment Type', 'Mutant Type',
-                   'Allele', 'Strain Background', 'Phenotype', 'Chemical', 'Condition', 'Details', 'Reporter']
+        columns = [
+            'Feature Name', 'Feature Type', 'Gene Name', 'SGDID', 'Reference',
+            'Experiment Type', 'Mutant Type', 'Allele', 'Strain Background',
+            'Phenotype', 'Chemical', 'Condition', 'Details', 'Reporter']
         sgd_df = pd.read_csv(sgd_file, sep='\t', names=columns)
         records = sgd_df.to_dict(orient='records')
         for index, assoc in enumerate(records):
@@ -73,7 +84,7 @@ class SGD(Source):
         """
         contstruct the association
         :param record:
-        :return: modeled association of  genotype to mammalian phenotype
+        :return: modeled association of  genotype to mammalian??? phenotype
         """
         # prep record
         # remove description and mapp Experiment Type to apo term
@@ -97,7 +108,8 @@ class SGD(Source):
                 'term': None,
                 'apo_id': None
             },
-            'has_quality': False  # False = phenotype was descriptive and don't bother looking for a quality
+            'has_quality': False
+            # False = phenotype was descriptive and don't bother looking for a quality
         }
         phenotype = record['Phenotype']
         if ':' in phenotype:
@@ -129,13 +141,16 @@ class SGD(Source):
                 record['pheno_obj']['entity']['apo_id'].replace(':', '_'),
                 record['pheno_obj']['quality']['apo_id'].replace(':', '_')
             )
-            g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+            g2p_assoc = Assoc(
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
         else:
             pheno_label = record['pheno_obj']['entity']['term']
             pheno_id = record['pheno_obj']['entity']['apo_id']
-            g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
-            assoc_id = g2p_assoc.make_association_id(definedby='yeastgenome.org', subject=gene, predicate=relation,
-                                                     object=pheno_id)
+            g2p_assoc = Assoc(
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+            assoc_id = g2p_assoc.make_association_id(
+                definedby='yeastgenome.org', subject=gene, predicate=relation,
+                object=pheno_id)
             g2p_assoc.set_association_id(assoc_id=assoc_id)
 
         # add to graph to mint assoc id
@@ -147,7 +162,9 @@ class SGD(Source):
         model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id)
 
         # make pheno subclass of UPHENO:0001001
-        model.addTriple(subject_id=pheno_id, predicate_id=Model.object_properties['subclass_of'], obj='UPHENO:0001001')
+        model.addTriple(
+            subject_id=pheno_id, predicate_id=Model.object_properties['subclass_of'],
+            obj='UPHENO:0001001')
 
         # label nodes
         # pheno label
@@ -160,7 +177,7 @@ class SGD(Source):
         references = references.replace(' ', '')
         references = references.split('|')
 
-        #  created RGDRef prefix in curie map to route to proper reference URL in RGD
+        #  created Ref prefix in curie map to route to proper reference URL in SGD
         if len(references) > 0:
             # make first ref in list the source
             g2p_assoc.add_source(identifier=references[0])

@@ -88,7 +88,8 @@ class Model():
         'dc:evidence': 'dc:evidence',
         'has_evidence': 'RO:0002558',
         'causally_upstream_of_or_within': 'RO:0002418',
-        'causally_influences': 'RO:0002566'
+        'causally_influences': 'RO:0002566',
+        'has_sex_specificity': ':has_sex_specificity'
     }
 
     datatype_properties = {
@@ -143,7 +144,8 @@ class Model():
                 object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(class_id, self.object_properties['subclass_of'], class_type)
+            self.graph.addTriple(
+                class_id, self.object_properties['subclass_of'], class_type)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.annotation_properties['description'], description,
@@ -272,7 +274,6 @@ class Model():
                              parent_id)
         return
 
-
     def addSynonym(self, class_id, synonym, synonym_type=None):
         """
         Add the synonym as a property of the class cid.
@@ -364,4 +365,27 @@ class Model():
         self.graph.addTriple(
             node_id, self.annotation_properties['is_anonymous'], True,
             object_is_literal=True, literal_type='xsd:boolean')
+        return
+
+    def _addSexSpecificity(self, subject_id, sex):
+        """
+        Add sex specificity to a subject (eg association node)
+
+        In our modeling we use this to add a qualifier to a triple
+        for example, this genotype to phenotype association
+        is specific to this sex (see MGI, IMPC)
+
+        This expects the client to define the ontology term
+        for sex (eg PATO)
+
+        Note this class is probably not the right place for this
+        method, but putting here until a better home is found
+        :param subject_id:
+        :param sex:
+        :return:
+        """
+        self.graph.addTriple(
+            subject_id,
+            self.object_properties['has_sex_specificity'],
+            sex)
         return

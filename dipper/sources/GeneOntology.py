@@ -11,7 +11,6 @@ from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper import config
 
@@ -94,7 +93,16 @@ class GeneOntology(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'go')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'go',
+            ingest_title='Gene Ontology',
+            ingest_url='http://www.geneontology.org',
+            license_url='http://geneontology.org/page/use-and-license'
+            # data_rights=None
+            # file_handle=None
+        )
 
         # Defaults
         self.tax_ids = tax_ids
@@ -103,13 +111,6 @@ class GeneOntology(Source):
             logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
         else:
             logger.info("Filtering on the following taxa: %s", str(tax_ids))
-
-        # update the dataset object with details about this resource
-        # NO LICENSE for this resource
-        self.dataset = Dataset(
-            'go', 'GeneOntology', 'http://www.geneontology.org', None,
-            "https://creativecommons.org/licenses/by/4.0/legalcode",
-            'http://geneontology.org/page/use-and-license')
 
         if 'test_ids' not in config.get_config() or \
                 'gene' not in config.get_config()['test_ids']:
@@ -412,7 +413,6 @@ class GeneOntology(Source):
 
         return id_map
 
-
     def clean_db_prefix(self, db):
         """
         Here, we map the GO-style prefixes with
@@ -427,7 +427,8 @@ class GeneOntology(Source):
             'WB_REF': 'WormBase',
             'FB': 'FlyBase',
             'Reactome': 'REACT',
-            'Ensembl': 'ENSEMBL'
+            'Ensembl': 'ENSEMBL',
+            'GOC': 'GO_REF'
         }
 
         clean_prefix = db

@@ -12,8 +12,27 @@ class PostgreSQLSource(Source):
     Class for interfacing with remote Postgres databases
     """
 
-    def __init__(self, graph_type, are_bnodes_skolemized, name=None):
-        super().__init__(graph_type, are_bnodes_skolemized, name)
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized,
+        name=None,
+        ingest_title=None,
+        ingest_url=None,
+        license_url=None,
+        data_rights=None,
+        file_handle=None
+    ):
+
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            name,
+            ingest_title,
+            ingest_url,
+            license_url,
+            data_rights,
+            file_handle)
         return
 
     def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):
@@ -68,8 +87,9 @@ class PostgreSQLSource(Source):
                     if force:
                         logger.info("Forcing download of %s", tab)
                     else:
-                        logger.info("%s local (%d) different from remote (%d); fetching.",
-                                    tab, filerowcount, tablerowcount)
+                        logger.info(
+                            "%s local (%d) different from remote (%d); fetching.",
+                            tab, filerowcount, tablerowcount)
                     # download the file
                     logger.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
@@ -153,7 +173,7 @@ class PostgreSQLSource(Source):
                     (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
                 logger.warn(
-                    "Download from %s more rows in file (%s) " + \
+                    "Download from %s more rows in file (%s) " +
                     "than reported in count(%s)",
                     cxn['host'] + ':'+cxn['database'],
                     (filerowcount-1), tablerowcount)

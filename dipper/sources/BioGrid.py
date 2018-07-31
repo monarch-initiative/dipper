@@ -10,7 +10,6 @@ from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
-from dipper.models.Dataset import Dataset
 
 __author__ = 'nicole'
 
@@ -41,14 +40,18 @@ class BioGrid(Source):
         199832, 203220, 247276, 120150, 120160, 124085]
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
-        super().__init__(graph_type, are_bnodes_skolemized, 'biogrid')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'biogrid',
+            ingest_title='Biological General Repository for Interaction Datasets',
+            ingest_url='http://thebiogrid.org',
+            license_url='https://wiki.thebiogrid.org/doku.php/terms_and_conditions'
+            # data_rights=None,
+            # file_handle=None
+        )
 
         self.tax_ids = tax_ids
-
-        self.dataset = Dataset(
-            'biogrid', 'The BioGrid', 'http://thebiogrid.org/', None,
-            'http://wiki.thebiogrid.org/doku.php/terms_and_conditions')
-
         # Defaults
         # our favorite animals
         # taxids = [9606,10090,10116,7227,7955,6239,8355]
@@ -88,8 +91,8 @@ class BioGrid(Source):
             # assume that the first entry is the item
             fname = flist[0]
             # get the version from the filename
-            version = \
-                re.match(r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
+            version = re.match(
+                r'BIOGRID-ALL-(\d+\.\d+\.\d+)\.mitab.txt', fname)
         myzip.close()
 
         self.dataset.setVersion(filedate, str(version.groups()[0]))

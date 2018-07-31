@@ -3,12 +3,9 @@ import csv
 import re
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper import config
-from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.DipperUtil import DipperUtil
 from dipper.models.Model import Model
-from dipper import curie_map
 from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
@@ -62,16 +59,19 @@ class GWASCatalog(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'gwascatalog')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'gwascatalog',
+            ingest_title='The NHGRI-EBI Catalog of published genome-wide association studies',
+            ingest_url='http://www.ebi.ac.uk/gwas/',
+            license_url='http://www.ebi.ac.uk/gwas/docs/about',
+            data_rights='http://www.ebi.ac.uk/gwas/docs/about'
+            # file_handle=None
+        )
 
         if graph_type != 'rdf_graph':
             raise ValueError("GWAS Catalog requires a rdf_graph")
-
-        self.dataset = Dataset(
-            'gwascatalog', 'GWAS Catalog', 'http://www.ebi.ac.uk/gwas/',
-            'The NHGRI-EBI Catalog of published genome-wide association studies',
-            'http://creativecommons.org/licenses/by/3.0/', None)
-        # 'http://www.ebi.ac.uk/gwas/docs/about'  # TODO add this
 
         if 'test_ids' not in config.get_config() or \
                 'gene' not in config.get_config()['test_ids']:
@@ -146,8 +146,6 @@ class GWASCatalog(Source):
                             'BadRow: %i has %i columns', line_counter, row)
                         pass
 
-
-                        
                     (date_added_to_catalog,
                      pubmed_num,
                      first_author,
@@ -554,7 +552,7 @@ class GWASCatalog(Source):
             'synonymous_variant': 'SO:0001819',       # synonymous variant
             'frameshift_variant': 'SO:0001589',       # frameshift
             'intergenic_variant': 'SO:0001628',       # intergenic_variant
-            'non_coding_transcript_exon_variant': 'SO:0001619', # noncoding transcript variant
+            'non_coding_transcript_exon_variant': 'SO:0001619',  # noncoding transcript variant
             'splice_acceptor_variant': 'SO:0001574',  # splice acceptor variant
             'splice_donor_variant': 'SO:0001575',     # splice donor variant
             'missense_variant': 'SO:0001583',         # missense variant

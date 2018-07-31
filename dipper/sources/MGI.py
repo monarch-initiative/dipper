@@ -3,10 +3,8 @@ import os
 from datetime import datetime
 import logging
 import re
-
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
@@ -91,8 +89,8 @@ class MGI(PostgreSQLSource):
           'outfile': 'voc_annot_view'
         },
         {
-          'query': '../../resources/sql/mgi/voc_evidence_view.sql',
-          'outfile': 'voc_evidence_view'
+          'query': '../../resources/sql/mgi/evidence.sql',
+          'outfile': 'evidence_view'
         },
         {
           'query': '../../resources/sql/mgi/bib_acc_view.sql',
@@ -214,21 +212,23 @@ class MGI(PostgreSQLSource):
             107251870, 107255383, 107256603]
     }
 
-    def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'mgi')
+    def __init__(
+        self,
+        graph_type,
+        are_bnodes_skolemized
+    ):
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            name='mgi',
+            ingest_title='Mouse Genome Informatics',
+            ingest_url='http://www.informatics.jax.org/',
+            license_url='http://www.informatics.jax.org/mgihome/other/copyright.shtml',
+            data_rights=None,
+            file_handle=None)
 
-        # update the dataset object with details about this resource
-        self.dataset = Dataset(
-            'mgi', 'MGI', 'http://www.informatics.jax.org/', None,
-            'http://www.informatics.jax.org/mgihome/other/copyright.shtml')
-
-        # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and \
-                'mgi' not in config.get_config()['dbauth']:
-            logger.error("not configured with PG user/password.")
-
-        # source-specific warnings.  will be cleared when resolved.
-        logger.warning("we are ignoring normal phenotypes for now")
+        self.global_terms = self.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
 
         # so that we don't have to deal with BNodes,
         # we will create hash lookups
@@ -267,6 +267,11 @@ class MGI(PostgreSQLSource):
         We'll check the local table versions against the remote version
         :return:
         """
+
+        # check if config exists; if it doesn't, error out and let user know
+        if 'dbauth' not in config.get_config() and \
+                'mgi' not in config.get_config()['dbauth']:
+            logger.error("not configured with PG user/password.")
 
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
@@ -314,7 +319,6 @@ class MGI(PostgreSQLSource):
                     datetime.strptime(
                         d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
-
         self.dataset.setVersion(datestamp, ver)
 
         return
@@ -358,7 +362,7 @@ class MGI(PostgreSQLSource):
         self._process_all_allele_mutation_view(limit)
         self._process_gxd_allele_pair_view(limit)
         self._process_voc_annot_view(limit)
-        self._process_voc_evidence_view(limit)
+        self._process_evidence_view(limit)
         self._process_mgi_note_vocevidence_view(limit)
         self._process_mrk_location_cache(limit)
         self.process_mgi_relationship_transgene_genes(limit)
@@ -1044,8 +1048,6 @@ class MGI(PostgreSQLSource):
     def _process_voc_annot_view(self, limit):
         """
         This MGI table represents associations between things.
-        We now filter this table on abnormal Genotype-Phenotype associations,
-        but may be expanded in the future.
 
         We add the internal annotation id to the idhashmap.
         It is expected that the genotypes have already been added to the idhash
@@ -1086,12 +1088,6 @@ class MGI(PostgreSQLSource):
                 # Mammalian Phenotype/Genotype are curated G2P assoc
                 if annot_type == 'Mammalian Phenotype/Genotype':
                     line_counter += 1
-
-                    # TODO add NOT annotations
-                    # skip 'normal'
-                    if qualifier == 'norm':
-                        logger.info("found normal phenotype: %s", term)
-                        continue
 
                     # We expect the label for the phenotype
                     # to be taken care of elsewhere
@@ -1164,12 +1160,19 @@ class MGI(PostgreSQLSource):
 
         return
 
-    def _process_voc_evidence_view(self, limit):
+    def _process_evidence_view(self, limit):
         """
         Here we fetch the evidence (code and publication) for the associations.
         The evidence codes are mapped from the standard GO codes to ECO.
         J numbers are added for publications.
         We will only add the evidence if the annotation is in our idhash.
+
+        We also pull in evidence qualifiers, as of June 2018 they are
+        Data Interpretation Center (eg IMPC)
+        external ref (eg UniProtKB:Q9JHI2-3 for Proteoform/Marker assoc)
+        Phenotyping Center (eg WTSI)
+        Resource Name (eg MGP)
+        MP-Sex-Specificity (eg NA, M, F)
 
         Triples:
         <annot_id> dc:evidence <evidence_id>
@@ -1182,21 +1185,27 @@ class MGI(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         logger.info("getting evidence and pubs for annotations")
-        raw = '/'.join((self.rawdir, 'voc_evidence_view'))
+        raw = '/'.join((self.rawdir, 'evidence_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line = line.rstrip("\n")
                 line_counter += 1
 
-                (annot_evidence_key, annot_key,
-                 evidence_code, jnumid) = line.split('\t')
-
+                (annot_evidence_key,
+                 annot_key,
+                 evidence_code,
+                 jnumid,
+                 qualifier,
+                 qualifier_value,
+                 annotation_type
+                 ) = line.split('\t')
                 if self.testMode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
@@ -1214,16 +1223,27 @@ class MGI(PostgreSQLSource):
 
                 evidence_id = self._map_evidence_id(evidence_code)
 
-                reference = Reference(g, jnumid)
+                reference = Reference(graph, jnumid)
                 reference.addRefToGraph()
 
                 # add the ECO and citation information to the annot
-                g.addTriple(assoc_id,
-                            Assoc.object_properties['has_evidence'],
-                            evidence_id)
-                g.addTriple(assoc_id,
-                            Assoc.object_properties['has_source'],
-                            jnumid)
+                model.addTriple(assoc_id,
+                                Assoc.object_properties['has_evidence'],
+                                evidence_id)
+                model.addTriple(assoc_id,
+                                Assoc.object_properties['has_source'],
+                                jnumid)
+
+                # For Mammalian Phenotype/Genotype annotation types
+                # MGI adds sex specificity qualifiers here
+                if qualifier == 'MP-Sex-Specificity'\
+                        and (qualifier_value == 'M' or qualifier_value == 'F'):
+                    sex = None
+                    if qualifier_value == 'M':
+                        sex = self.global_terms['male']
+                    elif qualifier_value == 'F':
+                        sex = self.global_terms['female']
+                    model._addSexSpecificity(assoc_id, sex)
 
                 if not self.testMode and \
                         limit is not None and line_counter > limit:

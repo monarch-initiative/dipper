@@ -7,7 +7,6 @@ import json
 
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Evidence import Evidence
 from dipper.models.Provenance import Provenance
@@ -44,13 +43,13 @@ class IMPC(Source):
      * colony_id (ES cell line + phenotyping center)
      * strain
      * zygosity
-    
+
     2.  For the Effective genotypes that are attached to the phenotypes:
      * colony_id (ES cell line + phenotyping center)
      * strain
      * zygosity
      * sex
-    
+
     3.  Associations based on:
     effective_genotype_id + phenotype_id + phenotyping_center +
     pipeline_stable_id + procedure_stable_id + parameter_stable_id
@@ -101,12 +100,19 @@ class IMPC(Source):
         "MGI:2152453", "MGI:1098270"]
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'impc')
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'impc',
+            ingest_title='International Mouse Phenotyping Consortium',
+            ingest_url='http://www.mousephenotype.org',
+            license_url='https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE',
+            data_rights=None,
+            file_handle=None
+        )
 
-        # update the dataset object with details about this resource
-        self.dataset = Dataset(
-            'impc', 'IMPC', 'http://www.mousephenotype.org', None,
-            'https://raw.githubusercontent.com/mpi2/PhenotypeArchive/master/LICENSE')
+        self.global_terms = self.open_and_parse_yaml(
+            '../../translationtable/global_terms.yaml')
 
         # TODO add a citation for impc dataset as a whole
         # :impc cito:citesAsAuthority PMID:24194600
@@ -340,8 +346,8 @@ class IMPC(Source):
                 vslc_name = '/'.join((allele1_label, allele2_label))
 
                 # Add the VSLC
-                vslc_id = '-'.join((marker_accession_id,
-                                          allele_accession_id, zygosity))
+                vslc_id = '-'.join(
+                    (marker_accession_id, allele_accession_id, zygosity))
                 vslc_id = re.sub(r':', '', vslc_id)
                 vslc_id = '_:'+vslc_id
                 model.addIndividualToGraph(
@@ -414,8 +420,14 @@ class IMPC(Source):
                     sq_type_id = geno.genoparts['male_genotype']
                 elif sex == 'female':
                     sq_type_id = geno.genoparts['female_genotype']
-                else:
+                elif sex == 'both':
                     sq_type_id = geno.genoparts['sex_qualified_genotype']
+                elif sex == 'no_data':
+                    sq_type_id = geno.genoparts['intrinsic_genotype']
+                else:
+                    sq_type_id = geno.genoparts['intrinsic_genotype']
+                    logger.WARNING("Unknown sex qualifier {}, "
+                                   "adding as intrinsic_genotype".format(sex))
 
                 geno.addGenotype(
                     sex_qualified_genotype_id,
@@ -464,6 +476,13 @@ class IMPC(Source):
 
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
+
+                if sex == 'male':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['male'])
+                elif sex == 'female':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['female'])
 
                 # add a free-text description
                 try:
