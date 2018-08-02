@@ -1,6 +1,6 @@
 ---
 # YAML format for a Python dict
-# the label to match, a colon, the ontology identifier to return.
+# the label to match a colon the ontology identifier to return.
 # post octothorp comments and empty lines are ignored
 # both columns should be unique (invertable function)
 
@@ -105,7 +105,7 @@
 # "microsatellite": "SO:0000289"
 "microsatellite": "GENO:0000847"
 "short repeat": "GENO:0000846"
-"complex heterozygous": "GENO:0000402"
+
 "variant single locus complement": "GENO:0000030"
 "has_zygosity": "GENO:0000608"
 "haplotype": "GENO:0000871"
@@ -117,8 +117,8 @@
 "likely_benign_for_condition": "GENO:0000844"
 "uncertain significance": "GENO:0000845"
 # punting to RCV on disease for now
-# (would be a little under 10,000 terms to map here
-# maybe down to 3,500 if clustered)
+# (would be a little under 10000 terms to map here
+# maybe down to 3500 if clustered)
 # evidence & provenance
 # SEPIO
 "clinical testing": "SEPIO:0000067"
@@ -145,19 +145,19 @@
 "has_affected_feature": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
 "is downstream of sequence of": "RO:0002529"
-# asserted, but not computed (MB no idea what this means)
+# asserted but not computed (MB no idea what this means)
 "in taxon": "RO:0002162"
 "evidence": "ECO:0000000"
 "journal article": "IAO:0000013"
 "has_url": "ERO:0000480"
 "is_asserted_in": "SEPIO:0000015"
 "assertion": "SEPIO:0000001"
-"is_assertion_supported_by_evidence": "SEPIO:0000111"
+
 "created_by": "SEPIO:0000018"
 "is_specified_by": "SEPIO:0000041"
 "assertion method": "SEPIO:0000037"
 "has_supporting_reference": "SEPIO:0000124"
-"has_supporting_activity": "SEPIO:0000085"
+"has_evidence_item_output_from": "SEPIO:0000085"
 
 "evidence used in automatic assertion": "ECO:0000501"
 "inference by association of genotype from phenotype": "ECO:0005613"
@@ -170,15 +170,128 @@
 "author statement without traceable support used in manual assertion":  "ECO:0000303"
 "inference from phenotype manipulation evidence":  "ECO:0005612"
 "expression evidence used in manual assertion":  "ECO:0000270"
+'mutant phenotype evidence': 'ECO:0000015'
+
 
 # PATO
 "male": "PATO:0000384"
 "female": "PATO:0000383"
 
+# species
 "Homo sapiens": "NCBITaxon:9606"
 "Gallus gallus": "NCBITaxon:9031"
-"Sus scrofa": "NCBITaxon:9823" 
+"Sus scrofa": "NCBITaxon:9823"
 "Equus caballus": "NCBITaxon:9796"
 "Oncorhynchus mykiss": "NCBITaxon:8022"
 "Ovis aries": "NCBITaxon:9940"
 "Bos taurus": "NCBITaxon:9913"
+"Mus musculus": "NCBITaxon:10090"
+"Danio rerio": "NCBITaxon:7955"
+
+# zygosity
+'homoplasmic': 'GENO:0000602'
+'heterozygous': 'GENO:0000135'
+'indeterminate': 'GENO:0000137'
+'heteroplasmic': 'GENO:0000603'
+'hemizygous-y': 'GENO:0000604'
+'hemizygous-x': 'GENO:0000605'
+'homozygous': 'GENO:0000136'
+'hemizygous': 'GENO:0000606'
+'compound heterozygote': 'GENO:0000402'
+'simple heterozygous': 'GENO:0000458'
+
+'embryonic stem cell line': 'ERO:0002002'
+
+# Geno partonomy
+'intrinsic_genotype': 'GENO:0000000'
+'extrinsic_genotype': 'GENO:0000524'
+'effective_genotype': 'GENO:0000525'
+'sex_qualified_genotype': 'GENO:0000645'
+'male_genotype': 'GENO:0000646'
+'female_genotype': 'GENO:0000647'
+'genomic_background': 'GENO:0000611'
+'unspecified_genomic_background': 'GENO:0000649'
+'genomic_variation_complement': 'GENO:0000009'
+'karyotype_variation_complement': 'GENO:0000644'
+'variant_locus': 'GENO:0000002'
+'reference_locus': 'GENO:0000036'
+'allele': 'GENO:0000512'
+'gene': 'SO:0000704'
+'QTL': 'SO:0000771'
+'transgene': 'SO:0000902'  # not really used any more
+'transgenic_insertion': 'SO:0001218'
+'pseudogene': 'SO:0000336'
+'cytogenetic marker': 'SO:0000341'
+'sequence_feature': 'SO:0000110'
+'substitution': 'SO:1000002'
+'point_mutation': 'SO:1000008'
+'population': 'PCO:0000001'
+'family': 'PCO:0000020'
+'wildtype': 'GENO:0000511'
+'reagent_targeted_gene': 'GENO:0000504'
+'targeted_gene_subregion': 'GENO:0000534'
+'targeted_gene_complement': 'GENO:0000527'
+'biological_region': 'SO:0001411'
+'missense_variant': 'SO:0001583'
+'transcript': 'SO:0000233'
+'polypeptide': 'SO:0000104'
+'cDNA': 'SO:0000756'
+'sequence_variant_causing_loss_of_function_of_polypeptide': 'SO:1000118'
+'sequence_variant_causing_gain_of_function_of_polypeptide': 'SO:1000125'
+'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120'
+'sequence_variant_affecting_polypeptide_function': 'SO:1000117'
+'regulatory_transgene_feature': 'GENO:0000637'
+'coding_transgene_feature': 'GENO:0000638'
+'protein_coding_gene': 'SO:0001217'
+'ncRNA_gene': 'SO:0001263'
+'RNAi_reagent': 'SO:0000337'
+'heritable_phenotypic_marker': 'SO:0001500'
+'is_mutant_of': 'GENO:0000440'
+'has_reference_part': 'GENO:0000385'
+'has_member_with_allelotype': 'GENO:0000225'
+'is_allelotype_of': 'GENO:0000206'
+'translates_to': 'RO:0002513'
+'is_transgene_variant_of': 'GENO:0000444'
+
+# statistical_method:
+"Fisher's exact test": 'STATO:0000073'
+"statistical model": 'STATO:0000107'
+"generalized least squares estimation": 'STATO:0000372'
+"Mann-Whitney U-test": 'STATO:0000076'
+"Manual": 'NCIT:C63513'
+
+# measurements:
+'p_value': 'OBI:0000175'
+'effect size estimate': 'STATO:0000085'
+'fold change':  'STATO:0000169'
+
+
+# provenance_types
+'assertion': 'SEPIO:0000001'
+'assay': 'OBI:0000070'
+'organization': 'foaf:organization'
+'person': 'foaf:person'
+'statistical_hypothesis_test': 'OBI:0000673'
+'mixed_model': 'STATO:0000189'
+'project': 'VIVO:Project'
+'study': 'OBI:0000471'
+'assertion process': 'SEPIO:0000003'
+'xref': 'OIO:hasdbxref'
+
+
+# object_properties
+'has_provenance': 'SEPIO:0000011'
+'has_participant': 'RO:0000057'
+'has_input': 'RO:0002233'
+'asserted_by': 'SEPIO:0000130'
+'created_on': 'pav:createdOn'
+
+# SEPIO:0000019 found in sepio_developer.owl
+x-created_at_location': 'SEPIO:0000019'
+
+
+# SEPIO:0000111  -- is not found in sepio
+"is_assertion_supported_by_evidence": "SEPIO:0000111"
+# 'is_assertion_supported_by': 'SEPIO:0000111'
+# possible alternative
+# "has_evidence_with_item": "SEPIO:0000189"
