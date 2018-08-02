@@ -4,7 +4,6 @@ import unittest
 import logging
 import csv
 import gzip
-import json
 from tests.test_source import SourceTestCase
 from dipper.sources.IMPC import IMPC
 from dipper.utils.CurieUtil import CurieUtil
@@ -73,12 +72,11 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         # Test graph is empty
         self.assertTrue(len(list(impc.graph)) == 0)
 
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
-
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
 
-        impc._add_evidence(self.assoc_curie, self.eco_id, impc_map, p_value,
-                           percentage_change, effect_size, self.study_curie)
+        impc._add_evidence(
+            self.assoc_curie, self.eco_id, p_value, percentage_change, effect_size,
+            self.study_curie)
 
         triples = """
     :MONARCH_test_association SEPIO:0000007 <https://monarchinitiative.org/.well-known/genid/b097a98087df7a99> .
@@ -108,11 +106,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         impc.graph = RDFGraph(True)
         self.assertTrue(len(list(impc.graph)) == 0)
 
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
-        impress_map = json.loads(
-            impc.fetch_from_url(
-                impc.map_files['impress_map']).read().decode('utf-8'))
-
         (phenotyping_center, colony) = self.test_set_1[2:4]
         (project_fullname, pipeline_name, pipeline_stable_id,
          procedure_stable_id, procedure_name, parameter_stable_id,
@@ -120,7 +113,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         (statistical_method, resource_name) = self.test_set_1[26:28]
 
         impc._add_study_provenance(
-            impc_map, impress_map, phenotyping_center, colony,
+            phenotyping_center, colony,
             project_fullname, pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
@@ -158,7 +151,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
         )
         # bitrot test
-        #self.assertTrue(
+        # self.assertTrue(
         #    self.test_util.test_graph_equality(triples, impc.graph))
 
     def test_assertion_model(self):
@@ -170,10 +163,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         impc.graph = RDFGraph(True)
         self.assertTrue(len(list(impc.graph)) == 0)
 
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
-
-        impc._add_assertion_provenance(
-            self.assoc_curie, self.evidence_curie, impc_map)
+        impc._add_assertion_provenance(self.assoc_curie, self.evidence_curie)
 
         triples = """
     MONARCH:test_association SEPIO:0000015 <https://monarchinitiative.org/.well-known/genid/bcb2c00a5c2f9c43> .
@@ -203,10 +193,6 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         line_to_test = 1129
         count = 0
         impc = IMPC('rdf_graph', False)   # Not Skolem
-        impress_map = json.loads(
-            impc.fetch_from_url(
-                impc.map_files['impress_map']).read().decode('utf-8'))
-        impc_map = impc.open_and_parse_yaml(impc.map_files['impc_map'])
 
         # fetch file
         impc.fetch(True)
@@ -228,11 +214,12 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
 
-        impc._add_evidence(self.assoc_curie, self.eco_id, impc_map, p_value,
-                           percentage_change, effect_size, self.study_curie)
+        impc._add_evidence(
+            self.assoc_curie, self.eco_id, p_value, percentage_change, effect_size,
+            self.study_curie)
 
         impc._add_study_provenance(
-            impc_map, impress_map, phenotyping_center, colony,
+            phenotyping_center, colony,
             project_fullname, pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
