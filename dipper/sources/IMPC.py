@@ -710,7 +710,8 @@ class IMPC(Source):
         provenance_model.add_study_to_measurements(
             study_bnode, measurements.keys())
         self.graph.addTriple(
-            evidence_line_bnode, self.resolve('has_supporting_reference'), study_bnode)
+            evidence_line_bnode, self.resolve('has_evidence_item_output_from'),
+            study_bnode)
 
         return evidence_line_bnode
 
