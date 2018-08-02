@@ -26,8 +26,8 @@ class Provenance:
         'mixed_model': 'STATO:0000189',
         'project': 'VIVO:Project',
         'study': 'OBI:0000471',
-        'variant_classification_guideline': 'SEPIO:0000037',
-        'assertion_process': 'SEPIO:0000003',
+        'assertion method': 'SEPIO:0000037',
+        'assertion process': 'SEPIO:0000003',
         'xref': 'OIO:hasdbxref'
     }
 
@@ -44,7 +44,7 @@ class Provenance:
         'specified_by': 'SEPIO:0000041',
         'created_at_location': 'SEPIO:0000019',
         'created_with_resource': 'SEPIO:0000022',
-        'measures': 'SEPIO:0000114',
+        'measures': 'SEPIO:0000114',               # TODO became measures_parameter 
         'has_supporting_study': 'SEPIO:0000085',
         'asserted_by': 'SEPIO:0000130',
         'created_on': 'pav:createdOn'
