@@ -166,12 +166,12 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         impc._add_assertion_provenance(self.assoc_curie, self.evidence_curie)
 
         triples = """
-    MONARCH:test_association SEPIO:0000015 <https://monarchinitiative.org/.well-known/genid/bcb2c00a5c2f9c43> .
-    <https://monarchinitiative.org/.well-known/genid/bcb2c00a5c2f9c43> a SEPIO:0000001 ;
-        SEPIO:0000018 <http://www.mousephenotype.org/> ;
+    MONARCH:test_association SEPIO:0000015 <https://monarchinitiative.org/.well-known/genid/bff92df374a88496> .
+    <https://monarchinitiative.org/.well-known/genid/bff92df374a88496> a SEPIO:0000001 ;
+        SEPIO:0000018 <https://www.mousephenotype.org/> ;
         SEPIO:0000111 <https://monarchinitiative.org/.well-known/genid/evidence>  .
 
-    <http://www.mousephenotype.org/> a foaf:organization ;
+    <https://www.mousephenotype.org/> a foaf:organization ;
         rdfs:label "International Mouse Phenotyping Consortium" .
 
         """
@@ -180,8 +180,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
         )
 
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, impc.graph))
+        self.assertTrue(self.test_util.test_graph_equality(triples, impc.graph))
 
     def test_random_data_set(self):
         """
