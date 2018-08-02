@@ -762,28 +762,32 @@ class Source:
                 localtt = yaml.safe_load(fh)
 
         # inverse local translation.
-        # note keeping this invertable will be work
+        # note: keeping this invertable will be work.
+        # Useful to not litter an ingest with external syntax
         self.localtcid = {v: k for k, v in localtt.items()}
 
         return localtt
 
 
-    def resolve(self, word, mandatory=False):  # wip
+    def resolve(self, word, mandatory=True):  # wip
         '''
         composite mapping
         given f(x) and g(x)
-        here:  globaltt & localtt respectivly
+        here: localtt & globaltt respectivly
         return g(x)|g(f(x))|f(x)|x in order of preference
-        returning x on fall through
-        : return word's mapping, if any
+        returns x on fall through if finding a mapping
+        is not manditory (by default finding is mandatory).
+
+        This may be specialized further from any mapping
+        to a global mapping only; if need be.
 
         :param word:  the srting to find as a key in translation tables
-        :pram  mandatory: boolean to cauaes failure when no key exists
+        :param  mandatory: boolean to cauae failure when no key exists
 
         :return
             value from global translation table,
             or value from local translation table,
-            or the query key if finding a value is not mandatory in this order
+            or the query key if finding a value is not mandatory (in this order)
 
         '''
 
@@ -794,7 +798,7 @@ class Source:
             if label in self.globaltt:
                 term_id = self.globaltt[label]
             else:
-                logging.warning(
+                logging.info(
                     'Translated to "' + label + '" but no global term_id for: ' + word)
                 term_id = label
         else:
