@@ -2,7 +2,7 @@
 ### Environment variables.
 ###
 
-DIPPER_BIN = ./dipper-etl.py
+DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python3 -m unittest
 
 ###

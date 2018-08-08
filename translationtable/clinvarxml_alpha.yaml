@@ -2,10 +2,12 @@
 # YAML format for a Python dict 
 # external_string to internal_label translation table
 # quoted external_string, a colon, quoted internal_label.
-# post octothorp comments and empty lines are ignored
-# only the external_string column should be checked for uniqueness
-# ALL items in the the internal_label column MUST appear 
-# exactly once in the first column of the global_terms.yaml file
+# octothorp comments and empty lines are ignored
+# the external_string column should be unique
+# items in the the internal_label column should be unique 
+# in the first column of the global_terms.yaml file
+
+
 
 ### RCV variant to gene relationship types type
 #########################################################

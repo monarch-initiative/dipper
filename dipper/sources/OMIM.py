@@ -5,7 +5,6 @@ import urllib
 from urllib.error import HTTPError
 
 from dipper.sources.Source import Source, USER_AGENT
-from dipper.models.Dataset import Dataset
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -100,8 +99,8 @@ class OMIM(Source):
             graph_type,
             are_bnodes_skolemized,
             'omim',
-            ingest_title= 'Online Mendelian Inheritance in Man',
-            ingest_url= 'http://www.omim.org',
+            ingest_title='Online Mendelian Inheritance in Man',
+            ingest_url='http://www.omim.org',
             # ingest_desc=None,
             # data_rights=None,
             license_url='http://omim.org/help/agreement'
@@ -471,9 +470,7 @@ class OMIM(Source):
                     feature_id = self._make_anonymous_feature(str(omimnum))
                     if abbrev is not None:
                         feature_label = abbrev
-                    omimtype = \
-                        Genotype.genoparts[
-                            'heritable_phenotypic_marker']
+                    omimtype = Genotype.genoparts['heritable_phenotypic_marker']
 
                 if feature_id is not None:
                     if 'comments' in genemap:
@@ -497,8 +494,7 @@ class OMIM(Source):
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
-                            geno.addChromosomeClass(
-                                chrom_num, tax_id, tax_label)
+                            geno.addChromosomeClass(chrom_num, tax_id, tax_label)
 
                             # add the positional information, if available
                             fstart = fend = -1
@@ -508,16 +504,14 @@ class OMIM(Source):
                                 fend = genemap['chromosomeLocationEnd']
                             if fstart >= 0:
                                 # make the build-specific chromosome
-                                chrom_in_build = makeChromID(chrom_num,
-                                                             build_num,
-                                                             'MONARCH')
+                                chrom_in_build = makeChromID(
+                                    chrom_num, build_num, 'MONARCH')
                                 # then, add the chromosome instance
                                 # (from the given build)
                                 geno.addChromosomeInstance(
                                     chrom_num, build_id, build_num, chrom)
-                                if omimtype == \
-                                        Genotype.genoparts[
-                                            'heritable_phenotypic_marker']:
+                                if omimtype == Genotype.genoparts[
+                                        'heritable_phenotypic_marker']:
                                     postypes = [Feature.types['FuzzyPosition']]
                                 else:
                                     postypes = None
@@ -841,8 +835,7 @@ class OMIM(Source):
                                 al_id)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
-                            dbsnp_ids = \
-                                re.split(r',', al['allelicVariant']['dbSnps'])
+                            dbsnp_ids = re.split(r',', al['allelicVariant']['dbSnps'])
                             for dnum in dbsnp_ids:
                                 did = 'dbSNP:'+dnum.strip()
                                 model.addIndividualToGraph(did, None)
@@ -854,15 +847,12 @@ class OMIM(Source):
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each >1 like RCV000020059;;;
-                            rcv_ids = \
-                                re.split(
-                                    r';;;',
-                                    al['allelicVariant']['clinvarAccessions'])
+                            rcv_ids = re.split(
+                                r';;;', al['allelicVariant']['clinvarAccessions'])
                             rcv_ids = [
-                                (re.match(r'(RCV\d+);*', r)).group(1)
-                                for r in rcv_ids]
+                                (re.match(r'(RCV\d+);*', r)).group(1) for r in rcv_ids]
                             for rnum in rcv_ids:
-                                rid = 'ClinVar:'+rnum
+                                rid = 'ClinVar:' + rnum
                                 model.addXref(al_id, rid)
                         reference.addPage(
                             al_id, "http://omim.org/entry/" +
@@ -1025,8 +1015,7 @@ class OMIM(Source):
                     for p in phenolist:
                         serieslist.append(
                             p['phenotypeMap']['phenotypicSeriesNumber'])
-                if 'geneMap' in entry and \
-                        'phenotypeMapList' in entry['geneMap']:
+                if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
                     phenolist = entry['geneMap']['phenotypeMapList']
                     for p in phenolist:
                         if 'phenotypicSeriesNumber' in p['phenotypeMap']:
@@ -1034,7 +1023,7 @@ class OMIM(Source):
                                 p['phenotypeMap']['phenotypicSeriesNumber'])
         # add this entry as a subclass of the series entry
         for ser in serieslist:
-            series_id = 'OMIM:'+ser
+            series_id = 'OMIM:' + ser
             model.addClassToGraph(series_id, None)
             model.addSubClass(omimid, series_id)
 
@@ -1071,14 +1060,13 @@ class OMIM(Source):
                     umls_id = 'UMLS:'+i
                     model.addClassToGraph(umls_id, None)
                     model.addXref(omimid, umls_id)
-
         return
 
     def _get_mapped_gene_ids(self, entry, g):
 
         gene_ids = []
         model = Model(g)
-        omimid = 'OMIM:'+str(entry['mimNumber'])
+        omimid = 'OMIM:' + str(entry['mimNumber'])
         if 'externalLinks' in entry:
             links = entry['externalLinks']
             omimtype = self._get_omimtype(entry)
@@ -1088,7 +1076,7 @@ class OMIM(Source):
                 self.omim_ncbigene_idmap[omimid] = gene_ids
                 if omimtype == Genotype.genoparts['gene']:
                     for i in gene_ids:
-                        model.addEquivalentClass(omimid, 'NCBIGene:'+str(i))
+                        model.addEquivalentClass(omimid, 'NCBIGene:' + str(i))
 
         return gene_ids
 
@@ -1131,15 +1119,12 @@ class OMIM(Source):
             for r in reflist:
                 if 'pubmedID' in r['reference']:
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
-                    ref = \
-                        Reference(
-                            g, pub_id,
-                            Reference.ref_types['journal_article'])
+                    ref = Reference(
+                        g, pub_id, Reference.ref_types['journal_article'])
                 else:
                     # make blank node for internal reference
-                    pub_id = \
-                        '_:OMIM' + str(entry_num) + 'ref' + \
-                        str(r['reference']['referenceNumber'])
+                    pub_id = '_:OMIM' + str(entry_num) + 'ref' + str(
+                        r['reference']['referenceNumber'])
 
                     ref = Reference(g, pub_id)
                     title = author_list = source = citation = None
@@ -1159,9 +1144,8 @@ class OMIM(Source):
                 ref_to_pmid[r['reference']['referenceNumber']] = pub_id
 
                 # add is_about for the pub
-                omim_id = 'OMIM:'+str(entry_num)
-                g.addTriple(omim_id, model.object_properties['mentions'],
-                            pub_id)
+                omim_id = 'OMIM:' + str(entry_num)
+                g.addTriple(omim_id, model.object_properties['mentions'], pub_id)
 
         return ref_to_pmid
 
@@ -1254,8 +1238,7 @@ def filter_keep_phenotype_entry_ids(entry, graph=None):
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'])
-    if omim_type != \
-            Genotype.genoparts['gene'] and \
+    if omim_type != Genotype.genoparts['gene'] and \
             omim_type != Genotype.genoparts['biological_region']:
         return omim_id
 

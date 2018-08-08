@@ -104,23 +104,26 @@ class Model():
         else:
             raise ValueError("{} is not a graph".graph)
 
-    def addTriple(self, subject_id, predicate_id, obj,
-                  object_is_literal=False, literal_type=None):
-        self.graph.addTriple(subject_id, predicate_id, obj,
-                             object_is_literal, literal_type)
+    def addTriple(
+        self, subject_id, predicate_id, obj, object_is_literal=False, literal_type=None
+    ):
+        self.graph.addTriple(
+            subject_id, predicate_id, obj, object_is_literal, literal_type)
 
     def addType(self, subject_id, subject_type):
-        self.graph.addTriple(subject_id, self.object_properties['type'],
-                             subject_type)
+        self.graph.addTriple(
+            subject_id, self.object_properties['type'], subject_type)
         return
 
     def addLabel(self, subject_id, label):
-        self.graph.addTriple(subject_id, self.annotation_properties['label'],
-                             label, object_is_literal=True)
+        self.graph.addTriple(
+            subject_id, self.annotation_properties['label'], label,
+            object_is_literal=True)
         return
 
-    def addClassToGraph(self, class_id, label=None,
-                        class_type=None, description=None):
+    def addClassToGraph(
+        self, class_id, label=None, class_type=None, description=None
+    ):
         """
         Any node added to the graph will get at least 3 triples:
         *(node, type, owl:Class) and
@@ -137,8 +140,8 @@ class Model():
 
         """
 
-        self.graph.addTriple(class_id, self.object_properties['type'],
-                             self.types['class'])
+        self.graph.addTriple(
+            class_id, self.object_properties['type'], self.types['class'])
         if label is not None:
             self.graph.addTriple(
                 class_id, self.annotation_properties['label'], label,
@@ -176,8 +179,8 @@ class Model():
         return
 
     def addEquivalentClass(self, sub, obj):
-        self.graph.addTriple(sub, self.object_properties['equivalent_class'],
-                             obj)
+        self.graph.addTriple(
+            sub, self.object_properties['equivalent_class'], obj)
         return
 
     def addSameIndividual(self, sub, obj):
@@ -185,33 +188,31 @@ class Model():
 
         return
 
-    def addOWLPropertyClassRestriction(
-            self, class_id, property_id, property_value):
+    def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
 
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
-        bnode = \
-            '_:'+re.sub(r':', '', property_id)+re.sub(r':', '', property_value)
+        bnode = '_:'+re.sub(
+            r':', '', property_id)+re.sub(r':', '', property_value)
 
-        self.graph.addTriple(bnode, self.object_properties['type'],
-                             self.types['restriction'])
-        self.graph.addTriple(bnode, self.object_properties['on_property'],
-                             property_id)
-        self.graph.addTriple(bnode, self.object_properties['some_values_from'],
-                             property_value)
-        self.graph.addTriple(class_id, self.object_properties['subclass_of'],
-                             bnode)
+        self.graph.addTriple(
+            bnode, self.object_properties['type'], self.types['restriction'])
+        self.graph.addTriple(
+            bnode, self.object_properties['on_property'], property_id)
+        self.graph.addTriple(
+            bnode, self.object_properties['some_values_from'], property_value)
+        self.graph.addTriple(
+            class_id, self.object_properties['subclass_of'], bnode)
 
         return
 
     def addPerson(self, person_id, person_label=None):
-        self.graph.addTriple(person_id, self.object_properties['type'],
-                             self.types['person'])
+        self.graph.addTriple(
+            person_id, self.object_properties['type'], self.types['person'])
         if person_label is not None:
             self.graph.addTriple(
                 person_id, self.annotation_properties['label'],
-                person_label, object_is_literal=True
-            )
+                person_label, object_is_literal=True)
         return
 
     def addDeprecatedClass(self, old_id, new_ids=None):
@@ -225,8 +226,8 @@ class Model():
         :return: None
 
         """
-        self.graph.addTriple(old_id, self.object_properties['type'],
-                             self.types['class'])
+        self.graph.addTriple(
+            old_id, self.object_properties['type'], self.types['class'])
 
         self._addReplacementIds(old_id, new_ids)
 
@@ -236,9 +237,9 @@ class Model():
         consider = self.annotation_properties['consider']
         replaced_by = self.annotation_properties['replaced_by']
 
-        self.graph.addTriple(old_id, self.types['deprecated'],
-                             True, object_is_literal=True,
-                             literal_type='xsd:boolean')
+        self.graph.addTriple(
+            old_id, self.types['deprecated'], True, object_is_literal=True,
+            literal_type='xsd:boolean')
 
         if new_ids is not None:
             if isinstance(new_ids, str):
@@ -262,17 +263,16 @@ class Model():
         :return:
 
         """
-        self.graph.addTriple(old_id, self.object_properties['type'],
-                             self.types['named_individual'])
+        self.graph.addTriple(
+            old_id, self.object_properties['type'], self.types['named_individual'])
 
         self._addReplacementIds(old_id, new_ids)
 
         return
 
     def addSubClass(self, child_id, parent_id):
-        self.graph.addTriple(child_id,
-                             self.object_properties['subclass_of'],
-                             parent_id)
+        self.graph.addTriple(
+            child_id, self.object_properties['subclass_of'], parent_id)
         return
 
     def addSynonym(self, class_id, synonym, synonym_type=None):
@@ -291,13 +291,14 @@ class Model():
             synonym_type = self.annotation_properties['hasExactSynonym']
 
         if synonym is not None:
-            self.graph.addTriple(class_id, synonym_type, synonym,
-                                 object_is_literal=True)
+            self.graph.addTriple(
+                class_id, synonym_type, synonym, object_is_literal=True)
         return
 
     def addDefinition(self, class_id, definition):
-        self.graph.addTriple(class_id, self.annotation_properties['definition'],
-                             definition, object_is_literal=True)
+        self.graph.addTriple(
+            class_id, self.annotation_properties['definition'],  definition,
+            object_is_literal=True)
         return
 
     def addXref(self, class_id, xref_id, xref_as_literal=False):
@@ -308,26 +309,26 @@ class Model():
 
     def addDepiction(self, subject_id, image_url):
         self.graph.addTriple(
-            subject_id, self.annotation_properties['depiction'],
-            image_url, object_is_literal=True)
+            subject_id, self.annotation_properties['depiction'], image_url,
+            object_is_literal=True)
         return
 
     def addComment(self, subject_id, comment):
         self.graph.addTriple(
-            subject_id, self.annotation_properties['comment'],
-            comment.strip(), object_is_literal=True)
+            subject_id, self.annotation_properties['comment'], comment.strip(),
+            object_is_literal=True)
         return
 
     def addDescription(self, subject_id, description):
         self.graph.addTriple(
-            subject_id, self.annotation_properties['description'],
-            description.strip(), object_is_literal=True)
+            subject_id, self.annotation_properties['description'], description.strip(),
+            object_is_literal=True)
         return
 
     def addOntologyDeclaration(self, ontology_id):
 
-        self.graph.addTriple(ontology_id, self.object_properties['type'],
-                             self.types['ontology'])
+        self.graph.addTriple(
+            ontology_id, self.object_properties['type'], self.types['ontology'])
         return
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
