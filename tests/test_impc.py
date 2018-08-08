@@ -37,18 +37,66 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         self.assoc_curie = 'MONARCH:test_association'
         self.eco_id = 'ECO:0000015'
 
+        # Headers:
+        # 01 marker_accession_id,
+        # 02 marker_symbol,
+        # 03 phenotyping_center,
+        # 04 colony_raw,
+        # 05 sex,
+        # 06 zygosity,
+        # 07 allele_accession_id,
+        # 08 allele_symbol,
+        # 09 allele_name,
+        # 10 strain_accession_id,
+        # 11 strain_name,
+        # 12 project_name,
+        # 13 project_fullname,
+        # 14 pipeline_name,
+        # 15 pipeline_stable_id,
+        # 16 procedure_stable_id,
+        # 17 procedure_name,
+        # 18 parameter_stable_id,
+        # 19 parameter_name,
+        # 20 top_level_mp_term_id,
+        # 21 top_level_mp_term_name,
+        # 22 mp_term_id,
+        # 23 mp_term_name,
+        # 24 p_value,
+        # 25 percentage_change,
+        # 26 effect_size,
+        # 27 statistical_method,
+        # 28 resource_name
+
         self.test_set_1 = (
-            'MGI:1920145', 'Setd5', 'WTSI', 'MEFW', 'male', 'heterozygote',
-            'MGI:4432631', 'Setd5<tm1a(EUCOMM)Wtsi>',
-            'targeted mutation 1a, Wellcome Trust Sanger Institute',
-            'MGI:2159965', 'C57BL/6N', 'MGP',
-            'Wellcome Trust Sanger Institute Mouse Genetics Project',
-            'MGP Select Pipeline', 'MGP_001', 'MGP_XRY_001', 'X-ray',
-            'IMPC_XRY_008_001', 'Number of ribs right', 'MP:0005390',
-            'skeleton phenotype', 'MP:0000480', 'increased rib number',
-            '1.637023E-010', '', '8.885439E-007',
-            'Wilcoxon rank sum test with continuity correction',
-            'International Mouse Phenotyping Consortium')
+            'MGI:1920145',              # 01
+            'Setd5',                    # 02
+            'WTSI',                     # 03
+            'MEFW',                     # 04
+            'male',                     # 05
+            'heterozygote',             # 06
+            'MGI:4432631',              # 07
+            'Setd5<tm1a(EUCOMM)Wtsi>',  # 08
+            'targeted mutation 1a, Wellcome Trust Sanger Institute',    # 09
+            'MGI:2159965',              # 10
+            'C57BL/6N',                 # 11
+            'MGP',                      # 12
+            'Wellcome Trust Sanger Institute Mouse Genetics Project',   # 13
+            'MGP Select Pipeline',      # 14
+            'MGP_001',                  # 15
+            'MGP_XRY_001',              # 16
+            'X-ray',                    # 17
+            'IMPC_XRY_001',             # 18   # was 'IMPC_XRY_008_001',
+            'Number of ribs right',     # 19
+            'MP:0005390',               # 20
+            'skeleton phenotype',       # 21
+            'MP:0000480',               # 22
+            'increased rib number',     # 23
+            '1.637023E-010',            # 24
+            '',                         # 25
+            '8.885439E-007',            # 26
+            'Wilcoxon rank sum test with continuity correction',    # 27
+            'International Mouse Phenotyping Consortium'            # 28
+        )
 
         # Generate test curies, these are otherwise generated
         # within _add_evidence() and _add_study_provenance()
@@ -114,45 +162,47 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         impc._add_study_provenance(
             phenotyping_center, colony,
-            project_fullname, pipeline_name, pipeline_stable_id,
+            project_fullname,
+            pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
-            statistical_method, resource_name)
+            statistical_method, resource_name, 0)
+
+        # dbg
+        logger.info(
+            "Provenance graph as turtle:\n%s\n",
+            impc.graph.serialize(format="turtle").decode("utf-8")
+        )
 
         triples = """
-    <https://monarchinitiative.org/.well-known/genid/bbdd05a8ca155dda> a OBI:0000471 ;
-      BFO:0000051 OBO:STATO_0000076,
-          <https://www.mousephenotype.org/impress/protocol/175/15> ;
-      BFO:0000050  IMPRESS-procedure:15 ,
-          <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
-      SEPIO:0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
-      SEPIO:0000017 <http://www.sanger.ac.uk/>  .
+<https://monarchinitiative.org/.well-known/genid/bb091afddeeec4a1> a OBI:0000471 ;
+  BFO:0000051 OBO:STATO_0000076,
+      <https://www.mousephenotype.org/impress/protocol/175/15> ;
+  BFO:0000050  IMPRESS-procedure:15 ,
+      <http://www.sanger.ac.uk/science/data/mouse-genomes-project> ;
+  SEPIO:0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
+  SEPIO:0000017 <http://www.sanger.ac.uk/>  .
 
-    <https://monarchinitiative.org/.well-known/genid/bc0b26361b8687b5> a owl:NamedIndividual ;
-        rdfs:label "MEFW" .
+<https://monarchinitiative.org/.well-known/genid/bc0b26361b8687b5> a owl:NamedIndividual ;
+    rdfs:label "MEFW" .
 
-    <http://www.sanger.ac.uk/> a foaf:organization ;
-        rdfs:label "WTSI" .
+<http://www.sanger.ac.uk/> a foaf:organization ;
+    rdfs:label "WTSI" .
 
-    <http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
-        rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
+<http://www.sanger.ac.uk/science/data/mouse-genomes-project> a VIVO:Project ;
+    rdfs:label "Wellcome Trust Sanger Institute Mouse Genetics Project" .
 
-    <https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
-        rdfs:label "Number of ribs right (X-ray)" .
+<https://www.mousephenotype.org/impress/parameterontologies/1867/91> a owl:NamedIndividual ;
+    rdfs:label "Number of ribs right (X-ray)" .
 
-    IMPRESS-procedure:15 a owl:NamedIndividual ;
-        rdfs:label "MGP Select Pipeline" .
+IMPRESS-procedure:15 a owl:NamedIndividual ;
+    rdfs:label "MGP Select Pipeline" .
 
-    <https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
-        rdfs:label "X-ray" .
+<https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
+    rdfs:label "X-ray" .
 """
-        # dbg
-        logger.debug(
-            "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
-        )
-        # bitrot test
-        # self.assertTrue(
-        #    self.test_util.test_graph_equality(triples, impc.graph))
+
+        # self.assertTrue(self.test_util.test_graph_equality(triples, impc.graph))
 
     def test_assertion_model(self):
         """
@@ -176,8 +226,9 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         """
         # dbg
-        logger.debug(
-            "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
+        logger.info(
+            "Assertion graph:\n %s\n", impc.graph.serialize(
+                format="turtle").decode("utf-8")
         )
 
         self.assertTrue(self.test_util.test_graph_equality(triples, impc.graph))
@@ -189,44 +240,58 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 
         Line of data is hardcoded, but theoretically should work on any line
         """
-        line_to_test = 1129
+        line_to_test = 66
         count = 0
         impc = IMPC('rdf_graph', False)   # Not Skolem
-
+        self.test_set_N = []
         # fetch file
-        impc.fetch(True)
+        # impc.fetch(True)
         file_path = '/'.join((impc.rawdir, impc.files['all']['file']))
         with gzip.open(file_path, 'rt') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             for row in filereader:
                 count += 1
-                if count == line_to_test:
-                    self.test_set_1 = row
+                if count < line_to_test:
+                    continue
+                elif count == line_to_test:
+                    self.test_set_N = row
+                elif count > line_to_test:
+                    logger.info("stopped at line:\t%s\n", count)
                     break
 
         # Some DRY violation with the above tests
-        (phenotyping_center, colony) = row[2:4]
+        (phenotyping_center, colony) = self.test_set_N[2:4]
         (project_fullname, pipeline_name, pipeline_stable_id,
          procedure_stable_id, procedure_name, parameter_stable_id,
-         parameter_name) = row[12:19]
-        (statistical_method, resource_name) = row[26:28]
+         parameter_name) = self.test_set_N[12:19]
+        (statistical_method, resource_name) = self.test_set_N[26:28]
 
-        (p_value, percentage_change, effect_size) = self.test_set_1[23:26]
+        (p_value, percentage_change, effect_size) = self.test_set_N[23:26]
 
+        # adding evidence
         impc._add_evidence(
             self.assoc_curie, self.eco_id, p_value, percentage_change, effect_size,
             self.study_curie)
 
+        # adding  study
         impc._add_study_provenance(
-            phenotyping_center, colony,
-            project_fullname, pipeline_name, pipeline_stable_id,
+            phenotyping_center, colony, project_fullname,
+            pipeline_name,
+            pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
-            statistical_method, resource_name)
+            statistical_method, resource_name, line_to_test)
 
         # Note that this doesn't test much since we're dealing with
         # multiple part_of  and has_part links to individuals
         # which results in ambiguity = hard to test
+
+        # dbg
+        logger.info(
+            "Row %i graph as ntriples:\n%s\n", line_to_test, impc.graph.serialize(
+                format="ntriples").decode("utf-8")
+        )
+
         sparql_query = """
 SELECT *
 WHERE {
@@ -239,8 +304,13 @@ WHERE {
         SEPIO:0000017 ?agent .
 }
 """
+
         sparql_output = impc.graph.query(sparql_query)
-        # Test that query passes and returns one row
+        logger.info("Test that query for row %i passes and returns one row", int(line_to_test))
+
+        # print("Sparql Output: %s\n", list(sparql_output) )
+        # it is an array with one list with five vars in it
+
         self.assertEqual(len(list(sparql_output)), 1)
 
     def tearDown(self):

@@ -505,7 +505,7 @@ class IMPC(Source):
                     phenotyping_center, colony_raw, project_fullname, pipeline_name,
                     pipeline_stable_id, procedure_stable_id, procedure_name,
                     parameter_stable_id, parameter_name, statistical_method,
-                    resource_name)
+                    resource_name, line_counter)
 
                 evidence_line_bnode = self._add_evidence(
                     assoc_id, eco_id, p_value, percentage_change, effect_size,
@@ -566,7 +566,9 @@ class IMPC(Source):
         parameter_stable_id,
         parameter_name,
         statistical_method,
-        resource_name
+        resource_name,
+        row_num
+
     ):
         """
         :param phenotyping_center: str, from self.files['all']
@@ -609,17 +611,19 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
 
-        # Maybe filter on parameter_stable_id having more than three segments?
-        if len(parameter_stable_id.split("_")) <= 3:
-            parameter_stable_link = self.resolve(parameter_stable_id)
+        # when there are more than three parts to the stable ID,
+        # one part (or more) may be indicating a sub section of a page
 
-            if parameter_stable_link == parameter_stable_id:
-                logging.warning(
-                    "Valid Mapping to URL for %s was ecpected in localtt{}",
-                    parameter_stable_id)
-            else:
-                model.addIndividualToGraph(parameter_stable_link, parameter_label)
-                provenance_model.add_study_measure(study_bnode, parameter_stable_link)
+        # Maybe filter out parameter_stable_id having more than three segments?
+        # no good  ALL parameter_stable_id have four parts
+        # and most (all?) parameter_stable_id have no where specific to go.
+        # mabe a page they can be searched for or a 78 page pdf ...
+        # The parameter labels should just be attached as literals
+        # TODO eliminate this bnode
+
+        logging.info("Adding Provance")
+        model.addIndividualToGraph('_:' + parameter_stable_id, parameter_label)
+        provenance_model.add_study_measure(study_bnode, '_:' + parameter_stable_id)
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')
@@ -629,20 +633,24 @@ class IMPC(Source):
         model.addIndividualToGraph(
             self.resolve(phenotyping_center), phenotyping_center,
             self.resolve('organization'))
-        self.graph.addTriple(
+
+        # self.graph
+        model.addTriple(
             study_bnode, self.resolve('has_agent'), self.resolve(phenotyping_center))
 
         # add pipeline and project
         model.addIndividualToGraph(
             self.resolve(pipeline_stable_id), pipeline_name)
 
-        self.graph.addTriple(
+        # self.graph
+        model.addTriple(
             study_bnode, self.resolve('part_of'), self.resolve(pipeline_stable_id))
 
         model.addIndividualToGraph(
             self.resolve(project_fullname), project_fullname, self.resolve('project'))
 
-        self.graph.addTriple(
+        # self.graph
+        model.addTriple(
             study_bnode, self.resolve('part_of'), self.resolve(project_fullname))
 
         return study_bnode
