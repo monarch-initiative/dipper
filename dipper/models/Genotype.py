@@ -21,8 +21,8 @@ class Genotype():
     """
 
     # special genotype parts mapped to their
-    # GENO and SO classes that we explicitly reference here
-    genoparts = {
+    # GENO and SO classes that we explicitly reference here (and there, and everywhere)
+    genoparts = {  # TODO use version in global tt; it gets checked & updated (DELETEME)
         'intrinsic_genotype': 'GENO:0000000',
         'extrinsic_genotype': 'GENO:0000524',
         'effective_genotype': 'GENO:0000525',
@@ -78,7 +78,9 @@ class Genotype():
         'heritable_phenotypic_marker': 'SO:0001500'
     }
 
-    object_properties = {
+    object_properties = {  # TODO use version in global tt;
+        # it gets checked & updated (DELETEME)
+        # see 'GENO:0000382' for why this is bad for maintaince  -- TEC
         'is_mutant_of': 'GENO:0000440',
         'derives_from': 'RO:0001000',
         'has_alternate_part': 'GENO:0000382',
@@ -121,7 +123,7 @@ class Genotype():
         'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change'
     }
 
-    zygosity = {
+    zygosity = {  # TODO use version in global tt; it gets checked & updated (DELETEME)
         'homoplasmic': 'GENO:0000602',
         'heterozygous': 'GENO:0000135',
         'indeterminate': 'GENO:0000137',
@@ -390,7 +392,6 @@ class Genotype():
             raise TypeError('Attempt to pass None as child')
         elif part_relationship is None:
             part_relationship = self.properties['has_part']
-
 
         self.graph.addTriple(parent_id, part_relationship, part_id)
 

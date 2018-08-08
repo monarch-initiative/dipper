@@ -5,11 +5,6 @@ import logging
 import unittest
 import importlib
 import time
-
-# TODO PYLINT not finding imports
-# Unable to import 'tests.test_general'
-# No name 'utils' in module 'dipper'
-# Invalid constant name "test_suite"
 from tests.test_general import GeneralGraphTestCase
 from dipper.utils.TestUtils import TestUtils
 from dipper.utils.GraphUtils import GraphUtils
