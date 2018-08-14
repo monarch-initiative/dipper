@@ -20,124 +20,8 @@ class Genotype():
 
     """
 
-    # special genotype parts mapped to their
-    # GENO and SO classes that we explicitly reference here (and there, and everywhere)
-    genoparts = {  # TODO use version in global tt; it gets checked & updated (DELETEME)
-        'intrinsic_genotype': 'GENO:0000000',
-        'extrinsic_genotype': 'GENO:0000524',
-        'effective_genotype': 'GENO:0000525',
-        'sex_qualified_genotype': 'GENO:0000645',
-        'male_genotype': 'GENO:0000646',
-        'female_genotype': 'GENO:0000647',
-        'genomic_background': 'GENO:0000611',
-        'unspecified_genomic_background': 'GENO:0000649',
-        'genomic_variation_complement': 'GENO:0000009',
-        'karyotype_variation_complement': 'GENO:0000644',
-        'variant_single_locus_complement': 'GENO:0000030',
-        'variant_locus': 'GENO:0000002',
-        'reference_locus': 'GENO:0000036',
-        'allele': 'GENO:0000512',
-        'gene': 'SO:0000704',
-        'QTL': 'SO:0000771',
-        'transgene': 'SO:0000902',  # not really used any more
-        'transgenic_insertion': 'SO:0001218',
-        'pseudogene': 'SO:0000336',
-        'cytogenetic marker': 'SO:0000341',
-        'sequence_feature': 'SO:0000110',
-        'sequence_alteration': 'SO:0001059',
-        'insertion': 'SO:0000667',
-        'deletion': 'SO:0000159',
-        'substitution': 'SO:1000002',
-        'duplication': 'SO:1000035',
-        'translocation': 'SO:0000199',
-        'inversion': 'SO:1000036',
-        'tandem_duplication': 'SO:1000173',
-        'point_mutation': 'SO:1000008',
-        'population': 'PCO:0000001',  # population
-        'family': 'PCO:0000020',  # family
-        'wildtype': 'GENO:0000511',
-        'reagent_targeted_gene': 'GENO:0000504',
-        'targeted_gene_subregion': 'GENO:0000534',
-        'targeted_gene_complement': 'GENO:0000527',
-        'biological_region': 'SO:0001411',
-        'missense_variant': 'SO:0001583',
-        'transcript': 'SO:0000233',
-        'polypeptide': 'SO:0000104',
-        'cDNA': 'SO:0000756',
-        'sequence_variant_causing_loss_of_function_of_polypeptide':
-            'SO:1000118',
-        'sequence_variant_causing_gain_of_function_of_polypeptide':
-            'SO:1000125',
-        'sequence_variant_causing_inactive_catalytic_site': 'SO:1000120',
-        'sequence_variant_affecting_polypeptide_function': 'SO:1000117',
-        'regulatory_transgene_feature': 'GENO:0000637',
-        'coding_transgene_feature': 'GENO:0000638',
-        'protein_coding_gene': 'SO:0001217',
-        'ncRNA_gene': 'SO:0001263',
-        'RNAi_reagent': 'SO:0000337',
-        'heritable_phenotypic_marker': 'SO:0001500'
-    }
-
-    object_properties = {  # TODO use version in global tt;
-        # it gets checked & updated (DELETEME)
-        # see 'GENO:0000382' for why this is bad for maintaince  -- TEC
-        'is_mutant_of': 'GENO:0000440',
-        'derives_from': 'RO:0001000',
-        'has_alternate_part': 'GENO:0000382',
-        'has_reference_part': 'GENO:0000385',
-        'has_sex_agnostic_genotype_part': 'GENO:0000650',
-        'in_taxon': 'RO:0002162',
-        'has_zygosity': 'GENO:0000608',
-        # is_seq_var_inst_of links a alternate locus (instance)
-        # to a gene (class)
-        'is_sequence_variant_instance_of': 'GENO:0000408',
-        'targets_instance_of': 'GENO:0000414',
-        'is_reference_instance_of': 'GENO:0000610',
-        'has_part': 'BFO:0000051',
-        # use has_member_with_allelotype when relating populations
-        'has_member_with_allelotype': 'GENO:0000225',
-        'is_allelotype_of': 'GENO:0000206',
-        'has_genotype': 'GENO:0000222',
-        'has_phenotype': 'RO:0002200',
-        'has_gene_product': 'RO:0002205',
-        'translates_to': 'RO:0002513',
-        'is_targeted_expression_variant_of': 'GENO:0000443',
-        'is_transgene_variant_of': 'GENO:0000444',
-        'has_variant_part': 'GENO:0000382',
-        # targeted_by isa between a (reagent-targeted gene) and a morpholino
-        'targeted_by': 'GENO:0000634',
-        # FIXME should derives_sequence_from_gene just be subsequence of?
-        'derives_sequence_from_gene': 'GENO:0000639',
-        'has_affected_locus': 'GENO:0000418'
-    }
-
-    annotation_properties = {
-        # TODO change properties with
-        # https://github.com/monarch-initiative/GENO-ontology/issues/21
-        # FIXME
-        # reference_nucleotide, reference_amino_acid, altered_nucleotide
-        # results_in_amino_acid_change are FIXME Made up terms
-        'reference_nucleotide': 'GENO:reference_nucleotide',
-        'reference_amino_acid': 'GENO:reference_amino_acid',
-        'altered_nucleotide': 'GENO:altered_nucleotide',
-        'results_in_amino_acid_change': 'GENO:results_in_amino_acid_change'
-    }
-
-    zygosity = {  # TODO use version in global tt; it gets checked & updated (DELETEME)
-        'homoplasmic': 'GENO:0000602',
-        'heterozygous': 'GENO:0000135',
-        'indeterminate': 'GENO:0000137',
-        'heteroplasmic': 'GENO:0000603',
-        'hemizygous-y': 'GENO:0000604',
-        'hemizygous-x': 'GENO:0000605',
-        'homozygous': 'GENO:0000136',
-        'hemizygous': 'GENO:0000606',
-        'complex_heterozygous': 'GENO:0000402',
-        'simple_heterozygous': 'GENO:0000458'
-    }
-
-    properties = object_properties.copy()
-    properties.update(annotation_properties)
+    globaltt = Model.globaltt
+    globaltcid = Model.globaltcid
 
     def __init__(self, graph):
         if isinstance(graph, Graph):
@@ -149,8 +33,10 @@ class Genotype():
         return
 
     def addGenotype(
-            self, genotype_id, genotype_label, genotype_type=None,
-            genotype_description=None):
+            self, genotype_id, genotype_label,
+            genotype_type=globaltt['intrinsic_genotype'],
+            genotype_description=None
+    ):
         """
         If a genotype_type is not supplied,
         we will default to 'intrinsic_genotype'
@@ -161,9 +47,6 @@ class Genotype():
         :return:
 
         """
-
-        if genotype_type is None:
-            genotype_type = self.genoparts['intrinsic_genotype']
 
         self.model.addIndividualToGraph(
             genotype_id, genotype_label, genotype_type, genotype_description)
@@ -186,25 +69,24 @@ class Genotype():
 
         # TODO should we accept a list of allele types?
         if allele_type is None:
-            allele_type = self.genoparts['allele']  # TODO is this a good idea?
+            allele_type = self.globaltt['allele']  # TODO is this a good idea?
         self.model.addIndividualToGraph(
             allele_id, allele_label, allele_type, allele_description)
 
         return
 
     def addGene(
-            self, gene_id, gene_label, gene_type=None,
-            gene_description=None):
-        if gene_type is None:
-            gene_type = self.genoparts['gene']
-        # genes are classes
-        self.model.addClassToGraph(
-            gene_id, gene_label, gene_type, gene_description)
+            self, gene_id, gene_label, gene_type=None, gene_description=globaltt['gene']
+    ):
+        ''' genes are classes '''
+        self.model.addClassToGraph(gene_id, gene_label, gene_type, gene_description)
 
         return
 
-    def addConstruct(self, construct_id, construct_label, construct_type=None,
-                     construct_description=None):
+    def addConstruct(
+            self, construct_id, construct_label, construct_type=None,
+            construct_description=None
+    ):
         # TODO add base type for construct
         # if (constrcut_type is None):
         #    constrcut_type=self.construct_base_type
@@ -228,13 +110,13 @@ class Genotype():
         """
 
         self.graph.addTriple(
-            child_id, self.properties['derives_from'], parent_id)
+            child_id, self.globaltt['derives_from'], parent_id)
 
         return
 
     def addSequenceDerivesFrom(self, child_id, parent_id):
         self.graph.addTriple(
-            child_id, self.properties['derives_sequence_from_gene'], parent_id)
+            child_id, self.globaltt['derives_sequence_from_gene'], parent_id)
         return
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
@@ -251,11 +133,12 @@ class Genotype():
 
         """
         if rel_id is None:
-            rel_id = self.properties['is_sequence_variant_instance_of']
+            rel_id = self.globaltt['is_sequence_variant_instance_of']
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
-    def addAffectedLocus(self, allele_id, gene_id, rel_id=None):
+    def addAffectedLocus(
+            self, allele_id, gene_id, rel_id=globaltt['has_affected_locus']):
         """
         We make the assumption here that if the relationship is not provided,
         it is a
@@ -268,14 +151,11 @@ class Genotype():
         :return:
 
         """
-        if rel_id is None:
-            rel_id = self.properties['has_affected_locus']
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
     def addGeneProduct(
-            self, sequence_id, product_id,
-            product_label=None, product_type=None):
+            self, sequence_id, product_id, product_label=None, product_type=None):
         """
         Add gene/variant/allele has_gene_product relationship
         Can be used to either describe a gene to transcript relationship
@@ -291,13 +171,13 @@ class Genotype():
             self.model.addIndividualToGraph(
                 product_id, product_label, product_type)
         self.graph.addTriple(
-            sequence_id, self.properties['has_gene_product'], product_id)
+            sequence_id, self.globaltt['has_gene_product'], product_id)
 
         return
 
     def addPolypeptide(
             self, polypeptide_id, polypeptide_label=None,
-            transcript_id=None, polypeptide_type=None, ):
+            transcript_id=None, polypeptide_type=globaltt['polypeptide']):
         """
         :param polypeptide_id:
         :param polypeptide_label:
@@ -307,14 +187,11 @@ class Genotype():
 
         """
 
-        if polypeptide_type is None:
-            polypeptide_type = self.genoparts['polypeptide']
         self.model.addIndividualToGraph(
             polypeptide_id, polypeptide_label, polypeptide_type)
         if transcript_id is not None:
             self.graph.addTriple(
-                transcript_id, self.properties['translates_to'],
-                polypeptide_id)
+                transcript_id, self.globaltt['translates_to'], polypeptide_id)
 
         return
 
@@ -348,13 +225,12 @@ class Genotype():
         # figure out zygosity if it's not supplied
         if zygosity_id is None:
             if allele1_id == allele2_id:
-                zygosity_id = self.zygosity['homozygous']
+                zygosity_id = self.globaltt['homozygous']
             else:
-                zygosity_id = self.zygosity['heterozygous']
+                zygosity_id = self.globaltt['heterozygous']
 
         if zygosity_id is not None:
-            self.graph.addTriple(
-                vslc_id, self.properties['has_zygosity'], zygosity_id)
+            self.graph.addTriple(vslc_id, self.globaltt['has_zygosity'], zygosity_id)
 
         return
 
@@ -367,12 +243,11 @@ class Genotype():
         :return:
         """
 
-        self.addParts(
-            vslc_id, parent_id, self.properties['has_alternate_part'])
+        self.addParts(vslc_id, parent_id, self.globaltt['has_alternate_part'])
 
         return
 
-    def addParts(self, part_id, parent_id, part_relationship=None):
+    def addParts(self, part_id, parent_id, part_relationship=globaltt['has_part']):
         """
         This will add a has_part (or subproperty) relationship between
         a parent_id and the supplied part.
@@ -391,30 +266,32 @@ class Genotype():
         elif part_id is None:
             raise TypeError('Attempt to pass None as child')
         elif part_relationship is None:
-            part_relationship = self.properties['has_part']
+            part_relationship = self.globaltt['has_part']
 
         self.graph.addTriple(parent_id, part_relationship, part_id)
 
         return
 
     def addSequenceAlteration(
-            self, sa_id, sa_label, sa_type=None, sa_description=None):
+            self, sa_id, sa_label, sa_type=globaltt['sequence_alteration'],
+            sa_description=None):
         if sa_type is None:
-            sa_type = self.genoparts['sequence_alteration']
+            sa_type = self.globaltt['sequence_alteration']
         self.model.addIndividualToGraph(
             sa_id, sa_label, sa_type, sa_description)
 
         return
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
-        self.addParts(sa_id, vl_id, self.properties['has_alternate_part'])
+        self.addParts(sa_id, vl_id, self.globaltt['has_alternate_part'])
         return
 
     def addGenomicBackground(
             self, background_id, background_label,
-            background_type=None, background_description=None):
+            background_type=globaltt['genomic_background'],
+            background_description=None):
         if background_type is None:
-            background_type = self.genoparts['genomic_background']
+            background_type = self.globaltt['genomic_background']
         self.model.addIndividualToGraph(
             background_id, background_label, background_type,
             background_description)
@@ -422,12 +299,13 @@ class Genotype():
         return
 
     def addGenomicBackgroundToGenotype(
-            self, background_id, genotype_id, background_type=None):
+            self, background_id, genotype_id,
+            background_type=globaltt['genomic_background']):
         if background_type is None:
-            background_type = self.genoparts['genomic_background']
+            background_type = self.globaltt['genomic_background']
         self.model.addType(background_id, background_type)
-        self.addParts(background_id, genotype_id,
-                      self.object_properties['has_reference_part'])
+        self.addParts(
+            background_id, genotype_id, self.globaltt['has_reference_part'])
 
         return
 
@@ -445,7 +323,7 @@ class Genotype():
 
         """
         self.graph.addTriple(
-            genopart_id, self.properties['in_taxon'], taxon_id)
+            genopart_id, self.globaltt['in_taxon'], taxon_id)
 
         return
 
@@ -453,7 +331,7 @@ class Genotype():
         # for example, add a morphant reagent thingy to the genotype,
         # assuming it's a extrinsic_genotype
         self.graph.addTriple(
-            genotype_id, self.properties['has_variant_part'], reagent_id)
+            genotype_id, self.globaltt['has_variant_part'], reagent_id)
 
         return
 
@@ -475,8 +353,7 @@ class Genotype():
         self.model.addIndividualToGraph(
             reagent_id, reagent_label, reagent_type, description)
 
-        self.graph.addTriple(
-            reagent_id, self.object_properties['targets_instance_of'], gene_id)
+        self.graph.addTriple(reagent_id, self.globaltt['targets_instance_of'], gene_id)
 
         return
 
@@ -511,50 +388,58 @@ class Genotype():
         self.model.addIndividualToGraph(
             targeted_gene_id, targeted_gene_label,
 
-            self.genoparts['reagent_targeted_gene'], description)
+            self.globaltt['reagent_targeted_gene'], description)
 
         if gene_id is not None:
             self.graph.addTriple(
-                targeted_gene_id,
-                self.object_properties['is_targeted_expression_variant_of'],
+                targeted_gene_id, self.globaltt['is_targeted_expression_variant_of'],
                 gene_id)
 
         self.graph.addTriple(
-            targeted_gene_id, self.properties['targeted_by'], reagent_id)
+            targeted_gene_id, self.globaltt['targeted_by'], reagent_id)
 
         return
 
     def addTargetedGeneSubregion(
-            self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
+            self, tgs_id, tgs_label, tgs_type=globaltt['targeted_gene_subregion'],
+            tgs_description=None):
         if tgs_type is None:
-            tgs_type = self.genoparts['targeted_gene_subregion']
+            tgs_type = self.globaltt['targeted_gene_subregion']
 
-        self.model.addIndividualToGraph(
-            tgs_id, tgs_label, tgs_type, tgs_description)
+        self.model.addIndividualToGraph(tgs_id, tgs_label, tgs_type, tgs_description)
 
     def addMemberOfPopulation(self, member_id, population_id):
         self.graph.addTriple(
-            population_id,
-            self.properties['has_member_with_allelotype'],
-            member_id)
+            population_id, self.globaltt['has_member_with_allelotype'], member_id)
         return
 
     def addTargetedGeneComplement(
-            self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
+            self, tgc_id, tgc_label, tgc_type=globaltt['targeted_gene_complement'],
+            tgc_description=None):
         if tgc_type is None:
-            tgc_type = self.genoparts['targeted_gene_complement']
-        self.model.addIndividualToGraph(
-            tgc_id, tgc_label, tgc_type, tgc_description)
+            tgc_type = self.globaltt['targeted_gene_complement']
+        self.model.addIndividualToGraph(tgc_id, tgc_label, tgc_type, tgc_description)
 
         return
 
     def addGenome(self, taxon_id, taxon_label=None):
         if taxon_label is None:
-            taxon_label = taxon_id
-        genome_label = taxon_label+' genome'
+            if taxon_id in self.globaltcid:
+                taxon_label = self.globaltcid[taxon_id]
+            else:
+                logging.warning('Add ' + taxon_id + ' to global translation table')
+                taxon_label = taxon_id
+        elif taxon_id in self.globaltcid and taxon_label != self.globaltcid[taxon_id]:
+            logging.warning(
+                '"' + self.globaltcid[taxon_id] + ' may need updating to ' +
+                taxon_label + ' in global translation table')
+            logging.warning(
+                '"' + taxon_label + '": " ' + self.globaltcid[taxon_id] + '"' +
+                'may need to be added to a local translation table')
+
+        genome_label = taxon_label + ' genome'
         genome_id = self.makeGenomeID(taxon_id)
-        self.model.addClassToGraph(
-            genome_id, genome_label, Feature.types['genome'])
+        self.model.addClassToGraph(genome_id, genome_label, Feature.types['genome'])
 
         return
 
@@ -696,5 +581,5 @@ class Genotype():
         animal_label = ' '.join((genotype_label, taxon_label))
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
         self.graph.addTriple(
-            animal_id, Genotype.object_properties['has_genotype'], genotype_id)
+            animal_id, Genotype.globaltt['has_genotype'], genotype_id)
         return animal_id

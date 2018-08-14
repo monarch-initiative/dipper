@@ -1,5 +1,5 @@
 from dipper.graph.Graph import Graph
-
+from dipper.models.Model import Model
 
 class Family():
     """
@@ -11,15 +11,7 @@ class Family():
     reflect the meaning of the relations it is modeling
     """
 
-    object_properties = {
-        # has member is a mereological relation
-        # between a collection and an item
-        'has_member': 'RO:0002351',
-
-        # is member of is a mereological relation
-        # between a item and a collection
-        'member_of': 'RO:0002350'
-    }
+    globaltt = Model.globaltt
 
     def __init__(self, graph):
         if isinstance(graph, Graph):
@@ -28,11 +20,9 @@ class Family():
             raise ValueError("{} is not a graph".graph)
 
     def addMember(self, group_id, member_id):
-        self.graph.addTriple(
-            group_id, self.object_properties['has_member'], member_id)
+        self.graph.addTriple(group_id, self.globaltt['has member'], member_id)
         return
 
     def addMemberOf(self, member_id, group_id):
-        self.graph.addTriple(
-            member_id, self.object_properties['member_of'], group_id)
+        self.graph.addTriple(member_id, self.globaltt['member of'], group_id)
         return

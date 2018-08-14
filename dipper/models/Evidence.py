@@ -16,42 +16,8 @@ class Evidence:
         each of which may have it's own significance
 
     """
-    evidence_types = {
-        'measurement datum': 'IAO:0000109',
-        'zscore': 'STATO:0000104',
-        'pvalue': 'OBI:0000175',
-        'fold_change': 'STATO:0000169',
-        'assay': 'OBI:0000070',
-        'statistical_hypothesis_test': 'OBI:0000673',
-        'effect_size': 'STATO:0000085',
-        'percent_change': 'STATO:percent_change',
-        'blood test evidence': 'ECO:0001016'
-    }
 
-    data_types = {
-        'proportional_reporting_ratio': 'OAE:0001563',
-        'odds_ratio': 'STATO:0000182',
-        'count': 'SIO:000794',
-    }
-
-    object_properties = {
-        'has_evidence': 'SEPIO:0000006',
-        'has_supporting_evidence': 'SEPIO:0000007',
-        'has_supporting_data': 'SEPIO:0000084',
-        'is_evidence_for': 'SEPIO:0000031',
-        'is_refuting_evidence_for': 'SEPIO:0000033',
-        'is_supporting_evidence_for': 'SEPIO:0000032',
-        'is_evidence_supported_by': 'SEPIO:000010',
-        'is_evidence_with_support_from': 'SEPIO:0000059',
-        'has_significance': 'STATO:has_significance',
-        'has_supporting_reference': 'SEPIO:0000124',
-        'source': 'dc:source'
-    }
-
-    data_property = {
-        'has_value': 'STATO:0000129',
-        'has_measurement': 'IAO:0000004'
-    }
+    globaltt = Model.globaltt
 
     def __init__(self, graph, association):
         if isinstance(graph, Graph):
@@ -72,11 +38,10 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(self.association,
-                             self.object_properties['has_supporting_evidence'],
+                             self.globaltt['has_supporting_evidence'],
                              evidence_line)
         if type is not None:
-            self.model.addIndividualToGraph(evidence_line,
-                                            label, type)
+            self.model.addIndividualToGraph(evidence_line, label, type)
         return
 
     def add_evidence(self, evidence_line, ev_type=None, label=None):
@@ -87,8 +52,9 @@ class Evidence:
         :param evidence_line: curie or iri, evidence line
         :return: None
         """
-        self.graph.addTriple(self.association,
-                             self.object_properties['has_evidence'],
+        self.graph.addTriple(
+            self.association,
+                             self.globaltt['has_evidence'],
                              evidence_line)
         if ev_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, ev_type)
@@ -128,17 +94,16 @@ class Evidence:
         :return: None
         """
         for measurement in measurement_dict:
-            self.graph.addTriple(evidence_line,
-                                 self.object_properties['has_supporting_data'],
-                                 measurement)
+            self.graph.addTriple(
+                evidence_line, self.globaltt['has_supporting_data'],measurement)
 
-            self.graph.addTriple(measurement,
-                                 self.data_property['has_value'],
-                                 measurement_dict[measurement], True)
+            self.graph.addTriple(
+                measurement, self.globaltt['has_value'],  # 'has measurement value' ??
+                measurement_dict[measurement], True)
         return
 
-    def add_supporting_publication(self, evidence_line, publication,
-                                   label=None, pub_type=None):
+    def add_supporting_publication(
+            self, evidence_line, publication, label=None, pub_type=None):
         """
         <evidence> <SEPIO:0000124> <source>
         <source> <rdf:type> <type>
@@ -150,9 +115,7 @@ class Evidence:
         :return:
         """
         self.graph.addTriple(
-            evidence_line,
-            self.object_properties['has_supporting_reference'], publication
-        )
+            evidence_line, self.globaltt['has_supporting_reference'], publication)
         self.model.addIndividualToGraph(publication, label, pub_type)
         return
 
@@ -170,8 +133,6 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line,
-                             self.object_properties['source'],
-                             source)
+        self.graph.addTriple(evidence_line,self.globaltt['source'], source)
         self.model.addIndividualToGraph(source, label, src_type)
         return
