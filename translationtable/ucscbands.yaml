@@ -1,0 +1,33 @@
+---
+"Homo sapians": "9606" 
+"UCSC:hg38": "NCBIGenome:GRCh38"
+"UCSC:hg19": "NCBIGenome:GRCh37"
+"UCSC:hg18": "NCBIGenome:36.1"
+"UCSC:hg17": "NCBIGenome:35"
+"UCSC:hg16": "NCBIGenome:34"
+"UCSC:hg15": "NCBIGenome:33"
+
+"Danio rerio": "7955": 
+"UCSC:danRer10": "NCBIGenome:GRCz10"
+"UCSC:danRer7":	"NCBIGenome:Zv9"
+"UCSC:danRer6": "NCBIGenome:Zv8"
+
+"Mus musculus":  "10090": 
+"UCSC:mm10": "NCBIGenome:GRCm38"
+"UCSC:mm9":	"NCBIGenome:37"
+
+"Gallus gallus":  "9031": 
+"UCSC:galGal4": "NCBIAssembly:317958"
+
+"Bos taurus":  "9913": 
+"UCSC:bosTau7": "NCBIAssembly:GCF_000003205.5"
+
+"Sus scrofa":  "9823": 
+"UCSC:susScr3": "NCBIAssembly:304498"
+
+"Ovis aries":  "9940": 
+"UCSC:oviAri3": "NCBIAssembly:GCF_000298735.1"
+
+"Equus caballus":  "9796":  
+"UCSC:equCab2": "NCBIAssembly:GCF_000002305.2"
+

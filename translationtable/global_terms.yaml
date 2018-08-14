@@ -74,7 +74,7 @@
 "association has predicate": "oban:association_has_predicate"
 "association has subject": "oban:association_has_subject"
 "Similarity score": "SWO:0000425"
-"database_cross_reference": "oboInOwl:hasDbXref"
+"has_dbxref": "oboInOwl:hasDbXref"
 "has_exact_synonym": "oboInOwl:hasExactSynonym"
 "has_related_synonym": "oboInOwl:hasRelatedSynonym"
 "version": "pav:version"
@@ -118,11 +118,7 @@
 "benign_for_condition": "GENO:0000843"
 "likely_benign_for_condition": "GENO:0000844"
 "uncertain significance": "GENO:0000845"
-# punting to RCV on disease for now
-# (would be a little under 10000 terms to map here
-# maybe down to 3500 if clustered)
-# evidence & provenance
-# SEPIO
+
 "clinical testing": "SEPIO:0000067"
 "literature only": "SEPIO:0000080"
 "reference population": "SEPIO:0000102"
@@ -137,17 +133,10 @@
 # this does not seem to be an ontology term. why is it here?
 "has_sex_specificty": ":has_sex_specificity"
 
-# provenance  unused now? (2016 06 03)
-# ENIGMA BRCA1/2 Classification Criteria (2015)	SEPIO:1000001
-# ENIGMA BRCA1/2 Classification Criteria (2015)": "SEPIO:1000001"
-# Counsyl Autosomal Dominant Disease Classification criteria (2015)	SEPIO:1000002
-# Counsyl Autosomal Dominant Disease Classification criteria (2015)": "SEPIO:1000002"
 
-# RCV variant to gene relationship types type
 "has_affected_feature": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
-"is downstream of sequence of": "RO:0002529"
-# asserted but not computed (MB no idea what this means)
+"is downstream of sequence of": "RO:0002529"  
 "in taxon": "RO:0002162"
 "evidence": "ECO:0000000"
 "journal article": "IAO:0000013"
@@ -201,7 +190,6 @@
 "hemizygous": "GENO:0000606"
 "compound heterozygote": "GENO:0000402"
 "simple heterozygous": "GENO:0000458"
-
 "embryonic stem cell line": "ERO:0002002"
 
 # Geno partonomy
@@ -223,7 +211,6 @@
 "transgene": "SO:0000902"  # not really used any more
 "transgenic_insertion": "SO:0001218"
 "pseudogene": "SO:0000336"
-"cytogenetic marker": "SO:0000341"
 "sequence_feature": "SO:0000110"
 "substitution": "SO:1000002"
 "point_mutation": "SO:1000008"
@@ -275,7 +262,6 @@
 "project": "VIVO:Project"
 "study": "OBI:0000471"
 "assertion process": "SEPIO:0000003"
-"xref": "OIO:hasdbxref"
 
 
 # object_properties
@@ -284,6 +270,119 @@
 "has_input": "RO:0002233"
 "asserted_by": "SEPIO:0000130"
 "created_on": "pav:createdOn"
+"has_quality": "RO:0000086"
+"towards": "RO:0002503"
+"has_source": "dc:source"
+"causes_or_contributes": "RO:0003302"
+"association": "oban:association"
+
+"consider": "oboInOwl:consider"
+
+'inchi_key': 'CHEBI:InChIKey',
+'probabalistic_quantifier': 'GENO:0000867'
+
+'position': 'faldo:position'  # Little p for position property, big P for confusion. 
+'Position': 'faldo:Position'  # Big P for Position type. little p for confusion
+        
+'gene product of': 'RO:0002204'
+
+"stop_gained": "SO:0001587"
+"intron_variant": "SO:0001627"
+"3_prime_UTR_variant": "SO:0001624"
+"5_prime_UTR_variant": "SO:0001623"
+"synonymous_variant": "SO:0001819"
+"frameshift_variant": "SO:0001589"
+"intergenic_variant": "SO:0001628"
+"non_coding_transcript_exon_variant": "SO:0001619"
+"splice_acceptor_variant": "SO:0001574"
+"splice_donor_variant": "SO:0001575"
+"downstream_gene_variant": "SO:0001634"
+"upstream_gene_variant": "SO:0001636"
+"coding_sequence_variant": "SO:0001580"
+"non_coding_exon_variant ": "SO:0001792"
+"regulatory_region_variant": "SO:0001566"
+"splice_region_variant": "SO:0001630"
+"stop_lost": "SO:0001578"
+"TF_binding_site_variant": "SO:0001782"
+
+
+"combinatorial evidence used in automatic assertion": "ECO:0000213"
+"Phenotype": "UPHENO:0001001"
+"region": "faldo:Region"
+"FuzzyPosition": "faldo:FuzzyPosition"
+"chromosome": "SO:0000340"
+"chromosome_arm": "SO:0000105"
+"chromosome_band": "SO:0000341"
+"chromosome_part": "SO:0000830"
+"long_chromosome_arm": "GENO:0000629"
+"short_chromosome_arm": "GENO:0000628"
+"chromosome_region": "GENO:0000614"
+"chromosome_subband": "GENO:0000616"
+"centromere": "SO:0000577"
+"plus_strand": "faldo:PlusStrandPosition"
+"minus_strand": "faldo:MinusStrandPosition"
+"both_strand": "faldo:BothStrandPosition"
+"score": "SO:0001685"  # FIXME - score is not a good solution too generic
+"reference_genome": "SO:0001505"
+"genome": "SO:0001026"
+"assembly_component": "SO:0000143"
+"SNP": "SO:0000694"
+"band_intensity":  "GENO:0000618"
+"gneg": "GENO:0000620"
+"gpos": "GENO:0000619"
+"gpos100": "GENO:0000622"
+"gpos75": "GENO:0000623"
+"gpos50": "GENO:0000624"
+"gpos25": "GENO:0000625"
+"gvar": "GENO:0000621"
+"gpos33": "GENO:0000633"
+"gpos66": "GENO:0000632"
+
+
+######################################################
+
+        'is_asserted_in': 'SEPIO:0000015',
+        'output_of': 'RO:0002353',
+        'specified_by': 'SEPIO:0000041',
+        'created_at_location': 'SEPIO:0000019',
+        'created_with_resource': 'SEPIO:0000022',
+        'measures': 'SEPIO:0000114',               # TODO became measures_parameter 
+        'has_supporting_study': 'SEPIO:0000085',
+        'asserted_by': 'SEPIO:0000130',
+    }
+
+ fooevidence_types = {
+        'measurement datum': 'IAO:0000109',
+        'zscore': 'STATO:0000104',
+        'pvalue': 'OBI:0000175',
+        'fold_change': 'STATO:0000169',
+        'effect_size': 'STATO:0000085',
+        'percent_change': 'STATO:percent_change',
+        'blood test evidence': 'ECO:0001016'
+    }
+
+    foodata_types = {
+        'proportional_reporting_ratio': 'OAE:0001563',
+        'odds_ratio': 'STATO:0000182',
+        'count': 'SIO:000794',
+    }
+
+    fooobject_properties = {
+        'has_evidence': 'SEPIO:0000006',
+        'has_supporting_evidence': 'SEPIO:0000007',
+        'has_supporting_data': 'SEPIO:0000084',
+        'is_evidence_for': 'SEPIO:0000031',
+        'is_refuting_evidence_for': 'SEPIO:0000033',
+        'is_supporting_evidence_for': 'SEPIO:0000032',
+        'is_evidence_supported_by': 'SEPIO:000010',
+        'is_evidence_with_support_from': 'SEPIO:0000059',
+        'has_significance': 'STATO:has_significance',
+        'has_supporting_reference': 'SEPIO:0000124',
+        'source': 'dc:source'
+    }
+
+
+
 
 # SEPIO:0000019 found in sepio_developer.owl
 "x-created_at_location": "SEPIO:0000019"
