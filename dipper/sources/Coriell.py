@@ -405,7 +405,7 @@ class Coriell(Source):
                         # gu.addIndividualToGraph(
                         #   g,age_id,age,self.terms['age'])
                         # gu.addTriple(
-                        #   g,age_id,self.properties['has_measurement'],age,
+                        #   g,age_id,self.resolve['has measurement value'],age,
                         #   True)
 
                     # #############    BUILD THE PATIENT    #############

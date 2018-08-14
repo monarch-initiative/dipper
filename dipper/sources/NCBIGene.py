@@ -236,13 +236,11 @@ class NCBIGene(Source):
                 if synonyms.strip() != '-':
                     for s in synonyms.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(),
-                            Assoc.annotation_properties['hasRelatedSynonym'])
+                            gene_id, s.strip(), model.globaltt['has_related_synonym'])
                 if other_designations.strip() != '-':
                     for s in other_designations.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(),
-                            Assoc.annotation_properties['hasRelatedSynonym'])
+                            gene_id, s.strip(), model.globaltt['has_related_synonym'])
                 if xrefs.strip() != '-':
                     self._add_gene_equivalencies(xrefs, gene_id, tax_num)
 

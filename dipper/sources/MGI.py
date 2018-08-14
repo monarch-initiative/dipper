@@ -1221,18 +1221,14 @@ class MGI(PostgreSQLSource):
                     # for annots that we have in our db
                     continue
 
-                evidence_id = self._map_evidence_id(evidence_code)
+                evidence_id = self.resolve(evidence_code)
 
                 reference = Reference(graph, jnumid)
                 reference.addRefToGraph()
 
                 # add the ECO and citation information to the annot
-                model.addTriple(assoc_id,
-                                Assoc.object_properties['has_evidence'],
-                                evidence_id)
-                model.addTriple(assoc_id,
-                                Assoc.object_properties['has_source'],
-                                jnumid)
+                model.addTriple(assoc_id, self.resolve('has evidence'), evidence_id)
+                model.addTriple(assoc_id, self.resolve('has_source'), jnumid)
 
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
@@ -1245,8 +1241,7 @@ class MGI(PostgreSQLSource):
                         sex = self.global_terms['female']
                     model._addSexSpecificity(assoc_id, sex)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1486,15 +1481,13 @@ class MGI(PostgreSQLSource):
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id,
-                            name, Assoc.properties['hasExactSynonym'])
+                            marker_id, name, self.resolve('has_exact_synonym'))
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name,
-                            Assoc.properties['hasExactSynonym'])
+                            marker_id, name, self.resolve('has_exact_synonym'))
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1503,11 +1496,10 @@ class MGI(PostgreSQLSource):
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
-                    if taxon_id == 'NCBITaxon:10090':
+                    if taxon_id == self.resolve('Mus musculus')
                         model.makeLeader(marker_id)
 
-                    if not self.testMode and \
-                            limit is not None and line_counter > limit:
+                    if not self.testMode and limit is not None and line_counter > limit:
                         break
 
         return

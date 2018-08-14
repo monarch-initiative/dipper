@@ -38,11 +38,11 @@ class EOM(PostgreSQLSource):
     tables = [
         'dvp.pr_nlx_157874_1'
     ]
-    GHRAW = 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
+    GHRAW = 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology'
     files = {
         'map': {
             'file': 'hp-to-eom-mapping.tsv',
-            'url': 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/src/mappings/hp-to-eom-mapping.tsv'
+            'url': GHRAW + '/master/src/mappings/hp-to-eom-mapping.tsv'
         }
     }
 
@@ -105,11 +105,10 @@ class EOM(PostgreSQLSource):
 
         logger.info("Parsing files...")
 
-        self._process_nlx_157874_1_view('/'.join((self.rawdir,
-                                                  'dvp.pr_nlx_157874_1')),
-                                        limit)
-        self._map_eom_terms('/'.join((self.rawdir, self.files['map']['file'])),
-                            limit)
+        self._process_nlx_157874_1_view(
+            '/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')), limit)
+        self._map_eom_terms(
+            '/'.join((self.rawdir, self.files['map']['file'])), limit)
 
         logger.info("Finished parsing.")
 
@@ -128,7 +127,7 @@ class EOM(PostgreSQLSource):
         Since it is bad form to have two definitions,
         we concatenate the two into one string.
 
-        Triples:
+        Turtle:
             <eom id> a owl:Class
                 rdf:label Literal(eom label)
                 OIO:hasRelatedSynonym Literal(synonym list)
@@ -210,14 +209,14 @@ class EOM(PostgreSQLSource):
                     for s in synonyms.split(';'):
                         model.addSynonym(
                             morphology_term_id, s.strip(),
-                            model.annotation_properties['hasExactSynonym'])
+                            model.globaltt['has_exact_synonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
                         model.addSynonym(
                             morphology_term_id, s.strip(),
-                            model.annotation_properties['hasRelatedSynonym'])
+                            model.globaltt['has_related_synonym'])
 
                 # morphology_term_id has page morphology_term_url
                 reference = Reference(self.graph)
@@ -243,9 +242,9 @@ class EOM(PostgreSQLSource):
             f1.readline()  # read the header row; skip
             for line in f1:
                 line_counter += 1
-
-                (morphology_term_id, morphology_term_label, hp_id, hp_label,
-                 notes) = line.split('\t')
+                row = line.split('\t')
+                (morphology_term_id, morphology_term_label,
+                    hp_id, hp_label, notes) = row
 
                 # Sub out the underscores for colons.
                 hp_id = re.sub('_', ':', hp_id)
@@ -253,11 +252,9 @@ class EOM(PostgreSQLSource):
                     # add the HP term as a class
                     model.addClassToGraph(hp_id, None)
                     # Add the HP ID as an equivalent class
-                    model.addEquivalentClass(
-                        morphology_term_id, hp_id)
+                    model.addEquivalentClass(morphology_term_id, hp_id)
                 else:
-                    logger.warning('No matching HP term for %s',
-                                   morphology_term_label)
+                    logger.warning('No matching HP term for %s', morphology_term_label)
 
                 if limit is not None and line_counter > limit:
                     break

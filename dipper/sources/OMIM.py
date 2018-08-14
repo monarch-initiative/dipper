@@ -421,14 +421,14 @@ class OMIM(Source):
 
             # add the alternate labels and includes as synonyms
             for l in other_labels:
-                model.addSynonym(omimid, l, 'OIO:hasRelatedSynonym')
+                model.addSynonym(omimid, l, model.globaltt['has_related_synonym'])
 
             # for OMIM, we're adding the description as a definition
             if description is not None:
                 model.addDefinition(omimid, description)
 
             if abbrev is not None:
-                model.addSynonym(omimid, abbrev, 'OIO:hasRelatedSynonym')
+                model.addSynonym(omimid, abbrev,  model.globaltt['has_related_synonym'])
 
             # if this is a genetic locus (but not sequenced)
             #   then add the chrom loc info

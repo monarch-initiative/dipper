@@ -129,20 +129,20 @@ class Monochrom(Source):
     }
 
     region_type_map = {
-        'acen': Feature.types['centromere'],
-        'gvar': Feature.types['chromosome_band'],
-        'stalk': Feature.types['chromosome_band'],
-        'gneg': Feature.types['chromosome_band'],
-        'gpos100': Feature.types['chromosome_band'],
-        'gpos25': Feature.types['chromosome_band'],
-        'gpos33': Feature.types['chromosome_band'],
-        'gpos50': Feature.types['chromosome_band'],
-        'gpos66': Feature.types['chromosome_band'],
-        'gpos75': Feature.types['chromosome_band'],
-        'chromosome': Feature.types['chromosome'],
-        'chromosome_arm': Feature.types['chromosome_arm'],
-        'chromosome_band': Feature.types['chromosome_band'],
-        'chromosome_part': Feature.types['chromosome_part']
+        'acen': self.globaltt['centromere'],
+        'gvar': globaltt['chromosome_band'],
+        'stalk': globaltt['chromosome_band'],
+        'gneg': globaltt['chromosome_band'],
+        'gpos100': globaltt['chromosome_band'],
+        'gpos25': globaltt['chromosome_band'],
+        'gpos33': globaltt['chromosome_band'],
+        'gpos50': globaltt['chromosome_band'],
+        'gpos66': globaltt['chromosome_band'],
+        'gpos75': globaltt['chromosome_band'],
+        'chromosome': globaltt['chromosome'],
+        'chromosome_arm': globaltt['chromosome_arm'],
+        'chromosome_band': globaltt['chromosome_band'],
+        'chromosome_part': globaltt['chromosome_part']
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
@@ -279,17 +279,17 @@ class Monochrom(Source):
                         maplocclass_id, maplocclass_label,
                         region_type_id)
                 else:
-                    region_type_id = Feature.types['chromosome']
+                    region_type_id = globaltt['chromosome']
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
                     if region_type_id in [
-                            Feature.types['chromosome_band'],
-                            Feature.types['chromosome_subband']]:
+                            globaltt['chromosome_band'],
+                            globaltt['chromosome_subband']]:
                         stain_type = Feature.types.get(rtype)
                         if stain_type is not None:
                             model.addOWLPropertyClassRestriction(
                                 maplocclass_id,
-                                Feature.properties['has_staining_intensity'],
+                                model.globaltt['has_sequence_attribute'],
                                 Feature.types.get(rtype))
                     else:
                         # usually happens if it's a chromosome because
@@ -393,14 +393,13 @@ class Monochrom(Source):
         :return:
 
         """
-        so_id = Feature.types['chromosome_part']
 
         if regiontype in self.region_type_map.keys():
-            so_id = self.region_type_map.get(regiontype)
+            so_id = self.resolve(regiontype)
         else:
+            so_id = self.resolve('chromosome_part')
             logger.warning(
-                "Unmapped code %s. Defaulting to chr_part 'SO:0000830'.",
-                regiontype)
+                "Unmapped code %s. Defaulting to chr_part 'SO:0000830'.", regiontype)
 
         return so_id
 
@@ -437,16 +436,16 @@ def getChrPartTypeByNotation(notation):
     # though UCSC does. We may need to adjust for that here
 
     if re.match(r'p$', notation):
-        rti = Feature.types['short_chromosome_arm']
+        rti = self.resolve('short_chromosome_arm')
     elif re.match(r'q$', notation):
-        rti = Feature.types['long_chromosome_arm']
+        rti = self.resolve('long_chromosome_arm')
     elif re.match(r'[pq][A-H\d]$', notation):
-        rti = Feature.types['chromosome_region']
+        rti = self.resolve('chromosome_region')
     elif re.match(r'[pq][A-H\d]\d', notation):
-        rti = Feature.types['chromosome_band']
+        rti = self.resolve('chromosome_band')
     elif re.match(r'[pq][A-H\d]\d\.\d+', notation):
-        rti = Feature.types['chromosome_subband']
+        rti = self.resolve('chromosome_subband')
     else:
-        rti = Feature.types['chromosome_part']
+        rti = self.resolve('chromosome_part')
 
     return rti

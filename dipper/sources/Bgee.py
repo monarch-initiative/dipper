@@ -1,16 +1,16 @@
 import logging
 import os
-from stat import ST_SIZE
 import re
+import time
+import ftplib
+import pandas as pd
+from stat import ST_SIZE
 from zipfile import ZipFile
 from datetime import datetime
-import time
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.Association import Assoc
-from dipper.models.Genotype import Genotype
-import ftplib
-import pandas as pd
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,11 @@ class Bgee(Source):
     """
 
     BGEE_FTP = 'ftp.bgee.org'
-    DEFAULT_TAXA = [10090, 10116, 13616, 28377, 6239,
-                    7227, 7955, 8364, 9031, 9258,
-                    9544, 9593, 9597, 9598, 9606,
-                    9823, 9913]
+    # would like to see these as names
+    DEFAULT_TAXA = [
+        10090, 10116, 13616, 28377, 6239, 7227, 7955, 8364, 9031, 9258, 9544, 9593,
+        9597, 9598, 9606, 9823, 9913
+    ]
     files = {
         'anat_entity': {
             'path': '/download/ranks/anat_entity/',
@@ -74,21 +75,20 @@ class Bgee(Source):
         :return:
         """
         for group in self.files:
-            files_to_download, ftp = \
-                self._get_file_list(self.files[group]['path'],
-                                    self.files[group]['pattern'])
+            files_to_download, ftp = self._get_file_list(
+                self.files[group]['path'], self.files[group]['pattern'])
             for name, info in files_to_download:
                 localfile = '/'.join((self.rawdir, name))
                 if not os.path.exists(localfile)\
-                        or is_dl_forced\
-                        or self.checkIfRemoteIsNewer(localfile, info['size'],
-                                                     info['modify']):
+                        or is_dl_forced or self.checkIfRemoteIsNewer(
+                            localfile, info['size'], info['modify']):
                     logger.info("Fetching {}".format(name))
                     logger.info("Writing to {}".format(localfile))
                     ftp.retrbinary('RETR {}'.format(name), open(localfile, 'wb').write)
                     remote_dt = Bgee._convert_ftp_time_to_iso(info['modify'])
-                    os.utime(localfile, (time.mktime(remote_dt.timetuple()),
-                                         time.mktime(remote_dt.timetuple())))
+                    os.utime(localfile, (
+                        time.mktime(remote_dt.timetuple()),
+                        time.mktime(remote_dt.timetuple())))
 
         ftp.quit()
 
@@ -102,9 +102,9 @@ class Bgee(Source):
         :param limit: int Limit to top ranked anatomy associations per group
         :return: None
         """
-        files_to_download, ftp = \
-            self._get_file_list(self.files['anat_entity']['path'],
-                                self.files['anat_entity']['pattern'])
+        files_to_download, ftp = self._get_file_list(
+            self.files['anat_entity']['path'],
+            self.files['anat_entity']['pattern'])
         for name, info in files_to_download:
             localfile = '/'.join((self.rawdir, name))
             with ZipFile(localfile, 'r') as zip_file:
@@ -125,8 +125,8 @@ class Bgee(Source):
         :return: None
         """
         dataframe = pd.read_csv(fh, sep='\t')
-        gene_groups = dataframe.sort_values('rank score', ascending=False)\
-                               .groupby('Ensembl gene ID')
+        gene_groups = dataframe.sort_values(
+            'rank score', ascending=False).groupby('Ensembl gene ID')
 
         if limit is not None:
             gene_groups = gene_groups.head(limit).groupby('Ensembl gene ID')
@@ -148,19 +148,17 @@ class Bgee(Source):
         :return: None
         """
         g2a_association = Assoc(self.graph, self.name)
-        genotype = Genotype(self.graph)
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
         rank = re.sub(r',', '', rank)
-        model.addIndividualToGraph(ind_id=gene_curie, label=None,
-                                   ind_type=genotype.genoparts['gene'])
+        model.addIndividualToGraph(
+            ind_id=gene_curie, label=None, ind_type=self.resolve('gene'))
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
-        g2a_association.rel = Assoc.object_properties['expressed_in']
+        g2a_association.rel = self.resolve('expressed in')
         g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
-            Assoc.datatype_properties['has_quantifier'],
-            float(rank), 'Literal', 'xsd:float')
+            self.resolve('has_quantifier'), float(rank), 'Literal', 'xsd:float')
         return
 
     # Override
