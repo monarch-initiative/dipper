@@ -24,6 +24,7 @@ class Assoc:
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
+        self.globaltt = self.model.globaltt
 
         # core parts of the association
         self.definedby = definedby
@@ -71,7 +72,7 @@ class Assoc:
         if self.assoc_id is None:
             self.set_association_id()
 
-        self.model.addType(self.assoc_id, self.globaltt['association'])
+        self.model.addType(self.assoc_id, self.model.globaltt['association'])
 
         self.graph.addTriple(
             self.assoc_id, self.globaltt['association has subject'], self.sub)
@@ -86,7 +87,7 @@ class Assoc:
         if self.evidence is not None and len(self.evidence) > 0:
             for e in self.evidence:
                 self.graph.addTriple(
-                    self.assoc_id, self.globaltt['has_evidence'], e)
+                    self.assoc_id, self.globaltt['has evidence'], e)
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
@@ -94,10 +95,10 @@ class Assoc:
                     # TODO assume that the source is a publication?
                     # use Reference class here
                     self.graph.addTriple(
-                        self.assoc_id, self.globaltt['has_source'], src, True)
+                        self.assoc_id, self.globaltt['source'], src, True)
                 else:
                     self.graph.addTriple(
-                        self.assoc_id, self.globaltt['has_source'], src)
+                        self.assoc_id, self.globaltt['source'], src)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:
@@ -267,6 +268,6 @@ class Assoc:
             if val is None:
                 items_to_hash[key] = ''
 
-        byte_string = '+'.join(items_to_hash).encode("utf-8")
+        byte_string = '+'.join(items_to_hash)
 
-        return ':'.join('MONARCH', GraphUtils.digest_id(byte_string))
+        return ':'.join(('MONARCH', GraphUtils.digest_id(byte_string)))

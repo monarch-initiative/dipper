@@ -46,8 +46,9 @@ class StringTestFakeData(unittest.TestCase):
         for key in prot_map.keys():
             prot_map[key] = "ENSEMBL:{}".format(prot_map[key])
 
-        print("Finished fetching ENSP IDs, "
-              "fetched {} proteins".format(len(prot_map.keys())))
+        print(
+            "Finished fetching ENSP IDs, fetched {} proteins"
+            .format(len(prot_map.keys())))
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
         string_db._process_protein_links(dataframe, prot_map, 9606)
@@ -55,8 +56,7 @@ class StringTestFakeData(unittest.TestCase):
         triples = """
             ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
         """
-        # self.assertTrue(
-        #    self.test_util.test_graph_equality(triples, string_db.graph))
+        # self.assertTrue( self.test_util.test_graph_equality(triples, string_db.graph))
 
     def testFakeDataSet2(self):
         """

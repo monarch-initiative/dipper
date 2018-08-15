@@ -48,7 +48,7 @@ class Provenance:
 
     def add_study_measure(self, study, measure):
         self.graph.addTriple(
-            study, self.globaltt['measures'], measure)
+            study, self.globaltt['measures_parameter'], measure)
         return
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
@@ -74,8 +74,7 @@ class Provenance:
         return
 
     def add_agent_to_graph(
-            self, agent_id, agent_label, agent_type=globaltt['organization'],
-            agent_description=None):
+            self, agent_id, agent_label, agent_type=None, agent_description=None):
 
         if agent_type is None:
             agent_type = self.globaltt['organization']
@@ -85,8 +84,7 @@ class Provenance:
         return
 
     def add_assay_to_graph(
-            self, assay_id, assay_label, assay_type=globaltt['assay'],
-            assay_description=None):
+            self, assay_id, assay_label, assay_type=None, assay_description=None):
         if assay_type is None:
             assay_type = self.globaltt['assay']
         self.model.addIndividualToGraph(

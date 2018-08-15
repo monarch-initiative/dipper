@@ -73,8 +73,6 @@ class Ensembl(Source):
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
-        self.properties = Feature.properties
-
         logger.setLevel(logging.INFO)
 
         return

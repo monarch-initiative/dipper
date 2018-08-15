@@ -741,7 +741,7 @@ class FlyBase(PostgreSQLSource):
                         model.addClassToGraph(
                             feature_id, name, type_id)
                         g.addTriple(
-                            feature_id, model.object_properties['in_taxon'],
+                            feature_id, self.globaltt['in_taxon'],
                             tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
@@ -811,13 +811,11 @@ class FlyBase(PostgreSQLSource):
                 # not sure if this is a mistake, or zygosity, or?
                 if feature_id is not None and genotype_id is not None:
                     geno.addParts(
-                        feature_id, genotype_id,
-                        geno.object_properties['has_alternate_part'])
+                        feature_id, genotype_id, self.globaltt['has_alternate_part'])
 
                 # TODO we will build up the genotypes here... lots to do
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -923,7 +921,7 @@ class FlyBase(PostgreSQLSource):
                 pub_id = self.idhash['publication'][pub_key]
 
                 g.addTriple(
-                    pub_id, model.object_properties['mentions'], feature_id)
+                    pub_id, self.globaltt['mentions'], feature_id)
 
                 line_counter += 1
 
@@ -962,13 +960,10 @@ class FlyBase(PostgreSQLSource):
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode and int(genotype_key) not in \
-                        self.test_keys['genotype']:
+                if self.testMode and int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
-                g.addTriple(
-                    stock_id, geno.object_properties['has_genotype'],
-                    genotype_id)
+                g.addTriple(stock_id, self.globaltt['has_genotype'], genotype_id)
 
                 line_counter += 1
 
@@ -1717,14 +1712,13 @@ class FlyBase(PostgreSQLSource):
                     line_counter += 1
                     if allele_id is not None and gene_id is not None:
                         if self.feature_types[subject_id] == \
-                                Genotype.genoparts['reagent_targeted_gene']:
+                                self.globaltt['reagent_targeted_gene']:
                             g.addTriple(
                                 allele_id,
-                                Genotype.object_properties[
-                                    'is_targeted_expression_variant_of'],
+                                self.globaltt['is_targeted_expression_variant_of'],
                                 gene_id)
-                        elif self.feature_types[subject_id] == \
-                                Genotype.genoparts['transgenic_insertion']:
+                        elif self.feature_types[subject_id] \
+                                == self.globaltt['transgenic_insertion']:
                             geno.addSequenceDerivesFrom(allele_id, gene_id)
                         elif re.match(r'\w+\\', gene_label):
                             # the thing that this is the allele of,
@@ -1787,11 +1781,9 @@ class FlyBase(PostgreSQLSource):
                     #     which is basically the sequence alteration
                     #     geno.addParts(
                     #       ti_id, allele_id,
-                    #       geno.object_properties['has_alternate_part'])
+                    #       self.globaltt['has_alternate_part'])
                     elif reagent_id is not None and ti_id is not None:
-                        g.addTriple(
-                            ti_id, geno.object_properties['targeted_by'],
-                            reagent_id)
+                        g.addTriple(ti_id, self.globaltt['targeted_by'], reagent_id)
 
                 # derived_tp_assoc_alleles
                 elif name == 'derived_tp_assoc_alleles':
@@ -1811,7 +1803,7 @@ class FlyBase(PostgreSQLSource):
                     # if allele_id is not None and tp_id is not None:
                     #     geno.addParts(
                     #       tp_id, allele_id,
-                    #       geno.object_properties['has_alternate_part'])
+                    #       self.globaltt['has_alternate_part'])
                     model.addComment(allele_id, tp_id)
 
                 # derived_sf_assoc_alleles
@@ -1834,9 +1826,7 @@ class FlyBase(PostgreSQLSource):
                         reagent_id = self.idhash['reagent'][object_id]
 
                     if allele_id is not None and reagent_id is not None:
-                        g.addTriple(
-                            allele_id,
-                            geno.object_properties['targeted_by'], reagent_id)
+                        g.addTriple(allele_id, self.globaltt['targeted_by'], reagent_id)
 
                 # produced by
                 elif name == 'producedby':
@@ -1871,8 +1861,7 @@ class FlyBase(PostgreSQLSource):
                     if tp_id is not None and allele_id is not None:
                         geno.addSequenceDerivesFrom(allele_id, tp_id)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
         return
 
@@ -1906,8 +1895,7 @@ class FlyBase(PostgreSQLSource):
 
                 line_counter += 1
 
-                tax_internal_id = self._makeInternalIdentifier(
-                    'organism', organism_id)
+                tax_internal_id = self._makeInternalIdentifier('organism', organism_id)
                 tax_label = ' '.join((genus, species))
                 tax_id = tax_internal_id
 
@@ -1918,8 +1906,7 @@ class FlyBase(PostgreSQLSource):
                 # unless we actually use it therefore it is added outside of
                 # this function
 
-                if self.testMode and\
-                        int(organism_id) not in self.test_keys['organism']:
+                if self.testMode and int(organism_id) not in self.test_keys['organism']:
                     continue
 
                 if not self.testMode and\
@@ -1967,10 +1954,10 @@ class FlyBase(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'organism_dbxref'))
         logger.info("processing organsim dbxref mappings")
@@ -1981,8 +1968,7 @@ class FlyBase(PostgreSQLSource):
 
                 (organism_dbxref_id, organism_id, dbxref_id, is_current) = line
 
-                if self.testMode and\
-                        int(organism_id) not in self.test_keys['organism']:
+                if self.testMode and int(organism_id) not in self.test_keys['organism']:
                     continue
 
                 organism_key = organism_id
@@ -2006,8 +1992,7 @@ class FlyBase(PostgreSQLSource):
                             model.addIndividualToGraph(did, dlabel)
                         line_counter += 1
 
-                if not self.testMode and\
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2033,7 +2018,7 @@ class FlyBase(PostgreSQLSource):
 
         line_counter = 0
         geno = Genotype(g)
-        fly_taxon = 'NCBITaxon:7227'
+        fly_taxon = self.globaltt["Drosophila melanogaster"]  # 'NCBITaxon:7227'
 
         with gzip.open(raw, 'rb') as f:
             filereader = csv.reader(
@@ -2047,15 +2032,14 @@ class FlyBase(PostgreSQLSource):
                  evidence_or_interacting_allele, pub_id) = line
                 line_counter += 1
 
-                if self.testMode and\
-                        self.test_ids['disease'] is not None and\
-                        doid_id not in self.test_ids['disease']:
+                if self.testMode and self.test_ids['disease'] is not None \
+                        and doid_id not in self.test_ids['disease']:
                     continue
 
                 rel = None
                 allele_id = 'FlyBase:'+allele_id
                 if qualifier == 'model of':
-                    rel = model.object_properties['model_of']
+                    rel = self.globaltt['model_of']
                 else:
                     # TODO amelorates, exacerbates, and DOES NOT *
                     continue
@@ -2067,17 +2051,15 @@ class FlyBase(PostgreSQLSource):
                 if pub_id != '':
                     pub_id = 'FlyBase:'+pub_id
                     assoc.add_source(pub_id)
-                if evidence_or_interacting_allele == \
-                        'inferred from mutant phenotype':
-                    evidence_id = 'ECO:0000015'
+                if evidence_or_interacting_allele == 'inferred from mutant phenotype':
+                    evidence_id = self.globaltt['"mutant phenotype evidence"']
                     assoc.add_evidence(evidence_id)
                 else:
                     assoc.set_description(evidence_or_interacting_allele)
 
                 assoc.add_association_to_graph()
 
-                if not self.testMode and\
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2092,10 +2074,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'stockprop'))
         logger.info("processing stock-image depictions")
 
@@ -2112,8 +2094,7 @@ class FlyBase(PostgreSQLSource):
 
                 line_counter += 1
 
-                if self.testMode \
-                        and self.test_keys['strain'] is not None \
+                if self.testMode and self.test_keys['strain'] is not None \
                         and int(stock_id) not in self.test_keys['strain']:
                     continue
 
@@ -2121,16 +2102,14 @@ class FlyBase(PostgreSQLSource):
                 # linked_image
                 if cvterm == "linked_image" and re.match(r'FBim', value):
                     # FIXME make sure this image url is perm
-                    image_url = \
-                        'http://flybase.org/tmp-shared/reports/'+value+'.png'
+                    image_url = 'http://flybase.org/tmp-shared/reports/'+value+'.png'
                     if sid is not None:
                         model.addDepiction(sid, image_url)
                     # TODO should this be a Reference object?
 
                 # TODO add the stockprop_pub table when there is data to pull
 
-                if not self.testMode and\
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2200,14 +2179,13 @@ class FlyBase(PostgreSQLSource):
 
         """
 
-        return '_:' + hashlib.sha1(
+        return '_:b' + hashlib.sha1(
             ('fb'+prefix+'key'+key).encode('utf-8')).hexdigest()[1:20]
 
     def getTestSuite(self):
         import unittest
         from tests.test_flybase import FlyBaseTestCase
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(FlyBaseTestCase)
 
         return test_suite

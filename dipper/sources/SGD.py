@@ -131,7 +131,7 @@ class SGD(Source):
 
         # define the triple
         gene = 'SGD:{}'.format(record['SGDID'])
-        relation = Model.object_properties['has_phenotype']  # has phenotype
+        relation = self.globaltt['has phenotype']
 
         if record['pheno_obj']['has_quality']:
             pheno_label = '{0}:{1}'.format(
@@ -163,7 +163,7 @@ class SGD(Source):
 
         # make pheno subclass of UPHENO:0001001
         model.addTriple(
-            subject_id=pheno_id, predicate_id=Model.object_properties['subclass_of'],
+            subject_id=pheno_id, predicate_id=self.goblaltt['subclass_of'],
             obj='UPHENO:0001001')
 
         # label nodes

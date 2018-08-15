@@ -34,7 +34,7 @@ class Genotype():
 
     def addGenotype(
             self, genotype_id, genotype_label,
-            genotype_type=globaltt['intrinsic_genotype'],
+            genotype_type=None,
             genotype_description=None
     ):
         """
@@ -47,6 +47,8 @@ class Genotype():
         :return:
 
         """
+        if genotype_type is None:
+            genotype_type = self.globaltt['intrinsic_genotype']
 
         self.model.addIndividualToGraph(
             genotype_id, genotype_label, genotype_type, genotype_description)
@@ -76,9 +78,11 @@ class Genotype():
         return
 
     def addGene(
-            self, gene_id, gene_label, gene_type=None, gene_description=globaltt['gene']
+            self, gene_id, gene_label, gene_type=None, gene_description=None
     ):
         ''' genes are classes '''
+        if gene_type is None:
+            gene_type = self.globaltt['gene']
         self.model.addClassToGraph(gene_id, gene_label, gene_type, gene_description)
 
         return
@@ -133,12 +137,12 @@ class Genotype():
 
         """
         if rel_id is None:
-            rel_id = self.globaltt['is_sequence_variant_instance_of']
+            rel_id = self.globaltt["is_allele_of"]
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
     def addAffectedLocus(
-            self, allele_id, gene_id, rel_id=globaltt['has_affected_locus']):
+            self, allele_id, gene_id, rel_id=None):
         """
         We make the assumption here that if the relationship is not provided,
         it is a
@@ -151,6 +155,8 @@ class Genotype():
         :return:
 
         """
+        if rel_id is None:
+            rel_id = self.globaltt['has_affected_feature']
         self.graph.addTriple(allele_id, rel_id, gene_id)
         return
 
@@ -177,7 +183,7 @@ class Genotype():
 
     def addPolypeptide(
             self, polypeptide_id, polypeptide_label=None,
-            transcript_id=None, polypeptide_type=globaltt['polypeptide']):
+            transcript_id=None, polypeptide_type=None):
         """
         :param polypeptide_id:
         :param polypeptide_label:
@@ -186,7 +192,8 @@ class Genotype():
         :return:
 
         """
-
+        if polypeptide_type is None:
+            polypeptide_type = self.globaltt['polypeptide']
         self.model.addIndividualToGraph(
             polypeptide_id, polypeptide_label, polypeptide_type)
         if transcript_id is not None:
@@ -247,7 +254,7 @@ class Genotype():
 
         return
 
-    def addParts(self, part_id, parent_id, part_relationship=globaltt['has_part']):
+    def addParts(self, part_id, parent_id, part_relationship=None):
         """
         This will add a has_part (or subproperty) relationship between
         a parent_id and the supplied part.
@@ -259,7 +266,8 @@ class Genotype():
         :return:
 
         """
-
+        if part_relationship is None:
+            part_relationship = self.globaltt['has_part']
         # Fail loudly if parent or child identifiers are None
         if parent_id is None:
             raise TypeError('Attempt to pass None as parent')
@@ -272,13 +280,12 @@ class Genotype():
 
         return
 
-    def addSequenceAlteration(
-            self, sa_id, sa_label, sa_type=globaltt['sequence_alteration'],
-            sa_description=None):
+    def addSequenceAlteration(self, sa_id, sa_label, sa_type=None, sa_description=None):
+
         if sa_type is None:
             sa_type = self.globaltt['sequence_alteration']
-        self.model.addIndividualToGraph(
-            sa_id, sa_label, sa_type, sa_description)
+
+        self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description)
 
         return
 
@@ -287,8 +294,7 @@ class Genotype():
         return
 
     def addGenomicBackground(
-            self, background_id, background_label,
-            background_type=globaltt['genomic_background'],
+            self, background_id, background_label, background_type=None,
             background_description=None):
         if background_type is None:
             background_type = self.globaltt['genomic_background']
@@ -299,8 +305,7 @@ class Genotype():
         return
 
     def addGenomicBackgroundToGenotype(
-            self, background_id, genotype_id,
-            background_type=globaltt['genomic_background']):
+            self, background_id, genotype_id, background_type=None):
         if background_type is None:
             background_type = self.globaltt['genomic_background']
         self.model.addType(background_id, background_type)
@@ -401,8 +406,7 @@ class Genotype():
         return
 
     def addTargetedGeneSubregion(
-            self, tgs_id, tgs_label, tgs_type=globaltt['targeted_gene_subregion'],
-            tgs_description=None):
+            self, tgs_id, tgs_label, tgs_type=None, tgs_description=None):
         if tgs_type is None:
             tgs_type = self.globaltt['targeted_gene_subregion']
 
@@ -414,8 +418,7 @@ class Genotype():
         return
 
     def addTargetedGeneComplement(
-            self, tgc_id, tgc_label, tgc_type=globaltt['targeted_gene_complement'],
-            tgc_description=None):
+            self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
         if tgc_type is None:
             tgc_type = self.globaltt['targeted_gene_complement']
         self.model.addIndividualToGraph(tgc_id, tgc_label, tgc_type, tgc_description)

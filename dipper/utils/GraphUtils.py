@@ -132,7 +132,7 @@ class GraphUtils:
                 graph.add((row, RDF['type'], property_type))
         return graph
 
-    @static
+    @staticmethod
     def digest_id(wordage):
         '''
         Form a deterministic digest of input

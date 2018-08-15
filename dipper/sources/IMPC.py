@@ -691,7 +691,7 @@ class IMPC(Source):
         if p_value is not None or p_value != "":
             p_value_bnode = self.make_id(
                 "{0}{1}{2}".format(evidence_line_bnode, 'p_value', p_value), '_')
-            model.addIndividualToGraph(p_value_bnode, None, self.resolve('p_value'))
+            model.addIndividualToGraph(p_value_bnode, None, self.globaltt['p-value'])
             try:
                 measurements[p_value_bnode] = float(p_value)
             except ValueError:
@@ -709,17 +709,15 @@ class IMPC(Source):
                 "{0}{1}{2}".format(
                     evidence_line_bnode, 'effect_size', effect_size), '_')
             model.addIndividualToGraph(
-                fold_change_bnode, None, self.resolve('effect_size'))
+                fold_change_bnode, None, self.globaltt['effect size estimate'])
             measurements[fold_change_bnode] = effect_size
 
         evidence_model.add_supporting_data(evidence_line_bnode, measurements)
 
         # Link evidence to provenance by connecting to study node
-        provenance_model.add_study_to_measurements(
-            study_bnode, measurements.keys())
+        provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         self.graph.addTriple(
-            evidence_line_bnode, self.resolve('has_evidence_item_output_from'),
-            study_bnode)
+            evidence_line_bnode, self.globaltt('has_supporting_activity'), study_bnode)
 
         return evidence_line_bnode
 

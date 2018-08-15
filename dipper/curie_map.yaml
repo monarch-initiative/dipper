@@ -60,10 +60,10 @@
 'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'                    # Mammalian Pathology Ontology
 'NBO': 'http://purl.obolibrary.org/obo/NBO_'                        # NeuroBehavior Ontology
 'OBA': 'http://purl.obolibrary.org/obo/OBA_'                        # Ontology of Biological Attributes (traits)
-'OBAN': 'http://purl.org/oban/'                                     # OBAN: Open Biomedical Annotation Model
-'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # OBI: Ontology of Biomedical Investigations
+'OBAN': 'http://purl.org/oban/'                                     # Open Biomedical Annotation Model
+'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # Ontology of Biomedical Investigations
 'OBO': 'http://purl.obolibrary.org/obo/'                            # Biological Ontology namespace (this is not itself an ontology)
-'OIO': 'http://www.geneontology.org/formats/oboInOwl#'              # obo-specific annotation properties, like synonym types
+'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
 'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'                      # Online Mendelian Inheritance in Man (human disease and variants)
 'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_'                   # Rare diseases and Orphan drugs
@@ -147,7 +147,7 @@
 'PANTHER': 'http://www.pantherdb.org/panther/family.do?clsAccession='   # Protein ANalysis THrough Evolutionary Relationships
 
 # variants / traits
-# 'AQTL': 'http://identifiers.org/animalqtl/'  # does not exist   		#
+
 # 'AQTL-BT': https://www.animalgenome.org/cgi-bin/QTLdb/BT/search       # maybe?
 'horseQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
 'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_D='

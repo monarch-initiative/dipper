@@ -18,7 +18,7 @@ for source in ../dipper/sources/[^_]*.py; do
     src=${name,,}
     # don't want the resident super classes: Sources & PostgresqlSource
     if ! [[ ${src} =~ ".*sources*$" ]]; then
-        # echo "../dipper.py --sources ${src}";  # --no_verify
-        ../dipper-etl.py --sources "${src}"
+        echo "../dipper.py --sources" ${src};  # --no_verify
+        # ../dipper-etl.py --sources "${src}"
     fi
 done

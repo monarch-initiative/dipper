@@ -12,6 +12,26 @@
 
 # Read: http://precedings.nature.com/documents/3576/version/1/files/npre20093576-1.pdf
 
+"type": "rdf:type"
+"ontology": "owl:Ontology"
+"class": "owl:Class"
+"same_as": "owl:sameAs"
+"named_individual": "owl:NamedIndividual"
+"object_property": "owl:ObjectProperty"
+"annotation_property": "owl:AnnotationProperty"
+"datatype_property": "owl:DatatypeProperty"
+"restriction": "owl:Restriction"
+"deprecated": "owl:deprecated"
+"subclass_of": "rdfs:subClassOf"
+"version_info": "owl:versionInfo"
+"version_iri": "owl:versionIRI"
+"label": "rdfs:label"
+"depiction": "foaf:depiction"
+"comment": "dc:comment"
+"hasExactSynonym": "oboInOwl:hasExactSynonym"
+"hasRelatedSynonym": "oboInOwl:hasRelatedSynonym"
+"clique_leader": "MONARCH:cliqueLeader"
+"is_anonymous": "MONARCH:anonymous"
 "part_of": "BFO:0000050"
 "has_part": "BFO:0000051"
 "has_sequence_attribute": "GENO:0000207"
@@ -37,7 +57,6 @@
 "derives_from": "RO:0001000"
 "starts during": "RO:0002091"
 "ends during": "RO:0002093"
-
 "has phenotype": "RO:0002200"
 "has gene product": "RO:0002205"
 "expressed in": "RO:0002206"
@@ -70,13 +89,12 @@
 "contradicts": "SEPIO:0000101"
 "measures_parameter": "SEPIO:0000114"
 "has_value": "STATO:0000129"
-"association has object": "oban:association_has_object"
-"association has predicate": "oban:association_has_predicate"
-"association has subject": "oban:association_has_subject"
+"association": "OBAN:association"
+"association has object": "OBAN:association_has_object"
+"association has predicate": "OBAN:association_has_predicate"
+"association has subject": "OBAN:association_has_subject"
 "Similarity score": "SWO:0000425"
 "has_dbxref": "oboInOwl:hasDbXref"
-"has_exact_synonym": "oboInOwl:hasExactSynonym"
-"has_related_synonym": "oboInOwl:hasRelatedSynonym"
 "version": "pav:version"
 "description": "dc:description"
 "title (dce)": "dc:title"
@@ -85,10 +103,7 @@
 "begin": "faldo:begin"
 "end": "faldo:end"
 "location": "faldo:location"
-"position": "faldo:position"
 "reference": "faldo:reference"
-
-# Variant (Subject) Sequence Types
 "SNV": "SO:0001483"
 "deletion": "SO:0000159"
 "copy_number_gain": "SO:0001742"
@@ -107,18 +122,15 @@
 # "microsatellite": "SO:0000289"
 "microsatellite": "GENO:0000847"
 "short repeat": "GENO:0000846"
-
 "variant single locus complement": "GENO:0000030"
 "has_zygosity": "GENO:0000608"
 "haplotype": "GENO:0000871"
 "coding sequence alteration": "GENO:0000848"
-# Association types
 "pathogenic_for_condition": "GENO:0000840"
 "likely_pathogenic_for_condition": "GENO:0000841"
 "benign_for_condition": "GENO:0000843"
 "likely_benign_for_condition": "GENO:0000844"
 "uncertain significance": "GENO:0000845"
-
 "clinical testing": "SEPIO:0000067"
 "literature only": "SEPIO:0000080"
 "reference population": "SEPIO:0000102"
@@ -127,48 +139,39 @@
 "in vitro": "SEPIO:0000073"
 "in vivo": "SEPIO:0000074"
 "case-control": "SEPIO:0000071"
-
 "phenotyping only": "SEPIO:0000186"
 
 # this does not seem to be an ontology term. why is it here?
 "has_sex_specificty": ":has_sex_specificity"
 
-
 "has_affected_feature": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
-"is downstream of sequence of": "RO:0002529"  
+"is downstream of sequence of": "RO:0002529"
 "in taxon": "RO:0002162"
 "evidence": "ECO:0000000"
 "journal article": "IAO:0000013"
 "has_url": "ERO:0000480"
 "is_asserted_in": "SEPIO:0000015"
 "assertion": "SEPIO:0000001"
-
 "created_by": "SEPIO:0000018"
 "is_specified_by": "SEPIO:0000041"
 "assertion method": "SEPIO:0000037"
 "has_supporting_reference": "SEPIO:0000124"
-"has_evidence_item_output_from": "SEPIO:0000085"
-
+"has_supporting_activity": "SEPIO:0000085"
 "evidence used in automatic assertion": "ECO:0000501"
 "inference by association of genotype from phenotype": "ECO:0005613"
 "direct assay evidence used in manual assertion": "ECO:0000314"
 "mutant phenotype evidence used in manual assertion": "ECO:0000315"
-"inference from experimental data evidence":  "ECO:0005611"
+"inference from experimental data evidence": "ECO:0005611"
 "author statement supported by traceable reference used in manual assertion": "ECO:0000304"
-"quantitative trait analysis evidence":  "ECO:0000061"
-"sequence similarity evidence used in manual assertion":  "ECO:0000250"
-"author statement without traceable support used in manual assertion":  "ECO:0000303"
-"inference from phenotype manipulation evidence":  "ECO:0005612"
-"expression evidence used in manual assertion":  "ECO:0000270"
+"quantitative trait analysis evidence": "ECO:0000061"
+"sequence similarity evidence used in manual assertion": "ECO:0000250"
+"author statement without traceable support used in manual assertion": "ECO:0000303"
+"inference from phenotype manipulation evidence": "ECO:0005612"
+"expression evidence used in manual assertion": "ECO:0000270"
 "mutant phenotype evidence": "ECO:0000015"
-
-
-# PATO
 "male": "PATO:0000384"
 "female": "PATO:0000383"
-
-# species
 "Homo sapiens": "NCBITaxon:9606"
 "Gallus gallus": "NCBITaxon:9031"
 "Sus scrofa": "NCBITaxon:9823"
@@ -178,8 +181,7 @@
 "Bos taurus": "NCBITaxon:9913"
 "Mus musculus": "NCBITaxon:10090"
 "Danio rerio": "NCBITaxon:7955"
-
-# zygosity
+"Drosophila melanogaster": "NCBITaxon:7227"
 "homoplasmic": "GENO:0000602"
 "heterozygous": "GENO:0000135"
 "indeterminate": "GENO:0000137"
@@ -191,8 +193,6 @@
 "compound heterozygote": "GENO:0000402"
 "simple heterozygous": "GENO:0000458"
 "embryonic stem cell line": "ERO:0002002"
-
-# Geno partonomy
 "intrinsic_genotype": "GENO:0000000"
 "extrinsic_genotype": "GENO:0000524"
 "effective_genotype": "GENO:0000525"
@@ -240,20 +240,14 @@
 "is_allelotype_of": "GENO:0000206"
 "translates_to": "RO:0002513"
 "is_transgene_variant_of": "GENO:0000444"
-
-# statistical_method:
 "Fisher's exact test": "STATO:0000073"
 "statistical model": "STATO:0000107"
 "generalized least squares estimation": "STATO:0000372"
 "Mann-Whitney U-test": "STATO:0000076"
 "Manual": "NCIT:C63513"
-
-# measurements:
-"p_value": "OBI:0000175"
+"p-value": "OBI:0000175"
 "effect size estimate": "STATO:0000085"
 "fold change":  "STATO:0000169"
-
-# provenance_types
 "assay": "OBI:0000070"
 "organization": "foaf:organization"
 "person": "foaf:person"
@@ -262,9 +256,6 @@
 "project": "VIVO:Project"
 "study": "OBI:0000471"
 "assertion process": "SEPIO:0000003"
-
-
-# object_properties
 "has_provenance": "SEPIO:0000011"
 "has_participant": "RO:0000057"
 "has_input": "RO:0002233"
@@ -272,20 +263,14 @@
 "created_on": "pav:createdOn"
 "has_quality": "RO:0000086"
 "towards": "RO:0002503"
-"has_source": "dc:source"
+"source": "dc:source"
 "causes_or_contributes": "RO:0003302"
-"association": "oban:association"
-
 "consider": "oboInOwl:consider"
-
-'inchi_key': 'CHEBI:InChIKey',
-'probabalistic_quantifier': 'GENO:0000867'
-
-'position': 'faldo:position'  # Little p for position property, big P for confusion. 
-'Position': 'faldo:Position'  # Big P for Position type. little p for confusion
-        
-'gene product of': 'RO:0002204'
-
+"inchi_key": "CHEBI:InChIKey"
+"probabalistic_quantifier": "GENO:0000867"
+"position": "faldo:position"  # Little p for position property. big P for confusion.
+"Position": "faldo:Position"  # Big P for Position type. little p for confusion
+"gene product of": "RO:0002204"
 "stop_gained": "SO:0001587"
 "intron_variant": "SO:0001627"
 "3_prime_UTR_variant": "SO:0001624"
@@ -304,8 +289,6 @@
 "splice_region_variant": "SO:0001630"
 "stop_lost": "SO:0001578"
 "TF_binding_site_variant": "SO:0001782"
-
-
 "combinatorial evidence used in automatic assertion": "ECO:0000213"
 "Phenotype": "UPHENO:0001001"
 "region": "faldo:Region"
@@ -327,7 +310,7 @@
 "genome": "SO:0001026"
 "assembly_component": "SO:0000143"
 "SNP": "SO:0000694"
-"band_intensity":  "GENO:0000618"
+"band_intensity": "GENO:0000618"
 "gneg": "GENO:0000620"
 "gpos": "GENO:0000619"
 "gpos100": "GENO:0000622"
@@ -337,57 +320,69 @@
 "gvar": "GENO:0000621"
 "gpos33": "GENO:0000633"
 "gpos66": "GENO:0000632"
+"created_with_resource": "SEPIO:0000022"
+"measurement datum": "IAO:0000109"
+"zscore": "STATO:0000104"
+"Percent Change From Baseline":  "NCIT:C96621"
+"blood test evidence": "ECO:0001016"
+"proportional_reporting_ratio": "OAE:0001563"
+"odds_ratio": "STATO:0000182"
+"count": "SIO:000794"
+"has_evidence_line": "SEPIO:0000006"
+"is_evidence_for": "SEPIO:0000031"
+"is_refuting_evidence_for": "SEPIO:0000033"
+"is_supporting_evidence_for": "SEPIO:0000032"
+"is_evidence_supported_by":  "RO:0002614"
+"is_evidence_with_support_from": "SEPIO:0000059"
+"Statistical Significance": "NCIT:C61040"
+"developmental_process": "GO:0032502"
+"environmental_system": "ENVO:01000254"
+"environmental_condition": "XCO:0000000"
+"morpholio_reagent": "REO:0000042"
+"talen_reagent": "REO:0001022"
+# "crispr_reagent": "REO:crispr_TBD"
+"equivalent_class": "owl:equivalentClass"
+"on_property": "owl:onProperty"
+"some_values_from": "owl:someValuesFrom"
+"existence_starts_during": "RO:0002488"
+"existence_ends_during": "RO:0002492"
+"starts_with": "RO:0002224"
+"ends_with": "RO:0002230"
+"occurs_in": "BFO:0000066"
+"has_begin_stage_qualifier": "GENO:0000630"
+"has_end_stage_qualifier": "GENO:0000631"
+"correlates_with": "RO:0002610"
+"has_origin": "GENO:0000643"
+"has_author": "ERO:0000232"
+"causally_upstream_of_or_within": "RO:0002418"
+"causally_influences": "RO:0002566"
+
+
+# 'has_phenotype': 'RO:0002200', -> "has phenotype"
+# 'in_taxon': 'RO:0002162' -> "in taxon"
+# 'has_subject': ':hasSubject'
+# 'has_object': ':hasObject'
+# 'has_predicate': ':hasPredicate'
+# 'involved_in': 'RO:0002331', -> "involved in"
+# 'model_of': 'RO:0003301',  -> "is model of"
+# 'has_gene_product': 'RO:0002205'  -> "has gene product"
+# 'existence_starts_at': 'UBERON:existence_starts_at',
+# 'existence_ends_at': 'UBERON:existence_ends_at',
+# 'starts_during': 'RO:0002091', - > "starts during"
+# 'ends_during': 'RO:0002093', -> "ends during"
+# 'has_environment_qualifier': 'GENO:0000580', ->? "has_qualifier'"
+# 'substance_that_treats': 'RO:0002606', -> "is substance that treats"
+# 'is_marker_for': 'RO:0002607',  -> "'is marker for'"
+# 'contributes_to': 'RO:0002326', -> "contributes to"
+# 'dc:source': -> 'source',
+# 'dc:evidence': 'dc:evidence',  ???
+# 'has_evidence': 'RO:0002558',  -> "has evidence"
+
 
 
 ######################################################
-
-        'is_asserted_in': 'SEPIO:0000015',
-        'output_of': 'RO:0002353',
-        'specified_by': 'SEPIO:0000041',
-        'created_at_location': 'SEPIO:0000019',
-        'created_with_resource': 'SEPIO:0000022',
-        'measures': 'SEPIO:0000114',               # TODO became measures_parameter 
-        'has_supporting_study': 'SEPIO:0000085',
-        'asserted_by': 'SEPIO:0000130',
-    }
-
- fooevidence_types = {
-        'measurement datum': 'IAO:0000109',
-        'zscore': 'STATO:0000104',
-        'pvalue': 'OBI:0000175',
-        'fold_change': 'STATO:0000169',
-        'effect_size': 'STATO:0000085',
-        'percent_change': 'STATO:percent_change',
-        'blood test evidence': 'ECO:0001016'
-    }
-
-    foodata_types = {
-        'proportional_reporting_ratio': 'OAE:0001563',
-        'odds_ratio': 'STATO:0000182',
-        'count': 'SIO:000794',
-    }
-
-    fooobject_properties = {
-        'has_evidence': 'SEPIO:0000006',
-        'has_supporting_evidence': 'SEPIO:0000007',
-        'has_supporting_data': 'SEPIO:0000084',
-        'is_evidence_for': 'SEPIO:0000031',
-        'is_refuting_evidence_for': 'SEPIO:0000033',
-        'is_supporting_evidence_for': 'SEPIO:0000032',
-        'is_evidence_supported_by': 'SEPIO:000010',
-        'is_evidence_with_support_from': 'SEPIO:0000059',
-        'has_significance': 'STATO:has_significance',
-        'has_supporting_reference': 'SEPIO:0000124',
-        'source': 'dc:source'
-    }
-
-
-
-
 # SEPIO:0000019 found in sepio_developer.owl
-"x-created_at_location": "SEPIO:0000019"
-
-
+# "x-created_at_location": "SEPIO:0000019"
 # SEPIO:0000111  -- is not found in sepio
 "is_assertion_supported_by_evidence": "SEPIO:0000111"
 # "is_assertion_supported_by": "SEPIO:0000111"

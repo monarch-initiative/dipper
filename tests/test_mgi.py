@@ -2,11 +2,12 @@
 
 import unittest
 import logging
+import os
 from tests.test_source import SourceTestCase
 from dipper.sources.MGI import MGI
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
-import os
+
 
 
 logging.basicConfig(level=logging.WARNING)

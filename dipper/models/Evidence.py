@@ -38,7 +38,7 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(self.association,
-                             self.globaltt['has_supporting_evidence'],
+                             self.globaltt['has_supporting_evidence_line'],
                              evidence_line)
         if type is not None:
             self.model.addIndividualToGraph(evidence_line, label, type)
@@ -53,9 +53,7 @@ class Evidence:
         :return: None
         """
         self.graph.addTriple(
-            self.association,
-                             self.globaltt['has_evidence'],
-                             evidence_line)
+            self.association, self.globaltt['has_evidence_line'], evidence_line)
         if ev_type is not None:
             self.model.addIndividualToGraph(evidence_line, label, ev_type)
         return
@@ -95,7 +93,7 @@ class Evidence:
         """
         for measurement in measurement_dict:
             self.graph.addTriple(
-                evidence_line, self.globaltt['has_supporting_data'],measurement)
+                evidence_line, self.globaltt['has_evidence_item'], measurement)
 
             self.graph.addTriple(
                 measurement, self.globaltt['has_value'],  # 'has measurement value' ??
@@ -133,6 +131,6 @@ class Evidence:
         :param type: optional, str type as curie
         :return: None
         """
-        self.graph.addTriple(evidence_line,self.globaltt['source'], source)
+        self.graph.addTriple(evidence_line, self.globaltt['source'], source)
         self.model.addIndividualToGraph(source, label, src_type)
         return

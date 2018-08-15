@@ -907,14 +907,13 @@ class MGI(PostgreSQLSource):
                     vslc_label += allele2
 
                 model.addIndividualToGraph(
-                    ivslc_id, vslc_label,
-                    geno.genoparts['variant_single_locus_complement'])
+                    ivslc_id, vslc_label, self.globaltt['variant_single_locus_complement'])
                 self.label_hash[ivslc_id] = vslc_label
-                rel1 = rel2 = geno.object_properties['has_alternate_part']
+                rel1 = rel2 = self.globaltt['has_alternate_part']
                 if allele1_id in self.wildtype_alleles:
-                    rel1 = geno.object_properties['has_reference_part']
+                    rel1 = self.globaltt['has_reference_part']
                 if allele2_id in self.wildtype_alleles:
-                    rel2 = geno.object_properties['has_reference_part']
+                    rel2 = self.globaltts['has_reference_part']
                 geno.addPartsToVSLC(
                     ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
 
@@ -943,24 +942,18 @@ class MGI(PostgreSQLSource):
                 gvc_label = '; '.join(vslc_labels)
 
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label,
-                    geno.genoparts['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
-                    geno.addParts(
-                        v, gvc_id,
-                        geno.object_properties['has_alternate_part'])
+                    geno.addParts(v, gvc_id, self.globaltt['has_alternate_part'])
                     geno.addVSLCtoParent(v, gvc_id)
-                geno.addParts(
-                    gvc_id, gt,
-                    geno.object_properties['has_alternate_part'])
+                geno.addParts( gvc_id, gt, self.globaltt['has_alternate_part'])
             elif len(vslcs) == 1:
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label,
-                    geno.genoparts['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
@@ -1012,13 +1005,10 @@ class MGI(PostgreSQLSource):
                 (allele_key, mutation) = line.split('\t')
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = \
-                        self._makeInternalIdentifier(
-                            'seqalt', allele_key)
+                    iseqalt_id =  self._makeInternalIdentifier('seqalt', allele_key)
 
-                if self.testMode and \
-                        int(allele_key) not in \
-                        self.test_keys.get('allele'):
+                if self.testMode \
+                        and int(allele_key) not in  self.test_keys.get('allele'):
                     continue
 
                 # TODO we might need to map the seq alteration to the MGI id
@@ -1030,17 +1020,16 @@ class MGI(PostgreSQLSource):
                 allele_id = self.idhash['allele'].get(allele_key)
                 if allele_id is not None:
                     allele_label = self.label_hash.get(allele_id)
-                    if allele_label is not None and re.search(r'Tg\(',
-                                                              allele_label):
-                        logger.info("Found a transgenic insertion for %s",
-                                    allele_label)
+                    if allele_label is not None \
+                            and re.search(r'Tg\(', allele_label):
+                        logger.info(
+                            "Found a transgenic insertion for %s", allele_label)
                         # transgenic_insertion, instead of plain old insertion
-                        seq_alt_type_id = 'SO:0001218'
+                        seq_alt_type_id = self.globaltt["transgenic_insertion"]
 
                 model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1062,10 +1051,10 @@ class MGI(PostgreSQLSource):
         # non-derived?  (annottypekey = 1015)
         # TODO is evidence in this table?  what is the evidence vocab key?
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         logger.info("getting G2P associations")
         raw = '/'.join((self.rawdir, 'voc_annot_view'))
@@ -1095,8 +1084,8 @@ class MGI(PostgreSQLSource):
 
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error(
+                            "can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = G2PAssoc(g, self.name, genotype_id, accid)
@@ -1109,8 +1098,7 @@ class MGI(PostgreSQLSource):
                         continue
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = Assoc(g, self.name)
@@ -1120,8 +1108,7 @@ class MGI(PostgreSQLSource):
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(
-                            model.object_properties['model_of'])
+                        assoc.set_relationship(self.globaltt['model_of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 elif annot_type == 'MCV/Marker':
@@ -1137,15 +1124,13 @@ class MGI(PostgreSQLSource):
                 elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
                     if allele_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = Assoc(g, self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(
-                            model.object_properties['model_of'])
+                        assoc.set_relationship(self.globaltt['model_of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
 
@@ -1154,8 +1139,7 @@ class MGI(PostgreSQLSource):
                     self.idhash['annot'][annot_key] = assoc_id
                     model.addComment(assoc_id, "annot_key:"+annot_key)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1227,19 +1211,14 @@ class MGI(PostgreSQLSource):
                 reference.addRefToGraph()
 
                 # add the ECO and citation information to the annot
-                model.addTriple(assoc_id, self.resolve('has evidence'), evidence_id)
-                model.addTriple(assoc_id, self.resolve('has_source'), jnumid)
+                model.addTriple(assoc_id, self.globaltt['has evidence'], evidence_id)
+                model.addTriple(assoc_id, self.globaltt['source'], jnumid)
 
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
                 if qualifier == 'MP-Sex-Specificity'\
                         and (qualifier_value == 'M' or qualifier_value == 'F'):
-                    sex = None
-                    if qualifier_value == 'M':
-                        sex = self.global_terms['male']
-                    elif qualifier_value == 'F':
-                        sex = self.global_terms['female']
-                    model._addSexSpecificity(assoc_id, sex)
+                    model._addSexSpecificity(assoc_id, self.resolve(sex))
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1262,10 +1241,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         # firstpass, get the J number mapping, and add to the global hash
         line_counter = 1
         logger.info('populating pub id hash')
@@ -1289,11 +1268,10 @@ class MGI(PostgreSQLSource):
                 if prefixpart != 'J:':
                     continue
                 self.idhash['publication'][object_key] = accid
-                reference = Reference(g, accid)
+                reference = Reference(graph, accid)
                 reference.addRefToGraph()
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and  limit is not None and line_counter > limit:
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
@@ -1318,7 +1296,7 @@ class MGI(PostgreSQLSource):
 
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
-                    pub_id = 'PMID:'+accid
+                    pub_id = 'PMID:' + accid
                 elif logicaldb_key == '1' and re.match(r'MGI:', prefixpart):
                     # don't get the J numbers,
                     # because we dont' need to make the equiv to itself.
@@ -1344,18 +1322,17 @@ class MGI(PostgreSQLSource):
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
-                        reference.setType(
-                            Reference.ref_types['journal_article'])
+                        reference.setType(self.globaltt['journal_article'])
                         model.makeLeader(pub_id)
                     reference.addRefToGraph()
 
                     model.addSameIndividual(jid, pub_id)
                 else:
-                    logger.warning("Publication from (%s) not mapped for %s",
-                                   logical_db, object_key)
+                    logger.warning(
+                        "Publication from (%s) not mapped for %s",
+                        logical_db, object_key)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1379,12 +1356,12 @@ class MGI(PostgreSQLSource):
         #   recombinant inbred,     NS,             conplastic
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         model = Model(g)
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
         logger.info("getting strains and adding their taxa")
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1411,8 +1388,7 @@ class MGI(PostgreSQLSource):
                         geno.addTaxon(sp, strain_id)
                     model.addIndividualToGraph(strain_id, strain, sp)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1466,8 +1442,8 @@ class MGI(PostgreSQLSource):
                         continue
 
                     if marker_id is None:
-                        logger.error("can't find %s %s in the id hash",
-                                     marker_key, symbol)
+                        logger.error(
+                            "can't find %s %s in the id hash", marker_key, symbol)
 
                     mapped_marker_type = self._map_marker_type(marker_type)
 
@@ -1481,13 +1457,13 @@ class MGI(PostgreSQLSource):
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name, self.resolve('has_exact_synonym'))
+                            marker_id, name, self.globaltt['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name, self.resolve('has_exact_synonym'))
+                            marker_id, name, elf.globaltt['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1496,7 +1472,7 @@ class MGI(PostgreSQLSource):
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
-                    if taxon_id == self.resolve('Mus musculus')
+                    if taxon_id == self.globaltt['Mus musculus']:
                         model.makeLeader(marker_id)
 
                     if not self.testMode and limit is not None and line_counter > limit:
@@ -1516,16 +1492,16 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("getting markers and equivalent ids from mrk_summary_view")
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_summary_view'))
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
 
@@ -1551,16 +1527,16 @@ class MGI(PostgreSQLSource):
 
                     mapped_id = None
                     if logicaldb_key == '60':
-                        mapped_id = 'ENSEMBL:'+accid
+                        mapped_id = 'ENSEMBL:' + accid
                     elif logicaldb_key == '1':
                         # don't need to add the equivalence to itself.
                         continue
                     elif logicaldb_key == '55':
-                        mapped_id = 'NCBIGene:'+accid
+                        mapped_id = 'NCBIGene:' + accid
 
                     if mapped_id is not None:
-                        if mgiid in self.markers['classes'] or \
-                                subtype in ['Gene', 'Pseudogene']:
+                        if mgiid in self.markers['classes'] \
+                                or subtype in ['Gene', 'Pseudogene']:
                             model.addClassToGraph(mapped_id, None)
                             model.addEquivalentClass(mgiid, mapped_id)
                         elif mgiid in self.markers['indiv']:
@@ -1570,8 +1546,7 @@ class MGI(PostgreSQLSource):
                     # could parse the "subtype" string
                     # to get the kind of thing the marker is
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1590,9 +1565,9 @@ class MGI(PostgreSQLSource):
         line_counter = 0
         logger.info("mapping markers to internal identifiers")
         raw = '/'.join((self.rawdir, 'mrk_acc_view'))
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip('\n')
                 line_counter += 1
                 (accid, prefix_part, logicaldb_key, object_key,
@@ -1603,8 +1578,7 @@ class MGI(PostgreSQLSource):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and \
-                        prefix_part == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and prefix_part == 'MGI:' and preferred == '1':
                     self.idhash['marker'][object_key] = accid
 
         return
@@ -1619,10 +1593,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         # pass through the file again,
         # and make the equivalence statements to a subset of the idspaces.
         # TODO verify the difference between what the
@@ -1655,8 +1629,8 @@ class MGI(PostgreSQLSource):
                 marker_id = None
                 if preferred == '1':  # TODO what does it mean if it's 0?
                     if logicaldb_key == '55':  # entrez/ncbi
-                        marker_id = 'NCBIGene:'+accid
-                    elif logicaldb_key == '1' and prefix_part != 'MGI:':  # mgi
+                        marker_id = 'NCBIGene:' + accid
+                    elif logicaldb_key == '1' and prefix_part != 'MGI:':
                         marker_id = accid
                     elif logicaldb_key == '60':
                         marker_id = 'ENSEMBL:'+accid
@@ -1670,11 +1644,9 @@ class MGI(PostgreSQLSource):
                         model.addIndividualToGraph(marker_id, None)
                         model.addSameIndividual(mgiid, marker_id)
                     else:
-                        logger.error("mgiid not in class or indiv hash %s",
-                                     mgiid)
+                        logger.error("mgiid not in class or indiv hash %s", mgiid)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1698,22 +1670,22 @@ class MGI(PostgreSQLSource):
         # to create the mapping between the external and internal identifiers
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("mapping strains to internal identifiers")
         raw = '/'.join((self.rawdir, 'prb_strain_acc_view'))
 
-        tax_id = 'NCBITaxon:10090'  # hardcode mouse
+        tax_id = self.globaltt["Mus musculus"]
 
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
-                (accid, prefixpart, logicaldb_key,
-                 object_key, preferred) = line.split('\t')
+                (accid, prefixpart, logicaldb_key, object_key, preferred) \
+                    = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1722,8 +1694,7 @@ class MGI(PostgreSQLSource):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and \
-                        prefixpart == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
                     model.addIndividualToGraph(accid, None, tax_id)
 
@@ -1760,13 +1731,13 @@ class MGI(PostgreSQLSource):
         # and make the equivalence statements to a subset of the idspaces
         logger.info("mapping strain equivalent identifiers")
         line_counter = 0
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
-                (accid, prefixpart, logicaldb_key,
-                 object_key, preferred) = line.split('\t')
+                (accid, prefixpart, logicaldb_key, object_key, preferred) \
+                    = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1837,8 +1808,7 @@ class MGI(PostgreSQLSource):
                     if comment is not None:
                         model.addComment(strain_id, comment)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1855,10 +1825,10 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("getting free text descriptions for annotations")
         raw = '/'.join((self.rawdir, 'mgi_note_vocevidence_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1891,13 +1861,12 @@ class MGI(PostgreSQLSource):
     def _process_mrk_location_cache(self, limit):
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        # model = Model(g)  # unused
+            graph = self.graph
         logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
-        geno = Genotype(g)
+        geno = Genotype(graph)
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1919,19 +1888,18 @@ class MGI(PostgreSQLSource):
 
                 # make the chromsomome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
-                if version is not None and \
-                        version != '' and version != '(null)':
+                if version is not None and version != '' and version != '(null)':
 
                     # switch on maptype or mapkey
                     assembly = version
-                    build_id = 'NCBIGenome:'+assembly
-                    geno.addChromosomeInstance(chromosome, build_id, assembly,
-                                               chrom_id)
+                    build_id = 'NCBIGenome:' + assembly
+                    geno.addChromosomeInstance(
+                        chromosome, build_id, assembly, chrom_id)
                     chrom_id = makeChromID(chromosome, build_id, 'MONARCH')
 
                 if marker_key in self.idhash['marker']:
                     gene_id = self.idhash['marker'][marker_key]
-                    feature = Feature(g, gene_id, None, None)
+                    feature = Feature(graph, gene_id, None, None)
                     if strand == '(null)' or strand == '':
                         strand = None
                     if startcoordinate == '(null)' or startcoordinate == '':
@@ -1945,7 +1913,7 @@ class MGI(PostgreSQLSource):
                     else:
                         feature.addFeatureStartLocation(
                             startcoordinate, chrom_id, strand,
-                            [Feature.types['FuzzyPosition']])
+                            [self.globaltt['FuzzyPosition']])
                     if endcoordinate is not None:
                         feature.addFeatureEndLocation(
                             int(float(endcoordinate)), chrom_id, strand)
@@ -1957,11 +1925,9 @@ class MGI(PostgreSQLSource):
                     feature.addFeatureToGraph(True, None, add_as_class)
 
                 else:
-                    logger.warning('marker key %s not in idhash',
-                                   str(marker_key))
+                    logger.warning('marker key %s not in idhash', str(marker_key))
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1978,14 +1944,13 @@ class MGI(PostgreSQLSource):
         """
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         logger.info("getting transgene genes")
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
-        geno = Genotype(g)
+        geno = Genotype(graph)
 
-        # gu = GraphUtils(curie_map.get())  # TODO unused
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -2003,15 +1968,13 @@ class MGI(PostgreSQLSource):
 
                 gene_id = 'NCBIGene:'+gene_num
 
-                # geno.addParts(gene_id, allele_id,
-                #               geno.object_properties['has_alternate_part'])
+                # geno.addParts(gene_id, allele_id, self.globaltt['has_alternate_part'])
                 seqalt_id = self.idhash['seqalt'].get(allele_key)
                 if seqalt_id is None:
                     seqalt_id = allele_id
                 geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2034,7 +1997,6 @@ class MGI(PostgreSQLSource):
         model = Model(g)
         logger.info("Assembling notes on alleles")
         raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
-        # geno = Genotype(g)  # TODO unused
 
         notehash = {}
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -2096,10 +2058,9 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        # model = Model(g)  # unused
+            graph = self.graph
         logger.info("Getting genotypes for strains")
         raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -2112,10 +2073,8 @@ class MGI(PostgreSQLSource):
                 (strain_key, genotype_key) = line
 
                 if self.testMode is True:
-                    if int(genotype_key) not in \
-                            self.test_keys.get('genotype') and \
-                            int(strain_key) not in \
-                            self.test_keys.get('strain'):
+                    if int(genotype_key) not in self.test_keys.get('genotype') \
+                            and int(strain_key) not in self.test_keys.get('strain'):
                         continue
 
                 strain_id = self.idhash['strain'].get(strain_key)
@@ -2130,10 +2089,7 @@ class MGI(PostgreSQLSource):
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                g.addTriple(
-                    strain_id,
-                    Genotype.object_properties['has_genotype'],
-                    genotype_id)
+                g.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id)
                 # TODO
                 # verify if this should be contingent on the exactness or not
                 # if qualifier == 'Exact':

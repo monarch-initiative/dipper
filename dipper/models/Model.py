@@ -13,7 +13,7 @@ class Model():
     """
     # shared ontology_label to ontology_id mapping
     globaltt = {}
-    
+
     # reversed to find labels for items that only came with IDs; such as some taxons
     globaltcid = {}
 
@@ -23,7 +23,7 @@ class Model():
             with open('translationtable/global_terms.yaml') as fh:
                 self.globaltt = yaml.safe_load(fh)
                 self.globaltcid = {v: k for k, v in self.globaltt.items()}
-                
+
         else:
             raise ValueError("{} is not a graph".graph)
 
@@ -147,7 +147,7 @@ class Model():
 
         """
         self.graph.addTriple(
-            old_id, self.object_properties['type'], self.types['class'])
+            old_id, self.globaltt['type'], self.globaltt['class'])
 
         self._addReplacementIds(old_id, new_ids)
 
@@ -195,7 +195,7 @@ class Model():
         return
 
     def addSynonym(
-            self, class_id, synonym, synonym_type=globaltt['has_exact_synonym']):
+            self, class_id, synonym, synonym_type=None):
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
@@ -206,6 +206,9 @@ class Model():
         :return:
 
         """
+
+        if synonym_type is None:
+            synonym_type = self.globaltt['hasExactSynonym']
 
         if synonym is not None:
             self.graph.addTriple(
@@ -219,7 +222,7 @@ class Model():
 
     def addXref(self, class_id, xref_id, xref_as_literal=False):
         self.graph.addTriple(
-            class_id, self.globaltt['has_xref'], xref_id,
+            class_id, self.globaltt['has_dbxref'], xref_id,
             object_is_literal=xref_as_literal)
         return
 
@@ -299,5 +302,5 @@ class Model():
         :param sex:
         :return:
         """
-        self.graph.addTriple(subject_id, self.globaltt['has_sex_specificity'], sex)
+        self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex)
         return

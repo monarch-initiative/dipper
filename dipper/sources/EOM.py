@@ -202,21 +202,18 @@ class EOM(PostgreSQLSource):
 
                 # morphology_term_id has comment comments
                 if comments != '':
-                    model.addComment(morphology_term_id,
-                                     comments.strip())
+                    model.addComment(morphology_term_id, comments.strip())
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        model.addSynonym(
-                            morphology_term_id, s.strip(),
-                            model.globaltt['has_exact_synonym'])
+                        model.addSynonym(model.globaltt['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
                         model.addSynonym(
                             morphology_term_id, s.strip(),
-                            model.globaltt['has_related_synonym'])
+                            model.globaltt['hasRelatedSynonym'])
 
                 # morphology_term_id has page morphology_term_url
                 reference = Reference(self.graph)

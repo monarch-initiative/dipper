@@ -578,8 +578,8 @@ class CTD(Source):
             :return str: curie for relationship label
         """
         rel_map = {
-            'therapeutic': Model.object_properties['substance_that_treats'],
-            'marker/mechanism': Model.object_properties['is_marker_for'],
+            'therapeutic': Source.globaltt['substance that treats'],
+            'marker/mechanism': Source.globaltt['is_marker_for'],
         }
         return str(rel_map[rel])
 
@@ -624,8 +624,7 @@ class CTD(Source):
                 model.addClassToGraph(disease_id, None)
                 if pub_id != '':
                     pub_id = 'PMID:' + pub_id
-                    r = Reference(
-                        pub_id, Reference.ref_types['journal_article'])
+                    r = Reference(pub_id, self.globaltt['journal_article'])
                     r.addRefToGraph(self.graph)
                     pubids = [pub_id]
                 else:
