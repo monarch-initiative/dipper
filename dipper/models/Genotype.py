@@ -20,15 +20,14 @@ class Genotype():
 
     """
 
-    globaltt = Model.globaltt
-    globaltcid = Model.globaltcid
-
     def __init__(self, graph):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
+        self.globaltt = self.model.globaltt
+        self.globaltcid = self.model.globaltcid
 
         return
 
@@ -120,7 +119,8 @@ class Genotype():
 
     def addSequenceDerivesFrom(self, child_id, parent_id):
         self.graph.addTriple(
-            child_id, self.globaltt['derives_sequence_from_gene'], parent_id)
+            child_id, self.globaltt['sequence_derives_from'], parent_id)
+            
         return
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
@@ -250,7 +250,7 @@ class Genotype():
         :return:
         """
 
-        self.addParts(vslc_id, parent_id, self.globaltt['has_alternate_part'])
+        self.addParts(vslc_id, parent_id, self.globaltt['has_variant_part'])
 
         return
 
@@ -290,7 +290,7 @@ class Genotype():
         return
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
-        self.addParts(sa_id, vl_id, self.globaltt['has_alternate_part'])
+        self.addParts(sa_id, vl_id, self.globaltt['has_variant_part'])
         return
 
     def addGenomicBackground(
@@ -328,7 +328,7 @@ class Genotype():
 
         """
         self.graph.addTriple(
-            genopart_id, self.globaltt['in_taxon'], taxon_id)
+            genopart_id, self.globaltt['in taxon'], taxon_id)
 
         return
 

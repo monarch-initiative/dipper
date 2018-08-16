@@ -3,15 +3,17 @@
 # the label to match a colon the ontology identifier to return.
 # post octothorp comments and empty lines are ignored
 # both columns should be unique (invertable function)
-
 # Note well.
 # Sooner or later we will have to namespace our labels
 # due to ontologist's rebranding of existing terms.
-
 # We may want to sort the file by values to help keep dups down
-
 # Read: http://precedings.nature.com/documents/3576/version/1/files/npre20093576-1.pdf
-
+#
+# these need valid ontology terms found or created
+"has_sex_specificty": ":has_sex_specificity"
+"onset": ":onset"
+"frequency": ":frequencyOfPhenotype"
+####################################################################
 "type": "rdf:type"
 "ontology": "owl:Ontology"
 "class": "owl:Class"
@@ -119,6 +121,7 @@
 "fusion": "SO:0001882"
 "structural_alteration": "SO:0001785"
 "direct_tandem_duplication": "SO:1000039"
+"chromosome_structure_variation": "SO:1000183"
 # "microsatellite": "SO:0000289"
 "microsatellite": "GENO:0000847"
 "short repeat": "GENO:0000846"
@@ -140,10 +143,6 @@
 "in vivo": "SEPIO:0000074"
 "case-control": "SEPIO:0000071"
 "phenotyping only": "SEPIO:0000186"
-
-# this does not seem to be an ontology term. why is it here?
-"has_sex_specificty": ":has_sex_specificity"
-
 "has_affected_feature": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
 "is downstream of sequence of": "RO:0002529"
@@ -250,7 +249,7 @@
 "fold change":  "STATO:0000169"
 "assay": "OBI:0000070"
 "organization": "foaf:organization"
-"person": "foaf:person"
+"person": "foaf:Person"
 "statistical_hypothesis_test": "OBI:0000673"
 "mixed_model": "STATO:0000189"
 "project": "VIVO:Project"
@@ -284,7 +283,7 @@
 "downstream_gene_variant": "SO:0001634"
 "upstream_gene_variant": "SO:0001636"
 "coding_sequence_variant": "SO:0001580"
-"non_coding_exon_variant ": "SO:0001792"
+"non_coding_exon_variant": "SO:0001792"
 "regulatory_region_variant": "SO:0001566"
 "splice_region_variant": "SO:0001630"
 "stop_lost": "SO:0001578"
@@ -356,8 +355,42 @@
 "has_author": "ERO:0000232"
 "causally_upstream_of_or_within": "RO:0002418"
 "causally_influences": "RO:0002566"
-
-
+"signal_transduction": "GO:0007165"
+"cellular_process": "GO:0009987"
+"pathway": "PW:0000001"
+"gene_product": "CHEBI:33695"
+"publication": "IAO:0000311"
+"document": "IAO:0000310"
+"photograph": "IAO:0000185"
+"webpage": "SIO:000302"
+"page": "foaf:page"
+"experimental evidence": "ECO:0000006"
+"biological aspect of ancestor evidence used in manual assertion": "ECO:0000318"
+"inference from background scientific knowledge": "ECO:0000001"
+"direct assay evidence used in manual assertion": "ECO:0000314"
+"evidence used in automatic assertion": "ECO:0000501"
+"expression pattern evidence": "ECO:0000008"
+"genetic interaction evidence used in manual assertion": "ECO:0000316"
+"phylogenetic determination of loss of key residues evidence used in manual assertion": "ECO:0000320"
+"mutant phenotype evidence used in manual assertion": "ECO:0000315"
+"physical interaction evidence used in manual assertion": "ECO:0000353"
+"sequence alignment evidence": "ECO:0000200"
+"match to sequence model evidence": "ECO:0000202"
+"sequence orthology evidence": "ECO:0000201"
+"sequence similarity evidence used in manual assertion": "ECO:0000250"
+"author statement without traceable support used in manual assertion": "ECO:0000303"
+"no biological data found": "ECO:0000035"
+"computational combinatorial evidence used in manual assertion": "ECO:0000245"
+"author statement supported by traceable reference used in manual assertion": "ECO:0000304"
+"disease": "DOID:4"
+"interacts_with": "RO:0002434"
+"molecularly_interacts_with": "RO:0002436"
+"ubiquitinates": "RO:0002480"
+"regulates": "RO:0002448"
+"positively_regulates": "RO:0003003"
+"negatively_regulates": "RO:0003002"
+"imported automatically asserted information used in automatic assertion": "ECO:0000323"
+"imported manually asserted information used in automatic assertion": "ECO:0000322"
 # 'has_phenotype': 'RO:0002200', -> "has phenotype"
 # 'in_taxon': 'RO:0002162' -> "in taxon"
 # 'has_subject': ':hasSubject'
@@ -377,9 +410,11 @@
 # 'dc:source': -> 'source',
 # 'dc:evidence': 'dc:evidence',  ???
 # 'has_evidence': 'RO:0002558',  -> "has evidence"
-
-
-
+# 'gene_product_of': 'RO:0002204',  -> "gene product of'"
+# 'journal_article': 'IAO:0000013',  -> "journal article"
+# 'genetically_interacts_with': 'RO:0002435', --> "genetically interacts with"
+# colocalizes_with': 'RO:0002325',  --> "colocalizes with"
+######################################################
 ######################################################
 # SEPIO:0000019 found in sepio_developer.owl
 # "x-created_at_location": "SEPIO:0000019"

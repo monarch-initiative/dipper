@@ -23,8 +23,6 @@ class Feature():
 
     """
 
-    globaltt = Model.globaltt
-
     def __init__(
             self, graph, feature_id=None, label=None,
             feature_type=None, description=None):
@@ -34,6 +32,7 @@ class Feature():
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
+        self.globaltt = self.model.globaltt
         self.fid = feature_id
         self.label = label
         self.ftype = feature_type
@@ -194,10 +193,10 @@ class Feature():
                 region_id = rid
 
             self.graph.addTriple(self.fid, self.globaltt['location'], region_id)
-            self.model.addIndividualToGraph(region_id, None, 'faldo:Region')
+            self.model.addIndividualToGraph(region_id, None, self.globaltt['region'])
         else:
             region_id = self.fid
-            self.model.addType(region_id, 'faldo:Region')
+            self.model.addType(region_id, self.globaltt['region'])
 
         # add the start/end positions to the region
         beginp = endp = None
@@ -314,7 +313,7 @@ class Feature():
                 # not already mapped to faldo, so expect we need to map it
                 strnd = self._getStrandType(strand)
         # else:
-        #    strnd = selfglobaltt['both_strand']
+        #    strnd = self.globaltt['both_strand']
         if strnd is None and (position_types is None or position_types == []):
             strnd = self.globaltt['Position']
 
@@ -348,7 +347,7 @@ class Feature():
         :return:
         """
         self.taxon = taxonid
-        self.graph.addTriple(self.fid, self.globaltt['in_taxon'], self.taxon)
+        self.graph.addTriple(self.fid, self.globaltt['in taxon'], self.taxon)
 
         return
 

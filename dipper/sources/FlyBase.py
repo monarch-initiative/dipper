@@ -741,7 +741,7 @@ class FlyBase(PostgreSQLSource):
                         model.addClassToGraph(
                             feature_id, name, type_id)
                         g.addTriple(
-                            feature_id, self.globaltt['in_taxon'],
+                            feature_id, self.globaltt['in taxon'],
                             tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
@@ -811,7 +811,7 @@ class FlyBase(PostgreSQLSource):
                 # not sure if this is a mistake, or zygosity, or?
                 if feature_id is not None and genotype_id is not None:
                     geno.addParts(
-                        feature_id, genotype_id, self.globaltt['has_alternate_part'])
+                        feature_id, genotype_id, self.globaltt['has_variant_part'])
 
                 # TODO we will build up the genotypes here... lots to do
 
@@ -1781,7 +1781,7 @@ class FlyBase(PostgreSQLSource):
                     #     which is basically the sequence alteration
                     #     geno.addParts(
                     #       ti_id, allele_id,
-                    #       self.globaltt['has_alternate_part'])
+                    #       self.globaltt['has_variant_part'])
                     elif reagent_id is not None and ti_id is not None:
                         g.addTriple(ti_id, self.globaltt['targeted_by'], reagent_id)
 
@@ -1803,7 +1803,7 @@ class FlyBase(PostgreSQLSource):
                     # if allele_id is not None and tp_id is not None:
                     #     geno.addParts(
                     #       tp_id, allele_id,
-                    #       self.globaltt['has_alternate_part'])
+                    #       self.globaltt['has_variant_part'])
                     model.addComment(allele_id, tp_id)
 
                 # derived_sf_assoc_alleles

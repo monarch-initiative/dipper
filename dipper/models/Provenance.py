@@ -17,7 +17,6 @@ class Provenance:
      what entities participated in them, and when/where they occurred.
 
     """
-    globaltt = Model.globaltt
 
     def __init__(self, graph):
         if isinstance(graph, Graph):
@@ -25,7 +24,7 @@ class Provenance:
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
-
+        self.globaltt = self.model.globaltt
         return
 
     def add_date_created(self, prov_type, date):

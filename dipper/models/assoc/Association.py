@@ -16,7 +16,6 @@ class Assoc:
     on statements.
 
     """
-    globaltt = Model.globaltt
 
     def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
         if isinstance(graph, Graph):
@@ -135,11 +134,9 @@ class Assoc:
                 self.graph.addTriple(
                     self.assoc_id, predicate, object_node, True, datatype)
             else:
-                self.graph.addTriple(
-                    self.assoc_id, predicate, object_node, True)
+                self.graph.addTriple(self.assoc_id, predicate, object_node, True)
         else:
-            self.graph.addTriple(
-                self.assoc_id, predicate, object_node, False)
+            self.graph.addTriple(self.assoc_id, predicate, object_node, False)
 
         return
 

@@ -75,12 +75,12 @@ class Orphanet(Source):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         line_counter = 0
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
 
         myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
 
@@ -118,9 +118,8 @@ class Orphanet(Source):
                     gene_name = a.find('.//Gene/Name').text
                     gene_symbol = a.find('.//Gene/Symbol').text
                     gene_num = a.find('./Gene/OrphaNumber').text
-                    gene_id = 'Orphanet:'+str(gene_num)
-                    gene_type_id = \
-                        self._map_gene_type_id(gene_iid_to_type[gene_iid])
+                    gene_id = 'Orphanet:' + str(gene_num)
+                    gene_type_id = self.resolved(gene_iid_to_type[gene_iid])
                     model.addClassToGraph(
                         gene_id, gene_symbol, gene_type_id, gene_name)
                     syn_list = a.find('./Gene/SynonymList')
@@ -129,9 +128,8 @@ class Orphanet(Source):
                             model.addSynonym(gene_id, s.text)
 
                     dgtype = a.find('DisorderGeneAssociationType').get('id')
-                    rel_id = self._map_rel_id(dgtype)
-                    dg_label = \
-                        a.find('./DisorderGeneAssociationType/Name').text
+                    rel_id = self.resolve(dgtype)
+                    dg_label = a.find('./DisorderGeneAssociationType/Name').text
                     if rel_id is None:
                         logger.warning(
                             "Cannot map association type (%s) to RO " +
@@ -139,14 +137,12 @@ class Orphanet(Source):
                             dg_label, disorder_label, gene_symbol)
                         continue
 
-                    alt_locus_id = '_:'+gene_num+'-'+disorder_num+'VL'
-                    alt_label = \
-                        ' '.join(('some variant of', gene_symbol.strip(),
-                                  'that is a', dg_label.lower(),
-                                  disorder_label))
+                    alt_locus_id = '_:' + gene_num + '-' + disorder_num + 'VL'
+                    alt_label = ' '.join((
+                        'some variant of', gene_symbol.strip(), disorder_label))
 
-                    model.addIndividualToGraph(alt_locus_id, alt_label,
-                                               geno.genoparts['variant_locus'])
+                    model.addIndividualToGraph(
+                        alt_locus_id, alt_label, self.globaltt['variant_locus'])
                     geno.addAffectedLocus(alt_locus_id, gene_id)
                     model.addBlankNodeAnnotation(alt_locus_id)
 
@@ -156,22 +152,23 @@ class Orphanet(Source):
 
                     # use "assessed" status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
-                    status_code = \
-                        a.find('DisorderGeneAssociationStatus').get('id')
+                    status_code = a.find('DisorderGeneAssociationStatus').get('id')
                     # imported automatically asserted information
                     # used in automatic assertion
-                    eco_id = 'ECO:0000323'
+                    eco_id = self.globaltt[
+                        'imported automatically asserted information used in automatic assertion']
                     # Assessed
                     # TODO are these internal ids stable between releases?
                     if status_code == '17991':
                         # imported manually asserted information
                         # used in automatic assertion
-                        eco_id = 'ECO:0000322'
+                        eco_id = self.globaltt[
+                            'imported manually asserted information used in automatic assertion']
                     # Non-traceable author statement ECO_0000034
                     # imported information in automatic assertion ECO_0000313
 
-                    assoc = G2PAssoc(g, self.name, alt_locus_id,
-                                     disorder_id, rel_id)
+                    assoc = G2PAssoc(
+                        graph, self.name, alt_locus_id, disorder_id, rel_id)
                     assoc.add_evidence(eco_id)
                     assoc.add_association_to_graph()
 
@@ -197,80 +194,11 @@ class Orphanet(Source):
 
         return
 
-    # TODO rebuilding the map every time the function is called is
-    # not at all efficent ...(try decorator staticmethod or remove from class?)
-    # @staticmethod
-    def _map_rel_id(self, orphanet_rel_id):
-        # To check on  the "DisorderGeneAssociationType" to map
-        # xmlstarlet sel -t -m \
-        # './JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/\
-        # DisorderGeneAssociation/DisorderGeneAssociationType'\
-        # -v './@id' -o '    ' -v './Name' -n en_product6.xml |\
-        # sort | uniq -c | sort -nr
-        rel_id = None
-        model = Model(self.graph)
-        id_map = {
-            # Disease-causing germline mutation(s) in (RO:0002200)
-            '17949': model.object_properties['has_phenotype'],
-            # Disease-causing somatic mutation(s) in
-            '17955': model.object_properties['has_phenotype'],
-            # Major susceptibility factor in  ('RO:0002326')
-            '17961': model.object_properties['contributes_to'],
-            # Modifying germline mutation in
-            '17967': model.object_properties['contributes_to'],
-            # Modifying somatic mutation in
-            '17973': model.object_properties['contributes_to'],
-            # Part of a fusion gene in
-            '17979': model.object_properties['contributes_to'],
-            # Role in the phenotype of
-            '17985': model.object_properties['contributes_to'],
-            '18273': None,  # Candidate gene tested in  FIXME?
-            # Disease-causing germline mutation(s) (gain of function) in
-            '25979': model.object_properties['has_phenotype'],
-            # Disease-causing germline mutation(s) (loss of function) in
-            '25972': model.object_properties['has_phenotype'],
-        }
-
-        if orphanet_rel_id in id_map:
-            rel_id = id_map[orphanet_rel_id]
-        else:
-            logger.error(
-                'Disease-gene association type (%s) not mapped.',
-                orphanet_rel_id)
-
-        return rel_id
-
-    # To check the "GeneType" mappings
-    # xmlstarlet sel -t -v \
-    #   './JDBOR/DisorderList/Disorder//Gene/GeneType/Name'
-    #   en_product6.xml | sort | uniq -c | sort -nr
-    @staticmethod
-    def _map_gene_type_id(orphanet_type_id):
-        type_id = Genotype.genoparts['sequence_feature']
-        id_map = {
-            # locus
-            '25986': Genotype.genoparts['sequence_feature'],
-            # gene with protein product
-            '25993': Genotype.genoparts['protein_coding_gene'],
-            # Non-coding RNA
-            '26046': Genotype.genoparts['ncRNA_gene']
-        }
-
-        if orphanet_type_id in id_map:
-            type_id = id_map[orphanet_type_id]
-        else:
-            logger.error(
-                'Gene type (%s) not mapped. Defaulting to SO:sequence_feature',
-                orphanet_type_id)
-
-        return type_id
-
     def getTestSuite(self):
         import unittest
         # TODO PYLINT Unable to import 'tests.test_orphanet
         from tests.test_orphanet import OrphanetTestCase
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
 
         return test_suite

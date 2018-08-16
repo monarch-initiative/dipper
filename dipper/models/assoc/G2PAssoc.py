@@ -27,7 +27,7 @@ class G2PAssoc(Assoc):
         self.phenotype_id = phenotype_id
 
         if rel is None:
-            rel = self.globaltt['has_phenotype']
+            rel = self.globaltt['has phenotype']
 
         self.start_stage_id = None
         self.end_stage_id = None

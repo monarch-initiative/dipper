@@ -21,7 +21,7 @@ class Chem2DiseaseAssoc(Assoc):
         self.set_subject(chem_id)
         self.set_object(phenotype_id)
         if rel_id is None:
-            rel_id = self.gu.object_properties['has_phenotype']
+            rel_id = self.globaltt['has phenotype']
         self.set_relationship(rel_id)
 
         return
@@ -46,7 +46,7 @@ class Chem2DiseaseAssoc(Assoc):
 
     def make_c2p_assoc_id(self):
 
-        assoc_id = self.make_association_id(self.definedby, self.sub, self.rel,
-                                            self.obj)
+        assoc_id = self.make_association_id(
+            self.definedby, self.sub, self.rel, self.obj)
 
         return assoc_id

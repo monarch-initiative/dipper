@@ -16,11 +16,6 @@ class Environment():
     This is a stub ready for expansion.
     """
 
-    # special genotype parts mapped to their GENO and SO classes
-    # that we explicitly reference here
-
-    properties = object_properties.copy()
-    properties.update(annotation_properties)
 
     def __init__(self, graph):
         if isinstance(graph, Graph):

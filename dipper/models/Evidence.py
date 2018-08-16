@@ -17,7 +17,6 @@ class Evidence:
 
     """
 
-    globaltt = Model.globaltt
 
     def __init__(self, graph, association):
         if isinstance(graph, Graph):
@@ -25,6 +24,7 @@ class Evidence:
         else:
             raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
+        self.globaltt = self.model.globaltt
         self.association = association
 
         return

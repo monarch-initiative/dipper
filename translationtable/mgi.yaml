@@ -1,21 +1,21 @@
 ---
-"EXP": ""  # ECO:0000006
-"IBA": ""  # ECO:0000318
-"IC": ""   # ECO:0000001
-"IDA": ""  # ECO:0000314
-"IEA": ""  # ECO:0000501
-"IEP": ""  # ECO:0000008
-"IGI": ""  # ECO:0000316
-"IKR": ""  # ECO:0000320
-"IMP": ""  # ECO:0000315
-"IPI": ""  # ECO:0000353
-"ISA": ""  # ECO:0000200
-"ISM": ""  # ECO:0000202
-"ISO": ""  # ECO:0000201
-"ISS": ""  # ECO:0000250
-"NAS": ""  # ECO:0000303
-"ND": ""   # ECO:0000035
-"RCA": ""  # ECO:0000245
-"TAS": ""  # ECO:0000304
+"EXP": "experimental evidence"                                          # ECO:0000006
+"IBA": "biological aspect of ancestor evidence used in manual assertion"  # ECO:0000318
+"IC": "inference from background scientific knowledge"                  # ECO:0000001
+"IDA": "direct assay evidence used in manual assertion"                 # ECO:0000314
+"IEA": "evidence used in automatic assertion"                           # ECO:0000501
+"IEP": "expression pattern evidence"                                    # ECO:0000008
+"IGI": "genetic interaction evidence used in manual assertion"          # ECO:0000316
+"IKR": "phylogenetic determination of loss of key residues evidence used in manual assertion"  # ECO:0000320
+"IMP": "mutant phenotype evidence used in manual assertion"             # ECO:0000315
+"IPI": "physical interaction evidence used in manual assertion"         # ECO:0000353
+"ISA": "sequence alignment evidence"                                    # ECO:0000200
+"ISM": "match to sequence model evidence "                              # ECO:0000202
+"ISO": "sequence orthology evidence"                                    # ECO:0000201
+"ISS": "sequence similarity evidence used in manual assertion"          # ECO:0000250
+"NAS": "author statement without traceable support used in manual assertion"  # ECO:0000303
+"ND": "no biological data found"   # ECO:0000035
+"RCA": "computational combinatorial evidence used in manual assertion"  # ECO:0000245
+"TAS": "author statement supported by traceable reference used in manual assertion"  # ECO:0000304
 "M": "male"
 "F": "female"

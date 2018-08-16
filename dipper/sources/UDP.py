@@ -308,10 +308,10 @@ class UDP(Source):
                     model.addLabel(variant_bnode, variant_label)
 
                 self.graph.addTriple(
-                    variant_bnode, self.globaltt['in_taxon'],
+                    variant_bnode, self.globaltt['in taxon'],
                     'NCBITaxon:9606')
                 self.graph.addTriple(
-                    intrinsic_geno_bnode, self.globaltt['has_alternate_part'],
+                    intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)
                 if rs_id:
                     dbsnp_curie = 'dbSNP:{0}'.format(rs_id)
@@ -583,13 +583,11 @@ class UDP(Source):
 
             model.addPerson(patient_curie, patient_id)
 
-            self.graph.addTriple(patient_curie,
-                                 self.globaltt['has_phenotype'],
-                                 "DOID:4")
+            self.graph.addTriple(
+                patient_curie, self.globaltt['has phenotype'], self.globaltt['disease'])
             if present == 'yes':
-                self.graph.addTriple(patient_curie,
-                                     self.globaltt['has_phenotype'],
-                                     hpo_curie)
+                self.graph.addTriple(
+                    patient_curie, self.globaltt['has phenotype'], hpo_curie)
 
             line_counter += 1
             if not self.testMode and limit is not None \

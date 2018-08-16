@@ -21,19 +21,6 @@ class Reference:
 
     """
 
-    ref_types = {
-        'person': 'foaf:Person',
-        'journal_article': 'IAO:0000013',
-        'publication': 'IAO:0000311',  # book
-        'document': 'IAO:0000310',  # document???
-        'photograph': 'IAO:0000185',
-        'webpage': 'SIO:000302',
-    }
-
-    annotation_properties = {
-        'page': 'foaf:page',
-        'title': 'dc:title'
-    }
 
     def __init__(self, graph, ref_id=None, ref_type=None):
         if isinstance(graph, Graph):
@@ -48,9 +35,9 @@ class Reference:
         self.short_citation = None
 
         self.model = Model(self.graph)
-
+        self.globaltt = self.model.globaltt
         if ref_type is None:
-            self.ref_type = self.ref_types['document']
+            self.ref_type = self.globaltt['document']
         else:
             self.ref_type = ref_type
 
@@ -97,13 +84,13 @@ class Reference:
 
     def addPage(self, subject_id, page_url):
         self.graph.addTriple(
-            subject_id, self.annotation_properties['page'],
+            subject_id, self.globaltt['page'],
             page_url, object_is_literal=True)
         return
 
     def addTitle(self, subject_id, title):
         self.graph.addTriple(
-            subject_id, self.annotation_properties['title'],
+            subject_id, self.globaltt['title (dce)'],
             title, object_is_literal=True)
         return
 

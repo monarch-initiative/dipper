@@ -907,13 +907,14 @@ class MGI(PostgreSQLSource):
                     vslc_label += allele2
 
                 model.addIndividualToGraph(
-                    ivslc_id, vslc_label, self.globaltt['variant_single_locus_complement'])
+                    ivslc_id, vslc_label,
+                    self.globaltt['variant_single_locus_complement'])
                 self.label_hash[ivslc_id] = vslc_label
-                rel1 = rel2 = self.globaltt['has_alternate_part']
+                rel1 = rel2 = self.globaltt['has_variant_part']
                 if allele1_id in self.wildtype_alleles:
                     rel1 = self.globaltt['has_reference_part']
                 if allele2_id in self.wildtype_alleles:
-                    rel2 = self.globaltts['has_reference_part']
+                    rel2 = self.globaltt['has_reference_part']
                 geno.addPartsToVSLC(
                     ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
 
@@ -945,9 +946,9 @@ class MGI(PostgreSQLSource):
                     gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
-                    geno.addParts(v, gvc_id, self.globaltt['has_alternate_part'])
+                    geno.addParts(v, gvc_id, self.globaltt['has_variant_part'])
                     geno.addVSLCtoParent(v, gvc_id)
-                geno.addParts( gvc_id, gt, self.globaltt['has_alternate_part'])
+                geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
             elif len(vslcs) == 1:
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
@@ -1005,10 +1006,10 @@ class MGI(PostgreSQLSource):
                 (allele_key, mutation) = line.split('\t')
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id =  self._makeInternalIdentifier('seqalt', allele_key)
+                    iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
                 if self.testMode \
-                        and int(allele_key) not in  self.test_keys.get('allele'):
+                        and int(allele_key) not in self.test_keys.get('allele'):
                     continue
 
                 # TODO we might need to map the seq alteration to the MGI id
@@ -1088,7 +1089,7 @@ class MGI(PostgreSQLSource):
                             "can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = G2PAssoc(g, self.name, genotype_id, accid)
+                        assoc = G2PAssoc(graph, self.name, genotype_id, accid)
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 # OMIM/Genotype are disease-models
@@ -1101,7 +1102,7 @@ class MGI(PostgreSQLSource):
                         logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = Assoc(g, self.name)
+                        assoc = Assoc(graph, self.name)
                         # TODO PYLINT
                         # Redefinition of assoc type from
                         # dipper.models.assoc.G2PAssoc.G2PAssoc to
@@ -1127,7 +1128,7 @@ class MGI(PostgreSQLSource):
                         logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = Assoc(g, self.name)
+                        assoc = Assoc(graph, self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(accid)
                         assoc.set_relationship(self.globaltt['model_of'])
@@ -1218,7 +1219,7 @@ class MGI(PostgreSQLSource):
                 # MGI adds sex specificity qualifiers here
                 if qualifier == 'MP-Sex-Specificity'\
                         and (qualifier_value == 'M' or qualifier_value == 'F'):
-                    model._addSexSpecificity(assoc_id, self.resolve(sex))
+                    model._addSexSpecificity(assoc_id, self.resolve(qualifier_value))
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1271,7 +1272,7 @@ class MGI(PostgreSQLSource):
                 reference = Reference(graph, accid)
                 reference.addRefToGraph()
 
-                if not self.testMode and  limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
@@ -1318,7 +1319,7 @@ class MGI(PostgreSQLSource):
                 if pub_id is not None:
                     # only add these to the graph if
                     # it's mapped to something we understand
-                    reference = Reference(g, pub_id)
+                    reference = Reference(graph, pub_id)
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
@@ -1359,7 +1360,7 @@ class MGI(PostgreSQLSource):
             graph = self.testgraph
         else:
             graph = self.graph
-        model = Model(g)
+        model = Model(graph)
         line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
@@ -1463,7 +1464,7 @@ class MGI(PostgreSQLSource):
                         model.addIndividualToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name, elf.globaltt['hasExactSynonym'])
+                            marker_id, name, self.globaltt['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1968,7 +1969,7 @@ class MGI(PostgreSQLSource):
 
                 gene_id = 'NCBIGene:'+gene_num
 
-                # geno.addParts(gene_id, allele_id, self.globaltt['has_alternate_part'])
+                # geno.addParts(gene_id, allele_id, self.globaltt['has_variant_part'])
                 seqalt_id = self.idhash['seqalt'].get(allele_key)
                 if seqalt_id is None:
                     seqalt_id = allele_id
@@ -2089,13 +2090,13 @@ class MGI(PostgreSQLSource):
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                g.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id)
+                graph.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id)
                 # TODO
                 # verify if this should be contingent on the exactness or not
                 # if qualifier == 'Exact':
                 #     gu.addTriple(
                 #       g, strain_id,
-                #       Genotype.object_properties['has_genotype'],
+                #       self.globaltt['has_genotype'],
                 #       genotype_id)
                 # else:
                 #     gu.addXref(g, strain_id, genotype_id)
@@ -2507,37 +2508,6 @@ class MGI(PostgreSQLSource):
         if tax is not None:
             tax = 'NCBITaxon:'+tax
         return tax
-
-    @staticmethod
-    def _map_evidence_id(evidence_code):
-
-        ecotype = None
-        type_map = {
-            'EXP': 'ECO:0000006',
-            'IBA': 'ECO:0000318',
-            'IC': 'ECO:0000001',
-            'IDA': 'ECO:0000314',
-            'IEA': 'ECO:0000501',
-            'IEP': 'ECO:0000008',
-            'IGI': 'ECO:0000316',
-            'IKR': 'ECO:0000320',
-            'IMP': 'ECO:0000315',
-            'IPI': 'ECO:0000353',
-            'ISA': 'ECO:0000200',
-            'ISM': 'ECO:0000202',
-            'ISO': 'ECO:0000201',
-            'ISS': 'ECO:0000250',
-            'NAS': 'ECO:0000303',
-            'ND': 'ECO:0000035',
-            'RCA': 'ECO:0000245',
-            'TAS': 'ECO:0000304'
-        }
-        if evidence_code.strip() in type_map:
-            ecotype = type_map.get(evidence_code)
-        else:
-            logger.error("Evidence code (%s) not mapped", evidence_code)
-
-        return ecotype
 
     @staticmethod
     def _makeInternalIdentifier(prefix, key):

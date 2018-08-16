@@ -269,7 +269,7 @@ class GWASCatalog(Source):
 
         model.addIndividualToGraph(
             hap_id, hap_label.strip(), self.globaltt['haplotype'], hap_description)
-        geno.addTaxon(self.globaltt("Homo sapiens"), hap_id)
+        geno.addTaxon(self.globaltt["Homo sapiens"], hap_id)
 
         snp_labels = re.split(r';\s?', hap_label)
         chrom_nums = re.split(r';\s?', chrom_num)

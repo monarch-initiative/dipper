@@ -1,0 +1,26 @@
+---
+# Disease-causing germline mutation(s) in (RO:0002200)
+'17949': 'has phenotype'
+# Disease-causing somatic mutation(s) in
+'17955': 'has_phenotype'
+# Major susceptibility factor in  ('RO:0002326')
+'17961': 'contributes_to'
+# Modifying germline mutation in
+'17967': 'contributes_to'
+# Modifying somatic mutation in
+'17973': 'contributes_to'
+# Part of a fusion gene in
+'17979': 'contributes_to'
+# Role in the phenotype of
+'17985': 'contributes_to'
+'18273': None,  # Candidate gene tested in  FIXME?
+# Disease-causing germline mutation(s) (gain of function) in
+'25979': 'has phenotype'
+# Disease-causing germline mutation(s) (loss of function) in
+'25972': 'has phenotype'
+# locus
+'25986': 'sequence_feature'
+# gene with protein product
+'25993': 'protein_coding_gene'
+# Non-coding RNA
+'26046': 'ncRNA_gene'
