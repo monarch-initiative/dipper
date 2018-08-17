@@ -17,7 +17,6 @@
 "has_sequence_attribute": "GENO:0000207"
 "has_genotype": "GENO:0000222"
 "has_variant_part": "GENO:0000382"
-"has_reference_part": "GENO:0000385"
 "is_allele_of": "GENO:0000408"
 "targets_gene": "GENO:0000414"
 "is_expression_variant_of": "GENO:0000443"
@@ -38,11 +37,9 @@
 "starts during": "RO:0002091"
 "ends during": "RO:0002093"
 
-"has phenotype": "RO:0002200"
 "has gene product": "RO:0002205"
 "expressed in": "RO:0002206"
 "colocalizes with": "RO:0002325"
-"contributes to": "RO:0002326"
 "enables": "RO:0002327"
 "involved in": "RO:0002331"
 "member of": "RO:0002350"
@@ -54,7 +51,6 @@
 "is subsequence of": "RO:0002525"
 "has evidence": "RO:0002558"
 "is substance that treats": "RO:0002606"
-"is marker for": "RO:0002607"
 "is model of": "RO:0003301"
 "in paralogy relationship with": "RO:HOM0000011"
 "in orthology relationship with": "RO:HOM0000017"
@@ -142,6 +138,12 @@
 "benign_for_condition": "GENO:0000843"
 "likely_benign_for_condition": "GENO:0000844"
 "uncertain significance": "GENO:0000845"
+"contributes to": "RO:0002326"
+"has phenotype": "RO:0002200"
+"causes condition": "RO:0003303"
+"contributes to condition": "RO:0003304"
+"is marker for": "RO:0002607"
+
 
 # punting to RCV on disease for now
 # (would be a little under 10000 terms to map here
@@ -159,8 +161,6 @@
 
 "phenotyping only": "SEPIO:0000186"
 
-# this does not seem to be an ontology term. why is it here?
-"has_sex_specificty": ":has_sex_specificity"
 
 # provenance  unused now? (2016 06 03)
 # ENIGMA BRCA1/2 Classification Criteria (2015)	SEPIO:1000001
@@ -207,16 +207,6 @@
 "female": "PATO:0000383"
 
 
-# genotype to phenotype/disease
-"has_phenotype": "RO:0002200"
-"causes_condition": "RO:0003303"
-"contributes_to": "RO:0003304"
-"is_marker_for": "RO:0002607"
-"pathogenic": "GENO:0000840"
-"likely pathogenic": "GENO:0000841"
-"benign": "GENO:0000843"
-"likely benign": "GENO:0000844"
-"uncertain significance": "GENO:0000845"
 
 # Place holder predicates: predicates
 # while we wait for relation (or other) ontology
@@ -227,6 +217,8 @@
 "has_molecular_consequence": ":has_molecular_consequence"
 "has_cell_origin": ":has_cell_origin"
 "has_allelic_requirement": ":has_allelic_requirement"
+"protective_for_condition": ":protective_for_condition"
+"has_drug_response": ":has_drug_response"
 
 # Inheritance, allelic requirement
 "x_linked_dominant": "HP:0001423"
@@ -262,7 +254,7 @@
 "hemizygous-y": "GENO:0000604"
 "hemizygous-x": "GENO:0000605"
 "homozygous": "GENO:0000136"
-"hemizygous": "GENO:0000606"
+"hemizygous insertion-linked": "GENO:0000606"
 "compound heterozygote": "GENO:0000402"
 "simple heterozygous": "GENO:0000458"
 
@@ -298,7 +290,6 @@
 "targeted_gene_subregion": "GENO:0000534"
 "targeted_gene_complement": "GENO:0000527"
 "biological_region": "SO:0001411"
-"missense_variant": "SO:0001583"
 "transcript": "SO:0000233"
 "polypeptide": "SO:0000104"
 "cDNA": "SO:0000756"

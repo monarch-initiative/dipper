@@ -7,10 +7,10 @@
 # affecting or encompassing the coding region of a single gene
 # identified in multiple (>3) unrelated cases/families with both
 # a developmental disorder and an incidental (non-developmental) disorder
-"both DD and IF": "contributes_to"
+"both DD and IF": "contributes to condition"
 
 # Can't find definition
-"child IF": "contributes_to"
+"child IF": "contributes to condition"
 
 # 1. plausible disease-causing mutations* within, affecting or encompassing an
 # interpretable functional region** of a single  gene identified in
@@ -25,7 +25,7 @@
 # with mutation in orthologous gene which is known to have the relevant
 # deficient enzymatic activity in other species; existence of animal mode which
 # recapitulates the human phenotype
-"confirmed": "pathogenic"
+"confirmed": "pathogenic_for_condition"
 
 # 1. plausible disease-causing mutations within, affecting or encompassing an
 # interpretable functional region of a single gene identified in more than
@@ -42,7 +42,7 @@
 # metabolism with mutation in orthologous gene which is known to have the relevant
 # deficient enzymatic activity in other species; existence of animal mode which
 # recapitulates the human phenotype
-"probable": "likely pathogenic"
+"probable": "likely_pathogenic_for_condition"
 
 # 1. plausible disease-causing mutations within, affecting or
 # encompassing an interpretable functional region of a single gene
@@ -56,7 +56,7 @@
 # interpretable functional region of a single gene identified in more than
 # one unrelated cases/families or segregation within multiple individuals within
 # a single large family with a developmental disorder
-"possible": "contributes_to"
+"possible": "contributes to condition"
 
 
 # allelic requirement
@@ -120,4 +120,4 @@
 "part of contiguous gene duplication": "part_of_contiguous_gene_duplication"
 
 # where the exact nature of the mutation is unclear or not recorded
-# "uncertain": ""
+# "uncertain": "uncertain significance"
