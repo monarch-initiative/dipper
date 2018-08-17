@@ -9,11 +9,14 @@ TEST = python3 -m unittest
 ### Tests
 ###
 
-test: MGI-test UDP-test IMPC-fetch IMPC-test GWAS-test reactome-test \
-      string-test trans-test CTD-test mychem-test
-# RGD-test
+test: MGI-test Orphanet-test UDP-test IMPC-fetch IMPC-test GWAS-test \
+      reactome-test RGD-test string-test trans-test CTD-test mychem-test
+
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
+
+Orphanet-test:
+	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
 
 string-test:
 	$(TEST) tests/test_string.py
@@ -34,9 +37,8 @@ GWAS-test:
 reactome-test:
 	$(TEST) tests/test_reactome.py
 
-# temp remove till TP's pr is in
-#RGD-test:
-#	$(TEST) tests/test_rgd.py
+RGD-test:
+	$(TEST) tests/test_rgd.py
 
 SGD-test:
 	$(TEST) tests/test_sgd.py

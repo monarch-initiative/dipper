@@ -18,6 +18,8 @@ class Family():
             self.graph = graph
         else:
             raise ValueError("{} is not a graph".graph)
+        self.model = Model(graph)
+        self.globaltt = self.model.globaltt
 
     def addMember(self, group_id, member_id):
         self.graph.addTriple(group_id, self.globaltt['has member'], member_id)

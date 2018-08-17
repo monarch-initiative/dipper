@@ -4,8 +4,17 @@
     clinvarxml_alpha
     First pass at converting ClinVar XML into
     RDF triples to be ingested by SciGraph.
-    These triples comform to the core of the
+    These triples conform to the core of the
     SEPIO Evidence & Provenance model 2016 Apr
+
+    We also use the clinvar curated gene to disease
+    mappings to discern the functional consequence of
+    a variant on a gene in cases where this is ambiguous.
+    For example, some variants are located in two
+    genes overlapping on different strands, and may
+    only have a functional consequence on one gene.
+    This is suboptimal and we should look for a source
+    that directly provides this.
 
     creating a test set.
         get a full dataset   default ClinVarFullRelease_00-latest.xml.gz
@@ -30,6 +39,7 @@ import yaml
 import os
 import re
 import gzip
+import csv
 import hashlib
 import logging
 import argparse
@@ -49,7 +59,12 @@ RPATH = '/' + '/'.join(IPATH[1:-3])
 files = {
     'f1': {
         'file': 'ClinVarFullRelease_00-latest.xml.gz',
-        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'}
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'
+    },
+    'f2': {
+        'file': 'gene_condition_source_id',
+        'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id'
+    }
 }
 
 # regular expression to limit what is found in the CURIE identifier
@@ -63,6 +78,10 @@ ARGPARSER = argparse.ArgumentParser()
 ARGPARSER.add_argument(
     '-f', '--filename', default=files['f1']['file'],
     help="input filename. default: '" + files['f1']['file'] + "'")
+
+ARGPARSER.add_argument(
+    '-m', '--mapfile', default=files['f2']['file'],
+    help="input g2d mapping file. default: '" + files['f2']['file'] + "'")
 
 ARGPARSER.add_argument(
     '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
@@ -99,6 +118,7 @@ ARGS = ARGPARSER.parse_args()
 
 BASENAME = re.sub(r'\.xml.gz$', '', ARGS.filename)
 FILENAME = ARGS.inputdir + '/' + ARGS.filename
+MAPFILE = ARGS.inputdir + '/' + ARGS.mapfile
 
 # avoid clobbering existing output until we are finished
 OUTFILE = ARGS.destination + '/TMP_' + ARGS.output + '_PART'
@@ -302,6 +322,17 @@ def digest_id(wordage):
     return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[0:15]
 
 
+G2PMAP = {}
+with open(MAPFILE, 'rt') as tsvfile:
+    reader = csv.reader(tsvfile, delimiter="\t")
+    next(reader) #header
+    for row in reader:
+        if row[0] in G2PMAP:
+            G2PMAP[row[0]].append(row[3])
+        else:
+            G2PMAP[row[0]] = [row[3]]
+
+
 # Global translation table
 # Translate labels found in ontologies
 # to the terms they are for
@@ -383,6 +414,8 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_variant_id = rcv_variant_type = rcv_variant_label = None
         rcv_disease_db = rcv_disease_id = rcv_disease_label = None
         rcv_disease_curi = rcv_ncbigene_id = rcv_gene_symbol = None
+        medgen_db = None
+        medgen_id = None
 
         RCVAssertion = ClinVarSet.find('./ReferenceClinVarAssertion')
         rcv_created = RCVAssertion.get('DateCreated')
@@ -498,33 +531,42 @@ with gzip.open(FILENAME, 'rt') as fh:
             # 374 variant in gene
             # 54 near gene, downstream
 
-            RCV_Variant = RCV_Measure.find('./MeasureRelationship')
+            RCV_Variant = RCV_Measure.findall('./MeasureRelationship')
+
+            # Store as a list of tuples of type,id
+            # since a variant can overlap multiple genes
+            gene_list = []
 
             if RCV_Variant is None:  # try letting them all through
                 LOG.info(ET.tostring(RCV_Measure).decode('utf-8'))
             else:
-                rcv_variant_relationship_type = RCV_Variant.get('Type')
-                # if rcv_variant_relationship_type is not None:
-                #    LOG.warning(
-                #        rcv_acc +
-                #        ' rcv_variant_relationship_type ' +
-                #        rcv_variant_relationship_type)
+                for measure in RCV_Variant:
+                    rcv_variant_relationship_type = measure.get('Type')
+                    # if rcv_variant_relationship_type is not None:
+                    #    LOG.warning(
+                    #        rcv_acc +
+                    #        ' rcv_variant_relationship_type ' +
+                    #        rcv_variant_relationship_type)
 
-                # XRef[@DB="Gene"]/@ID
-                RCV_Gene = RCV_Variant.find('./XRef[@DB="Gene"]')
-                if rcv_ncbigene_id is None and RCV_Gene is not None:
-                    rcv_ncbigene_id = RCV_Gene.get('ID')
-                # elif rcv_ncbigene_id is None:
-                #    LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
+                    # XRef[@DB="Gene"]/@ID
+                    RCV_Gene = measure.find('./XRef[@DB="Gene"]')
+                    if RCV_Gene is not None:
+                        ncbigene_id = RCV_Gene.get('ID')
+                    gene_list.append((rcv_variant_relationship_type, ncbigene_id))
+                    # elif rcv_ncbigene_id is None:
+                    #    LOG.warning(rcv_acc + " VARIANT MISSING NCBIGene ID")
 
-                # Symbol/ElementValue[@Type="Preferred"]
-                RCV_Symbol = RCV_Variant.find(
-                    './Symbol/ElementValue[@Type="Preferred"]')
-                if rcv_gene_symbol is None and RCV_Symbol is not None:
-                    rcv_gene_symbol = RCV_Symbol.text
+                    # To avoid rdfs:label clashes, get symbols
+                    # from a single source
 
-                if rcv_gene_symbol is None:
-                    LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
+                    # Symbol/ElementValue[@Type="Preferred"]
+                    # RCV_Symbol = measure.find(
+                    #     './Symbol/ElementValue[@Type="Preferred"]')
+                    # if rcv_gene_symbol is None and RCV_Symbol is not None:
+                    #     rcv_gene_symbol = RCV_Symbol.text
+
+                    # if rcv_gene_symbol is None:
+                    #     LOG.warning(rcv_acc + " VARIANT MISSING Gene Symbol")
 
         #######################################################################
         # the Object is the Disease, here is called a "trait"
@@ -573,17 +615,17 @@ with gzip.open(FILENAME, 'rt') as fh:
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
 
-            # Otherwise go with MedGen
-            if rcv_disease_db is None or rcv_disease_id is None:
-                for RCV_Trait in \
-                        RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
-                    if rcv_disease_db is not None:
-                        break
-                    for RCV_TraitXRef in RCV_Trait.findall(
-                            './XRef[@DB="MedGen"]'):
-                        rcv_disease_db = RCV_TraitXRef.get('DB')
-                        rcv_disease_id = RCV_TraitXRef.get('ID')
-                        break
+            # Always get medgen for g2p mapping file
+            for RCV_Trait in RCV_TraitSet.findall('./Trait[@Type="Disease"]'):
+                for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="MedGen"]'):
+                    medgen_db = RCV_TraitXRef.get('DB')
+                    medgen_id = RCV_TraitXRef.get('ID')
+                    break
+
+            if rcv_disease_db is None and medgen_db is not None:
+                rcv_disease_db = medgen_db
+            if rcv_disease_id is None and medgen_id is not None:
+                rcv_disease_id = medgen_id
 
             # See if there are any leftovers. Possibilities include:
             # EFO, Gene, Human Phenotype Ontology
@@ -624,24 +666,51 @@ with gzip.open(FILENAME, 'rt') as fh:
         rcv_disease_curi = rcv_disease_db + ':' + rcv_disease_id
         rcv_variant_id = 'ClinVarVariant:' + rcv_variant_id
 
-        if rcv_ncbigene_id is not None and rcv_ncbigene_id.isnumeric():
-            rcv_ncbigene_curi = 'NCBIGene:' + str(rcv_ncbigene_id)
-            #           RCV only TRIPLES
-            term_id = resolve(rcv_variant_relationship_type, LTT)
-            if term_id is not None:
-                # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
-                write_spo(
-                    rcv_variant_id,
-                    term_id,
-                    rcv_ncbigene_curi)
-            else:
-                # LOG.warning(
-                # 'Check relationship type: ' + rcv_variant_relationship_type)
-                continue
+        # Hack to determine what relationship to make between
+        # a gene and variant.  We first look at the rcv
+        # variant gene relationship type to get the correct
+        # curie, but override has_affected_locus in cases
+        # where a gene to disease association has not been
+        # curated, and instead use has_reference_part
+        if len(gene_list) > 0:
+            for variant_relationship, ncbigene_id in gene_list:
+                if not ncbigene_id.isnumeric():
+                    continue
+                rcv_ncbigene_curi = 'NCBIGene:' + str(ncbigene_id)
+                #  RCV only TRIPLES
+                term_id = resolve(variant_relationship, LTT)
+                if term_id is not None:
+                    if medgen_id is not None \
+                            and ncbigene_id in G2PMAP \
+                            and medgen_id in G2PMAP[ncbigene_id]:
+                        # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
+                        write_spo(
+                           rcv_variant_id,
+                           term_id,
+                           rcv_ncbigene_curi)
+                    # Here we override our type mapping
+                    # and use has_reference_part
+                    elif medgen_id is not None \
+                            and LTT[variant_relationship] \
+                                == 'has_affected_locus':
+                        write_spo(
+                            rcv_variant_id,
+                            GTT['has_reference_part'],
+                            rcv_ncbigene_curi)
+                    else:
+                        write_spo(
+                            rcv_variant_id,
+                            term_id,
+                            rcv_ncbigene_curi)
+        else:
+            # LOG.warning(
+            # 'Check relationship type: ' + rcv_variant_relationship_type)
+            continue
 
             # <scv_ncbigene_id><rdfs:label><scv_gene_symbol>
-            if rcv_gene_symbol is not None:
-                write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
+            # get these from NCBIGene
+            # if rcv_gene_symbol is not None:
+            #     write_spo(rcv_ncbigene_curi, 'rdfs:label', rcv_gene_symbol)
 
         #######################################################################
         # Descend into each SCV grouped with the current RCV

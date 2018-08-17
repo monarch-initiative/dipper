@@ -39,7 +39,6 @@
 "has_sequence_attribute": "GENO:0000207"
 "has_genotype": "GENO:0000222"
 "has_variant_part": "GENO:0000382"
-"has_reference_part": "GENO:0000385"
 "is_allele_of": "GENO:0000408"
 "targets_gene": "GENO:0000414"
 "is_expression_variant_of": "GENO:0000443"
@@ -63,7 +62,6 @@
 "has gene product": "RO:0002205"
 "expressed in": "RO:0002206"
 "colocalizes with": "RO:0002325"
-"contributes to": "RO:0002326"
 "enables": "RO:0002327"
 "involved in": "RO:0002331"
 "member of": "RO:0002350"
@@ -75,7 +73,6 @@
 "is subsequence of": "RO:0002525"
 "has evidence": "RO:0002558"
 "is substance that treats": "RO:0002606"
-"is marker for": "RO:0002607"
 "is model of": "RO:0003301"
 "in paralogy relationship with": "RO:HOM0000011"
 "in orthology relationship with": "RO:HOM0000017"
@@ -122,6 +119,21 @@
 "structural_alteration": "SO:0001785"
 "direct_tandem_duplication": "SO:1000039"
 "chromosome_structure_variation": "SO:1000183"
+"loss_of_function_variant": "SO:0002054"
+"gain_of_function_variant": "SO:0002053"
+"activating_mutation": ":activating"
+"dominant_negative_variant": "SO:0002052"
+"inframe_variant": "SO:0001650"
+"missense_variant": "SO:0001583"
+"UTR_variant": "SO:0001622"
+"transcriptional_cis_regulatory_region": "SO:0001055"
+
+# GENO (some overlap between GENO and SO)
+# Prioritize GENO when possible 
+# why? SO is there first and very specific? 
+# if GENO needs it, a proper miriot is called for.  TEC
+
+
 # "microsatellite": "SO:0000289"
 "microsatellite": "GENO:0000847"
 "short repeat": "GENO:0000846"
@@ -129,11 +141,20 @@
 "has_zygosity": "GENO:0000608"
 "haplotype": "GENO:0000871"
 "coding sequence alteration": "GENO:0000848"
+"somatic": "GENO:0000882"
+"germline": "GENO:0000900"
+
+
 "pathogenic_for_condition": "GENO:0000840"
 "likely_pathogenic_for_condition": "GENO:0000841"
 "benign_for_condition": "GENO:0000843"
 "likely_benign_for_condition": "GENO:0000844"
 "uncertain significance": "GENO:0000845"
+"contributes to": "RO:0002326"
+"causes condition": "RO:0003303"
+"contributes to condition": "RO:0003304"
+"is marker for": "RO:0002607"
+
 "clinical testing": "SEPIO:0000067"
 "literature only": "SEPIO:0000080"
 "reference population": "SEPIO:0000102"
@@ -146,6 +167,7 @@
 "has_affected_feature": "GENO:0000418"
 "is upstream of sequence of": "RO:0002528"
 "is downstream of sequence of": "RO:0002529"
+
 "in taxon": "RO:0002162"
 "evidence": "ECO:0000000"
 "journal article": "IAO:0000013"
@@ -171,6 +193,55 @@
 "mutant phenotype evidence": "ECO:0000015"
 "male": "PATO:0000384"
 "female": "PATO:0000383"
+
+#############################################################
+# Place holder predicates: predicates
+# while we wait for relation (or other) ontology
+# tickets (link tickets url where appropriate)
+
+# Not liking this,
+# global translation should only be valid  verifiable ontology terms
+# if there are half measures or place holders
+# they should be local to an ingest till they are fixed. TEC
+
+"does_not_have_phenotype": ":does_not_have_phenotype"
+"has_sex_specificty": ":has_sex_specificity"
+"has_functional_consequence": ":has_functional_consequence"
+"has_molecular_consequence": ":has_molecular_consequence"
+"has_cell_origin": ":has_cell_origin"
+"has_allelic_requirement": ":has_allelic_requirement"
+"protective_for_condition": ":protective_for_condition"
+"has_drug_response": ":has_drug_response"
+
+# TODO review theses
+# Intersection of increased amount and gene dosage?
+# PATO_0000470 and GENO:0000876
+"increased_gene_dosage": ":increased_gene_dosage"
+"part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication"
+"all_missense_or_inframe": ":all_missense_or_inframe"
+
+
+# TODO decide on these
+# we do not currently ingest NCIT into scigraph
+# I am finding NCIT to have well defined terms missing fron other ontologies
+# and think we should use them TEC
+
+#"biallelic_mutation": "NCIT:C129830"
+#"monoallelic_mutation": "NCIT:C129829"
+#"mosaic_indiviual": "NCIT:C88144"
+"biallelic": ":biallelic"
+"monoallelic": ":monoallelic"
+"mosaic": ":mosaic"
+
+##############################################################
+# Inheritance, allelic requirement
+"x_linked_dominant": "HP:0001423"
+"mitochondrial_inheritance": "HP:0001427"
+"genomically_imprinted": "SO:0000134"
+"hemizygous": "GENO:0000134"
+"digenic_inheritance": "HP:0010984"
+
+
 "Homo sapiens": "NCBITaxon:9606"
 "Gallus gallus": "NCBITaxon:9031"
 "Sus scrofa": "NCBITaxon:9823"
@@ -188,7 +259,7 @@
 "hemizygous-y": "GENO:0000604"
 "hemizygous-x": "GENO:0000605"
 "homozygous": "GENO:0000136"
-"hemizygous": "GENO:0000606"
+"hemizygous insertion-linked": "GENO:0000606"
 "compound heterozygote": "GENO:0000402"
 "simple heterozygous": "GENO:0000458"
 "embryonic stem cell line": "ERO:0002002"
@@ -220,7 +291,6 @@
 "targeted_gene_subregion": "GENO:0000534"
 "targeted_gene_complement": "GENO:0000527"
 "biological_region": "SO:0001411"
-"missense_variant": "SO:0001583"
 "transcript": "SO:0000233"
 "polypeptide": "SO:0000104"
 "cDNA": "SO:0000756"

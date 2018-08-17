@@ -387,9 +387,6 @@ class CTD(Source):
         we toss this for now.
         (Mostly, we are not sure what to do with this information.)
 
-        We associate "some variant of gene X" with the phenotype,
-        rather than the gene directly.
-
         We also pull in the MeSH labels here (but not OMIM) to ensure that
         we have them (as they may not be brought in separately).
         :param row:
@@ -472,23 +469,7 @@ class CTD(Source):
                     # there is more than one OMIM entry in omim_ids.
                     pass
 
-        # we actually want the association between the gene and the disease
-        # to be via an alternate locus not the "wildtype" gene itself. So we
-        # make an anonymous alternate locus, and put that in the association.
-        alt_id = gene_id + '-' + preferred_disease_id + 'VL'
-        # can't have colons in the bnodes
-        alt_locus = re.sub(r':', '', alt_id)
-        alt_locus = "_:" + alt_locus
-
-        alt_label = 'some variant of ' + gene_symbol + ' that is ' \
-                    + direct_evidence + ' for ' + disease_name
-        model.addIndividualToGraph(
-            alt_locus, alt_label,
-            self.geno.genoparts['variant_locus'])
-        # assume that the label gets added elsewhere
         model.addClassToGraph(gene_id, None)
-        self.geno.addAffectedLocus(alt_locus, gene_id)
-        model.addBlankNodeAnnotation(alt_locus)
 
         # not sure if MESH is getting added separately.
         # adding labels here for good measure
@@ -501,7 +482,7 @@ class CTD(Source):
         rel_id = self._get_relationship_id(direct_evidence)
         refs = self._process_pubmed_ids(pubmed_ids)
 
-        self._make_association(alt_locus, preferred_disease_id, rel_id, refs)
+        self._make_association(gene_id, preferred_disease_id, rel_id, refs)
 
         return
 

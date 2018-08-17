@@ -252,14 +252,15 @@ class MMRRC(Source):
                     # assume the phenotype label is in the ontology
                     model.addClassToGraph(pid, None)
                     if mgi_allele_id is not None and mgi_allele_id != '':
-                        assoc = G2PAssoc(g, self.name, mgi_allele_id, pid,
-                                         model.object_properties['has_phenotype'])
+                        assoc = G2PAssoc(
+                            g, self.name, mgi_allele_id, pid,
+                            self.globaltt['has phenotype'])
                         for p in pubmed_ids:
                             assoc.add_source(p)
                         assoc.add_association_to_graph()
                     else:
-                        logger.info("Phenotypes and no allele for %s",
-                                    strain_id)
+                        logger.info(
+                            "Phenotypes and no allele for %s", strain_id)
 
                 if not self.testMode and (
                         limit is not None and line_counter > limit):
@@ -310,20 +311,19 @@ class MMRRC(Source):
                     vslc_list.append(vslc_id)
                     geno.addPartsToVSLC(
                         vslc_id, vl, None, geno.zygosity['indeterminate'],
-                        geno.object_properties['has_alternate_part'], None)
+                        self.globaltt['has_alternate_part'], None)
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
-                        geno.genoparts['variant_single_locus_complement'])
+                        self.globaltt['variant_single_locus_complement'])
                 if len(vslc_list) > 0:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)
                         gvc_id = re.sub(r'_|:', '', gvc_id)
                         gvc_id = '_:'+gvc_id
-                        gvc_label = \
-                            '; '.join(self.id_label_hash[v] for v in vslc_list)
+                        gvc_label = '; '.join(self.id_label_hash[v] for v in vslc_list)
                         model.addIndividualToGraph(
                             gvc_id, gvc_label,
-                            geno.genoparts['genomic_variation_complement'])
+                            self.globaltt['genomic_variation_complement'])
                         for vslc_id in vslc_list:
                             geno.addVSLCtoParent(vslc_id, gvc_id)
                     else:
@@ -332,28 +332,24 @@ class MMRRC(Source):
                         gvc_label = self.id_label_hash[gvc_id]
 
                     genotype_label = gvc_label + ' [n.s.]'
-                    bkgd_id = \
-                        re.sub(r':', '', '-'.join(
-                            (geno.genoparts['unspecified_genomic_background'],
-                             s)))
+                    bkgd_id = re.sub(
+                        r':', '', '-'.join((
+                            self.globaltt['unspecified_genomic_background'], s)))
                     genotype_id = '-'.join((gvc_id, bkgd_id))
-                    bkgd_id = '_:'+bkgd_id
+                    bkgd_id = '_:' + bkgd_id
                     geno.addTaxon(mouse_taxon, bkgd_id)
                     geno.addGenomicBackground(
-                        bkgd_id, 'unspecified ('+s+')',
-                        geno.genoparts['unspecified_genomic_background'],
-                        "A placeholder for the " +
-                        "unspecified genetic background for "+s)
+                        bkgd_id, 'unspecified (' + s + ')',
+                        self.globaltt['unspecified_genomic_background'],
+                        "A placeholder for the unspecified genetic background for " + s)
                     geno.addGenomicBackgroundToGenotype(
                         bkgd_id, genotype_id,
-                        geno.genoparts['unspecified_genomic_background'])
+                        self.globaltt['unspecified_genomic_background'])
                     geno.addParts(
-                        gvc_id, genotype_id,
-                        geno.object_properties['has_alternate_part'])
+                        gvc_id, genotype_id, self.globaltt['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
                     g.addTriple(
-                        s, geno.object_properties['has_genotype'],
-                        genotype_id)
+                        s, self.globaltt['has_genotype'], genotype_id)
                 else:
                     # logger.debug(
                     #   "Strain %s is not making a proper genotype.", s)

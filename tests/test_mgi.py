@@ -10,7 +10,7 @@ from dipper.graph.RDFGraph import RDFGraph
 
 
 
-logging.basicConfig(level=logging.WARNING)
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 

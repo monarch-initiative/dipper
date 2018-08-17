@@ -568,7 +568,6 @@ class IMPC(Source):
         statistical_method,
         resource_name,
         row_num
-
     ):
         """
         :param phenotyping_center: str, from self.files['all']
@@ -611,19 +610,11 @@ class IMPC(Source):
         # Add parameter/measure statement: study measures parameter
         parameter_label = "{0} ({1})".format(parameter_name, procedure_name)
 
-        # when there are more than three parts to the stable ID,
-        # one part (or more) may be indicating a sub section of a page
-
-        # Maybe filter out parameter_stable_id having more than three segments?
-        # no good  ALL parameter_stable_id have four parts
-        # and most (all?) parameter_stable_id have no where specific to go.
-        # mabe a page they can be searched for or a 78 page pdf ...
-        # The parameter labels should just be attached as literals
-        # TODO eliminate this bnode
-
-        logging.info("Adding Provance")
-        model.addIndividualToGraph('_:' + parameter_stable_id, parameter_label)
-        provenance_model.add_study_measure(study_bnode, '_:' + parameter_stable_id)
+        logging.info("Adding Provenance")
+        model.addIndividualToGraph(
+            self.resolve(parameter_stable_id), parameter_label)
+        provenance_model.add_study_measure(
+            study_bnode, self.resolve(parameter_stable_id))
 
         # Add Colony
         colony_bnode = self.make_id("{0}".format(colony), '_')

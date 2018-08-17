@@ -85,7 +85,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             'MGP_001',                  # 15
             'MGP_XRY_001',              # 16
             'X-ray',                    # 17
-            'IMPC_XRY_001',             # 18   # was 'IMPC_XRY_008_001',
+            'IMPC_XRY_008_001',         # 18
             'Number of ribs right',     # 19
             'MP:0005390',               # 20
             'skeleton phenotype',       # 21
@@ -95,7 +95,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             '',                         # 25
             '8.885439E-007',            # 26
             'Wilcoxon rank sum test with continuity correction',    # 27
-            'International Mouse Phenotyping Consortium'            # 28
+            'IMPC'            # 28
         )
 
         # Generate test curies, these are otherwise generated
@@ -175,7 +175,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         )
 
         triples = """
-<https://monarchinitiative.org/.well-known/genid/bb091afddeeec4a1> a OBI:0000471 ;
+<https://monarchinitiative.org/.well-known/genid/bbdd05a8ca155dda> a OBI:0000471 ;
   BFO:0000051 OBO:STATO_0000076,
       <https://www.mousephenotype.org/impress/protocol/175/15> ;
   BFO:0000050  IMPRESS-procedure:15 ,
@@ -202,7 +202,12 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
     rdfs:label "X-ray" .
 """
 
-        # self.assertTrue(self.test_util.test_graph_equality(triples, impc.graph))
+        # dbg
+        logger.debug(
+            "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
+        )
+        self.assertTrue(
+            self.test_util.test_graph_equality(triples, impc.graph))
 
     def test_assertion_model(self):
         """
@@ -240,7 +245,7 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
 
         Line of data is hardcoded, but theoretically should work on any line
         """
-        line_to_test = 66
+        line_to_test = 1129
         count = 0
         impc = IMPC('rdf_graph', False)   # Not Skolem
         self.test_set_N = []

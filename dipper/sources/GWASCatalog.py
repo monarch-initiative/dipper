@@ -291,7 +291,7 @@ class GWASCatalog(Source):
         length = len(snp_labels)
         if not all(len(lst) == length
                    for lst in [chrom_nums, chrom_positions, context_list]):
-            logger.warn(
+            logger.warning(
                 "Unexpected data field for haplotype {} \n "
                 "will not add snp details".format(hap_label))
             return
@@ -318,8 +318,10 @@ class GWASCatalog(Source):
                 """.format(so_class)
 
                 query_result = so_ontology.query(so_query)
-                if len(list(query_result)) > 0:
+
+                if len(list(query_result)) == 1:
                     gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+
                     if gene_id is not None:
                         geno.addAffectedLocus(snp_curie, gene_id)
                         geno.addAffectedLocus(hap_id, gene_id)
@@ -331,9 +333,10 @@ class GWASCatalog(Source):
                         snp_curie, self.resolve(context_list[index]), gene_id)
 
             else:
-                logger.warn(
+                logger.warning(
                     "More mapped genes than snps, cannot disambiguate for {}"
                     .format(hap_label))
+
 
         # Seperate in case we want to apply a different relation
         # If not this is redundant with triples added above
@@ -568,10 +571,3 @@ class GWASCatalog(Source):
 
         return curie, variant_type
 
-    def getTestSuite(self):
-        import unittest
-        from tests.test_gwascatalog import GWASCatalogTestCase
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(GWASCatalogTestCase)
-
-        return test_suite

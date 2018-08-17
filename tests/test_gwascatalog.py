@@ -173,12 +173,13 @@ class TestGwasSNPModel(unittest.TestCase):
 
         triples = """
 
+
     MONARCH:b46cdf48950cb00d4ddd a OBAN:association ;
         dc:description "{0}" ;
         OBO:RO_0002558 OBO:ECO_0000213 ;
         dc:source PMID:25918132 ;
         OBAN:association_has_object EFO:0003949 ;
-        OBAN:association_has_predicate OBO:RO_0002326 ;
+        OBAN:association_has_predicate RO:0003304 ;
         OBAN:association_has_subject dbSNP:rs1491921 .
 
     MONARCH:b0a05d8eb1c3d4b037d7 a OBAN:association ;
@@ -186,14 +187,14 @@ class TestGwasSNPModel(unittest.TestCase):
         OBO:RO_0002558 OBO:ECO_0000213 ;
         dc:source PMID:25918132 ;
         OBAN:association_has_object EFO:0006995 ;
-        OBAN:association_has_predicate OBO:RO_0002326 ;
+        OBAN:association_has_predicate RO:0003304 ;
         OBAN:association_has_subject dbSNP:rs1491921 .
 
     EFO:0003949 a owl:Class ;
         rdfs:label "eye color"^^xsd:string ;
         rdfs:subClassOf UPHENO:0001001 .
 
-    dbSNP:rs1491921 OBO:RO_0002326 EFO:0003949,
+    dbSNP:rs1491921 RO:0003304 EFO:0003949,
             EFO:0006995 .
 
     PMID:25918132 a OBO:IAO_0000013 .
