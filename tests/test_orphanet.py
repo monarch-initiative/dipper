@@ -13,18 +13,6 @@ logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class OrphanetTestCase(SourceTestCase):
-
-    def setUp(self):
-        self.source = Orphanet('rdf_graph', True)
-        self.source.settestonly(True)
-        self._setDirToSource()
-        return
-
-    def tearDown(self):
-        self.source = None
-        return
-
 
 class GeneVariantDiseaseTest(unittest.TestCase):
 

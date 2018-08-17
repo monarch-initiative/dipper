@@ -34,9 +34,6 @@ class Orphanet(Source):
             # file_handle=None
         )
 
-        #self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
-        #self.translation_table = self.open_and_parse_yaml('../../translationtable/orphanet.yaml')
-
         # check to see if there's any ids configured in the config;
         # otherwise, warn
         # TODO remove
@@ -252,28 +249,30 @@ class Orphanet(Source):
         # Variant attributes
         if "|".join([association_type, "function consequence"]) in self.localtt:
             is_variant = True
-            functional_consequence = self.resolve(
-                "|".join([association_type, "function consequence"]))
+            local_key = "|".join([association_type, "function consequence"])
+            functional_consequence = self.resolve(local_key)
+            functional_consequence_lbl = self.localtt[local_key]
         if "|".join([association_type, "cell origin"]) in self.localtt:
             is_variant = True
-            cell_origin = self.resolve(
-                "|".join([association_type, "cell origin"]))
+            local_key = "|".join([association_type, "cell origin"])
+            cell_origin = self.resolve(local_key)
+            cell_origin_lbl = self.localtt[local_key]
 
         if is_variant:
             variant_label = "of {}".format(gene_symbol)
             if functional_consequence:
                 variant_label = "{} {}"\
                     .format(
-                        functional_consequence.replace('_', ' '),
+                        functional_consequence_lbl.replace('_', ' '),
                         variant_label
                 )
-                variant_id_string += functional_consequence
+                variant_id_string += functional_consequence_lbl
             else:
                 variant_label = "variant {}".format(variant_label)
 
             if cell_origin:
-                variant_label = "{} {}".format(cell_origin, variant_label)
-                variant_id_string += cell_origin
+                variant_label = "{} {}".format(cell_origin_lbl, variant_label)
+                variant_id_string += cell_origin_lbl
 
             variant_bnode = self.make_id(variant_id_string, "_")
             model.addIndividualToGraph(variant_bnode, variant_label,
