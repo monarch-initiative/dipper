@@ -394,7 +394,6 @@ class OMIM(Source):
             abbrev = (re.split(r';', label)[1].strip())
         newlabel = self._cleanup_label(label)
 
-        description = self._get_description(e['entry'])
         omimid = 'OMIM:'+str(omimnum)
 
         if e['entry']['status'] == 'removed':
@@ -423,9 +422,13 @@ class OMIM(Source):
             for l in other_labels:
                 model.addSynonym(omimid, l, 'OIO:hasRelatedSynonym')
 
+            # KS: commenting out, we will get disease descriptions
+            # from MONDO, and gene descriptions from the mygene API
+            # description = self._get_description(e['entry'])
+
             # for OMIM, we're adding the description as a definition
-            if description is not None:
-                model.addDefinition(omimid, description)
+            # if description is not None:
+            #    model.addDefinition(omimid, description)
 
             if abbrev is not None:
                 model.addSynonym(omimid, abbrev, 'OIO:hasRelatedSynonym')
@@ -577,10 +580,10 @@ class OMIM(Source):
         <some_anonymous_variant_locus>
             is_sequence_variant_instance_of
                     <omim_gene_id>
-        <some_anonymous_variant_locus> has_phenotype <omim_disease_id>
+        <some_anonymous_variant_locus> causes_condition <omim_disease_id>
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
-        <assoc> hasPredicate <has_phenotype>
+        <assoc> hasPredicate <causes_condition>
         <assoc> DC:evidence <eco_id>
         :param limit:
         :return:
@@ -685,7 +688,7 @@ class OMIM(Source):
 
                 else:
                     logger.warning(
-                        "There are misformatted row %d:%s",
+                        "There are misformatted rows %d:%s",
                         line_counter, str(line))
 
                 if not self.testMode and \
@@ -702,52 +705,62 @@ class OMIM(Source):
 
         return feature_id
 
-    def _make_pheno_assoc(self, g, gene_id, gene_symbol, disorder_num,
+    def _make_pheno_assoc(self, graph, gene_id, gene_symbol, disorder_num,
                           disorder_label, phene_key):
 
-        geno = Genotype(g)
-        model = Model(g)
+        """
+        From the docs:
+        Brackets, "[ ]", indicate "nondiseases," mainly genetic variations
+        that lead to apparently abnormal laboratory test values
+        (e.g., dysalbuminemic euthyroidal hyperthyroxinemia).
+
+        Braces, "{ }", indicate mutations that contribute to susceptibility
+        to multifactorial disorders (e.g., diabetes, asthma) or to
+        susceptibility to infection (e.g., malaria).
+
+        A question mark, "?", before the phenotype name indicates that the
+        relationship between the phenotype and gene is provisional.
+        More details about this relationship are provided in the comment
+        field of the map and in the gene and phenotype OMIM entries.
+
+        Phene key:
+        The number in parentheses after the name of each disorder indicates
+        the following:
+          (1) the disorder was positioned by mapping of the wildtype gene;
+          (2) the disease phenotype itself was mapped;
+          (3) the molecular basis of the disorder is known;
+          (4) the disorder is a chromosome deletion or duplication syndrome.
+
+        reference: https://omim.org/help/faq#1_6
+
+        :param graph: graph object of type dipper.graph.Graph
+        :param gene_id: str, gene id as curie
+        :param gene_symbol: str, symbol
+        :param disorder_num: str, disorder id
+        :param disorder_label: str, disorder label
+        :param phene_key: int or str, 1-4, see docstring
+        :return:
+        """
+
+        geno = Genotype(graph)
+        model = Model(graph)
         disorder_id = ':'.join(('OMIM', disorder_num))
-        rel_id = model.object_properties['has_phenotype']  # default
+        rel_id = model.object_properties['causes_condition']  # default
         rel_label = 'causes'
-        if re.match(r'\[', disorder_label):
+        if disorder_label.startswith('['):
             rel_id = model.object_properties['is_marker_for']
             rel_label = 'is a marker for'
-        elif re.match(r'\{', disorder_label):
+        elif disorder_label.startswith('{'):
             rel_id = model.object_properties['contributes_to']
             rel_label = 'contributes to'
-        elif re.match(r'\?', disorder_label):
+        elif disorder_label.startswith('?'):
             # this is a questionable mapping!  skip?
             rel_id = model.object_properties['contributes_to']
             rel_label = 'contributes to'
 
         evidence = self._map_phene_mapping_code_to_eco(phene_key)
 
-        # we actually want the association between the gene and the disease
-        # to be via an alternate locus not the "wildtype" gene itself.
-        # so we make an anonymous alternate locus, -- Why? TEC
-        # and put that in the association.
-        # but we only need to do that in the cases when it's not an NCBIGene
-        # (as that is a sequence feature itself)
-        if re.match(r'OMIM:', gene_id):
-            alt_locus = '_:' + re.sub(r':', '', gene_id) + '-'+disorder_num + 'VL'
-            alt_label = gene_symbol.strip()
-            if alt_label is not None and alt_label != '':
-                alt_label = ' '.join(
-                    ('some variant of', alt_label, 'that', rel_label, disorder_label))
-            else:
-                alt_label = None
-
-            model.addIndividualToGraph(
-                alt_locus, alt_label, Genotype.genoparts['variant_locus'])
-            geno.addAffectedLocus(alt_locus, gene_id)
-            model.addBlankNodeAnnotation(alt_locus)
-
-        else:
-            # assume it's already been added
-            alt_locus = gene_id
-
-        assoc = G2PAssoc(g, self.name, alt_locus, disorder_id, rel_id)
+        assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
         assoc.add_evidence(evidence)
         assoc.add_association_to_graph()
 
@@ -827,6 +840,10 @@ class OMIM(Source):
                                 did = 'dbSNP:'+dnum.strip()
                                 model.addIndividualToGraph(did, None)
                                 model.addSameIndividual(al_id, did)
+
+                        # Note that RCVs are variant to disease associations
+                        # in ClinVar, rather than variant entries
+                        # so we make these xrefs instead of equivalents
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each >1 like RCV000020059;;;
@@ -879,7 +896,7 @@ class OMIM(Source):
         }
 
         if str(code) in phene_code_to_eco:
-            eco_code = phene_code_to_eco.get(code)
+            eco_code = phene_code_to_eco[code]
         else:
             logger.error("unmapped phene code %s", code)
 

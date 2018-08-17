@@ -92,6 +92,7 @@ class MPD(Source):
         # @N, not sure if this step is required
         self.stdevthreshold = 2
 
+        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
         # TODO add a citation for mpd dataset as a whole
         self.dataset.set_citation('PMID:15619963')
 
@@ -453,6 +454,12 @@ class MPD(Source):
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
                 model.addComment(assoc_id, comment)
+                if sex == 'm':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['male'])
+                elif sex == 'f':
+                    model._addSexSpecificity(assoc_id,
+                                             self.global_terms['female'])
 
         return
 

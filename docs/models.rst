@@ -1,17 +1,17 @@
 .. _models:
 
-Working with the models API
+Working with the model API
 ===========================
-The models package provides classes for building common sets of triples based on our modeling patterns.
+The model package provides classes for building common sets of triples based on our modeling patterns.
 
 For an example see the notebook on this topic: `Building graphs with the model API <http://nbviewer.jupyter.org/github/monarch-initiative/dipper/blob/master/docs/notebooks/model-api-tutorial.ipynb>`_
 
 
 Basics
 ------
-The models class provides methods for building common RDF and OWL statements
+The model class provides methods for building common RDF and OWL statements
 
-For a list of methods, `see the API docs <dipper.models.html>`_.
+For a list of methods, `see the API docs <dipper.models.Model.html>`_.
 
 
 Building associations

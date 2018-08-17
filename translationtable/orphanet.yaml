@@ -1,0 +1,30 @@
+# Orphanet stores variant-disease associations
+# in the DisorderGeneAssociationType element
+# Here we store the mappings to be used when decomposing them
+
+"Biomarker tested in|gene phenotype": "is marker for"
+
+"Candidate gene tested in|gene phenotype": "is marker for"
+
+"Disease-causing germline mutation(s) (gain of function) in|gene phenotype": "causes condition"
+"Disease-causing germline mutation(s) (gain of function) in|function consequence": "gain_of_function_variant"
+"Disease-causing germline mutation(s) (gain of function) in|cell origin": "germline"
+
+"Disease-causing germline mutation(s) in|gene phenotype": "causes condition"
+"Disease-causing germline mutation(s) in|cell origin": "germline"
+
+"Disease-causing germline mutation(s) (loss of function) in|gene phenotype": "causes condition"
+"Disease-causing germline mutation(s) (loss of function) in|function consequence": "loss_of_function_variant"
+"Disease-causing germline mutation(s) (loss of function) in|cell origin": "germline"
+
+"Disease-causing somatic mutation(s) in|gene phenotype": "causes condition"
+"Disease-causing somatic mutation(s) in|cell origin": "somatic"
+
+"Major susceptibility factor in|gene phenotype": "contributes to condition"
+
+"Modifying germline mutation in|gene phenotype": "contributes to condition"
+"Modifying germline mutation in|cell origin": "germline"
+
+"Part of a fusion gene in|gene phenotype": "contributes to condition"
+
+"Role in the phenotype of|gene phenotype": "contributes to condition"
