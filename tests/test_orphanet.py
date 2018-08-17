@@ -34,8 +34,8 @@ class GeneVariantDiseaseTest(unittest.TestCase):
         self.test_util = TestUtils()
         self.orphanet = Orphanet('rdf_graph', True)
         # Override so tests don't break when we update terms
-        self.global_terms = self.orphanet.open_and_parse_yaml(
-            os.path.join(os.path.dirname(__file__), './resources/global_terms.yaml'))
+        self.globaltt = self.orphanet.open_and_parse_yaml(
+            os.path.join(os.path.dirname(__file__), './resources/test_terms.yaml'))
         self.orphanet.rawdir = os.path.join(os.path.dirname(__file__), 'resources/orphanet')
 
     def tearDown(self):

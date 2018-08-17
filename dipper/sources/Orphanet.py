@@ -34,8 +34,8 @@ class Orphanet(Source):
             # file_handle=None
         )
 
-        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
-        self.translation_table = self.open_and_parse_yaml('../../translationtable/orphanet.yaml')
+        #self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
+        #self.translation_table = self.open_and_parse_yaml('../../translationtable/orphanet.yaml')
 
         # check to see if there's any ids configured in the config;
         # otherwise, warn
@@ -80,7 +80,6 @@ class Orphanet(Source):
         else:
             g = self.graph
         line_counter = 0
-        geno = Genotype(g)
         model = Model(g)
 
         myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
@@ -242,30 +241,23 @@ class Orphanet(Source):
 
         # hard fail for no mappings/new terms,
         # otherwise they go unnoticed
-        if association_type not in self.translation_table:
+        if "{}|gene phenotype".format(association_type) not in self.localtt:
             raise ValueError(
                 'Disease-gene association type {} not mapped'
                     .format(association_type)
             )
 
-        g2p_global_term = self.translation_table\
-                          [association_type]\
-                          ["gene phenotype"]
-        g2p_relation = self.global_terms[g2p_global_term]
+        g2p_relation = self.resolve("|".join([association_type, "gene phenotype"]))
 
         # Variant attributes
-        if self.translation_table\
-            [association_type]["function consequence"] is not None:
+        if "|".join([association_type, "function consequence"]) in self.localtt:
             is_variant = True
-            functional_consequence = self.translation_table\
-                                        [association_type]\
-                                        ["function consequence"]
-        if self.translation_table\
-            [association_type]["cell origin"] is not None:
+            functional_consequence = self.resolve(
+                "|".join([association_type, "function consequence"]))
+        if "|".join([association_type, "cell origin"]) in self.localtt:
             is_variant = True
-            cell_origin = self.translation_table\
-                             [association_type]\
-                             ["cell origin"]
+            cell_origin = self.resolve(
+                "|".join([association_type, "cell origin"]))
 
         if is_variant:
             variant_label = "of {}".format(gene_symbol)
@@ -307,8 +299,8 @@ class Orphanet(Source):
     def _add_variant_attributes(
             self,
             variant_id,
-            functional_consequence_gt=None,
-            cell_origin_gt=None):
+            functional_consequence=None,
+            cell_origin=None):
         """
         Add attributes to variant
 
@@ -320,15 +312,13 @@ class Orphanet(Source):
         """
         model = Model(self.graph)
 
-        if functional_consequence_gt is not None:
-            consequence = self.global_terms[functional_consequence_gt]
-            predicate = self.global_terms['has_functional_consequence']
-            model.addTriple(variant_id, predicate, consequence)
+        if functional_consequence is not None:
+            predicate = self.globaltt['has_functional_consequence']
+            model.addTriple(variant_id, predicate, functional_consequence)
 
-        if cell_origin_gt is not None:
-            origin = self.global_terms[cell_origin_gt]
-            predicate = self.global_terms['has_cell_origin']
-            model.addTriple(variant_id, predicate, origin)
+        if cell_origin is not None:
+            predicate = self.globaltt['has_cell_origin']
+            model.addTriple(variant_id, predicate, cell_origin)
 
         return
 

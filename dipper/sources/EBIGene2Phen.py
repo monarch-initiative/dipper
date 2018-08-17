@@ -56,15 +56,15 @@ class EBIGene2Phen(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        super().__init__(graph_type, are_bnodes_skolemized, 'ebi_g2p')
-
-        self.dataset = Dataset(
-            'ebi',
-            'EBI',
-            'https://www.ebi.ac.uk/gene2phenotype',
-            None,
-            None,
-            'https://www.ebi.ac.uk/about/terms-of-use#general',
+        super().__init__(
+            graph_type,
+            are_bnodes_skolemized,
+            'ebi_g2p',
+            ingest_title='EBI',
+            ingest_url='https://www.ebi.ac.uk/gene2phenotype',
+            license_url='https://www.ebi.ac.uk/about/terms-of-use',
+            data_rights='https://www.ebi.ac.uk/about/terms-of-use',
+            file_handle=None
         )
 
         # Load mondo map file
@@ -74,9 +74,6 @@ class EBIGene2Phen(Source):
             for line in map_fh.iter_lines():
                 row = line.decode('utf-8').split('\t')
                 self.mondo_map[row[0]] = row[1]
-
-        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
-        self.translation_table = self.open_and_parse_yaml('../../translationtable/ebi.yaml')
 
         return
 
@@ -180,26 +177,20 @@ class EBIGene2Phen(Source):
             disease_id = 'OMIM:'+disease_omim_id
 
         hgnc_curie = 'HGNC:' + hgnc_id
-        relation_global_term = self.translation_table[g2p_relation_label]
-        relation_curie = self.global_terms[relation_global_term]
-        consequence_predicate = None
+        relation_curie = self.resolve(g2p_relation_label)
 
         if mutation_consequence != 'uncertain' and mutation_consequence != '':
-            consequence = self._get_consequence_predicate(mutation_consequence)
-            consequence_relation = self.global_terms[consequence]
-            consequence_curie = self.global_terms[
-                self.translation_table[mutation_consequence]
-            ]
+            consequence_relation = self.resolve(
+                self._get_consequence_predicate(mutation_consequence)
+            )
+            consequence_curie = self.resolve(mutation_consequence)
             variant_label = "{} {}".format(mutation_consequence, variant_label)
         else:
             consequence_relation = None
             consequence_curie = None
 
         if allelic_requirement != '':
-            requirement_curie = self.global_terms[
-                self.translation_table[allelic_requirement]
-            ]
-            variant_label = "{} {}".format(allelic_requirement, variant_label)
+            requirement_curie = self.resolve(allelic_requirement)
         else:
             requirement_curie = None
 
@@ -247,10 +238,7 @@ class EBIGene2Phen(Source):
         is_variant = False
         variant_or_gene = gene_id
 
-        variant_id_string = variant_label + 'EBI'
-        if allelic_requirement is not None:
-            variant_id_string = variant_label + allelic_requirement + 'EBI'
-
+        variant_id_string = variant_label
         variant_bnode = self.make_id(variant_id_string, "_")
 
         if consequence_predicate is not None \
@@ -265,14 +253,6 @@ class EBIGene2Phen(Source):
                 model.addLabel(consequence_id,
                                consequence_id.strip(':').replace('_', ' '))
 
-        if allelic_requirement is not None:
-            is_variant = True
-            model.addTriple(variant_bnode,
-                            self.global_terms['has_allelic_requirement'],
-                            allelic_requirement)
-            if allelic_requirement.startswith(':'):
-                model.addLabel(allelic_requirement,
-                               allelic_requirement.strip(':').replace('_', ' '))
         if is_variant:
             variant_or_gene = variant_bnode
             # Typically we would type the variant using the
@@ -288,6 +268,14 @@ class EBIGene2Phen(Source):
             self.graph, self.name, variant_or_gene, disease_id, relation_id)
         assoc.source = pmids
         assoc.add_association_to_graph()
+
+        if allelic_requirement is not None and is_variant is False:
+            model.addTriple(assoc.assoc_id,
+                            self.globaltt['has_allelic_requirement'],
+                            allelic_requirement)
+            if allelic_requirement.startswith(':'):
+                model.addLabel(allelic_requirement,
+                               allelic_requirement.strip(':').replace('_', ' '))
 
         return
 
