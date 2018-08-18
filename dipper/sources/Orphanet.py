@@ -37,8 +37,8 @@ class Orphanet(Source):
         # check to see if there's any ids configured in the config;
         # otherwise, warn
         # TODO remove
-        if 'test_ids' not in config.get_config() or \
-                'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'disease' \
+                not in config.get_config()['test_ids']:
             logger.warning("not configured with disease test ids.")
 
         return
@@ -78,14 +78,10 @@ class Orphanet(Source):
             graph = self.graph
         line_counter = 0
 
-        geno = Genotype(graph)
         model = Model(graph)
-
 
         myfile = '/'.join((self.rawdir, self.files['disease-gene']['file']))
 
-        # PYLINT complains iterparse deprecated,
-        # but as of py 3.4 only the optional & unsupplied parse arg is.
         for event, elem in ET.iterparse(myfile):
             if elem.tag == 'Disorder':
                 # get the element name and id, ignoreS element name
@@ -94,9 +90,8 @@ class Orphanet(Source):
 
                 disorder_id = 'Orphanet:'+str(disorder_num)
 
-                if self.testMode and \
-                        disorder_id not in \
-                        config.get_config()['test_ids']['disease']:
+                if self.testMode and disorder_id \
+                        not in config.get_config()['test_ids']['disease']:
                     continue
 
                 disorder_label = elem.find('Name').text
@@ -119,7 +114,7 @@ class Orphanet(Source):
                     gene_symbol = a.find('.//Gene/Symbol').text
                     gene_num = a.find('./Gene/OrphaNumber').text
                     gene_id = 'Orphanet:' + str(gene_num)
-                    gene_type_id = self.resolved(gene_iid_to_type[gene_iid])
+                    gene_type_id = self.resolve(gene_iid_to_type[gene_iid])
                     model.addClassToGraph(
                         gene_id, gene_symbol, gene_type_id, gene_name)
                     syn_list = a.find('./Gene/SynonymList')
@@ -128,29 +123,29 @@ class Orphanet(Source):
                             model.addSynonym(gene_id, s.text)
 
                     # IDs appear stable but removing for now  KS
-                    #dgtype = a.find('DisorderGeneAssociationType').get('id')
-                    #rel_id = self.resolve(dgtype)
+                    # commented out in merge till confirmed TEC
+                    # dgtype = a.find('DisorderGeneAssociationType').get('id')
+                    # rel_id = self.resolve(dgtype)
                     dg_label = a.find('./DisorderGeneAssociationType/Name').text
-                    #if rel_id is None:
+                    # if rel_id is None:
                     #    logger.warning(
                     #        "Cannot map association type (%s) to RO " +
                     #        "for association (%s | %s).  Skipping.",
                     #        dg_label, disorder_label, gene_symbol)
                     #    continue
 
-                    #alt_locus_id = '_:' + gene_num + '-' + disorder_num + 'VL'
-                    #alt_label = ' '.join((
+                    # alt_locus_id = '_:' + gene_num + '-' + disorder_num + 'VL'
+                    # alt_label = ' '.join((
                     #    'some variant of', gene_symbol.strip(), disorder_label))
 
-                    #model.addIndividualToGraph(
+                    # model.addIndividualToGraph(
                     #    alt_locus_id, alt_label, self.globaltt['variant_locus'])
-                    #geno.addAffectedLocus(alt_locus_id, gene_id)
-                    #model.addBlankNodeAnnotation(alt_locus_id)
+                    # geno.addAffectedLocus(alt_locus_id, gene_id)
+                    # model.addBlankNodeAnnotation(alt_locus_id)
 
                     # consider typing the gain/loss-of-function variants like:
                     # http://sequenceontology.org/browser/current_svn/term/SO:0002054
                     # http://sequenceontology.org/browser/current_svn/term/SO:0002053
-
 
                     # use "assessed" status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
@@ -158,6 +153,7 @@ class Orphanet(Source):
                     # imported automatically asserted information
                     # used in automatic assertion
                     eco_id = self.globaltt[
+                        # can we get a more consice label, this reads like a description
                         'imported automatically asserted information used in automatic assertion']
                     # Assessed
                     # TODO are these internal ids stable between releases?
@@ -169,7 +165,7 @@ class Orphanet(Source):
                     # Non-traceable author statement ECO_0000034
                     # imported information in automatic assertion ECO_0000313
 
-                    #assoc = G2PAssoc(
+                    # assoc = G2PAssoc(
                     #    graph, self.name, alt_locus_id, disorder_id, rel_id)
                     # assoc.add_evidence(eco_id)
                     # assoc.add_association_to_graph()
@@ -182,11 +178,11 @@ class Orphanet(Source):
 
                     for r in rlist.findall('ExternalReference'):
                         if r.find('Source').text == 'Ensembl':
-                            eqid = 'ENSEMBL:'+r.find('Reference').text
+                            eqid = 'ENSEMBL:' + r.find('Reference').text
                         elif r.find('Source').text == 'HGNC':
-                            eqid = 'HGNC:'+r.find('Reference').text
+                            eqid = 'HGNC:' + r.find('Reference').text
                         elif r.find('Source').text == 'OMIM':
-                            eqid = 'OMIM:'+r.find('Reference').text
+                            eqid = 'OMIM:' + r.find('Reference').text
                         else:
                             pass  # skip the others for now
                         if eqid is not None:
@@ -198,7 +194,6 @@ class Orphanet(Source):
                 return
 
         return
-
 
     def add_gene_to_disease(
             self,
@@ -227,7 +222,7 @@ class Orphanet(Source):
         Role in the phenotype of
 
         These labels are a composition of terms, we map:
-        gene-disease predicate (has_phenotype, contributes_to)
+        gene-disease predicate (has phenotype, contributes_to)
         variant-origin (germline, somatic)
         variant-functional consequence (loss, gain)
 
@@ -269,8 +264,7 @@ class Orphanet(Source):
         # otherwise they go unnoticed
         if "{}|gene phenotype".format(association_type) not in self.localtt:
             raise ValueError(
-                'Disease-gene association type {} not mapped'
-                    .format(association_type)
+                'Disease-gene association type {} not mapped'.format(association_type)
             )
 
         g2p_relation = self.resolve("|".join([association_type, "gene phenotype"]))
@@ -290,10 +284,8 @@ class Orphanet(Source):
         if is_variant:
             variant_label = "of {}".format(gene_symbol)
             if functional_consequence:
-                variant_label = "{} {}"\
-                    .format(
-                        functional_consequence_lbl.replace('_', ' '),
-                        variant_label
+                variant_label = "{} {}".format(
+                    functional_consequence_lbl.replace('_', ' '), variant_label
                 )
                 variant_id_string += functional_consequence_lbl
             else:
@@ -304,8 +296,8 @@ class Orphanet(Source):
                 variant_id_string += cell_origin_lbl
 
             variant_bnode = self.make_id(variant_id_string, "_")
-            model.addIndividualToGraph(variant_bnode, variant_label,
-                                       geno.genoparts['variant_locus'])
+            model.addIndividualToGraph(
+                variant_bnode, variant_label, self.globaltt['variant_locus'])
             geno.addAffectedLocus(variant_bnode, gene_id)
             model.addBlankNodeAnnotation(variant_bnode)
 
@@ -349,37 +341,6 @@ class Orphanet(Source):
             model.addTriple(variant_id, predicate, cell_origin)
 
         return
-
-    @staticmethod
-    def _map_gene_type_id(orphanet_type_id):
-        """
-        To check the "GeneType" mappings
-        xmlstarlet sel -t -v \
-        './JDBOR/DisorderList/Disorder//Gene/GeneType/Name'
-         en_product6.xml | sort | uniq -c | sort -nr
-
-        :param orphanet_type_id:
-        :return:
-        """
-        type_id = Genotype.genoparts['sequence_feature']
-        id_map = {
-            # locus
-            '25986': Genotype.genoparts['sequence_feature'],
-            # gene with protein product
-            '25993': Genotype.genoparts['protein_coding_gene'],
-            # Non-coding RNA
-            '26046': Genotype.genoparts['ncRNA_gene']
-        }
-
-        if orphanet_type_id in id_map:
-            type_id = id_map[orphanet_type_id]
-        else:
-            logger.error(
-                'Gene type (%s) not mapped. Defaulting to SO:sequence_feature',
-                orphanet_type_id)
-
-        return type_id
-
 
     def getTestSuite(self):
         import unittest

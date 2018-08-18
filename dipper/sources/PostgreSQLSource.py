@@ -33,6 +33,9 @@ class PostgreSQLSource(Source):
             license_url,
             data_rights,
             file_handle)
+            
+        globaltt = self.globaltt
+        # globaltcid = self.globaltcid    
         return
 
     def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):

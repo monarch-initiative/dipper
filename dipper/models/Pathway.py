@@ -62,7 +62,7 @@ class Pathway():
         self.model.addIndividualToGraph(
             gene_product, None, self.globaltt['gene_product'])
         self.graph.addTriple(
-            gene_id, self.globaltt['has_gene_product'], gene_product)
+            gene_id, self.globaltt['has gene product'], gene_product)
         self.addComponentToPathway(gene_product, pathway_id)
 
         return

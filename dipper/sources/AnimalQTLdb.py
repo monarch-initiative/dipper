@@ -336,7 +336,7 @@ class AnimalQTLdb(Source):
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
                     reference = Reference(
-                        graph, pub_id, Reference.ref_types['journal_article'])
+                        graph, pub_id, self.globaltt['journal_article'])
 
                 if reference is not None:
                     reference.addRefToGraph()
@@ -487,7 +487,7 @@ class AnimalQTLdb(Source):
                     else:
                         pub_id = 'PMID:' + pub_id.strip()
                         reference = Reference(
-                            graph, pub_id, Reference.ref_types['journal_article'])
+                            graph, pub_id, self.globaltt['journal_article'])
                     reference.addRefToGraph()
 
                 # Add QTL to graph

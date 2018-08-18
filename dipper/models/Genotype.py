@@ -177,7 +177,7 @@ class Genotype():
             self.model.addIndividualToGraph(
                 product_id, product_label, product_type)
         self.graph.addTriple(
-            sequence_id, self.globaltt['has_gene_product'], product_id)
+            sequence_id, self.globaltt['has gene product'], product_id)
 
         return
 
@@ -560,8 +560,7 @@ class Genotype():
 
         vslc_label = ''
 
-        if gene_label is None and \
-                allele1_label is None and allele2_label is None:
+        if gene_label is None and allele1_label is None and allele2_label is None:
             logger.error("Not enough info to make vslc label")
             return None
 

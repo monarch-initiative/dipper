@@ -495,7 +495,7 @@ class GWASCatalog(Source):
 
                 assoc = G2PAssoc(
                     graph, self.name, variant_id, trait_curie,
-                    model.globaltt['contributes to'])
+                    model.globaltt['contributes to condition'])
                 assoc.add_source(pubmed_curie)
 
                 assoc.add_evidence(

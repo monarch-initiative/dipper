@@ -22,8 +22,6 @@ class MyChem(Source):
             # file_handle=None
         )
 
-        self.global_terms = Source.open_and_parse_yaml(
-            '../../translationtable/global_terms.yaml')
         self.inchikeys = MyChem.chunks(l=MyChem.get_inchikeys(), n=10)
         self.drugbank_targets = list()
         self.drugcentral_interactors = list()
@@ -41,7 +39,6 @@ class MyChem(Source):
                         record['drugbank']['drugbank_id']),
                     'unii': None,
                     'targets': [],
-
                 }
                 if 'unii' in record.keys():
                     if isinstance(record['unii'], dict):
@@ -117,55 +114,63 @@ class MyChem(Source):
         if source == 'drugbank':
             for target in package['targets']:
                 model.addTriple(
-                    subject_id=package['unii'], predicate_id=target['action'],
+                    subject_id=package['unii'],
+                    predicate_id=target['action'],
                     obj=target['uniprot'])
                 model.addLabel(subject_id=target['uniprot'], label=target['name'])
                 model.addTriple(
                     subject_id=target['uniprot'],
-                    predicate_id=Model.object_properties['subclass_of'],
-                    obj='SO:0000104')
+                    predicate_id=self.globaltt['subclass_of'],
+                    obj=self.globaltt['polypeptide'])
                 model.addTriple(
                     subject_id=package['drugbank_id'],
-                    predicate_id=Model.object_properties['equivalent_class'],
+                    predicate_id=self.globaltt['equivalent_class'],
                     obj=package['unii'])
                 model.addTriple(
-                    subject_id=target['action'], predicate_id='rdfs:subPropertyOf',
-                    obj='RO:0002436')
+                    subject_id=target['action'],
+                    predicate_id=self.globaltt['subPropertyOf'],
+                    obj=self.globaltt['molecularly_interacts_with'])
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=Model.object_properties['subclass_of'],
-                    obj='CHEBI:23367')
+                    obj=self.globaltt['molecular entity'])
         if source == 'drugcentral':
             for indication in package['indications']:
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id='RO:0002606',
-                                obj=indication['snomed_id'])
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='CHEBI:23367')
-                model.addTriple(subject_id=indication['snomed_id'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='DOID:4')
+                model.addTriple(
+                    subject_id=package['unii'],
+                    predicate_id=self.globaltt['is substance that treats'],
+                    obj=indication['snomed_id'])
+                model.addTriple(
+                    subject_id=package['unii'],
+                    predicate_id=self.globaltt['subclass_of'],
+                    obj=self.globaltt['molecular entity'])
+                model.addTriple(
+                    subject_id=indication['snomed_id'],
+                    predicate_id=self.globaltt['subclass_of'],
+                    obj=self.globaltt['disease'])
                 model.addLabel(
                     subject_id=indication['snomed_id'], label=indication['snomed_name'])
             for interaction in package['interactions']:
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id='RO:0002436',
-                                obj=interaction['uniprot'])
+                model.addTriple(
+                    subject_id=package['unii'],
+                    predicate_id=self.globaltt['molecularly_interacts_with'],
+                    obj=interaction['uniprot'])
                 # model.addLabel(
                 #    subject_id=interaction['uniprot'],
                 #    label='Protein_{}'.format(interaction['uniprot']))
                 model.addLabel(
                     subject_id=interaction['uniprot'], label=interaction['target_name'])
-                model.addTriple(subject_id=package['unii'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='CHEBI:23367')
+                model.addTriple(
+                    subject_id=package['unii'],
+                    predicate_id=self.globaltt['subclass_of'],
+                    obj=self.globaltt['molecular entity'])
                 model.addDescription(
                     subject_id=interaction['uniprot'],
                     description=interaction['target_class'])
-                model.addTriple(subject_id=interaction['uniprot'],
-                                predicate_id=Model.object_properties['subclass_of'],
-                                obj='SO:0000104')
+                model.addTriple(
+                    subject_id=interaction['uniprot'],
+                    predicate_id=self.globaltt['subclass_of'],
+                    obj=self.globaltt['polypeptide'])
         return
 
     def fetch_from_mychem(self):

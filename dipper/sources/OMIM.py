@@ -1120,7 +1120,7 @@ class OMIM(Source):
                 if 'pubmedID' in r['reference']:
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
                     ref = Reference(
-                        g, pub_id, Reference.ref_types['journal_article'])
+                        g, pub_id, self.globaltt['journal_article'])
                 else:
                     # make blank node for internal reference
                     pub_id = '_:OMIM' + str(entry_num) + 'ref' + str(

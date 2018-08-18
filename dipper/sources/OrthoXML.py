@@ -258,7 +258,7 @@ class OrthoXML(Source):
         added using a least recently used cache."""
         model.addClassToGraph(protein_id, None, Genotype.genoparts['polypeptide'])
         model.graph.addTriple(
-            protein_id, model.object_properties['in_taxon'], taxon)
+            protein_id, self.globaltt['in taxon'], taxon)
 
     def extract_taxon_info(self, gene_node):
         """extract the ncbi taxon id from a gene_node

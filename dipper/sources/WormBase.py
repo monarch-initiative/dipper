@@ -439,7 +439,7 @@ class WormBase(Source):
                             ref = re.sub(r'(WB:|WB_REF:)', 'WormBase:', ref)
                             reference = Reference(g, ref)
                             if re.search(r'Person', ref):
-                                reference.setType(reference.ref_types['person'])
+                                reference.setType(self.globaltt['person'])
                                 # also add
                                 # inferred from background scientific knowledge
                                 assoc.add_evidence('ECO:0000001')
@@ -557,7 +557,7 @@ class WormBase(Source):
                 if re.match(r'pmid', xref):
                     xref_id = 'PMID:' + re.sub(r'pmid\s*', '', xref)
                     reference = Reference(
-                        g, xref_id, Reference.ref_types['journal_article'])
+                        g, xref_id, self.globaltt['journal_article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
                     continue
                 elif re.match(r'doi', xref):
@@ -787,13 +787,13 @@ class WormBase(Source):
 
                 assoc = G2PAssoc(
                     g, self.name, animal_id,
-                    disease_id, model.object_properties['model_of'])
+                    disease_id, self.globaltt['is model of'])
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
                 eco_id = None
                 if eco_symbol == 'IEA':
-                    eco_id = 'ECO:0000501'  # IEA is this now
+                    eco_id = 'ECO:0000501'  # IEA is this now  "evidence used in automatic assertion"
                 if eco_id is not None:
                     assoc.add_evidence(eco_id)
 

@@ -413,7 +413,7 @@ class OMIA(Source):
         #     gu.addSynonym(g, sp_phene, row['symbol'])
 
         model.addOWLPropertyClassRestriction(
-            sp_phene_id, model.object_properties['in_taxon'],
+            sp_phene_id, self.globaltt['in taxon'],
             species_id)
 
         # add inheritance as an association
@@ -462,7 +462,7 @@ class OMIA(Source):
         self.id_hash['article'][row['article_id']] = iarticle_id
         rtype = None
         if row['journal'] != '':
-            rtype = Reference.ref_types['journal_article']
+            rtype = self.globaltt['journal_article']
         reference = Reference(self.g, iarticle_id, rtype)
 
         if row['title'] is not None:
@@ -550,7 +550,7 @@ class OMIA(Source):
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
             self.g.addTriple(
-                article_id, model.object_properties['is_about'], breed_id)
+                article_id, self.globaltt['is_about'], breed_id)
         else:
             logger.warning("Missing article key %s", str(row['article_id']))
 
@@ -577,7 +577,7 @@ class OMIA(Source):
         # make a triple, where the article is about the phenotype
         self.g.addTriple(
             article_id,
-            model.object_properties['is_about'], phenotype_id)
+            self.globaltt['is_about'], phenotype_id)
 
         return
 
@@ -600,7 +600,7 @@ class OMIA(Source):
         # FIXME we want a different relationship here
         assoc = G2PAssoc(
             self.g, self.name, breed_id, phene_id,
-            model.object_properties['has_phenotype'])
+            self.globaltt['has_phenotype'])
         assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
@@ -618,7 +618,7 @@ class OMIA(Source):
             for i in omim_ids:
                 assoc = G2PAssoc(
                     self.g, self.name, breed_id, i,
-                    model.object_properties['model_of'])
+                    self.globaltt['is model of'])
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()
                 aid = assoc.get_association_id()

@@ -60,7 +60,7 @@ class MGISlim(Source):
                 assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie)
                 if row["evidence.publications.pubMedId"]:
                     reference = Reference(self.graph, pub_curie,
-                                          Reference.ref_types['journal_article'])
+                                          self.globaltt['journal_article'])
                     reference.addRefToGraph()
                     assoc.add_source(pub_curie)
 

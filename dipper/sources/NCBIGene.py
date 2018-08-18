@@ -104,9 +104,8 @@ class NCBIGene(Source):
             logger.info("Filtering on the following taxa: %s", str(tax_ids))
 
         self.gene_ids = []
-        if 'test_ids' not in \
-                config.get_config() or \
-                'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' \
+                not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
@@ -205,7 +204,7 @@ class NCBIGene(Source):
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self.map_type_of_gene(gtype.strip())
+                gene_type_id = self.map_type_of_gene(gtype.strip())  # -> resolve()
 
                 if symbol == 'NEWENTRY':
                     label = None
@@ -217,8 +216,7 @@ class NCBIGene(Source):
                 else:
                     self.class_or_indiv[gene_id] = 'C'
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     continue
 
                 if self.class_or_indiv[gene_id] == 'C':
@@ -280,8 +278,7 @@ class NCBIGene(Source):
                         # >1 loc mapping
                         logger.info(
                             '%s is non-uniquely mapped to %s.' +
-                            ' Skipping for now.',
-                            gene_id, str(chr))
+                            ' Skipping for now.', gene_id, str(chr))
                         continue
                         # X|Y	Xp22.33;Yp11.3
 
@@ -322,7 +319,7 @@ class NCBIGene(Source):
                             # add the band as the containing feature
                             g.addTriple(
                                 gene_id,
-                                Feature.object_properties['is_subsequence_of'],
+                                self.globaltt['is_subsequence_of'],
                                 maploc_id)
                         else:
                             # TODO handle these cases: examples are:
@@ -330,12 +327,11 @@ class NCBIGene(Source):
                             # 12p13.3-p13.2|12p13-p12,1p13.3|1p21.3-p13.1,
                             # 12cen-q21,22q13.3|22q13.3
                             logger.debug(
-                                'not regular band pattern for %s: %s',
-                                gene_id, map_loc)
+                                'not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             g.addTriple(
                                 gene_id,
-                                Feature.object_properties['is_subsequence_of'],
+                                self.globaltt['is_subsequence_of'],
                                 mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
@@ -370,7 +366,7 @@ class NCBIGene(Source):
             taxon_spec_filters = []
 
         model = Model(graph)
-        # deal with the xrefs
+        # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
         for ref in xrefs.strip().split('|'):
             xref_curie = self._cleanup_id(ref)
@@ -379,7 +375,7 @@ class NCBIGene(Source):
                     # proteins are not == genes.
                     model.addTriple(
                         gene_id,
-                        self.properties['has_gene_product'], xref_curie)
+                        self.globaltt['has gene product'], xref_curie)
                     continue
                     # skip some of these for now
                 if xref_curie.split(':')[0] in filter_out:
@@ -391,8 +387,7 @@ class NCBIGene(Source):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
-                        model.addEquivalentClass(
-                            gene_id, xref_curie)
+                        model.addEquivalentClass(gene_id, xref_curie)
                         if int(taxon) in clique_map:
                             if clique_map[int(taxon)] == xref_curie.split(':')[0]:
                                 model.makeLeader(xref_curie)
@@ -471,8 +466,7 @@ class NCBIGene(Source):
                 # also add the old symbol as a synonym of the new gene
                 model.addSynonym(gene_id, discontinued_symbol)
 
-                if (not self.testMode) and\
-                        (limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -537,13 +531,12 @@ class NCBIGene(Source):
                 # add type publication
                 model.addIndividualToGraph(pubmed_id, None, None)
                 reference = Reference(
-                    g, pubmed_id, Reference.ref_types['journal_article'])
+                    g, pubmed_id, self.globaltt['journal_article'])
                 reference.addRefToGraph()
                 g.addTriple(
                     pubmed_id, model.object_properties['is_about'], gene_id)
                 assoc_counter += 1
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info(
@@ -553,6 +546,7 @@ class NCBIGene(Source):
 
     @staticmethod
     def map_type_of_gene(sotype):
+        # move to localtt -> globaltt
         so_id = 'SO:0000110'
         type_to_so_map = {
             'ncRNA': 'SO:0001263',
@@ -589,6 +583,7 @@ class NCBIGene(Source):
         :param i:
         :return:
         """
+        # move to localtt.
         cleanid = i
         # MIM:123456 --> #OMIM:123456
         cleanid = re.sub(r'^MIM', 'OMIM', cleanid)

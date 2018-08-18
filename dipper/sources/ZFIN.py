@@ -1400,7 +1400,7 @@ class ZFIN(Source):
                     if pub_id != '':
                         g.addTriple(
                             pub_id,
-                            model.object_properties['mentions'], fish_id)
+                            self.globaltt['mentions'], fish_id)
 
                 if not self.testMode \
                         and limit is not None and line_counter > limit:
@@ -1904,11 +1904,11 @@ class ZFIN(Source):
                 if pubmed_id is not None and pubmed_id != '':
                     # let's make an assumption that if there's a pubmed id,
                     # that it is a journal article
-                    r.setType(Reference.ref_types['journal_article'])
+                    r.setType(self.globaltt['journal_article'])
 
                     pubmed_id = 'PMID:' + pubmed_id.strip()
                     rpm = Reference(g, pubmed_id,
-                                    Reference.ref_types['journal_article'])
+                                    self.globaltt['journal_article'])
                     rpm.addRefToGraph()
 
                     model.addSameIndividual(pub_id, pubmed_id)
@@ -1961,7 +1961,7 @@ class ZFIN(Source):
                 rtype = None
                 if pubmed_id != '' and pubmed_id is not None:
                     pubmed_id = 'PMID:' + pubmed_id.strip()
-                    rtype = Reference.ref_types['journal_article']
+                    rtype = self.globaltt['journal_article']
                     rpm = Reference(g, pubmed_id, rtype)
                     rpm.addRefToGraph()
                     model.addSameIndividual(pub_id, pubmed_id)
@@ -2069,7 +2069,7 @@ class ZFIN(Source):
                         r.addRefToGraph()
                         g.addTriple(
                             pub_id,
-                            model.object_properties['mentions'], reagent_id)
+                            self.globaltt['mentions'], reagent_id)
 
                 # Add comment?
                 if note != '':
@@ -2356,13 +2356,12 @@ class ZFIN(Source):
 
                 geno.addGene(gene_id, gene_symbol)
                 # TODO: Abstract to one of the model utilities
-                model.addIndividualToGraph(uniprot_id, None,
-                                           geno.genoparts['polypeptide'])
-                g.addTriple(gene_id, model.properties['has_gene_product'],
-                            uniprot_id)
+                model.addIndividualToGraph(
+                    uniprot_id, None, self.globaltt['polypeptide'])
+                g.addTriple(
+                    gene_id, self.globaltt['has gene product'], uniprot_id)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with UniProt IDs")
@@ -2473,10 +2472,11 @@ class ZFIN(Source):
 
                 if self.testMode and gene_id not in self.test_ids['gene']:
                     continue
-                gene_id = 'ZFIN:'+gene_id
+                gene_id = 'ZFIN:' + gene_id
 
                 # make chrom
-                chrom_id = makeChromID(chrom, 'NCBITaxon:7227', 'CHR')
+                #chrom_id = makeChromID(chrom, 'NCBITaxon:7227', 'CHR')  # WTF Fly???
+                chrom_id = makeChromID(chrom, self.globaltt['Danio rerio'], 'CHR')
                 # assume it gets added elsewhere
                 model.addClassToGraph(chrom_id, None)
                 # FIXME - remove this hardcoding
@@ -2490,8 +2490,7 @@ class ZFIN(Source):
                 f.addFeatureEndLocation(end, chrom_in_build, strand)
                 f.addFeatureToGraph(True, None, True)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with gene coordinates")
@@ -2506,7 +2505,7 @@ class ZFIN(Source):
 
         logger.info("Processing fish models")
         line_counter = 0
-        fish_taxon = 'NCBITaxon:7955'
+        fish_taxon = self.globaltt['Danio rerio']
         geno = Genotype(g)
         model = Model(g)
         raw = '/'.join(
@@ -2556,7 +2555,7 @@ class ZFIN(Source):
 
                 assoc.set_subject(fish_id)
                 assoc.set_object(disease_id)
-                assoc.set_relationship(model.object_properties['model_of'])
+                assoc.set_relationship(self.globaltt['is model of'])
                 desc = ' '.join(('A fish with genotype', fish_label,
                                  'is a model for disease', disease_label,
                                  'under the condition of', environment_label))
@@ -2572,8 +2571,7 @@ class ZFIN(Source):
                     model.makeLeader(pubmed_id)
                 assoc.add_association_to_graph()
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2598,17 +2596,14 @@ class ZFIN(Source):
 
         # zfin uses free-text modifiers,
         # but we need to convert them to proper PATO classes for the mapping
-        mod_id = modifier
+        mod_id = self.resolve(modifier, False)
 
-        modifiers = {
-            'abnormal': 'PATO:0000460',
-            'normal': 'PATO:0000461'
-        }
-        if modifier in modifiers.keys():
-            mod_id = modifiers.get(modifier)
+        if modifier == mod_id:
+            logger("no mapping for pato modifier " + modifier)
 
-        key = self._make_zpkey(superterm1_id, subterm1_id, quality_id,
-                               superterm2_id, subterm2_id, mod_id)
+        key = self._make_zpkey(
+            superterm1_id, subterm1_id, quality_id,
+            superterm2_id, subterm2_id, mod_id)
         mapping = self.zp_map.get(key)
 
         if mapping is None:
@@ -2659,10 +2654,13 @@ class ZFIN(Source):
 
         return zp_map
 
-    def _make_zpkey(self, superterm1_id, subterm1_id, quality_id,
-                    superterm2_id, subterm2_id, modifier):
-        key = self.make_id('_'.join((superterm1_id, subterm1_id, quality_id,
-                                     superterm2_id, subterm2_id, modifier)))
+    def _make_zpkey(
+            self,
+            superterm1_id, subterm1_id, quality_id,
+            superterm2_id, subterm2_id, modifier):
+        key = self.make_id('_'.join((
+            superterm1_id, subterm1_id, quality_id,
+            superterm2_id, subterm2_id, modifier)))
         return key
 
     @staticmethod
@@ -2748,8 +2746,8 @@ class ZFIN(Source):
         return i
 
     def _make_effective_genotype_id(self, intrinsic_id, extrinsic_id):
-        effective_genotype_id = self.make_id('-'.join((intrinsic_id,
-                                                       extrinsic_id)))
+        effective_genotype_id = self.make_id(
+            '-'.join((intrinsic_id, extrinsic_id)))
 
         return effective_genotype_id
 
@@ -2854,29 +2852,25 @@ class ZFIN(Source):
                 zfin_pub_id = 'ZFIN:'+zfin_pub_num
                 pubmed_id = 'PMID:'+str(pubmed_num)
                 if zfin_gene_num != '' and ortholog_ncbigene_num != '':
-                    assoc = OrthologyAssoc(g, self.name, zfin_gene_id,
-                                           ortho_gene_id)
+                    assoc = OrthologyAssoc(
+                        g, self.name, zfin_gene_id, ortho_gene_id)
                     if zfin_pub_num != '':
                         r = Reference(g, zfin_pub_id)
                         r.addRefToGraph()
                         assoc.add_source(zfin_pub_id)
                     if pubmed_num != '':
-                        r = Reference(
-                            g, pubmed_id,
-                            Reference.ref_types['journal_article'])
+                        r = Reference(g, pubmed_id, self.globaltt['journal_article'])
                         r.addRefToGraph()
                         assoc.add_source(pubmed_id)
                     if evidence_code != '':
-                        eco_id = self.get_orthology_evidence_code(
-                            evidence_code)
+                        eco_id = self.get_orthology_evidence_code(evidence_code)
                         assoc.add_evidence(eco_id)
 
                     assoc.add_association_to_graph()
                 # FIXME need to update with proper provenance model
                 # so the papers get attached with the relevant eco code
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
         return
 

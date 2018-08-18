@@ -1109,7 +1109,7 @@ class MGI(PostgreSQLSource):
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(self.globaltt['model_of'])
+                        assoc.set_relationship(self.globaltt['is model of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 elif annot_type == 'MCV/Marker':
@@ -1131,14 +1131,14 @@ class MGI(PostgreSQLSource):
                         assoc = Assoc(graph, self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(self.globaltt['model_of'])
+                        assoc.set_relationship(self.globaltt['is model of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
 
                 if assoc_id is not None:
                     # add the assoc to the hashmap (using the monarch id)
                     self.idhash['annot'][annot_key] = assoc_id
-                    model.addComment(assoc_id, "annot_key:"+annot_key)
+                    model.addComment(assoc_id, "annot_key:" + annot_key)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1453,10 +1453,10 @@ class MGI(PostgreSQLSource):
                     # it's not added as a gene.
                     # everything except for genes are modeled as individuals
 
-                    # it's a gene or pseudogene
-                    if mapped_marker_type in ['SO:0000704', 'SO:0000336']:
-                        model.addClassToGraph(
-                            marker_id, symbol, mapped_marker_type, name)
+                    if mapped_marker_type in [
+                            self.globaltt['geene'],
+                            self.globaltt['pseudogene']]:
+                        model.addClassToGraph(marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
                             marker_id, name, self.globaltt['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
@@ -1469,7 +1469,7 @@ class MGI(PostgreSQLSource):
 
                     self.label_hash[marker_id] = symbol
                     # add the taxon
-                    taxon_id = self._map_taxon(latin_name)
+                    taxon_id = self.globaltt[latin_name]
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
@@ -2293,44 +2293,6 @@ class MGI(PostgreSQLSource):
         return altype
 
     @staticmethod
-    def _map_taxon(taxon_name):
-        taxtype = None
-        type_map = {
-            'Bos taurus': 'NCBITaxon:9913',
-            'Canis familiaris': 'NCBITaxon:9615',
-            'Capra hircus': 'NCBITaxon:9925',
-            'Cavia porcellus': 'NCBITaxon:10141',
-            'Cricetulus griseus': 'NCBITaxon:10029',
-            'Danio rerio': 'NCBITaxon:7955',
-            'Equus caballus': 'NCBITaxon:9796',
-            'Felis catus': 'NCBITaxon:9685',
-            'Gallus gallus': 'NCBITaxon:9031',
-            'Gorilla gorilla': 'NCBITaxon:9593',
-            'Homo sapiens': 'NCBITaxon:9606',
-            'Macaca mulatta': 'NCBITaxon:9544',
-            'Macropus eugenii': 'NCBITaxon:9315',
-            'Mesocricetus auratus': 'NCBITaxon:10036',
-            'Microcebus murinus': 'NCBITaxon:30608',
-            #  10090=Mus musculus, 10092=Mus musculus domesticus
-            'Mus musculus/domesticus': 'NCBITaxon:10090',
-            'Ornithorhynchus anatinus': 'NCBITaxon:9258',
-            'Oryctolagus cuniculus': 'NCBITaxon:9986',
-            'Ovis aries': 'NCBITaxon:9940',
-            'Pan troglodytes': 'NCBITaxon:9598',
-            'Pongo pygmaeus': 'NCBITaxon:9600',
-            'Rattus norvegicus': 'NCBITaxon:10116',
-            # 9823=Sus scrofa, 9825=Sus scrofa domestica
-            'Sus scrofa domestica L.': 'NCBITaxon:9823',
-            'Xenopus (Silurana) tropicalis': 'NCBITaxon:8364',
-        }
-        if taxon_name.strip() in type_map:
-            taxtype = type_map.get(taxon_name)
-        else:
-            logger.error("Taxon Name (%s) not mapped", taxon_name)
-
-        return taxtype
-
-    @staticmethod
     def _map_strain_species(species):
         # make the assumption that it is a Mus genus, unless if specified
         tax = '10088'
@@ -2509,6 +2471,7 @@ class MGI(PostgreSQLSource):
             tax = 'NCBITaxon:'+tax
         return tax
 
+
     @staticmethod
     def _makeInternalIdentifier(prefix, key):
         """
@@ -2522,6 +2485,7 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
+        # these are just blank nodes
         iid = '_:mgi'+prefix+'key'+key
 
         return iid

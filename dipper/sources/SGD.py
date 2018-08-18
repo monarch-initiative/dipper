@@ -161,13 +161,14 @@ class SGD(Source):
         # add the association triple
         model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id)
 
-        # make pheno subclass of UPHENO:0001001
         model.addTriple(
-            subject_id=pheno_id, predicate_id=self.goblaltt['subclass_of'],
-            obj='UPHENO:0001001')
+            subject_id=pheno_id,
+            predicate_id=self.globaltt['subclass_of'],
+            obj=self.globaltt['Phenotype'])
 
         # label nodes
         # pheno label
+
         model.addLabel(subject_id=pheno_id, label=pheno_label)
 
         g2p_assoc.description = self._make_description(record)
@@ -183,7 +184,7 @@ class SGD(Source):
             g2p_assoc.add_source(identifier=references[0])
             ref_model = Reference(
                 self.graph, references[0],
-                Reference.ref_types['publication']
+                self.globaltt['publication']
             )
             ref_model.addRefToGraph()
 

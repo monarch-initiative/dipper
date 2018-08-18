@@ -248,7 +248,7 @@ class Panther(Source):
 
                     rel = self._map_orthology_code_to_RO(orthology_class)
 
-                    evidence_id = 'ECO:0000080'  # phylogenetic evidence
+                    evidence_id = self.globaltt['phylogenetic evidence']
 
                     # add the association and relevant nodes to graph
                     assoc = OrthologyAssoc(g, self.name, gene_a, gene_b, rel)
@@ -261,9 +261,9 @@ class Panther(Source):
 
                     # might as well add the taxon info for completeness
                     g.addTriple(
-                        gene_a, model.object_properties['in_taxon'], taxon_a)
+                        gene_a, self.globaltt['in taxon'], taxon_a)
                     g.addTriple(
-                        gene_b, model.object_properties['in_taxon'], taxon_b)
+                        gene_b, self.globaltt['in taxon'], taxon_b)
 
                     assoc.add_association_to_graph()
 
@@ -292,8 +292,9 @@ class Panther(Source):
         :param ptax:
         :return: NCBITaxon id
         """
+        # TODO  move to localtt->globaltt
         taxid = None
-        ptax_to_taxid_map = {
+        ptax_to_taxid_map = { 
             'ANOCA': 28377,  # green lizard
             'ARATH': 3702,   # arabadopsis
             'BOVIN': 9913,   # cow
@@ -335,6 +336,7 @@ class Panther(Source):
         :param ortho: orthology code
         :return: RO identifier
         """
+        # TODO  move to localtt->globaltt
         ortho_rel = OrthologyAssoc.ortho_rel
         ro_id = ortho_rel['orthologous']  # in orthology relationship with
         ortho_to_ro_map = {

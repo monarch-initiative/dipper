@@ -228,7 +228,7 @@ class MMRRC(Source):
                         pmid = 'PMID:'+i.strip()
                         pubmed_ids.append(pmid)
                         r = Reference(g, pmid,
-                                      Reference.ref_types['journal_article'])
+                                      self.globaltt['journal_article'])
                         r.addRefToGraph()
 
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001

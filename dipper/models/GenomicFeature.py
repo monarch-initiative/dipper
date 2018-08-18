@@ -370,6 +370,7 @@ def makeChromID(chrom, reference=None, prefix=None):
     :return:
 
     """
+    # blank nodes
     if reference is None:
         logger.warning('No reference for this chr. You may have conflicting ids')
 

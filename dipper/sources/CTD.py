@@ -359,7 +359,7 @@ class CTD(Source):
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
         if re.match(evidence_pattern, direct_evidence):
-            rel_id = self._get_relationship_id(direct_evidence)
+            rel_id = self.resolve(direct_evidence)
             model.addClassToGraph(chem_id, chem_name)
             model.addClassToGraph(disease_id, None)
             self._make_association(chem_id, disease_id, rel_id, reference_list)
@@ -479,7 +479,7 @@ class CTD(Source):
         model.addClassToGraph(preferred_disease_id, dlabel)
 
         # Add the disease to gene relationship.
-        rel_id = self._get_relationship_id(direct_evidence)
+        rel_id = self.resolve(direct_evidence)
         refs = self._process_pubmed_ids(pubmed_ids)
 
         self._make_association(gene_id, preferred_disease_id, rel_id, refs)
@@ -503,10 +503,10 @@ class CTD(Source):
         # TODO pass in the relevant Assoc class rather than relying on G2P
         assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
-            eco = self._get_evidence_code('TAS')
+            eco = self.resolve('TAS')
             for pmid in pubmed_ids:
                 r = Reference(
-                    self.graph, pmid, Reference.ref_types['journal_article'])
+                    self.graph, pmid, self.globaltt['journal article'])
                 r.addRefToGraph()
                 assoc.add_source(pmid)
                 assoc.add_evidence(eco)
@@ -533,53 +533,6 @@ class CTD(Source):
             id_list[i] = 'PMID:' + val
         return id_list
 
-    @staticmethod
-    def _get_evidence_code(evidence):
-        """
-        Get curie for evidence class label
-        Args:
-        :param evidence (str): evidence label
-        Label:
-        :return str: curie for evidence label from ECO
-
-        """
-
-        eco_map = {
-            'TAS': 'ECO:0000033'
-        }
-        return eco_map[evidence]
-
-    @staticmethod
-    def _get_relationship_id(rel):
-        """
-        Get curie from relationship property label
-        Args:
-            :param rel (str): relationship label
-        Returns:
-            :return str: curie for relationship label
-        """
-        rel_map = {
-            'therapeutic': Source.globaltt['substance that treats'],
-            'marker/mechanism': Source.globaltt['is_marker_for'],
-        }
-        return str(rel_map[rel])
-
-    @staticmethod
-    def _get_class_id(clslab):
-        """
-        Get curie from CLASS_MAP dictionary
-        Args:
-            :param cls (str): class label
-        Returns:
-            :return str: curie for class label
-        """
-        class_map = {
-            'pathway': 'PW:0000001',
-            'signal transduction': 'GO:0007165'
-        }
-
-        return class_map[clslab]
-
     def _parse_curated_chem_disease(self, limit):
         model = Model(self.graph)
         line_counter = 0
@@ -599,13 +552,13 @@ class CTD(Source):
                 if disease_id.strip() == '' or chem_id.strip() == '':
                     continue
 
-                rel_id = self._get_relationship_id(evidence)
+                rel_id = self.resolve(evidence)
                 chem_id = 'MESH:' + chem_id
                 model.addClassToGraph(chem_id, chem_label)
                 model.addClassToGraph(disease_id, None)
                 if pub_id != '':
                     pub_id = 'PMID:' + pub_id
-                    r = Reference(pub_id, self.globaltt['journal_article'])
+                    r = Reference(pub_id, self.globaltt['journal article'])
                     r.addRefToGraph(self.graph)
                     pubids = [pub_id]
                 else:

@@ -299,11 +299,11 @@ class HPOAnnotations(Source):
                         if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match(r'PMID', pub):
                                 pubtype = \
-                                    Reference.ref_types['journal_article']
+                                    self.globaltt['journal_article']
                             elif re.match(r'HPO', pub):
-                                pubtype = Reference.ref_types['person']
+                                pubtype = self.globaltt['person']
                             else:
-                                pubtype = Reference.ref_types['publication']
+                                pubtype = self.globaltt['publication']
                             r = Reference(g, pub, pubtype)
                             r.addRefToGraph()
                         elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
@@ -327,7 +327,7 @@ class HPOAnnotations(Source):
                                     ('https://decipher.sanger.ac.uk/syndrome',
                                      deciphernum))
                                 pub = decipherurl
-                            pubtype = Reference.ref_types['webpage']
+                            pubtype = self.globaltt['webpage']
                         elif re.match(r'http', pub):
                             pass
                         else:

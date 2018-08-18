@@ -505,7 +505,7 @@ class ClinVar(Source):
                 if ref_id is not None:
                     r = Reference(
                         self.graph, ref_id,
-                        Reference.ref_types['journal_article'])
+                        self.globaltt['journal_article'])
                     r.addRefToGraph()
                     g.addTriple(
                         ref_id, self.properties['is_about'], var_id)
