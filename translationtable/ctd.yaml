@@ -1,1 +1,7 @@
-{ctd: ctd}
+---
+
+"therapeutic": "is substance that treats"
+"marker/mechanism": "is_marker_for"
+"signal transduction": "signal_transduction"
+"TAS": "traceable author statement"
+# "pathway": "pathway"  # already exists in globaltt

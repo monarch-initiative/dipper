@@ -1,58 +1,47 @@
-
+---
 # Disease-causing germline mutation(s) in (RO:0002200)
-'17949': 'has phenotype'
+"17949": "has phenotype"
 # Disease-causing somatic mutation(s) in
-'17955': 'has phenotype'
-# Major susceptibility factor in  ('RO:0002326')
-'17961': 'contributes_to'
+"17955": "has phenotype"
+# Major susceptibility factor in  ("RO:0002326")
+"17961": "contributes_to"
 # Modifying germline mutation in
-'17967': 'contributes_to'
+"17967": "contributes_to"
 # Modifying somatic mutation in
-'17973': 'contributes_to'
+"17973": "contributes_to"
 # Part of a fusion gene in
-'17979': 'contributes_to'
+"17979": "contributes_to"
 # Role in the phenotype of
-'17985': 'contributes_to'
-'18273': None,  # Candidate gene tested in  FIXME?
+"17985": "contributes_to"
+"18273": None,  # Candidate gene tested in  FIXME?
 # Disease-causing germline mutation(s) (gain of function) in
-'25979': 'has phenotype'
+"25979": "has phenotype"
 # Disease-causing germline mutation(s) (loss of function) in
-'25972': 'has phenotype'
+"25972": "has phenotype"
 # locus
-'25986': 'sequence_feature'
+"25986": "sequence_feature"
 # gene with protein product
-'25993': 'protein_coding_gene'
+"25993": "protein_coding_gene"
 # Non-coding RNA
-'26046': 'ncRNA_gene'
+"26046": "ncRNA_gene"
 
 # Orphanet stores variant-disease associations
 # in the DisorderGeneAssociationType element
 # Here we store the mappings to be used when decomposing them
-
 "Biomarker tested in|gene phenotype": "is marker for"
-
 "Candidate gene tested in|gene phenotype": "is marker for"
-
 "Disease-causing germline mutation(s) (gain of function) in|gene phenotype": "causes condition"
 "Disease-causing germline mutation(s) (gain of function) in|function consequence": "gain_of_function_variant"
 "Disease-causing germline mutation(s) (gain of function) in|cell origin": "germline"
-
 "Disease-causing germline mutation(s) in|gene phenotype": "causes condition"
 "Disease-causing germline mutation(s) in|cell origin": "germline"
-
 "Disease-causing germline mutation(s) (loss of function) in|gene phenotype": "causes condition"
 "Disease-causing germline mutation(s) (loss of function) in|function consequence": "loss_of_function_variant"
 "Disease-causing germline mutation(s) (loss of function) in|cell origin": "germline"
-
 "Disease-causing somatic mutation(s) in|gene phenotype": "causes condition"
 "Disease-causing somatic mutation(s) in|cell origin": "somatic"
-
 "Major susceptibility factor in|gene phenotype": "contributes to condition"
-
 "Modifying germline mutation in|gene phenotype": "contributes to condition"
 "Modifying germline mutation in|cell origin": "germline"
-
 "Part of a fusion gene in|gene phenotype": "contributes to condition"
-
 "Role in the phenotype of|gene phenotype": "contributes to condition"
->>>>>>> 4d91f6d4e994a54c2f6609dde8f9868c5bfe0c80

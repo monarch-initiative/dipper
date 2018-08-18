@@ -9,10 +9,8 @@
 # We may want to sort the file by values to help keep dups down
 # Read: http://precedings.nature.com/documents/3576/version/1/files/npre20093576-1.pdf
 #
-# these need valid ontology terms found or created
-"has_sex_specificty": ":has_sex_specificity"
-"onset": ":onset"
-"frequency": ":frequencyOfPhenotype"
+
+
 ####################################################################
 "type": "rdf:type"
 "ontology": "owl:Ontology"
@@ -193,17 +191,20 @@
 "mutant phenotype evidence": "ECO:0000015"
 "male": "PATO:0000384"
 "female": "PATO:0000383"
+"cell line": "CLO:0000031"
 
 #############################################################
 # Place holder predicates: predicates
 # while we wait for relation (or other) ontology
 # tickets (link tickets url where appropriate)
 
-# Not liking this,
-# global translation should only be valid  verifiable ontology terms
+# Not liking this kluge,
+# global translation should only be valid verifiable ontology terms
 # if there are half measures or place holders
 # they should be local to an ingest till they are fixed. TEC
 
+"onset": ":onset"
+"frequency": ":frequencyOfPhenotype"
 "does_not_have_phenotype": ":does_not_have_phenotype"
 "has_sex_specificty": ":has_sex_specificity"
 "has_functional_consequence": ":has_functional_consequence"
@@ -223,7 +224,7 @@
 
 # TODO decide on these
 # we do not currently ingest NCIT into scigraph
-# I am finding NCIT to have well defined terms missing fron other ontologies
+# I am finding NCIT to have well defined terms missing from other ontologies
 # and think we should use them TEC
 
 #"biallelic_mutation": "NCIT:C129830"
@@ -232,6 +233,7 @@
 "biallelic": ":biallelic"
 "monoallelic": ":monoallelic"
 "mosaic": ":mosaic"
+# "crispr_reagent": "REO:crispr_TBD"
 
 ##############################################################
 # Inheritance, allelic requirement
@@ -240,7 +242,6 @@
 "genomically_imprinted": "SO:0000134"
 "hemizygous": "GENO:0000134"
 "digenic_inheritance": "HP:0010984"
-
 
 "Homo sapiens": "NCBITaxon:9606"
 "Gallus gallus": "NCBITaxon:9031"
@@ -252,6 +253,42 @@
 "Mus musculus": "NCBITaxon:10090"
 "Danio rerio": "NCBITaxon:7955"
 "Drosophila melanogaster": "NCBITaxon:7227"
+"Canis familiaris": "NCBITaxon:9615"
+"Capra hircus": "NCBITaxon:9925"
+"Cavia porcellus": "NCBITaxon:10141"
+"Cricetulus griseus": "NCBITaxon:10029"
+"Felis catus": "NCBITaxon:9685"
+"Gorilla gorilla": "NCBITaxon:9593"
+"Macaca mulatta": "NCBITaxon:9544"
+"Macropus eugenii": "NCBITaxon:9315"
+"Mesocricetus auratus": "NCBITaxon:10036"
+"Microcebus murinus": "NCBITaxon:30608"
+"Mus musculus domesticus": "NCBITaxon:10092"  
+"Ornithorhynchus anatinus": "NCBITaxon:9258"
+"Oryctolagus cuniculus": "NCBITaxon:9986"
+"Pan troglodytes": "NCBITaxon:9598"
+"Pongo pygmaeus": "NCBITaxon:9600"
+"Rattus norvegicus": "NCBITaxon:10116"
+"Sus scrofa domestica": "NCBITaxon:9825"
+"Sus scrofa domestica L.": "NCBITaxon:9823"
+"Xenopus (Silurana) tropicalis": "NCBITaxon:8364"
+"Mus": "NCBITaxon:10088"  # Genus
+#"Mus" "NCBITaxon:862507" # SubGenus  -- name conflicts with Genus name
+"Mus musculus brevirostris": "NCBITaxon:116058"
+"Mus musculus bactrianus": "NCBITaxon:35531"
+"Mus musculus musculus x M. m. castaneus": "NCBITaxon:477816"
+"Mus musculus domesticus x M. m. molossinus": "NCBITaxon:1266728"
+"Mus setulosus":  "NCBITaxon:10102"
+"Mus musculus musculus":  "NCBITaxon:39442"
+"Mus musculus domesticus": "NCBITaxon:10092"
+"Mus musculus x Mus spretus": "NCBITaxon:186842"
+"Mus cookii": "NCBITaxon:10098"
+"Mus cervicolor": "NCBITaxon:10097"
+"Mus musculus gentilulus": "NCBITaxon:80274"
+"Mus musculus castaneus": "NCBITaxon:10091"
+
+
+################################################
 "homoplasmic": "GENO:0000602"
 "heterozygous": "GENO:0000135"
 "indeterminate": "GENO:0000137"
@@ -290,6 +327,7 @@
 "reagent_targeted_gene": "GENO:0000504"
 "targeted_gene_subregion": "GENO:0000534"
 "targeted_gene_complement": "GENO:0000527"
+"has_reference_part": "GENO:0000385"
 "biological_region": "SO:0001411"
 "transcript": "SO:0000233"
 "polypeptide": "SO:0000104"
@@ -357,6 +395,7 @@
 "regulatory_region_variant": "SO:0001566"
 "splice_region_variant": "SO:0001630"
 "stop_lost": "SO:0001578"
+"sequence_variant": "SO:0001060"
 "TF_binding_site_variant": "SO:0001782"
 "combinatorial evidence used in automatic assertion": "ECO:0000213"
 "Phenotype": "UPHENO:0001001"
@@ -409,7 +448,6 @@
 "environmental_condition": "XCO:0000000"
 "morpholio_reagent": "REO:0000042"
 "talen_reagent": "REO:0001022"
-# "crispr_reagent": "REO:crispr_TBD"
 "equivalent_class": "owl:equivalentClass"
 "on_property": "owl:onProperty"
 "some_values_from": "owl:someValuesFrom"
@@ -437,23 +475,18 @@
 "experimental evidence": "ECO:0000006"
 "biological aspect of ancestor evidence used in manual assertion": "ECO:0000318"
 "inference from background scientific knowledge": "ECO:0000001"
-"direct assay evidence used in manual assertion": "ECO:0000314"
-"evidence used in automatic assertion": "ECO:0000501"
 "expression pattern evidence": "ECO:0000008"
 "genetic interaction evidence used in manual assertion": "ECO:0000316"
 "phylogenetic determination of loss of key residues evidence used in manual assertion": "ECO:0000320"
-"mutant phenotype evidence used in manual assertion": "ECO:0000315"
 "physical interaction evidence used in manual assertion": "ECO:0000353"
 "sequence alignment evidence": "ECO:0000200"
 "match to sequence model evidence": "ECO:0000202"
 "sequence orthology evidence": "ECO:0000201"
-"sequence similarity evidence used in manual assertion": "ECO:0000250"
-"author statement without traceable support used in manual assertion": "ECO:0000303"
 "no biological data found": "ECO:0000035"
 "computational combinatorial evidence used in manual assertion": "ECO:0000245"
-"author statement supported by traceable reference used in manual assertion": "ECO:0000304"
+"traceable author statement": "ECO:0000033"
 "disease": "DOID:4"
-"interacts_with": "RO:0002434"
+
 "molecularly_interacts_with": "RO:0002436"
 "ubiquitinates": "RO:0002480"
 "regulates": "RO:0002448"
@@ -461,13 +494,20 @@
 "negatively_regulates": "RO:0003002"
 "imported automatically asserted information used in automatic assertion": "ECO:0000323"
 "imported manually asserted information used in automatic assertion": "ECO:0000322"
-# 'has_phenotype': 'RO:0002200', -> "has phenotype"
-# 'in_taxon': 'RO:0002162' -> "in taxon"
-# 'has_subject': ':hasSubject'
-# 'has_object': ':hasObject'
-# 'has_predicate': ':hasPredicate'
-# 'involved_in': 'RO:0002331', -> "involved in"
-# 'model_of': 'RO:0003301',  -> "is model of"
+"molecular entity": "CHEBI:23367"
+"phylogenetic evidence": "ECO:0000080"
+"experimental phenotypic evidence": "ECO:0000059"
+"cell_line_repository": "CLO:0000008"
+"race": "SIO:001015"
+"ethnic_group": "EFO:0001799"
+"age": "EFO:0000246"
+"sampling_time": "EFO:0000689"
+"collection": "ERO:0002190"
+"abnormal": "PATO:0000460"
+"normal": "PATO:0000461"
+ 
+
+
 # 'has_gene_product': 'RO:0002205'  -> "has gene product"
 # 'existence_starts_at': 'UBERON:existence_starts_at',
 # 'existence_ends_at': 'UBERON:existence_ends_at',
@@ -483,8 +523,13 @@
 # 'gene_product_of': 'RO:0002204',  -> "gene product of'"
 # 'journal_article': 'IAO:0000013',  -> "journal article"
 # 'genetically_interacts_with': 'RO:0002435', --> "genetically interacts with"
-# colocalizes_with': 'RO:0002325',  --> "colocalizes with"
+# 'colocalizes_with': 'RO:0002325',  --> "colocalizes with"
+# "interacts_with": "RO:0002434" --> interacts with
+
 ######################################################
+
+            
+
 ######################################################
 # SEPIO:0000019 found in sepio_developer.owl
 # "x-created_at_location": "SEPIO:0000019"
