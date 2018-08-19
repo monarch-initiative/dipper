@@ -52,8 +52,8 @@
 "term replaced by": "IAO:0100001"
 "has disposition": "RO:0000091"
 "derives_from": "RO:0001000"
-"starts during": "RO:0002091"
-"ends during": "RO:0002093"
+"starts_during": "RO:0002091"
+"ends_during": "RO:0002093"
 "has phenotype": "RO:0002200"
 "has gene product": "RO:0002205"
 "expressed in": "RO:0002206"
@@ -581,26 +581,11 @@
 "collection": "ERO:0002190"
 "abnormal": "PATO:0000460"
 "normal": "PATO:0000461"
-
-
-
-# 'has_gene_product': 'RO:0002205'  -> "has gene product"
 # 'existence_starts_at': 'UBERON:existence_starts_at',
-# 'existence_ends_at': 'UBERON:existence_ends_at',
-# 'starts_during': 'RO:0002091', - > "starts during"
-# 'ends_during': 'RO:0002093', -> "ends during"
-# 'has_environment_qualifier': 'GENO:0000580', ->? "has_qualifier'"
-# 'substance_that_treats': 'RO:0002606', -> "is substance that treats"
-# 'is_marker_for': 'RO:0002607',  -> "'is marker for'"
-# 'contributes_to': 'RO:0002326', -> "contributes to"
-# 'dc:source': -> 'source',
-# 'dc:evidence': 'dc:evidence',  ???
-# 'has_evidence': 'RO:0002558',  -> "has evidence"
-# 'gene_product_of': 'RO:0002204',  -> "gene product of'"
-# 'journal_article': 'IAO:0000013',  -> "journal article"
-# 'genetically_interacts_with': 'RO:0002435', --> "genetically interacts with"
-# 'colocalizes_with': 'RO:0002325',  --> "colocalizes with"
-# "interacts_with": "RO:0002434" --> interacts with
+# 'existence_ends_at': 'UBERON:existence_ends_at'
+"existence starts at point": "RO:0002583"
+"existence ends at point": "RO:0002593"
+"biological aspect of descendant evidence": "ECO:0000214"
 
 ######################################################
 
