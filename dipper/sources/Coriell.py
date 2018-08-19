@@ -689,7 +689,7 @@ class Coriell(Source):
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
                             ref = Reference(g, pubmed_id)
-                            ref.setType(self.globaltt['journal_article'])
+                            ref.setType(self.globaltt['journal article'])
                             ref.addRefToGraph()
                             g.addTriple(
                                 pubmed_id, self.globaltt['mentions'], cell_line_id)

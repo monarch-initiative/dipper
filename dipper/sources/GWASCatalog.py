@@ -20,7 +20,7 @@ class GWASCatalog(Source):
     The NHGRI-EBI Catalog of published genome-wide association studies.
 
     We link the variants recorded here to the curated EFO-classes using a
-    "contributes_to" linkage because the only thing we know is that the SNPs
+    "contributes to" linkage because the only thing we know is that the SNPs
     are associated with the trait/disease,
     but we don't know if it is actually causative.
 

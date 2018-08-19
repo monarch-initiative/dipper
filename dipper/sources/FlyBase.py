@@ -2048,7 +2048,7 @@ class FlyBase(PostgreSQLSource):
                     pub_id = 'FlyBase:'+pub_id
                     assoc.add_source(pub_id)
                 if evidence_or_interacting_allele == 'inferred from mutant phenotype':
-                    evidence_id = self.globaltt['"mutant phenotype evidence"']
+                    evidence_id = self.globaltt['mutant phenotype evidence']
                     assoc.add_evidence(evidence_id)
                 else:
                     assoc.set_description(evidence_or_interacting_allele)

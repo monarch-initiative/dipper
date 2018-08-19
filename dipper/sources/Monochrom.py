@@ -268,7 +268,7 @@ class Monochrom(Source):
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 model.addOWLPropertyClassRestriction(
-                    cclassid, self.globaltt['member_of'], genome_id)
+                    cclassid, self.globaltt['member of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band

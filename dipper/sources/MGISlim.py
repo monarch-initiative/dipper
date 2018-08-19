@@ -59,12 +59,12 @@ class MGISlim(Source):
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
                 assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie)
                 if row["evidence.publications.pubMedId"]:
-                    reference = Reference(self.graph, pub_curie,
-                                          self.globaltt['journal_article'])
+                    reference = Reference(
+                        self.graph, pub_curie, self.globaltt['journal article'])
                     reference.addRefToGraph()
                     assoc.add_source(pub_curie)
 
-                assoc.add_evidence('ECO:0000059')
+                assoc.add_evidence(self.globaltt['experimental phenotypic evidence'])
                 assoc.add_association_to_graph()
 
             if not count % 10 and count != 0:

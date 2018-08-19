@@ -156,8 +156,8 @@ class MMRRC(Source):
                 # get the variant or gene to save for later building of
                 # the genotype
                 if strain_id not in self.strain_hash:
-                    self.strain_hash[strain_id] = {'variants': set(),
-                                                   'genes': set()}
+                    self.strain_hash[strain_id] = {
+                        'variants': set(), 'genes': set()}
 
                 # clean up the bad one
                 if mgi_allele_id == 'multiple mutation':
@@ -185,8 +185,8 @@ class MMRRC(Source):
                 mgi_gene_id = re.sub(r'\s+', '', mgi_gene_id)
                 if mgi_gene_id.strip() != '':
                     if re.match(r'Gene\s*ID:', mgi_gene_id, re.I):
-                        mgi_gene_id = re.sub(r'Gene\s*ID:\s*', 'NCBIGene:',
-                                             mgi_gene_id)
+                        mgi_gene_id = re.sub(
+                            r'Gene\s*ID:\s*', 'NCBIGene:', mgi_gene_id)
                     elif not re.match(r'MGI', mgi_gene_id):
                         logger.info("Gene id not recognized: %s", mgi_gene_id)
                         if re.match(r'\d+$', mgi_gene_id):
@@ -227,8 +227,7 @@ class MMRRC(Source):
                     for i in re.split(r'\s+', pubmed_nums):
                         pmid = 'PMID:'+i.strip()
                         pubmed_ids.append(pmid)
-                        r = Reference(g, pmid,
-                                      self.globaltt['journal_article'])
+                        r = Reference(g, pmid, self.globaltt['journal article'])
                         r.addRefToGraph()
 
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001
@@ -292,8 +291,8 @@ class MMRRC(Source):
                         vl_id = '_:' + re.sub(r':', '', gene) + '-VL'
                         vl_symbol = self.id_label_hash[gene]+'<?>'
                         self.id_label_hash[vl_id] = vl_symbol
-                        geno.addAllele(vl_id, vl_symbol,
-                                       geno.genoparts['variant_locus'])
+                        geno.addAllele(
+                            vl_id, vl_symbol, geno.genoparts['variant_locus'])
                         geno.addGene(gene, self.id_label_hash[gene])
                         geno.addAlleleOfGene(vl_id, gene)
                         vl_set.add(vl_id)
@@ -310,7 +309,7 @@ class MMRRC(Source):
                     self.id_label_hash[vslc_id] = vslc_label
                     vslc_list.append(vslc_id)
                     geno.addPartsToVSLC(
-                        vslc_id, vl, None, geno.zygosity['indeterminate'],
+                        vslc_id, vl, None, self.globaltt['indeterminate'],
                         self.globaltt['has_alternate_part'], None)
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,

@@ -506,7 +506,7 @@ class KEGG(Source):
         model = Model(graph)
         line_counter = 0
         geno = Genotype(graph)
-        rel = self.globaltt['is_marker_for']
+        rel = self.globaltt['is marker for']
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -617,7 +617,7 @@ class KEGG(Source):
                     model.addBlankNodeAnnotation(alt_locus_id)
 
                     # Add the disease to gene relationship.
-                    rel = self.globaltt['is_marker_for']
+                    rel = self.globaltt['is marker for']
                     assoc = G2PAssoc(graph, self.name, alt_locus_id, omim_id, rel)
                     assoc.add_association_to_graph()
 
@@ -786,7 +786,7 @@ class KEGG(Source):
                 # will look like KEGG-path:map04130
                 kegg_id = 'KEGG-' + kegg_pathway_num
 
-                r = Reference(graph, pubmed_id, self.globaltt['journal_article'])
+                r = Reference(graph, pubmed_id, self.globaltt['journal article'])
                 r.addRefToGraph()
                 graph.addTriple(pubmed_id, self.globaltt['is_about'], kegg_id)
 

@@ -745,17 +745,17 @@ class OMIM(Source):
         geno = Genotype(graph)
         model = Model(graph)
         disorder_id = ':'.join(('OMIM', disorder_num))
-        rel_id = model.object_properties['causes_condition']  # default
+        rel_id = self.globaltt['causes_condition']  # default
         rel_label = 'causes'
         if disorder_label.startswith('['):
-            rel_id = model.object_properties['is_marker_for']
+            rel_id = self.globaltt['is marker for']
             rel_label = 'is a marker for'
         elif disorder_label.startswith('{'):
-            rel_id = model.object_properties['contributes_to']
+            rel_id = self.globaltt['contributes to']
             rel_label = 'contributes to'
         elif disorder_label.startswith('?'):
             # this is a questionable mapping!  skip?
-            rel_id = model.object_properties['contributes_to']
+            rel_id = self.globaltt['contributes to']
             rel_label = 'contributes to'
 
         evidence = self._map_phene_mapping_code_to_eco(phene_key)
@@ -831,7 +831,7 @@ class OMIM(Source):
                         for r in publist[al_id]:
                             pmid = ref_to_pmid[int(r)]
                             g.addTriple(
-                                pmid, model.object_properties['is_about'],
+                                pmid, self.globaltt['is_about'],
                                 al_id)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
@@ -1120,7 +1120,7 @@ class OMIM(Source):
                 if 'pubmedID' in r['reference']:
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
                     ref = Reference(
-                        g, pub_id, self.globaltt['journal_article'])
+                        g, pub_id, self.globaltt['journal article'])
                 else:
                     # make blank node for internal reference
                     pub_id = '_:OMIM' + str(entry_num) + 'ref' + str(
@@ -1145,7 +1145,7 @@ class OMIM(Source):
 
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
-                g.addTriple(omim_id, model.object_properties['mentions'], pub_id)
+                g.addTriple(omim_id, self.globaltt['mentions'], pub_id)
 
         return ref_to_pmid
 

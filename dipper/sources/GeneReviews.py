@@ -344,7 +344,7 @@ class GeneReviews(Source):
                                 pmid, self.globaltt['is_about'], nbk_id)
                             pmid_set.add(pmnum)
                             reference = Reference(
-                                self.graph, pmid, self.globaltt['journal_article'])
+                                self.graph, pmid, self.globaltt['journal article'])
                             reference.addRefToGraph()
 
             # TODO add author history, copyright, license to dataset

@@ -531,7 +531,7 @@ class NCBIGene(Source):
                 # add type publication
                 model.addIndividualToGraph(pubmed_id, None, None)
                 reference = Reference(
-                    g, pubmed_id, self.globaltt['journal_article'])
+                    g, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
                 g.addTriple(
                     pubmed_id, model.object_properties['is_about'], gene_id)

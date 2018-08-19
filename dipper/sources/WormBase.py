@@ -557,7 +557,7 @@ class WormBase(Source):
                 if re.match(r'pmid', xref):
                     xref_id = 'PMID:' + re.sub(r'pmid\s*', '', xref)
                     reference = Reference(
-                        g, xref_id, self.globaltt['journal_article'])
+                        g, xref_id, self.globaltt['journal article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
                     continue
                 elif re.match(r'doi', xref):
@@ -854,21 +854,14 @@ class WormBase(Source):
                 # TODO deal with subtypes
                 interaction_type_id = None
                 if interaction_type == 'Genetic':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'genetically_interacts_with']
+                    interaction_type_id = self.globaltt['genetically interacts with']
                 elif interaction_type == 'Physical':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'molecularly_interacts_with']
+                    interaction_type_id = self.globaltt['molecularly_interacts_with']
                 elif interaction_type == 'Regulatory':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'regulates']
+                    interaction_type_id = self.globaltt['regulates']
                 else:
                     logger.info(
-                        "An interaction type I don't understand %s",
-                        interaction_type)
+                        "An interaction type I don't understand %s", interaction_type)
 
                 num_interactors = (len(row) - 5) / 3
                 if num_interactors != 2:

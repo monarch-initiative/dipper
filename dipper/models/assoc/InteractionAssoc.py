@@ -11,7 +11,7 @@ class InteractionAssoc(Assoc):
         self.set_subject(subj)
         self.set_object(obj)
         if rel is None:
-            rel = self.globaltt['interacts_with']
+            rel = self.globaltt['interacts with']
         self.set_relationship(rel)
 
         return

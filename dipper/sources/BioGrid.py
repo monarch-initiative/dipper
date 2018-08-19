@@ -287,22 +287,22 @@ class BioGrid(Source):
         rel = InteractionAssoc.interaction_object_properties
         mi_ro_map = {
             # colocalization
-            'MI:0403': rel['colocalizes_with'],
+            'MI:0403': rel['colocalizes with'],
             # direct interaction
-            'MI:0407': rel['interacts_with'],
+            'MI:0407': rel['interacts with'],
             # synthetic genetic interaction defined by inequality
-            'MI:0794': rel['genetically_interacts_with'],
+            'MI:0794': rel['genetically interacts with'],
             # suppressive genetic interaction defined by inequality
-            'MI:0796': rel['genetically_interacts_with'],
+            'MI:0796': rel['genetically interacts with'],
             # additive genetic interaction defined by inequality
-            'MI:0799': rel['genetically_interacts_with'],
+            'MI:0799': rel['genetically interacts with'],
             # association
-            'MI:0914': rel['interacts_with'],
+            'MI:0914': rel['interacts with'],
             # physical association
-            'MI:0915': rel['interacts_with']
+            'MI:0915': rel['interacts with']
         }
 
-        ro_id = rel['interacts_with']  # default
+        ro_id = rel['interacts with']  # default
         if mi_id in mi_ro_map:
             ro_id = mi_ro_map.get(mi_id)
 
@@ -420,7 +420,6 @@ class BioGrid(Source):
         # TODO add InteractionAssoc tests
         # TODO add test about if all prefixes are mapped?
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
 
         return test_suite

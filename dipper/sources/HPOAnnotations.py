@@ -298,8 +298,7 @@ class HPOAnnotations(Source):
 
                         if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match(r'PMID', pub):
-                                pubtype = \
-                                    self.globaltt['journal_article']
+                                pubtype = self.globaltt['journal article']
                             elif re.match(r'HPO', pub):
                                 pubtype = self.globaltt['person']
                             else:
@@ -316,16 +315,15 @@ class HPOAnnotations(Source):
                                 pub = omimurl
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
-                                orphaneturl = \
-                                    ''.join((
-                                        'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                orphaneturl = ''.join((
+                                    'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
                                         str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
-                                decipherurl = '/'.join(
-                                    ('https://decipher.sanger.ac.uk/syndrome',
-                                     deciphernum))
+                                decipherurl = '/'.join((
+                                    'https://decipher.sanger.ac.uk/syndrome',
+                                    deciphernum))
                                 pub = decipherurl
                             pubtype = self.globaltt['webpage']
                         elif re.match(r'http', pub):
@@ -343,8 +341,7 @@ class HPOAnnotations(Source):
 
                 assoc.add_association_to_graph()
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -360,10 +357,8 @@ class HPOAnnotations(Source):
         """
 
         repo_dir = '/'.join((self.rawdir, 'git'))
-        REMOTE_URL = \
-            "git@github.com:monarch-initiative/hpo-annotation-data.git"
-        HTTPS_URL = \
-            "https://github.com/monarch-initiative/hpo-annotation-data.git"
+        REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
+        HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
@@ -420,8 +415,7 @@ class HPOAnnotations(Source):
             raw = self.files[f]['file']
             total_processed += self.process_common_disease_file(
                 raw, unpadded_doids, limit)
-            if not self.testMode \
-                    and limit is not None and total_processed > limit:
+            if not self.testMode and limit is not None and total_processed > limit:
                 break
         logger.info("Finished iterating over all common disease files.")
         logger.info("Fixed %d/%d incorrectly zero-padded ids",

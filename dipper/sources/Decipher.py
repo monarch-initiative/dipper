@@ -180,7 +180,7 @@ class Decipher(Source):
                     # elif category.strip() == 'Probable DD gene':
                     #    rel = self.self.globaltt['has phenotype']
                     # elif category.strip() == 'Possible DD gene':
-                    #    rel = self.self.globaltt['contributes_to']
+                    #    rel = self.self.globaltt['contributes to']
                     # elif category.strip() == 'Not DD gene':
                     #    # TODO negative annotation
                     #    continue
@@ -192,7 +192,7 @@ class Decipher(Source):
                         if p != '':
                             pmid = 'PMID:' + str(p)
                             r = Reference(
-                                graph, pmid, self.globaltt['journal_article'])
+                                graph, pmid, self.globaltt['journal article'])
                             r.addRefToGraph()
                             assoc.add_source(pmid)
 

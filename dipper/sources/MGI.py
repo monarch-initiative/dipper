@@ -1317,7 +1317,7 @@ SELECT  r._relationship_key as rel_key,
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
-                        reference.setType(self.globaltt['journal_article'])
+                        reference.setType(self.globaltt['journal article'])
                         model.makeLeader(pub_id)
                     reference.addRefToGraph()
 

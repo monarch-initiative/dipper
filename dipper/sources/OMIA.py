@@ -462,7 +462,7 @@ class OMIA(Source):
         self.id_hash['article'][row['article_id']] = iarticle_id
         rtype = None
         if row['journal'] != '':
-            rtype = self.globaltt['journal_article']
+            rtype = self.globaltt['journal article']
         reference = Reference(self.g, iarticle_id, rtype)
 
         if row['title'] is not None:
@@ -599,8 +599,7 @@ class OMIA(Source):
 
         # FIXME we want a different relationship here
         assoc = G2PAssoc(
-            self.g, self.name, breed_id, phene_id,
-            self.globaltt['has_phenotype'])
+            self.g, self.name, breed_id, phene_id, self.globaltt['has phenotype'])
         assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
@@ -609,7 +608,7 @@ class OMIA(Source):
         # from the omim list, so we can make the model associations here
 
         omim_ids = self.omia_omim_map.get(omia_id)
-        eco_id = "ECO:0000214"   # biological aspect of descendant evidence
+        eco_id = self.globaltt['biological aspect of descendant evidence']
         if omim_ids is not None and len(omim_ids) > 0:
             if len(omim_ids) > 1:
                 logger.info(

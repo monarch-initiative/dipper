@@ -336,7 +336,7 @@ class AnimalQTLdb(Source):
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
                     reference = Reference(
-                        graph, pub_id, self.globaltt['journal_article'])
+                        graph, pub_id, self.globaltt['journal article'])
 
                 if reference is not None:
                     reference.addRefToGraph()
@@ -344,7 +344,7 @@ class AnimalQTLdb(Source):
                 # make the association to the QTL
                 assoc = G2PAssoc(
                     graph, self.name, qtl_id, trait_id,
-                    model.object_properties['is_marker_for'])
+                    self.globaltt['is marker for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -372,7 +372,7 @@ class AnimalQTLdb(Source):
                     # make the association to the dbsnp_id
                     assoc = G2PAssoc(
                         graph, self.name, dbsnp_id, trait_id,
-                        model.object_properties['is_marker_for'])
+                        self.globaltt['is marker for'])
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
 
@@ -487,13 +487,13 @@ class AnimalQTLdb(Source):
                     else:
                         pub_id = 'PMID:' + pub_id.strip()
                         reference = Reference(
-                            graph, pub_id, self.globaltt['journal_article'])
+                            graph, pub_id, self.globaltt['journal article'])
                     reference.addRefToGraph()
 
                 # Add QTL to graph
                 assoc = G2PAssoc(
                     graph, self.name, qtl_id, trait_id,
-                    model.object_properties['is_marker_for'])
+                    self.globaltt['is marker for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():

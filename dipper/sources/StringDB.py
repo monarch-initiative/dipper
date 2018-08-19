@@ -182,9 +182,8 @@ class StringDB(Source):
                 filtered_out_count += 1
 
             if gene1_curie is not None and gene2_curie is not None:
-                # RO:0002434 ! interacts_with
-                interacts_with = 'RO:0002434'
-                self.graph.addTriple(gene1_curie, interacts_with, gene2_curie)
+                self.graph.addTriple(
+                    gene1_curie, self.globaltt['interacts with'], gene2_curie)
                 if limit is not None and index >= limit:
                     break
 
