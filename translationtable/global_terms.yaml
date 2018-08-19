@@ -9,8 +9,6 @@
 # We may want to sort the file by values to help keep dups down
 # Read: http://precedings.nature.com/documents/3576/version/1/files/npre20093576-1.pdf
 #
-
-
 ####################################################################
 "type": "rdf:type"
 "ontology": "owl:Ontology"
@@ -125,10 +123,15 @@
 "missense_variant": "SO:0001583"
 "UTR_variant": "SO:0001622"
 "transcriptional_cis_regulatory_region": "SO:0001055"
+"MNV": "SO:0002007"
+"mobile_element_insertion": "SO:0001837"
+"novel_sequence_insertion": "SO:0001838"
+"wild_type": "SO:0000817"
+
 
 # GENO (some overlap between GENO and SO)
-# Prioritize GENO when possible 
-# why? SO is there first and very specific? 
+# Prioritize GENO when possible
+# why? SO is there first and very specific?
 # if GENO needs it, a proper miriot is called for.  TEC
 
 
@@ -263,14 +266,13 @@
 "Macropus eugenii": "NCBITaxon:9315"
 "Mesocricetus auratus": "NCBITaxon:10036"
 "Microcebus murinus": "NCBITaxon:30608"
-"Mus musculus domesticus": "NCBITaxon:10092"  
+"Mus musculus domesticus": "NCBITaxon:10092"
 "Ornithorhynchus anatinus": "NCBITaxon:9258"
 "Oryctolagus cuniculus": "NCBITaxon:9986"
 "Pan troglodytes": "NCBITaxon:9598"
 "Pongo pygmaeus": "NCBITaxon:9600"
 "Rattus norvegicus": "NCBITaxon:10116"
 "Sus scrofa domestica": "NCBITaxon:9825"
-"Sus scrofa domestica L.": "NCBITaxon:9823"
 "Xenopus (Silurana) tropicalis": "NCBITaxon:8364"
 "Mus": "NCBITaxon:10088"  # Genus
 #"Mus" "NCBITaxon:862507" # SubGenus  -- name conflicts with Genus name
@@ -280,12 +282,52 @@
 "Mus musculus domesticus x M. m. molossinus": "NCBITaxon:1266728"
 "Mus setulosus":  "NCBITaxon:10102"
 "Mus musculus musculus":  "NCBITaxon:39442"
-"Mus musculus domesticus": "NCBITaxon:10092"
 "Mus musculus x Mus spretus": "NCBITaxon:186842"
 "Mus cookii": "NCBITaxon:10098"
 "Mus cervicolor": "NCBITaxon:10097"
 "Mus musculus gentilulus": "NCBITaxon:80274"
 "Mus musculus castaneus": "NCBITaxon:10091"
+"Mus spretus": "NCBITaxon:10096"
+"Mus tenellus": "NCBITaxon:397330"
+"Mus baoulei": "NCBITaxon:544437"
+"Mus haussa": "NCBITaxon:273922"
+"Rattus": "NCBITaxon:10114"
+
+
+"Mus cervicolor popaeus": "NCBITaxon:135828"
+"Mus abbotti": "NCBITaxon:10108"
+"Mus nitidulus": "NCBITaxon:390848"
+"Mus triton": "NCBITaxon:473865"
+"Mus musculus molossinus": "NCBITaxon:57486"
+"Mus lepidoides": "NCBITaxon:390847"
+"Mus cypriacus": "NCBITaxon:468371"
+"Mus crociduroides": "NCBITaxon:41269"
+"Mus caroli": "NCBITaxon:10089"
+"Mus emesi": "NCBITaxon:887131"
+"Mus gratus": "NCBITaxon:229288"
+"Nannomys": "NCBITaxon:862510"
+"Mus mattheyi": "NCBITaxon:41270"
+"Mus famulus": "NCBITaxon:83773"
+"Mus platythrix": "NCBITaxon:10101"
+"Mus spicilegus": "NCBITaxon:10103"
+"Mus terricolor": "NCBITaxon:254704"
+"Mus fragilicauda": "NCBITaxon:186193"
+"Mus macedonicus macedonicus": "NCBITaxon:270353"
+"Mus cervicolor cervicolor": "NCBITaxon:135827"
+
+"Mus pahari": "NCBITaxon:10093"
+"Mus indutus": "NCBITaxon:273921"
+"Mus saxicola": "NCBITaxon:10094"
+"Mus booduga": "NCBITaxon:27681"
+"Mus minutoides": "NCBITaxon:10105"
+"Mus musculus gansuensis": "NCBITaxon:1385377"
+"Mus macedonicus spretoides": "NCBITaxon:270352"
+#"": "NCBITaxon:"
+#"": "NCBITaxon:"
+#"": "NCBITaxon:"
+#"": "NCBITaxon:"
+#"": "NCBITaxon:"
+
 
 
 ################################################
@@ -321,6 +363,8 @@
 "sequence_feature": "SO:0000110"
 "substitution": "SO:1000002"
 "point_mutation": "SO:1000008"
+"genetic_marker": "SO:0001645"
+"read": "SO:0000150"
 "population": "PCO:0000001"
 "family": "PCO:0000020"
 "wildtype": "GENO:0000511"
@@ -340,6 +384,38 @@
 "coding_transgene_feature": "GENO:0000638"
 "protein_coding_gene": "SO:0001217"
 "ncRNA_gene": "SO:0001263"
+"lncRNA_gene": "SO:0002127"
+"antisense_lncRNA": "SO:0001904"
+"rRNA_gene": "SO:0001637"
+"tRNA_gene": "SO:0001272"
+"scRNA_gene": "SO:0001266"
+"lincRNA_gene": "SO:0001641"
+"gene_segment": "SO:3000000"
+"SRP_RNA_gene": "SO:0001269"
+"RNase_P_RNA_gene": "SO:0001639"
+"RNase_MRP_RNA_gene": "SO:0001640"
+"telomerase_RNA_gene": "SO:0001643"
+"pseudogenic_gene_segment": "SO:0001741"
+"chromosomal_deletion": "SO:1000029"
+"chromosomal_inversion": "SO:1000030"
+"Robertsonian_fusion": "SO:1000043"
+"reciprocal_chromosomal_translocation": "SO:1000048"
+"chromosomal_translocation": "SO:1000044"
+"chromosomal_duplication": "SO:1000037"
+"chromosomal_transposition": "SO:0000453"
+"pseudogenic_region": "SO:0000462"
+"polymorphic_pseudogene": "SO:0001841"
+"retrotransposon": "SO:0000180"
+"telomere": "SO:0000624"
+"minisatellite": "SO:0000643"
+"endogenous_retroviral_sequence": "SO:0000903"
+"CpG_island": "SO:0000307"
+"ribozyme": "SO:0000374"
+"ribozyme_gene": "SO:0002181"
+"promoter": "SO:0000167"
+"snRNA_gene": "SO:0001268"
+"snoRNA_gene": "SO:0001267"
+"miRNA_gene": "SO:0001265"
 "RNAi_reagent": "SO:0000337"
 "heritable_phenotypic_marker": "SO:0001500"
 "is_mutant_of": "GENO:0000440"
@@ -505,7 +581,7 @@
 "collection": "ERO:0002190"
 "abnormal": "PATO:0000460"
 "normal": "PATO:0000461"
- 
+
 
 
 # 'has_gene_product': 'RO:0002205'  -> "has gene product"
@@ -528,7 +604,7 @@
 
 ######################################################
 
-            
+
 
 ######################################################
 # SEPIO:0000019 found in sepio_developer.owl
