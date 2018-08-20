@@ -24,7 +24,8 @@ class GeneVariantDiseaseTest(unittest.TestCase):
         # Override so tests don't break when we update terms
         self.globaltt = self.orphanet.open_and_parse_yaml(
             os.path.join(os.path.dirname(__file__), './resources/test_terms.yaml'))
-        self.orphanet.rawdir = os.path.join(os.path.dirname(__file__), 'resources/orphanet')
+        self.orphanet.rawdir = os.path.join(
+            os.path.dirname(__file__), 'resources/orphanet')
 
     def tearDown(self):
         self.orphanet = None
@@ -35,12 +36,12 @@ class GeneVariantDiseaseTest(unittest.TestCase):
         self.orphanet.files['disease-gene']['file'] = 'orph-germline.xml'
 
         self.orphanet._process_diseasegene(limit=None)
-        logger.debug("Reference graph: %s",
-                     self.orphanet.graph.serialize(format="turtle")
-                                   .decode("utf-8")
+        logger.debug(
+            "Reference graph: %s",
+            self.orphanet.graph.serialize(format="turtle").decode("utf-8")
         )
         expected_triples = """
-:MONARCH_b2cd4dfacc21d0e2 a OBAN:association ;
+MONARCH:b2cd4dfacc21d0e28c39 a OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object Orphanet:938475 ;
     OBAN:association_has_predicate RO:0003303 ;
@@ -53,7 +54,7 @@ HGNC:30497 a owl:Class .
 Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
     dc:description "kinesin family member 7" ;
-    OIO:hasExactSynonym "KAS1" ;
+    oboInOwl:hasExactSynonym "KAS1" ;
     rdfs:subClassOf OBO:SO_0001217 ;
     owl:equivalentClass ENSEMBL:ENSG00000166813,
         HGNC:30497 .
@@ -76,12 +77,12 @@ Orphanet:938475 a owl:Class ;
         self.orphanet.files['disease-gene']['file'] = 'orph-germline-lof.xml'
 
         self.orphanet._process_diseasegene(limit=None)
-        logger.debug("Reference graph: %s",
-                     self.orphanet.graph.serialize(format="turtle")
-                                  .decode("utf-8")
+        logger.debug(
+            "Reference graph: %s",
+            self.orphanet.graph.serialize(format="turtle").decode("utf-8")
         )
         expected_triples = """
-:MONARCH_953dada0eb229a75 a OBAN:association ;
+MONARCH:b53dada0eb229a75e705 OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object Orphanet:938475 ;
     OBAN:association_has_predicate RO:0003303 ;
@@ -90,7 +91,7 @@ Orphanet:938475 a owl:Class ;
 Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
     dc:description "kinesin family member 7" ;
-    OIO:hasExactSynonym "KAS1" ;
+    oboInOwl:hasExactSynonym "KAS1" ;
     rdfs:subClassOf SO:0001217 .
 
 <https://monarchinitiative.org/.well-known/genid/ba0884fb61004110> a GENO:0000002 ;
@@ -112,12 +113,12 @@ Orphanet:938475 a owl:Class ;
         self.orphanet.files['disease-gene']['file'] = 'orph-no-variant.xml'
 
         self.orphanet._process_diseasegene(limit=None)
-        logger.debug("Reference graph: %s",
-                     self.orphanet.graph.serialize(format="turtle")
-                                  .decode("utf-8")
+        logger.debug(
+            "Reference graph: %s",
+            self.orphanet.graph.serialize(format="turtle") .decode("utf-8")
         )
         expected_triples = """
-MONARCH:264684a0ea6ae59f a OBAN:association ;
+MONARCH:b64684a0ea6ae59fdb09 a OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object Orphanet:938475 ;
     OBAN:association_has_predicate RO:0003304 ;
@@ -127,7 +128,7 @@ Orphanet:268061 a owl:Class ;
     rdfs:label "KS1" ;
     RO:0003304 Orphanet:938475 ;
     dc:description "kinesin family member 7" ;
-    OIO:hasExactSynonym "KAS1" ;
+    oboInOwl:hasExactSynonym "KAS1" ;
     rdfs:subClassOf SO:0001217 .
 
 Orphanet:938475 a owl:Class ;
@@ -144,8 +145,8 @@ Orphanet:938475 a owl:Class ;
         """
         self.orphanet.graph = RDFGraph()  # Reset graph
         self.orphanet.files['disease-gene']['file'] = 'orph-no-mapping.xml'
-        self.assertRaises(ValueError,
-                          lambda: self.orphanet._process_diseasegene(limit=None))
+        self.assertRaises(
+            ValueError, lambda: self.orphanet._process_diseasegene(limit=None))
 
 
 if __name__ == '__main__':
