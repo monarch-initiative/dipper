@@ -151,14 +151,13 @@ class Bgee(Source):
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
         rank = re.sub(r',', '', rank)
-        model.addIndividualToGraph(
-            ind_id=gene_curie, label=None, ind_type=self.resolve('gene'))
+        model.addIndividualToGraph(ind_id=gene_curie, label=None, ind_type=None)
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
-        g2a_association.rel = self.resolve('expressed in')
+        g2a_association.rel = self.globaltt['expressed in']
         g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
-            self.resolve('has_quantifier'), float(rank), 'Literal', 'xsd:float')
+            self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
         return
 
     # Override
@@ -173,9 +172,9 @@ class Bgee(Source):
         """
         is_remote_newer = False
         status = os.stat(localfile)
-        logger.info("Local file date: {0}, size: {1}".format(
-                    datetime.fromtimestamp(status.st_mtime),
-                    status[ST_SIZE]))
+        logger.info(
+            "Local file date: {0}, size: {1}"
+            .format(datetime.fromtimestamp(status.st_mtime), status[ST_SIZE]))
         remote_dt = Bgee._convert_ftp_time_to_iso(remote_modify)
 
         if remote_dt != datetime.fromtimestamp(status.st_mtime) \

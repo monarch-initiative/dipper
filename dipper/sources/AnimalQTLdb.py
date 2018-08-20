@@ -240,7 +240,7 @@ class AnimalQTLdb(Source):
                 trait_id = 'AQTLTrait:' + trait_id.strip()
 
                 # Add QTL to graph
-                feature = Feature(graph, qtl_id, qtl_symbol, geno.genoparts['QTL'])
+                feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'])
                 feature.addTaxonToFeature(taxon_id)
 
                 # deal with the chromosome
@@ -299,7 +299,7 @@ class AnimalQTLdb(Source):
 
                     model.addIndividualToGraph(
                         dbsnp_id, None,
-                        geno.genoparts['sequence_alteration'])
+                        self.globaltt['sequence_alteration'])
                     model.addXref(qtl_id, dbsnp_id)
 
                 gene_id = gene_id.replace('uncharacterized ', '')
@@ -472,7 +472,7 @@ class AnimalQTLdb(Source):
                 # make association between QTL and trait based on taxon
 
                 qtl_id = common_name + 'QTL:' + str(qtl_num)
-                model.addIndividualToGraph(qtl_id, None, geno.genoparts['QTL'])
+                model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'])
                 geno.addTaxon(taxon_id, qtl_id)
 
                 trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
@@ -515,7 +515,7 @@ class AnimalQTLdb(Source):
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
-                qtl_feature = Feature(graph, qtl_id, None, geno.genoparts['QTL'])
+                qtl_feature = Feature(graph, qtl_id, None, self.globaltt['QTL'])
                 if start_bp == '':
                     start_bp = None
                 qtl_feature.addFeatureStartLocation(

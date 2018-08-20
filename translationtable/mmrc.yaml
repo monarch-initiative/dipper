@@ -1,36 +1,19 @@
 ---
-"SM": "sequence_alteration" # spontaneous mutation
-"TM": "sequence_alteration"  # targeted mutation
-"TG": "transgenic_insertion"  # transgenic
-"GT": "sequence_alteration"  # gene trap
-"CI": "sequence_alteration"  # chemically induced mutation
-"RAD": "sequence_alteration"  # radiation induced mutation
-"CH": "chromosome_structure_variation"  # "SO:1000183",
-"RB": "Robertsonian_fusion"  # Robertsonian translocation
+
+# these are ids translated to lables as found
+# the comments are perhaps more specific
+"SM": "sequence_alteration"         # spontaneous mutation
+"TM": "sequence_alteration"         # targeted mutation
+"TG": "transgenic_insertion"        # transgenic
+"GT": "sequence_alteration"         # gene trap
+"CI": "sequence_alteration"         # chemically induced mutation
+"RAD": "sequence_alteration"        # radiation induced mutation
+"CH": "chromosome_structure_variation"  # chromosomal aberration
+"RB": "Robertsonian_fusion"         # Robertsonian translocation
 "TL": "reciprocal_chromosomal_translocation"  # reciprocal translocation
-"TP": "chromosomal_transposition"  # transposition
-"INV": "inversion",  # inversion
-"INS": "SO:0000667",  # insertion
-"DEL": "SO:0000159",  # deletion
-"DP": "SO:1000035",  # duplication
-"OTH": "sequence_alteration"  # other
-
-
-
-#################################################
-            'SM': 'SO:0001059',  # spontaneous mutation
-            'TM': 'SO:0001059',  # targeted mutation
-            'TG': 'SO:xxxxxxx',  # transgenic
-            'GT': 'SO:0001059',  # gene trap
-            'CI': 'SO:0001059',  # chemically induced mutation
-            'RAD': 'SO:0001059',  # radiation induced mutation
-            # chromosomal aberration --> chromosomal structure variation
-            'CH': 'SO:1000183',
-            'RB': 'SO:1000043',  # Robertsonian translocation
-            'TL': 'SO:1000048',  # reciprocal translocation
-            'TP': 'SO:0000453',  # transposition
-            'INV': 'SO:1000036',  # inversion
-            'INS': 'SO:0000667',  # insertion
-            'DEL': 'SO:0000159',  # deletion
-            'DP': 'SO:1000035',  # duplication
-            'OTH': 'SO:0001059'  # other
+"TP": "chromosomal_transposition"   # transposition
+"INV": "inversion"                  # inversion
+"INS": "insertion"                  # insertion
+"DEL": "deletion"                   # deletion
+"DP": "duplication",                # duplication
+"OTH": "sequence_alteration"        # other

@@ -387,7 +387,7 @@ class GWASCatalog(Source):
             feat.addFeatureStartLocation(chrom_pos, chrom_id)
             feat.addFeatureEndLocation(chrom_pos, chrom_id)
         feat.addFeatureToGraph()
-        feat.addTaxonToFeature(self.resolve("Homo sapiens"))
+        feat.addTaxonToFeature(self.globaltt["Homo sapiens"])
         # TODO consider adding allele frequency as property;
         # but would need background info to do that
 
@@ -485,7 +485,7 @@ class GWASCatalog(Source):
                     if re.match(r'^EFO', trait_curie):
                         model.addClassToGraph(
                             trait_curie, list(query_result)[0][0],
-                            self.resolve('Phenotype'))
+                            self.globaltt['Phenotype'])
 
                 pubmed_curie = 'PMID:' + pubmed_id
 

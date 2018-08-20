@@ -503,13 +503,12 @@ class CTD(Source):
         # TODO pass in the relevant Assoc class rather than relying on G2P
         assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
-            eco = self.resolve('TAS')
             for pmid in pubmed_ids:
                 r = Reference(
                     self.graph, pmid, self.globaltt['journal article'])
                 r.addRefToGraph()
                 assoc.add_source(pmid)
-                assoc.add_evidence(eco)
+                assoc.add_evidence(self.globaltt['traceable author statement'])
 
         assoc.add_association_to_graph()
         return
@@ -565,8 +564,7 @@ class CTD(Source):
                     pubids = None
                 self._make_association(chem_id, disease_id, rel_id, pubids)
 
-                if not self.testMode and limit is not None \
-                        and line_counter >= limit:
+                if not self.testMode and limit is not None and line_counter >= limit:
                     break
         return
 

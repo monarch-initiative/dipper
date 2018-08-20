@@ -389,7 +389,7 @@ class Monochrom(Source):
             so_id = self.globaltt['chromosome_part']
             logger.warning(
                 "Unmapped code %s. Defaulting to chr_part '" +
-                self.globaltt['chromosome_part'] + "'.", regiontype)  # SO:0000830
+                self.globaltt['chromosome_part'] + "'.", regiontype)
 
         return so_id
 

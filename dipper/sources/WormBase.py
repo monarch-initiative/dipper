@@ -411,7 +411,7 @@ class WormBase(Source):
                             geno.addReagentTargetedGene(
                                 rnai_id, 'WormBase:'+gene_num, rtg_id)
                             geno.addGeneTargetingReagent(
-                                rnai_id, None, geno.genoparts['RNAi_reagent'],
+                                rnai_id, None, self.globaltt['RNAi_reagent'],
                                 gene_id)
                             allele_id = rtg_id
                         elif re.search(r'WBVar', allele_id):
@@ -505,7 +505,7 @@ class WormBase(Source):
 
                     rnai_id = 'WormBase:'+rnai_num
                     geno.addGeneTargetingReagent(
-                        rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
+                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
 
                     # make the "allele" of the gene
                     # that is targeted by the reagent

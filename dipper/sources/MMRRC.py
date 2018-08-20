@@ -168,18 +168,15 @@ class MMRRC(Source):
                     self.strain_hash[strain_id]['variants'].add(mgi_allele_id)
                     self.id_label_hash[mgi_allele_id.strip()] = mgi_allele_symbol
 
-                    # use the following if needing to add the
-                    # sequence alteration types
-                    # var_type =
-                    #   self._get_variant_type_from_abbrev(mutation_type)
+                    # use the following if needing to add the sequence alteration types
+                    # var_type = self.localtt[mutation_type]
                     # make a sequence alteration for this variant locus,
                     # and link the variation type to it
                     # sa_id = '_'+re.sub(r':','',mgi_allele_id)+'SA'
                     # if self.nobnodes:
                     #     sa_id = ':'+sa_id
                     # gu.addIndividualToGraph(g, sa_id, None, var_type)
-                    # geno.addSequenceAlterationToVariantLocus(sa_id,
-                    #                                          mgi_allele_id)
+                    # geno.addSequenceAlterationToVariantLocus(sa_id, mgi_allele_id)
 
                 # scrub out any spaces
                 mgi_gene_id = re.sub(r'\s+', '', mgi_gene_id)
@@ -278,7 +275,7 @@ class MMRRC(Source):
                         vl_id = v.strip()
                         vl_symbol = self.id_label_hash[vl_id]
                         geno.addAllele(
-                            vl_id, vl_symbol, geno.genoparts['variant_locus'])
+                            vl_id, vl_symbol, self.globaltt['variant_locus'])
                         vl_set.add(vl_id)
                         if len(variants) == 1 and len(genes) == 1:
                             for gene in genes:
@@ -292,7 +289,7 @@ class MMRRC(Source):
                         vl_symbol = self.id_label_hash[gene]+'<?>'
                         self.id_label_hash[vl_id] = vl_symbol
                         geno.addAllele(
-                            vl_id, vl_symbol, geno.genoparts['variant_locus'])
+                            vl_id, vl_symbol, self.globaltt['variant_locus'])
                         geno.addGene(gene, self.id_label_hash[gene])
                         geno.addAlleleOfGene(vl_id, gene)
                         vl_set.add(vl_id)
@@ -359,42 +356,6 @@ class MMRRC(Source):
                 str(sorted(list(genes_with_no_ids))))
 
         return
-
-    @staticmethod
-    def _get_variant_type_from_abbrev(abbrev):
-        """
-        All variants are generically typed as "sequence_alterations"
-        unless otherwise stated.
-        :param abbrev:
-        :return:
-
-        """
-        variant_type = None
-
-        var_dict = {
-            'SM': 'SO:0001059',  # spontaneous mutation
-            'TM': 'SO:0001059',  # targeted mutation
-            'TG': 'SO:xxxxxxx',  # transgenic
-            'GT': 'SO:0001059',  # gene trap
-            'CI': 'SO:0001059',  # chemically induced mutation
-            'RAD': 'SO:0001059',  # radiation induced mutation
-            # chromosomal aberration --> chromosomal structure variation
-            'CH': 'SO:1000183',
-            'RB': 'SO:1000043',  # Robertsonian translocation
-            'TL': 'SO:1000048',  # reciprocal translocation
-            'TP': 'SO:0000453',  # transposition
-            'INV': 'SO:1000036',  # inversion
-            'INS': 'SO:0000667',  # insertion
-            'DEL': 'SO:0000159',  # deletion
-            'DP': 'SO:1000035',  # duplication
-            'OTH': 'SO:0001059'  # other
-        }
-        if abbrev in var_dict:
-            variant_type = var_dict[abbrev]
-        else:
-            logger.warning("Variant type not recognized: %s", abbrev)
-
-        return variant_type
 
     def getTestSuite(self):
         import unittest

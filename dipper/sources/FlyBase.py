@@ -1064,71 +1064,15 @@ class FlyBase(PostgreSQLSource):
                 # dbxref_id	db_id	accession	version	description	url
                 # 1	2	SO:0000000	""
 
-                db_ids = {          # the databases to fetch
-                    50: 'PMID',     # pubmed
-                    68: 'RO',       # obo-rel
-                    71: 'FBdv',     # FBdv
-                    74: 'FBbt',     # FBbt
-                    # 28:,          # genbank
-                    30: 'OMIM',     # MIM
-                    # 38,           # ncbi
-                    75: 'ISBN',     # ISBN
-                    46: 'PMID',     # PUBMED
-                    51: 'ISBN',     # isbn
-                    52: 'SO',       # so
-                    # 76,           # http
-                    77: 'PMID',     # PMID
-                    80: 'FBcv',     # FBcv
-                    # 95,           # MEDLINE
-                    98: 'REACT',    # Reactome
-                    103: 'CHEBI',   # Chebi
-                    102: 'MESH',    # MeSH
-                    106: 'OMIM',    # OMIM
-                    105: 'KEGG-path',  # KEGG pathway
-                    107: 'DOI',     # doi
-                    108: 'CL',      # CL
-                    114: 'CHEBI',   # CHEBI
-                    115: 'KEGG',    # KEGG
-                    116: 'PubChem',  # PubChem
-                    # 120,          # MA???
-                    3: 'GO',        # GO
-                    4: 'FlyBase',   # FlyBase
-                    # 126,          # URL
-                    128: 'PATO',    # PATO
-                    # 131,          # IMG
-                    2: 'SO',        # SO
-                    136: 'MESH',    # MESH
-                    139: 'CARO',    # CARO
-                    140: 'NCBITaxon',  # NCBITaxon
-                    # 151,          # MP  ???
-                    161: 'DOI',     # doi
-                    36: 'BDGP',     # BDGP
-                    # 55,           # DGRC
-                    # 54,           # DRSC
-                    # 169,          # Transgenic RNAi project???
-                    231: 'RO',      # RO ???
-                    180: 'NCBIGene',  # entrezgene
-                    # 192,          # Bloomington stock center
-                    197: 'UBERON',  # Uberon
-                    212: 'ENSEMBL',  # Ensembl
-                    # 129,          # GenomeRNAi
-                    275: 'PMID',    # PubMed
-                    286: 'PMID',    # pmid
-                    264: 'HGNC',
-                    # 265: 'OMIM',  # OMIM_Gene
-                    266: 'OMIM',    # OMIM_Phenotype
-                    300: 'DOID',    # DOID
-                    302: 'MESH',    # MSH
-                    347: 'PMID',    # Pubmed
-                }
-
-                if accession.strip() != '' and int(db_id) in db_ids:
+                accession = accession.strip()
+                db_id = db_id.strip()
+                if accession != '' and db_id in self.localtt:
                     # scrub some identifiers here
-                    m = re.match(
+                    mch = re.match(
                         r'(doi|SO|GO|FBcv|FBbt_root|FBdv|FBgn|FBdv_root|FlyBase|FBbt):',
                         accession)
-                    if m:
-                        accession = re.sub(m.group(1)+r'\:', '', accession)
+                    if mch:
+                        accession = re.sub(mch.group(1)+r'\:', '', accession)
                     elif re.match(
                             r'(FlyBase miscellaneous CV|cell_lineprop|relationship type|FBgn$)',
                             accession):
@@ -1138,18 +1082,16 @@ class FlyBase(PostgreSQLSource):
                     elif re.search(r'\s', accession):
                         # skip anything with a space
                         # logger.debug(
-                        #   'dbxref %s accession has a space: %s',
-                        #   dbxref_id, accession)
+                        #   'dbxref %s accession has a space: %s', dbxref_id, accession)
                         continue
 
                     if re.match(r'http', accession):
-                        did = accession.strip()
+                        did = accession
                     else:
-                        prefix = db_ids.get(int(db_id))
-                        did = ':'.join((prefix, accession.strip()))
+                        prefix = self.localtt[db_id])
+                        did = ':'.join((prefix, accession))
                         if re.search(r'\:', accession) and prefix != 'DOI':
-                            logger.warning(
-                                'id %s may be malformed; skipping', did)
+                            logger.warning('id %s may be malformed; skipping', did)
 
                     self.dbxrefs[dbxref_id] = {db_id: did}
 
@@ -1162,7 +1104,8 @@ class FlyBase(PostgreSQLSource):
                 if int(db_id) == 2 \
                         and accession.strip() == 'transgenic_transposon':
                     # transgenic_transposable_element
-                    self.dbxrefs[dbxref_id] = {db_id: 'SO:0000796'}
+                    self.dbxrefs[dbxref_id] = {
+                        db_id: self.globaltt['transgenic_transposable_element']}
 
                 line_counter += 1
 
@@ -1213,7 +1156,7 @@ class FlyBase(PostgreSQLSource):
                 # 8508	tarsal segment	83664 60468  60468 60468
                 # 18404	oocyte | oogenesis stage S9	86769 60468  60468 60468
                 # for now make these as phenotypic classes
-                # will need to xref at some point
+                # will need to dbxref at some point
                 phenotype_key = phenotype_id
                 phenotype_id = None
                 phenotype_internal_id = self._makeInternalIdentifier(
@@ -1221,8 +1164,7 @@ class FlyBase(PostgreSQLSource):
                 phenotype_label = None
                 self.label_hash[phenotype_internal_id] = uniquename
                 cvterm_id = None
-                if observable_id != '' \
-                        and int(observable_id) == 60468:
+                if observable_id != ''  and int(observable_id) == 60468:
                     # undefined - typically these are already phenotypes
                     if cvalue_id in self.idhash['cvterm']:
                         cvterm_id = self.idhash['cvterm'][cvalue_id]
@@ -1906,8 +1848,7 @@ class FlyBase(PostgreSQLSource):
                 if self.testMode and int(organism_id) not in self.test_keys['organism']:
                     continue
 
-                if not self.testMode and\
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
                     model.addClassToGraph(tax_id)

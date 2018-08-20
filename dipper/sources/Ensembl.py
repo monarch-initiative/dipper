@@ -8,7 +8,6 @@ from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
 from dipper import config
-from dipper.models.GenomicFeature import Feature
 
 
 logger = logging.getLogger(__name__)
@@ -204,48 +203,18 @@ class Ensembl(Source):
             "virtualSchemaName": "default", "formatter": "TSV", "header": "0",
             "uniqueRows": "1", "count": "0", "datasetConfigVersion": "0.6"}
 
-        ensembl_taxon_to_db_map = {
-            '9606': 'hsapiens_gene_ensembl',
-            '10090': 'mmusculus_gene_ensembl',
-            '7955': 'drerio_gene_ensembl',
-            '28377': 'acarolinensis_gene_ensembl',  # green lizard
-            # '3702': 'ensembl_3702.txt',           # arabadopsis?
-            '9913': 'btaurus_gene_ensembl',
-            '6239': 'celegans_gene_ensembl',
-            '9615': 'cfamiliaris_gene_ensembl',
-            '9031': 'ggallus_gene_ensembl',
-            # '44689': 'ensembl_44689.txt',         #  dicty?
-            '7227': 'dmelanogaster_gene_ensembl',   #
-            '9796': 'ecaballus_gene_ensembl',       #
-            '9544': 'mmulatta_gene_ensembl',        #
-            '13616': 'mdomestica_gene_ensembl',     #
-            '9258': 'oanatinus_gene_ensembl',       #
-            '9823': 'sscrofa_gene_ensembl',         #
-            '10116': 'rnorvegicus_gene_ensembl',    #
-            # '4896': 'spombe_gene_ensembl',        # no pombe genome
-            '31033': 'trubripes_gene_ensembl',      #
-            '8364': 'xtropicalis_gene_ensembl',     #
-            # '4932': 'scerevisiae_gene_ensembl',   #  yeast
-            '9685': 'fcatus_gene_ensembl'
-        }
-        if taxid not in ensembl_taxon_to_db_map:
-            logger.error('Bad taxid specified: %s', str(taxid))
-            return None
-        q = etree.Element("Query", query_attributes)
+        qry = etree.Element("Query", query_attributes)
 
-        object_attributes = {
-            "name": ensembl_taxon_to_db_map[taxid],
-            "interface": "default"
-        }
-        d = etree.SubElement(q, "Dataset", object_attributes)
-        for i in cols_to_fetch:
-            etree.SubElement(d, "Attribute", {"name": i})
-
-        # prepend the query
-        prepend = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>'
-
-        x = etree.tostring(q, encoding="unicode")
-        query = prepend+x
+        if taxid in self.localtt:
+            object_attributes = {"name": self.localtt[taxid], "interface": "default"}
+            dataset = etree.SubElement(qry, "Dataset", object_attributes)
+            for col in cols_to_fetch:
+                etree.SubElement(dataset, "Attribute", {"name": col})
+            # is indent right?
+            query = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>' \
+                + etree.tostring(qry, encoding="unicode")
+        else:
+            query = None
 
         return query
 
@@ -290,14 +259,16 @@ class Ensembl(Source):
 
                 if description == '':
                     description = None
+
                 # gene_type_id = self._get_gene_type(gene_biotype)
-                gene_type_id = None
+                # this had been punted on. ... see what happens
+                gene_type_id = self.resolve(gene_biotype.strip(), False)
+                if gene_type_id == gene_biotype.strip():
+                    gene_type_id = self.globaltt['polypeptide']
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
-                model.addIndividualToGraph(
-                    peptide_curie, None, self._get_gene_type("polypeptide"))
-                model.addIndividualToGraph(
-                    uniprot_curie, None, self._get_gene_type("polypeptide"))
+                model.addIndividualToGraph(peptide_curie, None, gene_type_id)
+                model.addIndividualToGraph(uniprot_curie, None, gene_type_id)
 
                 if entrezgene != '':
                     if taxid == '9606':
@@ -314,78 +285,10 @@ class Ensembl(Source):
                         geno.addGeneProduct(gene_id, uniprot_curie)
                         model.addXref(peptide_curie, uniprot_curie)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
-
-    def _get_gene_type(self, biotype):
-
-        type_id_map = {
-            "polypeptide": "SO:0000104",
-            '3prime_overlapping_ncrna': 'SO:0001263',
-            # IG_C_gene
-            # IG_C_pseudogene
-            # IG_D_gene
-            # IG_J_gene
-            # IG_J_pseudogene
-            # IG_V_gene
-            # IG_V_pseudogene
-            'Mt_rRNA': 'SO:0001637',
-            'Mt_tRNA': 'SO:0001272',  # FIXME    'tRNA': 'SO:0001272'
-            'TEC': '',
-            # TR_C_gene
-            # TR_D_gene
-            # TR_J_gene
-            # TR_J_pseudogene
-            # TR_V_gene
-            # TR_V_pseudogene
-            'antisense': 'SO:0001263',      # FIXME non-specific term
-            'lincRNA': 'SO:0001641',
-            'macro_lncRNA': 'SO:0001263',   # FIXME non-specific term
-            'miRNA': 'SO:0001265',
-            'misc_RNA': 'SO:0001263',       # FIXME non-specific term
-            'polymorphic_pseudogene': 'SO:0000336',
-            'processed_pseudogene': 'SO:0000336',
-            'processed_transcript': 'SO:0001263',  # non-coding RNA gene
-            'protein_coding': 'SO:0001217',
-            'pseudogene': 'SO:0000336',
-            'rRNA': 'SO:0001637',
-            'ribozyme': 'SO:0001263',   # FIXME non-specific term
-            'sRNA': 'SO:0001263',       # FIXME non-specific term
-            'scaRNA': 'SO:0001263',     # FIXME non-specific term
-            # 'sense_intronic': '',
-            # 'sense_overlapping': '',
-            'snoRNA': 'SO:0001267',
-            # FIXME non-specific term
-            'transcribed_processed_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'transcribed_unitary_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'transcribed_unprocessed_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'translated_unprocessed_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'unitary_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'unprocessed_pseudogene': 'SO:0000336',
-            # FIXME non-specific term
-            'vaultRNA': 'SO:0001263',
-            'ncRNA': 'SO:0001263',
-            'other': 'SO:0000110',
-            'snRNA': 'SO:0001268',
-            'piRNA': 'SO:0001638',
-            'scRNA': 'SO:0001266',
-            'tRNA': 'SO:0001272',
-            'asRNA': 'SO:0001263',  # using ncRNA gene  TODO make term request
-            }
-
-        tid = type_id_map.get(biotype)
-        # if tid is None:
-        #     logger.info("Don't have SO id defined for %s", biotype)
-
-        return tid
 
     def getTestSuite(self):
         import unittest

@@ -132,7 +132,7 @@ class MyChem(Source):
                     obj=self.globaltt['molecularly_interacts_with'])
                 model.addTriple(
                     subject_id=package['unii'],
-                    predicate_id=Model.object_properties['subclass_of'],
+                    predicate_id=self.globaltt['subclass_of'],
                     obj=self.globaltt['molecular entity'])
         if source == 'drugcentral':
             for indication in package['indications']:

@@ -822,7 +822,7 @@ class OMIM(Source):
                             m = re.findall(r'\{(\d+)\:', al_description)
                             publist[al_id] = set(m)
                         geno.addAllele(
-                            al_id, al_label, geno.genoparts['variant_locus'],
+                            al_id, al_label, self.globaltt['variant_locus'],
                             al_description)
                         geno.addAlleleOfGene(
                             al_id, 'OMIM:'+str(entry_num),

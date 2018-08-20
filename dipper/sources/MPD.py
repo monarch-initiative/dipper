@@ -92,7 +92,6 @@ class MPD(Source):
         # @N, not sure if this step is required
         self.stdevthreshold = 2
 
-        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
         # TODO add a citation for mpd dataset as a whole
         self.dataset.set_citation('PMID:15619963')
 
@@ -430,7 +429,7 @@ class MPD(Source):
             genotype_id, genotype_label,
             Genotype.genoparts['genomic_background'])
         g.addTriple(
-            strain_id, Genotype.object_properties['has_genotype'], genotype_id)
+            strain_id, self.globaltt['has_genotype'], genotype_id)
 
         geno.addGenotype(
             sex_specific_genotype_id, sex_specific_genotype_label,
@@ -439,7 +438,7 @@ class MPD(Source):
         # add the strain as the background for the genotype
         g.addTriple(
             sex_specific_genotype_id,
-            Genotype.object_properties['has_sex_agnostic_genotype_part'],
+            self.globaltt['has_sex_agnostic_genotype_part'],
             genotype_id)
 
         # #############    BUILD THE G2P ASSOC    #############
@@ -456,10 +455,10 @@ class MPD(Source):
                 model.addComment(assoc_id, comment)
                 if sex == 'm':
                     model._addSexSpecificity(assoc_id,
-                                             self.global_terms['male'])
+                                             self.globaltt['male'])
                 elif sex == 'f':
                     model._addSexSpecificity(assoc_id,
-                                             self.global_terms['female'])
+                                             self.globaltt['female'])
 
         return
 

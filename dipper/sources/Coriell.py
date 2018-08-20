@@ -313,13 +313,14 @@ class Coriell(Source):
                     cell_line_id = 'Coriell:'+catalog_id.strip()
 
                     # Map the cell/sample type
-                    cell_type = self._map_cell_type(sample_type)
+                    cell_type = self.resolve(sample_type)
+                    # on fail cell_type = self.globaltt['cell'] ?
 
                     # Make a cell line label
                     line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
 
                     # Map the repository/collection
-                    repository = self._map_collection(collection)
+                    repository = self.localtt[collection]
 
                     # patients are uniquely identified by one of:
                     # dbsnp id (which is == an individual haplotype)
@@ -348,12 +349,9 @@ class Coriell(Source):
                     # the control cases are so odd with this labeling scheme;
                     # but we'll deal with it as-is for now.
                     short_desc = (description.split(';')[0]).capitalize()
-                    if affected == 'Yes':
-                        affected = 'affected'
-                    elif affected == 'No':
-                        affected = 'unaffected'
+
                     gender = gender.lower()
-                    patient_label = ' '.join((affected, gender, relprob))
+                    patient_label = ' '.join((self.localtt[affected], gender, relprob))
                     if relprob == 'proband':
                         patient_label = ' '.join((
                             patient_label.strip(), 'with', short_desc))
@@ -419,7 +417,7 @@ class Coriell(Source):
                     # TODO race should go into the individual's background
                     # and abstracted out to the Genotype class punting for now.
                     # if race != '':
-                    #    mapped_race = self._map_race(race)
+                    #    mapped_race = self.resolve(race)
                     #    if mapped_race is not None:
                     #        gu.addTriple(
                     #           g,patient_id,self.globaltt['race'], mapped_race)
@@ -606,7 +604,7 @@ class Coriell(Source):
                     if gvc_id is not None:
                         model.addIndividualToGraph(
                             gvc_id, gvc_label,
-                           self.globaltt['genomic_variation_complement'])
+                            self.globaltt['genomic_variation_complement'])
 
                         # add the gvc to the genotype
                         if genotype_id is not None:
@@ -728,151 +726,6 @@ class Coriell(Source):
             reference.addPage(repo_id, repo_page)
 
         return
-
-    @staticmethod
-    def _map_cell_type(sample_type):
-        ctype = None
-        type_map = {
-            # FIXME: mesenchymal stem cell of adipose
-            'Adipose stromal cell': 'CL:0002570',
-            # FIXME: amniocyte?
-            'Amniotic fluid-derived cell line': 'CL:0002323',
-            # B cell
-            'B-Lymphocyte': 'CL:0000236',
-            # FIXME: No Match
-            'Chorionic villus-derived cell line': 'CL:0000000',
-            # endothelial cell
-            'Endothelial': 'CL:0000115',
-            # epithelial cell
-            'Epithelial': 'CL:0000066',
-            # FIXME: No Match. "Abnormal precursor (virally transformed)
-            # of mouse erythrocytes that can be grown in culture and
-            # induced to differentiate by treatment with, for example, DMSO."
-            'Erythroleukemic cell line': 'CL:0000000',
-
-            'Fibroblast': 'CL:0000057',         # fibroblast
-            'Keratinocyte': 'CL:0000312',       # keratinocyte
-            'Melanocyte': 'CL:0000148',         # melanocyte
-            'Mesothelial': 'CL:0000077',
-            'Microcell hybrid': 'CL:0000000',   # FIXME: No Match
-            'Myoblast': 'CL:0000056',           # myoblast
-            'Smooth muscle': 'CL:0000192',      # smooth muscle cell
-            'Stem cell': 'CL:0000034',          # stem cell
-            'T-Lymphocyte': 'CL:0000084',       # T cell
-            # FIXME: No Match. "Cells isolated from a mass of neoplastic cells,
-            # i.e., a growth formed by abnormal cellular proliferation."
-            # Oncocyte? CL:0002198
-            'Tumor-derived cell line': 'CL:0002198',
-            'Kidney-derived cell line': 'CLO:0000220'
-        }
-        if sample_type.strip() in type_map:
-            ctype = type_map.get(sample_type)
-        else:
-            logger.error("Cell type not mapped: %s", sample_type)
-
-        return ctype
-
-    @staticmethod
-    def _map_race(race):
-        rtype = None
-        type_map = {
-            'African American': 'EFO:0003150',
-            # 'American Indian': 'EFO',
-            'Asian': 'EFO:0003152',
-            # FIXME: Asian?
-            'Asian; Other': 'EFO:0003152',
-            # Asian Indian
-            'Asiatic Indian': 'EFO:0003153',
-            # FIXME: African American? There is also African.
-            'Black': 'EFO:0003150',
-            'Caucasian': 'EFO:0003156',
-            'Chinese': 'EFO:0003157',
-            'East Indian': 'EFO:0003158',  # Eastern Indian
-            'Filipino': 'EFO:0003160',
-            # Hispanic: EFO:0003169, Latino: EFO:0003166 see next
-            'Hispanic/Latino': 'EFO:0003169',
-            'Japanese': 'EFO:0003164',
-            'Korean': 'EFO:0003165',
-            # 'More than one race': 'EFO',
-            # 'Not Reported': 'EFO',
-            # 'Other': 'EFO',
-            # Asian/Pacific Islander
-            'Pacific Islander': 'EFO:0003154',
-            # Asian/Pacific Islander
-            'Polynesian': 'EFO:0003154',
-            # 'Unknown': 'EFO',
-            # Asian
-            'Vietnamese': 'EFO:0003152',
-        }
-        if race.strip() in type_map:
-            rtype = type_map.get(race)
-        else:
-            logger.warning("Race type not mapped: %s", race)
-
-        return rtype
-
-    @staticmethod
-    def _map_species(species):
-        tax = None
-        type_map = {
-            'Mus musculus': 'NCBITaxon:10090',
-            'Peromyscus peromyscus californicus': 'NCBITaxon:42520',
-            'Peromyscus peromyscus maniculatus': 'NCBITaxon:10042',
-            'Peromyscus peromyscus leucopus': 'NCBITaxon:10041',
-            'Peromyscus peromyscus polionotus': 'NCBITaxon:42413',
-            'Macaca fascicularis': 'NCBITaxon:9541',
-            'Rattus norvegicus': 'NCBITaxon:10116',
-            'Papio anubis': 'NCBITaxon:9555',
-            'Cricetulus griseus': 'NCBITaxon:10029',
-            'Geochelone elephantopus': 'NCBITaxon:66189',
-            'Muntiacus muntjak': 'NCBITaxon:9888',
-            'Ailurus fulgens': 'NCBITaxon:9649',
-            'Sus scrofa': 'NCBITaxon:9823',
-            'Bos taurus': 'NCBITaxon:9913',
-            'Oryctolagus cuniculus': 'NCBITaxon:9986',
-            'Macaca nemestrina': 'NCBITaxon:9545',
-            'Canis familiaris': 'NCBITaxon:9615',
-            'Equus caballus': 'NCBITaxon:9796',
-            'Macaca mulatta': 'NCBITaxon:9544',
-            'Mesocricetus auratus': 'NCBITaxon:10036',
-            'Macaca nigra': 'NCBITaxon:54600',
-            'Erythrocebus patas': 'NCBITaxon:9538',
-            'Pongo pygmaeus': 'NCBITaxon:9600',
-            'Callicebus moloch': 'NCBITaxon:9523',
-            'Lagothrix lagotricha': 'NCBITaxon:9519',
-            'Saguinus fuscicollis': 'NCBITaxon:9487',
-            'Saimiri sciureus': 'NCBITaxon:9521',
-            'Saguinus labiatus': 'NCBITaxon:78454',
-            'Pan paniscus': 'NCBITaxon:9597',
-            'Ovis aries': 'NCBITaxon:9940',
-            'Felis catus': 'NCBITaxon:9685',
-            'Homo sapiens': 'NCBITaxon:9606',
-            'Gorilla gorilla': 'NCBITaxon:9593',
-            'Peromyscus maniculatus': 'NCBITaxon:10042'
-        }
-        if species.strip() in type_map:
-            tax = type_map.get(species)
-        else:
-            logger.warning("Species type not mapped: %s", species)
-
-        return tax
-
-    @staticmethod
-    def _map_collection(collection):
-        ctype = None
-        type_map = {
-            'NINDS Repository': 'CoriellCollection:NINDS',
-            'NIGMS Human Genetic Cell Repository': 'CoriellCollection:NIGMS',
-            'NIA Aging Cell Culture Repository': 'CoriellCollection:NIA',
-            'NHGRI Sample Repository for Human Genetic Research':
-                    'CoriellCollection:NHGRI'
-        }
-        if collection.strip() in type_map:
-            ctype = type_map.get(collection)
-        else:
-            logger.warning("ERROR: Collection type not mapped: %s", collection)
-
-        return ctype
 
     @staticmethod
     def _get_affected_chromosomes_from_karyotype(karyotype):

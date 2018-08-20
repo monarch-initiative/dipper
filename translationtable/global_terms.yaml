@@ -127,12 +127,14 @@
 "mobile_element_insertion": "SO:0001837"
 "novel_sequence_insertion": "SO:0001838"
 "wild_type": "SO:0000817"
+"Y RNA": "SO:0000405"
+"ncRNA": "SO:0000655"
 
 
 # GENO (some overlap between GENO and SO)
 # Prioritize GENO when possible
 # why? SO is there first and very specific?
-# if GENO needs it, a proper miriot is called for.  TEC
+# if GENO needs it, a proper miriot is called for. TEC
 
 
 # "microsatellite": "SO:0000289"
@@ -194,9 +196,50 @@
 "mutant phenotype evidence": "ECO:0000015"
 "male": "PATO:0000384"
 "female": "PATO:0000383"
+# cell_type
 "cell line": "CLO:0000031"
+"cell_line_repository": "CLO:0000008"
+"Amniotic fluid-derived cell line": "CLO:0036935"
+"Chorionic villus-derived cell line": "CLO:0036940"
+"Adipose stromal cell": "CLO:0036934"
 
-#############################################################
+"mesenchymal stem cell of adipose": "CL:0002570"
+"amniocyte": "CL:0002323"
+"B cell": "CL:0000236"
+"cell": "CL:0000000"
+"precursor cell": "CL:0011115"
+"endothelial cell": "CL:0000115"
+"epithelial cell": "CL:0000066"
+"fibroblast": "CL:0000057"
+"keratinocyte": "CL:0000312"
+"melanocyte": "CL:0000148"
+"mesothelial": "CL:0000077"
+"Microcell hybrid": "CLO:0036939"
+"myoblast": "CL:0000056"
+"smooth muscle cell": "CL:0000192"
+"stem cell": "CL:0000034"
+"T cell": "CL:0000084"
+"oncocyte": "CL:0002198"
+"Tumor-derived cell line": "CLO:0036938"
+"immortal kidney-derived cell line cell": "CLO:0000220"
+########################
+# race
+"African American": "EFO:0003150"
+"Native American": "ERO:0001984"
+"Asian": "EFO:0003152"
+"Asian Indian": "EFO:0003153"
+"African": "EFO:0004561"
+"Caucasian": "EFO:0003156"
+"Chinese": "EFO:0003157"
+"Eastern Indian": "EFO:0003158"
+"Filipino": "EFO:0003160"
+"Hispanic": "EFO:0003169"
+"Japanese": "EFO:0003164"
+"Korean": "EFO:0003165"
+"hybrid": "NCBITaxon:37965"
+"Asian/Pacific Islander":  EFO:0003154"
+"Asian, Vietnamese": "ERO:0002071"
+#####################################
 # Place holder predicates: predicates
 # while we wait for relation (or other) ontology
 # tickets (link tickets url where appropriate)
@@ -245,7 +288,6 @@
 "genomically_imprinted": "SO:0000134"
 "hemizygous": "GENO:0000134"
 "digenic_inheritance": "HP:0010984"
-
 "Homo sapiens": "NCBITaxon:9606"
 "Gallus gallus": "NCBITaxon:9031"
 "Sus scrofa": "NCBITaxon:9823"
@@ -274,14 +316,14 @@
 "Rattus norvegicus": "NCBITaxon:10116"
 "Sus scrofa domestica": "NCBITaxon:9825"
 "Xenopus (Silurana) tropicalis": "NCBITaxon:8364"
-"Mus": "NCBITaxon:10088"  # Genus
-#"Mus" "NCBITaxon:862507" # SubGenus  -- name conflicts with Genus name
+"Mus": "NCBITaxon:10088"   # Genus
+#"Mus" "NCBITaxon:862507"  # SubGenus -- name conflicts with Genus name
 "Mus musculus brevirostris": "NCBITaxon:116058"
 "Mus musculus bactrianus": "NCBITaxon:35531"
 "Mus musculus musculus x M. m. castaneus": "NCBITaxon:477816"
 "Mus musculus domesticus x M. m. molossinus": "NCBITaxon:1266728"
-"Mus setulosus":  "NCBITaxon:10102"
-"Mus musculus musculus":  "NCBITaxon:39442"
+"Mus setulosus": "NCBITaxon:10102"
+"Mus musculus musculus": "NCBITaxon:39442"
 "Mus musculus x Mus spretus": "NCBITaxon:186842"
 "Mus cookii": "NCBITaxon:10098"
 "Mus cervicolor": "NCBITaxon:10097"
@@ -292,8 +334,6 @@
 "Mus baoulei": "NCBITaxon:544437"
 "Mus haussa": "NCBITaxon:273922"
 "Rattus": "NCBITaxon:10114"
-
-
 "Mus cervicolor popaeus": "NCBITaxon:135828"
 "Mus abbotti": "NCBITaxon:10108"
 "Mus nitidulus": "NCBITaxon:390848"
@@ -314,7 +354,6 @@
 "Mus fragilicauda": "NCBITaxon:186193"
 "Mus macedonicus macedonicus": "NCBITaxon:270353"
 "Mus cervicolor cervicolor": "NCBITaxon:135827"
-
 "Mus pahari": "NCBITaxon:10093"
 "Mus indutus": "NCBITaxon:273921"
 "Mus saxicola": "NCBITaxon:10094"
@@ -322,6 +361,26 @@
 "Mus minutoides": "NCBITaxon:10105"
 "Mus musculus gansuensis": "NCBITaxon:1385377"
 "Mus macedonicus spretoides": "NCBITaxon:270352"
+"Macaca fascicularis": "NCBITaxon:9541"
+"Papio anubis": "NCBITaxon:9555"
+"Muntiacus muntjak": "NCBITaxon:9888"
+"Ailurus fulgens": "NCBITaxon:9649"
+"Macaca nemestrina": "NCBITaxon:9545"
+"Macaca nigra": "NCBITaxon:54600"
+"Erythrocebus patas": "NCBITaxon:9538"
+"Peromyscus californicus": "NCBITaxon:42520"
+"Peromyscus maniculatus": "NCBITaxon:10042"
+"Peromyscus leucopus": "NCBITaxon:10041"
+"Peromyscus polionotus": "NCBITaxon:42413"
+"Chelonoidis niger": "NCBITaxon:66189"
+"Callicebus moloch": "NCBITaxon:9523"
+"Lagothrix lagotricha": "NCBITaxon:9519"
+"Saguinus fuscicollis": "NCBITaxon:9487"
+"Saimiri sciureus": "NCBITaxon:9521"
+"Saguinus labiatus": "NCBITaxon:78454"
+"Pan paniscus": "NCBITaxon:9597"
+
+
 #"": "NCBITaxon:"
 #"": "NCBITaxon:"
 #"": "NCBITaxon:"
@@ -384,8 +443,64 @@
 "coding_transgene_feature": "GENO:0000638"
 "protein_coding_gene": "SO:0001217"
 "ncRNA_gene": "SO:0001263"
+"3prime_overlapping_ncRNA": "SO:0002120"
+"endogenous_retroviral_gene": "SO:0000100"
+"biological_region": "SO_0001411"
+"stop codon readthrough": "SO:0000883"
+"region": "SO:0000001"
+"transposable_element": "SO:0000101"
+"integration_excision_site": "SO:0000946"
+
+
+
+
+"IG_C_gene": "SO:0002123"
+"IG_D_gene": "SO:0002124"
+"IG_J_gene": "SO:0002125"
+"IG_V_gene": "SO:0002126"
+"IG_C_pseudogene": "SO:0002100"
+"IG_J_pseudogene": "SO:0002101"
+"IG_V_pseudogene": "SO:0002102"
+"mt_rRNA": "SO:0002128"
+"mt_tRNA": "SO:0002129"
+"TEC": "SO:0002139"
+"TR_C_gene": "SO:0002134"
+"TR_D_gene": "SO:0002135"
+"TR_J_gene": "SO:0002136"
+"TR_V_gene": "SO:0002137"
+"TR_J_pseudogene": "SO:0002104"
+"TR_V_pseudogene": "SO:0002103"
+
+"polymorphic_pseudogene": "SO:0001841"
+"processed_pseudogene": "SO:0000043"
+"processed_transcript": "SO:0001503"
+"ribozyme": "SO:0000374"
+"scaRNA": "SO:0002095"
+"sense_intronic": "SO:0002131"
+"sense_overlapping": "SO:0002132"
+"transcribed_processed_pseudogene": "SO:0002109"
+"transcribed_unitary_pseudogene": "SO:0002108"
+"transcribed_unprocessed_pseudogene": "SO:0002107"
+"translated_unprocessed_pseudogene": "SO:0002106"
+"unitary_pseudogene": "SO:0001759"
+'unprocessed_pseudogene': "SO:0001760"
+"vaultRNA_primary_transcript": "SO:0002040"
+"piRNA_gene": "SO:0001638"
+"small cytoplasmic RNA": ""SO:0000013"
+"vault_RNA": "SO:0000404"
+"T_cell_receptor_pseudogene": "SO:0002099"
+"vertebrate_immunoglobulin_T_cell_receptor_segment": "SO:0000460"
+"immunoglobulin_gene": "SO:0002122"
+"immunoglobulin_pseudogene": "SO:0002098"
+
+
+
+
+"large_subunit_rRNA": "SO:0000651"
+"lnc_RNA": "SO_0001877"
 "lncRNA_gene": "SO:0002127"
 "antisense_lncRNA": "SO:0001904"
+"antisense": "SO:0000077"
 "rRNA_gene": "SO:0001637"
 "tRNA_gene": "SO:0001272"
 "scRNA_gene": "SO:0001266"
@@ -430,7 +545,7 @@
 "Manual": "NCIT:C63513"
 "p-value": "OBI:0000175"
 "effect size estimate": "STATO:0000085"
-"fold change":  "STATO:0000169"
+"fold change": "STATO:0000169"
 "assay": "OBI:0000070"
 "organization": "foaf:organization"
 "person": "foaf:Person"
@@ -473,6 +588,11 @@
 "stop_lost": "SO:0001578"
 "sequence_variant": "SO:0001060"
 "TF_binding_site_variant": "SO:0001782"
+"transgenic_transposable_element": "SO:0000796"
+
+
+"mature_transcript": "SO_0000233"
+
 "combinatorial evidence used in automatic assertion": "ECO:0000213"
 "Phenotype": "UPHENO:0001001"
 "region": "faldo:Region"
@@ -507,7 +627,7 @@
 "created_with_resource": "SEPIO:0000022"
 "measurement datum": "IAO:0000109"
 "zscore": "STATO:0000104"
-"Percent Change From Baseline":  "NCIT:C96621"
+"Percent Change From Baseline": "NCIT:C96621"
 "blood test evidence": "ECO:0001016"
 "proportional_reporting_ratio": "OAE:0001563"
 "odds_ratio": "STATO:0000182"
@@ -516,7 +636,7 @@
 "is_evidence_for": "SEPIO:0000031"
 "is_refuting_evidence_for": "SEPIO:0000033"
 "is_supporting_evidence_for": "SEPIO:0000032"
-"is_evidence_supported_by":  "RO:0002614"
+"is_evidence_supported_by": "RO:0002614"
 "is_evidence_with_support_from": "SEPIO:0000059"
 "Statistical Significance": "NCIT:C61040"
 "developmental_process": "GO:0032502"
@@ -549,6 +669,8 @@
 "webpage": "SIO:000302"
 "page": "foaf:page"
 "experimental evidence": "ECO:0000006"
+"clinical study evidence": "ECO:0000180"
+"data set": "IAO:0000100"
 "biological aspect of ancestor evidence used in manual assertion": "ECO:0000318"
 "inference from background scientific knowledge": "ECO:0000001"
 "expression pattern evidence": "ECO:0000008"
@@ -573,7 +695,6 @@
 "molecular entity": "CHEBI:23367"
 "phylogenetic evidence": "ECO:0000080"
 "experimental phenotypic evidence": "ECO:0000059"
-"cell_line_repository": "CLO:0000008"
 "race": "SIO:001015"
 "ethnic_group": "EFO:0001799"
 "age": "EFO:0000246"
@@ -581,8 +702,8 @@
 "collection": "ERO:0002190"
 "abnormal": "PATO:0000460"
 "normal": "PATO:0000461"
-# 'existence_starts_at': 'UBERON:existence_starts_at',
-# 'existence_ends_at': 'UBERON:existence_ends_at'
+#  "existence_starts_at ": "UBERON:existence_starts_at ",
+#  "existence_ends_at ": "UBERON:existence_ends_at "
 "existence starts at point": "RO:0002583"
 "existence ends at point": "RO:0002593"
 "biological aspect of descendant evidence": "ECO:0000214"
@@ -594,7 +715,7 @@
 ######################################################
 # SEPIO:0000019 found in sepio_developer.owl
 # "x-created_at_location": "SEPIO:0000019"
-# SEPIO:0000111  -- is not found in sepio
+# SEPIO:0000111 -- is not found in sepio
 "is_assertion_supported_by_evidence": "SEPIO:0000111"
 # "is_assertion_supported_by": "SEPIO:0000111"
 # possible alternative

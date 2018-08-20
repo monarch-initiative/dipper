@@ -3,12 +3,9 @@ import gzip
 import logging
 import csv
 import io
-import requests
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
-from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper import config
@@ -49,7 +46,7 @@ class NCBIGene(Source):
 
     """
 
-    SCIGRAPH_BASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
+    SCIGRAPHBASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
 
     files = {
         'gene_info': {
@@ -204,7 +201,8 @@ class NCBIGene(Source):
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self.map_type_of_gene(gtype.strip())  # -> resolve()
+                gtype = gtype.strip()
+                gene_type_id = self.resolve(gtype)
 
                 if symbol == 'NEWENTRY':
                     label = None
@@ -360,10 +358,9 @@ class NCBIGene(Source):
             '10090': ['ENSEMBL'],
             '9606': ['ENSEMBL']
         }
-        if taxon in taxon_spec_xref_filters:
-            taxon_spec_filters = taxon_spec_xref_filters[taxon]
-        else:
-            taxon_spec_filters = []
+        # taxon_spec_filters = []
+        # if taxon in taxon_spec_xref_filters:
+        #    taxon_spec_filters = taxon_spec_xref_filters[taxon]
 
         model = Model(graph)
         # deal with the dbxrefs
@@ -534,7 +531,7 @@ class NCBIGene(Source):
                     g, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
                 g.addTriple(
-                    pubmed_id, model.object_properties['is_about'], gene_id)
+                    pubmed_id, self.globaltt['is_about'], gene_id)
                 assoc_counter += 1
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -543,38 +540,6 @@ class NCBIGene(Source):
             "Processed %d pub-gene associations", assoc_counter)
 
         return
-
-    @staticmethod
-    def map_type_of_gene(sotype):
-        # move to localtt -> globaltt
-        so_id = 'SO:0000110'
-        type_to_so_map = {
-            'ncRNA': 'SO:0001263',
-            'other': 'SO:0000110',
-            'protein-coding': 'SO:0001217',
-            'pseudo': 'SO:0000336',
-            'rRNA': 'SO:0001637',
-            'snRNA': 'SO:0001268',
-            'snoRNA': 'SO:0001267',
-            'tRNA': 'SO:0001272',
-            'unknown': 'SO:0000110',
-            'scRNA': 'SO:0001266',
-            # mature transcript - there is no good mapping
-            'miscRNA': 'SO:0000233',
-            'chromosome': 'SO:0000340',
-            'chromosome_arm': 'SO:0000105',
-            'chromosome_band': 'SO:0000341',
-            'chromosome_part': 'SO:0000830'
-        }
-
-        if sotype in type_to_so_map:
-            so_id = type_to_so_map.get(sotype)
-        else:
-            logger.warning(
-                "unmapped code %s. Defaulting to 'SO:0000110', " +
-                "sequence_feature.", sotype)
-
-        return so_id
 
     @staticmethod
     def _cleanup_id(i):

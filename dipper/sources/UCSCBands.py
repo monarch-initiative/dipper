@@ -314,7 +314,7 @@ class UCSCBands(Source):
                             'ref': build_id,
                             'parent': None,
                             'stain': None,
-                            'type': self.resolve('chromosome')}
+                            'type': self.globaltt['chromosome']}
 
                 if scaffold_num is not None:
                     # this will put the coordinates of the scaffold
@@ -330,7 +330,7 @@ class UCSCBands(Source):
                         'ref': build_id,
                         'parent': chrom_num,
                         'stain': None,
-                        'type': self.resolve('assembly_component'),
+                        'type': self.globaltt['assembly_component'],
                         'synonym': scaffold}
 
                 if band_num is not None and band_num.strip() != '':
