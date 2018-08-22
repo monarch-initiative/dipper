@@ -172,8 +172,8 @@ class OrthoXML(Source):
         """
         logger.info("getting ortholog and paralog relations")
 
-        g = self.testgraph if self.testMode else self.graph
-        model = Model(g)
+        graph = self.testgraph if self.testMode else self.graph
+        model = Model(graph)
 
         for k in self.files.keys():
             f = os.path.join(self.rawdir, self.files[k]['file'])
@@ -236,7 +236,8 @@ class OrthoXML(Source):
                 rel = self._map_orthology_code_to_RO[rel_type]
                 evidence_id = 'ECO:0000080'  # phylogenetic evidence
                 # add the association and relevant nodes to graph
-                assoc = OrthologyAssoc(g, self.name, protein_id_a, protein_id_b, rel)
+                assoc = OrthologyAssoc(
+                    graph, self.name, protein_id_a, protein_id_b, rel)
                 assoc.add_evidence(evidence_id)
                 assoc.add_association_to_graph()
 

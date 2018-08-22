@@ -6,7 +6,6 @@ from contextlib import closing
 from typing import List, Optional
 
 from dipper.sources.Source import Source
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
@@ -126,7 +125,7 @@ class EBIGene2Phen(Source):
 
         with gzip.open(file_path, 'rt') as csvfile:
             reader = csv.reader(csvfile)
-            next(reader) # header
+            next(reader)  # header
             for row in reader:
                 if limit is None or row_count <= (limit + 1):
                     self._add_gene_disease(row)
@@ -138,7 +137,7 @@ class EBIGene2Phen(Source):
 
         return
 
-    def _add_gene_disease(self, row:List):
+    def _add_gene_disease(self, row):  # ::List  getting syntax error here
         """
         Parse and add gene variant disease model
         Model building happens in _build_gene_disease_model
@@ -147,8 +146,7 @@ class EBIGene2Phen(Source):
         :return: None
         """
         if len(row) != 14:
-            raise ValueError("Unexpected number of fields "
-                             "for row {}".format(row))
+            raise ValueError("Unexpected number of fields for row {}".format(row))
 
         (
             gene_symbol,
@@ -172,7 +170,7 @@ class EBIGene2Phen(Source):
             if disease_label in self.mondo_map:
                 disease_id = self.mondo_map[disease_label]
             else:
-                return # sorry for this
+                return  # sorry for this
         else:
             disease_id = 'OMIM:'+disease_omim_id
 
@@ -282,7 +280,7 @@ class EBIGene2Phen(Source):
     @staticmethod
     def _get_consequence_predicate(consequence):
         consequence_map = {
-            'has_molecular_consequence' : [
+            'has_molecular_consequence': [
                 '5_prime or 3_prime UTR mutation',
                 'all missense/in frame',
                 'cis-regulatory or promotor mutation',

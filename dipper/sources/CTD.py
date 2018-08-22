@@ -395,11 +395,11 @@ class CTD(Source):
         """
 
         # if self.testMode:
-        # g = self.testgraph
+        # graph = self.testgraph
         # else:
-        #     g = self.graph
+        #     graph = self.graph
         # self._check_list_len(row, 9)
-        # geno = Genotype(g)
+        # geno = Genotype(graph)
         # gu = GraphUtils(curie_map.get())
         model = Model(self.graph)
         (gene_symbol, gene_id, disease_name, disease_id, direct_evidence,

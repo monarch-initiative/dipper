@@ -5,7 +5,6 @@ from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.Family import Family
 
 
 logger = logging.getLogger(__name__)
@@ -130,19 +129,19 @@ class Monochrom(Source):
 
     region_type_map = {
         'acen': self.globaltt['centromere'],
-        'gvar': globaltt['chromosome_band'],
-        'stalk': globaltt['chromosome_band'],
-        'gneg': globaltt['chromosome_band'],
-        'gpos100': globaltt['chromosome_band'],
-        'gpos25': globaltt['chromosome_band'],
-        'gpos33': globaltt['chromosome_band'],
-        'gpos50': globaltt['chromosome_band'],
-        'gpos66': globaltt['chromosome_band'],
-        'gpos75': globaltt['chromosome_band'],
-        'chromosome': globaltt['chromosome'],
-        'chromosome_arm': globaltt['chromosome_arm'],
-        'chromosome_band': globaltt['chromosome_band'],
-        'chromosome_part': globaltt['chromosome_part']
+        'gvar': self.globaltt['chromosome_band'],
+        'stalk': self.globaltt['chromosome_band'],
+        'gneg': self.globaltt['chromosome_band'],
+        'gpos100': self.globaltt['chromosome_band'],
+        'gpos25': self.globaltt['chromosome_band'],
+        'gpos33': self.globaltt['chromosome_band'],
+        'gpos50': self.globaltt['chromosome_band'],
+        'gpos66': self.globaltt['chromosome_band'],
+        'gpos75': self.globaltt['chromosome_band'],
+        'chromosome': self.globaltt['chromosome'],
+        'chromosome_arm': self.globaltt['chromosome_arm'],
+        'chromosome_band': self.globaltt['chromosome_band'],
+        'chromosome_part': self.globaltt['chromosome_part']
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
@@ -201,7 +200,6 @@ class Monochrom(Source):
 
         """
         model = Model(self.graph)
-        family = Family(self.graph)
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
@@ -279,7 +277,7 @@ class Monochrom(Source):
                         maplocclass_id, maplocclass_label,
                         region_type_id)
                 else:
-                    region_type_id = selfglobaltt['chromosome']
+                    region_type_id = self.globaltt['chromosome']
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
                     if region_type_id in [
@@ -408,7 +406,7 @@ class Monochrom(Source):
         return test_suite
 
 
-def getChrPartTypeByNotation(notation):
+def getChrPartTypeByNotation(self, notation):
     """
     This method will figure out the kind of feature that a given band
     is based on pattern matching to standard karyotype notation.

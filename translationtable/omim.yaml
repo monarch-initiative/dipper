@@ -1,2 +1,9 @@
 ---
 'MIM': 'OMIM'
+
+# phene_code_to_eco
+
+"1": "inference from background scientific knowledge used in manual assertion"
+"2": "genomic context evidence:
+"3": "sequencing assay evidence"
+"4": "sequencing assay evidence"

@@ -372,15 +372,15 @@ class FlyBase(PostgreSQLSource):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'genotype'))
         logger.info("building labels for genotypes")
-        geno = Genotype(g)
+        geno = Genotype(graph)
         fly_tax = 'NCBITaxon:7227'
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -439,10 +439,10 @@ class FlyBase(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'stock'))
@@ -496,10 +496,10 @@ class FlyBase(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'pub'))
@@ -525,7 +525,7 @@ class FlyBase(PostgreSQLSource):
                     continue
                 line_counter += 1
 
-                reference = Reference(g, pub_id)
+                reference = Reference(graph, pub_id)
                 if title != '':
                     reference.setTitle(title)
                 if pyear != '':
@@ -562,14 +562,14 @@ class FlyBase(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         raw = '/'.join((self.rawdir, 'environment'))
         logger.info("building labels for environment")
         env_parts = {}
         label_map = {}
-        env = Environment(g)
+        env = Environment(graph)
         with open(raw, 'r') as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
@@ -623,10 +623,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'feature'))
         logger.info("building labels for features")
 
@@ -740,7 +740,7 @@ class FlyBase(PostgreSQLSource):
                     if is_gene:
                         model.addClassToGraph(
                             feature_id, name, type_id)
-                        g.addTriple(
+                        graph.addTriple(
                             feature_id, self.globaltt['in taxon'],
                             tax_id)
                     else:
@@ -772,12 +772,12 @@ class FlyBase(PostgreSQLSource):
     def _process_feature_genotype(self, limit):
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         raw = '/'.join((self.rawdir, 'feature_genotype'))
         logger.info("processing genotype features")
-        geno = Genotype(g)
+        geno = Genotype(graph)
         line_counter = 0
 
         with open(raw, 'r') as f:
@@ -829,10 +829,10 @@ class FlyBase(PostgreSQLSource):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'phendesc'))
         logger.info("processing G2P")
 
@@ -867,7 +867,7 @@ class FlyBase(PostgreSQLSource):
 
                 # just make associations with abnormal phenotype
                 phenotype_id = 'FBcv:0001347'
-                assoc = G2PAssoc(g, self.name, genotype_id, phenotype_id)
+                assoc = G2PAssoc(graph, self.name, genotype_id, phenotype_id)
                 assoc.add_source(pub_id)
                 assoc.set_description(description)
                 assoc.set_environment(environment_id)
@@ -911,8 +911,8 @@ class FlyBase(PostgreSQLSource):
                 feature_key = feature_id
                 if self.testMode and not (
                         int(feature_key)
-                        in self.test_keys['gene'] + self.test_keys['allele']\
-                        and int(pub_id) in self.test_keys['pub']):
+                        in self.test_keys['gene'] + self.test_keys['allele'] and
+                        int(pub_id) in self.test_keys['pub']):
                     continue
                 if feature_key not in self.idhash['feature']:
                     continue
@@ -1088,7 +1088,7 @@ class FlyBase(PostgreSQLSource):
                     if re.match(r'http', accession):
                         did = accession
                     else:
-                        prefix = self.localtt[db_id])
+                        prefix = self.localtt[db_id]
                         did = ':'.join((prefix, accession))
                         if re.search(r'\:', accession) and prefix != 'DOI':
                             logger.warning('id %s may be malformed; skipping', did)
@@ -1134,10 +1134,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'phenotype'))
         logger.info("processing phenotype")
 
@@ -1164,7 +1164,7 @@ class FlyBase(PostgreSQLSource):
                 phenotype_label = None
                 self.label_hash[phenotype_internal_id] = uniquename
                 cvterm_id = None
-                if observable_id != ''  and int(observable_id) == 60468:
+                if observable_id != '' and int(observable_id) == 60468:
                     # undefined - typically these are already phenotypes
                     if cvalue_id in self.idhash['cvterm']:
                         cvterm_id = self.idhash['cvterm'][cvalue_id]
@@ -1217,10 +1217,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'phenstatement'))
         logger.info("processing phenstatement")
 
@@ -1261,7 +1261,7 @@ class FlyBase(PostgreSQLSource):
 
                 # figure out if there is a relevant stage
 
-                assoc = G2PAssoc(g, self.name, genotype_id, phenotype_id)
+                assoc = G2PAssoc(graph, self.name, genotype_id, phenotype_id)
                 if phenotype_id in self.phenocv:
                     stages = set(
                         s for s in
@@ -1445,10 +1445,10 @@ class FlyBase(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'feature_dbxref'))
         logger.info("processing feature_dbxref mappings")
@@ -1535,10 +1535,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
         logger.info("determining some feature types based on relationships")
         with open(raw, 'r') as f:
@@ -1570,14 +1570,14 @@ class FlyBase(PostgreSQLSource):
 
     def _process_feature_relationship(self, limit):
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         # ti_allele_map = {}  # TODO to be used when building genotypes
 
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
         logger.info("processing feature relationships")
         with open(raw, 'r') as f:
@@ -1652,7 +1652,7 @@ class FlyBase(PostgreSQLSource):
                     if allele_id is not None and gene_id is not None:
                         if self.feature_types[subject_id] == \
                                 self.globaltt['reagent_targeted_gene']:
-                            g.addTriple(
+                            graph.addTriple(
                                 allele_id,
                                 self.globaltt['is_targeted_expression_variant_of'],
                                 gene_id)
@@ -1722,7 +1722,7 @@ class FlyBase(PostgreSQLSource):
                     #       ti_id, allele_id,
                     #       self.globaltt['has_variant_part'])
                     elif reagent_id is not None and ti_id is not None:
-                        g.addTriple(ti_id, self.globaltt['targeted_by'], reagent_id)
+                        graph.addTriple(ti_id, self.globaltt['targeted_by'], reagent_id)
 
                 # derived_tp_assoc_alleles
                 elif name == 'derived_tp_assoc_alleles':
@@ -1765,7 +1765,8 @@ class FlyBase(PostgreSQLSource):
                         reagent_id = self.idhash['reagent'][object_id]
 
                     if allele_id is not None and reagent_id is not None:
-                        g.addTriple(allele_id, self.globaltt['targeted_by'], reagent_id)
+                        graph.addTriple(
+                            allele_id, self.globaltt['targeted_by'], reagent_id)
 
                 # produced by
                 elif name == 'producedby':
@@ -1815,10 +1816,10 @@ class FlyBase(PostgreSQLSource):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         raw = '/'.join((self.rawdir, 'organism'))
         logger.info("processing organisms")
 

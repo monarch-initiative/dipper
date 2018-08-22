@@ -337,13 +337,13 @@ class OMIM(Source):
         omimids = self._get_omim_ids()  # store the set of omim identifiers
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        geno = Genotype(g)
-        model = Model(g)
-        # tax_num = '9606'   # TODO PYLINT unused
-        tax_id = 'NCBITaxon:9606'
+            graph = self.graph
+        geno = Genotype(graph)
+        model = Model(graph)
+
+        tax_id = self.globaltt['Homo sapiens']
         tax_label = 'Human'
 
         # add genome and taxon
@@ -353,8 +353,7 @@ class OMIM(Source):
         includes = set()
         includes.add('all')
 
-        self.process_entries(
-            omimids, self._transform_entry, includes, g, limit)
+        self.process_entries(omimids, self._transform_entry, includes, graph, limit)
 
         return
 
@@ -364,7 +363,6 @@ class OMIM(Source):
         geno = Genotype(graph)
 
         tax_num = '9606'
-        tax_id = 'NCBITaxon:9606'
         tax_label = 'Human'
         build_num = "GRCh38"
         build_id = "NCBIGenome:"+build_num
@@ -494,7 +492,8 @@ class OMIM(Source):
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
-                            geno.addChromosomeClass(chrom_num, tax_id, tax_label)
+                            geno.addChromosomeClass(
+                                chrom_num, self.globaltt['Homo sapians'], tax_label)
 
                             # add the positional information, if available
                             fstart = fend = -1
@@ -589,9 +588,9 @@ class OMIM(Source):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         line_counter = 0
         assoc_count = 0
         with open(
@@ -643,9 +642,9 @@ class OMIM(Source):
                     assoc_count += 1
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = 'OMIM:'+str(gene_num)
-                    self._make_pheno_assoc(g, gene_id, gene_symbols[0],
-                                           disorder_num, disorder_label,
-                                           phene_key)
+                    self._make_pheno_assoc(
+                        graph, gene_id, gene_symbols[0], disorder_num, disorder_label,
+                        phene_key)
                 elif nogene_match is not None:
                     # this is a case where the disorder
                     # a blended gene/phenotype
@@ -667,7 +666,7 @@ class OMIM(Source):
                             gene_id = 'NCBIGene:'+str(gene_num).strip()
                             assoc_count += 1
                             self._make_pheno_assoc(
-                                g, gene_id, gene_symbols[0],
+                                graph, gene_id, gene_symbols[0],
                                 disorder_num, disorder_label, phene_key)
                     else:
                         # we can create an anonymous feature
@@ -675,7 +674,7 @@ class OMIM(Source):
                         feature_id = self._make_anonymous_feature(gene_num)
                         assoc_count += 1
                         self._make_pheno_assoc(
-                            g, feature_id, gene_symbols[0], disorder_num,
+                            graph, feature_id, gene_symbols[0], disorder_num,
                             disorder_label, phene_key)
 
                         logger.info(
@@ -691,8 +690,7 @@ class OMIM(Source):
                         "There are misformatted rows %d:%s",
                         line_counter, str(line))
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             logger.info("Added %d G2P associations", assoc_count)
@@ -742,23 +740,20 @@ class OMIM(Source):
         :return:
         """
 
-        geno = Genotype(graph)
-        model = Model(graph)
         disorder_id = ':'.join(('OMIM', disorder_num))
         rel_id = self.globaltt['causes_condition']  # default
-        rel_label = 'causes'
+        # rel_label = 'causes_condition'
         if disorder_label.startswith('['):
             rel_id = self.globaltt['is marker for']
-            rel_label = 'is a marker for'
+            # rel_label = 'is a marker for'
         elif disorder_label.startswith('{'):
             rel_id = self.globaltt['contributes to']
-            rel_label = 'contributes to'
+            # rel_label = 'contributes to'
         elif disorder_label.startswith('?'):
             # this is a questionable mapping!  skip?
             rel_id = self.globaltt['contributes to']
-            rel_label = 'contributes to'
 
-        evidence = self._map_phene_mapping_code_to_eco(phene_key)
+        evidence = self.resolve(phene_key)
 
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
         assoc.add_evidence(evidence)
@@ -873,36 +868,6 @@ class OMIM(Source):
         return
 
     @staticmethod
-    def _map_phene_mapping_code_to_eco(code):
-        # phenotype mapping code
-        # 1 - the disorder is placed on the map based on its association with a
-        #       gene, but the underlying defect is not known.
-        # 2 - the disorder has been placed on the map by linkage;
-        #       no mutation has been found.
-        # 3 - the molecular basis for the disorder is known;
-        #       a mutation has been found in the gene.
-        # 4 - a contiguous gene deletion or duplication syndrome,
-        #       multiple genes are deleted or duplicated causing the phenotype.
-        eco_code = 'ECO:0000000'  # generic evidence
-        phene_code_to_eco = {
-            # inference from expert knowledge
-            '1': 'ECO:0000306',
-            # genomic context evidence
-            '2': 'ECO:0000177',
-            # sequencing assay evidence
-            '3': 'ECO:0000220',
-            # sequencing assay evidence
-            '4': 'ECO:0000220'
-        }
-
-        if str(code) in phene_code_to_eco:
-            eco_code = phene_code_to_eco[code]
-        else:
-            logger.error("unmapped phene code %s", code)
-
-        return eco_code
-
-    @staticmethod
     def _cleanup_label(label):
         """
         Reformat the ALL CAPS OMIM labels to something more pleasant to read.
@@ -964,11 +929,11 @@ class OMIM(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         logger.info("getting phenotypic series titles")
-        model = Model(g)
+        model = Model(graph)
         line_counter = 0
         with open(
                 '/'.join(
@@ -1113,7 +1078,6 @@ class OMIM(Source):
 
         ref_to_pmid = {}
         entry_num = entry['mimNumber']
-        model = Model(g)
         if 'referenceList' in entry:
             reflist = entry['referenceList']
             for r in reflist:

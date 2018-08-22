@@ -268,15 +268,15 @@ class Coriell(Source):
         logger.info("Processing Data from %s", raw)
 
         if self.testMode:      # set the graph to build
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        family = Family(g)
-        model = Model(g)
+        family = Family(graph)
+        model = Model(graph)
 
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         du = DipperUtil()
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -495,7 +495,7 @@ class Coriell(Source):
                             karyotype_feature_label = \
                                 'some karyotype alteration on chr'+str(c)
                             f = Feature(
-                                g, karyotype_feature_id,
+                                graph, karyotype_feature_id,
                                 karyotype_feature_label,
                                 self.globaltt['sequence_alteration'])
                             f.addFeatureStartLocation(None, chr_id)
@@ -640,7 +640,7 @@ class Coriell(Source):
                         # add that the patient has the genotype
                         # TODO check if the genotype belongs to
                         # the cell line or to the patient
-                        g.addTriple(
+                        graph.addTriple(
                             patient_id,
                             self.globaltt['has_genotype'], genotype_id)
                     else:
@@ -665,14 +665,14 @@ class Coriell(Source):
                                         # add the association:
                                         #   the patient has the disease
                                         assoc = G2PAssoc(
-                                            g, self.name,
+                                            graph, self.name,
                                             patient_id, disease_id)
                                         assoc.add_association_to_graph()
 
                                         # this line is a model of this disease
                                         # TODO abstract out model into
                                         # it's own association class?
-                                        g.addTriple(
+                                        graph.addTriple(
                                             cell_line_id,
                                             self.globaltt['is model of'],
                                             disease_id)
@@ -686,10 +686,10 @@ class Coriell(Source):
                     if pubmed_ids != '':
                         for s in pubmed_ids.split(';'):
                             pubmed_id = 'PMID:'+s.strip()
-                            ref = Reference(g, pubmed_id)
+                            ref = Reference(graph, pubmed_id)
                             ref.setType(self.globaltt['journal article'])
                             ref.addRefToGraph()
-                            g.addTriple(
+                            graph.addTriple(
                                 pubmed_id, self.globaltt['mentions'], cell_line_id)
 
                     if not self.testMode and (

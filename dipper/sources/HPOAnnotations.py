@@ -224,10 +224,10 @@ class HPOAnnotations(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -266,13 +266,13 @@ class HPOAnnotations(Source):
                 #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
                 if asp == 'O' or asp == 'M':  # organ abnormality or mortality
                     assoc = D2PAssoc(
-                        g, self.name, disease_id, pheno_id, onset, freq)
+                        graph, self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
                     assoc = DispositionAssoc(
-                        g, self.name, disease_id, pheno_id)
+                        graph, self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
                     assoc = DispositionAssoc(
-                        g, self.name, disease_id, pheno_id)
+                        graph, self.name, disease_id, pheno_id)
                 else:
                     logger.error("I don't know what this aspect is: %s", asp)
 
@@ -303,21 +303,21 @@ class HPOAnnotations(Source):
                                 pubtype = self.globaltt['person']
                             else:
                                 pubtype = self.globaltt['publication']
-                            r = Reference(g, pub, pubtype)
-                            r.addRefToGraph()
+                            ref = Reference(graph, pub, pubtype)
+                            ref.addRefToGraph()
                         elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
                             # make the pubs a reference to the website,
                             # instead of the curie
                             if re.match(r'OMIM', pub):
                                 omimnum = re.sub(r'OMIM:', '', pub)
-                                omimurl = '/'.join(('http://omim.org/entry',
-                                                    str(omimnum).strip()))
+                                omimurl = '/'.join((
+                                    'http://omim.org/entry', str(omimnum).strip()))
                                 pub = omimurl
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
                                 orphaneturl = ''.join((
                                     'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                        str(orphanetnum)))
+                                    str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
@@ -474,9 +474,9 @@ class HPOAnnotations(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
         line_counter = 0
         assoc_count = 0
@@ -532,7 +532,7 @@ class HPOAnnotations(Source):
 
                 if disease_id != '' and phenotype_id != '':
                     assoc = D2PAssoc(
-                        g, self.name, disease_id, phenotype_id.strip())
+                        graph, self.name, disease_id, phenotype_id.strip())
                     if age_of_onset_id != '':
                         assoc.onset = age_of_onset_id
                     if frequency != '':

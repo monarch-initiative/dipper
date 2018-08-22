@@ -245,9 +245,8 @@ class GeneOntology(Source):
                 else:
                     gene_id = ':'.join((db, gene_num))
 
-                if self.testMode \
-                        and not(re.match(r'NCBIGene', gene_id)\
-                        and int(gene_num) in self.test_ids):
+                if self.testMode and not(re.match(r'NCBIGene', gene_id) and
+                        int(gene_num) in self.test_ids):
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
@@ -319,8 +318,8 @@ class GeneOntology(Source):
                     phenotypeid = go_id+'PHENOTYPE'
                     # create phenotype associations
                     for i in withitems:
-                        if i == '' \
-                                or re.match(r'(UniProtKB|WBPhenotype|InterPro|HGNC)',i):
+                        if i == '' or re.match(
+                                r'(UniProtKB|WBPhenotype|InterPro|HGNC)', i):
                             logger.warning(
                                 "Don't know what having a uniprot id " +
                                 "in the 'with' column means of %s", uniprotid)

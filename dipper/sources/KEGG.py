@@ -255,8 +255,7 @@ class KEGG(Source):
                 if disease_id not in self.label_hash:
                     self.label_hash[disease_id] = disease_name
 
-                if self.testMode and\
-                        disease_id not in self.test_ids['disease']:
+                if self.testMode and disease_id not in self.test_ids['disease']:
                     continue
 
                 # Add the disease as a class.
@@ -266,8 +265,7 @@ class KEGG(Source):
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
-                if (not self.testMode) and (
-                        limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         logger.info("Done with diseases")
@@ -293,13 +291,13 @@ class KEGG(Source):
 
         logger.info("Processing genes")
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
-        family = Family(g)
-        geno = Genotype(g)
+        family = Family(graph)
+        geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -350,8 +348,7 @@ class KEGG(Source):
                         ko = 'KEGG-ko:'+ko_match.group(1)
                         family.addMemberOf(gene_id, ko)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with genes")
@@ -375,10 +372,10 @@ class KEGG(Source):
 
         logger.info("Processing ortholog classes")
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
@@ -387,9 +384,8 @@ class KEGG(Source):
                 line_counter += 1
                 (orthology_class_id, orthology_class_name) = row
 
-                if self.testMode and \
-                        orthology_class_id not in \
-                        self.test_ids['orthology_classes']:
+                if self.testMode and orthology_class_id \
+                        not in self.test_ids['orthology_classes']:
                     continue
 
                 # The orthology class is essentially a KEGG gene ID
@@ -403,8 +399,8 @@ class KEGG(Source):
                 orthology_class_id = 'KEGG-'+orthology_class_id.strip()
 
                 orthology_type = OrthologyAssoc.terms['gene_family']
-                model.addClassToGraph(orthology_class_id, orthology_label,
-                                      orthology_type)
+                model.addClassToGraph(
+                    orthology_class_id, orthology_label, orthology_type)
                 if len(other_labels) > 1:
                     # add the rest as synonyms
                     # todo skip the first
@@ -423,8 +419,7 @@ class KEGG(Source):
                         for ecm in ec_matches:
                             model.addXref(orthology_class_id, 'EC:'+ecm)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with ortholog classes")
@@ -459,7 +454,7 @@ class KEGG(Source):
                 (gene_id, orthology_class_id) = row
 
                 orthology_class_id = 'KEGG:'+orthology_class_id.strip()
-                gene_id = 'KEGG:'+gene_id.strip()
+                gene_id = 'KEGG:' + gene_id.strip()
 
                 # note that the panther_id references a group of orthologs,
                 # and is not 1:1 with the rest

@@ -321,8 +321,8 @@ class GeneReviews(Source):
 
                 # add in the copyright and citation info to description
                 ptext = ' '.join((
-                    ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, '
-                    + nbk_id + ']'))
+                    ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
+                        nbk_id + ']'))
 
                 model.addDefinition(nbk_id, ptext.strip())
 
@@ -370,8 +370,8 @@ class GeneReviews(Source):
                 logger.warning("There were %d books not found.", l)
             else:
                 logger.warning(
-                    "The following %d books were not found locally: %s",
-                    l, str(books_not_found))
+                    "The following %d books were not found locally: %s", l,
+                    str(books_not_found))
         logger.info("Finished processing %d books for clinical descriptions", c-l)
 
         return

@@ -149,11 +149,11 @@ class Panther(Source):
         logger.info("getting orthologs")
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
 
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         unprocessed_gene_ids = set()  # may be faster to make a set after
 
         for k in self.files.keys():
@@ -251,7 +251,7 @@ class Panther(Source):
                     evidence_id = self.globaltt['phylogenetic evidence']
 
                     # add the association and relevant nodes to graph
-                    assoc = OrthologyAssoc(g, self.name, gene_a, gene_b, rel)
+                    assoc = OrthologyAssoc(graph, self.name, gene_a, gene_b, rel)
                     assoc.add_evidence(evidence_id)
 
                     # add genes to graph;
@@ -260,9 +260,9 @@ class Panther(Source):
                     model.addClassToGraph(gene_b, None)
 
                     # might as well add the taxon info for completeness
-                    g.addTriple(
+                    graph.addTriple(
                         gene_a, self.globaltt['in taxon'], taxon_a)
-                    g.addTriple(
+                    graph.addTriple(
                         gene_b, self.globaltt['in taxon'], taxon_b)
 
                     assoc.add_association_to_graph()
@@ -294,7 +294,7 @@ class Panther(Source):
         """
         # TODO  move to localtt->globaltt
         taxid = None
-        ptax_to_taxid_map = { 
+        ptax_to_taxid_map = {
             'ANOCA': 28377,  # green lizard
             'ARATH': 3702,   # arabadopsis
             'BOVIN': 9913,   # cow

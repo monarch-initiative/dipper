@@ -220,12 +220,12 @@ class Ensembl(Source):
 
     def _process_genes(self, taxid, limit=None):
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
-        geno = Genotype(g)
+        model = Model(graph)
+        geno = Genotype(graph)
 
         raw = '/'.join((self.rawdir, self.files[taxid]['file']))
         line_counter = 0

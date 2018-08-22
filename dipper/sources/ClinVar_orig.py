@@ -129,13 +129,13 @@ class ClinVar(Source):
         """
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
 
-        geno = Genotype(g)
+        geno = Genotype(graph)
         f = Feature(g, None, None, None)
 
         # add the taxon and the genome
@@ -457,10 +457,10 @@ class ClinVar(Source):
         myfile = \
             '/'.join((self.rawdir, self.files['variant_citations']['file']))
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
 
         with open(myfile, 'r', encoding="utf8") as f:
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')

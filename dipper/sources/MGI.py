@@ -773,7 +773,7 @@ SELECT  r._relationship_key as rel_key,
                     sa_id = iseqalt_id
 
                     if marker_key is not None \
-                            and  allele_label != marker_label and marker_key != '':
+                            and allele_label != marker_label and marker_key != '':
                         # sequence alteration has label reformatted(symbol)
                         if re.match(r".*<.*>.*", symbol):
                             sa_label = re.sub(r".*<", "<", symbol)
@@ -1452,7 +1452,7 @@ SELECT  r._relationship_key as rel_key,
                     # everything except for genes are modeled as individuals
 
                     if mapped_marker_type in [
-                            self.globaltt['geene'],
+                            self.globaltt['gene'],
                             self.globaltt['pseudogene']]:
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)

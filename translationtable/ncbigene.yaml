@@ -12,5 +12,4 @@
 "tRNA": "tRNA_gene"
 "unknown": "sequence_feature"
 "scRNA": "scRNA_gene"
-"mature transcript": "mature_transcript"
-"miscRNA": "transcript"
+"miscRNA": "mature_transcript"

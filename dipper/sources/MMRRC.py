@@ -115,10 +115,10 @@ class MMRRC(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         fname = '/'.join((self.rawdir, self.files['catalog']['file']))
 
@@ -127,7 +127,7 @@ class MMRRC(Source):
         genes_with_no_ids = set()
         stem_cell_class = 'CL:0000034'
         mouse_taxon = 'NCBITaxon:10090'
-        geno = Genotype(g)
+        geno = Genotype(graph)
         with open(fname, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
             for row in filereader:
@@ -224,8 +224,8 @@ class MMRRC(Source):
                     for i in re.split(r'\s+', pubmed_nums):
                         pmid = 'PMID:'+i.strip()
                         pubmed_ids.append(pmid)
-                        r = Reference(g, pmid, self.globaltt['journal article'])
-                        r.addRefToGraph()
+                        ref = Reference(graph, pmid, self.globaltt['journal article'])
+                        ref.addRefToGraph()
 
                 # https://www.mmrrc.org/catalog/sds.php?mmrrc_id=00001
                 # is a good example of 4 genotype parts
@@ -249,7 +249,7 @@ class MMRRC(Source):
                     model.addClassToGraph(pid, None)
                     if mgi_allele_id is not None and mgi_allele_id != '':
                         assoc = G2PAssoc(
-                            g, self.name, mgi_allele_id, pid,
+                            graph, self.name, mgi_allele_id, pid,
                             self.globaltt['has phenotype'])
                         for p in pubmed_ids:
                             assoc.add_source(p)
@@ -344,7 +344,7 @@ class MMRRC(Source):
                     geno.addParts(
                         gvc_id, genotype_id, self.globaltt['has_alternate_part'])
                     geno.addGenotype(genotype_id, genotype_label)
-                    g.addTriple(
+                    graph.addTriple(
                         s, self.globaltt['has_genotype'], genotype_id)
                 else:
                     # logger.debug(

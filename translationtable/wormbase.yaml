@@ -2,29 +2,21 @@
 # wormbase.yaml
 
 # biotype_map 
-"lincRNA": "SO:0001641"
-"miRNA": "SO:0001265"
-"ncRNA": "SO:0001263"
-"piRNA": "SO:0001638"
-"rRNA": "SO:0001637"
-"scRNA": "SO:0001266"
-"snRNA": "SO:0001268"
-"snoRNA": "SO:0001267"
-"tRNA": "SO:0001272"
+"lincRNA": "lincRNA_gene"
+"miRNA": "miRNA_gene"
+"ncRNA": "ncRNA_gene"
+"piRNA": "piRNA_gene"
+"rRNA": "rRNA_gene"
+"scRNA": "scRNA_gene"
+"snRNA": "snRNA_gene"
+"snoRNA": "snoRNA_gene7"
+"tRNA": "tRNA_gene"
 # transposable element gene
-"transposon_protein_coding": "SO:0000111"
-"transposon_pseudogene": "SO:0001897"
-"pseudogene": "SO:0000336"
-"protein_coding": "SO:0001217"
-"asRNA": "SO:0001263"  # using ncRNA gene  TODO make term request
+"transposon_protein_coding": "transposable_element_gene"
+"transposon_pseudogene": "transposable_element_pseudogene"
+"protein_coding": "protein_coding_gene"
+"asRNA": "ncRNA_gene"  # TODO make term request
 
 
-# ftype_map
-"point_mutation": "SO:1000008"
-"deletion": "SO:0000159"
-"RNAi_reagent": "SO:0000337"
-"duplication": "SO:1000035"
-"enhancer": "SO:0000165"
-"binding_site": "SO:0000409"
-"biological_region": "SO:0001411"
-"complex_substitution": "SO:1000005"
+"IMP": "mutant phenotype evidence"
+"IEA": "evidence used in automatic assertion"

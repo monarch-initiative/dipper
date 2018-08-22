@@ -150,12 +150,12 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
 
         # not unzipping the file
         logger.info("Processing 'Gene Info' records")
@@ -312,10 +312,10 @@ class NCBIGene(Source):
                             maploc_id = makeChromID(c+bid, tax_num, 'CHR')
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             # Assume it's type will be added elsewhere
-                            band = Feature(g, maploc_id, None, None)
+                            band = Feature(graph, maploc_id, None, None)
                             band.addFeatureToGraph()
                             # add the band as the containing feature
-                            g.addTriple(
+                            graph.addTriple(
                                 gene_id,
                                 self.globaltt['is_subsequence_of'],
                                 maploc_id)
@@ -327,7 +327,7 @@ class NCBIGene(Source):
                             logger.debug(
                                 'not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
-                            g.addTriple(
+                            graph.addTriple(
                                 gene_id,
                                 self.globaltt['is_subsequence_of'],
                                 mychrom)
@@ -406,10 +406,10 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
@@ -481,10 +481,10 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
@@ -528,9 +528,9 @@ class NCBIGene(Source):
                 # add type publication
                 model.addIndividualToGraph(pubmed_id, None, None)
                 reference = Reference(
-                    g, pubmed_id, self.globaltt['journal article'])
+                    graph, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
-                g.addTriple(
+                graph.addTriple(
                     pubmed_id, self.globaltt['is_about'], gene_id)
                 assoc_counter += 1
                 if not self.testMode and limit is not None and line_counter > limit:

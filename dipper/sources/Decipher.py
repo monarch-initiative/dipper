@@ -14,6 +14,7 @@ from dipper.models.Genotype import Genotype
 
 logger = logging.getLogger(__name__)
 
+
 class Decipher(Source):
     """
     Deprecated - please see the EBIGene2Phen class, which parses the same
@@ -58,9 +59,9 @@ class Decipher(Source):
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        self.g = self.graph
+        self.graph = self.graph
         self.geno = Genotype(self.g)
-        self.model = Model(self.g)
+        self.model = Model(self.graph)
 
         return
 

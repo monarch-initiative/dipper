@@ -148,13 +148,13 @@ class BioGrid(Source):
                     r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
                 if self.testMode:
-                    g = self.testgraph
+                    graph = self.testgraph
                     # skip any genes that don't match our test set
                     if (int(gene_a_num) not in self.test_ids) or\
                             (int(gene_b_num) not in self.test_ids):
                         continue
                 else:
-                    g = self.graph
+                    graph = self.graph
                     # when not in test mode, filter by taxon
                     if int(re.sub(r'taxid:', '', taxid_a.rstrip())) not in\
                             self.tax_ids or\
@@ -186,7 +186,7 @@ class BioGrid(Source):
                 # identifier that does not map to a public URI.
                 # we will construct a monarch identifier from this
 
-                assoc = InteractionAssoc(g, self.name, gene_a, gene_b, rel)
+                assoc = InteractionAssoc(graph, self.name, gene_a, gene_b, rel)
                 assoc.add_evidence(evidence)
                 assoc.add_source(pub_id)
                 assoc.add_association_to_graph()
@@ -241,14 +241,14 @@ class BioGrid(Source):
                  organism_label) = line.split('\t')
 
                 if self.testMode:
-                    g = self.testgraph
+                    graph = self.testgraph
                     # skip any genes that don't match our test set
                     if int(biogrid_num) not in self.biogrid_ids:
                         continue
                 else:
-                    g = self.graph
+                    graph = self.graph
 
-                model = Model(g)
+                model = Model(graph)
 
                 # for each one of these,
                 # create the node and add equivalent classes

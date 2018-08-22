@@ -35,15 +35,6 @@ class GWASCatalog(Source):
 
     """
 
-    terms = {
-        'cell_line_repository': 'CLO:0000008',
-        'race': 'SIO:001015',
-        'ethnic_group': 'EFO:0001799',
-        'age': 'EFO:0000246',
-        'sampling_time': 'EFO:0000689',
-        'collection': 'ERO:0002190'
-    }
-
     GWASFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest'
     GWASFILE = 'gwas-catalog-associations_ontology-annotated.tsv'
     files = {
@@ -73,8 +64,8 @@ class GWASCatalog(Source):
         if graph_type != 'rdf_graph':
             raise ValueError("GWAS Catalog requires a rdf_graph")
 
-        if 'test_ids' not in config.get_config() or \
-                'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' \
+                not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']
@@ -197,9 +188,8 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                    variant_curie, variant_type = \
-                        self._get_curie_and_type_from_id(
-                            strongest_snp_risk_allele)
+                    variant_curie, variant_type = self._get_curie_and_type_from_id(
+                        strongest_snp_risk_allele)
 
                     if strongest_snp_risk_allele.strip() == '':
                         logger.debug(
@@ -222,9 +212,9 @@ class GWASCatalog(Source):
                             downstream_gene_num)
                     elif variant_type == 'haplotype':
                         self._process_haplotype(
-                            variant_curie, strongest_snp_risk_allele,
-                            chrom_num, chrom_pos, context,
-                            risk_allele_frequency, mapped_gene, so_ontology)
+                            variant_curie, strongest_snp_risk_allele, chrom_num,
+                            chrom_pos, context, risk_allele_frequency, mapped_gene,
+                            so_ontology)
                     elif variant_type is None:
                         logger.warning(
                             "There's a snp id i can't manage: %s",
@@ -312,7 +302,8 @@ class GWASCatalog(Source):
                 so_query = """
                     SELECT ?variant_label
                     WHERE {{
-                        {0} rdfs:subClassOf+ SO:0001564 ;
+                        {0} rdfs:subClassOf+ """ \
+                        + self.globaltt["gene_variant"] + """ ;
                             rdfs:label ?variant_label .
                     }}
                 """.format(so_class)
@@ -336,7 +327,6 @@ class GWASCatalog(Source):
                 logger.warning(
                     "More mapped genes than snps, cannot disambiguate for {}"
                     .format(hap_label))
-
 
         # Seperate in case we want to apply a different relation
         # If not this is redundant with triples added above
@@ -372,7 +362,7 @@ class GWASCatalog(Source):
             self.id_location_map[location].add(snp_id)
 
         # create the chromosome
-        chrom_id = makeChromID(chrom_num, 'GRCh38', 'CHR')
+        chrom_id = makeChromID(chrom_num, self.localtt['reference assembly'], 'CHR')
 
         # add the feature to the graph
         snp_description = None
@@ -457,9 +447,9 @@ class GWASCatalog(Source):
             graph.addTriple(
                 snp_id, self.globaltt['is downstream of sequence of'], upstream_gene_id)
 
-    def _add_variant_trait_association(self, variant_id, mapped_trait_uri,
-                                       efo_ontology, pubmed_id,
-                                       description=None):
+    def _add_variant_trait_association(
+            self, variant_id, mapped_trait_uri, efo_ontology, pubmed_id,
+            description=None):
         if self.testMode:
             graph = self.testgraph
         else:
@@ -570,4 +560,3 @@ class GWASCatalog(Source):
             logger.warning("There's a snp id i can't manage: %s", variant_id)
 
         return curie, variant_type
-

@@ -737,7 +737,6 @@ class Source:
             globaltt = yaml.safe_load(fh)
         return globaltt
 
-
     def load_local_translationtable(self, name):  # wip
         '''
         Load "ingest specific" translation from whatever they called something
@@ -767,7 +766,6 @@ class Source:
         self.localtcid = {v: k for k, v in localtt.items()}
 
         return localtt
-
 
     def resolve(self, word, mandatory=True):  # wip
         '''

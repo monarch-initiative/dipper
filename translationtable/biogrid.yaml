@@ -1,0 +1,17 @@
+---
+# biogrid.yaml
+
+#mi_to_eco_map 
+'MI:0018': 'ECO:0000068',  # yeast two-hybrid
+'MI:0004': 'ECO:0000079',  # affinity chromatography
+'MI:0047': 'ECO:0000076',  # far western blotting
+'MI:0055': 'ECO:0000021',  # should be FRET, but using physical_interaction FIXME
+'MI:0090': 'ECO:0000012',  # desired: protein complementation, using: functional complementation
+'MI:0096': 'ECO:0000085',  # desired: pull down, using: immunoprecipitation
+'MI:0114': 'ECO:0000324',  # desired: x-ray crystallography, using: imaging assay
+'MI:0254': 'ECO:0000011',  # desired: genetic interference, using: genetic interaction evidence
+'MI:0401': 'ECO:0000172',  # desired: biochemical, using: biochemical trait evidence
+'MI:0415': 'ECO:0000005',  # desired: enzymatic study, using: enzyme assay evidence
+'MI:0428': 'ECO:0000324',  # imaging
+'MI:0686': 'ECO:0000006',  # desired: unspecified, using: experimental evidence
+'MI:1313': 'ECO:0000006'   # None?

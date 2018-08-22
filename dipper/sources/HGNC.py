@@ -80,12 +80,12 @@ class HGNC(Source):
     def _process_genes(self, limit=None):
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['genes']['file']))
         line_counter = 0
         logger.info("Processing HGNC genes")
@@ -180,7 +180,7 @@ class HGNC(Source):
                 if pubmed_id != '':
                     for p in re.split(r'\|', pubmed_id.strip()):
                         if str(p) != '':
-                            g.addTriple(
+                            graph.addTriple(
                                 'PMID:' + str(p.strip()),
                                 self.globaltt['is_about'], hgnc_id)
 
@@ -198,20 +198,19 @@ class HGNC(Source):
                     chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
                     band_pattern = r'([pq][A-H\d]?\d?(?:\.\d+)?)'
                     band_match = re.search(band_pattern, location)
-                    f = Feature(g, hgnc_id, None, None)
+                    feat = Feature(graph, hgnc_id, None, None)
                     if band_match is not None and len(band_match.groups()) > 0:
                         band = band_match.group(1)
                         band = chrom + band
                         # add the chr band as the parent to this gene
                         # as a feature but assume that the band is created
                         # as a class with properties elsewhere in Monochrom
-                        # TEC Monoch? Monarchdom??
                         band_id = makeChromID(band, self.hs_txid, 'CHR')
                         model.addClassToGraph(band_id, None)
-                        f.addSubsequenceOfFeature(band_id)
+                        feat.addSubsequenceOfFeature(band_id)
                     else:
                         model.addClassToGraph(chrom_id, None)
-                        f.addSubsequenceOfFeature(chrom_id)
+                        feat.addSubsequenceOfFeature(chrom_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break

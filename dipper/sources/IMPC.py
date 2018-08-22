@@ -547,7 +547,7 @@ class IMPC(Source):
 
         self.graph.addTriple(
             assertion_bnode,
-            self.resolve('is_assertion_supported_by_evidence'),  #  "SEPIO:0000111"
+            self.resolve('is_assertion_supported_by_evidence'),  # "SEPIO:0000111"
             evidence_line_bnode)
 
         return
@@ -691,7 +691,7 @@ class IMPC(Source):
                 "{0}{1}{2}".format(
                     evidence_line_bnode, 'percentage_change', percentage_change), '_')
             model.addIndividualToGraph(
-                fold_change_bnode, None, self.globaltt['percentage_change'])
+                fold_change_bnode, None, self.resolve('percentage_change'))
             measurements[fold_change_bnode] = percentage_change
         if effect_size is not None or effect_size != "":
             fold_change_bnode = self.make_id(

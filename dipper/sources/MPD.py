@@ -170,10 +170,10 @@ class MPD(Source):
     def _process_straininfo(self, limit):
         # line_counter = 0  # TODO unused
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
 
         logger.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
@@ -313,10 +313,10 @@ class MPD(Source):
     def _fill_provenance_graph(self, limit):
         logger.info("Building graph ...")
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
         model.addClassToGraph(taxon_id, None)
 
@@ -369,7 +369,7 @@ class MPD(Source):
                                     assay_id, assay_label, assay_type_id,
                                     assay_description)
                                 self._add_g2p_assoc(
-                                    g, strain_id, sex, assay_id, ont_term_ids,
+                                    graph, strain_id, sex, assay_id, ont_term_ids,
                                     comment)
                         else:
                             scores_not_passing_threshold_count += 1
@@ -383,7 +383,7 @@ class MPD(Source):
 
         return
 
-    def _add_g2p_assoc(self, g, strain_id, sex, assay_id, phenotypes, comment):
+    def _add_g2p_assoc(self, graph, strain_id, sex, assay_id, phenotypes, comment):
         """
         Create an association between a sex-specific strain id
         and each of the phenotypes.
@@ -403,8 +403,8 @@ class MPD(Source):
         :return:
 
         """
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
@@ -428,7 +428,7 @@ class MPD(Source):
         geno.addGenotype(
             genotype_id, genotype_label,
             Genotype.genoparts['genomic_background'])
-        g.addTriple(
+        graph.addTriple(
             strain_id, self.globaltt['has_genotype'], genotype_id)
 
         geno.addGenotype(
@@ -436,7 +436,7 @@ class MPD(Source):
             genotype_type)
 
         # add the strain as the background for the genotype
-        g.addTriple(
+        graph.addTriple(
             sex_specific_genotype_id,
             self.globaltt['has_sex_agnostic_genotype_part'],
             genotype_id)
@@ -447,7 +447,7 @@ class MPD(Source):
         if phenotypes is not None:
             for phenotype_id in phenotypes:
                 assoc = G2PAssoc(
-                    g, self.name, sex_specific_genotype_id, phenotype_id)
+                    graph, self.name, sex_specific_genotype_id, phenotype_id)
                 assoc.add_evidence(assay_id)
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()

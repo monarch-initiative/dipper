@@ -111,7 +111,7 @@ class MyDrug(Source):
 
         model.addSameIndividual(rxcui_curie, uni_curie)
         self.graph.addTriple(
-            rxcui_curie, globaltt['inchi_key'], document['unii']['inchikey'],
+            rxcui_curie, self.globaltt['inchi_key'], document['unii']['inchikey'],
             object_is_literal=True)
 
         if or_limit is not None:
