@@ -303,7 +303,7 @@ class GWASCatalog(Source):
                     SELECT ?variant_label
                     WHERE {{
                         {0} rdfs:subClassOf+ """ \
-                        + self.globaltt["gene_variant"] + """ ;
+                        + self.globaltt['gene_variant'] + """ ;
                             rdfs:label ?variant_label .
                     }}
                 """.format(so_class)
@@ -377,7 +377,7 @@ class GWASCatalog(Source):
             feat.addFeatureStartLocation(chrom_pos, chrom_id)
             feat.addFeatureEndLocation(chrom_pos, chrom_id)
         feat.addFeatureToGraph()
-        feat.addTaxonToFeature(self.globaltt["Homo sapiens"])
+        feat.addTaxonToFeature(self.globaltt['Homo sapiens'])
         # TODO consider adding allele frequency as property;
         # but would need background info to do that
 
@@ -489,7 +489,7 @@ class GWASCatalog(Source):
                 assoc.add_source(pubmed_curie)
 
                 assoc.add_evidence(
-                    self.resolve("combinatorial evidence used in automatic assertion"))
+                    self.globaltt['combinatorial evidence used in automatic assertion'])
 
                 if description is not None:
                     assoc.set_description(description)
