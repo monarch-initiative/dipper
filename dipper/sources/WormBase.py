@@ -258,7 +258,7 @@ class WormBase(Source):
                 if gene_symbol == '':
                     gene_symbol = None
                 model.addClassToGraph(
-                    gene_id, gene_symbol, Genotype.genoparts['gene'])
+                    gene_id, gene_symbol, self.globaltt['gene'])
                 if live == 'Dead':
                     model.addDeprecatedClass(gene_id)
                 geno.addTaxon(taxon_id, gene_id)

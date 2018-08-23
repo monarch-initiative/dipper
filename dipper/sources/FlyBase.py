@@ -412,7 +412,7 @@ class FlyBase(PostgreSQLSource):
 
                     model.addIndividualToGraph(
                         genotype_id, uniquename,
-                        Genotype.genoparts['intrinsic_genotype'],
+                        self.globaltt['intrinsic_genotype'],
                         description)
                     # we know all genotypes are in flies
                     # FIXME we assume here they are in melanogaster,
@@ -745,7 +745,7 @@ class FlyBase(PostgreSQLSource):
                             tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
-                            type_id = Genotype.genoparts['allele']
+                            type_id = self.globaltt['allele']
                         model.addIndividualToGraph(feature_id, name, type_id)
 
                     # stop adding what we do not appreciate
@@ -1551,7 +1551,7 @@ class FlyBase(PostgreSQLSource):
                 if name == 'derived_tp_assoc_alleles':
                     # derived_tp_assoc_alleles
                     self.feature_types[subject_id] = \
-                        Genotype.genoparts['transgenic_insertion']
+                        self.globaltt['transgenic_insertion']
                     sid = self.idhash['allele'].get(subject_id)
                     model.addType(sid, self.feature_types[subject_id])
                 elif name == 'derived_sf_assoc_alleles':
@@ -1559,7 +1559,7 @@ class FlyBase(PostgreSQLSource):
                     # my subject is a reagent_targeted_gene
                     # my object is the dsRNA
                     self.feature_types[subject_id] = \
-                        Genotype.genoparts['reagent_targeted_gene']
+                        self.globaltt['reagent_targeted_gene']
                     sid = self.idhash['allele'].get(subject_id)
                     model.addType(sid, self.feature_types[subject_id])
 

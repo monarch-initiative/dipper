@@ -62,6 +62,7 @@ class Source:
         self.ingest_title = ingest_title
         self.globaltt = self.load_global_translationtable()
         self.localtt = self.load_local_translationtable(name)
+        self.curiemap = self.load_curie_map()
 
         if name is not None:
             self.name = name
@@ -450,8 +451,7 @@ class Source:
                     row[ats['name']] = f.text
                 processing_function(row)
                 line_counter += 1
-                if self.testMode \
-                        and limit is not None and line_counter > limit:
+                if self.testMode and limit is not None and line_counter > limit:
                     continue
 
             elem.clear()  # discard the element
@@ -709,8 +709,7 @@ class Source:
         """
         id_map = {}
         if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(
-                    os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
                     label = row[0]
@@ -736,6 +735,18 @@ class Source:
         with open(globaltt_file) as fh:
             globaltt = yaml.safe_load(fh)
         return globaltt
+
+    @staticmethod
+    def load_curie_map(  # wip
+            curie_map_file='dipper/curie_map.yaml'):
+        '''
+        Load common mapping from ontology lables to ontology identifiers
+        affords a set of human readable terms to aid understanding within
+        and between ingests
+        '''
+        with open(curie_map_file) as fh:
+            curiemap = yaml.safe_load(fh)
+        return curiemap
 
     def load_local_translationtable(self, name):  # wip
         '''

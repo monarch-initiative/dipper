@@ -257,7 +257,7 @@ class OrthoXML(Source):
 
         for efficency reasons, we cache which proteins we have already
         added using a least recently used cache."""
-        model.addClassToGraph(protein_id, None, Genotype.genoparts['polypeptide'])
+        model.addClassToGraph(protein_id, None, self.globaltt['polypeptide'])
         model.graph.addTriple(
             protein_id, self.globaltt['in taxon'], taxon)
 

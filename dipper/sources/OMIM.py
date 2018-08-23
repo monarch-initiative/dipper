@@ -1,4 +1,4 @@
-import logging
+qimport logging
 import re
 import json
 import urllib
@@ -400,13 +400,13 @@ class OMIM(Source):
             omimtype = self._get_omimtype(e['entry'])
             nodelabel = newlabel
             # this uses our cleaned-up label
-            if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+            if omimtype == self.globaltt['heritable_phenotypic_marker']:
                 if abbrev is not None:
                     nodelabel = abbrev
                 # in this special case,
                 # make it a disease by not declaring it as a gene/marker
                 model.addClassToGraph(omimid, nodelabel, None, newlabel)
-            elif omimtype == Genotype.genoparts['gene']:
+            elif omimtype == self.globaltt['gene']:
                 if abbrev is not None:
                     nodelabel = abbrev
                 model.addClassToGraph(omimid, nodelabel, omimtype, newlabel)
@@ -442,7 +442,7 @@ class OMIM(Source):
                 is_gene = False
 
                 if omimtype == \
-                        Genotype.genoparts['heritable_phenotypic_marker']:
+                        self.globaltt['heritable_phenotypic_marker']:
                     # get the ncbigene ids
                     ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
                     if len(ncbifeature) == 1:
@@ -460,7 +460,7 @@ class OMIM(Source):
                         feature_id = self._make_anonymous_feature(str(omimnum))
                         feature_label = abbrev
 
-                elif omimtype == Genotype.genoparts['gene']:
+                elif omimtype == self.globaltt['gene']:
                     feature_id = omimid
                     is_gene = True
                 else:
@@ -468,7 +468,7 @@ class OMIM(Source):
                     feature_id = self._make_anonymous_feature(str(omimnum))
                     if abbrev is not None:
                         feature_label = abbrev
-                    omimtype = Genotype.genoparts['heritable_phenotypic_marker']
+                    omimtype = self.globaltt['heritable_phenotypic_marker']
 
                 if feature_id is not None:
                     if 'comments' in genemap:
@@ -509,7 +509,7 @@ class OMIM(Source):
                                 # (from the given build)
                                 geno.addChromosomeInstance(
                                     chrom_num, build_id, build_num, chrom)
-                                if omimtype == Genotype.genoparts[
+                                if omimtype == self.globaltt[
                                         'heritable_phenotypic_marker']:
                                     postypes = [Feature.types['FuzzyPosition']]
                                 else:
@@ -703,8 +703,8 @@ class OMIM(Source):
 
         return feature_id
 
-    def _make_pheno_assoc(self, graph, gene_id, gene_symbol, disorder_num,
-                          disorder_label, phene_key):
+    def _make_pheno_assoc(
+        self, graph, gene_id, gene_symbol, disorder_num, disorder_label, phene_key):
 
         """
         From the docs:
@@ -1039,7 +1039,7 @@ class OMIM(Source):
                 entrez_mappings = links['geneIDs']
                 gene_ids = entrez_mappings.split(',')
                 self.omim_ncbigene_idmap[omimid] = gene_ids
-                if omimtype == Genotype.genoparts['gene']:
+                if omimtype == self.globaltt['gene']:
                     for i in gene_ids:
                         model.addEquivalentClass(omimid, 'NCBIGene:' + str(i))
 
@@ -1159,7 +1159,7 @@ class OMIM(Source):
             # note that some genes are also phenotypes,
             # even in this class, like 102480
             # examples: 102560,102480,100678,102750
-            type_id = Genotype.genoparts['gene']  # doublecheck this
+            type_id = self.globaltt['gene']  # doublecheck this
         elif prefix == '#':
             # phenotype/disease -- indicate that here?
             # examples: 104200,105400,114480,115300,121900
@@ -1167,11 +1167,11 @@ class OMIM(Source):
         elif prefix == '+':
             # gene of known sequence and has a phenotype
             # examples: 107670,110600,126453
-            type_id = Genotype.genoparts['gene']  # doublecheck this
+            type_id = self.globaltt['gene']  # doublecheck this
         elif prefix == '%':
             # this is a disease (with a known locus).
             # examples include:  102150,104000,107200,100070
-            type_id = Genotype.genoparts['heritable_phenotypic_marker']
+            type_id = self.globaltt['heritable_phenotypic_marker']
         elif prefix == '':
             # this is probably just a phenotype
             pass
@@ -1202,8 +1202,8 @@ def filter_keep_phenotype_entry_ids(entry, graph=None):
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'])
-    if omim_type != Genotype.genoparts['gene'] and \
-            omim_type != Genotype.genoparts['biological_region']:
+    if omim_type != self.globaltt['gene'] and \
+            omim_type != self.globaltt['biological_region']:
         return omim_id
 
     return None

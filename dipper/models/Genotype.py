@@ -2,8 +2,8 @@ import logging
 import re
 from dipper.models.Model import Model
 from dipper.models.Family import Family
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.graph.Graph import Graph
+from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 
 __author__ = 'nlw'
 logger = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class Genotype():
     def addSequenceDerivesFrom(self, child_id, parent_id):
         self.graph.addTriple(
             child_id, self.globaltt['sequence_derives_from'], parent_id)
-            
+
         return
 
     def addAlleleOfGene(self, allele_id, gene_id, rel_id=None):
@@ -434,22 +434,22 @@ class Genotype():
                 taxon_label = taxon_id
         elif taxon_id in self.globaltcid and taxon_label != self.globaltcid[taxon_id]:
             logging.warning(
-                '"' + self.globaltcid[taxon_id] + ' may need updating to ' +
-                taxon_label + ' in global translation table')
+                '"' + self.globaltcid[taxon_id] + '" may need updating from "' +
+                taxon_label + '" in global translation table')
             logging.warning(
                 '"' + taxon_label + '": " ' + self.globaltcid[taxon_id] + '"' +
-                'may need to be added to a local translation table')
+                ' may need to be added to a local translation table')
 
         genome_label = taxon_label + ' genome'
         genome_id = self.makeGenomeID(taxon_id)
-        self.model.addClassToGraph(genome_id, genome_label, Feature.types['genome'])
+        self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'])
 
         return
 
     def addReferenceGenome(self, build_id, build_label, taxon_id):
         genome_id = self.makeGenomeID(taxon_id)
         self.model.addIndividualToGraph(
-            build_id, build_label, Feature.types['reference_genome'])
+            build_id, build_label, self.globaltt['reference_genome'])
         self.model.addType(build_id, genome_id)
         self.addTaxon(taxon_id, build_id)
 
@@ -482,7 +482,7 @@ class Genotype():
             chr_label = makeChromLabel(chr)
         genome_id = self.makeGenomeID(tax_id)
         self.model.addClassToGraph(
-            chr_id, chr_label, Feature.types['chromosome'])
+            chr_id, chr_label, self.globaltt['chromosome'])
         self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
 
         if build_id is not None:
@@ -509,7 +509,7 @@ class Genotype():
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
         self.model.addClassToGraph(
-            chrom_class_id, chrom_class_label, Feature.types['chromosome'])
+            chrom_class_id, chrom_class_label, self.globaltt['chromosome'])
 
         return
 
@@ -531,7 +531,7 @@ class Genotype():
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
         self.model.addIndividualToGraph(
-            chr_id, chr_label, Feature.types['chromosome'])
+            chr_id, chr_label, self.globaltt['chromosome'])
         if chr_type is not None:
             self.model.addType(chr_id, chr_type)
 

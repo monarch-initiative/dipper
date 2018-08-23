@@ -655,7 +655,7 @@ class NCBIGene(Source):
                         for o in orthologs:
                             oid = 'NCBIGene:'+str(o)
                             model.addClassToGraph(
-                                oid, None, Genotype.genoparts['gene'])
+                                oid, None, self.globaltt['gene'])
                             otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
                             geno.addTaxon(otaxid, oid)
                             assoc = OrthologyAssoc(graph, self.name, gid, oid)

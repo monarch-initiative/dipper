@@ -418,16 +418,16 @@ class MPD(Source):
         else:
             sex_specific_genotype_label = strain_id + '(' + sex + ')'
 
-        genotype_type = Genotype.genoparts['sex_qualified_genotype']
+        genotype_type = self.globaltt['sex_qualified_genotype']
         if sex == 'm':
-            genotype_type = Genotype.genoparts['male_genotype']
+            genotype_type = self.globaltt['male_genotype']
         elif sex == 'f':
-            genotype_type = Genotype.genoparts['female_genotype']
+            genotype_type = self.globaltt['female_genotype']
 
         # add the genotype to strain connection
         geno.addGenotype(
             genotype_id, genotype_label,
-            Genotype.genoparts['genomic_background'])
+            self.globaltt['genomic_background'])
         graph.addTriple(
             strain_id, self.globaltt['has_genotype'], genotype_id)
 

@@ -41,7 +41,7 @@
 'EFO': 'http://purl.obolibrary.org/obo/EFO_'                        # Experimental Factor Ontology (all kinds of stuff)
 'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'                      # Environment Ontology
 'EOM': 'http://purl.obolibrary.org/obo/EOM_'                        # Elements of Morphology phentoypes
-'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource ontology
+'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource Ontology
 'faldo': 'http://biohackathon.org/resource/faldo#'                  # Feature Annotation Location Description Ontology
 'FBcv': 'http://purl.obolibrary.org/obo/FBcv_'                      # FlyBase Controled Vocabulary (includes phenotypes)
 'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'                      # FlyBase anatomy
@@ -182,7 +182,7 @@
 'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
-'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
+'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
 'PomBase': 'https://www.pombase.org/spombe/result/'                             # Database for fission yeast Schizosaccharomyces pombe  ***
 'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='                           # NCBI Reference Sequence Database
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='                    # Rat Genome Database

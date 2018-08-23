@@ -5,7 +5,7 @@ import time
 import ftplib
 import pandas as pd
 from stat import ST_SIZE
-from zipfile import ZipFile
+import gzip
 from datetime import datetime
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
@@ -107,11 +107,9 @@ class Bgee(Source):
             self.files['anat_entity']['pattern'])
         for name, info in files_to_download:
             localfile = '/'.join((self.rawdir, name))
-            with ZipFile(localfile, 'r') as zip_file:
-                fh = zip_file.open(re.sub(r'\.zip$', '', name))
-                logger.info("Processing {}".format(name))
+            with gzip.open(localfile, 'rt', encoding='ISO-8859-1') as fh:
+                logger.info("Processing {}".format(localfile))
                 self._parse_gene_anatomy(fh, limit)
-
         return
 
     def _parse_gene_anatomy(self, fh, limit):
@@ -134,7 +132,8 @@ class Bgee(Source):
         for gene, group in gene_groups:
             for index, row in group.iterrows():
                 self._add_gene_anatomy_association(
-                    row['Ensembl gene ID'], row['anatomical entity ID'],
+                    row['Ensembl gene ID'].strip(),
+                    row['anatomical entity ID'].strip(),
                     row['rank score']
                 )
         return
@@ -150,8 +149,9 @@ class Bgee(Source):
         g2a_association = Assoc(self.graph, self.name)
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
-        rank = re.sub(r',', '', rank)
-        model.addIndividualToGraph(ind_id=gene_curie, label=None, ind_type=None)
+  
+        rank = re.sub(r',', '', str(rank))  # ? can't do RE on a float ...
+        model.addIndividualToGraph(gene_curie, None)
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
         g2a_association.rel = self.globaltt['expressed in']
@@ -181,8 +181,8 @@ class Bgee(Source):
                 or status[ST_SIZE] != int(remote_size):
             is_remote_newer = True
             logger.info(
-                "Object on server is has different size {0} and/or "
-                "date {1}".format(remote_size, remote_dt))
+                "Object on server is has different size {0} and/or date {1}"
+                .format(remote_size, remote_dt))
 
         return is_remote_newer
 
@@ -193,9 +193,9 @@ class Bgee(Source):
 
         :return: datetime object
         """
-        date_time = datetime(int(ftp_time[:4]), int(ftp_time[4:6]),
-                             int(ftp_time[6:8]), int(ftp_time[8:10]),
-                             int(ftp_time[10:12]), int(ftp_time[12:14]))
+        date_time = datetime(
+            int(ftp_time[:4]), int(ftp_time[4:6]), int(ftp_time[6:8]),
+            int(ftp_time[8:10]), int(ftp_time[10:12]), int(ftp_time[12:14]))
         return date_time
 
     def _get_file_list(self, working_dir, file_regex=re.compile(r'.*'), ftp=None):

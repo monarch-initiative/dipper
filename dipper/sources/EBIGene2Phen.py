@@ -258,7 +258,7 @@ class EBIGene2Phen(Source):
             # enough for us to make mappings (see translation table)
             model.addIndividualToGraph(variant_bnode,
                                        variant_label,
-                                       geno.genoparts['variant_locus'])
+                                       self.globaltt['variant_locus'])
             geno.addAffectedLocus(variant_bnode, gene_id)
             model.addBlankNodeAnnotation(variant_bnode)
 

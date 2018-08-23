@@ -206,7 +206,9 @@ class EOM(PostgreSQLSource):
 
                 if synonyms != '':
                     for s in synonyms.split(';'):
-                        model.addSynonym(model.globaltt['hasExactSynonym'])
+                        model.addSynonym(
+                            morphology_term_id, s.strip(),
+                            model.globaltt['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
