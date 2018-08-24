@@ -34,7 +34,7 @@ class ReactomeTestCase(unittest.TestCase):
         triples = """
         ENSEMBL:ENSBTAP00000013354 RO:0002331 REACT:R-BTA-3000480 .
         
-        :MONARCH_6582c188b7ec2001 a OBAN:association ;
+        :MONARCH_b582c188b7ec20016206 a OBAN:association ;
             OBO:RO_0002558 ECO:0000501 ;
             OBAN:association_has_object REACT:R-BTA-3000480 ;
             OBAN:association_has_predicate RO:0002331 ;

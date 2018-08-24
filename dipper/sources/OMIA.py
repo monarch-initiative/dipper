@@ -7,7 +7,6 @@ import shutil
 
 from dipper.sources.Source import Source
 from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
-from dipper.models.Dataset import Dataset
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.assoc.DispositionAssoc import DispositionAssoc
@@ -61,7 +60,7 @@ class OMIA(Source):
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
-        
+
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
@@ -103,7 +102,7 @@ class OMIA(Source):
         # to store a map of omia ids and any molecular info
         # to write a report for curation
         self.stored_omia_mol_gen = {}
-        self.g = self.graph
+        self.graph = self.graph
         return
 
     def fetch(self, is_dl_forced=False):
@@ -141,9 +140,9 @@ class OMIA(Source):
             self.testMode = True
 
         if self.testMode:
-            self.g = self.testgraph
+            self.graph = self.testgraph
         else:
-            self.g = self.graph
+            self.graph = self.graph
 
         # we do three passes through the file
         # first process species (two others reference this one)
@@ -315,9 +314,8 @@ class OMIA(Source):
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
         sci_name = row['sci_name']
         com_name = row['com_name']
-        model = Model(self.g)
-        if self.testMode and \
-                (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        model = Model(self.graph)
+        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         model.addClassToGraph(tax_id)
@@ -330,10 +328,9 @@ class OMIA(Source):
         return
 
     def _process_breed_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         # in test mode, keep all breeds of our test species
-        if self.testMode and \
-                (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         # save the breed keys in the test_ids for later processing
@@ -354,7 +351,7 @@ class OMIA(Source):
         return
 
     def _process_phene_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         phenotype_id = None
         sp_phene_label = row['phene_name']
         if sp_phene_label == '':
@@ -365,9 +362,9 @@ class OMIA(Source):
         else:
             omia_id = 'OMIA:'+str(row['omia_id'])
 
-        if self.testMode and not\
-                (int(row['gb_species_id']) in self.test_ids['taxon'] and
-                 omia_id in self.test_ids['disease']):
+        if self.testMode and not(
+                int(row['gb_species_id']) in self.test_ids['taxon'] and omia_id
+                in self.test_ids['disease']):
             return
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = omia_id
@@ -386,15 +383,14 @@ class OMIA(Source):
             sp_phene_id = '-'.join((omia_id, gb_species_id))
         else:
             logger.error(
-                "No species supplied in species-specific phene table for %s",
-                omia_id)
+                "No species supplied in species-specific phene table for %s", omia_id)
             return
 
         species_id = 'NCBITaxon:'+str(gb_species_id)
         # use this instead
         species_label = self.label_hash.get('NCBITaxon:'+gb_species_id)
-        if sp_phene_label is None and \
-                omia_label is not None and species_label is not None:
+        if sp_phene_label is None and omia_label is not None \
+                and species_label is not None:
             sp_phene_label = ' '.join((omia_label, 'in', species_label))
         model.addClassToGraph(
             sp_phene_id, sp_phene_label, omia_id, descr)
@@ -413,7 +409,7 @@ class OMIA(Source):
         #     gu.addSynonym(g, sp_phene, row['symbol'])
 
         model.addOWLPropertyClassRestriction(
-            sp_phene_id, model.object_properties['in_taxon'],
+            sp_phene_id, self.globaltt['in taxon'],
             species_id)
 
         # add inheritance as an association
@@ -441,10 +437,11 @@ class OMIA(Source):
             h = ['omia_id', 'molecular_description', 'mapping_info', 'species']
             writer.writerow(h)
             for phene in self.stored_omia_mol_gen:
-                writer.writerow((str(phene),
-                                 self.stored_omia_mol_gen[phene]['mol_gen'],
-                                 self.stored_omia_mol_gen[phene]['map_info'],
-                                 self.stored_omia_mol_gen[phene]['species']))
+                writer.writerow((
+                    str(phene),
+                    self.stored_omia_mol_gen[phene]['mol_gen'],
+                    self.stored_omia_mol_gen[phene]['map_info'],
+                    self.stored_omia_mol_gen[phene]['species']))
 
         logger.info(
             "Wrote %d potential G2P descriptions for curation to %s",
@@ -453,7 +450,7 @@ class OMIA(Source):
         return
 
     def _process_article_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         # don't bother in test mode
         if self.testMode:
             return
@@ -462,7 +459,7 @@ class OMIA(Source):
         self.id_hash['article'][row['article_id']] = iarticle_id
         rtype = None
         if row['journal'] != '':
-            rtype = Reference.ref_types['journal_article']
+            rtype = self.globaltt['journal article']
         reference = Reference(self.g, iarticle_id, rtype)
 
         if row['title'] is not None:
@@ -480,7 +477,7 @@ class OMIA(Source):
         return
 
     def _process_omia_group_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         omia_id = 'OMIA:'+row['omia_id']
 
         if self.testMode and omia_id not in self.test_ids['disease']:
@@ -491,11 +488,11 @@ class OMIA(Source):
 
         disease_id = None
         group_category = row.get('group_category')
-        disease_id = \
-            self.map_omia_group_category_to_ontology_id(group_category)
+        # disease_id = self.map_omia_group_category_to_ontology_id(group_category)
+        disease_id = self.resolve(group_category)
         if disease_id is not None:
             model.addClassToGraph(disease_id, None)
-            if disease_id == 'MP:0008762':  # embryonic lethal
+            if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association
                 # add embryonic onset
                 assoc = D2PAssoc(self.g, self.name, omia_id, disease_id)
@@ -506,7 +503,7 @@ class OMIA(Source):
                 "No disease superclass defined for %s:  %s",
                 omia_id, group_name)
             # default to general disease  FIXME this may not be desired
-            disease_id = 'DOID:4'
+            disease_id = self.globaltt['disease']
 
         if group_summary == '':
             group_summary = None
@@ -520,7 +517,7 @@ class OMIA(Source):
         return
 
     def _process_gene_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         geno = Genotype(self.g)
         if self.testMode and row['gene_id'] not in self.test_ids['gene']:
             return
@@ -536,7 +533,7 @@ class OMIA(Source):
         return
 
     def _process_article_breed_row(self, row):
-        model = Model(self.g)
+
         # article_id, breed_id, added_by
         # don't bother putting these into the test... too many!
 
@@ -550,7 +547,7 @@ class OMIA(Source):
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
             self.g.addTriple(
-                article_id, model.object_properties['is_about'], breed_id)
+                article_id, self.globaltt['is_about'], breed_id)
         else:
             logger.warning("Missing article key %s", str(row['article_id']))
 
@@ -563,7 +560,6 @@ class OMIA(Source):
         :param row:
         :return:
         """
-        model = Model(self.g)
         # article_id, phene_id, added_by
         # look up the article in the hashmap
         phenotype_id = self.id_hash['phene'].get(row['phene_id'])
@@ -577,12 +573,12 @@ class OMIA(Source):
         # make a triple, where the article is about the phenotype
         self.g.addTriple(
             article_id,
-            model.object_properties['is_about'], phenotype_id)
+            self.globaltt['is_about'], phenotype_id)
 
         return
 
     def _process_breed_phene_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         # Linking disorders/characteristic to breeds
         # breed_id, phene_id, added_by
         breed_id = self.id_hash['breed'].get(row['breed_id'])
@@ -599,8 +595,7 @@ class OMIA(Source):
 
         # FIXME we want a different relationship here
         assoc = G2PAssoc(
-            self.g, self.name, breed_id, phene_id,
-            model.object_properties['has_phenotype'])
+            self.g, self.name, breed_id, phene_id, self.globaltt['has phenotype'])
         assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
@@ -609,7 +604,7 @@ class OMIA(Source):
         # from the omim list, so we can make the model associations here
 
         omim_ids = self.omia_omim_map.get(omia_id)
-        eco_id = "ECO:0000214"   # biological aspect of descendant evidence
+        eco_id = self.globaltt['biological aspect of descendant evidence']
         if omim_ids is not None and len(omim_ids) > 0:
             if len(omim_ids) > 1:
                 logger.info(
@@ -618,7 +613,7 @@ class OMIA(Source):
             for i in omim_ids:
                 assoc = G2PAssoc(
                     self.g, self.name, breed_id, i,
-                    model.object_properties['model_of'])
+                    self.globaltt['is model of'])
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()
                 aid = assoc.get_association_id()
@@ -647,7 +642,7 @@ class OMIA(Source):
         return
 
     def _process_lida_links_row(self, row):
-        model = Model(self.g)
+        model = Model(self.graph)
         # lidaurl, omia_id, added_by
         omia_id = 'OMIA:'+row['omia_id']
         lidaurl = row['lidaurl']
@@ -660,8 +655,8 @@ class OMIA(Source):
         return
 
     def _process_phene_gene_row(self, row):
-        geno = Genotype(self.g)
-        model = Model(self.g)
+        geno = Genotype(self.graph)
+        model = Model(self.graph)
         gene_id = self.id_hash['gene'].get(row['gene_id'])
         phene_id = self.id_hash['phene'].get(row['phene_id'])
 
@@ -701,7 +696,7 @@ class OMIA(Source):
         :return:
         """
         # omia_id, omim_id, added_by
-        model = Model(self.g)
+        model = Model(self.graph)
         omia_id = 'OMIA:'+row['omia_id']
         omim_id = 'OMIM:'+row['omim_id']
 

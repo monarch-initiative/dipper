@@ -172,8 +172,8 @@ class OrthoXML(Source):
         """
         logger.info("getting ortholog and paralog relations")
 
-        g = self.testgraph if self.testMode else self.graph
-        model = Model(g)
+        graph = self.testgraph if self.testMode else self.graph
+        model = Model(graph)
 
         for k in self.files.keys():
             f = os.path.join(self.rawdir, self.files[k]['file'])
@@ -236,7 +236,8 @@ class OrthoXML(Source):
                 rel = self._map_orthology_code_to_RO[rel_type]
                 evidence_id = 'ECO:0000080'  # phylogenetic evidence
                 # add the association and relevant nodes to graph
-                assoc = OrthologyAssoc(g, self.name, protein_id_a, protein_id_b, rel)
+                assoc = OrthologyAssoc(
+                    graph, self.name, protein_id_a, protein_id_b, rel)
                 assoc.add_evidence(evidence_id)
                 assoc.add_association_to_graph()
 
@@ -256,9 +257,9 @@ class OrthoXML(Source):
 
         for efficency reasons, we cache which proteins we have already
         added using a least recently used cache."""
-        model.addClassToGraph(protein_id, None, Genotype.genoparts['polypeptide'])
+        model.addClassToGraph(protein_id, None, self.globaltt['polypeptide'])
         model.graph.addTriple(
-            protein_id, model.object_properties['in_taxon'], taxon)
+            protein_id, self.globaltt['in taxon'], taxon)
 
     def extract_taxon_info(self, gene_node):
         """extract the ncbi taxon id from a gene_node

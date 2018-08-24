@@ -320,11 +320,9 @@ class GeneReviews(Source):
                     ptext += ' '.join(item_text)
 
                 # add in the copyright and citation info to description
-                ptext = \
-                    ' '.join(
-                        (ptext,
-                         '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
-                         nbk_id+']'))
+                ptext = ' '.join((
+                    ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
+                        nbk_id + ']'))
 
                 model.addDefinition(nbk_id, ptext.strip())
 
@@ -339,19 +337,14 @@ class GeneReviews(Source):
                         if re.match(r'PubMed:', a.text):
                             pmnum = re.sub(r'PubMed:\s*', '', a.text)
                         else:
-                            pmnum = \
-                                re.search(
-                                    r'\/pubmed\/(\d+)$', a['href']).group(1)
+                            pmnum = re.search(r'\/pubmed\/(\d+)$', a['href']).group(1)
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
                             self.graph.addTriple(
-                                pmid,
-                                model.object_properties['is_about'],
-                                nbk_id)
+                                pmid, self.globaltt['is_about'], nbk_id)
                             pmid_set.add(pmnum)
                             reference = Reference(
-                                self.graph,
-                                pmid, Reference.ref_types['journal_article'])
+                                self.graph, pmid, self.globaltt['journal article'])
                             reference.addRefToGraph()
 
             # TODO add author history, copyright, license to dataset
@@ -360,7 +353,7 @@ class GeneReviews(Source):
             # and make it "is about" link
             # self.gu.addTriple(
             #   self.graph, pmid,
-            #   self.gu.object_properties['is_about'], nbk_id)
+            #   self.globaltt['is_about'], nbk_id)
             # for example: NBK1191 PMID:20301370
 
             # add the book to the dataset
@@ -377,10 +370,9 @@ class GeneReviews(Source):
                 logger.warning("There were %d books not found.", l)
             else:
                 logger.warning(
-                    "The following %d books were not found locally: %s",
-                    l, str(books_not_found))
-        logger.info(
-            "Finished processing %d books for clinical descriptions", c-l)
+                    "The following %d books were not found locally: %s", l,
+                    str(books_not_found))
+        logger.info("Finished processing %d books for clinical descriptions", c-l)
 
         return
 
@@ -388,7 +380,6 @@ class GeneReviews(Source):
         import unittest
         from tests.test_genereviews import GeneReviewsTestCase
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(GeneReviewsTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneReviewsTestCase)
 
         return test_suite

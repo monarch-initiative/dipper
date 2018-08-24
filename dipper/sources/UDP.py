@@ -121,14 +121,15 @@ class UDP(Source):
         prioritized_variants = [
             'Patient', 'Gene', 'Chromosome Position', 'Variant Allele', 'Transcript']
 
-        prioritized_params = {'method': 'search_subjects',
-                              'subject_type': 'Variant Prioritization',
-                              'search_mode': 'DEEP',
-                              'fields': 'Patient',
-                              'conditions': 'equals',
-                              'values': ','.join(udp_internal_ids),
-                              'user_fields': ','.join(prioritized_variants),
-                              'format': 'json'}
+        prioritized_params = {
+            'method': 'search_subjects',
+            'subject_type': 'Variant Prioritization',
+            'search_mode': 'DEEP',
+            'fields': 'Patient',
+            'conditions': 'equals',
+            'values': ','.join(udp_internal_ids),
+            'user_fields': ','.join(prioritized_variants),
+            'format': 'json'}
 
         variant_fields = [
             'Patient', 'Family', 'Chr', 'Build', 'Chromosome Position',
@@ -138,13 +139,14 @@ class UDP(Source):
             'Position', 'Exon', 'Inheritance model', 'Zygosity', 'dbSNP ID',
             '1K Frequency', 'Number of Alleles']
 
-        variant_params = {'method': 'search_subjects',
-                          'subject_type': 'Exome Analysis Results',
-                          'search_mode': 'DEEP',
-                          'fields': 'Patient',
-                          'conditions': 'equals',
-                          'user_fields': ','.join(variant_fields),
-                          'format': 'json'}
+        variant_params = {
+            'method': 'search_subjects',
+            'subject_type': 'Exome Analysis Results',
+            'search_mode': 'DEEP',
+            'fields': 'Patient',
+            'conditions': 'equals',
+            'user_fields': ','.join(variant_fields),
+            'format': 'json'}
 
         pheno_file = open(
             '/'.join((self.rawdir, self.files['patient_phenotypes']['file'])), 'w')
@@ -197,7 +199,8 @@ class UDP(Source):
         if limit is not None:
             logger.info("Only parsing first %d rows", limit)
 
-        phenotype_file = '/'.join((self.rawdir, self.files['patient_phenotypes']['file']))
+        phenotype_file = '/'.join(
+            (self.rawdir, self.files['patient_phenotypes']['file']))
         variant_file = '/'.join((self.rawdir, self.files['patient_variants']['file']))
 
         phenotype_file_handler = open(phenotype_file, 'r')
@@ -217,8 +220,9 @@ class UDP(Source):
             params['limit'] = 100
             while result_count > 0:
 
-                logger.debug("processing {0} lines starting at {1} for patient {2}"
-                             .format(params['limit'], params['start'], patient))
+                logger.debug(
+                    "processing {0} lines starting at {1} for patient {2}"
+                    .format(params['limit'], params['start'], patient))
 
                 req = requests.get(self.UDP_SERVER, params=params, auth=credentials)
                 results = req.json()
@@ -237,7 +241,8 @@ class UDP(Source):
         :return:
         """
         patient_var_map = self._convert_variant_file_to_dict(file)
-        gene_coordinate_map = self._parse_gene_coordinates(self.map_files['gene_coord_map'])
+        gene_coordinate_map = self._parse_gene_coordinates(
+            self.map_files['gene_coord_map'])
         rs_map = self._parse_rs_map_file(self.map_files['dbsnp_map'])
 
         genotype = Genotype(self.graph)
@@ -248,15 +253,15 @@ class UDP(Source):
         for patient in patient_var_map:
             patient_curie = ':{0}'.format(patient)
             # make intrinsic genotype for each patient
-            intrinsic_geno_bnode = self.make_id("{0}-intrinsic-genotype".format(patient), "_")
+            intrinsic_geno_bnode = self.make_id(
+                "{0}-intrinsic-genotype".format(patient), "_")
             genotype_label = "{0} genotype".format(patient)
-            genotype.addGenotype(intrinsic_geno_bnode,
-                                 genotype_label,
-                                 genotype.genoparts['intrinsic_genotype'])
+            genotype.addGenotype(
+                intrinsic_geno_bnode, genotype_label,
+                model.globaltt['intrinsic_genotype'])
 
-            self.graph.addTriple(patient_curie,
-                                 genotype.object_properties['has_genotype'],
-                                 intrinsic_geno_bnode)
+            self.graph.addTriple(
+                patient_curie, model.globaltt['has_genotype'], intrinsic_geno_bnode)
             for variant_id, variant in patient_var_map[patient].items():
                 build = variant['build']
                 chromosome = variant['chromosome']
@@ -267,34 +272,29 @@ class UDP(Source):
                 rs_id = variant['rs_id']
 
                 variant_label = ''
-                variant_bnode\
-                    = self.make_id("{0}".format(variant_id), "_")
+                variant_bnode = self.make_id("{0}".format(variant_id), "_")
 
                 # maybe should have these look like the elif statements below
                 if position and reference_allele and variant_allele:
-                    variant_label = \
-                        self._build_variant_label(build, chromosome,
-                                                  position, reference_allele,
-                                                  variant_allele, genes_of_interest)
+                    variant_label = self._build_variant_label(
+                        build, chromosome, position, reference_allele,
+                        variant_allele, genes_of_interest)
                 elif not position and reference_allele and variant_allele \
                         and len(genes_of_interest) == 1:
 
-                        variant_label = \
-                            self._build_variant_label(build, chromosome,
-                                                      position, reference_allele,
-                                                      variant_allele, genes_of_interest)
+                    variant_label = self._build_variant_label(
+                        build, chromosome, position, reference_allele, variant_allele,
+                        genes_of_interest)
                 elif position and (not reference_allele or not variant_allele) \
                         and len(genes_of_interest) == 1:
 
-                        variant_label = "{0}{1}({2}):g.{3}".format(
-                            build, chromosome, genes_of_interest[0], position)
+                    variant_label = "{0}{1}({2}):g.{3}".format(
+                        build, chromosome, genes_of_interest[0], position)
                 elif len(genes_of_interest) == 1:
-                    variant_label = 'variant of interest' \
-                                    ' in {0} gene of patient' \
-                                    ' {1}'.format(genes_of_interest[0], patient)
+                    variant_label = 'variant of interest in {0} gene of patient' \
+                        ' {1}'.format(genes_of_interest[0], patient)
                 else:
-                    variant_label = 'variant of interest' \
-                                    ' in patient {0}'.format(patient)
+                    variant_label = 'variant of interest in patient {0}'.format(patient)
 
                 genotype.addSequenceAlteration(variant_bnode, None)
                 # check if it we have built the label
@@ -308,10 +308,10 @@ class UDP(Source):
                     model.addLabel(variant_bnode, variant_label)
 
                 self.graph.addTriple(
-                    variant_bnode, model.object_properties['in_taxon'],
+                    variant_bnode, self.globaltt['in taxon'],
                     'NCBITaxon:9606')
                 self.graph.addTriple(
-                    intrinsic_geno_bnode, genotype.object_properties['has_alternate_part'],
+                    intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)
                 if rs_id:
                     dbsnp_curie = 'dbSNP:{0}'.format(rs_id)
@@ -340,7 +340,7 @@ class UDP(Source):
         see if we can disambiguate which genes are which
         :return: None
         """
-        genotype = Genotype(self.graph)
+        # genotype = Genotype(self.graph)
         dipper_util = DipperUtil()
         model = Model(self.graph)
         # Note this could be compressed in someway to remove one level of for looping
@@ -354,19 +354,15 @@ class UDP(Source):
                     gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
                     self._add_gene_to_graph(
                         gene, variant_bnode, gene_id,
-                        genotype.object_properties['has_affected_locus'])
+                        self.globaltt['has_affected_feature'])
 
-                elif re.search(r'upstream|downstream',
-                               variant['type'],
-                               flags=re.I):
+                elif re.search(r'upstream|downstream', variant['type'], flags=re.I):
                     # Attempt to disambiguate
                     ref_gene = []
                     up_down_gene = []
                     unmatched_genes = []
                     for gene in variant['genes_of_interest']:
-                        if gene_id \
-                                and gene_id != '' \
-                                and gene_id in gene_coordinate_map:
+                        if gene_id and gene_id != '' and gene_id in gene_coordinate_map:
                             if gene_coordinate_map[gene_id]['start'] \
                                     <= variant['position']\
                                     <= gene_coordinate_map[gene_id]['end']:
@@ -382,7 +378,7 @@ class UDP(Source):
                     if len(ref_gene) == 1:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype.object_properties['has_affected_locus'])
+                            self.globaltt['has_affected_feature'])
 
                         # update label with gene
                         gene_list = [ref_gene[0]['symbol']]  # build label expects list
@@ -398,7 +394,7 @@ class UDP(Source):
                     elif len(ref_gene) > 0 and ref_gene[1:] == ref_gene[:-1]:
                         self._add_gene_to_graph(
                             ref_gene[0]['symbol'], variant_bnode, gene_id,
-                            genotype.object_properties['has_affected_locus'])
+                            self.globaltt['has_affected_feature'])
 
                         # build label function expects list
                         gene_list = [ref_gene[0]['symbol']]
@@ -415,7 +411,7 @@ class UDP(Source):
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
-                                    genotype.object_properties['has_affected_locus'])
+                                    self.globaltt['has_affected_feature'])
                         else:
                             logger.warn("unable to map intron variant"
                                         " to gene coordinates: {0}"
@@ -423,7 +419,7 @@ class UDP(Source):
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
-                                    model.object_properties['causally_influences'])
+                                    self.globaltt['causally_influences'])
                     elif re.search(r'intron', variant['type'], flags=re.I):
                         logger.warn("unable to map intron variant"
                                     " to gene coordinates: {0}"
@@ -431,13 +427,13 @@ class UDP(Source):
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
                             neighbor, variant_bnode, gene_id,
-                            model.object_properties['causally_influences'])
+                            self.globaltt['causally_influences'])
                     # Unmatched genes are likely because we cannot map to an NCBIGene
                     # or we do not have coordinate information
                     for unmatched_gene in unmatched_genes:
                         self._add_gene_to_graph(
                             unmatched_gene, variant_bnode, gene_id,
-                            model.object_properties['causally_influences'])
+                            self.globaltt['causally_influences'])
 
         return
 
@@ -562,7 +558,8 @@ class UDP(Source):
                 if rs_id:
                     patient_variant_map[patient][variant_id]['rs_id'] = rs_id
 
-                patient_variant_map[patient][variant_id]['genes_of_interest'] = [gene_symbol]
+                patient_variant_map[patient][variant_id]['genes_of_interest']\
+                    = [gene_symbol]
 
             line_num += 1
 
@@ -586,13 +583,11 @@ class UDP(Source):
 
             model.addPerson(patient_curie, patient_id)
 
-            self.graph.addTriple(patient_curie,
-                                 model.object_properties['has_phenotype'],
-                                 "DOID:4")
+            self.graph.addTriple(
+                patient_curie, self.globaltt['has phenotype'], self.globaltt['disease'])
             if present == 'yes':
-                self.graph.addTriple(patient_curie,
-                                     model.object_properties['has_phenotype'],
-                                     hpo_curie)
+                self.graph.addTriple(
+                    patient_curie, self.globaltt['has phenotype'], hpo_curie)
 
             line_counter += 1
             if not self.testMode and limit is not None \
@@ -767,7 +762,9 @@ class UDP(Source):
         if variant_type == 'snp':
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
             if variant_key in rs_map:
-                snp_candidates = [rs_dict for rs_dict in rs_map[variant_key] if rs_dict['type'] == 'snp']
+                snp_candidates = [
+                    rs_dict for rs_dict in rs_map[variant_key]
+                    if rs_dict['type'] == 'snp']
                 if len(snp_candidates) == 1:
                     rs_id = snp_candidates[0]["rs_id"]
         elif variant_type == 'indel':
@@ -775,7 +772,9 @@ class UDP(Source):
             variant_key = "{0}-{1}".format(variant['chromosome'], variant['position'])
 
             if variant_key in rs_map:
-                snp_candidates = [rs_dict for rs_dict in rs_map[variant_key] if rs_dict['type'] == 'in-del']
+                snp_candidates = [
+                    rs_dict for rs_dict in rs_map[variant_key]
+                    if rs_dict['type'] == 'in-del']
                 for candidate in snp_candidates:
                     alleles = candidate['alleles'].split('/')
                     if variant['reference_allele'] in alleles \

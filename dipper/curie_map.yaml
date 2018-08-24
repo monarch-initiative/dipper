@@ -41,7 +41,7 @@
 'EFO': 'http://purl.obolibrary.org/obo/EFO_'                        # Experimental Factor Ontology (all kinds of stuff)
 'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'                      # Environment Ontology
 'EOM': 'http://purl.obolibrary.org/obo/EOM_'                        # Elements of Morphology phentoypes
-'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource ontology
+'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource Ontology
 'faldo': 'http://biohackathon.org/resource/faldo#'                  # Feature Annotation Location Description Ontology
 'FBcv': 'http://purl.obolibrary.org/obo/FBcv_'                      # FlyBase Controled Vocabulary (includes phenotypes)
 'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'                      # FlyBase anatomy
@@ -60,10 +60,10 @@
 'MPATH': 'http://purl.obolibrary.org/obo/MPATH_'                    # Mammalian Pathology Ontology
 'NBO': 'http://purl.obolibrary.org/obo/NBO_'                        # NeuroBehavior Ontology
 'OBA': 'http://purl.obolibrary.org/obo/OBA_'                        # Ontology of Biological Attributes (traits)
-'OBAN': 'http://purl.org/oban/'                                     # OBAN: Open Biomedical Annotation Model
-'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # OBI: Ontology of Biomedical Investigations
+'OBAN': 'http://purl.org/oban/'                                     # Open Biomedical Annotation Model
+'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # Ontology of Biomedical Investigations
 'OBO': 'http://purl.obolibrary.org/obo/'                            # Biological Ontology namespace (this is not itself an ontology)
-'OIO': 'http://www.geneontology.org/formats/oboInOwl#'              # obo-specific annotation properties, like synonym types
+'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
 'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'                      # Online Mendelian Inheritance in Man (human disease and variants)
 'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_'                   # Rare diseases and Orphan drugs
@@ -147,7 +147,7 @@
 'PANTHER': 'http://www.pantherdb.org/panther/family.do?clsAccession='   # Protein ANalysis THrough Evolutionary Relationships
 
 # variants / traits
-# 'AQTL': 'http://identifiers.org/animalqtl/'  # does not exist   		#
+
 # 'AQTL-BT': https://www.animalgenome.org/cgi-bin/QTLdb/BT/search       # maybe?
 'horseQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
 'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_D='
@@ -182,7 +182,7 @@
 'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
-'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
+'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
 'PomBase': 'https://www.pombase.org/spombe/result/'                             # Database for fission yeast Schizosaccharomyces pombe  ***
 'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='                           # NCBI Reference Sequence Database
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='                    # Rat Genome Database

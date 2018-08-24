@@ -5,7 +5,6 @@ from dipper.sources.Source import Source
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper.models.Family import Family
 
 
 logger = logging.getLogger(__name__)
@@ -129,20 +128,20 @@ class Monochrom(Source):
     }
 
     region_type_map = {
-        'acen': Feature.types['centromere'],
-        'gvar': Feature.types['chromosome_band'],
-        'stalk': Feature.types['chromosome_band'],
-        'gneg': Feature.types['chromosome_band'],
-        'gpos100': Feature.types['chromosome_band'],
-        'gpos25': Feature.types['chromosome_band'],
-        'gpos33': Feature.types['chromosome_band'],
-        'gpos50': Feature.types['chromosome_band'],
-        'gpos66': Feature.types['chromosome_band'],
-        'gpos75': Feature.types['chromosome_band'],
-        'chromosome': Feature.types['chromosome'],
-        'chromosome_arm': Feature.types['chromosome_arm'],
-        'chromosome_band': Feature.types['chromosome_band'],
-        'chromosome_part': Feature.types['chromosome_part']
+        'acen': self.globaltt['centromere'],
+        'gvar': self.globaltt['chromosome_band'],
+        'stalk': self.globaltt['chromosome_band'],
+        'gneg': self.globaltt['chromosome_band'],
+        'gpos100': self.globaltt['chromosome_band'],
+        'gpos25': self.globaltt['chromosome_band'],
+        'gpos33': self.globaltt['chromosome_band'],
+        'gpos50': self.globaltt['chromosome_band'],
+        'gpos66': self.globaltt['chromosome_band'],
+        'gpos75': self.globaltt['chromosome_band'],
+        'chromosome': self.globaltt['chromosome'],
+        'chromosome_arm': self.globaltt['chromosome_arm'],
+        'chromosome_band': self.globaltt['chromosome_band'],
+        'chromosome_part': self.globaltt['chromosome_part']
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
@@ -201,7 +200,6 @@ class Monochrom(Source):
 
         """
         model = Model(self.graph)
-        family = Family(self.graph)
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
         logger.info("Processing Chr bands from FILE: %s", myfile)
@@ -218,7 +216,7 @@ class Monochrom(Source):
         genome_id = geno.makeGenomeID(taxon_id)
         geno.addGenome(taxon_id, genome_label)
         model.addOWLPropertyClassRestriction(
-            genome_id, Genotype.object_properties['in_taxon'],
+            genome_id, self.globaltt['in taxon'],
             taxon_id)
 
         with gzip.open(myfile, 'rb') as f:
@@ -268,7 +266,7 @@ class Monochrom(Source):
                 # add the chromosome as a class
                 geno.addChromosomeClass(chrom, taxon_id, genome_label)
                 model.addOWLPropertyClassRestriction(
-                    cclassid, family.object_properties['member_of'], genome_id)
+                    cclassid, self.globaltt['member of'], genome_id)
 
                 # add the band(region) as a class
                 maplocclass_id = cclassid+band
@@ -279,17 +277,17 @@ class Monochrom(Source):
                         maplocclass_id, maplocclass_label,
                         region_type_id)
                 else:
-                    region_type_id = Feature.types['chromosome']
+                    region_type_id = self.globaltt['chromosome']
                 # add the staining intensity of the band
                 if re.match(r'g(neg|pos|var)', rtype):
                     if region_type_id in [
-                            Feature.types['chromosome_band'],
-                            Feature.types['chromosome_subband']]:
+                            self.globaltt['chromosome_band'],
+                            self.globaltt['chromosome_subband']]:
                         stain_type = Feature.types.get(rtype)
                         if stain_type is not None:
                             model.addOWLPropertyClassRestriction(
                                 maplocclass_id,
-                                Feature.properties['has_staining_intensity'],
+                                self.globaltt['has_sequence_attribute'],
                                 Feature.types.get(rtype))
                     else:
                         # usually happens if it's a chromosome because
@@ -312,8 +310,7 @@ class Monochrom(Source):
                 # instead of iterating with range and len
                 for i in range(len(parents)):
                     pclassid = cclassid+parents[i]  # class chr parts
-                    pclass_label = \
-                        makeChromLabel(chrom+parents[i], genome_label)
+                    pclass_label = makeChromLabel(chrom+parents[i], genome_label)
 
                     rti = getChrPartTypeByNotation(parents[i])
 
@@ -325,35 +322,25 @@ class Monochrom(Source):
                     if i < len(parents) - 1:
                         pid = cclassid+parents[i+1]   # the instance
                         model.addOWLPropertyClassRestriction(
-                            pclassid,
-                            Feature.object_properties['is_subsequence_of'],
-                            pid)
+                            pclassid, self.globaltt['is_subsequence_of'], pid)
                         model.addOWLPropertyClassRestriction(
-                            pid,
-                            Feature.object_properties['has_subsequence'],
-                            pclassid)
+                            pid, self.globaltt['has_subsequence'],  pclassid)
 
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
                         model.addOWLPropertyClassRestriction(
-                            pclassid,
-                            Feature.object_properties['is_subsequence_of'],
-                            cclassid)
+                            pclassid, self.globaltt['is_subsequence_of'], cclassid)
                         model.addOWLPropertyClassRestriction(
-                            cclassid,
-                            Feature.object_properties['has_subsequence'],
-                            pclassid)
+                            cclassid, self.globaltt['has_subsequence'],  pclassid)
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
                     model.addOWLPropertyClassRestriction(
-                        maplocclass_id,
-                        Feature.object_properties['is_subsequence_of'],
+                        maplocclass_id, self.globaltt['is_subsequence_of'],
                         cclassid+parents[0])
                     model.addOWLPropertyClassRestriction(
-                        cclassid+parents[0],
-                        Feature.object_properties['has_subsequence'],
+                        cclassid+parents[0],  self.globaltt['has_subsequence'],
                         maplocclass_id)
 
                 if limit is not None and line_counter > limit:
@@ -393,34 +380,33 @@ class Monochrom(Source):
         :return:
 
         """
-        so_id = Feature.types['chromosome_part']
 
         if regiontype in self.region_type_map.keys():
-            so_id = self.region_type_map.get(regiontype)
+            so_id = self.resolve(regiontype)
         else:
+            so_id = self.globaltt['chromosome_part']
             logger.warning(
-                "Unmapped code %s. Defaulting to chr_part 'SO:0000830'.",
-                regiontype)
+                "Unmapped code %s. Defaulting to chr_part '" +
+                self.globaltt['chromosome_part'] + "'.", regiontype)
 
         return so_id
 
     def _check_tax_ids(self):
         for taxon in self.tax_ids:
             if str(taxon) not in self.files:
-                raise Exception("Taxon " + str(taxon) +
-                                " not supported by source Monochrom")
+                raise Exception(
+                    "Taxon " + str(taxon) + " not supported by source Monochrom")
 
     def getTestSuite(self):
         # import unittest
         # from tests.test_ucscbands import UCSCBandsTestCase
         test_suite = None
-        # test_suite = \
-        #   unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
+        # test_suite = unittest.TestLoader().loadTestsFromTestCase(UCSCBandsTestCase)
 
         return test_suite
 
 
-def getChrPartTypeByNotation(notation):
+def getChrPartTypeByNotation(self, notation):
     """
     This method will figure out the kind of feature that a given band
     is based on pattern matching to standard karyotype notation.
@@ -437,16 +423,16 @@ def getChrPartTypeByNotation(notation):
     # though UCSC does. We may need to adjust for that here
 
     if re.match(r'p$', notation):
-        rti = Feature.types['short_chromosome_arm']
+        rti = self.globaltt['short_chromosome_arm']
     elif re.match(r'q$', notation):
-        rti = Feature.types['long_chromosome_arm']
+        rti = self.globaltt['long_chromosome_arm']
     elif re.match(r'[pq][A-H\d]$', notation):
-        rti = Feature.types['chromosome_region']
+        rti = self.globaltt['chromosome_region']
     elif re.match(r'[pq][A-H\d]\d', notation):
-        rti = Feature.types['chromosome_band']
+        rti = self.globaltt['chromosome_band']
     elif re.match(r'[pq][A-H\d]\d\.\d+', notation):
-        rti = Feature.types['chromosome_subband']
+        rti = self.globaltt['chromosome_subband']
     else:
-        rti = Feature.types['chromosome_part']
+        rti = self.globaltt['chromosome_part']
 
     return rti

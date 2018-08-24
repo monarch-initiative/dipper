@@ -44,9 +44,9 @@ class TestMyChemParser(unittest.TestCase):
         """
 
         # dbg
-        logger.debug("Reference graph: %s",
-                     self.source.graph.serialize(format="turtle")
-                                      .decode("utf-8")
+        logger.debug(
+            "Reference graph: %s", self.source.graph.serialize(format="turtle")
+            .decode("utf-8")
         )
         self.assertTrue(self.test_util.test_graph_equality(
             triples, self.source.graph))

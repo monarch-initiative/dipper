@@ -1,8 +1,8 @@
 import re
 import logging
-import hashlib
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
+from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
@@ -17,56 +17,15 @@ class Assoc:
 
     """
 
-    assoc_types = {
-        'association': 'OBAN:association'
-    }
-
-    annotation_properties = {
-        'replaced_by': 'IAO:0100001',
-        'consider': 'OIO:consider',
-        'hasExactSynonym': 'OIO:hasExactSynonym',
-        'hasRelatedSynonym': 'OIO:hasRelatedSynonym',
-        'definition': 'IAO:0000115',
-        'has_xref': 'OIO:hasDbXref',
-        'inchi_key': 'CHEBI:InChIKey',
-        'probabalistic_quantifier': 'GENO:0000867'
-    }
-
-    object_properties = {
-        'has disposition': 'RO:0000091',
-        'has_phenotype': 'RO:0002200',
-        'expressed_in': 'RO:0002206',
-        'in_taxon': 'RO:0002162',
-        'has_quality': 'RO:0000086',
-        'towards': 'RO:0002503',
-        'has_subject': 'OBAN:association_has_subject',
-        'has_object': 'OBAN:association_has_object',
-        'has_predicate': 'OBAN:association_has_predicate',
-        'is_about': 'IAO:0000136',
-        'has_evidence': 'RO:0002558',
-        'has_source': 'dc:source',
-        'has_provenance': 'OBAN:has_provenance',
-        'causes_or_contributes': 'RO:0003302'
-    }
-
-    datatype_properties = {
-        'position': 'faldo:position',
-        'has_measurement': 'IAO:0000004',
-        'has_quantifier': 'GENO:0000866',
-        'created_on': 'pav:createdOn'
-    }
-
-    properties = annotation_properties.copy()
-    properties.update(object_properties)
-    properties.update(datatype_properties)
-
     def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
-
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         # core parts of the association
         self.definedby = definedby
         self.sub = sub
@@ -87,12 +46,13 @@ class Assoc:
 
         return
 
-    def get_properties(self):
-        return self.properties
+    # use translation table instead
+    # def get_properties(self):
+    #    return self.properties
 
     def _is_valid(self):
-
         # check if sub/obj/rel are none...throw error
+        #
         if self.sub is None:
             raise ValueError('No subject set for this association')
         if self.obj is None:
@@ -112,14 +72,14 @@ class Assoc:
         if self.assoc_id is None:
             self.set_association_id()
 
-        self.model.addType(self.assoc_id, self.assoc_types['association'])
+        self.model.addType(self.assoc_id, self.model.globaltt['association'])
 
         self.graph.addTriple(
-            self.assoc_id, self.object_properties['has_subject'], self.sub)
+            self.assoc_id, self.globaltt['association has subject'], self.sub)
         self.graph.addTriple(
-            self.assoc_id, self.object_properties['has_object'], self.obj)
+            self.assoc_id, self.globaltt['association has object'], self.obj)
         self.graph.addTriple(
-            self.assoc_id, self.object_properties['has_predicate'], self.rel)
+            self.assoc_id, self.globaltt['association has predicate'], self.rel)
 
         if self.description is not None:
             self.model.addDescription(self.assoc_id, self.description)
@@ -127,37 +87,34 @@ class Assoc:
         if self.evidence is not None and len(self.evidence) > 0:
             for e in self.evidence:
                 self.graph.addTriple(
-                    self.assoc_id, self.object_properties['has_evidence'], e)
+                    self.assoc_id, self.globaltt['has evidence'], e)
 
         if self.source is not None and len(self.source) > 0:
-            for s in self.source:
-                if re.match('http', s):
+            for src in self.source:
+                if re.match(r'http', src):
                     # TODO assume that the source is a publication?
                     # use Reference class here
                     self.graph.addTriple(
-                        self.assoc_id, self.object_properties['has_source'],
-                        s, True)
+                        self.assoc_id, self.globaltt['source'], src, True)
                 else:
                     self.graph.addTriple(
-                        self.assoc_id, self.object_properties['has_source'], s)
+                        self.assoc_id, self.globaltt['source'], src)
 
         if self.provenance is not None and len(self.provenance) > 0:
-            for p in self.provenance:
+            for prov in self.provenance:
                 self.graph.addTriple(
-                    self.assoc_id, self.object_properties['has_provenance'], p)
+                    self.assoc_id, self.globaltt['has_provenance'], prov)
 
         if self.date is not None and len(self.date) > 0:
-            for d in self.date:
+            for dt in self.date:
                 self.graph.addTriple(
-                    object_is_literal=True,
-                    subject_id=self.assoc_id,
-                    predicate_id=self.datatype_properties['created_on'],
-                    obj=d)
+                    object_is_literal=True, subject_id=self.assoc_id,
+                    predicate_id=self.globaltt['created_on'], obj=dt)
 
         if self.score is not None:
             self.graph.addTriple(
-                self.assoc_id, self.properties['has_measurement'],
-                self.score, True, 'xsd:float')
+                self.assoc_id, self.globaltt['has measurement value'], self.score,
+                True, 'xsd:float')
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
@@ -170,19 +127,17 @@ class Assoc:
 
         return
 
-    def add_predicate_object(self, predicate, object_node,
-                             object_type=None, datatype=None):
+    def add_predicate_object(
+            self, predicate, object_node, object_type=None, datatype=None):
 
         if object_type == 'Literal':
             if datatype is not None:
-                self.graph.addTriple(self.assoc_id, predicate,
-                                     object_node, True, datatype)
+                self.graph.addTriple(
+                    self.assoc_id, predicate, object_node, True, datatype)
             else:
-                self.graph.addTriple(self.assoc_id, predicate,
-                                     object_node, True)
+                self.graph.addTriple(self.assoc_id, predicate, object_node, True)
         else:
-            self.graph.addTriple(self.assoc_id, predicate,
-                                 object_node, False)
+            self.graph.addTriple(self.assoc_id, predicate, object_node, False)
 
         return
 
@@ -213,8 +168,8 @@ class Assoc:
 
         """
         if assoc_id is None:
-            self.assoc_id = self.make_association_id(self.definedby, self.sub,
-                                                     self.rel, self.obj)
+            self.assoc_id = self.make_association_id(
+                self.definedby, self.sub, self.rel, self.obj)
         else:
             self.assoc_id = assoc_id
 
@@ -282,8 +237,7 @@ class Assoc:
         return
 
     @staticmethod
-    def make_association_id(definedby, subject, predicate, object,
-                            attributes=None):
+    def make_association_id(definedby, sub, pred, obj, attributes=None):
         """
         A method to create unique identifiers for OBAN-style associations,
         based on all the parts of the association
@@ -291,6 +245,8 @@ class Assoc:
         It effectively digests the  string of concatonated values.
         Subclasses of Assoc can submit an additional array of attributes
         that will be appeded to the ID.
+
+        Note this is equivalent to a RDF blank node
 
         :param definedby: The (data) resource that provided the annotation
         :param subject:
@@ -302,23 +258,14 @@ class Assoc:
 
         """
 
-        # note others available:
-        #   md5(), sha1(), sha224(), sha256(), sha384(), and sha512()
-        # putting definedby first,
-        # as this will usually be the datasource providing the annotation
-        # this will end up making the first few parts of the id
-        # be the same for all annotations in that resource
-        # (although the point of a digest is to render such details moot).
-
-        items_to_hash = [definedby, subject, predicate, object]
+        items_to_hash = [definedby, sub, pred, obj]
         if attributes is not None:
             items_to_hash += attributes
 
-        for i, val in enumerate(items_to_hash):
+        for key, val in enumerate(items_to_hash):
             if val is None:
-                items_to_hash[i] = ''
+                items_to_hash[key] = ''
 
-        byte_string = '+'.join(items_to_hash).encode("utf-8")
+        byte_string = '+'.join(items_to_hash)
 
-        # TODO put this in a util?
-        return ':'.join(('MONARCH', hashlib.sha1(byte_string).hexdigest()[0:16]))
+        return ':'.join(('MONARCH', GraphUtils.digest_id(byte_string)))

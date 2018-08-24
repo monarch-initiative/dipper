@@ -227,9 +227,6 @@ class MGI(PostgreSQLSource):
             data_rights=None,
             file_handle=None)
 
-        self.global_terms = self.open_and_parse_yaml(
-            '../../translationtable/global_terms.yaml')
-
         # so that we don't have to deal with BNodes,
         # we will create hash lookups
         # for the internal identifiers the hash will hold
@@ -253,8 +250,8 @@ class MGI(PostgreSQLSource):
 
         # also add the gene ids from the config
         # in order to capture transgenes of the test set
-        if 'test_ids' not in config.get_config() or\
-                'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() \
+                or 'gene' not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -269,8 +266,8 @@ class MGI(PostgreSQLSource):
         """
 
         # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() and \
-                'mgi' not in config.get_config()['dbauth']:
+        if 'dbauth' not in config.get_config() and 'mgi' \
+                not in config.get_config()['dbauth']:
             logger.error("not configured with PG user/password.")
 
         # create the connection details for MGI
@@ -315,9 +312,8 @@ class MGI(PostgreSQLSource):
                 # datestamp in the table: 2014-12-23 00:14:20[.12345]
                 # modification date without micro seconds
                 (d, ms) = cols[1].strip().split('.')
-                datestamp = \
-                    datetime.strptime(
-                        d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+                datestamp = datetime.strptime(
+                    d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
         self.dataset.setVersion(datestamp, ver)
 
@@ -382,33 +378,29 @@ class MGI(PostgreSQLSource):
         :return:
         """
 
-        query = "" + \
-                "SELECT r._relationship_key as rel_key, " + \
-                "r._object_key_1 as object_1, " + \
-                "a.accid as allele_id, " + \
-                "alabel.label as allele_label, " + \
-                "rc._category_key as category_key, " + \
-                "rc.name as category_name, " +\
-                "t._term_key as property_key, " +\
-                "t.term as property_name, " +\
-                "rp.value as property_value " +\
-                "FROM mgi_relationship r " +\
-                "JOIN mgi_relationship_category rc " +\
-                "ON r._category_key = rc._category_key " +\
-                "JOIN acc_accession a " +\
-                "ON r._object_key_1 = a._object_key " +\
-                "AND rc._mgitype_key_1 = a._mgitype_key " +\
-                "AND a._logicaldb_key = 1 " +\
-                "JOIN all_label alabel " +\
-                "ON a._object_key = alabel._allele_key " +\
-                "AND alabel._label_status_key = 1 " +\
-                "AND alabel.priority = 1 " +\
-                "JOIN mgi_relationship_property rp " +\
-                "ON r._relationship_key = rp._relationship_key " +\
-                "AND rp._propertyname_key = 12948292  " +\
-                "JOIN voc_term t " +\
-                "ON rp._propertyname_key = t._term_key " +\
-                "WHERE r._category_key = 1004  "
+        query = '''
+SELECT  r._relationship_key as rel_key,
+        r._object_key_1 as object_1,
+        a.accid as allele_id,
+        alabel.label as allele_label,
+        rc._category_key as category_key,
+        rc.name as category_name,
+        t._term_key as property_key,
+        t.term as property_name,
+        rp.value as property_value
+    FROM mgi_relationship r
+    JOIN mgi_relationship_category rc ON r._category_key = rc._category_key
+    JOIN acc_accession a  ON r._object_key_1 = a._object_key
+        AND rc._mgitype_key_1 = a._mgitype_key
+        AND a._logicaldb_key = 1
+    JOIN all_label alabel ON a._object_key = alabel._allele_key
+        AND alabel._label_status_key = 1
+        AND alabel.priority = 1
+    JOIN mgi_relationship_property rp ON r._relationship_key = rp._relationship_key
+        AND rp._propertyname_key = 12948292
+        JOIN voc_term t ON rp._propertyname_key = t._term_key
+    WHERE r._category_key = 1004
+        '''
 
         self.fetch_query_from_pgdb(
             'mgi_relationship_transgene_genes', query, None, cxn)
@@ -439,12 +431,12 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
 
         raw = '/'.join((self.rawdir, 'gxd_genotype_view'))
         logger.info("getting genotypes and their backgrounds")
@@ -470,21 +462,19 @@ class MGI(PostgreSQLSource):
                 # if it's in the hash,
                 # assume that the individual was created elsewhere
                 strain_id = self.idhash['strain'].get(strain_key)
-                background_type = geno.genoparts['genomic_background']
+                background_type = self.globaltt['genomic_background']
                 if strain_id is None or int(strain_key) < 0:
                     if strain_id is None:
                         # some of the strains don't have public identifiers!
                         # so we make one up, and add it to the hash
-                        strain_id = self._makeInternalIdentifier('strain',
-                                                                 strain_key)
+                        strain_id = self._makeInternalIdentifier('strain', strain_key)
                         self.idhash['strain'].update({strain_key: strain_id})
-                        model.addComment(strain_id, "strain_key:"+strain_key)
+                        model.addComment(strain_id, "strain_key:" + strain_key)
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.
                         # so add instances of each.
-                        strain_id = \
-                            self._makeInternalIdentifier(
-                                'strain', re.sub(r':', '', str(strain_id)))
+                        strain_id = self._makeInternalIdentifier(
+                            'strain', re.sub(r':', '', str(strain_id)))
                         strain_id += re.sub(r':', '', str(mgiid))
                         strain_id = re.sub(r'^_', '_:', strain_id)
                         strain_id = re.sub(r'::', ':', strain_id)
@@ -493,12 +483,13 @@ class MGI(PostgreSQLSource):
                             "This genomic background is unknown.  " +
                             "This is a placeholder background for " +
                             mgiid + ".")
-                        background_type = \
-                            geno.genoparts['unspecified_genomic_background']
+                        background_type = self.globaltt[
+                            'unspecified_genomic_background']
 
                     # add it back to the idhash
-                    logger.info("adding background as internal id: %s %s: %s",
-                                strain_key, strain, strain_id)
+                    logger.info(
+                        "adding background as internal id: %s %s: %s",
+                        strain_key, strain, strain_id)
 
                 geno.addGenomicBackgroundToGenotype(
                     strain_id, mgiid, background_type)
@@ -508,8 +499,7 @@ class MGI(PostgreSQLSource):
                 # add BG to a hash so we can build the genotype label later
                 self.geno_bkgd[mgiid] = strain_id
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -532,11 +522,11 @@ class MGI(PostgreSQLSource):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
         line_counter = 0
         geno_hash = {}
         raw = '/'.join((self.rawdir, 'gxd_genotype_summary_view'))
@@ -569,14 +559,13 @@ class MGI(PostgreSQLSource):
                     pass
                     # TODO what to do with != preferred
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # now, loop through the hash and add the genotypes as individuals
         # we add the mgi genotype as a synonym
         # (we generate our own label later)
-        geno = Genotype(g)
+        geno = Genotype(graph)
         for gt in geno_hash:
             genotype = geno_hash.get(gt)
             gvc = sorted(genotype.get('vslcs'))
@@ -602,10 +591,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
         logger.info(
@@ -687,11 +676,11 @@ class MGI(PostgreSQLSource):
         """
         # transmission_key -> inheritance? Need to locate related table.
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
-        geno = Genotype(g)
+            graph = self.graph
+        model = Model(graph)
+        geno = Genotype(graph)
         line_counter = 0
         logger.info(
             "adding alleles, mapping to markers, " +
@@ -744,13 +733,12 @@ class MGI(PostgreSQLSource):
 
                 # for non-wild type alleles:
                 if iswildtype == '0':
-                    locus_type = geno.genoparts['variant_locus']
-                    locus_rel = \
-                        geno.properties['is_sequence_variant_instance_of']
+                    locus_type = self.globaltt['variant_locus']
+                    locus_rel = self.globaltt['is_sequence_variant_instance_of']
                 # for wild type alleles:
                 elif iswildtype == '1':
-                    locus_type = geno.genoparts['reference_locus']
-                    locus_rel = geno.properties['is_reference_instance_of']
+                    locus_type = self.globaltt['reference_locus']
+                    locus_rel = self.globaltt['is_reference_instance_of']
                     # add the allele to the wildtype set for lookup later
                     self.wildtype_alleles.add(allele_id)
                 else:
@@ -784,8 +772,8 @@ class MGI(PostgreSQLSource):
                     sa_label = symbol
                     sa_id = iseqalt_id
 
-                    if marker_key is not None and \
-                            allele_label != marker_label and marker_key != '':
+                    if marker_key is not None \
+                            and allele_label != marker_label and marker_key != '':
                         # sequence alteration has label reformatted(symbol)
                         if re.match(r".*<.*>.*", symbol):
                             sa_label = re.sub(r".*<", "<", symbol)
@@ -804,7 +792,7 @@ class MGI(PostgreSQLSource):
                     # as sequence alterations also removing the < and > from sa
                     sa_label = re.sub(r'[\<\>]', '', sa_label)
 
-                    # gu.addIndividualToGraph(g,sa_id,sa_label,None,name)
+                    # gu.addIndividualToGraph(graph,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id, sa_label, None, name)
                     self.label_hash[sa_id] = sa_label
 
@@ -837,11 +825,11 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
-        geno = Genotype(g)
+            graph = self.graph
+        model = Model(graph)
+        geno = Genotype(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'gxd_allelepair_view'))
         logger.info("processing allele pairs (VSLCs) for genotypes")
@@ -877,7 +865,7 @@ class MGI(PostgreSQLSource):
                 allele2_id = self.idhash['allele'].get(allele_key_2)
 
                 # Need to map the allelestate to a zygosity term
-                zygosity_id = self._map_zygosity(allelestate)
+                zygosity_id = self.resolve(allelestate.strip())
                 ivslc_id = self._makeInternalIdentifier('vslc', allelepair_key)
 
                 geno_hash[genotype_id].add(ivslc_id)
@@ -908,13 +896,13 @@ class MGI(PostgreSQLSource):
 
                 model.addIndividualToGraph(
                     ivslc_id, vslc_label,
-                    geno.genoparts['variant_single_locus_complement'])
+                    self.globaltt['variant_single_locus_complement'])
                 self.label_hash[ivslc_id] = vslc_label
-                rel1 = rel2 = geno.object_properties['has_alternate_part']
+                rel1 = rel2 = self.globaltt['has_variant_part']
                 if allele1_id in self.wildtype_alleles:
-                    rel1 = geno.object_properties['has_reference_part']
+                    rel1 = self.globaltt['has_reference_part']
                 if allele2_id in self.wildtype_alleles:
-                    rel2 = geno.object_properties['has_reference_part']
+                    rel2 = self.globaltt['has_reference_part']
                 geno.addPartsToVSLC(
                     ivslc_id, allele1_id, allele2_id, zygosity_id, rel1, rel2)
 
@@ -943,24 +931,18 @@ class MGI(PostgreSQLSource):
                 gvc_label = '; '.join(vslc_labels)
 
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label,
-                    geno.genoparts['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
-                    geno.addParts(
-                        v, gvc_id,
-                        geno.object_properties['has_alternate_part'])
+                    geno.addParts(v, gvc_id, self.globaltt['has_variant_part'])
                     geno.addVSLCtoParent(v, gvc_id)
-                geno.addParts(
-                    gvc_id, gt,
-                    geno.object_properties['has_alternate_part'])
+                geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
             elif len(vslcs) == 1:
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label,
-                    geno.genoparts['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
                 logger.info("No VSLCs for %s", gt)
@@ -996,10 +978,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_allele_mutation_view'))
         logger.info("getting mutation types for sequence alterations")
@@ -1012,35 +994,36 @@ class MGI(PostgreSQLSource):
                 (allele_key, mutation) = line.split('\t')
                 iseqalt_id = self.idhash['seqalt'].get(allele_key)
                 if iseqalt_id is None:
-                    iseqalt_id = \
-                        self._makeInternalIdentifier(
-                            'seqalt', allele_key)
+                    iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
-                if self.testMode and \
-                        int(allele_key) not in \
-                        self.test_keys.get('allele'):
+                if self.testMode and int(allele_key) \
+                        not in self.test_keys.get('allele'):
                     continue
 
                 # TODO we might need to map the seq alteration to the MGI id
                 # for unlocated things; need to use hashmap
                 # map the sequence_alteration_type
-                seq_alt_type_id = self._map_seq_alt_type(mutation)
+
+                seq_alt_type_id = self.resolve(mutation, False)
+                if seq_alt_type_id == mutation:
+                    logger.error("No mappjng found for seq alt '%s'", mutation)
+                    logger.info("Defaulting to 'sequence_alteration'")
+                    seq_alt_type_id = self.globaltt['sequence_alteration']
+
                 # HACK - if the seq alteration is a transgene,
                 # then make sure it is a transgenic insertion
                 allele_id = self.idhash['allele'].get(allele_key)
                 if allele_id is not None:
                     allele_label = self.label_hash.get(allele_id)
-                    if allele_label is not None and re.search(r'Tg\(',
-                                                              allele_label):
-                        logger.info("Found a transgenic insertion for %s",
-                                    allele_label)
+                    if allele_label is not None and re.search(r'Tg\(', allele_label):
+                        logger.info(
+                            "Found a transgenic insertion for %s", allele_label)
                         # transgenic_insertion, instead of plain old insertion
-                        seq_alt_type_id = 'SO:0001218'
+                        seq_alt_type_id = self.globaltt["transgenic_insertion"]
 
                 model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1062,10 +1045,10 @@ class MGI(PostgreSQLSource):
         # non-derived?  (annottypekey = 1015)
         # TODO is evidence in this table?  what is the evidence vocab key?
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         logger.info("getting G2P associations")
         raw = '/'.join((self.rawdir, 'voc_annot_view'))
@@ -1095,11 +1078,11 @@ class MGI(PostgreSQLSource):
 
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error(
+                            "can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = G2PAssoc(g, self.name, genotype_id, accid)
+                        assoc = G2PAssoc(graph, self.name, genotype_id, accid)
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 # OMIM/Genotype are disease-models
@@ -1109,25 +1092,23 @@ class MGI(PostgreSQLSource):
                         continue
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = Assoc(g, self.name)
+                        assoc = Assoc(graph, self.name)
                         # TODO PYLINT
                         # Redefinition of assoc type from
                         # dipper.models.assoc.G2PAssoc.G2PAssoc to
                         # dipper.models.assoc.Association.Assoc
                         assoc.set_subject(genotype_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(
-                            model.object_properties['model_of'])
+                        assoc.set_relationship(self.globaltt['is model of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
                 elif annot_type == 'MCV/Marker':
                     # marker category == type
                     marker_id = self.idhash['marker'].get(object_key)
-                    term_id = self._map_marker_category(str(term_key))
+                    term_id = self.resolve(str(term_key).strip())
                     # note that the accid here is an internal mouse cv term,
                     # and we don't use it.
                     if term_id is not None and marker_id is not None:
@@ -1137,25 +1118,22 @@ class MGI(PostgreSQLSource):
                 elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
                     if allele_id is None:
-                        logger.error("can't find genotype id for %s",
-                                     object_key)
+                        logger.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
-                        assoc = Assoc(g, self.name)
+                        assoc = Assoc(graph, self.name)
                         assoc.set_subject(allele_id)
                         assoc.set_object(accid)
-                        assoc.set_relationship(
-                            model.object_properties['model_of'])
+                        assoc.set_relationship(self.globaltt['is model of'])
                         assoc.add_association_to_graph()
                         assoc_id = assoc.get_association_id()
 
                 if assoc_id is not None:
                     # add the assoc to the hashmap (using the monarch id)
                     self.idhash['annot'][annot_key] = assoc_id
-                    model.addComment(assoc_id, "annot_key:"+annot_key)
+                    model.addComment(assoc_id, "annot_key:" + annot_key)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1221,32 +1199,22 @@ class MGI(PostgreSQLSource):
                     # for annots that we have in our db
                     continue
 
-                evidence_id = self._map_evidence_id(evidence_code)
+                evidence_id = self.resolve(evidence_code)
 
                 reference = Reference(graph, jnumid)
                 reference.addRefToGraph()
 
                 # add the ECO and citation information to the annot
-                model.addTriple(assoc_id,
-                                Assoc.object_properties['has_evidence'],
-                                evidence_id)
-                model.addTriple(assoc_id,
-                                Assoc.object_properties['has_source'],
-                                jnumid)
+                model.addTriple(assoc_id, self.globaltt['has evidence'], evidence_id)
+                model.addTriple(assoc_id, self.globaltt['source'], jnumid)
 
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
                 if qualifier == 'MP-Sex-Specificity'\
                         and (qualifier_value == 'M' or qualifier_value == 'F'):
-                    sex = None
-                    if qualifier_value == 'M':
-                        sex = self.global_terms['male']
-                    elif qualifier_value == 'F':
-                        sex = self.global_terms['female']
-                    model._addSexSpecificity(assoc_id, sex)
+                    model._addSexSpecificity(assoc_id, self.resolve(qualifier_value))
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1267,10 +1235,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         # firstpass, get the J number mapping, and add to the global hash
         line_counter = 1
         logger.info('populating pub id hash')
@@ -1294,11 +1262,10 @@ class MGI(PostgreSQLSource):
                 if prefixpart != 'J:':
                     continue
                 self.idhash['publication'][object_key] = accid
-                reference = Reference(g, accid)
+                reference = Reference(graph, accid)
                 reference.addRefToGraph()
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
@@ -1323,7 +1290,7 @@ class MGI(PostgreSQLSource):
 
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
-                    pub_id = 'PMID:'+accid
+                    pub_id = 'PMID:' + accid
                 elif logicaldb_key == '1' and re.match(r'MGI:', prefixpart):
                     # don't get the J numbers,
                     # because we dont' need to make the equiv to itself.
@@ -1345,22 +1312,21 @@ class MGI(PostgreSQLSource):
                 if pub_id is not None:
                     # only add these to the graph if
                     # it's mapped to something we understand
-                    reference = Reference(g, pub_id)
+                    reference = Reference(graph, pub_id)
 
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
-                        reference.setType(
-                            Reference.ref_types['journal_article'])
+                        reference.setType(self.globaltt['journal article'])
                         model.makeLeader(pub_id)
                     reference.addRefToGraph()
 
                     model.addSameIndividual(jid, pub_id)
                 else:
-                    logger.warning("Publication from (%s) not mapped for %s",
-                                   logical_db, object_key)
+                    logger.warning(
+                        "Publication from (%s) not mapped for %s",
+                        logical_db, object_key)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1384,12 +1350,12 @@ class MGI(PostgreSQLSource):
         #   recombinant inbred,     NS,             conplastic
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
         logger.info("getting strains and adding their taxa")
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1410,14 +1376,18 @@ class MGI(PostgreSQLSource):
                     self.label_hash[strain_id] = strain
 
                     # add the species to the graph as a class
-                    sp = self._map_strain_species(species)
-                    if sp is not None:
-                        model.addClassToGraph(sp, None)
-                        geno.addTaxon(sp, strain_id)
+                    species = species.strip()
+                    sp = self.resolve(species, False)
+                    if sp == species:
+                        logger.error("No taxon mapping for " + species)
+                        logger.warning("defaulting to Mus Genus")
+                        sp = self.globaltt['Mus']
+
+                    model.addClassToGraph(sp, None)
+                    geno.addTaxon(sp, strain_id)
                     model.addIndividualToGraph(strain_id, strain, sp)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1440,11 +1410,11 @@ class MGI(PostgreSQLSource):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
-        geno = Genotype(g)
+            graph = self.graph
+        model = Model(graph)
+        geno = Genotype(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_marker_view'))
         logger.info("getting markers and assigning types")
@@ -1471,43 +1441,41 @@ class MGI(PostgreSQLSource):
                         continue
 
                     if marker_id is None:
-                        logger.error("can't find %s %s in the id hash",
-                                     marker_key, symbol)
+                        logger.error(
+                            "can't find %s %s in the id hash", marker_key, symbol)
 
-                    mapped_marker_type = self._map_marker_type(marker_type)
+                    mapped_marker_type = self.resolve(marker_type.strip())
 
                     # if it's unlocated, or is not a gene,
                     # then don't add it as a class because
                     # it's not added as a gene.
                     # everything except for genes are modeled as individuals
 
-                    # it's a gene or pseudogene
-                    if mapped_marker_type in ['SO:0000704', 'SO:0000336']:
+                    if mapped_marker_type in [
+                            self.globaltt['gene'],
+                            self.globaltt['pseudogene']]:
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id,
-                            name, Assoc.properties['hasExactSynonym'])
+                            marker_id, name, self.globaltt['hasExactSynonym'])
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name,
-                            Assoc.properties['hasExactSynonym'])
+                            marker_id, name, self.globaltt['hasExactSynonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
                     # add the taxon
-                    taxon_id = self._map_taxon(latin_name)
+                    taxon_id = self.globaltt[latin_name]
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
-                    if taxon_id == 'NCBITaxon:10090':
+                    if taxon_id == self.globaltt['Mus musculus']:
                         model.makeLeader(marker_id)
 
-                    if not self.testMode and \
-                            limit is not None and line_counter > limit:
+                    if not self.testMode and limit is not None and line_counter > limit:
                         break
 
         return
@@ -1524,16 +1492,16 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("getting markers and equivalent ids from mrk_summary_view")
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_summary_view'))
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
 
@@ -1559,16 +1527,16 @@ class MGI(PostgreSQLSource):
 
                     mapped_id = None
                     if logicaldb_key == '60':
-                        mapped_id = 'ENSEMBL:'+accid
+                        mapped_id = 'ENSEMBL:' + accid
                     elif logicaldb_key == '1':
                         # don't need to add the equivalence to itself.
                         continue
                     elif logicaldb_key == '55':
-                        mapped_id = 'NCBIGene:'+accid
+                        mapped_id = 'NCBIGene:' + accid
 
                     if mapped_id is not None:
-                        if mgiid in self.markers['classes'] or \
-                                subtype in ['Gene', 'Pseudogene']:
+                        if mgiid in self.markers['classes'] \
+                                or subtype in ['Gene', 'Pseudogene']:
                             model.addClassToGraph(mapped_id, None)
                             model.addEquivalentClass(mgiid, mapped_id)
                         elif mgiid in self.markers['indiv']:
@@ -1578,8 +1546,7 @@ class MGI(PostgreSQLSource):
                     # could parse the "subtype" string
                     # to get the kind of thing the marker is
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1598,9 +1565,9 @@ class MGI(PostgreSQLSource):
         line_counter = 0
         logger.info("mapping markers to internal identifiers")
         raw = '/'.join((self.rawdir, 'mrk_acc_view'))
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip('\n')
                 line_counter += 1
                 (accid, prefix_part, logicaldb_key, object_key,
@@ -1611,8 +1578,7 @@ class MGI(PostgreSQLSource):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and \
-                        prefix_part == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and prefix_part == 'MGI:' and preferred == '1':
                     self.idhash['marker'][object_key] = accid
 
         return
@@ -1627,10 +1593,10 @@ class MGI(PostgreSQLSource):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         # pass through the file again,
         # and make the equivalence statements to a subset of the idspaces.
         # TODO verify the difference between what the
@@ -1663,8 +1629,8 @@ class MGI(PostgreSQLSource):
                 marker_id = None
                 if preferred == '1':  # TODO what does it mean if it's 0?
                     if logicaldb_key == '55':  # entrez/ncbi
-                        marker_id = 'NCBIGene:'+accid
-                    elif logicaldb_key == '1' and prefix_part != 'MGI:':  # mgi
+                        marker_id = 'NCBIGene:' + accid
+                    elif logicaldb_key == '1' and prefix_part != 'MGI:':
                         marker_id = accid
                     elif logicaldb_key == '60':
                         marker_id = 'ENSEMBL:'+accid
@@ -1678,11 +1644,9 @@ class MGI(PostgreSQLSource):
                         model.addIndividualToGraph(marker_id, None)
                         model.addSameIndividual(mgiid, marker_id)
                     else:
-                        logger.error("mgiid not in class or indiv hash %s",
-                                     mgiid)
+                        logger.error("mgiid not in class or indiv hash %s", mgiid)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1706,22 +1670,22 @@ class MGI(PostgreSQLSource):
         # to create the mapping between the external and internal identifiers
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("mapping strains to internal identifiers")
         raw = '/'.join((self.rawdir, 'prb_strain_acc_view'))
 
-        tax_id = 'NCBITaxon:10090'  # hardcode mouse
+        tax_id = self.globaltt["Mus musculus"]
 
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
-                (accid, prefixpart, logicaldb_key,
-                 object_key, preferred) = line.split('\t')
+                (accid, prefixpart, logicaldb_key, object_key, preferred) \
+                    = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1730,8 +1694,7 @@ class MGI(PostgreSQLSource):
                         continue
 
                 # get the hashmap of the identifiers
-                if logicaldb_key == '1' and \
-                        prefixpart == 'MGI:' and preferred == '1':
+                if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
                     model.addIndividualToGraph(accid, None, tax_id)
 
@@ -1768,13 +1731,13 @@ class MGI(PostgreSQLSource):
         # and make the equivalence statements to a subset of the idspaces
         logger.info("mapping strain equivalent identifiers")
         line_counter = 0
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as fh:
+            fh.readline()  # read the header row; skip
+            for line in fh:
                 line = line.rstrip("\n")
                 line_counter += 1
-                (accid, prefixpart, logicaldb_key,
-                 object_key, preferred) = line.split('\t')
+                (accid, prefixpart, logicaldb_key, object_key, preferred) \
+                    = line.split('\t')
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
@@ -1845,8 +1808,7 @@ class MGI(PostgreSQLSource):
                     if comment is not None:
                         model.addComment(strain_id, comment)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1863,10 +1825,10 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("getting free text descriptions for annotations")
         raw = '/'.join((self.rawdir, 'mgi_note_vocevidence_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -1899,13 +1861,12 @@ class MGI(PostgreSQLSource):
     def _process_mrk_location_cache(self, limit):
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        # model = Model(g)  # unused
+            graph = self.graph
         logger.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
-        geno = Genotype(g)
+        geno = Genotype(graph)
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1927,19 +1888,18 @@ class MGI(PostgreSQLSource):
 
                 # make the chromsomome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
-                if version is not None and \
-                        version != '' and version != '(null)':
+                if version is not None and version != '' and version != '(null)':
 
                     # switch on maptype or mapkey
                     assembly = version
-                    build_id = 'NCBIGenome:'+assembly
-                    geno.addChromosomeInstance(chromosome, build_id, assembly,
-                                               chrom_id)
+                    build_id = 'NCBIGenome:' + assembly
+                    geno.addChromosomeInstance(
+                        chromosome, build_id, assembly, chrom_id)
                     chrom_id = makeChromID(chromosome, build_id, 'MONARCH')
 
                 if marker_key in self.idhash['marker']:
                     gene_id = self.idhash['marker'][marker_key]
-                    feature = Feature(g, gene_id, None, None)
+                    feature = Feature(graph, gene_id, None, None)
                     if strand == '(null)' or strand == '':
                         strand = None
                     if startcoordinate == '(null)' or startcoordinate == '':
@@ -1953,7 +1913,7 @@ class MGI(PostgreSQLSource):
                     else:
                         feature.addFeatureStartLocation(
                             startcoordinate, chrom_id, strand,
-                            [Feature.types['FuzzyPosition']])
+                            [self.globaltt['FuzzyPosition']])
                     if endcoordinate is not None:
                         feature.addFeatureEndLocation(
                             int(float(endcoordinate)), chrom_id, strand)
@@ -1965,11 +1925,9 @@ class MGI(PostgreSQLSource):
                     feature.addFeatureToGraph(True, None, add_as_class)
 
                 else:
-                    logger.warning('marker key %s not in idhash',
-                                   str(marker_key))
+                    logger.warning('marker key %s not in idhash', str(marker_key))
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1986,14 +1944,13 @@ class MGI(PostgreSQLSource):
         """
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         logger.info("getting transgene genes")
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
-        geno = Genotype(g)
+        geno = Genotype(graph)
 
-        # gu = GraphUtils(curie_map.get())  # TODO unused
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -2011,15 +1968,13 @@ class MGI(PostgreSQLSource):
 
                 gene_id = 'NCBIGene:'+gene_num
 
-                # geno.addParts(gene_id, allele_id,
-                #               geno.object_properties['has_alternate_part'])
+                # geno.addParts(gene_id, allele_id, self.globaltt['has_variant_part'])
                 seqalt_id = self.idhash['seqalt'].get(allele_key)
                 if seqalt_id is None:
                     seqalt_id = allele_id
                 geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2036,13 +1991,12 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Assembling notes on alleles")
         raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
-        # geno = Genotype(g)  # TODO unused
 
         notehash = {}
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -2064,8 +2018,7 @@ class MGI(PostgreSQLSource):
                             len(notehash[object_key][notetype]),
                             int(sequencenum)):
                         notehash[object_key][notetype].append('')
-                notehash[object_key][notetype][int(sequencenum)-1] = \
-                    note.strip()
+                notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
 
             # finish iteration over notes
 
@@ -2104,10 +2057,9 @@ class MGI(PostgreSQLSource):
 
         line_counter = 0
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        # model = Model(g)  # unused
+            graph = self.graph
         logger.info("Getting genotypes for strains")
         raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -2120,10 +2072,8 @@ class MGI(PostgreSQLSource):
                 (strain_key, genotype_key) = line
 
                 if self.testMode is True:
-                    if int(genotype_key) not in \
-                            self.test_keys.get('genotype') and \
-                            int(strain_key) not in \
-                            self.test_keys.get('strain'):
+                    if int(genotype_key) not in self.test_keys.get('genotype') \
+                            and int(strain_key) not in self.test_keys.get('strain'):
                         continue
 
                 strain_id = self.idhash['strain'].get(strain_key)
@@ -2138,458 +2088,21 @@ class MGI(PostgreSQLSource):
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                g.addTriple(
-                    strain_id,
-                    Genotype.object_properties['has_genotype'],
-                    genotype_id)
+                graph.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id)
                 # TODO
                 # verify if this should be contingent on the exactness or not
                 # if qualifier == 'Exact':
                 #     gu.addTriple(
-                #       g, strain_id,
-                #       Genotype.object_properties['has_genotype'],
+                #       graph, strain_id,
+                #       self.globaltt['has_genotype'],
                 #       genotype_id)
                 # else:
-                #     gu.addXref(g, strain_id, genotype_id)
+                #     gu.addXref(graph, strain_id, genotype_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
-
-    # TODO: Finish identifying SO/GENO terms
-    # for mappings for those found in MGI
-    @staticmethod
-    def _map_seq_alt_type(sequence_alteration_type):
-        seqalttype = 'SO:0001059'  # default to sequence_alteration
-        type_map = {
-            'Deletion': 'SO:0000159',  # deletion
-            # insertion - correct?
-            'Disruption caused by insertion of vector': 'SO:0000667',
-            'Duplication': 'SO:1000035',  # duplication
-            'Insertion': 'SO:0000667',  # insertion
-            # transgenic insertion - correct?
-            # TODO gene_trap_construct: SO:0001477
-            'Insertion of gene trap vector': 'SO:0001218',
-            # deletion  # TODO return a list? SO:0001628 intergenic_variant
-            'Intergenic deletion': 'SO:0000159',
-            # deletion  # TODO return a list?  SO:0001564 gene_variant
-            'Intragenic deletion': 'SO:0000159',
-            'Inversion': 'SO:1000036',  # inversion
-            'Not Applicable': 'SO:0001059',
-            'Not Specified': 'SO:0001059',
-            # tandem duplication  # TODO ask for another term
-            'Nucleotide repeat expansion': 'SO:1000039',
-            # multiple nucleotide variant
-            'Nucleotide substitutions': 'SO:0002007',
-            'Other': 'SO:0001059',
-            'Single point mutation': 'SO:1000008',  # point_mutation
-            'Translocation': 'SO:0000199',  # translocation
-            'Transposon insertion': 'SO:0001837',  # mobile element insertion
-            'Undefined': 'SO:0001059',
-            # novel sequence insertion (no viral version)
-            'Viral insertion': 'SO:0001838',
-            'wild type': 'SO:0000817'  # wild type
-        }
-        if sequence_alteration_type.strip() in type_map:
-            seqalttype = type_map.get(sequence_alteration_type.strip())
-        else:
-            logger.error(
-                "Sequence Alteration Type (%s) not mapped; " +
-                "defaulting to sequence_alteration",
-                sequence_alteration_type)
-
-        return seqalttype
-
-    @staticmethod
-    def _map_marker_category(marker_type_key):
-        """
-        These map the internal "mouse CV" terms for marker categories
-        to SO classes.
-        There remains one open ticket to satisfy the lncRNA terms
-            that don't have a specific type:
-        https://sourceforge.net/p/song/term-tracker/436/
-        :param marker_type_key:
-        :return:
-
-        """
-
-        so_id = None
-        marker_category_to_so_map = {
-            '6238160': 'SO:0000704',  # gene
-
-            '15406202': 'SO:0001263',  # lncRNA gene --> ncRNA gene FIXME
-            '6238161': 'SO:0001217',  # protein coding gene
-            '6238162': 'SO:0001263',  # non-coding RNA gene
-            # antisense lncRNA gene --> ncRNA gene FIXME
-            '15406203': 'SO:0001263',
-            '6238163': 'SO:0001637',  # rRNA gene
-            '6238164': 'SO:0001272',  # tRNA gene
-            '6238165': 'SO:0001268',  # snRNA gene
-            '6238166': 'SO:0001267',  # snoRNA gene
-            '6238167': 'SO:0001265',  # miRNA gene
-            '6238168': 'SO:0001266',  # scRNA gene
-            '6238169': 'SO:0001641',  # lincRNA gene
-            '6238170': 'SO:0001500',  # heritable phenotypic marker
-            '6238171': 'SO:3000000',  # gene segment
-            '7313348': 'SO:0000336',  # pseudogene
-            '6238180': 'SO:0001269',  # SRP RNA gene
-            '6238181': 'SO:0001639',  # RNase P RNA gene
-            '6238182': 'SO:0001640',  # RNase MRP RNA gene
-            '6238183': 'SO:0001643',  # telomerase RNA gene
-            '6238184': 'SO:0000704',  # unclassified gene  --> gene
-            '6238186': 'SO:0001263',  # unclassified non-coding RNA gene
-            '6967235': 'SO:0001741',  # pseudogenic gene segment
-            '7196768': 'SO:1000029',  # chromosomal deletion
-            '7196769': 'SO:0000667',  # insertion
-            '7196770': 'SO:1000030',  # chromosomal inversion
-            '7196771': 'SO:1000043',  # Robertsonian fusion
-            '7196772': 'SO:1000048',  # reciprocal chromosomal translocation
-            '7196773': 'SO:1000044',  # chromosomal translocation
-            '7196774': 'SO:1000037',  # chromosomal duplication
-            '7196775': 'SO:0000453',  # chromosomal transposition
-            # unclassified cytogenetic marker --> chromosome_part
-            '7222413': 'SO:0000830',
-            '7288448': 'SO:0000341',  # pseudogenic region
-            '7288449': 'SO:0001841',  # polymorphic pseudogene
-            '7648966': 'SO:0000180',  # retrotransposon
-            '7648967': 'SO:0000624',  # telomere
-            '7648968': 'SO:0000643',  # minisatellite
-            # unclassified other genome feature --> sequence feature
-            '7648969': 'SO:0000110',
-            # endogenous retroviral region --> endogenous retroviral sequence
-            '9272146': 'SO:0000903',
-            # mutation defined region --> sequence variant
-            '11928467': 'SO:0001060',
-            # intronic lncRNA gene  --> ncRNA gene   #FIXME
-            '15406204': 'SO:0001263',
-            '15406205': 'SO:0000307',  # CpG island
-            '15406206': 'SO:0000374',  # ribozyme gene  --> ribozyme
-            '15406207': 'SO:0000167',  # promoter
-        }
-        if marker_type_key.strip() in marker_category_to_so_map:
-            so_id = marker_category_to_so_map.get(marker_type_key)
-        else:
-            logger.error("Marker Category (%s) not mapped", marker_type_key)
-
-        return so_id
-
-    @staticmethod
-    def _map_zygosity(zygosity):
-        zygtype = None
-        type_map = {
-            'Heterozygous': 'GENO:0000135',
-            'Heteroplasmic': 'GENO:0000603',
-            'Homozygous': 'GENO:0000136',
-            'Homoplasmic': 'GENO:0000602',
-            'Hemizygous Insertion': 'GENO:0000606',
-            'Hemizygous Deletion': 'GENO:0000134',  # hemizygous
-            'Hemizygous X-linked': 'GENO:0000605',
-            'Hemizygous Y-linked': 'GENO:0000604',
-            'Indeterminate': 'GENO:0000137'
-        }
-        if zygosity.strip() in type_map:
-            zygtype = type_map.get(zygosity)
-        else:
-            logger.error("Zygosity (%s) not mapped", zygosity)
-
-        return zygtype
-
-    @staticmethod
-    def _map_marker_type(marker_type):
-        marktype = None
-        type_map = {
-            'Complex/Cluster/Region': 'SO:0000110',  # sequence feature
-            # transgene
-            # WE redefine these as transgenic insertion features instead
-            'Transgene': 'SO:0001218',
-            'Gene': 'SO:0000704',  # gene
-            'QTL': 'SO:0000771',  # QTL
-            # sequence_feature. sequence_motif=SO:0001683? region=SO:0000001
-            'DNA Segment': 'SO:0000110',
-            'Pseudogene': 'SO:0000336',  # pseudogene
-            'Cytogenetic Marker': 'SO:0001645',  # genetic_marker?   # fixme
-            # sequence_feature. Or sequence_motif=SO:0001683?
-            'Other Genome Feature': 'SO:0000110',
-            # BAC_end: SO:0000999, YAC_end: SO:00011498; using parent term
-            'BAC/YAC end': 'SO:0000150'
-        }
-        if marker_type.strip() in type_map:
-            marktype = type_map.get(marker_type)
-        else:
-            logger.error("Marker Type (%s) not mapped", marker_type)
-
-        return marktype
-
-    @staticmethod
-    def _map_allele_type(allele_type):
-        """
-        This makes the assumption that all things are variant_loci
-        (including Not Specified)
-        :param allele_type:
-        :return:
-
-        """
-        # assume it's a variant locus
-        altype = Genotype.genoparts['variant_locus']
-        type_map = {
-            'Not Applicable': Genotype.genoparts['reference_locus'],
-            # should QTLs be something else?  or SO:QTL?
-            'QTL': Genotype.genoparts['reference_locus'],
-        }
-        if allele_type.strip() in type_map:
-            altype = type_map.get(allele_type)
-
-        return altype
-
-    @staticmethod
-    def _map_taxon(taxon_name):
-        taxtype = None
-        type_map = {
-            'Bos taurus': 'NCBITaxon:9913',
-            'Canis familiaris': 'NCBITaxon:9615',
-            'Capra hircus': 'NCBITaxon:9925',
-            'Cavia porcellus': 'NCBITaxon:10141',
-            'Cricetulus griseus': 'NCBITaxon:10029',
-            'Danio rerio': 'NCBITaxon:7955',
-            'Equus caballus': 'NCBITaxon:9796',
-            'Felis catus': 'NCBITaxon:9685',
-            'Gallus gallus': 'NCBITaxon:9031',
-            'Gorilla gorilla': 'NCBITaxon:9593',
-            'Homo sapiens': 'NCBITaxon:9606',
-            'Macaca mulatta': 'NCBITaxon:9544',
-            'Macropus eugenii': 'NCBITaxon:9315',
-            'Mesocricetus auratus': 'NCBITaxon:10036',
-            'Microcebus murinus': 'NCBITaxon:30608',
-            #  10090=Mus musculus, 10092=Mus musculus domesticus
-            'Mus musculus/domesticus': 'NCBITaxon:10090',
-            'Ornithorhynchus anatinus': 'NCBITaxon:9258',
-            'Oryctolagus cuniculus': 'NCBITaxon:9986',
-            'Ovis aries': 'NCBITaxon:9940',
-            'Pan troglodytes': 'NCBITaxon:9598',
-            'Pongo pygmaeus': 'NCBITaxon:9600',
-            'Rattus norvegicus': 'NCBITaxon:10116',
-            # 9823=Sus scrofa, 9825=Sus scrofa domestica
-            'Sus scrofa domestica L.': 'NCBITaxon:9823',
-            'Xenopus (Silurana) tropicalis': 'NCBITaxon:8364',
-        }
-        if taxon_name.strip() in type_map:
-            taxtype = type_map.get(taxon_name)
-        else:
-            logger.error("Taxon Name (%s) not mapped", taxon_name)
-
-        return taxtype
-
-    @staticmethod
-    def _map_strain_species(species):
-        # make the assumption that it is a Mus genus, unless if specified
-        tax = '10088'
-        id_map = {
-            'laboratory mouse and M. m. domesticus (brevirostris)': '116058',
-            'laboratory mouse and M. m. bactrianus': '35531',
-            # does not include lab mouse
-            'laboratory mouse and M. m. castaneus and M. m. musculus': '477816',
-            'M. m. domesticus and M. m. molossinus and M. m. castaneus': '1266728',
-            'M. setulosus': '10102',
-            'laboratory mouse and wild-derived': '10088',  # Mus genus
-            'laboratory mouse and M. m. musculus (Prague)': '39442',
-            'M. m. castaneus and M. m. musculus': '477816',
-            'M. m. domesticus (Canada)': '10092',
-            # FIXME
-            'M. m. domesticus and M. m. domesticus poschiavinus': '10092',
-            'M. m. musculus and M. spretus or M. m. domesticus': '186842',
-            'M. chypre': '862507',  # unclassified mus
-            'M. cookii (Southeast Asia)': '10098',
-            'M. cervicolor': '10097',
-            'M. m. gentilulus': '80274',
-            'M. m. domesticus poschiavinus (Tirano, Italy)': '10092',  # FIXME
-            'M. m. castaneus (Phillipines)': '10091',
-            'M. m. domesticus (brevirostris) (France)': '116058',
-            'M. m. domesticus (Lake Casitas, CA)': '10092',
-            'laboratory mouse or wild': '862507',
-            'M. spretus (Morocco)': '10096',
-            'M. m. bactrianus (Russia)': '35531',
-            'M. m. musculus (Pakistan)': '39442',
-            'M. tenellus': '397330',
-            'M. baoulei': '544437',
-            'laboratory mouse and M. spretus or M. m. castaneus': '862507',
-            'M. haussa': '273922',
-            'M. m. domesticus (Montpellier, France)': '10092',
-            'M. m. musculus': '39442',
-            'M. m. domesticus and Not specified': '10090',
-            'laboratory mouse and M. spretus or M. m. musculus': '862507',
-            'Rat': '10114',
-            'M. m. musculus (Czech)': '39442',
-            'M. spretus or laboratory mouse and M. m. musculus': '862507',
-            'M. m. domesticus (Skokholm, UK)': '10092',
-            'M. shanghai': '862507',
-            'M. m. musculus (Korea)': '39442',
-            'laboratory mouse and M. m. domesticus (Peru)': '39442',
-            'M. m. molossinus and laboratory mouse': '57486',
-            'laboratory mouse and M. m. praetextus x M. m. domesticus': '10088',
-            'M. cervicolor popaeus': '135828',
-            'M. m. domesticus or M. m. musculus': '10090',
-            'M. abbotti': '10108',
-            'M. nitidulus': '390848',
-            'M. gradsko': '10088',
-            'M. m. domesticus poschiavinus (Zalende)': '10092',
-            'M. m. domesticus (MD)': '10092',
-            'M. triton': '473865',
-            'M. m. domesticus (Tunisia)': '10092',
-            'Wild and outbred Swiss and M. m. domesticus and M. m. molossinus': '862507',
-            'M. m. molossinus and M. spretus': '186842',
-            'M. spretus (France)': '10096',
-            'M. m. praetextus x M. m. domesticus and M. m. domesticus': '10090',
-            'M. m. bactrianus': '35531',
-            'M. m. domesticus (Bulgaria)': '10092',
-            'Not Specified and M. m. domesticus': '10090',
-            'laboratory mouse and M. m. molossinus': '10090',
-            'M. spretus or M. m. domesticus': '862507',
-            'M. m. molossinus (Anjo, Japan)': '57486',
-            'M. m. castaneus or M. m. musculus': '10090',
-            'laboratory mouse and M. m. castaneus and M. m. domesticus poschiavinus': '10090',
-            'M. spretus (Spain)': '10096',
-            'M. m. molossinus (Japan)': '57486',
-            'M. lepidoides': '390847',
-            'M. m. macedonicus': '10090',
-            'M. m. musculus (Pohnpei-Micronesia)': '39442',
-            'M. m. domesticus (Morocco)': '10092',
-            'laboratory mouse and M. m. domesticus poschiavinus': '10090',
-            'M. (Nannomys) (Zakouma NP, Chad)': '862510',
-            'laboratory mouse and M. m. musculus (Tubingen, S Germany)': '10090',
-            'M. cypriacus': '468371',
-            'laboratory mouse and M. m. domesticus': '10090',
-            'M. m. musculus and M. m. domesticus': '477815',
-            'M. crociduroides': '41269',
-            'laboratory mouse and M. m. domesticus (Israel)': '10090',
-            'M. m. domesticus (Ann Arbor, MI)': '10092',
-            'M. caroli': '10089',
-            'M. emesi': '887131',
-            'M. gratus': '229288',
-            'laboratory mouse or M. spretus': '10090',
-            'M. m. domesticus (PA)': '10092',
-            'M. m. domesticus (DE)': '10092',
-            'laboratory mouse and M. m. castaneus': '10090',
-            'M. hortulanus (Austria)': '10103',  # synonymous with Mus spicilegus
-            'M. m. musculus and M. hortulanus': '862507',
-            'Not Applicable': None,
-            'M. mattheyi': '41270',
-            'M. m. macedonicus or M. m. musculus': '10090',
-            'M. m. musculus (Georgia)': '39442',
-            'M. famulus': '83773',
-            'M. m. bactrianus (Iran)': '35531',
-            'M. m. musculus (Toshevo, Bulgaria)': '39442',
-            'M. m. musculus (Prague)': '39442',
-            'M. platythrix (India)': '10101',
-            'M. m. domesticus': '10092',
-            'M. m. castaneus and laboratory mouse': '10090',
-            'M. m. domesticus (Australia)': '10092',
-            'laboratory mouse and M. m. domesticus and M. m. molossinus': '10090',
-            'M. m. domesticus (brevirostris) (Morocco)': '10092',
-            'laboratory mouse and M. spretus and M. m. musculus': '10090',
-            'M. m. molossinus': '57486',
-            'M. hortulanus': '10103',  # synonymous with Mus spicilegus
-            'M. dunni': '254704',  # synonymous with Mus terricolor
-            'M. m. castaneus (Pathumthani, Thailand)': '10091',
-            'M. terricolor': '254704',
-            'M. m. domesticus (China)': '10092',
-            'M. fragilicauda': '186193',
-            'Not Resolved': '10088',  # assume Mus
-            'M. m. musculus or M. spretus and laboratory mouse': '10088',
-            'M. macedonicus macedonicus': '270353',
-            'laboratory mouse': '10090',
-            'laboratory mouse and M. abbotti': '10088',
-            'M. cervicolor cervicolor': '135827',
-            'laboratory mouse and M. spretus': '10088',
-            'M. m. domesticus (praetextus)': '10092',
-            'M. spretus (London)': '10096',
-            'M. m. musculus (Prague) and laboratory mouse': '10090',
-            'laboratory mouse and M. m. musculus (Central Jutland, Denmark)': '10090',
-            'M. m. musculus (Northern Jutland, Denmark)': '39442',
-            'M. m. castaneus (Taiwan)': '10091',
-            'M. brevirostris': '116058',
-            'M. spretus': '10096',
-            'M. m. domesticus poschiavinus': '10092',
-            'M. pahari': '10093',
-            'M. m. molossinus (Hakozaki, Japan)': '57486',
-            'M. m. musculus (Hokkaido)': '39442',
-            'M. m. musculus or M. spretus': '862507',
-            'laboratory mouse and M. m. musculus': '10090',
-            'Not Specified and M. m. musculus': '10090',
-            'M. m. castaneus (Masinagudi, South India)': '10091',
-            'M. indutus': '273921',
-            'M. saxicola': '10094',
-            'M. m. praetextus x M. m. musculus': '10090',
-            'M. spretus and laboratory mouse': '862507',
-            'laboratory mouse and M. m. castaneus and M. m. domesticus': '10090',
-            'M. m. musculus (Bulgaria)': '39442',
-            'M. booduga': '27681',
-            'Not Specified': '10090',  # OK?
-            'Not Specified and M. m. molossinus': '10090',
-            'M. m. musculus and M. spretus': '862507',
-            'M. minutoides': '10105',
-            'M. spretus (Tunisia)': '10096',
-            'M. spicilegus': '10103',
-            'Peru Coppock': '10088',  # unclassified mus
-            'M. m. domesticus (CA)': '10092',
-            'M. macedonicus spretoides': '270352',
-            'M. m. musculus and M. m. castaneus': '477816',
-            'M. m. praetextus x M. m. domesticus': '10090',
-            'M. m. domesticus and M. spretus': '862507',
-            'M. m. molossinus (Mishima)': '57486',
-            'M. hortulanus and M. m. macedonicus': '10088',
-            'Not Specified and M. spretus': '10088',
-            'M. m. domesticus (Peru)': '10092',
-            'M. m. domesticus (OH)': '10092',
-            'M. m. bactrianus and laboratory mouse': '10090',
-            'laboratory mouse and M. m. domesticus (OH)': '10090',
-            'M. m. gansuensis': '1385377',
-            'laboratory mouse and M. m. castaneus and M. spretus': '10088',
-            'M. m. castaneus': '10091',
-            'Wild and M. m. domesticus': '10088',
-            'M. m. molossinus (Nagoya)': '57486'
-        }
-        if species.strip() in id_map:
-            tax = id_map.get(species.strip())
-        else:
-            logger.warning("Species (%s) not mapped; defaulting to Mus genus.",
-                           species)
-
-        if tax is not None:
-            tax = 'NCBITaxon:'+tax
-        return tax
-
-    @staticmethod
-    def _map_evidence_id(evidence_code):
-
-        ecotype = None
-        type_map = {
-            'EXP': 'ECO:0000006',
-            'IBA': 'ECO:0000318',
-            'IC': 'ECO:0000001',
-            'IDA': 'ECO:0000314',
-            'IEA': 'ECO:0000501',
-            'IEP': 'ECO:0000008',
-            'IGI': 'ECO:0000316',
-            'IKR': 'ECO:0000320',
-            'IMP': 'ECO:0000315',
-            'IPI': 'ECO:0000353',
-            'ISA': 'ECO:0000200',
-            'ISM': 'ECO:0000202',
-            'ISO': 'ECO:0000201',
-            'ISS': 'ECO:0000250',
-            'NAS': 'ECO:0000303',
-            'ND': 'ECO:0000035',
-            'RCA': 'ECO:0000245',
-            'TAS': 'ECO:0000304'
-        }
-        if evidence_code.strip() in type_map:
-            ecotype = type_map.get(evidence_code)
-        else:
-            logger.error("Evidence code (%s) not mapped", evidence_code)
-
-        return ecotype
 
     @staticmethod
     def _makeInternalIdentifier(prefix, key):
@@ -2604,6 +2117,7 @@ class MGI(PostgreSQLSource):
         :return:
 
         """
+        # these are just blank nodes
         iid = '_:mgi'+prefix+'key'+key
 
         return iid

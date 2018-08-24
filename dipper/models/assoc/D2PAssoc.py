@@ -14,20 +14,17 @@ class D2PAssoc(Assoc):
 
     """
 
-    d2p_object_properties = {
-        'onset': ':onset',
-        'frequency': ':frequencyOfPhenotype'
-    }
 
-    def __init__(self, graph, definedby, disease_id, phenotype_id, onset=None,
-                 frequency=None, rel=None):
+    def __init__(
+            self, graph, definedby, disease_id, phenotype_id, onset=None,
+            frequency=None, rel=None):
         super().__init__(graph, definedby)
         self.disease_id = disease_id
         self.phenotype_id = phenotype_id
         self.onset = onset
         self.frequency = frequency
         if rel is None:
-            rel = self.properties['has_phenotype']
+            rel = self.globaltt['has phenotype']
 
         self.set_relationship(rel)
         self.set_subject(disease_id)
@@ -62,14 +59,12 @@ class D2PAssoc(Assoc):
 
         if self.frequency is not None and self.frequency != '':
             # FIXME what is the real predicate here?
-            self.graph.addTriple(self.assoc_id,
-                                 self.d2p_object_properties['frequency'],
-                                 self.frequency)
+            self.graph.addTriple(
+                self.assoc_id, self.globaltt['frequency'], self.frequency)
         if self.onset is not None and self.onset != '':
             # FIXME what is the real predicate here?
-            self.graph.addTriple(self.assoc_id,
-                                 self.d2p_object_properties['onset'],
-                                 self.onset)
+            self.graph.addTriple(
+                self.assoc_id, self.globaltt['onset'], self.onset)
 
         return
 
@@ -86,7 +81,6 @@ class D2PAssoc(Assoc):
 
         attributes = [self.onset, self.frequency]
         assoc_id = self.make_association_id(
-            self.definedby, self.disease_id, self.rel, self.phenotype_id,
-            attributes)
+            self.definedby, self.disease_id, self.rel, self.phenotype_id, attributes)
 
         return assoc_id

@@ -7,3 +7,14 @@
 'rainbow_trout': 'Oncorhynchus mykiss'  # NCBITaxon:8022
 'sheep': 'Ovis aries'       # NCBITaxon:9940
 'cattle': 'Bos taurus'      # NCBITaxon:9913
+
+# map_linkage_by_organism(self, organism):
+# This is not yet confirmed, thus is not utilized.
+
+#    'chicken': 'Wageningen-chicken',    # PMID:10645958
+#    'cattle': 'USDA-MARC',              # PMID:9074927
+#    'pig': 'USDA-MARC',                 # PMID:8743988
+#    # -- this is an assumption
+#    'sheep': 'Wageningen-sheep',        # PMID:11435411
+#    'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
+#    'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344

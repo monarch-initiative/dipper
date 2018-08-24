@@ -100,7 +100,7 @@ class RGD(Source):
             g2p_assoc.add_source(identifier=references[0])
             ref_model = Reference(
                 self.graph, references[0],
-                Reference.ref_types['publication']
+                self.globaltt['publication']
             )
             ref_model.addRefToGraph()
 

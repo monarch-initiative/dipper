@@ -224,10 +224,10 @@ class HPOAnnotations(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         line_counter = 0
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -266,13 +266,13 @@ class HPOAnnotations(Source):
                 #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
                 if asp == 'O' or asp == 'M':  # organ abnormality or mortality
                     assoc = D2PAssoc(
-                        g, self.name, disease_id, pheno_id, onset, freq)
+                        graph, self.name, disease_id, pheno_id, onset, freq)
                 elif asp == 'I':  # inheritance patterns for the whole disease
                     assoc = DispositionAssoc(
-                        g, self.name, disease_id, pheno_id)
+                        graph, self.name, disease_id, pheno_id)
                 elif asp == 'C':  # clinical course / onset
                     assoc = DispositionAssoc(
-                        g, self.name, disease_id, pheno_id)
+                        graph, self.name, disease_id, pheno_id)
                 else:
                     logger.error("I don't know what this aspect is: %s", asp)
 
@@ -298,36 +298,34 @@ class HPOAnnotations(Source):
 
                         if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
                             if re.match(r'PMID', pub):
-                                pubtype = \
-                                    Reference.ref_types['journal_article']
+                                pubtype = self.globaltt['journal article']
                             elif re.match(r'HPO', pub):
-                                pubtype = Reference.ref_types['person']
+                                pubtype = self.globaltt['person']
                             else:
-                                pubtype = Reference.ref_types['publication']
-                            r = Reference(g, pub, pubtype)
-                            r.addRefToGraph()
+                                pubtype = self.globaltt['publication']
+                            ref = Reference(graph, pub, pubtype)
+                            ref.addRefToGraph()
                         elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
                             # make the pubs a reference to the website,
                             # instead of the curie
                             if re.match(r'OMIM', pub):
                                 omimnum = re.sub(r'OMIM:', '', pub)
-                                omimurl = '/'.join(('http://omim.org/entry',
-                                                    str(omimnum).strip()))
+                                omimurl = '/'.join((
+                                    'http://omim.org/entry', str(omimnum).strip()))
                                 pub = omimurl
                             elif re.match(r'Orphanet:', pub):
                                 orphanetnum = re.sub(r'Orphanet:', '', pub)
-                                orphaneturl = \
-                                    ''.join((
-                                        'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                        str(orphanetnum)))
+                                orphaneturl = ''.join((
+                                    'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
+                                    str(orphanetnum)))
                                 pub = orphaneturl
                             elif re.match(r'DECIPHER:', pub):
                                 deciphernum = re.sub(r'DECIPHER:', '', pub)
-                                decipherurl = '/'.join(
-                                    ('https://decipher.sanger.ac.uk/syndrome',
-                                     deciphernum))
+                                decipherurl = '/'.join((
+                                    'https://decipher.sanger.ac.uk/syndrome',
+                                    deciphernum))
                                 pub = decipherurl
-                            pubtype = Reference.ref_types['webpage']
+                            pubtype = self.globaltt['webpage']
                         elif re.match(r'http', pub):
                             pass
                         else:
@@ -343,8 +341,7 @@ class HPOAnnotations(Source):
 
                 assoc.add_association_to_graph()
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -360,10 +357,8 @@ class HPOAnnotations(Source):
         """
 
         repo_dir = '/'.join((self.rawdir, 'git'))
-        REMOTE_URL = \
-            "git@github.com:monarch-initiative/hpo-annotation-data.git"
-        HTTPS_URL = \
-            "https://github.com/monarch-initiative/hpo-annotation-data.git"
+        REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
+        HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
 
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
@@ -420,8 +415,7 @@ class HPOAnnotations(Source):
             raw = self.files[f]['file']
             total_processed += self.process_common_disease_file(
                 raw, unpadded_doids, limit)
-            if not self.testMode \
-                    and limit is not None and total_processed > limit:
+            if not self.testMode and limit is not None and total_processed > limit:
                 break
         logger.info("Finished iterating over all common disease files.")
         logger.info("Fixed %d/%d incorrectly zero-padded ids",
@@ -480,9 +474,9 @@ class HPOAnnotations(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
         line_counter = 0
         assoc_count = 0
@@ -538,7 +532,7 @@ class HPOAnnotations(Source):
 
                 if disease_id != '' and phenotype_id != '':
                     assoc = D2PAssoc(
-                        g, self.name, disease_id, phenotype_id.strip())
+                        graph, self.name, disease_id, phenotype_id.strip())
                     if age_of_onset_id != '':
                         assoc.onset = age_of_onset_id
                     if frequency != '':

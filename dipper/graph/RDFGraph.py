@@ -5,6 +5,7 @@ from dipper import curie_map
 import re
 import logging
 import sys
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,13 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     Bnodes, and literals from an input curie
     """
 
-    curie_util = CurieUtil(curie_map.get())
+    curie_map = curie_map.get()
+    curie_util = CurieUtil(curie_map)
+
+    # make global translation table available outside the ingest
+    with open('translationtable/global_terms.yaml') as fh:
+        globaltt = yaml.safe_load(fh)
+        globaltcid = {v: k for k, v in globaltt.items()}
 
     def __init__(self, are_bnodes_skized=True, identifier=None):
         # print("in RDFGraph  with id: ", identifier)
@@ -58,9 +65,9 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 # magic number 2 here is "steps up the stack"
                 logger.warning(sys._getframe(2).f_code.co_name)
         elif obj is not None and obj != '':
-            self.add(
-                (self._getNode(subject_id), self._getNode(predicate_id),
-                 self._getNode(obj)))
+            self.add((
+                self._getNode(subject_id), self._getNode(predicate_id),
+                self._getNode(obj)))
         else:
             logger.warning(
                 "None/empty object IRI for subj: %s and pred: %s",

@@ -22,10 +22,11 @@ class HGNC(Source):
 
     """
 
+    EBIFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/'
     files = {
         'genes': {
             'file': 'hgnc_complete_set.txt',
-            'url': 'ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt'},
+            'url': EBIFTP + 'new/tsv/hgnc_complete_set.txt'},
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized,
@@ -51,7 +52,7 @@ class HGNC(Source):
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
-        self.properties = Feature.properties
+        self.hs_txid = self.globaltt['Homo sapiens']
 
         return
 
@@ -79,12 +80,12 @@ class HGNC(Source):
     def _process_genes(self, limit=None):
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['genes']['file']))
         line_counter = 0
         logger.info("Processing HGNC genes")
@@ -155,7 +156,8 @@ class HGNC(Source):
 
                 if name == '':
                     name = None
-                gene_type_id = self._get_gene_type(locus_type)
+                gene_type_id = self.resolve(locus_type)  # withdrawn -> None
+
                 model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
@@ -172,15 +174,15 @@ class HGNC(Source):
                     if not DipperUtil.is_omim_disease(omim_curie):
                         model.addEquivalentClass(hgnc_id, omim_curie)
 
-                geno.addTaxon('NCBITaxon:9606', hgnc_id)
+                geno.addTaxon(self.hs_txid, hgnc_id)
 
                 # add pubs as "is about"
                 if pubmed_id != '':
                     for p in re.split(r'\|', pubmed_id.strip()):
                         if str(p) != '':
-                            g.addTriple(
+                            graph.addTriple(
                                 'PMID:' + str(p.strip()),
-                                model.object_properties['is_about'], hgnc_id)
+                                self.globaltt['is_about'], hgnc_id)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
@@ -193,26 +195,24 @@ class HGNC(Source):
                 chr_match = re.match(chr_pattern, location)
                 if chr_match is not None and len(chr_match.groups()) > 0:
                     chrom = chr_match.group(1)
-                    chrom_id = makeChromID(chrom, 'NCBITaxon:9606', 'CHR')
+                    chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
                     band_pattern = r'([pq][A-H\d]?\d?(?:\.\d+)?)'
                     band_match = re.search(band_pattern, location)
-                    f = Feature(g, hgnc_id, None, None)
+                    feat = Feature(graph, hgnc_id, None, None)
                     if band_match is not None and len(band_match.groups()) > 0:
                         band = band_match.group(1)
                         band = chrom + band
                         # add the chr band as the parent to this gene
                         # as a feature but assume that the band is created
                         # as a class with properties elsewhere in Monochrom
-                        # TEC Monoch? Monarchdom??
-                        band_id = makeChromID(band, 'NCBITaxon:9606', 'CHR')
+                        band_id = makeChromID(band, self.hs_txid, 'CHR')
                         model.addClassToGraph(band_id, None)
-                        f.addSubsequenceOfFeature(band_id)
+                        feat.addSubsequenceOfFeature(band_id)
                     else:
                         model.addClassToGraph(chrom_id, None)
-                        f.addSubsequenceOfFeature(chrom_id)
+                        feat.addSubsequenceOfFeature(chrom_id)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             # end loop through file
@@ -247,61 +247,6 @@ class HGNC(Source):
                 symbol_id_map[symbol.strip()] = hgnc_id
 
         return symbol_id_map
-
-    @staticmethod
-    def _get_gene_type(locus_type):
-        """
-        Given the locus_type string supplied by HGNC,
-        we map them to relevant SO terms.
-        We use the mappings listed in the "?" popup on any HGNC gene page.
-        :param locus_type:
-        :return:
-
-        """
-
-        locus_type_map = {
-            'RNA, Y': 'SO:0000405',
-            'RNA, cluster': 'SO:0000655',               # ??? ncRNA
-            'RNA, long non-coding': 'SO:0001877',       # lncRNA
-            'RNA, micro': 'SO:0001265',                 # miRNA
-            'RNA, misc': 'SO:0000655',                  # ??? ncRNA
-            'RNA, ribosomal': 'SO:0001637',             # rRNA
-            # small cytoplasmic is synonym of scRNA_primary_transcript
-            'RNA, small cytoplasmic': 'SO:0001266',
-            'RNA, small nuclear': 'SO:0001268',         # snRNA
-            'RNA, small nucleolar': 'SO:0001267',       # snoRNA
-            'RNA, transfer': 'SO:0001272',              # tRNA
-            'RNA, vault': 'SO:0000404',                 # vault_RNA
-            # vertebrate_immunoglobulin_T_cell_receptor_segment
-            'T cell receptor gene': 'SO:0000460',
-            'T cell receptor pseudogene': 'SO:0000336',  # pseudogene
-            # protein_coding - no way to say member of cluster
-            'complex locus constituent': 'SO:0001217',
-            # endogenous_retroviral_gene
-            'endogenous retrovirus': 'SO:0000100',
-            # biological_region
-            # TODO https://sourceforge.net/p/song/term-tracker/433/
-            'fragile site': 'SO:0001411',
-            'gene with protein product': 'SO:0001217',  # protein_coding_gene
-            'immunoglobulin gene': 'SO:0000460',        # immunoglobulin_region
-            'immunoglobulin pseudogene': 'SO:0000336',  # pseudogene  FIXME
-            'phenotype only': 'SO:0001500',       # heritable_phenotypic_marker
-            'protocadherin': 'SO:0000110',              # FIXME
-            'pseudogene': 'SO:0000336',                 # pseudogene
-            'readthrough': 'SO:0000110',                # FIXME
-            'region': 'SO:0000001',                     # region
-            'transposable element': 'SO:0000101',       # transposable element
-            'unknown': 'SO:0000110',                    # sequence_feature
-            'virus integration site': 'SO:0000110',     # FIXME
-            'withdrawn': None                           # TODO
-        }
-        t = None
-        if locus_type in locus_type_map:
-            t = locus_type_map[locus_type]
-        else:
-            logger.error("Unknown/unmapped locus type: %s", locus_type)
-
-        return t
 
     def getTestSuite(self):
         import unittest

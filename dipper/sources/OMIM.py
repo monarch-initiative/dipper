@@ -1,4 +1,4 @@
-import logging
+qimport logging
 import re
 import json
 import urllib
@@ -337,13 +337,13 @@ class OMIM(Source):
         omimids = self._get_omim_ids()  # store the set of omim identifiers
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        geno = Genotype(g)
-        model = Model(g)
-        # tax_num = '9606'   # TODO PYLINT unused
-        tax_id = 'NCBITaxon:9606'
+            graph = self.graph
+        geno = Genotype(graph)
+        model = Model(graph)
+
+        tax_id = self.globaltt['Homo sapiens']
         tax_label = 'Human'
 
         # add genome and taxon
@@ -353,8 +353,7 @@ class OMIM(Source):
         includes = set()
         includes.add('all')
 
-        self.process_entries(
-            omimids, self._transform_entry, includes, g, limit)
+        self.process_entries(omimids, self._transform_entry, includes, graph, limit)
 
         return
 
@@ -364,7 +363,6 @@ class OMIM(Source):
         geno = Genotype(graph)
 
         tax_num = '9606'
-        tax_id = 'NCBITaxon:9606'
         tax_label = 'Human'
         build_num = "GRCh38"
         build_id = "NCBIGenome:"+build_num
@@ -402,13 +400,13 @@ class OMIM(Source):
             omimtype = self._get_omimtype(e['entry'])
             nodelabel = newlabel
             # this uses our cleaned-up label
-            if omimtype == Genotype.genoparts['heritable_phenotypic_marker']:
+            if omimtype == self.globaltt['heritable_phenotypic_marker']:
                 if abbrev is not None:
                     nodelabel = abbrev
                 # in this special case,
                 # make it a disease by not declaring it as a gene/marker
                 model.addClassToGraph(omimid, nodelabel, None, newlabel)
-            elif omimtype == Genotype.genoparts['gene']:
+            elif omimtype == self.globaltt['gene']:
                 if abbrev is not None:
                     nodelabel = abbrev
                 model.addClassToGraph(omimid, nodelabel, omimtype, newlabel)
@@ -420,7 +418,7 @@ class OMIM(Source):
 
             # add the alternate labels and includes as synonyms
             for l in other_labels:
-                model.addSynonym(omimid, l, 'OIO:hasRelatedSynonym')
+                model.addSynonym(omimid, l, model.globaltt['hasRelatedSynonym'])
 
             # KS: commenting out, we will get disease descriptions
             # from MONDO, and gene descriptions from the mygene API
@@ -431,7 +429,7 @@ class OMIM(Source):
             #    model.addDefinition(omimid, description)
 
             if abbrev is not None:
-                model.addSynonym(omimid, abbrev, 'OIO:hasRelatedSynonym')
+                model.addSynonym(omimid, abbrev,  model.globaltt['hasRelatedSynonym'])
 
             # if this is a genetic locus (but not sequenced)
             #   then add the chrom loc info
@@ -444,7 +442,7 @@ class OMIM(Source):
                 is_gene = False
 
                 if omimtype == \
-                        Genotype.genoparts['heritable_phenotypic_marker']:
+                        self.globaltt['heritable_phenotypic_marker']:
                     # get the ncbigene ids
                     ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
                     if len(ncbifeature) == 1:
@@ -462,7 +460,7 @@ class OMIM(Source):
                         feature_id = self._make_anonymous_feature(str(omimnum))
                         feature_label = abbrev
 
-                elif omimtype == Genotype.genoparts['gene']:
+                elif omimtype == self.globaltt['gene']:
                     feature_id = omimid
                     is_gene = True
                 else:
@@ -470,7 +468,7 @@ class OMIM(Source):
                     feature_id = self._make_anonymous_feature(str(omimnum))
                     if abbrev is not None:
                         feature_label = abbrev
-                    omimtype = Genotype.genoparts['heritable_phenotypic_marker']
+                    omimtype = self.globaltt['heritable_phenotypic_marker']
 
                 if feature_id is not None:
                     if 'comments' in genemap:
@@ -494,7 +492,8 @@ class OMIM(Source):
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
-                            geno.addChromosomeClass(chrom_num, tax_id, tax_label)
+                            geno.addChromosomeClass(
+                                chrom_num, self.globaltt['Homo sapians'], tax_label)
 
                             # add the positional information, if available
                             fstart = fend = -1
@@ -510,7 +509,7 @@ class OMIM(Source):
                                 # (from the given build)
                                 geno.addChromosomeInstance(
                                     chrom_num, build_id, build_num, chrom)
-                                if omimtype == Genotype.genoparts[
+                                if omimtype == self.globaltt[
                                         'heritable_phenotypic_marker']:
                                     postypes = [Feature.types['FuzzyPosition']]
                                 else:
@@ -589,9 +588,9 @@ class OMIM(Source):
         :return:
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         line_counter = 0
         assoc_count = 0
         with open(
@@ -643,9 +642,9 @@ class OMIM(Source):
                     assoc_count += 1
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = 'OMIM:'+str(gene_num)
-                    self._make_pheno_assoc(g, gene_id, gene_symbols[0],
-                                           disorder_num, disorder_label,
-                                           phene_key)
+                    self._make_pheno_assoc(
+                        graph, gene_id, gene_symbols[0], disorder_num, disorder_label,
+                        phene_key)
                 elif nogene_match is not None:
                     # this is a case where the disorder
                     # a blended gene/phenotype
@@ -667,7 +666,7 @@ class OMIM(Source):
                             gene_id = 'NCBIGene:'+str(gene_num).strip()
                             assoc_count += 1
                             self._make_pheno_assoc(
-                                g, gene_id, gene_symbols[0],
+                                graph, gene_id, gene_symbols[0],
                                 disorder_num, disorder_label, phene_key)
                     else:
                         # we can create an anonymous feature
@@ -675,7 +674,7 @@ class OMIM(Source):
                         feature_id = self._make_anonymous_feature(gene_num)
                         assoc_count += 1
                         self._make_pheno_assoc(
-                            g, feature_id, gene_symbols[0], disorder_num,
+                            graph, feature_id, gene_symbols[0], disorder_num,
                             disorder_label, phene_key)
 
                         logger.info(
@@ -691,8 +690,7 @@ class OMIM(Source):
                         "There are misformatted rows %d:%s",
                         line_counter, str(line))
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             logger.info("Added %d G2P associations", assoc_count)
@@ -705,8 +703,8 @@ class OMIM(Source):
 
         return feature_id
 
-    def _make_pheno_assoc(self, graph, gene_id, gene_symbol, disorder_num,
-                          disorder_label, phene_key):
+    def _make_pheno_assoc(
+        self, graph, gene_id, gene_symbol, disorder_num, disorder_label, phene_key):
 
         """
         From the docs:
@@ -742,23 +740,20 @@ class OMIM(Source):
         :return:
         """
 
-        geno = Genotype(graph)
-        model = Model(graph)
         disorder_id = ':'.join(('OMIM', disorder_num))
-        rel_id = model.object_properties['causes_condition']  # default
-        rel_label = 'causes'
+        rel_id = self.globaltt['causes_condition']  # default
+        # rel_label = 'causes_condition'
         if disorder_label.startswith('['):
-            rel_id = model.object_properties['is_marker_for']
-            rel_label = 'is a marker for'
+            rel_id = self.globaltt['is marker for']
+            # rel_label = 'is a marker for'
         elif disorder_label.startswith('{'):
-            rel_id = model.object_properties['contributes_to']
-            rel_label = 'contributes to'
+            rel_id = self.globaltt['contributes to']
+            # rel_label = 'contributes to'
         elif disorder_label.startswith('?'):
             # this is a questionable mapping!  skip?
-            rel_id = model.object_properties['contributes_to']
-            rel_label = 'contributes to'
+            rel_id = self.globaltt['contributes to']
 
-        evidence = self._map_phene_mapping_code_to_eco(phene_key)
+        evidence = self.resolve(phene_key)
 
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
         assoc.add_evidence(evidence)
@@ -822,7 +817,7 @@ class OMIM(Source):
                             m = re.findall(r'\{(\d+)\:', al_description)
                             publist[al_id] = set(m)
                         geno.addAllele(
-                            al_id, al_label, geno.genoparts['variant_locus'],
+                            al_id, al_label, self.globaltt['variant_locus'],
                             al_description)
                         geno.addAlleleOfGene(
                             al_id, 'OMIM:'+str(entry_num),
@@ -831,7 +826,7 @@ class OMIM(Source):
                         for r in publist[al_id]:
                             pmid = ref_to_pmid[int(r)]
                             g.addTriple(
-                                pmid, model.object_properties['is_about'],
+                                pmid, self.globaltt['is_about'],
                                 al_id)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in al['allelicVariant']:
@@ -871,36 +866,6 @@ class OMIM(Source):
                 # end loop allelicVariantList
 
         return
-
-    @staticmethod
-    def _map_phene_mapping_code_to_eco(code):
-        # phenotype mapping code
-        # 1 - the disorder is placed on the map based on its association with a
-        #       gene, but the underlying defect is not known.
-        # 2 - the disorder has been placed on the map by linkage;
-        #       no mutation has been found.
-        # 3 - the molecular basis for the disorder is known;
-        #       a mutation has been found in the gene.
-        # 4 - a contiguous gene deletion or duplication syndrome,
-        #       multiple genes are deleted or duplicated causing the phenotype.
-        eco_code = 'ECO:0000000'  # generic evidence
-        phene_code_to_eco = {
-            # inference from expert knowledge
-            '1': 'ECO:0000306',
-            # genomic context evidence
-            '2': 'ECO:0000177',
-            # sequencing assay evidence
-            '3': 'ECO:0000220',
-            # sequencing assay evidence
-            '4': 'ECO:0000220'
-        }
-
-        if str(code) in phene_code_to_eco:
-            eco_code = phene_code_to_eco[code]
-        else:
-            logger.error("unmapped phene code %s", code)
-
-        return eco_code
 
     @staticmethod
     def _cleanup_label(label):
@@ -964,11 +929,11 @@ class OMIM(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         logger.info("getting phenotypic series titles")
-        model = Model(g)
+        model = Model(graph)
         line_counter = 0
         with open(
                 '/'.join(
@@ -1074,7 +1039,7 @@ class OMIM(Source):
                 entrez_mappings = links['geneIDs']
                 gene_ids = entrez_mappings.split(',')
                 self.omim_ncbigene_idmap[omimid] = gene_ids
-                if omimtype == Genotype.genoparts['gene']:
+                if omimtype == self.globaltt['gene']:
                     for i in gene_ids:
                         model.addEquivalentClass(omimid, 'NCBIGene:' + str(i))
 
@@ -1113,14 +1078,13 @@ class OMIM(Source):
 
         ref_to_pmid = {}
         entry_num = entry['mimNumber']
-        model = Model(g)
         if 'referenceList' in entry:
             reflist = entry['referenceList']
             for r in reflist:
                 if 'pubmedID' in r['reference']:
                     pub_id = 'PMID:' + str(r['reference']['pubmedID'])
                     ref = Reference(
-                        g, pub_id, Reference.ref_types['journal_article'])
+                        g, pub_id, self.globaltt['journal article'])
                 else:
                     # make blank node for internal reference
                     pub_id = '_:OMIM' + str(entry_num) + 'ref' + str(
@@ -1145,7 +1109,7 @@ class OMIM(Source):
 
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
-                g.addTriple(omim_id, model.object_properties['mentions'], pub_id)
+                g.addTriple(omim_id, self.globaltt['mentions'], pub_id)
 
         return ref_to_pmid
 
@@ -1195,7 +1159,7 @@ class OMIM(Source):
             # note that some genes are also phenotypes,
             # even in this class, like 102480
             # examples: 102560,102480,100678,102750
-            type_id = Genotype.genoparts['gene']  # doublecheck this
+            type_id = self.globaltt['gene']  # doublecheck this
         elif prefix == '#':
             # phenotype/disease -- indicate that here?
             # examples: 104200,105400,114480,115300,121900
@@ -1203,11 +1167,11 @@ class OMIM(Source):
         elif prefix == '+':
             # gene of known sequence and has a phenotype
             # examples: 107670,110600,126453
-            type_id = Genotype.genoparts['gene']  # doublecheck this
+            type_id = self.globaltt['gene']  # doublecheck this
         elif prefix == '%':
             # this is a disease (with a known locus).
             # examples include:  102150,104000,107200,100070
-            type_id = Genotype.genoparts['heritable_phenotypic_marker']
+            type_id = self.globaltt['heritable_phenotypic_marker']
         elif prefix == '':
             # this is probably just a phenotype
             pass
@@ -1238,8 +1202,8 @@ def filter_keep_phenotype_entry_ids(entry, graph=None):
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'])
-    if omim_type != Genotype.genoparts['gene'] and \
-            omim_type != Genotype.genoparts['biological_region']:
+    if omim_type != self.globaltt['gene'] and \
+            omim_type != self.globaltt['biological_region']:
         return omim_id
 
     return None

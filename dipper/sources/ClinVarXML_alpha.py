@@ -325,7 +325,7 @@ def digest_id(wordage):
 G2PMAP = {}
 with open(MAPFILE, 'rt') as tsvfile:
     reader = csv.reader(tsvfile, delimiter="\t")
-    next(reader) #header
+    next(reader)  # header
     for row in reader:
         if row[0] in G2PMAP:
             G2PMAP[row[0]].append(row[3])
@@ -691,8 +691,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # Here we override our type mapping
                     # and use has_reference_part
                     elif medgen_id is not None \
-                            and LTT[variant_relationship] \
-                                == 'has_affected_locus':
+                            and LTT[variant_relationship] == 'has_affected_locus':
                         write_spo(
                             rcv_variant_id,
                             GTT['has_reference_part'],

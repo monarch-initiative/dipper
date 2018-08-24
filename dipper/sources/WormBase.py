@@ -226,14 +226,14 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['gene_ids']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
         logger.info("Processing: %s", self.files['gene_ids']['file'])
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         with gzip.open(raw, 'rb') as csvfile:
             filereader = csv.reader(
                 io.TextIOWrapper(csvfile, newline=""), delimiter=',',
@@ -258,7 +258,7 @@ class WormBase(Source):
                 if gene_symbol == '':
                     gene_symbol = None
                 model.addClassToGraph(
-                    gene_id, gene_symbol, Genotype.genoparts['gene'])
+                    gene_id, gene_symbol, self.globaltt['gene'])
                 if live == 'Dead':
                     model.addDeprecatedClass(gene_id)
                 geno.addTaxon(taxon_id, gene_id)
@@ -275,13 +275,13 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['gene_desc']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing: %s", self.files['gene_desc']['file'])
         line_counter = 0
-        # geno = Genotype(g)  # TODO unused
+        # geno = Genotype(graph)  # TODO unused
         with gzip.open(raw, 'rb') as csvfile:
             filereader = csv.reader(
                 io.TextIOWrapper(csvfile, newline=""), delimiter='\t',
@@ -343,13 +343,13 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
         logger.info("Processing Allele phenotype associations")
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -367,13 +367,12 @@ class WormBase(Source):
                 if is_not == 'NOT':
                     continue
 
+                eco_symbol = eco_symbol.strip()
                 eco_id = None
-                if eco_symbol == 'IMP':
-                    eco_id = 'ECO:0000015'
-                elif eco_symbol.strip() != '':
+                if eco_symbol.strip() != '':
                     logger.warning(
-                        "Encountered an ECO code we don't have: %s",
-                        eco_symbol)
+                        "Encountered an ECO code we don't have: %s", eco_symbol)
+                eco_id = self.resolve(eco_symbol)
 
                 # according to the GOA spec, persons are not allowed to be
                 # in the reference column, therefore they the variant and
@@ -411,7 +410,7 @@ class WormBase(Source):
                             geno.addReagentTargetedGene(
                                 rnai_id, 'WormBase:'+gene_num, rtg_id)
                             geno.addGeneTargetingReagent(
-                                rnai_id, None, geno.genoparts['RNAi_reagent'],
+                                rnai_id, None, self.globaltt['RNAi_reagent'],
                                 gene_id)
                             allele_id = rtg_id
                         elif re.search(r'WBVar', allele_id):
@@ -430,16 +429,16 @@ class WormBase(Source):
                                 "Some kind of allele I don't recognize: %s",
                                 allele_num)
                             continue
-                        assoc = G2PAssoc(g, self.name, allele_id, phenotype_id)
+                        assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
 
                         if eco_id is not None:
                             assoc.add_evidence(eco_id)
 
                         if ref is not None and ref != '':
                             ref = re.sub(r'(WB:|WB_REF:)', 'WormBase:', ref)
-                            reference = Reference(g, ref)
+                            reference = Reference(graph, ref)
                             if re.search(r'Person', ref):
-                                reference.setType(reference.ref_types['person'])
+                                reference.setType(self.globaltt['person'])
                                 # also add
                                 # inferred from background scientific knowledge
                                 assoc.add_evidence('ECO:0000001')
@@ -461,12 +460,12 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['rnai_pheno']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
         logger.info("Processing RNAi phenotype associations")
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -505,7 +504,7 @@ class WormBase(Source):
 
                     rnai_id = 'WormBase:'+rnai_num
                     geno.addGeneTargetingReagent(
-                        rnai_id, None, geno.genoparts['RNAi_reagent'], gene_id)
+                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
 
                     # make the "allele" of the gene
                     # that is targeted by the reagent
@@ -515,7 +514,7 @@ class WormBase(Source):
                     geno.addReagentTargetedGene(
                         rnai_id, gene_id, allele_id, allele_label)
 
-                    assoc = G2PAssoc(g, self.name, allele_id, phenotype_id)
+                    assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
                     assoc.add_source('WormBase:'+ref_num)
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph()
@@ -531,11 +530,11 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['pub_xrefs']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
         logger.info("Processing publication xrefs")
         line_counter = 0
         with open(raw, 'r') as csvfile:
@@ -557,12 +556,12 @@ class WormBase(Source):
                 if re.match(r'pmid', xref):
                     xref_id = 'PMID:' + re.sub(r'pmid\s*', '', xref)
                     reference = Reference(
-                        g, xref_id, Reference.ref_types['journal_article'])
+                        graph, xref_id, self.globaltt['journal article'])
                 elif re.search(r'[\(\)\<\>\[\]\s]', xref):
                     continue
                 elif re.match(r'doi', xref):
                     xref_id = 'DOI:'+re.sub(r'doi', '', xref.strip())
-                    reference = Reference(g, xref_id)
+                    reference = Reference(graph, xref_id)
                 elif re.match(r'cgc', xref):
                     # TODO not sure what to do here with cgc xrefs
                     continue
@@ -585,13 +584,13 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['feature_loc']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing Feature location and attributes")
         line_counter = 0
-        geno = Genotype(g)
+        geno = Genotype(graph)
         strain_to_variant_map = {}
         build_num = self.version_num
         build_id = 'WormBase:'+build_num
@@ -709,13 +708,15 @@ class WormBase(Source):
                     if n is not None:
                         model.addSynonym(fid, other_name)
 
-                ftype = self.get_feature_type_by_class_and_biotype(
-                    feature_type_label, biotype)
-
+                if feature_type_label == 'gene':
+                    ftype_id = self.resolve(biotype)
+                else:
+                    # so far, they all come with SO label syntax. resolve if need be.
+                    ftype_id = self.globaltt[feature_type_label]
                 chr_id = makeChromID(chrom, build_id, 'CHR')
                 geno.addChromosomeInstance(chrom, build_id, build_num)
 
-                feature = Feature(g, fid, flabel, ftype)
+                feature = Feature(graph, fid, flabel, ftype_id)
                 feature.addFeatureStartLocation(start, chr_id, strand)
                 feature.addFeatureEndLocation(start, chr_id, strand)
 
@@ -728,8 +729,7 @@ class WormBase(Source):
                 if note is not None:
                     model.addDescription(fid, note)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
                 # RNAi reagents:
@@ -748,15 +748,15 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['disease_assoc']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
+        model = Model(graph)
         logger.info("Processing disease models")
-        geno = Genotype(g)
+        geno = Genotype(graph)
         line_counter = 0
-        worm_taxon = 'NCBITaxon:6239'
+        worm_taxon = self.globaltt['Caenorhabditis elegans']
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -786,17 +786,12 @@ class WormBase(Source):
                     vl, vl_label, worm_taxon, 'worm')
 
                 assoc = G2PAssoc(
-                    g, self.name, animal_id,
-                    disease_id, model.object_properties['model_of'])
+                    graph, self.name, animal_id,
+                    disease_id, self.globaltt['is model of'])
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
-                eco_id = None
-                if eco_symbol == 'IEA':
-                    eco_id = 'ECO:0000501'  # IEA is this now
-                if eco_id is not None:
-                    assoc.add_evidence(eco_id)
-
+                assoc.add_evidence(self.resolve(eco_symbol))
                 assoc.add_association_to_graph()
 
         return
@@ -829,10 +824,10 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['gene_interaction']['file']))
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing gene interaction associations")
         line_counter = 0
 
@@ -854,21 +849,14 @@ class WormBase(Source):
                 # TODO deal with subtypes
                 interaction_type_id = None
                 if interaction_type == 'Genetic':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'genetically_interacts_with']
+                    interaction_type_id = self.globaltt['genetically interacts with']
                 elif interaction_type == 'Physical':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'molecularly_interacts_with']
+                    interaction_type_id = self.globaltt['molecularly_interacts_with']
                 elif interaction_type == 'Regulatory':
-                    interaction_type_id = \
-                        InteractionAssoc.interaction_object_properties[
-                            'regulates']
+                    interaction_type_id = self.globaltt['regulates']
                 else:
                     logger.info(
-                        "An interaction type I don't understand %s",
-                        interaction_type)
+                        "An interaction type I don't understand %s", interaction_type)
 
                 num_interactors = (len(row) - 5) / 3
                 if num_interactors != 2:
@@ -886,56 +874,17 @@ class WormBase(Source):
                     continue
 
                 assoc = InteractionAssoc(
-                    g, self.name, gene_a_id, gene_b_id, interaction_type_id)
+                    graph, self.name, gene_a_id, gene_b_id, interaction_type_id)
                 assoc.set_association_id(interaction_id)
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
                 # citation is not a pmid or WBref - get this some other way
                 model.addDescription(assoc_id, summary)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
-
-    def get_feature_type_by_class_and_biotype(self, ftype, biotype):
-        ftype_id = None
-        biotype_map = {
-            'lincRNA': 'SO:0001641',
-            'miRNA': 'SO:0001265',
-            'ncRNA': 'SO:0001263',
-            'piRNA': 'SO:0001638',
-            'rRNA': 'SO:0001637',
-            'scRNA': 'SO:0001266',
-            'snRNA': 'SO:0001268',
-            'snoRNA': 'SO:0001267',
-            'tRNA': 'SO:0001272',
-            # transposable element gene
-            'transposon_protein_coding': 'SO:0000111',
-            'transposon_pseudogene': 'SO:0001897',
-            'pseudogene': 'SO:0000336',
-            'protein_coding': 'SO:0001217',
-            'asRNA': 'SO:0001263',  # using ncRNA gene  TODO make term request
-        }
-
-        ftype_map = {
-            'point_mutation': 'SO:1000008',
-            'deletion': 'SO:0000159',
-            'RNAi_reagent': 'SO:0000337',
-            'duplication': 'SO:1000035',
-            'enhancer': 'SO:0000165',
-            'binding_site': 'SO:0000409',
-            'biological_region': 'SO:0001411',
-            'complex_substitution': 'SO:1000005'
-        }
-        if ftype == 'gene':
-            if biotype in biotype_map:
-                ftype_id = biotype_map.get(biotype)
-        else:
-            ftype_id = ftype_map.get(ftype)
-
-        return ftype_id
 
     def make_reagent_targeted_gene_id(
             self, gene_id, reagent_id):

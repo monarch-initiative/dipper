@@ -2,6 +2,7 @@ import csv
 import logging
 import re
 import gzip
+import requests
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
@@ -144,8 +145,8 @@ class AnimalQTLdb(Source):
         animals = ['chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
 
         for common_name in animals:
-            tax_id = self._get_tax_by_common_name(common_name)
-            geno.addGenome(tax_id, common_name)
+            txid_num = self.resolve(common_name).split(':')[1]
+            geno.addGenome(txid_num, self.localtt[common_name])
             build_id = None
             build = None
 
@@ -159,17 +160,17 @@ class AnimalQTLdb(Source):
                     build = mch.group(1)
                     build_id = self._map_build_by_abbrev(build)
                     logger.info("Build = %s", build_id)
-                    geno.addReferenceGenome(build_id, build, tax_id)
+                    geno.addReferenceGenome(build_id, build, txid_num)
                 if build_id is not None:
                     self._process_QTLs_genomic_location(
-                        '/'.join((self.rawdir, bpfile)), tax_id, build_id, build,
+                        '/'.join((self.rawdir, bpfile)), txid_num, build_id, build,
                         common_name, limit)
 
             fname_cm = common_name + '_cm'
             if fname_cm in self.files:
                 cmfile = self.files[fname_cm]['file']
                 self._process_QTLs_genetic_location(
-                    '/'.join((self.rawdir, cmfile)), tax_id, common_name, limit)
+                    '/'.join((self.rawdir, cmfile)), txid_num, common_name, limit)
 
         logger.info("Finished parsing")
         return
@@ -192,8 +193,7 @@ class AnimalQTLdb(Source):
         line_counter = 0
         geno = Genotype(graph)
         model = Model(graph)
-        # TODO move to translation table
-        eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
+        eco_id = self.globaltt['quantitative trait analysis evidence']
 
         logger.info(
             "Processing genetic location for %s from %s", taxon_id, raw)
@@ -240,7 +240,7 @@ class AnimalQTLdb(Source):
                 trait_id = 'AQTLTrait:' + trait_id.strip()
 
                 # Add QTL to graph
-                feature = Feature(graph, qtl_id, qtl_symbol, geno.genoparts['QTL'])
+                feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'])
                 feature.addTaxonToFeature(taxon_id)
 
                 # deal with the chromosome
@@ -283,10 +283,10 @@ class AnimalQTLdb(Source):
                 # based on the range
                 feature.addFeatureStartLocation(
                     start, chrom_in_build_id, None,
-                    [Feature.types['FuzzyPosition']])
+                    [self.globaltt['FuzzyPosition']])
                 feature.addFeatureEndLocation(
                     stop, chrom_in_build_id, None,
-                    [Feature.types['FuzzyPosition']])
+                    [self.globaltt['FuzzyPosition']])
                 feature.addFeatureToGraph()
 
                 # sometimes there's a peak marker, like a rsid.
@@ -299,28 +299,37 @@ class AnimalQTLdb(Source):
 
                     model.addIndividualToGraph(
                         dbsnp_id, None,
-                        geno.genoparts['sequence_alteration'])
+                        self.globaltt['sequence_alteration'])
                     model.addXref(qtl_id, dbsnp_id)
 
-                gene_id = gene_id.replace('uncharacterized ', '')
+                gene_id = gene_id.replace('uncharacterized ', '').strip()
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
                         and re.fullmatch(r'[^ ]*', gene_id) is not None:
 
-                    # we assume if no src is provided
-                    # and gene_id is an integer, it's NCBI
-                    if (gene_id_src == 'NCBIgene' or gene_id_src == '') and \
-                            gene_id.strip().isdigit():
-                        gene_id = 'NCBIGene:' + gene_id.strip()
-                        # we will expect that these labels provided elsewhere
+                    # we assume if no src is provided and gene_id is an integer,
+                    # then it is an NCBI gene ... (okay, lets crank that back a notch)
+                    if gene_id_src == '' and gene_id.isdigit():
+                        url = self.curiemap['NCBIgene'] + gene_id
+                        logger.warrning('checking if %s goes anywhere', url)
+                        try:  # see if it the int _could_ be an ncbi gene hit
+                            response = requests.head(url)
+                        except requests.exceptions.RequestException:
+                            response.raise_for_status()
+                        if response.status_code == requests.codes.ok:
+                            gene_id_src = 'NCBIgene'
+                            logger.warrning('%s  --> Page is Found', url)
+
+                    if gene_id_src == 'NCBIgene':
+                        gene_id = 'NCBIGene:' + gene_id
+                        # we will expect that these will get labels elsewhere
                         geno.addGene(gene_id, None)
                         # FIXME what is the right relationship here?
                         geno.addAffectedLocus(qtl_id, gene_id)
 
                         if dbsnp_id is not None:
                             # add the rsid as a seq alt of the gene_id
-                            vl_id = \
-                                '_:' + re.sub(
-                                    r':', '', gene_id) + '-' + peak_mark.strip()
+                            vl_id = '_:' + re.sub(
+                                r':', '', gene_id) + '-' + peak_mark.strip()
                             geno.addSequenceAlterationToVariantLocus(
                                 dbsnp_id, vl_id)
                             geno.addAffectedLocus(vl_id, gene_id)
@@ -336,15 +345,14 @@ class AnimalQTLdb(Source):
                 elif pubmed_id != '':
                     pub_id = 'PMID:' + pubmed_id.strip()
                     reference = Reference(
-                        graph, pub_id, Reference.ref_types['journal_article'])
+                        graph, pub_id, self.globaltt['journal article'])
 
                 if reference is not None:
                     reference.addRefToGraph()
 
                 # make the association to the QTL
                 assoc = G2PAssoc(
-                    graph, self.name, qtl_id, trait_id,
-                    model.object_properties['is_marker_for'])
+                    graph, self.name, qtl_id, trait_id, self.globaltt['is marker for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
 
@@ -372,7 +380,7 @@ class AnimalQTLdb(Source):
                     # make the association to the dbsnp_id
                     assoc = G2PAssoc(
                         graph, self.name, dbsnp_id, trait_id,
-                        model.object_properties['is_marker_for'])
+                        self.globaltt['is marker for'])
                     assoc.add_evidence(eco_id)
                     assoc.add_source(pub_id)
 
@@ -395,8 +403,7 @@ class AnimalQTLdb(Source):
 
                     assoc.add_association_to_graph()
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info("Done with QTL genetic info")
@@ -422,7 +429,7 @@ class AnimalQTLdb(Source):
         # assume that chrs get added to the genome elsewhere
         # genome_id = geno.makeGenomeID(taxon_id)  # TODO unused
 
-        eco_id = "ECO:0000061"  # Quantitative Trait Analysis Evidence
+        eco_id = self.globaltt['quantitative trait analysis evidence']
         logger.info("Processing QTL locations for %s", taxon_id)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
@@ -472,7 +479,7 @@ class AnimalQTLdb(Source):
                 # make association between QTL and trait based on taxon
 
                 qtl_id = common_name + 'QTL:' + str(qtl_num)
-                model.addIndividualToGraph(qtl_id, None, geno.genoparts['QTL'])
+                model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'])
                 geno.addTaxon(taxon_id, qtl_id)
 
                 trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
@@ -487,13 +494,13 @@ class AnimalQTLdb(Source):
                     else:
                         pub_id = 'PMID:' + pub_id.strip()
                         reference = Reference(
-                            graph, pub_id, Reference.ref_types['journal_article'])
+                            graph, pub_id, self.globaltt['journal article'])
                     reference.addRefToGraph()
 
                 # Add QTL to graph
                 assoc = G2PAssoc(
                     graph, self.name, qtl_id, trait_id,
-                    model.object_properties['is_marker_for'])
+                    self.globaltt['is marker for'])
                 assoc.add_evidence(eco_id)
                 assoc.add_source(pub_id)
                 if 'P-value' in attribute_dict.keys():
@@ -515,17 +522,17 @@ class AnimalQTLdb(Source):
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
-                qtl_feature = Feature(graph, qtl_id, None, geno.genoparts['QTL'])
+                qtl_feature = Feature(graph, qtl_id, None, self.globaltt['QTL'])
                 if start_bp == '':
                     start_bp = None
                 qtl_feature.addFeatureStartLocation(
                     start_bp, chrom_in_build_id, strand,
-                    [Feature.types['FuzzyPosition']])
+                    [self.globaltt['FuzzyPosition']])
                 if stop_bp == '':
                     stop_bp = None
                 qtl_feature.addFeatureEndLocation(
                     stop_bp, chrom_in_build_id, strand,
-                    [Feature.types['FuzzyPosition']])
+                    [self.globaltt['FuzzyPosition']])
                 qtl_feature.addTaxonToFeature(taxon_id)
                 qtl_feature.addFeatureToGraph()
 
@@ -559,8 +566,7 @@ class AnimalQTLdb(Source):
                 line_counter += 1
                 # need to skip the last line
                 if len(row) < 8:
-                    logger.info(
-                        "skipping line %d: %s", line_counter, '\t'.join(row))
+                    logger.info("skipping line %d: %s", line_counter, '\t'.join(row))
                     continue
                 (vto_id, pto_id, cmo_id, ato_column, species, trait_class,
                  trait_type, qtl_count) = row
@@ -586,19 +592,6 @@ class AnimalQTLdb(Source):
 
         logger.info("Done with trait mappings")
         return
-
-    # TODO move to translation tables
-    def _get_tax_by_common_name(self, common_name):
-
-        tax_map = {
-            'chicken': 9031,
-            'cattle': 9913,
-            'pig': 9823,
-            'sheep': 9940,
-            'horse': 9796,
-            'rainbow_trout': 8022}
-
-        return 'NCBITaxon:' + str(tax_map[common_name])
 
     def _map_build_by_abbrev(self, build):
 
@@ -634,27 +627,6 @@ class AnimalQTLdb(Source):
                 build_id = 'NCBIAssembly:' + build.get('NCBIAssembly')
 
         return build_id
-
-    def _map_linkage_by_organism(self, organism):
-        """
-        Need to add appropriate linkage maps...but need more information before
-        they become identified.
-        This is not yet confirmed, thus is not utilized.
-        :param organism:
-        :return:
-
-        """
-
-        # TODO this hash is unused and would be an external translation table
-        # tax_map = {
-        #    'chicken': 'Wageningen-chicken',    # PMID:10645958
-        #    'cattle': 'USDA-MARC',              # PMID:9074927
-        #    'pig': 'USDA-MARC',                 # PMID:8743988
-        #    # -- this is an assumption
-        #    'sheep': 'Wageningen-sheep',        # PMID:11435411
-        #    'horse': 'Swinburne-Penedo',        # PMID:16314071 PMID:16093715
-        #    'rainbow_trout': 'USDA-NCCCWA'}     # PMID:19019240 PMID:22101344
-        # return
 
     def getTestSuite(self):
         import unittest

@@ -14,6 +14,7 @@ from dipper.models.Genotype import Genotype
 
 logger = logging.getLogger(__name__)
 
+
 class Decipher(Source):
     """
     Deprecated - please see the EBIGene2Phen class, which parses the same
@@ -58,9 +59,9 @@ class Decipher(Source):
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
-        self.g = self.graph
+        self.graph = self.graph
         self.geno = Genotype(self.g)
-        self.model = Model(self.g)
+        self.model = Model(self.graph)
 
         return
 
@@ -83,11 +84,11 @@ class Decipher(Source):
 
         if self.testOnly:
             self.testMode = True
-            self.g = self.testgraph
+            self.graph = self.testgraph
         else:
-            self.g = self.graph
+            self.graph = self.graph
 
-        self.geno = Genotype(self.g)
+        self.geno = Genotype(self.graph)
 
         # rare disease-phenotype associations
         self._process_ddg2p_annotations(limit)
@@ -121,10 +122,10 @@ class Decipher(Source):
         """
 
         line_counter = 0
-        if self.g is not None:
-            g = self.g
+        if self.graph is not None:
+            graph = self.graph
         else:
-            g = self.graph
+            graph = self.graph
 
         # in order for this to work, we need to map the HGNC id-symbol;
         hgnc = HGNC()
@@ -176,15 +177,15 @@ class Decipher(Source):
 
                     # ??? rel is never used
                     # if category.strip() == 'Confirmed DD gene':
-                    #     rel = self.model.object_properties['has_phenotype']
+                    #     rel = self.self.globaltt['has phenotype']
                     # elif category.strip() == 'Probable DD gene':
-                    #    rel = self.model.object_properties['has_phenotype']
+                    #    rel = self.self.globaltt['has phenotype']
                     # elif category.strip() == 'Possible DD gene':
-                    #    rel = self.model.object_properties['contributes_to']
+                    #    rel = self.self.globaltt['contributes to']
                     # elif category.strip() == 'Not DD gene':
                     #    # TODO negative annotation
                     #    continue
-                    assoc = G2PAssoc(g, self.name, allele_id, omim_id)
+                    assoc = G2PAssoc(graph, self.name, allele_id, omim_id)
                     # TODO 'rel' is assigned to but never used
 
                     for p in re.split(r';', pubmed_ids):
@@ -192,7 +193,7 @@ class Decipher(Source):
                         if p != '':
                             pmid = 'PMID:' + str(p)
                             r = Reference(
-                                g, pmid, Reference.ref_types['journal_article'])
+                                graph, pmid, self.globaltt['journal article'])
                             r.addRefToGraph()
                             assoc.add_source(pmid)
 
@@ -212,8 +213,7 @@ class Decipher(Source):
                 # are they about the gene?  the omim disease?  something else?
                 # So, we wont create associations until this is clarified
 
-                if not self.testMode and limit is not None \
-                        and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()
@@ -258,22 +258,11 @@ class Decipher(Source):
         #   promotor of the controlled gene
         # Uncertain : Where the exact nature of the mutation is unclear or
         #   not recorded
-        so_type = {                                 # type of variant
-            'Loss of function': 'SO:0002054',       # loss of function
-            'All missense/in frame': 'SO:0001583',  # missense
-            'Dominant negative': 'SO:0002052',      # dominant negative
-            'Activating': 'SO:0002053',             # gain of function
-            'Increased gene dosage': 'SO:0001742',  # copy number gain
-            # regulatory region
-            'Cis-regulatory or promotor mutation': 'SO:0001566',
-            'Uncertain': 'SO:0001060',              # generic sequence
-            '5 or 3UTR mutation': 'SO:0001622',     # UTR
-        }
 
-        type_id = so_type.get(consequence)
-        if type_id is None:
+        type_id = self.resolve(consequence, mandatory=False)
+        if type_id == consequence:
             logger.warning("Consequence type unmapped: %s", str(consequence))
-            type_id = 'SO:0001060'  # sequence variant
+            type_id = self.globaltt['sequence_variant']
 
         # make the allele
         allele_id = ''.join((gene_id, type_id))

@@ -92,7 +92,6 @@ class MPD(Source):
         # @N, not sure if this step is required
         self.stdevthreshold = 2
 
-        self.global_terms = self.open_and_parse_yaml('../../translationtable/global_terms.yaml')
         # TODO add a citation for mpd dataset as a whole
         self.dataset.set_citation('PMID:15619963')
 
@@ -171,10 +170,10 @@ class MPD(Source):
     def _process_straininfo(self, limit):
         # line_counter = 0  # TODO unused
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
 
         logger.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
@@ -314,10 +313,10 @@ class MPD(Source):
     def _fill_provenance_graph(self, limit):
         logger.info("Building graph ...")
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
         model.addClassToGraph(taxon_id, None)
 
@@ -370,7 +369,7 @@ class MPD(Source):
                                     assay_id, assay_label, assay_type_id,
                                     assay_description)
                                 self._add_g2p_assoc(
-                                    g, strain_id, sex, assay_id, ont_term_ids,
+                                    graph, strain_id, sex, assay_id, ont_term_ids,
                                     comment)
                         else:
                             scores_not_passing_threshold_count += 1
@@ -384,7 +383,7 @@ class MPD(Source):
 
         return
 
-    def _add_g2p_assoc(self, g, strain_id, sex, assay_id, phenotypes, comment):
+    def _add_g2p_assoc(self, graph, strain_id, sex, assay_id, phenotypes, comment):
         """
         Create an association between a sex-specific strain id
         and each of the phenotypes.
@@ -404,8 +403,8 @@ class MPD(Source):
         :return:
 
         """
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
         eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
@@ -419,27 +418,27 @@ class MPD(Source):
         else:
             sex_specific_genotype_label = strain_id + '(' + sex + ')'
 
-        genotype_type = Genotype.genoparts['sex_qualified_genotype']
+        genotype_type = self.globaltt['sex_qualified_genotype']
         if sex == 'm':
-            genotype_type = Genotype.genoparts['male_genotype']
+            genotype_type = self.globaltt['male_genotype']
         elif sex == 'f':
-            genotype_type = Genotype.genoparts['female_genotype']
+            genotype_type = self.globaltt['female_genotype']
 
         # add the genotype to strain connection
         geno.addGenotype(
             genotype_id, genotype_label,
-            Genotype.genoparts['genomic_background'])
-        g.addTriple(
-            strain_id, Genotype.object_properties['has_genotype'], genotype_id)
+            self.globaltt['genomic_background'])
+        graph.addTriple(
+            strain_id, self.globaltt['has_genotype'], genotype_id)
 
         geno.addGenotype(
             sex_specific_genotype_id, sex_specific_genotype_label,
             genotype_type)
 
         # add the strain as the background for the genotype
-        g.addTriple(
+        graph.addTriple(
             sex_specific_genotype_id,
-            Genotype.object_properties['has_sex_agnostic_genotype_part'],
+            self.globaltt['has_sex_agnostic_genotype_part'],
             genotype_id)
 
         # #############    BUILD THE G2P ASSOC    #############
@@ -448,7 +447,7 @@ class MPD(Source):
         if phenotypes is not None:
             for phenotype_id in phenotypes:
                 assoc = G2PAssoc(
-                    g, self.name, sex_specific_genotype_id, phenotype_id)
+                    graph, self.name, sex_specific_genotype_id, phenotype_id)
                 assoc.add_evidence(assay_id)
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()
@@ -456,10 +455,10 @@ class MPD(Source):
                 model.addComment(assoc_id, comment)
                 if sex == 'm':
                     model._addSexSpecificity(assoc_id,
-                                             self.global_terms['male'])
+                                             self.globaltt['male'])
                 elif sex == 'f':
                     model._addSexSpecificity(assoc_id,
-                                             self.global_terms['female'])
+                                             self.globaltt['female'])
 
         return
 

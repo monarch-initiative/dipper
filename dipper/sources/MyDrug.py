@@ -110,10 +110,9 @@ class MyDrug(Source):
         model.addLabel(uni_curie, document['aeolus']['drug_name'])
 
         model.addSameIndividual(rxcui_curie, uni_curie)
-        self.graph.addTriple(rxcui_curie,
-                             model.annotation_properties['inchi_key'],
-                             document['unii']['inchikey'],
-                             object_is_literal=True)
+        self.graph.addTriple(
+            rxcui_curie, self.globaltt['inchi_key'], document['unii']['inchikey'],
+            object_is_literal=True)
 
         if or_limit is not None:
             outcomes = (outcome for outcome in document['aeolus']['outcomes']
@@ -129,7 +128,7 @@ class MyDrug(Source):
 
             drug2outcome_assoc.sub = rxcui_curie
             drug2outcome_assoc.obj = meddra_curie
-            drug2outcome_assoc.rel = Assoc.object_properties['causes_or_contributes']
+            drug2outcome_assoc.rel = self.globaltt['causes_or_contributes']
             drug2outcome_assoc.description = \
                 "A proportional reporting ratio or odds " \
                 "ratio greater than or equal to {} in the " \
@@ -137,8 +136,7 @@ class MyDrug(Source):
                 "used for creating drug-outcome associations".format(or_limit)
             drug2outcome_assoc.add_association_to_graph()
             drug2outcome_assoc.add_predicate_object(
-                Assoc.annotation_properties['probabalistic_quantifier'],
-                outcome['ror'], 'Literal')
+                self.globaltt['probabalistic_quantifier'], outcome['ror'], 'Literal')
 
             self._add_outcome_evidence(drug2outcome_assoc.assoc_id, outcome)
             self._add_outcome_provenance(drug2outcome_assoc.assoc_id, outcome)
@@ -153,8 +151,7 @@ class MyDrug(Source):
         base = curie_map.get_base()
 
         provenance.add_agent_to_graph(base, 'Monarch Initiative')
-        self.graph.addTriple(
-            association, provenance.object_properties['asserted_by'], base)
+        self.graph.addTriple(association, self.globaltt['asserted_by'], base)
 
     def _add_outcome_evidence(self, association, outcome):
         """
@@ -167,17 +164,17 @@ class MyDrug(Source):
             'curie': "DOI:10.5061/dryad.8q0s4/1",
             'label': "Data from: A curated and standardized adverse "
                      "drug event resource to accelerate drug safety research",
-            'type': 'IAO:0000100'
+            'type': self.globaltt['data set']
         }
         reference = {
             'curie': "PMID:27193236",
             'label': None,
-            'type': "IAO:0000311"
+            'type': self.globaltt['publication']
         }
         evidence_curie = self.make_id("{0}{1}{2}".format(
             association, outcome['id'], self.name
         ))
-        evidence_type = "ECO:0000180"
+        evidence_type = self.globaltt['clinical study evidence']
         evidence.add_supporting_evidence(evidence_curie, evidence_type)
 
         evidence.add_supporting_publication(
@@ -198,12 +195,12 @@ class MyDrug(Source):
             prefix="_")
 
         evidence.add_data_individual(
-            count_bnode, ind_type=evidence.data_types['count'])
+            count_bnode, ind_type=self.globaltt['count'])
         evidence.add_data_individual(
             pr_ratio_bnode,
-            ind_type=evidence.data_types['proportional_reporting_ratio'])
+            ind_type=self.globaltt['proportional_reporting_ratio'])
         evidence.add_data_individual(
-            odds_ratio_bnode, ind_type=evidence.data_types['odds_ratio'])
+            odds_ratio_bnode, ind_type=self.globaltt['odds_ratio'])
 
         value_map = {
             count_bnode: outcome['case_count'],
@@ -223,8 +220,7 @@ class MyDrug(Source):
         :return: boolean True if remote file is newer else False
         """
         is_remote_newer = False
-        if localfile.exists() \
-                and localfile.stat().st_size > 0:
+        if localfile.exists() and localfile.stat().st_size > 0:
             logger.info("File exists locally, using cache")
         else:
             is_remote_newer = True

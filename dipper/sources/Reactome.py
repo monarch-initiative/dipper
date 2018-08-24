@@ -16,7 +16,7 @@ class Reactome(Source):
     files = {
         'ensembl2pathway': {
             'file': 'Ensembl2Reactome.txt',
-            'url': REACTOME_BASE+'Ensembl2Reactome.txt'},
+            'url': REACTOME_BASE + 'Ensembl2Reactome.txt'},
         'chebi2pathway': {
             'file': 'ChEBI2Reactome.txt',
             'url': REACTOME_BASE + 'ChEBI2Reactome.txt'},
@@ -109,7 +109,7 @@ class Reactome(Source):
 
         association = Assoc(self.graph, self.name)
         association.sub = gene_curie
-        association.rel = pathway.object_properties['involved_in']
+        association.rel = self.globaltt['involved in']
         association.obj = pathway_curie
         association.set_association_id()
         association.add_evidence(eco_curie)

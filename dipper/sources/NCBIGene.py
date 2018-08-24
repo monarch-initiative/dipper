@@ -3,12 +3,9 @@ import gzip
 import logging
 import csv
 import io
-import requests
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
-from dipper.models.Dataset import Dataset
-from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
 from dipper import config
@@ -49,7 +46,7 @@ class NCBIGene(Source):
 
     """
 
-    SCIGRAPH_BASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
+    SCIGRAPHBASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
 
     files = {
         'gene_info': {
@@ -104,9 +101,8 @@ class NCBIGene(Source):
             logger.info("Filtering on the following taxa: %s", str(tax_ids))
 
         self.gene_ids = []
-        if 'test_ids' not in \
-                config.get_config() or \
-                'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' \
+                not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
@@ -154,12 +150,12 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        geno = Genotype(g)
-        model = Model(g)
+        geno = Genotype(graph)
+        model = Model(graph)
 
         # not unzipping the file
         logger.info("Processing 'Gene Info' records")
@@ -205,7 +201,8 @@ class NCBIGene(Source):
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gene_type_id = self.map_type_of_gene(gtype.strip())
+                gtype = gtype.strip()
+                gene_type_id = self.resolve(gtype)
 
                 if symbol == 'NEWENTRY':
                     label = None
@@ -217,8 +214,7 @@ class NCBIGene(Source):
                 else:
                     self.class_or_indiv[gene_id] = 'C'
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     continue
 
                 if self.class_or_indiv[gene_id] == 'C':
@@ -236,13 +232,11 @@ class NCBIGene(Source):
                 if synonyms.strip() != '-':
                     for s in synonyms.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(),
-                            Assoc.annotation_properties['hasRelatedSynonym'])
+                            gene_id, s.strip(), model.globaltt['hasRelatedSynonym'])
                 if other_designations.strip() != '-':
                     for s in other_designations.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(),
-                            Assoc.annotation_properties['hasRelatedSynonym'])
+                            gene_id, s.strip(), model.globaltt['hasRelatedSynonym'])
                 if xrefs.strip() != '-':
                     self._add_gene_equivalencies(xrefs, gene_id, tax_num)
 
@@ -282,8 +276,7 @@ class NCBIGene(Source):
                         # >1 loc mapping
                         logger.info(
                             '%s is non-uniquely mapped to %s.' +
-                            ' Skipping for now.',
-                            gene_id, str(chr))
+                            ' Skipping for now.', gene_id, str(chr))
                         continue
                         # X|Y	Xp22.33;Yp11.3
 
@@ -319,12 +312,12 @@ class NCBIGene(Source):
                             maploc_id = makeChromID(c+bid, tax_num, 'CHR')
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             # Assume it's type will be added elsewhere
-                            band = Feature(g, maploc_id, None, None)
+                            band = Feature(graph, maploc_id, None, None)
                             band.addFeatureToGraph()
                             # add the band as the containing feature
-                            g.addTriple(
+                            graph.addTriple(
                                 gene_id,
-                                Feature.object_properties['is_subsequence_of'],
+                                self.globaltt['is_subsequence_of'],
                                 maploc_id)
                         else:
                             # TODO handle these cases: examples are:
@@ -332,12 +325,11 @@ class NCBIGene(Source):
                             # 12p13.3-p13.2|12p13-p12,1p13.3|1p21.3-p13.1,
                             # 12cen-q21,22q13.3|22q13.3
                             logger.debug(
-                                'not regular band pattern for %s: %s',
-                                gene_id, map_loc)
+                                'not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
-                            g.addTriple(
+                            graph.addTriple(
                                 gene_id,
-                                Feature.object_properties['is_subsequence_of'],
+                                self.globaltt['is_subsequence_of'],
                                 mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
@@ -366,13 +358,12 @@ class NCBIGene(Source):
             '10090': ['ENSEMBL'],
             '9606': ['ENSEMBL']
         }
-        if taxon in taxon_spec_xref_filters:
-            taxon_spec_filters = taxon_spec_xref_filters[taxon]
-        else:
-            taxon_spec_filters = []
+        # taxon_spec_filters = []
+        # if taxon in taxon_spec_xref_filters:
+        #    taxon_spec_filters = taxon_spec_xref_filters[taxon]
 
         model = Model(graph)
-        # deal with the xrefs
+        # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
         for ref in xrefs.strip().split('|'):
             xref_curie = self._cleanup_id(ref)
@@ -381,7 +372,7 @@ class NCBIGene(Source):
                     # proteins are not == genes.
                     model.addTriple(
                         gene_id,
-                        self.properties['has_gene_product'], xref_curie)
+                        self.globaltt['has gene product'], xref_curie)
                     continue
                     # skip some of these for now
                 if xref_curie.split(':')[0] in filter_out:
@@ -393,8 +384,7 @@ class NCBIGene(Source):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
-                        model.addEquivalentClass(
-                            gene_id, xref_curie)
+                        model.addEquivalentClass(gene_id, xref_curie)
                         if int(taxon) in clique_map:
                             if clique_map[int(taxon)] == xref_curie.split(':')[0]:
                                 model.makeLeader(xref_curie)
@@ -416,10 +406,10 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
@@ -473,8 +463,7 @@ class NCBIGene(Source):
                 # also add the old symbol as a synonym of the new gene
                 model.addSynonym(gene_id, discontinued_symbol)
 
-                if (not self.testMode) and\
-                        (limit is not None and line_counter > limit):
+                if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -492,10 +481,10 @@ class NCBIGene(Source):
 
         """
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         logger.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
@@ -539,13 +528,12 @@ class NCBIGene(Source):
                 # add type publication
                 model.addIndividualToGraph(pubmed_id, None, None)
                 reference = Reference(
-                    g, pubmed_id, Reference.ref_types['journal_article'])
+                    graph, pubmed_id, self.globaltt['journal article'])
                 reference.addRefToGraph()
-                g.addTriple(
-                    pubmed_id, model.object_properties['is_about'], gene_id)
+                graph.addTriple(
+                    pubmed_id, self.globaltt['is_about'], gene_id)
                 assoc_counter += 1
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         logger.info(
@@ -554,43 +542,13 @@ class NCBIGene(Source):
         return
 
     @staticmethod
-    def map_type_of_gene(sotype):
-        so_id = 'SO:0000110'
-        type_to_so_map = {
-            'ncRNA': 'SO:0001263',
-            'other': 'SO:0000110',
-            'protein-coding': 'SO:0001217',
-            'pseudo': 'SO:0000336',
-            'rRNA': 'SO:0001637',
-            'snRNA': 'SO:0001268',
-            'snoRNA': 'SO:0001267',
-            'tRNA': 'SO:0001272',
-            'unknown': 'SO:0000110',
-            'scRNA': 'SO:0001266',
-            # mature transcript - there is no good mapping
-            'miscRNA': 'SO:0000233',
-            'chromosome': 'SO:0000340',
-            'chromosome_arm': 'SO:0000105',
-            'chromosome_band': 'SO:0000341',
-            'chromosome_part': 'SO:0000830'
-        }
-
-        if sotype in type_to_so_map:
-            so_id = type_to_so_map.get(sotype)
-        else:
-            logger.warning(
-                "unmapped code %s. Defaulting to 'SO:0000110', " +
-                "sequence_feature.", sotype)
-
-        return so_id
-
-    @staticmethod
     def _cleanup_id(i):
         """
         Clean up messy id prefixes
         :param i:
         :return:
         """
+        # move to localtt.
         cleanid = i
         # MIM:123456 --> #OMIM:123456
         cleanid = re.sub(r'^MIM', 'OMIM', cleanid)
@@ -697,7 +655,7 @@ class NCBIGene(Source):
                         for o in orthologs:
                             oid = 'NCBIGene:'+str(o)
                             model.addClassToGraph(
-                                oid, None, Genotype.genoparts['gene'])
+                                oid, None, self.globaltt['gene'])
                             otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
                             geno.addTaxon(otaxid, oid)
                             assoc = OrthologyAssoc(graph, self.name, gid, oid)

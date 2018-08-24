@@ -124,8 +124,7 @@ class StringDB(Source):
             p2gene_map = dict()
 
             if taxon in self.id_map_files:
-                map_file = '/'.join((
-                    self.rawdir, self.id_map_files[taxon]['file']))
+                map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
                 mfile_handle = open(map_file, 'r')
                 if taxon == 9606:
@@ -139,8 +138,7 @@ class StringDB(Source):
                         p2gene_map[prot] = gene
                 mfile_handle.close()
             else:
-                logger.info("Fetching ensembl proteins "
-                            "for taxon {}".format(taxon))
+                logger.info("Fetching ensembl proteins for taxon {}".format(taxon))
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in p2gene_map.keys():
                     p2gene_map[key] = "ENSEMBL:{}".format(p2gene_map[key])
@@ -150,11 +148,12 @@ class StringDB(Source):
                     if key not in p2gene_map:
                         p2gene_map[key] = "ENSEMBL:{}".format(temp_map[key])
 
-            logger.info("Finished fetching ENSP ID mappings, "
-                        "fetched {} proteins".format(len(p2gene_map)))
+            logger.info(
+                "Finished fetching ENSP ID mappings, fetched {} proteins"
+                .format(len(p2gene_map)))
 
-            logger.info("Fetching protein protein interactions "
-                        "for taxon {}".format(taxon))
+            logger.info(
+                "Fetching protein protein interactions for taxon {}".format(taxon))
 
             self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
@@ -171,7 +170,7 @@ class StringDB(Source):
             gene2_curie = None
 
             try:
-                # Keep orientation the same since RO:0002434 is symmetric
+                # Keep orientation the same since RO!"interacts with" is symmetric
                 if protein1 > protein1:
                     gene1_curie = p2gene_map[protein1]
                     gene2_curie = p2gene_map[protein2]
@@ -182,15 +181,15 @@ class StringDB(Source):
                 filtered_out_count += 1
 
             if gene1_curie is not None and gene2_curie is not None:
-                # RO:0002434 ! interacts_with
-                interacts_with = 'RO:0002434'
-                self.graph.addTriple(gene1_curie, interacts_with, gene2_curie)
+                self.graph.addTriple(
+                    gene1_curie, self.globaltt['interacts with'], gene2_curie)
                 if limit is not None and index >= limit:
                     break
 
-        logger.info("Finished parsing p-p interactions for {},"
-                    " {} rows filtered out based on checking"
-                    " ensembl proteins".format(taxon, filtered_out_count))
+        logger.info(
+            "Finished parsing p-p interactions for {}, {} " +
+            "rows filtered out based on checking ensembl proteins"
+            .format(taxon, filtered_out_count))
         return
 
     def _get_file_paths(self, tax_ids, file_type):

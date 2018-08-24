@@ -1,16 +1,16 @@
 import logging
 import os
-from stat import ST_SIZE
 import re
-from zipfile import ZipFile
-from datetime import datetime
 import time
+import ftplib
+import pandas as pd
+from stat import ST_SIZE
+import gzip
+from datetime import datetime
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.Association import Assoc
-from dipper.models.Genotype import Genotype
-import ftplib
-import pandas as pd
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,11 @@ class Bgee(Source):
     """
 
     BGEE_FTP = 'ftp.bgee.org'
-    DEFAULT_TAXA = [10090, 10116, 13616, 28377, 6239,
-                    7227, 7955, 8364, 9031, 9258,
-                    9544, 9593, 9597, 9598, 9606,
-                    9823, 9913]
+    # would like to see these as names
+    DEFAULT_TAXA = [
+        10090, 10116, 13616, 28377, 6239, 7227, 7955, 8364, 9031, 9258, 9544, 9593,
+        9597, 9598, 9606, 9823, 9913
+    ]
     files = {
         'anat_entity': {
             'path': '/download/ranks/anat_entity/',
@@ -74,21 +75,20 @@ class Bgee(Source):
         :return:
         """
         for group in self.files:
-            files_to_download, ftp = \
-                self._get_file_list(self.files[group]['path'],
-                                    self.files[group]['pattern'])
+            files_to_download, ftp = self._get_file_list(
+                self.files[group]['path'], self.files[group]['pattern'])
             for name, info in files_to_download:
                 localfile = '/'.join((self.rawdir, name))
                 if not os.path.exists(localfile)\
-                        or is_dl_forced\
-                        or self.checkIfRemoteIsNewer(localfile, info['size'],
-                                                     info['modify']):
+                        or is_dl_forced or self.checkIfRemoteIsNewer(
+                            localfile, info['size'], info['modify']):
                     logger.info("Fetching {}".format(name))
                     logger.info("Writing to {}".format(localfile))
                     ftp.retrbinary('RETR {}'.format(name), open(localfile, 'wb').write)
                     remote_dt = Bgee._convert_ftp_time_to_iso(info['modify'])
-                    os.utime(localfile, (time.mktime(remote_dt.timetuple()),
-                                         time.mktime(remote_dt.timetuple())))
+                    os.utime(localfile, (
+                        time.mktime(remote_dt.timetuple()),
+                        time.mktime(remote_dt.timetuple())))
 
         ftp.quit()
 
@@ -102,16 +102,14 @@ class Bgee(Source):
         :param limit: int Limit to top ranked anatomy associations per group
         :return: None
         """
-        files_to_download, ftp = \
-            self._get_file_list(self.files['anat_entity']['path'],
-                                self.files['anat_entity']['pattern'])
+        files_to_download, ftp = self._get_file_list(
+            self.files['anat_entity']['path'],
+            self.files['anat_entity']['pattern'])
         for name, info in files_to_download:
             localfile = '/'.join((self.rawdir, name))
-            with ZipFile(localfile, 'r') as zip_file:
-                fh = zip_file.open(re.sub(r'\.zip$', '', name))
-                logger.info("Processing {}".format(name))
+            with gzip.open(localfile, 'rt', encoding='ISO-8859-1') as fh:
+                logger.info("Processing {}".format(localfile))
                 self._parse_gene_anatomy(fh, limit)
-
         return
 
     def _parse_gene_anatomy(self, fh, limit):
@@ -125,8 +123,8 @@ class Bgee(Source):
         :return: None
         """
         dataframe = pd.read_csv(fh, sep='\t')
-        gene_groups = dataframe.sort_values('rank score', ascending=False)\
-                               .groupby('Ensembl gene ID')
+        gene_groups = dataframe.sort_values(
+            'rank score', ascending=False).groupby('Ensembl gene ID')
 
         if limit is not None:
             gene_groups = gene_groups.head(limit).groupby('Ensembl gene ID')
@@ -134,7 +132,8 @@ class Bgee(Source):
         for gene, group in gene_groups:
             for index, row in group.iterrows():
                 self._add_gene_anatomy_association(
-                    row['Ensembl gene ID'], row['anatomical entity ID'],
+                    row['Ensembl gene ID'].strip(),
+                    row['anatomical entity ID'].strip(),
                     row['rank score']
                 )
         return
@@ -148,19 +147,17 @@ class Bgee(Source):
         :return: None
         """
         g2a_association = Assoc(self.graph, self.name)
-        genotype = Genotype(self.graph)
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
-        rank = re.sub(r',', '', rank)
-        model.addIndividualToGraph(ind_id=gene_curie, label=None,
-                                   ind_type=genotype.genoparts['gene'])
+  
+        rank = re.sub(r',', '', str(rank))  # ? can't do RE on a float ...
+        model.addIndividualToGraph(gene_curie, None)
         g2a_association.sub = gene_curie
         g2a_association.obj = anatomy_curie
-        g2a_association.rel = Assoc.object_properties['expressed_in']
+        g2a_association.rel = self.globaltt['expressed in']
         g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
-            Assoc.datatype_properties['has_quantifier'],
-            float(rank), 'Literal', 'xsd:float')
+            self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
         return
 
     # Override
@@ -175,17 +172,17 @@ class Bgee(Source):
         """
         is_remote_newer = False
         status = os.stat(localfile)
-        logger.info("Local file date: {0}, size: {1}".format(
-                    datetime.fromtimestamp(status.st_mtime),
-                    status[ST_SIZE]))
+        logger.info(
+            "Local file date: {0}, size: {1}"
+            .format(datetime.fromtimestamp(status.st_mtime), status[ST_SIZE]))
         remote_dt = Bgee._convert_ftp_time_to_iso(remote_modify)
 
         if remote_dt != datetime.fromtimestamp(status.st_mtime) \
                 or status[ST_SIZE] != int(remote_size):
             is_remote_newer = True
             logger.info(
-                "Object on server is has different size {0} and/or "
-                "date {1}".format(remote_size, remote_dt))
+                "Object on server is has different size {0} and/or date {1}"
+                .format(remote_size, remote_dt))
 
         return is_remote_newer
 
@@ -196,9 +193,9 @@ class Bgee(Source):
 
         :return: datetime object
         """
-        date_time = datetime(int(ftp_time[:4]), int(ftp_time[4:6]),
-                             int(ftp_time[6:8]), int(ftp_time[8:10]),
-                             int(ftp_time[10:12]), int(ftp_time[12:14]))
+        date_time = datetime(
+            int(ftp_time[:4]), int(ftp_time[4:6]), int(ftp_time[6:8]),
+            int(ftp_time[8:10]), int(ftp_time[10:12]), int(ftp_time[12:14]))
         return date_time
 
     def _get_file_list(self, working_dir, file_regex=re.compile(r'.*'), ftp=None):

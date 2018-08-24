@@ -21,17 +21,13 @@ class G2PAssoc(Assoc):
 
     """
 
-    g2p_types = {
-        'developmental_process': 'GO:0032502'
-    }
-
     def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
 
         if rel is None:
-            rel = self.properties['has_phenotype']  # default to has_phenotype
+            rel = self.globaltt['has phenotype']
 
         self.start_stage_id = None
         self.end_stage_id = None
@@ -88,24 +84,22 @@ class G2PAssoc(Assoc):
                                          str(self.end_stage_id)))
             stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
-                stage_process_id, None,
-                self.g2p_types['developmental_process'])
-            self.graph.addTriple(stage_process_id,
-                                 self.model.object_properties['starts_during'],
-                                 self.start_stage_id)
-            self.graph.addTriple(stage_process_id,
-                                 self.model.object_properties['ends_during'],
-                                 self.end_stage_id)
-            self.stage_process_id = stage_process_id
+                stage_process_id, None, self.globaltt['developmental_process'])
 
-            self.graph.addTriple(self.assoc_id,
-                                 self.model.object_properties['has_qualifier'],
-                                 self.stage_process_id)
+            self.graph.addTriple(
+                stage_process_id, self.globaltt['starts_during'], self.start_stage_id)
+
+            self.graph.addTriple(
+                stage_process_id, self.globaltt['ends_during'], self.end_stage_id)
+
+
+            self.stage_process_id = stage_process_id
+            self.graph.addTriple(
+                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id)
 
         if self.environment_id is not None:
-            self.graph.addTriple(self.assoc_id,
-                                 self.model.object_properties['has_qualifier'],
-                                 self.environment_id)
+            self.graph.addTriple(
+                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id)
         return
 
     def make_g2p_id(self):
@@ -123,11 +117,8 @@ class G2PAssoc(Assoc):
 
         """
 
-        attributes = \
-            [self.environment_id, self.start_stage_id, self.end_stage_id]
-        assoc_id = self.make_association_id(self.definedby,
-                                            self.entity_id,
-                                            self.rel,
-                                            self.phenotype_id, attributes)
+        attributes = [self.environment_id, self.start_stage_id, self.end_stage_id]
+        assoc_id = self.make_association_id(
+            self.definedby, self.entity_id, self.rel, self.phenotype_id, attributes)
 
         return assoc_id

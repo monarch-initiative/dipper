@@ -156,12 +156,12 @@ class GeneOntology(Source):
     def process_gaf(self, file, limit, id_map=None, eco_map=None):
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
         else:
-            g = self.graph
+            graph = self.graph
 
-        model = Model(g)
-        geno = Genotype(g)
+        model = Model(graph)
+        geno = Genotype(graph)
         logger.info("Processing Gene Associations from %s", file)
         line_counter = 0
 
@@ -171,8 +171,8 @@ class GeneOntology(Source):
             wbase = WormBase(self.graph_type, self.are_bnodes_skized)
 
         with gzip.open(file, 'rb') as csvfile:
-            filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""),
-                                    delimiter='\t', quotechar='\"')
+            filereader = csv.reader(
+                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
             for row in filereader:
                 line_counter += 1
                 # comments start with exclamation
@@ -181,8 +181,8 @@ class GeneOntology(Source):
 
                 if len(row) > 17 or len(row) < 15:
                     logger.warning(
-                        "Wrong number of columns {},"
-                        " expected 15 or 17\n{}".format(len(row), row)
+                        "Wrong number of columns {}, expected 15 or 17\n{}"
+                        .format(len(row), row)
                     )
                     continue
 
@@ -213,9 +213,8 @@ class GeneOntology(Source):
                         aspect == '' or object_type == '' or taxon == '' or
                         date == '' or assigned_by == ''):
                     logger.error(
-                        "Missing required part of annotation " +
-                        "on row %d:\n"+'\t'.join(row),
-                        line_counter)
+                        "Missing required part of annotation on row %d:\n"+'\t'
+                        .join(row), line_counter)
                     continue
 
                 # deal with qualifier NOT, contributes_to, colocalizes_with
@@ -246,10 +245,8 @@ class GeneOntology(Source):
                 else:
                     gene_id = ':'.join((db, gene_num))
 
-                if self.testMode \
-                        and not(
-                            re.match(r'NCBIGene', gene_id) and
-                            int(gene_num) in self.test_ids):
+                if self.testMode and not(re.match(r'NCBIGene', gene_id) and
+                        int(gene_num) in self.test_ids):
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
@@ -260,13 +257,13 @@ class GeneOntology(Source):
                         model.addSynonym(gene_id, s.strip())
                 if re.search(r'\|', taxon):
                     # TODO add annotations with >1 taxon
-                    logger.info(">1 taxon (%s) on line %d.  skipping", taxon,
-                                line_counter)
+                    logger.info(
+                        ">1 taxon (%s) on line %d.  skipping", taxon, line_counter)
                 else:
                     tax_id = re.sub(r'taxon:', 'NCBITaxon:', taxon)
                     geno.addTaxon(tax_id, gene_id)
 
-                assoc = Assoc(g, self.name)
+                assoc = Assoc(graph, self.name)
 
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
@@ -282,32 +279,27 @@ class GeneOntology(Source):
                     r = r.strip()
                     if r != '':
                         prefix = re.split(r':', r)[0]
-                        r = re.sub(prefix, self.clean_db_prefix(prefix), r)
+                        r = re.sub(prefix, self.localtt[prefix], r)
                         r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
-                        ref = Reference(g, r)
+                        ref = Reference(graph, r)
                         if re.match(r'PMID', r):
-                            ref_type = Reference.ref_types['journal_article']
+                            ref_type = self.globaltt['journal article']
                             ref.setType(ref_type)
                         ref.addRefToGraph()
                         assoc.add_source(r)
 
                 # TODO add the source of the annotations from assigned by?
 
-                aspect_rel_map = {
-                    'P': model.object_properties['involved_in'],  # involved in
-                    'F': model.object_properties['enables'],  # enables
-                    'C': model.object_properties['part_of']  # part of
-                }
-
-                if aspect not in aspect_rel_map:
+                rel = self.resolve(aspect, mandatory=False)
+                if aspect == rel:
                     logger.error("Aspect not recognized: %s", aspect)
-
-                rel = aspect_rel_map.get(aspect)
-                if aspect == 'F' and re.search(r'contributes_to', qualifier):
-                    rel = model.object_properties['contributes_to']
-                assoc.set_relationship(rel)
+                    rel = None
+                else:
+                    if aspect == 'F' and re.search(r'contributes_to', qualifier):
+                        rel = self.globaltt['contributes to']
+                    assoc.set_relationship(rel)
                 if uniprotid is not None:
-                    assoc.set_description('Mapped from '+uniprotid)
+                    assoc.set_description('Mapped from ' + uniprotid)
                 # object_type should be one of:
                 # protein_complex; protein; transcript; ncRNA; rRNA; tRNA;
                 # snRNA; snoRNA; any subtype of ncRNA in the Sequence Ontology.
@@ -326,14 +318,11 @@ class GeneOntology(Source):
                     phenotypeid = go_id+'PHENOTYPE'
                     # create phenotype associations
                     for i in withitems:
-                        if i == '' or \
-                                re.match(
-                                    r'(UniProtKB|WBPhenotype|InterPro|HGNC)',
-                                    i):
+                        if i == '' or re.match(
+                                r'(UniProtKB|WBPhenotype|InterPro|HGNC)', i):
                             logger.warning(
                                 "Don't know what having a uniprot id " +
-                                "in the 'with' column means of %s",
-                                uniprotid)
+                                "in the 'with' column means of %s", uniprotid)
                             continue
                         i = re.sub(r'MGI\:MGI\:', 'MGI:', i)
                         i = re.sub(r'WB:', 'WormBase:', i)
@@ -341,36 +330,33 @@ class GeneOntology(Source):
                         # for worms and fish, they might give a RNAi or MORPH
                         # in these cases make a reagent-targeted gene
                         if re.search('MRPHLNO|CRISPR|TALEN', i):
-                            targeted_gene_id = zfin.make_targeted_gene_id(
-                                gene_id, i)
-                            geno.addReagentTargetedGene(i, gene_id,
-                                                        targeted_gene_id)
+                            targeted_gene_id = zfin.make_targeted_gene_id(gene_id, i)
+                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
                             # TODO PYLINT why is this:
                             # Redefinition of assoc type from
                             # dipper.models.assoc.Association.Assoc to
                             # dipper.models.assoc.G2PAssoc.G2PAssoc
-                            assoc = G2PAssoc(g, self.name, targeted_gene_id,
-                                             phenotypeid)
-                        elif re.search(r'WBRNAi', i):
-                            targeted_gene_id = \
-                                wbase.make_reagent_targeted_gene_id(
-                                    gene_id, i)
-                            geno.addReagentTargetedGene(
-                                i, gene_id, targeted_gene_id)
                             assoc = G2PAssoc(
-                                g, self.name, targeted_gene_id, phenotypeid)
+                                graph, self.name, targeted_gene_id, phenotypeid)
+                        elif re.search(r'WBRNAi', i):
+                            targeted_gene_id = wbase.make_reagent_targeted_gene_id(
+                                gene_id, i)
+                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
+                            assoc = G2PAssoc(
+                                graph, self.name, targeted_gene_id, phenotypeid)
                         else:
-                            assoc = G2PAssoc(g, self.name, i, phenotypeid)
+                            assoc = G2PAssoc(graph, self.name, i, phenotypeid)
                         for r in refs:
                             r = r.strip()
                             if r != '':
                                 prefix = re.split(r':', r)[0]
                                 r = re.sub(
-                                    prefix, self.clean_db_prefix(prefix), r)
+                                    prefix, self.localtt[prefix], r)
                                 r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
                                 assoc.add_source(r)
                                 # experimental phenotypic evidence
-                                assoc.add_evidence("ECO:0000059")
+                                assoc.add_evidence(
+                                    self.globaltt['experimental phenotypic evidence'])
                         assoc.add_association_to_graph()
                         # TODO should the G2PAssoc be
                         # the evidence for the GO assoc?
@@ -401,41 +387,15 @@ class GeneOntology(Source):
                 if geneid.strip() != '':
                     idlist = re.split(r';', geneid)
                     id_map[
-                        uniprotkb_ac.strip()] = [
-                            'NCBIGene:'+i.strip() for i in idlist]
+                        uniprotkb_ac.strip()] = ['NCBIGene:'+i.strip() for i in idlist]
                 elif ensembl.strip() != '':
                     idlist = re.split(r';', ensembl)
-                    id_map[
-                        uniprotkb_ac.strip()] = [
-                            'ENSEMBL:'+i.strip() for i in idlist]
+                    id_map[uniprotkb_ac.strip()] = [
+                        'ENSEMBL:'+i.strip() for i in idlist]
 
-        logger.info("Acquired %d uniprot-entrez mappings", len(id_map))
+        logger.info("Acquired %i uniprot-entrez mappings", len(id_map))
 
         return id_map
-
-    def clean_db_prefix(self, db):
-        """
-        Here, we map the GO-style prefixes with
-        Monarch-style prefixes that are able to be processed by our curie_map.
-        :param db:
-        :return:
-
-        """
-
-        prefix_map = {
-            'WB': 'WormBase',
-            'WB_REF': 'WormBase',
-            'FB': 'FlyBase',
-            'Reactome': 'REACT',
-            'Ensembl': 'ENSEMBL',
-            'GOC': 'GO_REF'
-        }
-
-        clean_prefix = db
-        if db in prefix_map:
-            clean_prefix = prefix_map.get(db)
-
-        return clean_prefix
 
     def getTestSuite(self):
         import unittest

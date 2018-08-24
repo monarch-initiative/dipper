@@ -93,7 +93,7 @@ class ZFINSlim(Source):
                     assoc = G2PAssoc(self.graph, self.name, gene_curie, zp_id)
                     if pub_id:
                         reference = Reference(self.graph, pub_curie,
-                                              Reference.ref_types['document'])
+                                              self.globaltt['document'])
                         reference.addRefToGraph()
                         assoc.add_source(pub_curie)
 

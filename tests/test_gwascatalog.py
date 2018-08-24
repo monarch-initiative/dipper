@@ -20,7 +20,7 @@ class TestGwasSNPModel(unittest.TestCase):
     def setUp(self):
         self.test_util = TestUtils()
         self.source = GWASCatalog('rdf_graph', True)
-        self.source.graph = RDFGraph(True) # Reset graph
+        self.source.graph = RDFGraph(True)  # Reset graph
         self.source.graph.bind_all_namespaces()
         self.test_data = {
             'snp_label': 'rs1491921-C',
@@ -53,8 +53,8 @@ class TestGwasSNPModel(unittest.TestCase):
         return dbSNP:rs1491921, snp
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         self.assertEqual(variant_curie, "dbSNP:rs1491921")
         self.assertEqual(variant_type, 'snp')
@@ -64,8 +64,8 @@ class TestGwasSNPModel(unittest.TestCase):
         Test output model of _add_snp_to_graph()
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         self.source._add_snp_to_graph(
             variant_curie, self.test_data['snp_label'], self.test_data['chrom_num'],
@@ -88,17 +88,15 @@ class TestGwasSNPModel(unittest.TestCase):
         faldo:reference OBO:CHR_GRCh38chr5 .
 """
         # To debug
-        #print(self.source.graph.serialize(format="turtle").decode("utf-8"))
-        #self.assertTrue(False)
+        # print(self.source.graph.serialize(format="turtle").decode("utf-8"))
+        # self.assertTrue(False)
 
         # dbg
-        logger.debug("Reference graph: %s",
-                     self.source.graph.serialize(format="turtle")
-                                      .decode("utf-8")
-        )
+        # logger.debug(
+        #    "Reference graph: %s",
+        #   self.source.graph.serialize(format="turtle").decode("utf-8"))
 
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, self.source.graph))
+        self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
     def test_snp_gene_relation(self):
         """
@@ -106,9 +104,8 @@ class TestGwasSNPModel(unittest.TestCase):
         :return:
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(
-                self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         self.source._add_snp_gene_relation(
             variant_curie, self.test_data['snp_gene_nums'],
@@ -119,8 +116,7 @@ class TestGwasSNPModel(unittest.TestCase):
         dbSNP:rs1491921 OBO:RO_0002528 NCBIGene:107986180 ;
             OBO:RO_0002529 NCBIGene:107986179 .
         """
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, self.source.graph))
+        self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
     def test_deprecated_snp(self):
         """
@@ -128,12 +124,12 @@ class TestGwasSNPModel(unittest.TestCase):
         :return:
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        #fake data
+        # fake data
         snp_id_current = '12345'
         merged = '1'
 
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         self.source._add_deprecated_snp(
             variant_curie, snp_id_current, merged,
@@ -146,8 +142,7 @@ class TestGwasSNPModel(unittest.TestCase):
 
         dbSNP:rs12345 MONARCH:cliqueLeader true .
         """
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, self.source.graph))
+        self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
     def test_snp_trait_association(self):
         """
@@ -161,8 +156,8 @@ class TestGwasSNPModel(unittest.TestCase):
         efo_ontology.bind_all_namespaces()
         logger.info("Finished loading EFO ontology")
 
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         description = self.source._make_description(
             self.test_data['trait'], self.test_data['init_sample_desc'],
@@ -174,7 +169,9 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['pubmed'], description)
 
         triples = """
-    MONARCH:b7d0d4224dcd4c5c a OBAN:association ;
+
+
+    MONARCH:b7d0d4224dcd4c5c46d0 a OBAN:association ;
         dc:description "{0}" ;
         OBO:RO_0002558 OBO:ECO_0000213 ;
         dc:source PMID:25918132 ;
@@ -182,7 +179,7 @@ class TestGwasSNPModel(unittest.TestCase):
         OBAN:association_has_predicate RO:0003304 ;
         OBAN:association_has_subject dbSNP:rs1491921 .
 
-    MONARCH:757b13271c1c5bf8 a OBAN:association ;
+    MONARCH:b57b13271c1c5bf834cc a OBAN:association ;
         dc:description "{0}" ;
         OBO:RO_0002558 OBO:ECO_0000213 ;
         dc:source PMID:25918132 ;
@@ -201,12 +198,10 @@ class TestGwasSNPModel(unittest.TestCase):
         """.format(description)
 
         # dbg
-        logger.warning("Reference graph: %s",
-                     self.source.graph.serialize(format="turtle")
-                                      .decode("utf-8")
-        )
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, self.source.graph))
+        # logger.debug(
+        #    "Reference graph: %s",
+        #    self.source.graph.serialize(format="turtle").decode("utf-8"))
+        self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
 
 class TestGwasHaplotypeModel(unittest.TestCase):
@@ -247,13 +242,13 @@ class TestGwasHaplotypeModel(unittest.TestCase):
         """
         Test output model of _process_haplotype()
         self._process_haplotype(
-                            variant_curie, strongest_snp_risk_allele,
-                            chrom_num, chrom_pos, context,
-                            risk_allele_frequency, mapped_gene, so_ontology)
+            variant_curie, strongest_snp_risk_allele,
+            chrom_num, chrom_pos, context,
+            risk_allele_frequency, mapped_gene, so_ontology)
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        variant_curie, variant_type = \
-            self.source._get_curie_and_type_from_id(self.test_data['snp_label'])
+        variant_curie, variant_type = self.source._get_curie_and_type_from_id(
+            self.test_data['snp_label'])
 
         so_ontology = RDFGraph()
         logger.info("Loading SO ontology in separate rdf graph")
@@ -338,13 +333,12 @@ dbSNP:rs7020413 a OBO:SO_0000694,
         """
 
         # dbg
-        logger.debug("Reference graph: %s",
-                     self.source.graph.serialize(format="turtle")
-                                      .decode("utf-8")
-        )
+        # logger.debug(
+        #    "Reference graph: %s",
+        #   self.source.graph.serialize(format="turtle").decode("utf-8"))
 
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, self.source.graph))
+        #  Does not seem to acknowlage these constant triples 
+        self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
 
 if __name__ == '__main__':

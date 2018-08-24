@@ -1,3 +1,10 @@
+*dot/
+*ClinVar.py
+*~
+Pipfile.lock
+
+junk/*
+
 # Created by https://www.gitignore.io
 
 ### Project specific:

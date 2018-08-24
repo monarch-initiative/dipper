@@ -48,7 +48,7 @@ class RGDTestCase(unittest.TestCase):
 
         rgd.make_association(record=self.test_set_1)
         triples = """
-    :MONARCH_64650e8c3d865f11 a OBAN:association ;
+    :MONARCH_b4650e8c3d865f11a1a5 a OBAN:association ;
         RO:0002558 ECO:0005611 ;
         dc:source RGDRef:1581841 ;
         OBAN:association_has_object OBO:MP_0003340 ;

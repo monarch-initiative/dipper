@@ -149,11 +149,11 @@ class Panther(Source):
         logger.info("getting orthologs")
 
         if self.testMode:
-            g = self.testgraph
+            graph = self.testgraph
 
         else:
-            g = self.graph
-        model = Model(g)
+            graph = self.graph
+        model = Model(graph)
         unprocessed_gene_ids = set()  # may be faster to make a set after
 
         for k in self.files.keys():
@@ -248,10 +248,10 @@ class Panther(Source):
 
                     rel = self._map_orthology_code_to_RO(orthology_class)
 
-                    evidence_id = 'ECO:0000080'  # phylogenetic evidence
+                    evidence_id = self.globaltt['phylogenetic evidence']
 
                     # add the association and relevant nodes to graph
-                    assoc = OrthologyAssoc(g, self.name, gene_a, gene_b, rel)
+                    assoc = OrthologyAssoc(graph, self.name, gene_a, gene_b, rel)
                     assoc.add_evidence(evidence_id)
 
                     # add genes to graph;
@@ -260,10 +260,10 @@ class Panther(Source):
                     model.addClassToGraph(gene_b, None)
 
                     # might as well add the taxon info for completeness
-                    g.addTriple(
-                        gene_a, model.object_properties['in_taxon'], taxon_a)
-                    g.addTriple(
-                        gene_b, model.object_properties['in_taxon'], taxon_b)
+                    graph.addTriple(
+                        gene_a, self.globaltt['in taxon'], taxon_a)
+                    graph.addTriple(
+                        gene_b, self.globaltt['in taxon'], taxon_b)
 
                     assoc.add_association_to_graph()
 
@@ -292,6 +292,7 @@ class Panther(Source):
         :param ptax:
         :return: NCBITaxon id
         """
+        # TODO  move to localtt->globaltt
         taxid = None
         ptax_to_taxid_map = {
             'ANOCA': 28377,  # green lizard
@@ -335,6 +336,7 @@ class Panther(Source):
         :param ortho: orthology code
         :return: RO identifier
         """
+        # TODO  move to localtt->globaltt
         ortho_rel = OrthologyAssoc.ortho_rel
         ro_id = ortho_rel['orthologous']  # in orthology relationship with
         ortho_to_ro_map = {

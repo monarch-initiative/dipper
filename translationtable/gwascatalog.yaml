@@ -1,0 +1,9 @@
+---
+'upstream_gene_variant': 'is upstream of sequence of'
+'downstream_gene_variant': 'is downstream of sequence of'
+
+# find a way to parameterize this
+"reference assembly": "GRCh38"
+
+# switch from SO!region to falfo!Region
+"region":  "Region"   

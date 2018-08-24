@@ -148,13 +148,13 @@ class BioGrid(Source):
                     r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
                 if self.testMode:
-                    g = self.testgraph
+                    graph = self.testgraph
                     # skip any genes that don't match our test set
                     if (int(gene_a_num) not in self.test_ids) or\
                             (int(gene_b_num) not in self.test_ids):
                         continue
                 else:
-                    g = self.graph
+                    graph = self.graph
                     # when not in test mode, filter by taxon
                     if int(re.sub(r'taxid:', '', taxid_a.rstrip())) not in\
                             self.tax_ids or\
@@ -171,8 +171,10 @@ class BioGrid(Source):
                 # get the interaction type
                 # psi-mi:"MI:0407"(direct interaction)
                 int_type = re.search(r'MI:\d+', interaction_type).group()
-                rel = self._map_MI_to_RO(int_type)
-
+                rel = self.resolve(int_type, False)
+                if rel == int_type:
+                    rel = self.globaltt['interacts with']
+                    
                 # scrub pubmed-->PMID prefix
                 pub_id = re.sub(r'pubmed', 'PMID', pub_id)
                 # remove bogus whitespace
@@ -180,13 +182,15 @@ class BioGrid(Source):
 
                 # get the method, and convert to evidence code
                 det_code = re.search(r'MI:\d+', detection_method).group()
-                evidence = self._map_MI_to_ECO(det_code)
+                evidence = self.resolve(det_code, False)
+                if evidence == det_code:
+                    evidence = self.globaltt["experimental evidence"]
 
                 # note that the interaction_id is some kind of internal biogrid
                 # identifier that does not map to a public URI.
                 # we will construct a monarch identifier from this
 
-                assoc = InteractionAssoc(g, self.name, gene_a, gene_b, rel)
+                assoc = InteractionAssoc(graph, self.name, gene_a, gene_b, rel)
                 assoc.add_evidence(evidence)
                 assoc.add_source(pub_id)
                 assoc.add_association_to_graph()
@@ -241,19 +245,19 @@ class BioGrid(Source):
                  organism_label) = line.split('\t')
 
                 if self.testMode:
-                    g = self.testgraph
+                    graph = self.testgraph
                     # skip any genes that don't match our test set
                     if int(biogrid_num) not in self.biogrid_ids:
                         continue
                 else:
-                    g = self.graph
+                    graph = self.graph
 
-                model = Model(g)
+                model = Model(graph)
 
                 # for each one of these,
                 # create the node and add equivalent classes
                 biogrid_id = 'BIOGRID:'+biogrid_num
-                prefix = self._map_idtype_to_prefix(id_type)
+                prefix = self.localtt[id_type]
 
                 # TODO make these filters available as commandline options
                 # geneidtypefilters='NCBIGene,OMIM,MGI,FlyBase,ZFIN,MGI,HGNC,
@@ -287,52 +291,26 @@ class BioGrid(Source):
         rel = InteractionAssoc.interaction_object_properties
         mi_ro_map = {
             # colocalization
-            'MI:0403': rel['colocalizes_with'],
+            'MI:0403': rel['colocalizes with'],
             # direct interaction
-            'MI:0407': rel['interacts_with'],
+            'MI:0407': rel['interacts with'],
             # synthetic genetic interaction defined by inequality
-            'MI:0794': rel['genetically_interacts_with'],
+            'MI:0794': rel['genetically interacts with'],
             # suppressive genetic interaction defined by inequality
-            'MI:0796': rel['genetically_interacts_with'],
+            'MI:0796': rel['genetically interacts with'],
             # additive genetic interaction defined by inequality
-            'MI:0799': rel['genetically_interacts_with'],
+            'MI:0799': rel['genetically interacts with'],
             # association
-            'MI:0914': rel['interacts_with'],
+            'MI:0914': rel['interacts with'],
             # physical association
-            'MI:0915': rel['interacts_with']
+            'MI:0915': rel['interacts with']
         }
 
-        ro_id = rel['interacts_with']  # default
+        ro_id = rel['interacts with']  # default
         if mi_id in mi_ro_map:
             ro_id = mi_ro_map.get(mi_id)
 
         return ro_id
-
-    @staticmethod
-    def _map_MI_to_ECO(mi_id):
-        eco_id = 'ECO:0000006'  # default to experimental evidence
-        mi_to_eco_map = {
-            'MI:0018': 'ECO:0000068',  # yeast two-hybrid
-            'MI:0004': 'ECO:0000079',  # affinity chromatography
-            'MI:0047': 'ECO:0000076',  # far western blotting
-            'MI:0055': 'ECO:0000021',  # should be FRET, but using physical_interaction FIXME
-            'MI:0090': 'ECO:0000012',  # desired: protein complementation, using: functional complementation
-            'MI:0096': 'ECO:0000085',  # desired: pull down, using: immunoprecipitation
-            'MI:0114': 'ECO:0000324',  # desired: x-ray crystallography, using: imaging assay
-            'MI:0254': 'ECO:0000011',  # desired: genetic interference, using: genetic interaction evidence
-            'MI:0401': 'ECO:0000172',  # desired: biochemical, using: biochemical trait evidence
-            'MI:0415': 'ECO:0000005',  # desired: enzymatic study, using: enzyme assay evidence
-            'MI:0428': 'ECO:0000324',  # imaging
-            'MI:0686': 'ECO:0000006',  # desired: unspecified, using: experimental evidence
-            'MI:1313': 'ECO:0000006'   # None?
-        }
-        if mi_id in mi_to_eco_map:
-            eco_id = mi_to_eco_map.get(mi_id)
-        else:
-            logger.warning(
-                "unmapped code %s. Defaulting to experimental_evidence", mi_id)
-
-        return eco_id
 
     @staticmethod
     def _map_idtype_to_prefix(idtype):
@@ -420,7 +398,6 @@ class BioGrid(Source):
         # TODO add InteractionAssoc tests
         # TODO add test about if all prefixes are mapped?
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(BioGridTestCase)
 
         return test_suite
