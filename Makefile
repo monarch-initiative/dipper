@@ -9,8 +9,8 @@ TEST = python3 -m unittest
 ### Tests
 ###
 
-test: MGI-test Orphanet-test UDP-test IMPC-fetch IMPC-test GWAS-test \
-      reactome-test RGD-test string-test trans-test CTD-test mychem-test
+test: trans-test MGI-test  UDP-test IMPC-fetch IMPC-test  reactome-test \
+      RGD-test string-test  CTD-test mychem-test  # Orphanet-test  # GWAS-test
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
