@@ -3,6 +3,7 @@ from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
 import logging
 import re
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,11 @@ class StreamedGraph(DipperGraph):
     just support nt
     """
 
-    curie_util = CurieUtil(curie_map.get())
+    curie_util = CurieUtil(curie_map.get())  # it is just a flat mapping datastructure
+    
+    with open('translationtable/global_terms.yaml') as fh:
+        globaltt = yaml.safe_load(fh).copy()
+        globaltcid = {v: k for k, v in globaltt.items()}
 
     def __init__(self,
                 are_bnodes_skized=True,
@@ -27,6 +32,7 @@ class StreamedGraph(DipperGraph):
         self.fmt = fmt
         self.file_handle = file_handle
         self.identifier = identifier
+        self.curie_map = curie_map.get()
 
     def addTriple(self, subject_id, predicate_id, object_id,
                   object_is_literal=False, literal_type=None):

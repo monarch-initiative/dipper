@@ -39,7 +39,9 @@ class Dataset:
             self.graph = RDFGraph(True, identifier)
 
         self.model = Model(self.graph)
-        self.globaltt = self.model.globaltt
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         # TODO: move hard coded curies to translation table calls
         self.identifier = identifier
         if title is None:

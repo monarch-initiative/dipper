@@ -20,9 +20,7 @@ class Model():
     def __init__(self, graph):
         if isinstance(graph, Graph):
             self.graph = graph
-            with open('translationtable/global_terms.yaml') as fh:
-                self.globaltt = yaml.safe_load(fh)
-                self.globaltcid = {v: k for k, v in self.globaltt.items()}
+            self.globaltt = self.graph.globaltt
 
         else:
             raise ValueError("{} is not a graph".graph)

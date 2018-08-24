@@ -5,6 +5,7 @@ from dipper import curie_map
 import re
 import logging
 import sys
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,11 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
 
     curie_util = CurieUtil(curie_map.get())
 
+    # make global translation table available outside the ingest
+    with open('translationtable/global_terms.yaml') as fh:
+        globaltt = yaml.safe_load(fh).copy()
+        globaltcid = {v: k for k, v in globaltt.items()}
+
     def __init__(self, are_bnodes_skized=True, identifier=None):
         # print("in RDFGraph  with id: ", identifier)
         super().__init__('IOMemory', identifier)
@@ -37,6 +43,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
 
         # try adding them all
         # self.bind_all_namespaces()  # too much
+        self.curie_map = curie_map.get()
 
     def addTriple(self, subject_id, predicate_id, obj,
                   object_is_literal=False, literal_type=None):

@@ -23,8 +23,9 @@ class Assoc:
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
-        self.globaltt = self.model.globaltt
-
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         # core parts of the association
         self.definedby = definedby
         self.sub = sub

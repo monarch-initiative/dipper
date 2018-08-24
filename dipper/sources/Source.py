@@ -37,13 +37,6 @@ class Source:
     namespaces = {}
     files = {}
 
-    # translation table, mapping, dict... one stop shopping for labels to identifiers
-    globaltt = {}
-    # external to internal mapping.
-    # note: generating both external to internal & internal to external
-    localtt = {}    # e->i useful for direct mapping
-    localtcid = {}  # i->e useful for remapping external keys for human comprehension
-
     def __init__(
         self,
         graph_type='rdf_graph',     # or streamed_graph
@@ -60,9 +53,7 @@ class Source:
         self.are_bnodes_skized = are_bnodes_skized
         self.ingest_url = ingest_url
         self.ingest_title = ingest_title
-        self.globaltt = self.load_global_translationtable()
         self.localtt = self.load_local_translationtable(name)
-        self.curiemap = self.load_curie_map()
 
         if name is not None:
             self.name = name
@@ -105,10 +96,10 @@ class Source:
                 datetime.now().isoformat(' ').split()[0]
 
             logger.info("Creating graph  %s", graph_id)
-            self.graph = RDFGraph(are_bnodes_skized, graph_id)
+            self.graph = RDFGraph(are_bnodes_skized, graph_id) 
 
         elif graph_type == 'streamed_graph':
-            # insufficient
+            # need to expand on export formats
             source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             # leave test files as turtle (better human readibility)
@@ -116,6 +107,11 @@ class Source:
             logger.error(
                 "{} graph type not supported\n"
                 "valid types: rdf_graph, streamed_graph" .format(graph_type))
+
+        # pull in global ontology mapping datastructures
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
 
         # will be set to True if the intention is
         # to only process and write the test data
@@ -136,8 +132,6 @@ class Source:
 
         for g in [self.graph, self.testgraph]:
             self.declareAsOntology(g)
-
-        self.globaltt = self.load_global_translationtable()
 
         return
 
@@ -732,7 +726,8 @@ class Source:
         affords a set of human readable terms to aid understanding within
         and between ingests
         '''
-        with open(globaltt_file) as fh:
+        globaltt = dict()
+        with open(globaltt_file, 'r') as fh:
             globaltt = yaml.safe_load(fh)
         return globaltt
 
@@ -744,7 +739,7 @@ class Source:
         affords a set of human readable terms to aid understanding within
         and between ingests
         '''
-        with open(curie_map_file) as fh:
+        with open(curie_map_file, 'r') as fh:
             curiemap = yaml.safe_load(fh)
         return curiemap
 

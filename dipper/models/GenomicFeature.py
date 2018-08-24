@@ -32,7 +32,9 @@ class Feature():
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
-        self.globaltt = self.model.globaltt
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         self.fid = feature_id
         self.label = label
         self.ftype = feature_type

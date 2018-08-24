@@ -26,9 +26,9 @@ class Genotype():
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(self.graph)
-        self.globaltt = self.model.globaltt
-        self.globaltcid = self.model.globaltcid
-
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         return
 
     def addGenotype(
@@ -426,18 +426,19 @@ class Genotype():
         return
 
     def addGenome(self, taxon_id, taxon_label=None):
+        ncbitaxon = 'NCBITaxon:' + taxon_id
         if taxon_label is None:
-            if taxon_id in self.globaltcid:
-                taxon_label = self.globaltcid[taxon_id]
+            if ncbitaxon in self.globaltcid:
+                taxon_label = self.globaltcid[ncbitaxon]
             else:
-                logging.warning('Add ' + taxon_id + ' to global translation table')
+                logging.warning('Add ' + ncbitaxon + ' to global translation table')
                 taxon_label = taxon_id
-        elif taxon_id in self.globaltcid and taxon_label != self.globaltcid[taxon_id]:
+        elif ncbitaxon in self.globaltcid and taxon_label != self.globaltcid[ncbitaxon]:
             logging.warning(
-                '"' + self.globaltcid[taxon_id] + '" may need updating from "' +
+                '"' + self.globaltcid[ncbitaxon] + '" may need updating from "' +
                 taxon_label + '" in global translation table')
             logging.warning(
-                '"' + taxon_label + '": " ' + self.globaltcid[taxon_id] + '"' +
+                '"' + taxon_label + '": " ' + self.globaltcid[ncbitaxon] + '"' +
                 ' may need to be added to a local translation table')
 
         genome_label = taxon_label + ' genome'

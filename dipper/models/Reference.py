@@ -35,7 +35,9 @@ class Reference:
         self.short_citation = None
 
         self.model = Model(self.graph)
-        self.globaltt = self.model.globaltt
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
         if ref_type is None:
             self.ref_type = self.globaltt['document']
         else:

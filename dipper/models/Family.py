@@ -19,7 +19,9 @@ class Family():
         else:
             raise ValueError("{} is not a graph".graph)
         self.model = Model(graph)
-        self.globaltt = self.model.globaltt
+        self.globaltt = self.graph.globaltt
+        self.globaltcid = self.graph.globaltcid
+        self.curie_map = self.graph.curie_map
 
     def addMember(self, group_id, member_id):
         self.graph.addTriple(group_id, self.globaltt['has member'], member_id)

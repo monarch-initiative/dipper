@@ -145,8 +145,8 @@ class AnimalQTLdb(Source):
         animals = ['chicken', 'pig', 'horse', 'rainbow_trout', 'sheep', 'cattle']
 
         for common_name in animals:
-            tax_id = self.resolve(common_name).split(':')[1]
-            geno.addGenome(tax_id, self.localtt[common_name])
+            txid_num = self.resolve(common_name).split(':')[1]
+            geno.addGenome(txid_num, self.localtt[common_name])
             build_id = None
             build = None
 
@@ -160,17 +160,17 @@ class AnimalQTLdb(Source):
                     build = mch.group(1)
                     build_id = self._map_build_by_abbrev(build)
                     logger.info("Build = %s", build_id)
-                    geno.addReferenceGenome(build_id, build, tax_id)
+                    geno.addReferenceGenome(build_id, build, txid_num)
                 if build_id is not None:
                     self._process_QTLs_genomic_location(
-                        '/'.join((self.rawdir, bpfile)), tax_id, build_id, build,
+                        '/'.join((self.rawdir, bpfile)), txid_num, build_id, build,
                         common_name, limit)
 
             fname_cm = common_name + '_cm'
             if fname_cm in self.files:
                 cmfile = self.files[fname_cm]['file']
                 self._process_QTLs_genetic_location(
-                    '/'.join((self.rawdir, cmfile)), tax_id, common_name, limit)
+                    '/'.join((self.rawdir, cmfile)), txid_num, common_name, limit)
 
         logger.info("Finished parsing")
         return

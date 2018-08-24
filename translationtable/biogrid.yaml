@@ -99,3 +99,5 @@
 "UNIPROT-ISOFORM": "UniprotKB"
 "ENSEMBL GENE": "ENSEMBL"
 "WORMBASE-OLD": "WormBase"
+
+"CGD": "CGD"    # "???  TODO see if this should go somewhere"
