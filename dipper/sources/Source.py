@@ -96,7 +96,7 @@ class Source:
                 datetime.now().isoformat(' ').split()[0]
 
             logger.info("Creating graph  %s", graph_id)
-            self.graph = RDFGraph(are_bnodes_skized, graph_id) 
+            self.graph = RDFGraph(are_bnodes_skized, graph_id)
 
         elif graph_type == 'streamed_graph':
             # need to expand on export formats
@@ -717,31 +717,6 @@ class Source:
         return {
             'User-Agent': USER_AGENT
         }
-
-    @staticmethod
-    def load_global_translationtable(  # wip
-            globaltt_file='translationtable/global_terms.yaml'):
-        '''
-        Load common mapping from ontology lables to ontology identifiers
-        affords a set of human readable terms to aid understanding within
-        and between ingests
-        '''
-        globaltt = dict()
-        with open(globaltt_file, 'r') as fh:
-            globaltt = yaml.safe_load(fh)
-        return globaltt
-
-    @staticmethod
-    def load_curie_map(  # wip
-            curie_map_file='dipper/curie_map.yaml'):
-        '''
-        Load common mapping from ontology lables to ontology identifiers
-        affords a set of human readable terms to aid understanding within
-        and between ingests
-        '''
-        with open(curie_map_file, 'r') as fh:
-            curiemap = yaml.safe_load(fh)
-        return curiemap
 
     def load_local_translationtable(self, name):  # wip
         '''

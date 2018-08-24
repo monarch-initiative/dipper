@@ -100,4 +100,7 @@
 "ENSEMBL GENE": "ENSEMBL"
 "WORMBASE-OLD": "WormBase"
 
-"CGD": "CGD"    # "???  TODO see if this should go somewhere"
+
+# "???  TODO see if these should go somewhere  seen 2018-Aug
+"CGD": "CGD"
+"PBR": "PBR"

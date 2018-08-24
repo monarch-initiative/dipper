@@ -3,7 +3,7 @@
 import unittest
 import logging
 import os
-from tests.test_source import SourceTestCase
+# from tests.test_source import SourceTestCase
 from dipper.sources.Orphanet import Orphanet
 from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
@@ -11,7 +11,6 @@ from dipper.graph.RDFGraph import RDFGraph
 
 logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
-
 
 
 class GeneVariantDiseaseTest(unittest.TestCase):

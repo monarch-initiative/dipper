@@ -195,7 +195,7 @@ class Feature():
                 region_id = rid
 
             self.graph.addTriple(self.fid, self.globaltt['location'], region_id)
-            self.model.addIndividualToGraph(region_id, None, self.globaltt['region'])
+            self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'])
         else:
             region_id = self.fid
             self.model.addType(region_id, self.globaltt['region'])

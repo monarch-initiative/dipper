@@ -1756,7 +1756,7 @@ class ZFIN(Source):
                         model.addIndividualToGraph(
                             marker_id, marker_symbol, marker_so_id)
                         graph.addTriple(
-                            marker_id, self.globaltt['targets_instance_of'], gene_id)
+                            marker_id, self.globaltt['targets_gene'], gene_id)
                     else:
                         pass
 

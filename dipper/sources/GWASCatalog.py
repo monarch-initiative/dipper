@@ -35,12 +35,12 @@ class GWASCatalog(Source):
 
     """
 
-    GWASFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest'
+    GWASFTP = 'ftp://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/'
     GWASFILE = 'gwas-catalog-associations_ontology-annotated.tsv'
     files = {
         'catalog': {
             'file': GWASFILE,
-            'url': GWASFTP + '/' + GWASFILE},
+            'url': GWASFTP + GWASFILE},
         'efo': {
             'file': 'efo.owl',
             'url': 'http://www.ebi.ac.uk/efo/efo.owl'},
@@ -294,19 +294,15 @@ class GWASCatalog(Source):
 
             if len(mapped_genes) == len(snp_labels):
                 so_class = self.resolve(context_list[index])
-
-                if so_class is None:
-                    raise ValueError(
-                        "Unknown SO class {} in haplotype {}".format(
-                            context_list[index], hap_label))
+                # removed the '+' for recursive  one-or-more rdfs:subClassOf  paths
+                # just so it did not return an empty graph 
                 so_query = """
-                    SELECT ?variant_label
-                    WHERE {{
-                        {0} rdfs:subClassOf+ """ \
-                        + self.globaltt['gene_variant'] + """ ;
-                            rdfs:label ?variant_label .
-                    }}
-                """.format(so_class)
+SELECT ?variant_label
+    WHERE {{
+        {0} rdfs:subClassOf {1} ;
+        rdfs:label ?variant_label .
+    }}
+                """.format(so_class, self.globaltt['gene_variant'])
 
                 query_result = so_ontology.query(so_query)
 

@@ -108,25 +108,24 @@ class Orphanet(Source):
                 model.addClassToGraph(disorder_id, disorder_label)
 
                 assoc_list = elem.find('DisorderGeneAssociationList')
-                for a in assoc_list.findall('DisorderGeneAssociation'):
-                    gene_iid = a.find('.//Gene').get('id')
-                    gene_name = a.find('.//Gene/Name').text
-                    gene_symbol = a.find('.//Gene/Symbol').text
-                    gene_num = a.find('./Gene/OrphaNumber').text
+                for assoc in assoc_list.findall('DisorderGeneAssociation'):
+                    gene_iid = assoc.find('.//Gene').get('id')
+                    gene_name = assoc.find('.//Gene/Name').text
+                    gene_symbol = assoc.find('.//Gene/Symbol').text
+                    gene_num = assoc.find('./Gene/OrphaNumber').text
                     gene_id = 'Orphanet:' + str(gene_num)
                     gene_type_id = self.resolve(gene_iid_to_type[gene_iid])
                     model.addClassToGraph(
                         gene_id, gene_symbol, gene_type_id, gene_name)
-                    syn_list = a.find('./Gene/SynonymList')
+                    syn_list = assoc.find('./Gene/SynonymList')
                     if int(syn_list.get('count')) > 0:
                         for s in syn_list.findall('./Synonym'):
                             model.addSynonym(gene_id, s.text)
 
                     # IDs appear stable but removing for now  KS
-                    # commented out in merge till confirmed TEC
-                    # dgtype = a.find('DisorderGeneAssociationType').get('id')
+                    # dgtype = assoc.find('DisorderGeneAssociationType').get('id')
                     # rel_id = self.resolve(dgtype)
-                    dg_label = a.find('./DisorderGeneAssociationType/Name').text
+                    dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
                     # if rel_id is None:
                     #    logger.warning(
                     #        "Cannot map association type (%s) to RO " +
@@ -149,7 +148,7 @@ class Orphanet(Source):
 
                     # use "assessed" status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
-                    status_code = a.find('DisorderGeneAssociationStatus').get('id')
+                    status_code = assoc.find('DisorderGeneAssociationStatus').get('id')
                     # imported automatically asserted information
                     # used in automatic assertion
                     eco_id = self.globaltt[
@@ -173,7 +172,7 @@ class Orphanet(Source):
                     self.add_gene_to_disease(
                         dg_label, gene_id, gene_symbol, disorder_id, eco_id)
 
-                    rlist = a.find('./Gene/ExternalReferenceList')
+                    rlist = assoc.find('./Gene/ExternalReferenceList')
                     eqid = None
 
                     for r in rlist.findall('ExternalReference'):

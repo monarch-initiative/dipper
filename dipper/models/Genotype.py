@@ -358,7 +358,7 @@ class Genotype():
         self.model.addIndividualToGraph(
             reagent_id, reagent_label, reagent_type, description)
 
-        self.graph.addTriple(reagent_id, self.globaltt['targets_instance_of'], gene_id)
+        self.graph.addTriple(reagent_id, self.globaltt['targets_gene'], gene_id)
 
         return
 
@@ -377,7 +377,7 @@ class Genotype():
         <targeted_gene_id> a GENO:reagent_targeted_gene
         rdf:label targeted_gene_label
         dc:description description
-        <reagent_id> GENO:targets_instance_of <gene_id>
+        <reagent_id> GENO:targets_gene <gene_id>
 
         :param reagent_id:
         :param gene_id:

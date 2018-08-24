@@ -17,7 +17,8 @@ class StreamedGraph(DipperGraph):
     just support nt
     """
 
-    curie_util = CurieUtil(curie_map.get())  # it is just a flat mapping datastructure
+    curie_map = curie_map.get()
+    curie_util = CurieUtil(curie_map)
     
     with open('translationtable/global_terms.yaml') as fh:
         globaltt = yaml.safe_load(fh).copy()
@@ -32,7 +33,7 @@ class StreamedGraph(DipperGraph):
         self.fmt = fmt
         self.file_handle = file_handle
         self.identifier = identifier
-        self.curie_map = curie_map.get()
+        self.
 
     def addTriple(self, subject_id, predicate_id, object_id,
                   object_is_literal=False, literal_type=None):
