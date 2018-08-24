@@ -33,8 +33,7 @@ class StreamedGraph(DipperGraph):
         self.fmt = fmt
         self.file_handle = file_handle
         self.identifier = identifier
-        self.
-
+   
     def addTriple(self, subject_id, predicate_id, object_id,
                   object_is_literal=False, literal_type=None):
         subject_iri = self._getNode(subject_id)
