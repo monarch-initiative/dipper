@@ -351,7 +351,7 @@ class Coriell(Source):
                     short_desc = (description.split(';')[0]).capitalize()
 
                     gender = gender.lower()
-                    patient_label = ' '.join((self.localtt[affected], gender, relprob))
+                    patient_label = ' '.join((self.resolve(affected, False), gender, relprob))
                     if relprob == 'proband':
                         patient_label = ' '.join((
                             patient_label.strip(), 'with', short_desc))
