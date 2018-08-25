@@ -310,7 +310,7 @@ class MMRRC(Source):
                         self.globaltt['has_variant_part'], None)
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
-                        self.globaltt['variant_single_locus_complement'])
+                        self.globaltt['variant single locus complement'])
                 if len(vslc_list) > 0:
                     if len(vslc_list) > 1:
                         gvc_id = '-'.join(vslc_list)

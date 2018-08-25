@@ -577,7 +577,7 @@ class Coriell(Source):
                             # so the vslcs are just a pot of them
                             model.addIndividualToGraph(
                                 vslc_id, vslc_label,
-                                self.globaltt['variant_single_locus_complement'])
+                                self.globaltt['variant single locus complement'])
                             for v in omim_map.get(o):
                                 # this is actually a sequence alt
                                 allele1_id = 'OMIM:'+o+'.'+v

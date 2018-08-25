@@ -940,7 +940,7 @@ class ZFIN(Source):
 
                 model.addIndividualToGraph(
                     vslc_id, vslc_label,
-                    self.globaltt['variant_single_locus_complement'])
+                    self.globaltt['variant single locus complement'])
                 geno.addPartsToVSLC(
                     vslc_id, vloci1, vloci2, zygosity_id,
                     self.globaltt['has_variant_part'],
