@@ -1,4 +1,4 @@
-qimport logging
+import logging
 import re
 import json
 import urllib
