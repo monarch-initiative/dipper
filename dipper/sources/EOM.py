@@ -208,14 +208,14 @@ class EOM(PostgreSQLSource):
                     for s in synonyms.split(';'):
                         model.addSynonym(
                             morphology_term_id, s.strip(),
-                            model.globaltt['hasExactSynonym'])
+                            self.globaltt['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for s in replaces.split(';'):
                         model.addSynonym(
                             morphology_term_id, s.strip(),
-                            model.globaltt['hasRelatedSynonym'])
+                            self.globaltt['hasRelatedSynonym'])
 
                 # morphology_term_id has page morphology_term_url
                 reference = Reference(self.graph)

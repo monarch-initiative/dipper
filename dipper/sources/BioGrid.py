@@ -174,7 +174,7 @@ class BioGrid(Source):
                 rel = self.resolve(int_type, False)
                 if rel == int_type:
                     rel = self.globaltt['interacts with']
-                    
+
                 # scrub pubmed-->PMID prefix
                 pub_id = re.sub(r'pubmed', 'PMID', pub_id)
                 # remove bogus whitespace
@@ -278,119 +278,12 @@ class BioGrid(Source):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)
 
-                if not self.testMode and limit is not None \
-                        and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()
 
         return
-
-    @staticmethod
-    def _map_MI_to_RO(mi_id):
-        rel = InteractionAssoc.interaction_object_properties
-        mi_ro_map = {
-            # colocalization
-            'MI:0403': rel['colocalizes with'],
-            # direct interaction
-            'MI:0407': rel['interacts with'],
-            # synthetic genetic interaction defined by inequality
-            'MI:0794': rel['genetically interacts with'],
-            # suppressive genetic interaction defined by inequality
-            'MI:0796': rel['genetically interacts with'],
-            # additive genetic interaction defined by inequality
-            'MI:0799': rel['genetically interacts with'],
-            # association
-            'MI:0914': rel['interacts with'],
-            # physical association
-            'MI:0915': rel['interacts with']
-        }
-
-        ro_id = rel['interacts with']  # default
-        if mi_id in mi_ro_map:
-            ro_id = mi_ro_map.get(mi_id)
-
-        return ro_id
-
-    @staticmethod
-    def _map_idtype_to_prefix(idtype):
-        """
-        Here we need to reformat the BioGrid source prefixes
-        to standard ones used in our curie-map.
-        :param idtype:
-        :return:
-
-        """
-        prefix = idtype
-        idtype_to_prefix_map = {
-            'XENBASE': 'XenBase',
-            'TREMBL': 'TrEMBL',
-            'MGI': 'MGI',
-            'REFSEQ_DNA_ACCESSION': 'RefSeqNA',
-            'MAIZEGDB': 'MaizeGDB',
-            'BEEBASE': 'BeeBase',
-            'ENSEMBL': 'ENSEMBL',
-            'TAIR': 'TAIR',
-            'GENBANK_DNA_GI': 'NCBIgi',
-            'CGNC': 'CGNC',
-            'RGD': 'RGD',
-            'GENBANK_GENOMIC_DNA_GI': 'NCBIgi',
-            'SWISSPROT': 'Swiss-Prot',
-            'MIM': 'OMIM',
-            'FLYBASE': 'FlyBase',
-            'VEGA': 'VEGA',
-            'ANIMALQTLDB': 'AQTLDB',
-            'ENTREZ_GENE_ETG': 'ETG',
-            'HPRD': 'HPRD',
-            'APHIDBASE': 'APHIDBASE',
-            'GENBANK_PROTEIN_ACCESSION': 'NCBIProtein',
-            'ENTREZ_GENE': 'NCBIGene',
-            'SGD': 'SGD',
-            'GENBANK_GENOMIC_DNA_ACCESSION': 'NCBIGenome',
-            'BGD': 'BGD',
-            'WORMBASE': 'WormBase',
-            'ZFIN': 'ZFIN',
-            'DICTYBASE': 'dictyBase',
-            'ECOGENE': 'ECOGENE',
-            'BIOGRID': 'BIOGRID',
-            'GENBANK_DNA_ACCESSION': 'NCBILocus',
-            'VECTORBASE': 'VectorBase',
-            'MIRBASE': 'miRBase',
-            'IMGT/GENE-DB': 'IGMT',
-            'HGNC': 'HGNC',
-            'SYSTEMATIC_NAME': None,
-            'OFFICIAL_SYMBOL': None,
-            'REFSEQ_GENOMIC_DNA_ACCESSION': 'NCBILocus',
-            'GENBANK_PROTEIN_GI': 'NCBIgi',
-            'REFSEQ_PROTEIN_ACCESSION': 'RefSeqProt',
-            'SYNONYM': None,
-            'GRID_LEGACY': None,
-            # the following showed up in 3.3.124
-            'UNIPROT-ACCESSION': 'UniprotKB',
-            'SWISS-PROT': 'Swiss-Prot',
-            'OFFICIAL SYMBOL': None,
-            'ENSEMBL RNA': None,
-            'GRID LEGACY': None,
-            'ENSEMBL PROTEIN': None,
-            'REFSEQ-RNA-GI': None,
-            'REFSEQ-RNA-ACCESSION': None,
-            'REFSEQ-PROTEIN-GI': None,
-            'REFSEQ-PROTEIN-ACCESSION-VERSIONED': None,
-            'REFSEQ-PROTEIN-ACCESSION': None,
-            'REFSEQ-LEGACY': None,
-            'SYSTEMATIC NAME': None,
-            'ORDERED LOCUS': None,
-            'UNIPROT-ISOFORM': 'UniprotKB',
-            'ENSEMBL GENE': 'ENSEMBL',
-            'WORMBASE-OLD': 'WormBase'
-
-        }
-        if idtype in idtype_to_prefix_map:
-            prefix = idtype_to_prefix_map.get(idtype)
-        else:
-            logger.warning("unmapped prefix %s", prefix)
-
-        return prefix
 
     def getTestSuite(self):
         import unittest

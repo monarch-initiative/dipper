@@ -1,5 +1,5 @@
 from dipper.graph.Graph import Graph
-from dipper.models.Model import Model
+
 
 class Family():
     """
@@ -11,7 +11,6 @@ class Family():
     reflect the meaning of the relations it is modeling
     """
 
-    globaltt = Model.globaltt
 
     def __init__(self, graph):
         if isinstance(graph, Graph):

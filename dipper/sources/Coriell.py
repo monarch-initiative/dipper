@@ -49,15 +49,6 @@ class Coriell(Source):
 
     """
 
-    foo_terms = {
-        'cell_line_repository': 'CLO:0000008',
-        'race': 'SIO:001015',
-        'ethnic_group': 'EFO:0001799',
-        'age': 'EFO:0000246',
-        'sampling_time': 'EFO:0000689',
-        'collection': 'ERO:0002190'
-    }
-
     files = {
         'NINDS': {
             'file': 'NINDS.csv',
@@ -394,9 +385,9 @@ class Coriell(Source):
                         # the age node to the cell line? we need to ask @mbrush
                         # age_id = '_'+re.sub('\s+','_',age)
                         # gu.addIndividualToGraph(
-                        #   g,age_id,age,self.globaltt['age'])
+                        #   graph,age_id,age,self.globaltt['age'])
                         # gu.addTriple(
-                        #   g,age_id,self.resolve['has measurement value'],age,
+                        #   graph,age_id,self.globaltt['has measurement value'],age,
                         #   True)
 
                     # #############    BUILD THE PATIENT    #############
@@ -457,14 +448,14 @@ class Coriell(Source):
                     # that it is human!
                     if species is None or species == '':
                         species = 'Homo sapiens'
-                    taxon = self.globaltt[species]
+                    taxon = self.resolve(species)
 
                     # if there's a dbSNP id,
                     # this is actually the individual's genotype
                     genotype_id = None
                     genotype_label = None
                     if dbsnp_id != '':
-                        genotype_id = 'dbSNPIndividual:'+dbsnp_id.strip()
+                        genotype_id = 'dbSNPIndividual:' + dbsnp_id.strip()
 
                     omim_map = {}
                     gvc_id = None
