@@ -17,7 +17,6 @@ class Family():
             self.graph = graph
         else:
             raise ValueError("{} is not a graph".graph)
-        self.model = Model(graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
