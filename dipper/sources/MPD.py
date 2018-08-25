@@ -142,9 +142,6 @@ class MPD(Source):
         return
 
     def _process_ontology_mappings_file(self, limit):
-
-        # line_counter = 0  # TODO unused
-
         logger.info("Processing ontology mappings...")
         raw = '/'.join((self.rawdir, 'ontology_mappings.csv'))
 
@@ -178,7 +175,7 @@ class MPD(Source):
         logger.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
 
-        tax_id = 'NCBITaxon:10090'
+        tax_id = self.globaltt['Mus musculus']
 
         with open(raw, 'r') as f:
             reader = csv.reader(f, delimiter=',', quotechar='\"')
@@ -242,7 +239,7 @@ class MPD(Source):
 
                 if assay_id not in self.assayhash:
                     self.assayhash[assay_id] = {}
-                description = self.build_measurement_description(row)
+                description = self.build_measurement_description(row, self.localtt)
                 self.assayhash[assay_id]['description'] = description
                 self.assayhash[assay_id]['assay_label'] = assay_label
                 self.assayhash[assay_id]['assay_type'] = assay_type
@@ -278,10 +275,14 @@ class MPD(Source):
             strain_scores_by_measure = {}
             for row in reader:
                 try:
-                    (measnum, varname, strain, strainid, sex, mean, nmice, sd,
-                     sem, cv, minval, maxval, logmean, logsd, zscore,
-                     logzscore) = row
+                    # (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
+                    #  cv, minval, maxval, logmean, logsd, zscore, logzscore)
+                    (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
+                     cv, minval, maxval, zscore
+                     ) = row
+
                 except ValueError:
+
                     continue
                 line_counter += 1
                 strain_num = int(strainid)
@@ -317,7 +318,7 @@ class MPD(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        taxon_id = 'NCBITaxon:10090'  # hardcode to Mus musculus
+        taxon_id = self.globaltt['Mus musculus']
         model.addClassToGraph(taxon_id, None)
 
         scores_passing_threshold_count = 0
@@ -347,21 +348,18 @@ class MPD(Source):
                             prov = Provenance(self.graph)
                             try:
                                 assay_label = self.assayhash[m]['assay_label']
-                                assay_description = \
-                                    self.assayhash[m]['description']
+                                assay_description = self.assayhash[m]['description']
                                 ont_term_ids = self.assayhash[m].get('ont_terms')
-                                comment = ' '.join((assay_label,
-                                                   '(zscore='+str(zscore)+')'))
+                                comment = ' '.join((
+                                    assay_label, '(zscore='+str(zscore)+')'))
                             except KeyError:
                                 assay_label = None
                                 assay_description = None
                                 ont_term_ids = None
                             if assay_label is not None:
                                 assay_label += ' ('+str(m)+')'
-                            # TODO unused
-                            # assay_type = self.assayhash[m]['assay_type']
 
-                            assay_type_id = Provenance.provenance_types['assay']
+                            assay_type_id = self.globaltt['assay']
 
                             if ont_term_ids is not None:
                                 scores_passing_threshold_with_ontologies_count += 1
@@ -374,12 +372,13 @@ class MPD(Source):
                         else:
                             scores_not_passing_threshold_count += 1
 
-        logger.info("Scores passing threshold: %d",
-                    scores_passing_threshold_count)
-        logger.info("Scores passing threshold with ontologies: %d",
-                    scores_passing_threshold_with_ontologies_count)
-        logger.info("Scores not passing threshold: %d",
-                    scores_not_passing_threshold_count)
+        logger.info(
+            "Scores passing threshold: %d", scores_passing_threshold_count)
+        logger.info(
+            "Scores passing threshold with ontologies: %d",
+            scores_passing_threshold_with_ontologies_count)
+        logger.info(
+            "Scores not passing threshold: %d", scores_not_passing_threshold_count)
 
         return
 
@@ -405,14 +404,14 @@ class MPD(Source):
         """
         geno = Genotype(graph)
         model = Model(graph)
-        eco_id = "ECO:0000059"  # experimental_phenotypic_evidence
+        eco_id = self.globaltt['experimental phenotypic evidence']
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
         genotype_id = '_'+'-'.join((re.sub(r':', '', strain_id), 'genotype'))
         genotype_label = '[' + strain_label + ']'
 
-        sex_specific_genotype_id = '_'+'-'.join((re.sub(r':', '', strain_id),
-                                                 sex, 'genotype'))
+        sex_specific_genotype_id = '_'+'-'.join((
+            re.sub(r':', '', strain_id), sex, 'genotype'))
         if strain_label is not None:
             sex_specific_genotype_label = strain_label + ' (' + sex + ')'
         else:
@@ -438,7 +437,7 @@ class MPD(Source):
         # add the strain as the background for the genotype
         graph.addTriple(
             sex_specific_genotype_id,
-            self.globaltt['has_sex_agnostic_genotype_part'],
+            self.globaltt['has_sex_agnostic_part'],
             genotype_id)
 
         # #############    BUILD THE G2P ASSOC    #############
@@ -453,12 +452,7 @@ class MPD(Source):
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
                 model.addComment(assoc_id, comment)
-                if sex == 'm':
-                    model._addSexSpecificity(assoc_id,
-                                             self.globaltt['male'])
-                elif sex == 'f':
-                    model._addSexSpecificity(assoc_id,
-                                             self.globaltt['female'])
+                model._addSexSpecificity(assoc_id, self.resolve(sex))
 
         return
 
@@ -476,7 +470,7 @@ class MPD(Source):
         return units
 
     @staticmethod
-    def build_measurement_description(row):
+    def build_measurement_description(row, localtt):
         (measnum,
          mpdsector,
          projsym,
@@ -491,12 +485,8 @@ class MPD(Source):
          nstrainstested,
          ageweeks,) = row
 
-        if sextested == 'f':
-            sextested = 'female'
-        elif sextested == 'm':
-            sextested = 'male'
-        elif sextested == 'fm':
-            sextested = 'male and female'
+        if sextested in localtt:
+            sextested = localtt[sextested]
         else:
             logger.warning("Unknown sex tested key: %s", sextested)
         description = "This is an assay of [" + descrip + "] shown as a [" + \
@@ -513,11 +503,9 @@ class MPD(Source):
                 method + "]"
         """
 
-        description += \
-            ".  The overall experiment is entitled [" + projsym + "].  "
+        description += ".  The overall experiment is entitled [" + projsym + "].  "
 
-        description += \
-            "It was conducted in [" + sextested + "] mice at [" + \
+        description += "It was conducted in [" + sextested + "] mice at [" + \
             ageweeks + "] of age in" + " [" + nstrainstested + \
             "] different mouse strains. "
         """
@@ -539,9 +527,8 @@ class MPD(Source):
         header = header.rstrip("\n")
         header_map = {
             'strainmeans.csv.gz':
-                'measnum,varname,strain,strainid,sex,mean,'
-                'nmice,sd,sem,cv,minval,maxval,logmean,'
-                'logsd,zscore,logzscore',
+                'measnum,varname,strain,strainid,sex,mean,nmice,sd,sem,'
+                'cv,minval,maxval,zscore',
             'straininfo.csv':
                 'strainname,vendor,stocknum,panel,mpd_strainid,'
                 'straintype,n_proj,n_snp_datasets,mpd_shortname,url',
