@@ -381,7 +381,7 @@ class FlyBase(PostgreSQLSource):
         raw = '/'.join((self.rawdir, 'genotype'))
         logger.info("building labels for genotypes")
         geno = Genotype(graph)
-        fly_tax = 'NCBITaxon:7227'
+        fly_tax = self.globaltt['Drosophila melanogaster']
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -401,13 +401,11 @@ class FlyBase(PostgreSQLSource):
                 if description == '':
                     description = None
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and \
-                            int(genotype_num) not in \
-                            self.test_keys['genotype']:
+                    if self.testMode and int(genotype_num) \
+                            not in self.test_keys['genotype']:
                         continue
 
                     model.addIndividualToGraph(
@@ -866,7 +864,11 @@ class FlyBase(PostgreSQLSource):
                 # TODO type id ==> ECO???
 
                 # just make associations with abnormal phenotype
-                phenotype_id = 'FBcv:0001347'
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # note this is not "abnormal phenotype" if that was what is wanted
+                # "phenotype": "FBcv:0001347" ~~>  "Phenotype": "UPHENO:0001001"
+                # but it is a near collision with an existing term
+                phenotype_id = self.localtt['phenotype'] 
                 assoc = G2PAssoc(graph, self.name, genotype_id, phenotype_id)
                 assoc.add_source(pub_id)
                 assoc.set_description(description)

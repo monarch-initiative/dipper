@@ -46,10 +46,6 @@ class Assoc:
 
         return
 
-    # use translation table instead
-    # def get_properties(self):
-    #    return self.properties
-
     def _is_valid(self):
         # check if sub/obj/rel are none...throw error
         #

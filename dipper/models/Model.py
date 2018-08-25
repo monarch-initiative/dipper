@@ -1,6 +1,5 @@
 import logging
 import re
-import yaml
 from dipper.graph.Graph import Graph
 
 logger = logging.getLogger(__name__)
@@ -11,16 +10,13 @@ class Model():
     Utility class to add common triples to a graph
     (subClassOf, type, label, sameAs)
     """
-    # shared ontology_label to ontology_id mapping
-    globaltt = {}
-
-    # reversed to find labels for items that only came with IDs; such as some taxons
-    globaltcid = {}
 
     def __init__(self, graph):
         if isinstance(graph, Graph):
             self.graph = graph
             self.globaltt = self.graph.globaltt
+            self.globaltcid = self.graph.globaltcid
+            self.curie_map = self.graph.curie_map
 
         else:
             raise ValueError("{} is not a graph".graph)

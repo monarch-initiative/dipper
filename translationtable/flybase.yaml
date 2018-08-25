@@ -65,3 +65,4 @@
 "347:": "PMID"    # Pubmed
 
 
+"phenotype": "FBcv:0001347"   # see "Phenotype": "UPHENO:0001001"
