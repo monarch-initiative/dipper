@@ -38,7 +38,7 @@ class Bgee(Source):
     files = {
         'anat_entity': {
             'path': '/download/ranks/anat_entity/',
-            'pattern': re.compile(r'.*_all_data_.*')
+            'pattern': re.compile(r'.*_all_data_.*.gz')
         }
     }
 
