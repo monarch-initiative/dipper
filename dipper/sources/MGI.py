@@ -896,7 +896,7 @@ SELECT  r._relationship_key as rel_key,
 
                 model.addIndividualToGraph(
                     ivslc_id, vslc_label,
-                    self.globaltt['variant_single_locus_complement'])
+                    self.globaltt['variant single locus complement'])
                 self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = self.globaltt['has_variant_part']
                 if allele1_id in self.wildtype_alleles:
