@@ -502,7 +502,7 @@ class Coriell(Source):
                             f.addFeatureToGraph()
                             geno.addParts(
                                 karyotype_feature_id, karyotype_id,
-                                self.globaltt['has_alternate_part'])
+                                self.globaltt['has_variant_part'])
 
                     if gene != '':
                         vl = gene+'('+mutation+')'
@@ -531,7 +531,7 @@ class Coriell(Source):
 
                     # add the karyotype to the gvc.
                     # use reference if normal karyotype
-                    karyo_rel = self.globaltt['has_alternate_part']
+                    karyo_rel = self.globaltt['has_variant_part']
                     if self._is_normal_karyotype(karyotype):
                         karyo_rel = self.globaltt['has_reference_part']
                     if karyotype_id is not None \
@@ -588,7 +588,7 @@ class Coriell(Source):
                                 geno.addPartsToVSLC(
                                     vslc_id, allele1_id, None,
                                     self.globaltt['indeterminate'],
-                                    self.globaltt['has_alternate_part'])
+                                    self.globaltt['has_variant_part'])
 
                             if vslc_id != gvc_id:
                                 geno.addVSLCtoParent(vslc_id, gvc_id)
@@ -611,7 +611,7 @@ class Coriell(Source):
                             if affected == 'unaffected':
                                 rel = self.globaltt['has_reference_part']
                             else:
-                                rel = self.globaltt['has_alternate_part']
+                                rel = self.globaltt['has_variant_part']
                             geno.addParts(gvc_id, genotype_id, rel)
 
                         if karyotype_id is not None \

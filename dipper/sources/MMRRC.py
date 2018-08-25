@@ -307,7 +307,7 @@ class MMRRC(Source):
                     vslc_list.append(vslc_id)
                     geno.addPartsToVSLC(
                         vslc_id, vl, None, self.globaltt['indeterminate'],
-                        self.globaltt['has_alternate_part'], None)
+                        self.globaltt['has_variant_part'], None)
                     model.addIndividualToGraph(
                         vslc_id, vslc_label,
                         self.globaltt['variant_single_locus_complement'])
@@ -342,7 +342,7 @@ class MMRRC(Source):
                         bkgd_id, genotype_id,
                         self.globaltt['unspecified_genomic_background'])
                     geno.addParts(
-                        gvc_id, genotype_id, self.globaltt['has_alternate_part'])
+                        gvc_id, genotype_id, self.globaltt['has_variant_part'])
                     geno.addGenotype(genotype_id, genotype_label)
                     graph.addTriple(
                         s, self.globaltt['has_genotype'], genotype_id)

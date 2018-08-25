@@ -574,7 +574,7 @@ class ZFIN(Source):
                 geno.addGenotype(
                     extrinsic_id, extrinsic_label, self.globaltt['extrinsic_genotype'])
                 geno.addParts(
-                    extrinsic_id, fish_id, self.globaltt['has_alternate_part'])
+                    extrinsic_id, fish_id, self.globaltt['has_variant_part'])
 
             # check if the intrinsic is in the wildtype genotypes,
             # then it's a genomic background
@@ -582,7 +582,7 @@ class ZFIN(Source):
                 intrinsic_rel = self.globaltt['has_reference_part']
                 intrinsic_type = self.globaltt['genomic_background']
             else:
-                intrinsic_rel = self.globaltt['has_alternate_part']
+                intrinsic_rel = self.globaltt['has_variant_part']
                 intrinsic_type = self.globaltt['intrinsic_genotype']
             geno.addGenotype(
                 intrinsic_genotype_id, intrinsic_genotype_label, intrinsic_type)
@@ -636,7 +636,7 @@ class ZFIN(Source):
                                 if re.search(r'promoter', p):
                                     r = self.globaltt['has_part']
                                 else:
-                                    r = self.globaltt['has_alternate_part']
+                                    r = self.globaltt['has_variant_part']
                                 geno.addParts(p, allele_id, r)
 
         return
@@ -943,8 +943,8 @@ class ZFIN(Source):
                     self.globaltt['variant_single_locus_complement'])
                 geno.addPartsToVSLC(
                     vslc_id, vloci1, vloci2, zygosity_id,
-                    self.globaltt['has_alternate_part'],
-                    self.globaltt['has_alternate_part'])
+                    self.globaltt['has_variant_part'],
+                    self.globaltt['has_variant_part'])
 
                 gvcparts += [vslc_id]
 
@@ -1036,7 +1036,7 @@ class ZFIN(Source):
             self.id_label_map[gt] = genotype_name
 
             # Add the GVC to the genotype
-            geno.addParts(gvc_id, gt, self.globaltt['has_alternate_part'])
+            geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
 
             # end of gvc loop
 
