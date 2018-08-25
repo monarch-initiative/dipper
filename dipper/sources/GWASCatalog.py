@@ -380,8 +380,9 @@ SELECT ?variant_label
         # also want to add other descriptive info about
         # the variant from the context
         for c in re.split(r';', context):
-            cid = self.resolve(c.strip())
-            if cid is not None:
+            c = c.strip()
+            cid = self.resolve(c, False)
+            if cid != c:
                 model.addType(snp_id, cid)
 
         return
