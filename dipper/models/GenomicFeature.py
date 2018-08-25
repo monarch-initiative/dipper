@@ -335,8 +335,8 @@ class Feature():
         :return:
 
         """
-        self.graph.addTriple(self.fid, self.globaltt['is_subsequence_of'], parentid)
-        self.graph.addTriple(parentid, self.globaltt['has_subsequence'], self.fid)
+        self.graph.addTriple(self.fid, self.globaltt['is subsequence of'], parentid)
+        self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid)
 
         return
 

@@ -127,23 +127,6 @@ class Monochrom(Source):
         },
     }
 
-    region_type_map = {
-        'acen': self.globaltt['centromere'],
-        'gvar': self.globaltt['chromosome_band'],
-        'stalk': self.globaltt['chromosome_band'],
-        'gneg': self.globaltt['chromosome_band'],
-        'gpos100': self.globaltt['chromosome_band'],
-        'gpos25': self.globaltt['chromosome_band'],
-        'gpos33': self.globaltt['chromosome_band'],
-        'gpos50': self.globaltt['chromosome_band'],
-        'gpos66': self.globaltt['chromosome_band'],
-        'gpos75': self.globaltt['chromosome_band'],
-        'chromosome': self.globaltt['chromosome'],
-        'chromosome_arm': self.globaltt['chromosome_arm'],
-        'chromosome_band': self.globaltt['chromosome_band'],
-        'chromosome_part': self.globaltt['chromosome_part']
-    }
-
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
             graph_type,
@@ -207,7 +190,7 @@ class Monochrom(Source):
 
         # build the organism's genome from the taxon
         genome_label = self.files[taxon]['genome_label']
-        taxon_id = 'NCBITaxon:'+taxon
+        taxon_id = 'NCBITaxon:' + taxon
 
         # add the taxon as a class.  adding the class label elsewhere
         model.addClassToGraph(taxon_id, None)
@@ -309,12 +292,12 @@ class Monochrom(Source):
                 # TODO PYLINT Consider using enumerate
                 # instead of iterating with range and len
                 for i in range(len(parents)):
-                    pclassid = cclassid+parents[i]  # class chr parts
-                    pclass_label = makeChromLabel(chrom+parents[i], genome_label)
-
-                    rti = getChrPartTypeByNotation(parents[i])
-
-                    model.addClassToGraph(pclassid, pclass_label, rti)
+                    parent_i = parents[i].strip()
+                    if parent_i is not None and parent_i != "":
+                        pclassid = cclassid + parent_i # class chr parts
+                        pclass_label = makeChromLabel(chrom + parent_i, genome_label)
+                        rti = getChrPartTypeByNotation(parent_i, self.graph)
+                        model.addClassToGraph(pclassid, pclass_label, rti)
 
                     # for canonical chromosomes,
                     # then the subbands are subsequences of the full band
@@ -322,25 +305,25 @@ class Monochrom(Source):
                     if i < len(parents) - 1:
                         pid = cclassid+parents[i+1]   # the instance
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is_subsequence_of'], pid)
+                            pclassid, self.globaltt['is subsequence of'], pid)
                         model.addOWLPropertyClassRestriction(
-                            pid, self.globaltt['has_subsequence'],  pclassid)
+                            pid, self.globaltt['has subsequence'],  pclassid)
 
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
                         model.addOWLPropertyClassRestriction(
-                            pclassid, self.globaltt['is_subsequence_of'], cclassid)
+                            pclassid, self.globaltt['is subsequence of'], cclassid)
                         model.addOWLPropertyClassRestriction(
-                            cclassid, self.globaltt['has_subsequence'],  pclassid)
+                            cclassid, self.globaltt['has subsequence'],  pclassid)
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
                     model.addOWLPropertyClassRestriction(
-                        maplocclass_id, self.globaltt['is_subsequence_of'],
+                        maplocclass_id, self.globaltt['is subsequence of'],
                         cclassid+parents[0])
                     model.addOWLPropertyClassRestriction(
-                        cclassid+parents[0],  self.globaltt['has_subsequence'],
+                        cclassid+parents[0],  self.globaltt['has subsequence'],
                         maplocclass_id)
 
                 if limit is not None and line_counter > limit:
@@ -381,7 +364,7 @@ class Monochrom(Source):
 
         """
 
-        if regiontype in self.region_type_map.keys():
+        if regiontype in self.localtt:
             so_id = self.resolve(regiontype)
         else:
             so_id = self.globaltt['chromosome_part']
@@ -406,7 +389,7 @@ class Monochrom(Source):
         return test_suite
 
 
-def getChrPartTypeByNotation(self, notation):
+def getChrPartTypeByNotation(notation, graph=None):
     """
     This method will figure out the kind of feature that a given band
     is based on pattern matching to standard karyotype notation.
@@ -423,16 +406,16 @@ def getChrPartTypeByNotation(self, notation):
     # though UCSC does. We may need to adjust for that here
 
     if re.match(r'p$', notation):
-        rti = self.globaltt['short_chromosome_arm']
+        rti = graph.globaltt['short_chromosome_arm']
     elif re.match(r'q$', notation):
-        rti = self.globaltt['long_chromosome_arm']
+        rti = graph.globaltt['long_chromosome_arm']
     elif re.match(r'[pq][A-H\d]$', notation):
-        rti = self.globaltt['chromosome_region']
+        rti = graph.globaltt['chromosome_region']
     elif re.match(r'[pq][A-H\d]\d', notation):
-        rti = self.globaltt['chromosome_band']
+        rti = graph.globaltt['chromosome_band']
     elif re.match(r'[pq][A-H\d]\d\.\d+', notation):
-        rti = self.globaltt['chromosome_subband']
+        rti = graph.globaltt['chromosome_subband']
     else:
-        rti = self.globaltt['chromosome_part']
+        rti = graph.globaltt['chromosome_part']
 
     return rti
