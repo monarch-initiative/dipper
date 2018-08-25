@@ -5,8 +5,10 @@ from stat import ST_CTIME
 import logging
 import re
 import shutil
-from git import Repo
-from git import GitCommandError
+
+import git
+# from git import Repo
+# from git import GitCommandError
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
@@ -18,7 +20,8 @@ from dipper import config
 
 logger = logging.getLogger(__name__)
 
-HPOADL = 'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
+HPOADL = \
+    'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
 
 
 class HPOAnnotations(Source):
@@ -238,14 +241,14 @@ class HPOAnnotations(Source):
                 # inadverterntly and will be removed in the winter 2018
                 # release of hpo data
                 (db, num, name, qual, pheno_id, publist, eco, onset, freq, w,
-                 asp, syn, date, curator, extra) = row
+                 asp, syn, date, curator,  # extra
+                 ) = row
                 disease_id = db + ":" + num
 
                 if self.testMode:
                     try:
                         id_list = self.test_ids
-                        if id_list is None \
-                                or disease_id not in id_list:
+                        if id_list is None or disease_id not in id_list:
                             continue
                     except AttributeError:
                         continue
@@ -366,10 +369,10 @@ class HPOAnnotations(Source):
 
         logger.info("Cloning common disease files from %s", REMOTE_URL)
         try:
-            Repo.clone_from(REMOTE_URL, repo_dir)
-        except GitCommandError:
+            git.Repo.clone_from(REMOTE_URL, repo_dir)
+        except Exception:  # git.GitCommandError:
             # Try with https and if this doesn't work fail
-            Repo.clone_from(HTTPS_URL, repo_dir)
+            git.Repo.clone_from(HTTPS_URL, repo_dir)
 
         return
 
@@ -454,8 +457,8 @@ class HPOAnnotations(Source):
             if not re.match(r'^0', str(num)):
                 nopad_doids.add(num)
 
-        logger.info("Found %d/%d DOIDs are not zero-padded",
-                    len(nopad_doids), len(doids))
+        logger.info(
+            "Found %d/%d DOIDs are not zero-padded", len(nopad_doids), len(doids))
 
         return nopad_doids
 
@@ -547,9 +550,9 @@ class HPOAnnotations(Source):
                     if pub_ids != '':
                         for p in pub_ids.split(';'):
                             p = re.sub(r'  *', '', p)
-                            if re.search(r'(DOID|MESH)', p) \
-                                    or re.search(r'Disease name contained',
-                                                 description):
+                            if re.search(
+                                r'(DOID|MESH)', p) or re.search(
+                                    r'Disease name contained', description):
                                 # skip "pubs" that are derived from
                                 # the classes themselves
                                 continue

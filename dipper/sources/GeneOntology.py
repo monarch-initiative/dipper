@@ -38,6 +38,7 @@ class GeneOntology(Source):
 
     """
 
+    FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'
     files = {
         '9615': {
             'file': 'gene_association.goa_dog.gz',
@@ -78,13 +79,13 @@ class GeneOntology(Source):
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
-        #   'url': 'ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
+        #   'url': FTPEBI + 'GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
         'go-references': {
             'file': 'GO.references',
             'url': 'http://www.geneontology.org/doc/GO.references'},
         'id-map': {
             'file': 'idmapping_selected.tab.gz',
-            'url': 'ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI +' uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
         }
     }
 
@@ -221,7 +222,7 @@ class GeneOntology(Source):
                 if re.search(r'NOT', qualifier):
                     continue
 
-                db = self.clean_db_prefix(db)
+                db = self.resolve(db)
                 uniprotid = None
                 gene_id = None
                 if db == 'UniProtKB':
@@ -245,8 +246,9 @@ class GeneOntology(Source):
                 else:
                     gene_id = ':'.join((db, gene_num))
 
-                if self.testMode and not(re.match(r'NCBIGene', gene_id) and
-                        int(gene_num) in self.test_ids):
+                if self.testMode and \
+                        not(re.match(r'NCBIGene', gene_id) and
+                            int(gene_num) in self.test_ids):
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
