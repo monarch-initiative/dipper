@@ -511,7 +511,7 @@ class OMIM(Source):
                                     chrom_num, build_id, build_num, chrom)
                                 if omimtype == self.globaltt[
                                         'heritable_phenotypic_marker']:
-                                    postypes = [Feature.types['FuzzyPosition']]
+                                    postypes = [self.globaltt['FuzzyPosition']]
                                 else:
                                     postypes = None
                                 # NOTE that no strand information
@@ -1201,7 +1201,7 @@ def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'], globaltt)
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
-    omim_type = OMIM._get_omimtype(entry['entry'], globaltt)
+    omim_type = OMIM._get_omimtype(entry['entry'])
     if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:
         return omim_id
 

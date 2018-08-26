@@ -9,7 +9,7 @@
 "rRNA": "rRNA_gene"
 "scRNA": "scRNA_gene"
 "snRNA": "snRNA_gene"
-"snoRNA": "snoRNA_gene7"
+"snoRNA": "snoRNA_gene"
 "tRNA": "tRNA_gene"
 # transposable element gene
 "transposon_protein_coding": "transposable_element_gene"
