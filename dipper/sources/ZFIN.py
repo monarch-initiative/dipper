@@ -727,7 +727,7 @@ class ZFIN(Source):
                 # allele_type = self._map_allele_type_to_geno(allele_type)
                 allele_type_id = self.resolve(allele_type, False)
                 if allele_type_id == allele_type:
-                    allele_type_id = self.globaltt['unspecified']
+                    allele_type_id = self.globaltt['unspecified']  # is geno: not zfa:
 
                 allele_id = 'ZFIN:' + allele_num.strip()
 
@@ -883,11 +883,11 @@ class ZFIN(Source):
                     elif allele2_id == '0':
                         zygosity_id = self.globaltt['hemizygous']
                     elif allele1_id != allele2_id:
-                        zygosity_id = self.globaltt['complex_heterozygous']
+                        zygosity_id = self.globaltt['compound heterozygous']  
                     elif allele1_id == allele2_id:
                         zygosity_id = self.globaltt['homozygous']
                 else:
-                    zygosity_id = self.globaltt['simple_heterozygous']
+                    zygosity_id = self.globaltt['simple heterozygous']
                     allele2_label = '+'
                     allele2_id = 'WT'
 

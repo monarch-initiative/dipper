@@ -1656,7 +1656,7 @@ class FlyBase(PostgreSQLSource):
                                 self.globaltt['reagent_targeted_gene']:
                             graph.addTriple(
                                 allele_id,
-                                self.globaltt['is_targeted_expression_variant_of'],
+                                self.globaltt['is_expression_variant_of'],
                                 gene_id)
                         elif self.feature_types[subject_id] \
                                 == self.globaltt['transgenic_insertion']:
@@ -1724,7 +1724,8 @@ class FlyBase(PostgreSQLSource):
                     #       ti_id, allele_id,
                     #       self.globaltt['has_variant_part'])
                     elif reagent_id is not None and ti_id is not None:
-                        graph.addTriple(ti_id, self.globaltt['targeted_by'], reagent_id)
+                        graph.addTriple(
+                            ti_id, self.globaltt['is_targeted_by'], reagent_id)
 
                 # derived_tp_assoc_alleles
                 elif name == 'derived_tp_assoc_alleles':
@@ -1768,7 +1769,7 @@ class FlyBase(PostgreSQLSource):
 
                     if allele_id is not None and reagent_id is not None:
                         graph.addTriple(
-                            allele_id, self.globaltt['targeted_by'], reagent_id)
+                            allele_id, self.globaltt['is_targeted_by'], reagent_id)
 
                 # produced by
                 elif name == 'producedby':

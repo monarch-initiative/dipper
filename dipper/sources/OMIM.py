@@ -397,7 +397,7 @@ class OMIM(Source):
         if e['entry']['status'] == 'removed':
             model.addDeprecatedClass(omimid)
         else:
-            omimtype = self._get_omimtype(e['entry'], graph)
+            omimtype = self._get_omimtype(e['entry'], self.globaltt)
             nodelabel = newlabel
             # this uses our cleaned-up label
             if omimtype == self.globaltt['heritable_phenotypic_marker']:
@@ -493,7 +493,7 @@ class OMIM(Source):
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
                             geno.addChromosomeClass(
-                                chrom_num, self.globaltt['Homo sapians'], tax_label)
+                                chrom_num, self.globaltt['Homo sapiens'], tax_label)
 
                             # add the positional information, if available
                             fstart = fend = -1
@@ -577,12 +577,12 @@ class OMIM(Source):
         variant loci that are variants of the gene that causes the disease.
         Triples created:
         <some_anonymous_variant_locus>
-            is_sequence_variant_instance_of
+            is_allele_of
                     <omim_gene_id>
-        <some_anonymous_variant_locus> causes_condition <omim_disease_id>
+        <some_anonymous_variant_locus> causes condition <omim_disease_id>
         <assoc> hasSubject <some_anonymous_variant_locus>
         <assoc> hasObject <omim_disease_id>
-        <assoc> hasPredicate <causes_condition>
+        <assoc> hasPredicate <causes condition>
         <assoc> DC:evidence <eco_id>
         :param limit:
         :return:
@@ -741,8 +741,9 @@ class OMIM(Source):
         """
 
         disorder_id = ':'.join(('OMIM', disorder_num))
-        rel_id = self.globaltt['causes_condition']  # default
-        # rel_label = 'causes_condition'
+        rel_label = 'causes condition'
+        rel_id = self.globaltt[rel_label]
+
         if disorder_label.startswith('['):
             rel_id = self.globaltt['is marker for']
             # rel_label = 'is a marker for'
@@ -821,8 +822,7 @@ class OMIM(Source):
                             al_description)
                         geno.addAlleleOfGene(
                             al_id, 'OMIM:'+str(entry_num),
-                            geno.object_properties[
-                                'is_sequence_variant_instance_of'])
+                            self.globaltt['is_allele_of'])
                         for r in publist[al_id]:
                             pmid = ref_to_pmid[int(r)]
                             g.addTriple(
@@ -1034,7 +1034,7 @@ class OMIM(Source):
         omimid = 'OMIM:' + str(entry['mimNumber'])
         if 'externalLinks' in entry:
             links = entry['externalLinks']
-            omimtype = self._get_omimtype(entry, graph)
+            omimtype = self._get_omimtype(entry, self.globaltt)
             if 'geneIDs' in links:
                 entrez_mappings = links['geneIDs']
                 gene_ids = entrez_mappings.split(',')
@@ -1114,7 +1114,7 @@ class OMIM(Source):
         return ref_to_pmid
 
     @staticmethod
-    def _get_omimtype(entry, graph=None):
+    def _get_omimtype(entry, globaltt):
         """
         Here, we look at the omim 'prefix' to help to type the entry.
         For now, we only classify omim entries as genes;
@@ -1197,13 +1197,12 @@ def get_omim_id_from_entry(entry):
 
 
 #  used in OMIA.py
-def filter_keep_phenotype_entry_ids(entry, graph=None):
+def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
-    omim_id = get_omim_id_from_entry(entry['entry'])
+    omim_id = get_omim_id_from_entry(entry['entry'], globaltt)
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'], graph)
-    if omim_type != self.globaltt['gene'] and \
-            omim_type != self.globaltt['biological_region']:
+    if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:
         return omim_id
 
     return None

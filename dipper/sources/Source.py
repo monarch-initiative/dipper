@@ -19,7 +19,6 @@ CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
 USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
              "info@monarchinitiative.org)"
 
-localtt = {}
 class Source:
     """
     Abstract class for any data sources that we'll import and process.

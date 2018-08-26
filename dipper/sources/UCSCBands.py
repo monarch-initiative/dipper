@@ -155,7 +155,7 @@ class UCSCBands(Source):
         if self.tax_ids is None:
             # self.tax_ids = [9606, 10090, 7955]
             self.species = (
-                'Homo sapians',       # 9606,
+                'Homo sapiens',       # 9606,
                 'Mus musculus',       # 10090,
                 'Danio rerio',        # 7955,
                 'Bos taurus',         # 9913,

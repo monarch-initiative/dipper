@@ -317,7 +317,7 @@ class NCBIGene(Source):
                             # add the band as the containing feature
                             graph.addTriple(
                                 gene_id,
-                                self.globaltt['is_subsequence_of'],
+                                self.globaltt['is subsequence of'],
                                 maploc_id)
                         else:
                             # TODO handle these cases: examples are:
@@ -329,7 +329,7 @@ class NCBIGene(Source):
                             # add the gene as a subsequence of the chromosome
                             graph.addTriple(
                                 gene_id,
-                                self.globaltt['is_subsequence_of'],
+                                self.globaltt['is subsequence of'],
                                 mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
