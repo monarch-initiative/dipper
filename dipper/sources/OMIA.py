@@ -157,7 +157,7 @@ class OMIA(Source):
         # process the vertebrate orthology for genes
         # that are annotated with phenotypes
         ncbi = NCBIGene(self.graph_type, self.are_bnodes_skized)
-        ncbi.add_orthologs_by_gene_group(self.g, self.annotated_genes)
+        ncbi.add_orthologs_by_gene_group(self.graph, self.annotated_genes)
 
         logger.info("Done parsing.")
 
@@ -415,7 +415,7 @@ class OMIA(Source):
         # add inheritance as an association
         inheritance_id = self._map_inheritance_term_id(row['inherit'])
         if inheritance_id is not None:
-            assoc = DispositionAssoc(self.g, self.name, sp_phene_id, inheritance_id)
+            assoc = DispositionAssoc(self.graph, self.name, sp_phene_id, inheritance_id)
             assoc.add_association_to_graph()
 
         if row['characterised'] == 'Yes':
@@ -460,7 +460,7 @@ class OMIA(Source):
         rtype = None
         if row['journal'] != '':
             rtype = self.globaltt['journal article']
-        reference = Reference(self.g, iarticle_id, rtype)
+        reference = Reference(self.graph, iarticle_id, rtype)
 
         if row['title'] is not None:
             reference.setTitle(row['title'].strip())
@@ -495,7 +495,7 @@ class OMIA(Source):
             if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association
                 # add embryonic onset
-                assoc = D2PAssoc(self.g, self.name, omia_id, disease_id)
+                assoc = D2PAssoc(self.graph, self.name, omia_id, disease_id)
                 assoc.add_association_to_graph()
                 disease_id = None
         else:
@@ -518,7 +518,7 @@ class OMIA(Source):
 
     def _process_gene_row(self, row):
         model = Model(self.graph)
-        geno = Genotype(self.g)
+        geno = Genotype(self.graph)
         if self.testMode and row['gene_id'] not in self.test_ids['gene']:
             return
         gene_id = 'NCBIGene:'+str(row['gene_id'])
@@ -546,7 +546,7 @@ class OMIA(Source):
 
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
-            self.g.addTriple(
+            self.graph.addTriple(
                 article_id, self.globaltt['is_about'], breed_id)
         else:
             logger.warning("Missing article key %s", str(row['article_id']))
@@ -571,7 +571,7 @@ class OMIA(Source):
             return
 
         # make a triple, where the article is about the phenotype
-        self.g.addTriple(
+        self.graph.addTriple(
             article_id,
             self.globaltt['is_about'], phenotype_id)
 
@@ -595,7 +595,7 @@ class OMIA(Source):
 
         # FIXME we want a different relationship here
         assoc = G2PAssoc(
-            self.g, self.name, breed_id, phene_id, self.globaltt['has phenotype'])
+            self.graph, self.name, breed_id, phene_id, self.globaltt['has phenotype'])
         assoc.add_association_to_graph()
 
         # add that the breed is a model of the human disease
@@ -612,7 +612,7 @@ class OMIA(Source):
                     omia_id, str(omim_ids))
             for i in omim_ids:
                 assoc = G2PAssoc(
-                    self.g, self.name, breed_id, i,
+                    self.graph, self.name, breed_id, i,
                     self.globaltt['is model of'])
                 assoc.add_evidence(eco_id)
                 assoc.add_association_to_graph()
@@ -680,7 +680,7 @@ class OMIA(Source):
         geno.addAlleleOfGene(vl, gene_id)
         geno.addAffectedLocus(vl, gene_id)
         model.addBlankNodeAnnotation(vl)
-        assoc = G2PAssoc(self.g, self.name, vl, phene_id)
+        assoc = G2PAssoc(self.graph, self.name, vl, phene_id)
         assoc.add_association_to_graph()
 
         # add the gene id to the set of annotated genes
@@ -775,7 +775,7 @@ class OMIA(Source):
         mpo_num = int(row['MPO_no'])
         mpo_id = 'MP:'+str(mpo_num).zfill(7)
 
-        assoc = D2PAssoc(self.g, self.name, omia_id, mpo_id)
+        assoc = D2PAssoc(self.graph, self.name, omia_id, mpo_id)
         assoc.add_association_to_graph()
 
         return

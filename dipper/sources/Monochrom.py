@@ -266,12 +266,12 @@ class Monochrom(Source):
                     if region_type_id in [
                             self.globaltt['chromosome_band'],
                             self.globaltt['chromosome_subband']]:
-                        stain_type = Feature.types.get(rtype)
+                        stain_type = self.resolve(rtype)
                         if stain_type is not None:
                             model.addOWLPropertyClassRestriction(
                                 maplocclass_id,
                                 self.globaltt['has_sequence_attribute'],
-                                Feature.types.get(rtype))
+                                self.resolve(rtype))
                     else:
                         # usually happens if it's a chromosome because
                         # they don't actually have banding info

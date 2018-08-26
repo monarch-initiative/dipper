@@ -157,8 +157,8 @@ class HGNC(Source):
                 if name == '':
                     name = None
                 gene_type_id = self.resolve(locus_type)  # withdrawn -> None
-
-                model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
+                if gene_type_id is not None:
+                    model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
                 else:

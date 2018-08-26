@@ -42,40 +42,40 @@ class GeneOntology(Source):
     files = {
         '9615': {
             'file': 'gene_association.goa_dog.gz',
-            'url': GOGA+'/goa_dog.gaf.gz'},
+            'url': GOGA + '/goa_dog.gaf.gz'},
         '7227': {
             'file': 'gene_association.fb.gz',
-            'url': GOGA+'/gene_association.fb.gz'},
+            'url': GOGA + '/gene_association.fb.gz'},
         '7955': {
             'file': 'gene_association.zfin.gz',
-            'url': GOGA+'/gene_association.zfin.gz'},
+            'url': GOGA + '/gene_association.zfin.gz'},
         '10090': {
             'file': 'gene_association.mgi.gz',
-            'url': GOGA+'/gene_association.mgi.gz'},
+            'url': GOGA + '/gene_association.mgi.gz'},
         '10116': {
             'file': 'gene_association.rgd.gz',
-            'url': GOGA+'/gene_association.rgd.gz'},
+            'url': GOGA + '/gene_association.rgd.gz'},
         '6239': {
             'file': 'gene_association.wb.gz',
-            'url': GOGA+'/gene_association.wb.gz'},
+            'url': GOGA + '/gene_association.wb.gz'},
         '9823': {
             'file': 'gene_association.goa_ref_pig.gz',
-            'url': GOGA+'/goa_pig.gaf.gz'},
+            'url': GOGA + '/goa_pig.gaf.gz'},
         '9031': {
             'file': 'gene_association.goa_ref_chicken.gz',
-            'url': GOGA+'/goa_chicken.gaf.gz'},
+            'url': GOGA + '/goa_chicken.gaf.gz'},
         '9606': {
             'file': 'gene_association.goa_ref_human.gz',
-            'url': GOGA+'/goa_human.gaf.gz'},
+            'url': GOGA + '/goa_human.gaf.gz'},
         '9913': {
             'file': 'goa_cow.gaf.gz',
-            'url': GOGA+'/goa_cow.gaf.gz'},
+            'url': GOGA + '/goa_cow.gaf.gz'},
         '559292': {
             'file': 'gene_association.sgd.gz',
-            'url': GOGA+'/gene_association.sgd.gz'},
+            'url': GOGA + '/gene_association.sgd.gz'},
         '4896': {
             'file': 'gene_association.pombase.gz',
-            'url': GOGA+'/gene_association.pombase.gz'},
+            'url': GOGA + '/gene_association.pombase.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
@@ -85,7 +85,7 @@ class GeneOntology(Source):
             'url': 'http://www.geneontology.org/doc/GO.references'},
         'id-map': {
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI +' uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI + ' uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
         }
     }
 
@@ -100,8 +100,8 @@ class GeneOntology(Source):
             'go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',
-            license_url='http://geneontology.org/page/use-and-license'
-            # data_rights=None
+            license_url=None
+            data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None
         )
 
@@ -113,8 +113,8 @@ class GeneOntology(Source):
         else:
             logger.info("Filtering on the following taxa: %s", str(tax_ids))
 
-        if 'test_ids' not in config.get_config() or \
-                'gene' not in config.get_config()['test_ids']:
+        if 'test_ids' not in config.get_config() or 'gene' \
+                not in config.get_config()['test_ids']:
             logger.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
@@ -139,16 +139,16 @@ class GeneOntology(Source):
         # build the id map for mapping uniprot ids to genes
         uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
 
-        for s in self.files:
+        for txid_num in self.files:
 
-            if s in ['go-references', 'id-map']:
+            if txid_num in ['go-references', 'id-map']:
                 continue
 
-            if not self.testMode and int(s) not in self.tax_ids:
+            if not self.testMode and int(txid_num) not in self.tax_ids:
                 continue
 
-            file = '/'.join((self.rawdir, self.files.get(s)['file']))
-            self.process_gaf(file, limit, uniprot_entrez_id_map, eco_map)
+            gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
+            self.process_gaf(gaffile, limit, uniprot_entrez_id_map, eco_map)
 
         logger.info("Finished parsing.")
 

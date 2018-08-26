@@ -584,5 +584,5 @@ class Genotype():
         animal_label = ' '.join((genotype_label, taxon_label))
         self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
         self.graph.addTriple(
-            animal_id, Genotype.globaltt['has_genotype'], genotype_id)
+            animal_id, self.globaltt['has_genotype'], genotype_id)
         return animal_id
