@@ -107,8 +107,6 @@ class NCBIGene(Source):
         else:
             self.gene_ids = config.get_config()['test_ids']['gene']
 
-        self.properties = Feature.properties
-
         self.class_or_indiv = {}
 
         return

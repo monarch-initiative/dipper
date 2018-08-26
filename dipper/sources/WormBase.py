@@ -370,9 +370,7 @@ class WormBase(Source):
                 eco_symbol = eco_symbol.strip()
                 eco_id = None
                 if eco_symbol.strip() != '':
-                    logger.warning(
-                        "Encountered an ECO code we don't have: %s", eco_symbol)
-                eco_id = self.resolve(eco_symbol)
+                    eco_id = self.resolve(eco_symbol)
 
                 # according to the GOA spec, persons are not allowed to be
                 # in the reference column, therefore they the variant and

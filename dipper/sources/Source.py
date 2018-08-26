@@ -283,7 +283,7 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
-        except OSError as e:  # URLError?
+        except Exception as e: # OSError as e:  # URLError?
             resp_headers = None
             size = 0
             last_modified = None

@@ -1,7 +1,7 @@
 ---
 # wormbase.yaml
 
-# biotype_map 
+# biotype_map
 "lincRNA": "lincRNA_gene"
 "miRNA": "miRNA_gene"
 "ncRNA": "ncRNA_gene"
