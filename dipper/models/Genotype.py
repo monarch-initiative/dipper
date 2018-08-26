@@ -127,7 +127,7 @@ class Genotype():
         """
         We make the assumption here that if the relationship is not provided,
         it is a
-        GENO:is_sequence_variant_instance_of.
+        GENO:is_allele_of.
 
         Here, the allele should be a variant_locus, not a sequence alteration.
         :param allele_id:
@@ -146,7 +146,7 @@ class Genotype():
         """
         We make the assumption here that if the relationship is not provided,
         it is a
-        GENO:is_sequence_variant_instance_of.
+        GENO:is_allele_of.
 
         Here, the allele should be a variant_locus, not a sequence alteration.
         :param allele_id:
@@ -397,11 +397,11 @@ class Genotype():
 
         if gene_id is not None:
             self.graph.addTriple(
-                targeted_gene_id, self.globaltt['is_targeted_expression_variant_of'],
+                targeted_gene_id, self.globaltt['is_expression_variant_of'],
                 gene_id)
 
         self.graph.addTriple(
-            targeted_gene_id, self.globaltt['targeted_by'], reagent_id)
+            targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id)
 
         return
 

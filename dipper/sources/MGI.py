@@ -734,11 +734,11 @@ SELECT  r._relationship_key as rel_key,
                 # for non-wild type alleles:
                 if iswildtype == '0':
                     locus_type = self.globaltt['variant_locus']
-                    locus_rel = self.globaltt['is_sequence_variant_instance_of']
+                    locus_rel = self.globaltt['is_allele_of']
                 # for wild type alleles:
                 elif iswildtype == '1':
                     locus_type = self.globaltt['reference_locus']
-                    locus_rel = self.globaltt['is_reference_instance_of']
+                    locus_rel = self.globaltt['is_reference_allele_of']
                     # add the allele to the wildtype set for lookup later
                     self.wildtype_alleles.add(allele_id)
                 else:

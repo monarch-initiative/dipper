@@ -327,7 +327,7 @@ class Feature():
     def addSubsequenceOfFeature(self, parentid):
         """
         This will add reciprocal triples like:
-        feature is_subsequence_of parent
+        feature <is subsequence of> parent
         parent has_subsequence feature
         :param graph:
         :param parentid:
@@ -336,6 +336,7 @@ class Feature():
 
         """
         self.graph.addTriple(self.fid, self.globaltt['is subsequence of'], parentid)
+        # this should be expected to be done in reasoning not ETL
         self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid)
 
         return
