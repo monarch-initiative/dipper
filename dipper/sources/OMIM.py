@@ -1159,7 +1159,7 @@ class OMIM(Source):
             # note that some genes are also phenotypes,
             # even in this class, like 102480
             # examples: 102560,102480,100678,102750
-            type_id = graph.globaltt['gene']  # doublecheck this
+            type_id = globaltt['gene']  # doublecheck this
         elif prefix == '#':
             # phenotype/disease -- indicate that here?
             # examples: 104200,105400,114480,115300,121900
@@ -1167,11 +1167,11 @@ class OMIM(Source):
         elif prefix == '+':
             # gene of known sequence and has a phenotype
             # examples: 107670,110600,126453
-            type_id = graph.globaltt['gene']  # doublecheck this
+            type_id = globaltt['gene']  # doublecheck this
         elif prefix == '%':
             # this is a disease (with a known locus).
             # examples include:  102150,104000,107200,100070
-            type_id = graph.globaltt['heritable_phenotypic_marker']
+            type_id = globaltt['heritable_phenotypic_marker']
         elif prefix == '':
             # this is probably just a phenotype
             pass
@@ -1201,7 +1201,7 @@ def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'], globaltt)
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
-    omim_type = OMIM._get_omimtype(entry['entry'], graph)
+    omim_type = OMIM._get_omimtype(entry['entry'], globaltt)
     if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:
         return omim_id
 

@@ -149,8 +149,7 @@ class SGD(Source):
             g2p_assoc = Assoc(
                 self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
             assoc_id = g2p_assoc.make_association_id(
-                definedby='yeastgenome.org', subject=gene, predicate=relation,
-                object=pheno_id)
+                'yeastgenome.org', gene, relation, pheno_id)
             g2p_assoc.set_association_id(assoc_id=assoc_id)
 
         # add to graph to mint assoc id

@@ -3,17 +3,17 @@
 
 # locus_type_map
 
-"RNA Y": "Y RNA"
-"RNA cluster": "ncRNA"
-"RNA long non-coding": "lnc_RNA"
-"RNA micro": "miRNA_gene"
-"RNA misc": "ncRNA"
-"RNA ribosomal": "large_subunit_rRNA"       # is this legit? TEC
-"RNA small cytoplasmic": "scRNA_gene"
-"RNA small nuclear": snRNA_gene"
-"RNA small nucleolar": "snoRNA_gene"
-"RNA transfer": "tRNA_gene"
-"RNA vault": "vault_RNA"
+"RNA, Y": "Y RNA"
+"RNA, cluster": "ncRNA"
+"RNA, long non-coding": "lnc_RNA"
+"RNA, micro": "miRNA_gene"
+"RNA, misc": "ncRNA"
+"RNA, ribosomal": "large_subunit_rRNA"       # is this legit? TEC
+"RNA, small cytoplasmic": "scRNA_gene"
+"RNA, small nuclear": snRNA_gene"
+"RNA, small nucleolar": "snoRNA_gene"
+"RNA, transfer": "tRNA_gene"
+"RNA, vault": "vault_RNA"
 "T cell receptor gene": "vertebrate_immunoglobulin_T_cell_receptor_segment"
 "T cell receptor pseudogene": "T_cell_receptor_pseudogene"
 "complex locus constituent": "protein_coding_gene"  # no way to say member of cluster

@@ -341,11 +341,11 @@ class Orphanet(Source):
 
         return
 
-    def getTestSuite(self):
-        import unittest
-        # TODO PYLINT Unable to import 'tests.test_orphanet
-        from tests.test_orphanet import OrphanetTestCase
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
-
-        return test_suite
+    # def getTestSuite(self):
+    #    import unittest
+    #    # TODO PYLINT Unable to import 'tests.test_orphanet  (there is none)
+    #    from tests.test_orphanet import OrphanetTestCase
+    #
+    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
+    #
+    #    return test_suite

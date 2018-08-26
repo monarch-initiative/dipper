@@ -2523,7 +2523,7 @@ class ZFIN(Source):
         mod_id = self.resolve(modifier, False)
 
         if modifier == mod_id:
-            logger("no mapping for pato modifier " + modifier)
+            logger.warning("no mapping for pato modifier " + modifier)
 
         key = self._make_zpkey(
             superterm1_id, subterm1_id, quality_id,
