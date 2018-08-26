@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # Local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201806/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201808/'   # Release RDF data
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
