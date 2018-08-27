@@ -526,7 +526,7 @@ class OMIA(Source):
         gene_label = row['symbol']
         self.label_hash[gene_id] = gene_label
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
-        gene_type_id =self.globaltt[row['gene_type']]
+        gene_type_id = self.resolve(row['gene_type'])
         model.addClassToGraph(gene_id, gene_label, gene_type_id)
         geno.addTaxon(tax_id, gene_id)
 

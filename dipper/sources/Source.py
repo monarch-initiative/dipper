@@ -19,6 +19,7 @@ CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
 USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
              "info@monarchinitiative.org)"
 
+
 class Source:
     """
     Abstract class for any data sources that we'll import and process.
@@ -283,7 +284,7 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
-        except Exception as e: # OSError as e:  # URLError?
+        except Exception as e:  # OSError as e:  # URLError?
             resp_headers = None
             size = 0
             last_modified = None
@@ -548,6 +549,8 @@ class Source:
 
         :return: dict
         """
+        # this would go in a translation table but it is generated dynamicly
+        # maybe when we move to a make driven system
         eco_map = {}
         request = urllib.request.Request(url)
         response = urllib.request.urlopen(request)

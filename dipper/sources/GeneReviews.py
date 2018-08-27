@@ -174,8 +174,7 @@ class GeneReviews(Source):
 
                 allomimids.add(omim_num)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
             # end looping through file

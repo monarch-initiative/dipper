@@ -255,8 +255,7 @@ class MMRRC(Source):
                             assoc.add_source(p)
                         assoc.add_association_to_graph()
                     else:
-                        logger.info(
-                            "Phenotypes and no allele for %s", strain_id)
+                        logger.info("Phenotypes and no allele for %s", strain_id)
 
                 if not self.testMode and (
                         limit is not None and line_counter > limit):

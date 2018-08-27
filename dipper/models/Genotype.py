@@ -460,8 +460,8 @@ class Genotype():
         # scrub off the taxon prefix.  put it in base space
         # TODO: revisit as BNODE?
 
-        genome_id = re.sub(r'.*\:', ':', taxon_id) + 'genome'
-
+        # genome_id = re.sub(r'.*\:', '_:', taxon_id) + 'genome'
+        genome_id = '_:' + taxon_id + 'genome'
         return genome_id
 
     def addChromosome(

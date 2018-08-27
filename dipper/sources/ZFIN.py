@@ -1593,8 +1593,7 @@ class ZFIN(Source):
                     self.variant_loci_genes[genomic_feature_id] = [gene_id]
                 else:
                     if gene_id not in self.variant_loci_genes[genomic_feature_id]:
-                        self.variant_loci_genes[
-                            genomic_feature_id] += [gene_id]
+                        self.variant_loci_genes[genomic_feature_id] += [gene_id]
 
                 sequence_alteration_type = feature_so_id
                 # Add the sequence alteration id, label, and type

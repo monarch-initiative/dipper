@@ -755,10 +755,11 @@ class OMIM(Source):
             rel_id = self.globaltt['contributes to']
 
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
-        
-        evidence = self.resolve(phene_key, False)
-        if evidence != phene_key: 
-            assoc.add_evidence(evidence)  # evidence is Found
+
+        if phene_key is not None:
+            evidence = self.resolve(phene_key, False)
+            if evidence != phene_key: 
+                assoc.add_evidence(evidence)  # evidence is Found
             
         assoc.add_association_to_graph()
 
@@ -958,8 +959,7 @@ class OMIM(Source):
                 omim_id = 'OMIM:'+ps_num
                 model.addClassToGraph(omim_id, ps_label)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1203,7 +1203,7 @@ def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
-    omim_type = OMIM._get_omimtype(entry['entry'])
+    omim_type = OMIM._get_omimtype(entry['entry'], globaltt)
     if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:
         return omim_id
 

@@ -17,7 +17,6 @@ all_missense_or_inframe: ":all_missense_or_inframe",
 "mosaic": ":mosaic",
 "onset": ":onset",
 "part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication",
-"protective_for_condition": ":protective_for_condition",
  # SEPIO:0000019 found in sepio_developer.owl
  # SEPIO:0000111 -- is not found in sepio
  # PATO_0000470 and GENO:0000876
@@ -98,6 +97,7 @@ all_missense_or_inframe: ":all_missense_or_inframe",
 "author statement without traceable support used in manual assertion": "ECO:0000303",
 "author statement supported by traceable reference used in manual assertion": "ECO:0000304",
 "inference from background scientific knowledge used in manual assertion": "ECO:0000306",
+"imported information": "ECO:0000311",
 "direct assay evidence used in manual assertion": "ECO:0000314",
 "mutant phenotype evidence used in manual assertion": "ECO:0000315",
 "genetic interaction evidence used in manual assertion": "ECO:0000316",
