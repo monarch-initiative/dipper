@@ -198,8 +198,7 @@ class CTD(Source):
                     elif file == self.files['gene_disease']['file']:
                         self._process_disease2gene(row)
 
-                if not self.testMode and \
-                        limit is not None and row_count >= limit:
+                if not self.testMode and limit is not None and row_count >= limit:
                     break
 
         return

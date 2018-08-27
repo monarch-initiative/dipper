@@ -4,3 +4,6 @@
 "2": "genomic context evidence"
 "3": "sequencing assay evidence"
 "4": "sequencing assay evidence"
+
+#
+"protein-coding": "protein_coding_gene"

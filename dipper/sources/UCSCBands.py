@@ -473,7 +473,7 @@ class UCSCBands(Source):
         logger.info("Adding equivalent assembly identifiers")
         for sp in self.species:
             tax_id = self.resolve(sp)
-            for key in self.files.self.localtt[sp].assembly:
+            for key in self.files[self.localtt[sp]].assembly:
                 ucsc_id = key
                 ucsc_label = re.split(':', key)[1]
                 mapped_id = self.localtt[key]

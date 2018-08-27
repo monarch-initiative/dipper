@@ -34,6 +34,7 @@
 "Other Genome Feature": "sequence_feature"
 # BAC_end: SO:0000999, YAC_end: SO:00011498; using parent term
 "BAC/YAC end": "read"
+"Gene": "gene"
 
 # zygosity
 "Heterozygous": "heterozygous"

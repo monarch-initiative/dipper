@@ -363,8 +363,7 @@ class GeneOntology(Source):
                         # TODO should the G2PAssoc be
                         # the evidence for the GO assoc?
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -403,7 +402,6 @@ class GeneOntology(Source):
         import unittest
         from tests.test_geneontology import GeneOntologyTestCase
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(GeneOntologyTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(GeneOntologyTestCase)
 
         return test_suite

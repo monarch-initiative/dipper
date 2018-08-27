@@ -34,4 +34,4 @@
 "transposable element": "transposable_element"
 "unknown": "sequence_feature"
 "virus integration site": "integration_excision_site" # FIXME better? still not specific
-"withdrawn": None                          # TODO  NCIT:C38061 ?
+# "withdrawn": None                          # TODO  NCIT:C38061 ?

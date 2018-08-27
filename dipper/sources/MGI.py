@@ -644,8 +644,7 @@ SELECT  r._relationship_key as rel_key,
 
                 # TODO deal with non-preferreds, are these deprecated?
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -798,13 +797,11 @@ SELECT  r._relationship_key as rel_key,
 
                     strain_id = self.idhash['strain'].get(strain_key)
                     # scrub out if the strain is "not specified"
-                    if strain_id is not None and \
-                            strain_id not in [
+                    if strain_id is not None and strain_id not in [
                                 'MGI:4867032', 'MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id)
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -911,8 +908,7 @@ SELECT  r._relationship_key as rel_key,
                 # else:
                 #     geno_hash[genotype_id] += [vslc_label]
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         # build the gvc and the genotype label
@@ -1852,8 +1848,7 @@ SELECT  r._relationship_key as rel_key,
                 if annot_id is not None:
                     model.addDescription(annot_id, note.strip())
 
-                if not self.testMode and \
-                        limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2039,8 +2034,7 @@ SELECT  r._relationship_key as rel_key,
                 notes += ' ['+n+']'
                 model.addDescription(allele_id, notes)
 
-            if not self.testMode and \
-                    limit is not None and line_counter > limit:
+            if not self.testMode and limit is not None and line_counter > limit:
                 break
 
         return

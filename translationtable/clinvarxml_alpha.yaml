@@ -1,13 +1,13 @@
 ---
-# YAML format for a Python dict 
+# YAML format for a Python dict
 # external_string to internal_label translation table
 # quoted external_string, a colon, quoted internal_label.
 # octothorp comments and empty lines are ignored
 # the external_string column should be unique
-# items in the the internal_label column should be unique 
+# items in the the internal_label column should be unique
 # in the first column of the global_terms.yaml file
 
-
+# "protective_for_condition": ":protective_for_condition"   # needs a real term
 
 ### RCV variant to gene relationship types type
 #########################################################
@@ -22,8 +22,10 @@
 ### Pathos Association types
 ###########################################################
 "Benign": "benign_for_condition"
+"benign": "benign_for_condition"
 "conflicting data from submitters": "uncertain significance"
 "Likely benign": "likely_benign_for_condition"
+"likely benign": "likely_benign_for_condition"
 "Likely Benign": "likely_benign_for_condition"
 "likely pathogenic": "likely_pathogenic_for_condition"
 "Likely pathogenic": "likely_pathogenic_for_condition"
@@ -32,6 +34,7 @@
 "pathogenic": "pathogenic_for_condition"
 "Pathogenic": "pathogenic_for_condition"
 "Pathogenic/Likely pathogenic": "pathogenic_for_condition"
+"Pathologic": "pathogenic_for_condition"
 "pathologic": "pathogenic_for_condition"
 "probable-non-pathogenic": "likely_benign_for_condition"
 "probable-pathogenic": "likely_pathogenic_for_condition"
@@ -57,7 +60,7 @@
 "risk factor": "likely_pathogenic_for_condition"
 "drug response": "has_drug_response"
 "drug-response": "has_drug_response"
-"association": "uncertain significance"
+"association": "uncertain significance"   # tricksy with globaltt.association
 "Affects": "uncertain significance"
 "Moderate": "uncertain significance"
 "protective": "protective_for_condition"
@@ -65,7 +68,7 @@
 "likely pathogenic - adrenal bilateral pheochromocy": "likely_pathogenic_for_condition"
 "Associated with leiomyomas": "likely_benign_for_condition"
 # this next set are still unmapped
-# Pathologic
+
 # VSB
 # POLY
 # VOUS
@@ -92,3 +95,4 @@
 "CompoundHeterozygote": "variant single locus complement"
 #############################################################
 "patient phenotyping study": "phenotyping only"
+"provider interpretation": "imported information"   # "ECO:0000311"  checkme

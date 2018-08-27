@@ -531,12 +531,10 @@ class FlyBase(PostgreSQLSource):
                 if miniref != '':
                     reference.setShortCitation(miniref)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode \
-                            and int(pub_num) not in self.test_keys['pub']:
+                    if self.testMode and int(pub_num) not in self.test_keys['pub']:
                         continue
 
                     if is_obsolete == 't':
@@ -731,8 +729,7 @@ class FlyBase(PostgreSQLSource):
                     # make only fly things leaders
                     model.makeLeader(feature_id)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
                     if is_gene:
@@ -868,7 +865,7 @@ class FlyBase(PostgreSQLSource):
                 # note this is not "abnormal phenotype" if that was what is wanted
                 # "phenotype": "FBcv:0001347" ~~>  "Phenotype": "UPHENO:0001001"
                 # but it is a near collision with an existing term
-                phenotype_id = self.localtt['phenotype'] 
+                phenotype_id = self.localtt['phenotype']
                 assoc = G2PAssoc(graph, self.name, genotype_id, phenotype_id)
                 assoc.add_source(pub_id)
                 assoc.set_description(description)
@@ -877,8 +874,7 @@ class FlyBase(PostgreSQLSource):
                 assoc_id = assoc.get_association_id()
                 model.addComment(assoc_id, phendesc_id)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
