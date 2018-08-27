@@ -7,18 +7,6 @@ __author__ = 'nlw'
 
 class OrthologyAssoc(Assoc):
 
-    ortho_rel = {
-        'orthologous': 'RO:HOM0000017',  # in orthology relationship with
-        # in 1:1 orthology rel/wth
-        'least_diverged_orthologous': 'RO:HOM0000020',
-        'homologous': 'RO:HOM0000019',  # in 1 to 1 homology relationship with
-        'paralogous': 'RO:HOM0000011',  # in generic paralogy relationship with
-        'in_paralogous': 'RO:HOM0000023',  # in in-paralogy relationship with
-        'ohnologous': 'RO:HOM0000022',  # in ohnology relationship with
-        'xenologous': 'RO:HOM0000018',  # in xenology relationship with
-        'has_member': 'RO:0002351'
-        }
-
     terms = {
         'gene_family': 'DATA:3148'  # http://edamontology.org/data_3148
     }

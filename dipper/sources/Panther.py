@@ -6,7 +6,6 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
 from dipper import config
-from dipper import curie_map
 
 __author__ = 'nicole'
 
@@ -199,9 +198,9 @@ class Panther(Source):
                             in self.test_ids):
                         continue
 
-                    # map the taxon abbreviations to ncbi taxon ids
-                    taxon_a = self._map_taxon_abbr_to_id(species_a)
-                    taxon_b = self._map_taxon_abbr_to_id(species_b)
+                    # map the taxon abbreviations to ncbi taxon id numbers
+                    taxon_a = self.resolve(species_a).split(':')[1]
+                    taxon_b = self.resolve(species_b).split(':')[1]
 
                     # ###uncomment the following code block
                     # if you want to filter based on taxid of favorite animals
@@ -232,11 +231,13 @@ class Panther(Source):
                     gene_a = re.sub(r'=', ':', gene_a)
                     gene_b = re.sub(r'=', ':', gene_b)
 
-                    clean_gene = self._clean_up_gene_id(gene_a, species_a)
+                    clean_gene = self._clean_up_gene_id(
+                        gene_a, species_a, self.curie_map)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_a)
                     gene_a = clean_gene
-                    clean_gene = self._clean_up_gene_id(gene_b, species_b)
+                    clean_gene = self._clean_up_gene_id(
+                        gene_b, species_b, self.curie_map)
                     if clean_gene is None:
                         unprocessed_gene_ids.add(gene_b)
                     gene_b = clean_gene
@@ -286,77 +287,7 @@ class Panther(Source):
         return
 
     @staticmethod
-    def _map_taxon_abbr_to_id(ptax):
-        """
-        Will map the panther-specific taxon abbreviations to NCBI taxon numbers
-        :param ptax:
-        :return: NCBITaxon id
-        """
-        # TODO  move to localtt->globaltt
-        taxid = None
-        ptax_to_taxid_map = {
-            'ANOCA': 28377,  # green lizard
-            'ARATH': 3702,   # arabadopsis
-            'BOVIN': 9913,   # cow
-            'CAEEL': 6239,   # worm
-            'CANFA': 9615,   # dog
-            'CHICK': 9031,   # chicken
-            'DANRE': 7955,   # zebrafish
-            'DICDI': 44689,  # discodium
-            'DROME': 7227,   # drosophila melanogaster
-            'ECOLI': 562,
-            'HORSE': 9796,   # horses
-            'HUMAN': 9606,   # humans
-            'MACMU': 9544,   # macaque
-            'MONDO': 13616,  # opossum
-            'MOUSE': 10090,  # mouse
-            'ORNAN': 9258,   # orangutan
-            'PANTR': 9598,   # chimp
-            'PIG': 9823,
-            'RAT': 10116,
-            'SCHPO': 4896,   # yeast
-            'TAKRU': 31033,  # pufferfish
-            'XENTR': 8364,   # xenopus
-            'YEAST': 559292,   # yeast
-        }
-
-        if ptax in ptax_to_taxid_map:
-            taxid = ':'.join(('NCBITaxon', str(ptax_to_taxid_map.get(ptax))))
-        else:
-            logger.error("unmapped taxon code %s", ptax)
-
-        return taxid
-
-    @staticmethod
-    def _map_orthology_code_to_RO(ortho):
-        """
-        Map the panther-specific orthology code (P,O,LDO,X,LDX)
-        to relationship-ontology
-        identifiers.
-        :param ortho: orthology code
-        :return: RO identifier
-        """
-        # TODO  move to localtt->globaltt
-        ortho_rel = OrthologyAssoc.ortho_rel
-        ro_id = ortho_rel['orthologous']  # in orthology relationship with
-        ortho_to_ro_map = {
-            'P': ortho_rel['paralogous'],
-            'O': ortho_rel['orthologous'],
-            'LDO': ortho_rel['least_diverged_orthologous'],
-            'X': ortho_rel['xenologous'],
-            'LDX': ortho_rel['xenologous']
-        }
-
-        if ortho in ortho_to_ro_map:
-            ro_id = ortho_to_ro_map.get(ortho)
-        else:
-            logger.warning(
-                "unmapped orthology code %s. Defaulting to 'orthology'", ortho)
-
-        return ro_id
-
-    @staticmethod
-    def _clean_up_gene_id(geneid, sp):
+    def _clean_up_gene_id(geneid, sp, curie_map):
         """
         A series of identifier rewriting to conform with
         standard gene identifiers.
@@ -402,7 +333,7 @@ class Panther(Source):
         geneid = re.sub(r'Gene:Xenbase:', 'Xenbase:', geneid)
 
         # TODO this would be much better done as
-        # if foo not in curie_map:
+        # if foo not in selfcurie_map:
         # if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
         #        re.match(r'Gene_ORFName', geneid) or \
         #        re.match(r'Gene_Name', geneid):
@@ -412,9 +343,8 @@ class Panther(Source):
 
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
-        if pfx is None or pfx not in curie_map.get():
-            # logger.warning(
-            #    "No curie prefix for (species %s): %s", sp, geneid)
+        if pfx is None or pfx not in curie_map:
+            # logger.warning( "No curie prefix for (species %s): %s", sp, geneid)
             geneid = None
         return geneid
 

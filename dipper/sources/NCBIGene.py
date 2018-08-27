@@ -207,7 +207,7 @@ class NCBIGene(Source):
                 else:
                     label = symbol
                 # sequence feature, not a gene
-                if gene_type_id == 'SO:0000110':
+                if gene_type_id == self.globaltt['sequence_feature']:
                     self.class_or_indiv[gene_id] = 'I'
                 else:
                     self.class_or_indiv[gene_id] = 'C'
