@@ -363,6 +363,15 @@ all_missense_or_inframe: ":all_missense_or_inframe",
 "Ovis aries": "NCBITaxon:9940",
 "Oryctolagus cuniculus": "NCBITaxon:9986",
 "Mus musculus musculus x M. m. domesticus": "NCBITaxon:477815",
+"Anolis carolinensis": "NCBITaxon:28377",
+"Arabidopsis thaliana": "NCBITaxon:3702",
+"Dictyostelium discoideum": "NCBITaxon:44689",
+"Escherichia coli": "NCBITaxon:562",
+"Monodelphis domestica": "NCBITaxon:13616",
+"Schizosaccharomyces pombe": "NCBITaxon:4896",
+"Takifugu rubripe": "NCBITaxon:31033",
+"Saccharomyces cerevisiae S288C": "NCBITaxon:559292",
+# "": "NCBITaxon:",
  # "National Cancer Institute Thesaurus": "NCIT:!!!",
  #"monoallelic_mutation": "NCIT:C129829",
  #"biallelic_mutation": "NCIT:C129830",
@@ -476,6 +485,13 @@ all_missense_or_inframe: ":all_missense_or_inframe",
 "causes_or_contributes": "RO:0003302",
 "causes condition": "RO:0003303",
 "contributes to condition": "RO:0003304",
+
+#        'homologous': 'RO:HOM0000019',  # in 1 to 1 homology relationship with
+#        'in_paralogous': 'RO:HOM0000023',  # in in-paralogy relationship with
+#        'ohnologous': 'RO:HOM0000022',  # in ohnology relationship with
+#
+# "gene_family": "DATA:3148"  # http://edamontology.org/data_3148   add to curie map too
+
 "in paralogy relationship with": "RO:HOM0000011",
 "in orthology relationship with": "RO:HOM0000017",
 "in xenology relationship with": "RO:HOM0000018",

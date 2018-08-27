@@ -754,10 +754,12 @@ class OMIM(Source):
             # this is a questionable mapping!  skip?
             rel_id = self.globaltt['contributes to']
 
-        evidence = self.resolve(phene_key)
-
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
-        assoc.add_evidence(evidence)
+        
+        evidence = self.resolve(phene_key, False)
+        if evidence != phene_key: 
+            assoc.add_evidence(evidence)  # evidence is Found
+            
         assoc.add_association_to_graph()
 
         return
@@ -1199,7 +1201,7 @@ def get_omim_id_from_entry(entry):
 #  used in OMIA.py
 def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
-    omim_id = get_omim_id_from_entry(entry['entry'], globaltt)
+    omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'])
     if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:

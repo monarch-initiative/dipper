@@ -100,7 +100,7 @@ class GeneOntology(Source):
             'go',
             ingest_title='Gene Ontology',
             ingest_url='http://www.geneontology.org',
-            license_url=None
+            license_url=None,
             data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None
         )

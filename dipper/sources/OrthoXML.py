@@ -10,7 +10,6 @@ import time
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
-from dipper.models.Genotype import Genotype
 from dipper import config
 
 __author__ = "Adrian Altenhoff"
@@ -102,8 +101,8 @@ class OrthoXML(Source):
             'oma',
             'Ortholgous MAtrix Hierarchical Orthologous Groups',
             'https://omabrowser.org/',
-            license_url="https://creativecommons.org/licenses/by-sa/2.5/"
-            # data_rights=None,
+            license_url=None,
+            data_rights="https://creativecommons.org/licenses/by-sa/2.5/",
             # file_handle=None
         )
 
@@ -224,7 +223,7 @@ class OrthoXML(Source):
                             not in self.tax_ids) or
                             (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
                                 not in self.tax_ids))):
-                        continue
+                    continue
 
                 protein_id_a = self.clean_protein_id(protein_id_a)
                 protein_id_b = self.clean_protein_id(protein_id_b)
@@ -234,15 +233,14 @@ class OrthoXML(Source):
                 self.add_protein_to_graph(protein_id_b, taxon_b, model)
 
                 rel = self._map_orthology_code_to_RO[rel_type]
-                evidence_id = 'ECO:0000080'  # phylogenetic evidence
+                evidence_id = self.globaltt['phylogenetic evidence']  # 'ECO:0000080'
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(
                     graph, self.name, protein_id_a, protein_id_b, rel)
                 assoc.add_evidence(evidence_id)
                 assoc.add_association_to_graph()
 
-                if not self.testMode \
-                        and limit is not None and matchcounter > limit:
+                if not self.testMode and limit is not None and matchcounter > limit:
                     logger.warning(
                         "reached limit of relations to extract. Stopping early...")
                     break

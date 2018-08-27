@@ -1468,7 +1468,7 @@ SELECT  r._relationship_key as rel_key,
 
                     self.label_hash[marker_id] = symbol
                     # add the taxon
-                    taxon_id = self.globaltt[latin_name]
+                    taxon_id = self.resolve(latin_name)  # not always proper binomial
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.

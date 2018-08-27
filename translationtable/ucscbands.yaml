@@ -9,12 +9,12 @@
 
 "Danio rerio": "7955"
 "UCSC:danRer10": "NCBIGenome:GRCz10"
-"UCSC:danRer7":	"NCBIGenome:Zv9"
+"UCSC:danRer7": "NCBIGenome:Zv9"
 "UCSC:danRer6": "NCBIGenome:Zv8"
 
 "Mus musculus":  "10090"
 "UCSC:mm10": "NCBIGenome:GRCm38"
-"UCSC:mm9":	"NCBIGenome:37"
+"UCSC:mm9": "NCBIGenome:37"
 
 "Gallus gallus":  "9031"
 "UCSC:galGal4": "NCBIAssembly:317958"
