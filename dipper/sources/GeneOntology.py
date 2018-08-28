@@ -17,6 +17,8 @@ from dipper import config
 
 logger = logging.getLogger(__name__)
 GOGA = 'http://geneontology.org/gene-associations'
+FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'
+UPCR = 'uniprot/current_release/knowledgebase/'
 
 
 class GeneOntology(Source):
@@ -38,7 +40,6 @@ class GeneOntology(Source):
 
     """
 
-    FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'
     files = {
         '9615': {
             'file': 'gene_association.goa_dog.gz',
@@ -85,7 +86,7 @@ class GeneOntology(Source):
             'url': 'http://www.geneontology.org/doc/GO.references'},
         'id-map': {
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + 'uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI + UPCR + 'idmapping/idmapping_selected.tab.gz'
         }
     }
 
@@ -107,6 +108,7 @@ class GeneOntology(Source):
 
         # Defaults
         self.tax_ids = tax_ids
+        self.test_ids = list()
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
             logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
@@ -246,9 +248,9 @@ class GeneOntology(Source):
                 else:
                     gene_id = ':'.join((db, gene_num))
 
-                if self.testMode and \
-                        not(re.match(r'NCBIGene', gene_id) and
-                            int(gene_num) in self.test_ids):
+                if self.testMode and not(
+                        re.match(r'NCBIGene', gene_id) and
+                        int(gene_num) in self.test_ids):
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
