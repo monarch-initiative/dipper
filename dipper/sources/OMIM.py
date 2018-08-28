@@ -206,7 +206,7 @@ class OMIM(Source):
         return omimids
 
     def process_entries(
-        self, omimids, transform, globaltt=self.globaltt,
+        self, omimids, transform, globaltt=None,
         included_fields=None, graph=None, limit=None
     ):
         """

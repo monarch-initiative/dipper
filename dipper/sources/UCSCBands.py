@@ -475,9 +475,9 @@ class UCSCBands(Source):
             tax_id = self.resolve(sp)
             for key in self.files[self.localtt[sp]]['assembly']:
                 ucsc_id = key
-                ucsc_label = re.split(':', key)[1]
+                ucsc_label = key.split(':')[1]
                 mapped_id = self.localtt[key]
-                mapped_label = re.split(':', mapped_id)[1]
+                mapped_label = mapped_id.split(':')[1]
                 mapped_label = 'NCBI build ' + str(mapped_label)
                 geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
                 geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
