@@ -76,7 +76,7 @@ class UCSCBands(Source):
                 "UCSC:hg18",
                 "UCSC:hg17",
                 "UCSC:hg16",
-                "UCSC:hg15")
+                "UCSC:hg15",)
         },
         '10090': {
             'file': 'mm10cytoBand.txt.gz',
@@ -85,7 +85,7 @@ class UCSCBands(Source):
             'genome_label': 'Mouse',
             'assembly': (
                 "UCSC:mm10",
-                "UCSC:mm9")
+                "UCSC:mm9",)
         },
         # Note that there are no bands,
         # arms or staining components for the species below at the moment
@@ -97,42 +97,42 @@ class UCSCBands(Source):
             'assembly': (
                 "UCSC:danRer10",
                 "UCSC:danRer7",
-                "UCSC:danRer6")
+                "UCSC:danRer6",)
         },
         '9913': {
             'file': 'bosTau7cytoBand.txt.gz',
             'url': HGGP + '/bosTau7/database/cytoBandIdeo.txt.gz',
             'build_num': 'bosTau7',
             'genome_label': 'cow',
-            'assembly': ("UCSC:bosTau7")
+            'assembly': ("UCSC:bosTau7",)
         },
         '9031': {
             'file': 'galGal4cytoBand.txt.gz',
             'url': HGGP + '/galGal4/database/cytoBandIdeo.txt.gz',
             'build_num': 'galGal4',
             'genome_label': 'chicken',
-            'assembly': ("UCSC:galGal4")
+            'assembly': ("UCSC:galGal4",)
         },
         '9823': {
             'file': 'susScr3cytoBand.txt.gz',
             'url': HGGP + '/susScr3/database/cytoBandIdeo.txt.gz',
             'build_num': 'susScr3',
             'genome_label': 'pig',
-            'assembly': ("UCSC:susScr3")
+            'assembly': ("UCSC:susScr3",)
         },
         '9940': {
             'file': 'oviAri3cytoBand.txt.gz',
             'url': HGGP + '/oviAri3/database/cytoBandIdeo.txt.gz',
             'build_num': 'oviAri3',
             'genome_label': 'sheep',
-            'assembly': ("UCSC:oviAri3")
+            'assembly': ("UCSC:oviAri3",)
         },
         '9796': {
             'file': 'equCab2cytoBand.txt.gz',
             'url': HGGP + '/equCab2/database/cytoBandIdeo.txt.gz',
             'build_num': 'equCab2',
             'genome_label': 'horse',
-            'assembly': ("UCSC:equCab2")
+            'assembly': ("UCSC:equCab2",)
         },
         # TODO rainbow trout, 8022, when available
     }
@@ -473,14 +473,14 @@ class UCSCBands(Source):
         logger.info("Adding equivalent assembly identifiers")
         for sp in self.species:
             tax_id = self.resolve(sp)
-            for key in self.files[self.localtt[sp]]['assembly']:
+            txid_num = tax_id.split(':')[1]
+            for key in self.files[txid_num]['assembly']:
                 ucsc_id = key
                 try:
                     ucsc_label = ucsc_id.split(':')[1]
                 except IndexError:
                     logger.error('%s Assembly id:  "%s" is problematic', sp, key)
                     continue
-                # seeing ':' as a key?
                 if key in self.localtt:
                     mapped_id = self.localtt[key]
                 else:
