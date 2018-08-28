@@ -199,8 +199,8 @@ class Panther(Source):
                         continue
 
                     # map the taxon abbreviations to ncbi taxon id numbers
-                    taxon_a = self.resolve(species_a).split(':')[1]
-                    taxon_b = self.resolve(species_b).split(':')[1]
+                    taxon_a = self.resolve(species_a).split(':')[1].strip()
+                    taxon_b = self.resolve(species_b).split(':')[1].strip()
 
                     # ###uncomment the following code block
                     # if you want to filter based on taxid of favorite animals
@@ -212,13 +212,9 @@ class Panther(Source):
                     # gene1 AND gene2 are in the taxid list (most-filter)
                     # using OR will get you any associations where
                     # gene1 OR gene2 are in the taxid list (some-filter)
-                    if (
-                        self.tax_ids is not None and
-                        (int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
-                            not in self.tax_ids) and
-                        (int(re.sub(
-                            r'NCBITaxon:', '', taxon_b.rstrip())) not in
-                            self.tax_ids)):
+                    if self.tax_ids is None or (
+                        (taxon_a not in self.tax_ids) and
+                        (taxon_b not in self.tax_ids)):
                         continue
                     else:
                         matchcounter += 1
@@ -262,9 +258,9 @@ class Panther(Source):
 
                     # might as well add the taxon info for completeness
                     graph.addTriple(
-                        gene_a, self.globaltt['in taxon'], taxon_a)
+                        gene_a, self.globaltt['in taxon'], 'NCBIGene:' + taxon_a)
                     graph.addTriple(
-                        gene_b, self.globaltt['in taxon'], taxon_b)
+                        gene_b, self.globaltt['in taxon'], 'NCBIGene:' + taxon_b)
 
                     assoc.add_association_to_graph()
 

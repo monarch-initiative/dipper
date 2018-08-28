@@ -475,7 +475,11 @@ class UCSCBands(Source):
             tax_id = self.resolve(sp)
             for key in self.files[self.localtt[sp]]['assembly']:
                 ucsc_id = key
-                ucsc_label = key.split(':')[1]
+                try:
+                    ucsc_label = key.split(':')[1]
+                except IndexError;
+                    logger.error('Assembly id:  "%s" is problematic', key)
+                    continue
                 mapped_id = self.localtt[key]
                 mapped_label = mapped_id.split(':')[1]
                 mapped_label = 'NCBI build ' + str(mapped_label)
