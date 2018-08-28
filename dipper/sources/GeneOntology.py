@@ -222,7 +222,7 @@ class GeneOntology(Source):
                 if re.search(r'NOT', qualifier):
                     continue
 
-                db = self.resolve(db)
+                db = self.resolve(db, False)  # return 'db' if no mapping needed
                 uniprotid = None
                 gene_id = None
                 if db == 'UniProtKB':
@@ -280,8 +280,7 @@ class GeneOntology(Source):
                 for r in refs:
                     r = r.strip()
                     if r != '':
-                        prefix = re.split(r':', r)[0]
-                        r = re.sub(prefix, self.localtt[prefix], r)
+                        prefix = self.resolve(r.split(':')[0], False)
                         r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
                         ref = Reference(graph, r)
                         if re.match(r'PMID', r):
