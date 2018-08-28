@@ -476,12 +476,20 @@ class UCSCBands(Source):
             for key in self.files[self.localtt[sp]]['assembly']:
                 ucsc_id = key
                 try:
-                    ucsc_label = key.split(':')[1]
+                    ucsc_label = ucsc_id.split(':')[1]
                 except IndexError:
-                    logger.error('Assembly id:  "%s" is problematic', key)
+                    logger.error('%s Assembly id:  "%s" is problematic', sp, key)
                     continue
-                mapped_id = self.localtt[key]
+                # seeing ':' as a key?
+                if key in self.localtt:
+                    mapped_id = self.localtt[key]
+                else:
+                    logger.error(
+                        '%s Assembly id:  "%s" is not in local translation table',
+                        sp, key)
+
                 mapped_label = mapped_id.split(':')[1]
+
                 mapped_label = 'NCBI build ' + str(mapped_label)
                 geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
                 geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
