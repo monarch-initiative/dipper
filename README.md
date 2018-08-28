@@ -148,5 +148,4 @@ It became too cumbersome to first get all of these data into a relational schema
 are semantically captured, using standard modeling patterns.  We are currently working on tooling around
 defining, documenting, and constraining our schema as [biolink models](https://github.com/biolink/biolink-model).
 
-A manuscript is in preparation.  In the meantime, if you use any of our code or derived data, please cite
-this repository and the [Monarch Initiative](https://monarchinitiative.org).
+A manuscript on the Dipper pipeline is in preparation.  In the meantime, if you use any of our code or derived data, please cite this repository and doi: 10.1093/nar/gkw1128.
