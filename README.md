@@ -134,6 +134,9 @@ using Dipper code, and make a pull request.
 ## Identifiers
 Our identifier documentation as referenced in our recent paper on identifiers(doi:10.1371/journal.pbio.2001414)[https://doi.org/10.1371/journal.pbio.2001414]
 
+For instance, Monarch has in-house redirection rules like https://monarchinitiative.org/OMIM:154700.
+The external identifiers that we reference are listed here https://github.com/monarch-initiative/dipper/blob/master/dipper/curie_map.yaml
+
 
 ## About this project
 The Dipper data pipeline was born out of the need for a uniform representation of human and model organism
