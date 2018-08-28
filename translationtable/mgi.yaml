@@ -73,7 +73,7 @@
 "7196768": "chromosomal_deletion"
 "7196769": "insertion"
 "7196770": "chromosomal_inversion"
-"7196771": "SRobertsonian_fusion"
+"7196771": "Robertsonian_fusion"
 "7196772": "reciprocal_chromosomal_translocation"
 "7196773": "chromosomal_translocation"
 "7196774": "chromosomal_duplication"
@@ -94,7 +94,7 @@
 "15406205": "CpG_island"
 "15406206": "ribozyme_gene"
 "15406207": "promoter"
-#"36700088": ""
+#"36700088": ""          # this should be found -> (joins done on remote host)
 
 # seq_alt_type
 # TODO: Finish identifying SO/GENO terms for mappings found in MGI
