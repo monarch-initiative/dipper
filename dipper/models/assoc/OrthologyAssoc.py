@@ -14,7 +14,7 @@ class OrthologyAssoc(Assoc):
     def __init__(self, graph, definedby, gene1, gene2, rel=None):
         super().__init__(graph, definedby)
         if rel is None:
-            rel = self.globaltt['orthologous']  # default
+            rel = self.globaltt['in orthology relationship with']  # default
 
         self.set_subject(gene1)
         self.set_object(gene2)
