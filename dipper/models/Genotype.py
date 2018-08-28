@@ -454,13 +454,14 @@ class Genotype():
         self.model.addType(build_id, genome_id)
         if re.match(r'[0-9]+', taxon_id):
              taxon_id = 'NCBITaxon:' + taxon_id
-        self.addTaxon(, build_id)
+        self.addTaxon(taxon_id, build_id)
 
         return
 
     def makeGenomeID(self, taxon_id):
         # scrub off the taxon prefix.  put it in base space
         # TODO: revisit as BNODE?
+
         # genome_id = re.sub(r'.*\:', '_:', taxon_id) + 'genome'
         genome_id = '_:' + taxon_id + 'genome'
         return genome_id
