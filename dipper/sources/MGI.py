@@ -888,7 +888,7 @@ SELECT  r._relationship_key as rel_key,
                     else:
                         logger.info(
                             "A different kind of zygosity found is: %s",
-                            self.globaltcid[zygosity_id')
+                            self.globaltcid[zygosity_id])
                         vslc_label += '?'
                 else:
                     vslc_label += allele2

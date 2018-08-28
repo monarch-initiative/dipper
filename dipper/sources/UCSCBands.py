@@ -477,7 +477,7 @@ class UCSCBands(Source):
                 ucsc_id = key
                 try:
                     ucsc_label = key.split(':')[1]
-                except IndexError;
+                except IndexError:
                     logger.error('Assembly id:  "%s" is problematic', key)
                     continue
                 mapped_id = self.localtt[key]
