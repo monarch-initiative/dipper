@@ -205,8 +205,10 @@ class OMIM(Source):
             "Found %d omim genepheno ids", omimgenepheno.__len__())
         return omimids
 
-    def process_entries(self, omimids, transform,
-                        included_fields=None, graph=None, limit=None):
+    def process_entries(
+        self, omimids, transform, globaltt=self.globaltt,
+        included_fields=None, graph=None, limit=None
+    ):
         """
         Given a list of omim ids,
         this will use the omim API to fetch the entries, according to the
@@ -266,10 +268,8 @@ class OMIM(Source):
             # and fetch from the OMIM api in batches of 20
 
             if self.testMode:
-                intersect = \
-                    list(
-                        set([str(i)
-                            for i in self.test_ids]) & set(omimids[it:end]))
+                intersect = list(
+                    set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
                 # some of the test ids are in the omimids
                 if len(intersect) > 0:
                     logger.info("found test ids: %s", intersect)
@@ -306,7 +306,7 @@ class OMIM(Source):
 
             for e in entries:
                 # apply the data transformation, and save it to the graph
-                processed_entry = transform(e, graph)
+                processed_entry = transform(e, graph, globaltt)
                 if processed_entry is not None:
                     processed_entries.append(processed_entry)
 
@@ -1198,7 +1198,7 @@ def get_omim_id_from_entry(entry):
     return omimid
 
 
-#  used in OMIA.py
+#  used in OMIA  GeneReviews
 def filter_keep_phenotype_entry_ids(entry, globaltt):
     # TODO PYLINT  Unused argument 'graph'
     omim_id = get_omim_id_from_entry(entry['entry'])

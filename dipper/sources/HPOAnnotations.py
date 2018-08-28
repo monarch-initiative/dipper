@@ -6,9 +6,9 @@ import logging
 import re
 import shutil
 
-import git
-# from git import Repo
-# from git import GitCommandError
+#import git
+from git import Repo
+from git import GitCommandError
 
 from dipper.utils import pysed
 from dipper.sources.Source import Source
