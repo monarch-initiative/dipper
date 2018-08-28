@@ -874,7 +874,8 @@ SELECT  r._relationship_key as rel_key,
                     if zygosity_id in [
                             self.globaltt['hemizygous insertion-linked'],
                             self.globaltt['hemizygous-x'],
-                            self.globaltt['hemizygous-y']]:
+                            self.globaltt['hemizygous-y'],
+                            self.globaltt['hemizygous']]:
                         vslc_label += '0'
                     elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
@@ -883,9 +884,11 @@ SELECT  r._relationship_key as rel_key,
                     elif zygosity_id == self.globaltt['homozygous']:
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
+                    # heteroplasmic,  homoplasmic,   
                     else:
                         logger.info(
-                            "A different kind of zygosity is found: %s", zygosity_id)
+                            "A different kind of zygosity found is: %s",
+                            self.globaltcid[zygosity_id')
                         vslc_label += '?'
                 else:
                     vslc_label += allele2
@@ -1103,7 +1106,11 @@ SELECT  r._relationship_key as rel_key,
                 elif annot_type == 'MCV/Marker':
                     # marker category == type
                     marker_id = self.idhash['marker'].get(object_key)
-                    term_id = self.resolve(str(term_key).strip())
+                    if str(term_key).strip() in self.localtt:
+                        term_id = self.resolve(str(term_key).strip())
+                    else
+                        term_id = None
+                        logging.warning('No type mapping for: %s', term_key)    
                     # note that the accid here is an internal mouse cv term,
                     # and we don't use it.
                     if term_id is not None and marker_id is not None:
