@@ -141,11 +141,12 @@ The kinds of external identifiers that we reference are listed here https://gith
 For more information on our identifiers, see [here](https://docs.google.com/document/d/1jJHM0c358T5h2W2qLbpm9fGNcOsTSfhMPmmXQhI8n9Q/edit).
 
 
-## About this project
+## About the Dipper project
 The Dipper data pipeline was born out of the need for a uniform representation of human and model organism
 genotype-to-phenotype data, and an Extract-Transform-Load (ETL) pipeline to process it all.
 It became too cumbersome to first get all of these data into a relational schema; so, we decided to go straight from each source into triples that
 are semantically captured, using standard modeling patterns.  We are currently working on tooling around
 defining, documenting, and constraining our schema as [biolink models](https://github.com/biolink/biolink-model).
 
+## Citing Dipper
 A manuscript on the Dipper pipeline is in preparation.  In the meantime, if you use any of our code or derived data, please cite this repository and doi: 10.1093/nar/gkw1128.
