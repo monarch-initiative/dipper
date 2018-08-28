@@ -884,8 +884,7 @@ SELECT  r._relationship_key as rel_key,
                     elif zygosity_id == self.globaltt['homozygous']:
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
-                    # heteroplasmic,  homoplasmic,   
-                    else:
+                    else:  # heteroplasmic,  homoplasmic,  FIXME add these if possible
                         logger.info(
                             "A different kind of zygosity found is: %s",
                             self.globaltcid[zygosity_id])
@@ -1108,9 +1107,9 @@ SELECT  r._relationship_key as rel_key,
                     marker_id = self.idhash['marker'].get(object_key)
                     if str(term_key).strip() in self.localtt:
                         term_id = self.resolve(str(term_key).strip())
-                    else
+                    else:
                         term_id = None
-                        logging.warning('No type mapping for: %s', term_key)    
+                        logging.warning('No type mapping for: %s', term_key)
                     # note that the accid here is an internal mouse cv term,
                     # and we don't use it.
                     if term_id is not None and marker_id is not None:
