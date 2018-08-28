@@ -150,8 +150,8 @@ class HGNC(Source):
                 if line_counter <= 1:
                     continue
 
-                if self.testMode and entrez_id != '' \
-                        and int(entrez_id) not in self.gene_ids:
+                if self.testMode and entrez_id != ''  and \
+                        int(entrez_id) not in self.gene_ids:
                     continue
 
                 if name == '':

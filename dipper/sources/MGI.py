@@ -872,21 +872,20 @@ SELECT  r._relationship_key as rel_key,
                 vslc_label = allele1+'/'
                 if allele2_id is None:
                     if zygosity_id in [
-                            geno.zygosity['hemizygous'],
-                            geno.zygosity['hemizygous-x'],
-                            geno.zygosity['hemizygous-y']]:
+                            self.globaltt['hemizygous insertion-linked'],
+                            self.globaltt['hemizygous-x'],
+                            self.globaltt['hemizygous-y']]:
                         vslc_label += '0'
-                    elif zygosity_id == geno.zygosity['heterozygous']:
+                    elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
-                    elif zygosity_id == geno.zygosity['indeterminate']:
+                    elif zygosity_id == self.globaltt['indeterminate']:
                         vslc_label += '?'
-                    elif zygosity_id == geno.zygosity['homozygous']:
+                    elif zygosity_id == self.globaltt['homozygous']:
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
                     else:
                         logger.info(
-                            "A different kind of zygosity is found: %s",
-                            zygosity_id)
+                            "A different kind of zygosity is found: %s", zygosity_id)
                         vslc_label += '?'
                 else:
                     vslc_label += allele2

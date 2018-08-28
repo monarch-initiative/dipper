@@ -107,7 +107,7 @@ class OrthoXML(Source):
         )
 
         self.tax_ids = tax_ids
-        self._map_orthology_code_to_RO = {
+        self._map_orthology_code_to_RO_FOO = {
             'orthologGroup': OrthologyAssoc.ortho_rel['orthologous'],
             'paralogGroup': OrthologyAssoc.ortho_rel['paralogous']}
 
@@ -232,7 +232,7 @@ class OrthoXML(Source):
                 self.add_protein_to_graph(protein_id_a, taxon_a, model)
                 self.add_protein_to_graph(protein_id_b, taxon_b, model)
 
-                rel = self._map_orthology_code_to_RO[rel_type]
+                rel = self.seelf.globaltt[rel_type]
                 evidence_id = self.globaltt['phylogenetic evidence']  # 'ECO:0000080'
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(

@@ -85,7 +85,7 @@ class GeneOntology(Source):
             'url': 'http://www.geneontology.org/doc/GO.references'},
         'id-map': {
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + ' uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI + 'uniprot/current_release/knowledgebase/idmapping/idmapping_selected.tab.gz'
         }
     }
 

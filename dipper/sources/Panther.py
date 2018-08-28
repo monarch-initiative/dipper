@@ -247,7 +247,7 @@ class Panther(Source):
                     if gene_a is None or gene_b is None:
                         continue
 
-                    rel = self._map_orthology_code_to_RO(orthology_class)
+                    rel = self.resolve(orthology_class)
 
                     evidence_id = self.globaltt['phylogenetic evidence']
 
