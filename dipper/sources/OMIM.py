@@ -306,7 +306,7 @@ class OMIM(Source):
 
             for e in entries:
                 # apply the data transformation, and save it to the graph
-                processed_entry = transform(e, graph, globaltt)
+                processed_entry = transform(e, graph, globaltt=globaltt)
                 if processed_entry is not None:
                     processed_entries.append(processed_entry)
 
