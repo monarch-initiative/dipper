@@ -4,6 +4,7 @@
 "P": "involved in"
 "F": "enables"
 "C": "part_of"
+# "F":  "contributes to"   # FIXME:  only when qualifier includes 'contributes_to'
 
 # go-style to curiemap-style prefix
 "WB": "WormBase"
@@ -12,3 +13,10 @@
 "Reactome": "REACT"
 "Ensembl": "ENSEMBL"
 "GOC": "GO_REF"
+
+# meh, cuts warnnings
+"ZFIN": "ZFIN"
+"UniProtKB": "UniProtKB"
+"RGD": "RGD"
+"MGI": "MGI"
+"GO_REF": "GO_REF"
