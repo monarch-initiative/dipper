@@ -297,11 +297,11 @@ class GeneOntology(Source):
                 if aspect == rel:
                     if aspect == 'F' and re.search(r'contributes_to', qualifier):
                         assoc.set_relationship(self.globaltt['contributes to'])
-                    else: 
-                    logger.error(
-                        "Aspect: %s with qualifier: %s  is not recognized",
-                        aspect, qualifier)
-                else:        
+                    else:
+                        logger.error(
+                            "Aspect: %s with qualifier: %s  is not recognized",
+                            aspect, qualifier)
+                else:
                     assoc.set_relationship(rel)
                 if uniprotid is not None:
                     assoc.set_description('Mapped from ' + uniprotid)
