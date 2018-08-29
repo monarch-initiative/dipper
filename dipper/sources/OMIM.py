@@ -306,7 +306,7 @@ class OMIM(Source):
 
             for e in entries:
                 # apply the data transformation, and save it to the graph
-                processed_entry = transform(e, graph, globaltt=globaltt)
+                processed_entry = transform(e, graph, globaltt)
                 if processed_entry is not None:
                     processed_entries.append(processed_entry)
 
@@ -358,11 +358,11 @@ class OMIM(Source):
 
         return
 
-    def _transform_entry(self, e, graph):
-        g = graph
-        model = Model(g)
+    def _transform_entry(self, e, graph, globaltt):
+        self.graph = graph
+        model = Model(graph)
         geno = Genotype(graph)
-
+        self.globaltt = globaltt
         tax_num = '9606'
         tax_label = 'Human'
         build_num = "GRCh38"
@@ -398,7 +398,7 @@ class OMIM(Source):
         if e['entry']['status'] == 'removed':
             model.addDeprecatedClass(omimid)
         else:
-            omimtype = self._get_omimtype(e['entry'], self.globaltt)
+            omimtype = self._get_omimtype(e['entry'], globaltt)
             nodelabel = newlabel
             # this uses our cleaned-up label
             if omimtype == self.globaltt['heritable_phenotypic_marker']:
@@ -442,15 +442,14 @@ class OMIM(Source):
                 genemap = e['entry']['geneMap']
                 is_gene = False
 
-                if omimtype == \
-                        self.globaltt['heritable_phenotypic_marker']:
+                if omimtype == self.globaltt['heritable_phenotypic_marker']:
                     # get the ncbigene ids
-                    ncbifeature = self._get_mapped_gene_ids(e['entry'], g)
+                    ncbifeature = self._get_mapped_gene_ids(e['entry'], graph)
                     if len(ncbifeature) == 1:
                         feature_id = 'NCBIGene:'+str(ncbifeature[0])
                         # add this feature as a cause for the omim disease
                         # TODO SHOULD I EVEN DO THIS HERE?
-                        assoc = G2PAssoc(g, self.name, feature_id, omimid)
+                        assoc = G2PAssoc(graph, self.name, feature_id, omimid)
                         assoc.add_association_to_graph()
 
                     elif len(ncbifeature) > 1:
@@ -489,7 +488,7 @@ class OMIM(Source):
                         # not sure if saying subsequence of feature
                         # is the right relationship
 
-                        f = Feature(g, feature_id, feature_label, omimtype)
+                        f = Feature(graph, feature_id, feature_label, omimtype)
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
                             chrom = makeChromID(chrom_num, tax_num, 'CHR')
@@ -561,13 +560,13 @@ class OMIM(Source):
 
                 model.addDeprecatedClass(omimid, fixedids)
 
-            self._get_phenotypicseries_parents(e['entry'], g)
-            self._get_mappedids(e['entry'], g)
-            self._get_mapped_gene_ids(e['entry'], g)
+            self._get_phenotypicseries_parents(e['entry'], graph)
+            self._get_mappedids(e['entry'], graph)
+            self._get_mapped_gene_ids(e['entry'], graph)
 
-            self._get_pubs(e['entry'], g)
+            self._get_pubs(e['entry'], graph)
 
-            self._get_process_allelic_variants(e['entry'], g)  # temp gag
+            self._get_process_allelic_variants(e['entry'], graph)  # temp gag
 
         return
 
