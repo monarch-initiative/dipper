@@ -17,8 +17,7 @@
 # meh, pointless but cuts warnings
 "ZFIN": "ZFIN"
 "UniProtKB": "UniProtKB"
-"UniProtKB": "UniProtKB"
 "RGD": "RGD"
 "MGI": "MGI"
-"GO_REF": "GO_REF"
 "PomBase": "PomBase"
+"GO_REF": "GO_REF"
