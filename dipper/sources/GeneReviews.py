@@ -180,14 +180,14 @@ class GeneReviews(Source):
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes = \
-            omim.process_entries(
-                list(allomimids), filter_keep_phenotype_entry_ids,
-                None, None, limit)
+        entries_that_are_phenotypes =  omim.process_entries(
+            list(allomimids), filter_keep_phenotype_entry_ids, None, None, limit,
+            self.globaltt)
 
-        logger.info("Filtered out %d/%d entries that are genes or features",
-                    len(allomimids)-len(entries_that_are_phenotypes),
-                    len(allomimids))
+        logger.info(
+            "Filtered out %d/%d entries that are genes or features",
+            len(allomimids)-len(entries_that_are_phenotypes),
+            len(allomimids))
 
         for nbk_num in self.book_ids:
             gr_id = 'GeneReviews:'+nbk_num

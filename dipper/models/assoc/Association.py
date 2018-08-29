@@ -50,11 +50,19 @@ class Assoc:
         # check if sub/obj/rel are none...throw error
         #
         if self.sub is None:
-            raise ValueError('No subject set for this association')
+            raise ValueError(
+                'No subject set for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
         if self.obj is None:
-            raise ValueError('No object set for this association')
+            raise ValueError(
+                'No object set for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
         if self.rel is None:
-            raise ValueError('No relation set for this association')
+            raise ValueError('No predicate set for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
 
         return True
 

@@ -206,8 +206,8 @@ class OMIM(Source):
         return omimids
 
     def process_entries(
-        self, omimids, transform, globaltt=None,
-        included_fields=None, graph=None, limit=None
+        self, omimids, transform, included_fields=None, graph=None, limit=None,
+        globaltt=None
     ):
         """
         Given a list of omim ids,
@@ -353,7 +353,8 @@ class OMIM(Source):
         includes = set()
         includes.add('all')
 
-        self.process_entries(omimids, self._transform_entry, includes, graph, limit)
+        self.process_entries(
+            omimids, self._transform_entry, includes, graph, limit, self.globaltt)
 
         return
 
@@ -704,7 +705,8 @@ class OMIM(Source):
         return feature_id
 
     def _make_pheno_assoc(
-        self, graph, gene_id, gene_symbol, disorder_num, disorder_label, phene_key):
+            self, graph, gene_id, gene_symbol, disorder_num, disorder_label, phene_key
+    ):
 
         """
         From the docs:
@@ -758,9 +760,9 @@ class OMIM(Source):
 
         if phene_key is not None:
             evidence = self.resolve(phene_key, False)
-            if evidence != phene_key: 
+            if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
-            
+
         assoc.add_association_to_graph()
 
         return
@@ -1204,7 +1206,7 @@ def filter_keep_phenotype_entry_ids(entry, globaltt):
     omim_id = get_omim_id_from_entry(entry['entry'])
     # TODO PYLINT Access to a protected member _get_omimtype of a client class
     omim_type = OMIM._get_omimtype(entry['entry'], globaltt)
-    if omim_type != globaltt['gene'] and  omim_type != globaltt['biological_region']:
+    if omim_type != globaltt['gene'] and omim_type != globaltt['biological_region']:
         return omim_id
 
     return None
