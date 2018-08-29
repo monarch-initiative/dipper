@@ -296,11 +296,11 @@ class GeneOntology(Source):
                 rel = self.resolve(aspect, mandatory=False)
                 if aspect == rel:
                     logger.error("Aspect not recognized: %s", aspect)
-                    rel = None
-                else:
-                    if aspect == 'F' and re.search(r'contributes_to', qualifier):
-                        rel = self.globaltt['contributes to']
-                    assoc.set_relationship(rel)
+
+                if aspect == 'F' and re.search(r'contributes_to', qualifier):
+                    rel = self.globaltt['contributes to']
+
+                assoc.set_relationship(rel)
                 if uniprotid is not None:
                     assoc.set_description('Mapped from ' + uniprotid)
                 # object_type should be one of:
