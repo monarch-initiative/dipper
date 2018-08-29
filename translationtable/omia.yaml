@@ -2,3 +2,31 @@
 # omia.yaml
 
 "protein-coding": "protein_coding_gene"
+"pseudo": "pseudogene"
+"unknown": "protein_coding_gene"
+
+# inheritance_symbol to inheritance_term_id
+
+"A":  "condition inheritance"       # Autosomal ... can we know dominant/recessive?
+"ACD": "co-dominant inheritance"    #"GENO:0000143",  # Autosomal co-dominant
+# "ADV": None                       # autosomal dominant with variable expressivity
+# "AID": "GENO:0000259"  # autosomal incompletely dominant   # ABANDONED TERM !!!
+"ASD": "semi-dominant inheritance"
+"ASL": "autosomal recessive inheritance"    # autosomal recessive, semi-lethal
+"D": "autosomal dominant iniheritance"
+# "M": None,                                # multifactorial
+# "MAT": None,                              # Maternal
+"PR":  "autosomal recessive inheritance"    # probably autosomal recessive
+"R": "autosomal recessive inheritance"
+"REL": "recessive inheritance"              # Recessive Embryonic Lethal
+"RL": "autosomal recessive inheritance"     # Autosomal Recessive Lethal
+"S": "allosomal dominant inheritance"       # Sex-linked   <--using allosomal dominant
+# "SLi": None,                              # Sex-limited
+"UD": "complete dominant inheritance"       # Dominant
+# "X": None,                                # x-linked    # HP:0001417 ?
+"XLD": "allosomal dominant inheritance"     # X-linked Dominant
+"XLR": "allosomal recessive inheritance"    # X-linked Recessive
+# "Y": None,                                # Y-linked
+# "Z": None,                                # Z-linked
+"ZR": "allosomal recessive inheritance"     # Z-linked recessive
+# "999": None,                              # Z-linked incompletely dominant

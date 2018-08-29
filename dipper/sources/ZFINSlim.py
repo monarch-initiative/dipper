@@ -33,8 +33,8 @@ class ZFINSlim(Source):
             'zfinslim',
             ingest_title='Simplified ZFIN',
             ingest_url='https://zfin.org/',
-            license_url='http://zfin.org/warranty.html'
-            # data_rights=None,
+            license_url=None,
+            data_rights='http://zfin.org/warranty.html',
             # file_handle=None
         )
         self.dataset.set_citation(
@@ -69,7 +69,7 @@ class ZFINSlim(Source):
                  subterm2_id,
                  subterm2_label,
                  pc_rel2_id,
-                 pc_rel2_id,
+                 pc_rel2_label,
                  superterm2_id,
                  superterm2_label,
                  fish_id,

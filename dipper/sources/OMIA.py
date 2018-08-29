@@ -251,16 +251,12 @@ class OMIA(Source):
         parser = ET.XMLParser(encoding='utf-8')
 
         for event, elem in ET.iterparse(filereader, parser=parser):
-            self.process_xml_table(
-                elem, 'Articles', self._process_article_row, limit)
-            self.process_xml_table(
-                elem, 'Breed', self._process_breed_row, limit)
-            self.process_xml_table(
-                elem, 'Genes_gb', self._process_gene_row, limit)
+            self.process_xml_table(elem, 'Articles', self._process_article_row, limit)
+            self.process_xml_table(elem, 'Breed', self._process_breed_row, limit)
+            self.process_xml_table(elem, 'Genes_gb', self._process_gene_row, limit)
             self.process_xml_table(
                 elem, 'OMIA_Group', self._process_omia_group_row, limit)
-            self.process_xml_table(
-                elem, 'Phene', self._process_phene_row, limit)
+            self.process_xml_table(elem, 'Phene', self._process_phene_row, limit)
             self.process_xml_table(
                 elem, 'Omim_Xref', self._process_omia_omim_map, limit)
 
@@ -413,7 +409,10 @@ class OMIA(Source):
             species_id)
 
         # add inheritance as an association
-        inheritance_id = self._map_inheritance_term_id(row['inherit'])
+        inheritance_id = None
+        if row['inherit'] in self.localtt:
+            inheritance_id = self.resolve(row['inherit'])
+
         if inheritance_id is not None:
             assoc = DispositionAssoc(self.graph, self.name, sp_phene_id, inheritance_id)
             assoc.add_association_to_graph()
@@ -489,8 +488,8 @@ class OMIA(Source):
         disease_id = None
         group_category = row.get('group_category')
         # disease_id = self.map_omia_group_category_to_ontology_id(group_category)
-        disease_id = self.resolve(group_category)
-        if disease_id is not None:
+        disease_id = self.resolve(group_category, False)
+        if disease_id != group_category:
             model.addClassToGraph(disease_id, None)
             if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association
@@ -526,8 +525,9 @@ class OMIA(Source):
         gene_label = row['symbol']
         self.label_hash[gene_id] = gene_label
         tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
-        gene_type_id = self.resolve(row['gene_type'])
-        model.addClassToGraph(gene_id, gene_label, gene_type_id)
+        if row['gene_type'] is not None:
+            gene_type_id = self.resolve(row['gene_type'])
+            model.addClassToGraph(gene_id, gene_label, gene_type_id)
         geno.addTaxon(tax_id, gene_id)
 
         return
@@ -788,7 +788,8 @@ class OMIA(Source):
             allomimids.update(self.omia_omim_map[omia])
 
         entries_that_are_phenotypes = omim.process_entries(
-            list(allomimids), filter_keep_phenotype_entry_ids, None, None)
+            list(allomimids), filter_keep_phenotype_entry_ids, None, None,
+            self.globaltt)
         logger.info(
             "Filtered out %d/%d entries that are genes or features",
             len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
@@ -823,58 +824,10 @@ class OMIA(Source):
     def _get_omia_id_from_phene_id(phene_id):
         omia_id = None
         if phene_id is not None:
-            m = re.match(r'OMIA:\d+', str(phene_id))
-            if m:
-                omia_id = m.group(0)
-
+            mch = re.match(r'OMIA:\d+', str(phene_id))
+            if mch:
+                omia_id = mch.group(0)
         return omia_id
-
-    @staticmethod
-    def _map_inheritance_term_id(inheritance_symbol):
-
-        inherit_map = {
-            'A':  None,  # Autosomal
-            'ACD': 'GENO:0000143',  # Autosomal co-dominant
-            'ADV': None,  # autosomal dominant with variable expressivity
-            'AID': 'GENO:0000259',  # autosomal incompletely dominant
-            'ASD': 'GENO:0000145',  # autosomal semi-dominant
-            # autosomal recessive, semi-lethal
-            # using generic autosomal recessive
-            'ASL': 'GENO:0000150',
-            'D': 'GENO:0000147',  # autosomal dominant
-            'M': None,  # multifactorial
-            'MAT': None,  # Maternal
-            # probably autosomal recessive
-            # using generic autosomal recessive
-            'PR':  'GENO:0000150',
-            'R': 'GENO:0000150',  # Autosomal Recessive
-            # Recessive Embryonic Lethal
-            # using plain recessive
-            'REL': 'GENO:0000148',
-            # Autosomal Recessive Lethal
-            # using plain autosomal recessive
-            'RL': 'GENO:0000150',
-            'S': 'GENO:0000146',  # Sex-linked   <--using allosomal dominant
-            'SLi': None,  # Sex-limited
-            'UD': 'GENO:0000144',  # Dominant
-            'X': None,  # x-linked    # HP:0001417 ?
-            # X-linked Dominant     <-- temp using allosomal dominant  FIXME
-            'XLD': 'GENO:0000146',
-            # X-linked Recessive    <-- temp using allosomal recessive  FIXME
-            'XLR': 'GENO:0000149',
-            'Y': None,  # Y-linked
-            'Z': None,  # Z-linked
-            # Z-linked recessive    <-- temp using allosomal recessive  FIXME
-            'ZR': 'GENO:0000149',
-            '999': None,  # Z-linked incompletely dominant
-        }
-
-        inheritance_id = inherit_map.get(inheritance_symbol)
-        if inheritance_id is None and inheritance_symbol is not None:
-            logger.warning(
-                "No inheritance id is mapped for %s", inheritance_symbol)
-
-        return inheritance_id
 
     def getTestSuite(self):
         import unittest
