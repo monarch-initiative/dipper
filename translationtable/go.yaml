@@ -1,5 +1,5 @@
 ---
-# geneontology.yaml
+# go.yaml
 
 "P": "involved in"
 "F": "enables"
