@@ -294,15 +294,19 @@ class GeneOntology(Source):
                 # TODO add the source of the annotations from assigned by?
 
                 rel = self.resolve(aspect, mandatory=False)
-                if aspect == rel:
+                if rel is not None and aspect == rel:
                     if aspect == 'F' and re.search(r'contributes_to', qualifier):
                         assoc.set_relationship(self.globaltt['contributes to'])
                     else:
                         logger.error(
                             "Aspect: %s with qualifier: %s  is not recognized",
                             aspect, qualifier)
-                else:
+                elif rel is not None:
                     assoc.set_relationship(rel)
+                    assoc.add_association_to_graph()
+                else:
+                    logger.warning("No predicate for association \n%s\n", str(assoc))
+
                 if uniprotid is not None:
                     assoc.set_description('Mapped from ' + uniprotid)
                 # object_type should be one of:
@@ -310,8 +314,7 @@ class GeneOntology(Source):
                 # snRNA; snoRNA; any subtype of ncRNA in the Sequence Ontology.
                 # If the precise product type is unknown,
                 # gene_product should be used
-
-                assoc.add_association_to_graph()
+                #######################################################################
 
                 # Derive G2P Associations from IMP annotations
                 # in version 2.1 Pipe will indicate 'OR'
