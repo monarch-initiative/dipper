@@ -279,17 +279,18 @@ class GeneOntology(Source):
                     logger.error("Evidence code (%s) not mapped", eco_symbol)
 
                 refs = re.split(r'\|', ref)
-                for r in refs:
-                    r = r.strip()
-                    if r != '':
-                        prefix = self.resolve(r.split(':')[0], False)
-                        r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
-                        ref = Reference(graph, r)
-                        if re.match(r'PMID', r):
+                for ref in refs:
+                    ref = ref.strip()
+                    if ref != '':
+                        prefix = ref.split(':')[0]
+                        if prefix in self.localtt:
+                            prefix = self.localtt[prefix]
+                        refg = Reference(graph, ref)
+                        if 'PMID' == ref:
                             ref_type = self.globaltt['journal article']
-                            ref.setType(ref_type)
-                        ref.addRefToGraph()
-                        assoc.add_source(r)
+                            refg.setType(ref_type)
+                        refg.addRefToGraph()
+                        assoc.add_source(ref)
 
                 # TODO add the source of the annotations from assigned by?
 
