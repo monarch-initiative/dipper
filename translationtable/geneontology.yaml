@@ -13,6 +13,7 @@
 "Reactome": "REACT"
 "Ensembl": "ENSEMBL"
 "GOC": "GO_REF"
+"MGI:MGI": "MGI"
 
 # meh, pointless but cuts warnings
 "ZFIN": "ZFIN"
