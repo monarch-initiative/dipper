@@ -395,9 +395,9 @@ class GeneOntology(Source):
                     continue
                 genid = geneid.strip()
                 uniprotkb_ac = uniprotkb_ac.strip()
-                if geneid != '' and not re.find(r';', genid):
+                if geneid != '' and ';' not in genid:
                     id_map[uniprotkb_ac] = 'NCBIGene:' + genid
-                elif ensembl.strip() != '' and not re.find(r';', ensembl):
+                elif ensembl.strip() != '' and ';' not in ensembl:
                     id_map[uniprotkb_ac] = 'ENSEMBL:' + ensembl.strip()
 
         logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
