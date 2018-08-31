@@ -4,7 +4,6 @@
 "P": "involved in"
 "F": "enables"
 "C": "part_of"
-# "F" + "contributes to"   # FIXME:  only when qualifier includes 'contributes_to'
 
 # go-style to curiemap-style prefix
 "WB": "WormBase"
@@ -15,10 +14,3 @@
 "GOC": "GO_REF"
 "MGI:MGI": "MGI"
 
-# meh, pointless but cuts warnings
-"ZFIN": "ZFIN"
-"UniProtKB": "UniProtKB"
-"RGD": "RGD"
-"MGI": "MGI"
-"PomBase": "PomBase"
-"GO_REF": "GO_REF"

@@ -780,12 +780,12 @@ class Source:
                 term_id = self.globaltt[label]
             else:
                 logging.info(
-                    'Translated to "' + label + '" but no global term_id for: ' + word)
+                    "Translated to '%s' but no global term_id for: '%s'", label, word)
                 term_id = label
         else:
             if mandatory:
-                raise KeyError('Mapping required for: ' + word)
+                raise KeyError("Mapping required for: '%s'", word)
             else:
-                logging.warning('We have no translation for: ' + word)
+                logging.warning("We have no translation for: '%s'", word)
                 term_id = word
         return term_id

@@ -224,7 +224,9 @@ class GeneOntology(Source):
                 if re.search(r'NOT', qualifier):
                     continue
 
-                db = self.resolve(db, False)  # return 'db' if no mapping needed
+                # db = self.resolve(db, False)  # return 'db' if no mapping needed
+                if db in self.localtt:
+                    db = self.localtt[db]
                 uniprotid = None
                 gene_id = None
                 if db == 'UniProtKB':
@@ -241,12 +243,9 @@ class GeneOntology(Source):
                             continue
                     else:
                         continue
-                elif db == 'MGI':
-                    gene_num = re.sub(r'MGI:', '', gene_num)
-                    gene_id = ':'.join((db, gene_num))
-                    gene_id = re.sub(r'MGI\:MGI\:', 'MGI:', gene_id)
-                else:
-                    gene_id = ':'.join((db, gene_num))
+                gene_num = gene_num.split(':')[-1]  # last
+                gene_id = ':'.join((db, gene_num))
+
 
                 if self.testMode and not(
                         re.match(r'NCBIGene', gene_id) and
@@ -268,7 +267,6 @@ class GeneOntology(Source):
                     geno.addTaxon(tax_id, gene_id)
 
                 assoc = Assoc(graph, self.name)
-
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
 
@@ -282,9 +280,10 @@ class GeneOntology(Source):
                 for ref in refs:
                     ref = ref.strip()
                     if ref != '':
-                        prefix = ref.split(':')[0]
+                        prefix = ref.split(':')[0]  # sidestep 'MGI:MGI:'
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
+                        ref = ':'.join(prefix, ref.split(':')[-1]
                         refg = Reference(graph, ref)
                         if 'PMID' == ref:
                             ref_type = self.globaltt['journal article']
