@@ -412,7 +412,9 @@ class GeneOntology(Source):
                         id_map[uniprotkb_ac.strip()] = 'NCBIGene:' + genid
                     elif ensembl.strip() != '' and ';' not in ensembl:
                         id_map[uniprotkb_ac.strip()] = 'ENSEMBL:' + ensembl.strip()
-            with open(smallfile) as fh:
+
+            logger.info("Writing id_map out as %s", smallfile)
+            with open(smallfile, 'w') as fh:
                 yaml.write(fh, id_map)
 
         logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
