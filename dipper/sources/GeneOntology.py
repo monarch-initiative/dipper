@@ -375,7 +375,7 @@ class GeneOntology(Source):
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             logger.info(
-                "Uniprot: %f.2% of %i benifited from the 1/4 day id mapping download",
+                "Uniprot: %f.2%% of %i benifited from the 1/4 day id mapping download",
                 uniprot_per, uniprot_tot)
         return
 
@@ -387,7 +387,8 @@ class GeneOntology(Source):
 
         # if processed smallfile exists and is newer use it instesd
         if os.path.isfile(smallfile) and \
-                os.path.getctime(smallfile) < os.path.getctime(bigfile):
+                os.path.getctime(smallfile) > os.path.getctime(bigfile):
+            logger.info("Using the cheap mapping file %s", smallfile)
             with open(smallfile, 'r') as fh:
                 id_map = yaml.safe_load(fh)
         else:
@@ -417,7 +418,8 @@ class GeneOntology(Source):
             with open(smallfile, 'w') as fh:
                 yaml.dump(id_map, fh)
 
-        logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
+        logger.info(
+            "Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map.keys()))
 
         return id_map
 
