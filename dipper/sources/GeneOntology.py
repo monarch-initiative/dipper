@@ -415,7 +415,7 @@ class GeneOntology(Source):
 
             logger.info("Writing id_map out as %s", smallfile)
             with open(smallfile, 'w') as fh:
-                yaml.write(fh, id_map)
+                yaml.dump(id_map, fh)
 
         logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
 
