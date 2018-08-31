@@ -4,6 +4,8 @@ import logging
 import gzip
 import io
 import sys
+import yaml
+import os
 from dipper.sources.ZFIN import ZFIN
 from dipper.sources.WormBase import WormBase
 
@@ -368,38 +370,49 @@ class GeneOntology(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
             uniprot_tot = (uniprot_hit + uniprot_miss)
-            if uniprot_tot == 0:
-                uniprot_per = 0.0
-            else:
-                uniprot_tot = 100.0 * uniprot_hit / uniprot_tot
+            uniprot_per = 0.0
+            if uniprot_tot != 0:
+                uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             logger.info(
                 "Uniprot: %f.2% of %i benifited from the 1/4 day id mapping download",
                 uniprot_per, uniprot_tot)
-
         return
 
     def get_uniprot_entrez_id_map(self):
-        logger.info("Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids")
+        taxon_digest = self.GraphUtils.digest(str(self.taxids))
         id_map = {}
-        file = '/'.join((self.rawdir, self.files['id-map']['file']))
-        with gzip.open(file, 'rb') as csvfile:
-            csv.field_size_limit(sys.maxsize)
-            filereader = csv.reader(  # warning this file is over 10GB unzipped
-                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
-            for row in filereader:
-                (uniprotkb_ac, uniprotkb_id, geneid, refseq, gi, pdb, go,
-                 uniref100, unifref90, uniref50, uniparc, pir, ncbitaxon, mim,
-                 unigene, pubmed, embl, embl_cds, ensembl, ensembl_trs,
-                 ensembl_pro, other_pubmed) = row
+        smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
+        bigfile = '/'.join((self.rawdir, self.files['id-map']['file']))
 
-                if int(ncbitaxon) not in self.tax_ids:
-                    continue
-                genid = geneid.strip()
-                uniprotkb_ac = uniprotkb_ac.strip()
-                if geneid != '' and ';' not in genid:
-                    id_map[uniprotkb_ac] = 'NCBIGene:' + genid
-                elif ensembl.strip() != '' and ';' not in ensembl:
-                    id_map[uniprotkb_ac] = 'ENSEMBL:' + ensembl.strip()
+        # if processed smallfile exists and is newer use it instesd
+        if os.path.isfile(smallfile) and \
+                os.path.getctime(smallfile) < os.path.getctime(bigfile):
+            with open(smallfile, 'r') as fh:
+                id_map = yaml.safe_load(fh)
+        else:
+            logger.info(
+                "Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids for %s",
+                str(self.tax_ids))
+
+            with gzip.open(bigfile, 'rb') as csvfile:
+                csv.field_size_limit(sys.maxsize)
+                filereader = csv.reader(  # warning this file is over 10GB unzipped
+                    io.TextIOWrapper(
+                        csvfile, newline=""), delimiter='\t', quotechar='\"')
+                for row in filereader:
+                    (uniprotkb_ac, uniprotkb_id, geneid, refseq, gi, pdb, go,
+                     uniref100, unifref90, uniref50, uniparc, pir, ncbitaxon, mim,
+                     unigene, pubmed, embl, embl_cds, ensembl, ensembl_trs,
+                     ensembl_pro, other_pubmed) = row
+                    if int(ncbitaxon) not in self.tax_ids:
+                        continue
+                    genid = geneid.strip()
+                    if geneid != '' and ';' not in genid:
+                        id_map[uniprotkb_ac.strip()] = 'NCBIGene:' + genid
+                    elif ensembl.strip() != '' and ';' not in ensembl:
+                        id_map[uniprotkb_ac.strip()] = 'ENSEMBL:' + ensembl.strip()
+            with open(smallfile) as fh:
+                yaml.write(fh, id_map)
 
         logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
 
