@@ -122,10 +122,12 @@ class GeneOntology(Source):
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
 
+        # build the id map for mapping uniprot ids to genes ... ONCE
+        self.uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
+        self.eco_map = self.get_eco_map(self.map_files['eco_map'])
         return
 
     def fetch(self, is_dl_forced=False):
-
         self.get_files(is_dl_forced)
         return
 
@@ -137,11 +139,6 @@ class GeneOntology(Source):
         if self.testOnly:
             self.testMode = True
 
-        eco_map = self.get_eco_map(self.map_files['eco_map'])
-
-        # build the id map for mapping uniprot ids to genes
-        uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
-
         for txid_num in self.files:
 
             if txid_num in ['go-references', 'id-map']:
@@ -151,7 +148,7 @@ class GeneOntology(Source):
                 continue
 
             gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
-            self.process_gaf(gaffile, limit, uniprot_entrez_id_map, eco_map)
+            self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.eco_map)
 
         logger.info("Finished parsing.")
 
@@ -284,7 +281,7 @@ class GeneOntology(Source):
                             prefix = self.localtt[prefix]
                         ref = ':'.join((prefix, ref.split(':')[-1]))
                         refg = Reference(graph, ref)
-                        if 'PMID' == ref:
+                        if 'PMID' == prefix:
                             ref_type = self.globaltt['journal article']
                             refg.setType(ref_type)
                         refg.addRefToGraph()
@@ -353,14 +350,14 @@ class GeneOntology(Source):
                                 graph, self.name, targeted_gene_id, phenotypeid)
                         else:
                             assoc = G2PAssoc(graph, self.name, i, phenotypeid)
-                        for r in refs:
-                            r = r.strip()
-                            if r != '':
-                                prefix = re.split(r':', r)[0]
-                                r = re.sub(
-                                    prefix, self.localtt[prefix], r)
-                                r = re.sub(r'MGI\:MGI\:', 'MGI:', r)
-                                assoc.add_source(r)
+                        for ref in refs:
+                            ref = ref.strip()
+                            if ref != '':
+                                prefix = ref.split(':')[0]
+                                if prefix in self.localtt:
+                                    prefix = self.localtt[prefix]
+                                ref = ':'.join((prefix, ref.split(':')[-1]))
+                                assoc.add_source(ref)
                                 # experimental phenotypic evidence
                                 assoc.add_evidence(
                                     self.globaltt['experimental phenotypic evidence'])
@@ -370,10 +367,14 @@ class GeneOntology(Source):
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
-            uniptot_tot = (uniprot_hit + uniprot_miss)
+            uniprot_tot = (uniprot_hit + uniprot_miss)
+            if uniprot_tot == 0:
+                uniprot_per = 0.0
+            else:
+                uniprot_tot = 100.0 * uniprot_hit / uniprot_tot
             logger.info(
-                "Uniprot: %f of %i benifited from the 1/4 day id mapping download",
-                uniprot_hit / uniptot_tot, uniptot_tot)
+                "Uniprot: %f.2% of %i benifited from the 1/4 day id mapping download",
+                uniprot_per, uniprot_tot)
 
         return
 
