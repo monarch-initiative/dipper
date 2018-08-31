@@ -15,6 +15,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
+from dipper.utils.GraphUtils import GraphUtils
 from dipper import config
 
 
@@ -379,7 +380,7 @@ class GeneOntology(Source):
         return
 
     def get_uniprot_entrez_id_map(self):
-        taxon_digest = self.GraphUtils.digest(str(self.taxids))
+        taxon_digest = GraphUtils.digest_id(str(self.taxids))
         id_map = {}
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
         bigfile = '/'.join((self.rawdir, self.files['id-map']['file']))
