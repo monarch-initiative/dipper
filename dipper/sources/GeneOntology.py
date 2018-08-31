@@ -3,6 +3,7 @@ import re
 import logging
 import gzip
 import io
+import sys
 from dipper.sources.ZFIN import ZFIN
 from dipper.sources.WormBase import WormBase
 
@@ -17,8 +18,8 @@ from dipper import config
 
 logger = logging.getLogger(__name__)
 GOGA = 'http://geneontology.org/gene-associations'
-FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'
-UPCR = 'uniprot/current_release/knowledgebase/'
+FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
+UPCRKB = 'uniprot/current_release/knowledgebase/'
 
 
 class GeneOntology(Source):
@@ -84,12 +85,12 @@ class GeneOntology(Source):
         'go-references': {
             'file': 'GO.references',
             'url': 'http://www.geneontology.org/doc/GO.references'},
-        'id-map': {
+        'id-map': {  # 5GB mapping file takes 6 hours to DL ... maps UniProt to Ensembl
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + UPCR + 'idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz'
         }
     }
-
+    # consider moving the go-ref and id-map above to here in map_files
     map_files = {
         'eco_map': 'http://purl.obolibrary.org/obo/eco/gaf-eco-mapping.txt',
     }
@@ -167,7 +168,8 @@ class GeneOntology(Source):
         geno = Genotype(graph)
         logger.info("Processing Gene Associations from %s", file)
         line_counter = 0
-
+        uniprot_hit = 0
+        uniprot_miss = 0
         if 7955 in self.tax_ids:
             zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
         if 6239 in self.tax_ids:
@@ -224,27 +226,25 @@ class GeneOntology(Source):
                 if re.search(r'NOT', qualifier):
                     continue
 
-                # db = self.resolve(db, False)  # return 'db' if no mapping needed
                 if db in self.localtt:
                     db = self.localtt[db]
                 uniprotid = None
                 gene_id = None
                 if db == 'UniProtKB':
-                    mapped_ids = id_map.get(gene_num)
-                    if id_map is not None and mapped_ids is not None:
-                        if len(mapped_ids) == 1:
-                            gene_id = mapped_ids[0]
-                            uniprotid = ':'.join((db, gene_num))
-                            gene_num = re.sub(r'\w+\:', '', gene_id)
-                        elif len(mapped_ids) > 1:
-                            # logger.warning(
-                            #   "Skipping gene id mapped for >1 gene %s -> %s",
-                            #    gene_num, str(mapped_ids))
-                            continue
+                    if id_map is not None and gene_num in id_map:
+                        gene_id = id_map[gene_num]
+                        uniprotid = ':'.join((db, gene_num))
+                        (db, gene_num) = gene_id.split(':')
+                        uniprot_hit += 1
                     else:
+                        # logger.warning(
+                        #   "UniProt id %s  is without a 1:1 mapping to entrez/ensembl",
+                        #    gene_num)
+                        uniprot_miss += 1
                         continue
-                gene_num = gene_num.split(':')[-1]  # last
-                gene_id = ':'.join((db, gene_num))
+                else:
+                    gene_num = gene_num.split(':')[-1]  # last
+                    gene_id = ':'.join((db, gene_num))
 
                 if self.testMode and not(
                         re.match(r'NCBIGene', gene_id) and
@@ -282,7 +282,7 @@ class GeneOntology(Source):
                         prefix = ref.split(':')[0]  # sidestep 'MGI:MGI:'
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
-                        ref = ':'.join(prefix, ref.split(':')[-1])
+                        ref = ':'.join((prefix, ref.split(':')[-1]))
                         refg = Reference(graph, ref)
                         if 'PMID' == ref:
                             ref_type = self.globaltt['journal article']
@@ -370,18 +370,21 @@ class GeneOntology(Source):
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
+            uniptot_tot = (uniprot_hit + uniprot_miss)
+            logger.info(
+                "Uniprot: %f of %i benifited from the 1/4 day id mapping download",
+                uniprot_hit / uniptot_tot, uniptot_tot)
 
         return
 
     def get_uniprot_entrez_id_map(self):
-        logger.info("Mapping Uniprot ids to Entrez/ENSEMBL gene ids")
-        import sys
+        logger.info("Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids")
         id_map = {}
         file = '/'.join((self.rawdir, self.files['id-map']['file']))
         with gzip.open(file, 'rb') as csvfile:
             csv.field_size_limit(sys.maxsize)
-            filereader = csv.reader(io.TextIOWrapper(csvfile, newline=""),
-                                    delimiter='\t', quotechar='\"')
+            filereader = csv.reader(  # warning this file is over 10GB unzipped
+                io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
             for row in filereader:
                 (uniprotkb_ac, uniprotkb_id, geneid, refseq, gi, pdb, go,
                  uniref100, unifref90, uniref50, uniparc, pir, ncbitaxon, mim,
@@ -390,16 +393,14 @@ class GeneOntology(Source):
 
                 if int(ncbitaxon) not in self.tax_ids:
                     continue
-                if geneid.strip() != '':
-                    idlist = re.split(r';', geneid)
-                    id_map[
-                        uniprotkb_ac.strip()] = ['NCBIGene:'+i.strip() for i in idlist]
-                elif ensembl.strip() != '':
-                    idlist = re.split(r';', ensembl)
-                    id_map[uniprotkb_ac.strip()] = [
-                        'ENSEMBL:'+i.strip() for i in idlist]
+                genid = geneid.strip()
+                uniprotkb_ac = uniprotkb_ac.strip()
+                if geneid != '' and not re.find(r';', genid):
+                    id_map[uniprotkb_ac] = 'NCBIGene:' + genid
+                elif ensembl.strip() != '' and not re.find(r';', ensembl):
+                    id_map[uniprotkb_ac] = 'ENSEMBL:' + ensembl.strip()
 
-        logger.info("Acquired %i uniprot-entrez mappings", len(id_map))
+        logger.info("Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map))
 
         return id_map
 
