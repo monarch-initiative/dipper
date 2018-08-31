@@ -387,7 +387,8 @@ class GeneOntology(Source):
 
         # if processed smallfile exists and is newer use it instesd
         if os.path.isfile(smallfile) and \
-                os.path.getctime(smallfile) < os.path.getctime(bigfile):
+                os.path.getctime(smallfile) > os.path.getctime(bigfile):
+            logger.info("Using the cheap mapping file %s", smallfile)
             with open(smallfile, 'r') as fh:
                 id_map = yaml.safe_load(fh)
         else:
