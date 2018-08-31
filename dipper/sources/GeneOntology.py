@@ -246,7 +246,6 @@ class GeneOntology(Source):
                 gene_num = gene_num.split(':')[-1]  # last
                 gene_id = ':'.join((db, gene_num))
 
-
                 if self.testMode and not(
                         re.match(r'NCBIGene', gene_id) and
                         int(gene_num) in self.test_ids):
@@ -283,7 +282,7 @@ class GeneOntology(Source):
                         prefix = ref.split(':')[0]  # sidestep 'MGI:MGI:'
                         if prefix in self.localtt:
                             prefix = self.localtt[prefix]
-                        ref = ':'.join(prefix, ref.split(':')[-1]
+                        ref = ':'.join(prefix, ref.split(':')[-1])
                         refg = Reference(graph, ref)
                         if 'PMID' == ref:
                             ref_type = self.globaltt['journal article']
