@@ -8,7 +8,7 @@
 # inheritance_symbol to inheritance_term_id
 
 "A":  "condition inheritance"       # Autosomal ... can we know dominant/recessive?
-"ACD": "co-dominant inheritance"    #"GENO:0000143",  # Autosomal co-dominant
+"ACD": "co-dominant inheritance"    # Autosomal co-dominant
 # "ADV": None                       # autosomal dominant with variable expressivity
 # "AID": "GENO:0000259"  # autosomal incompletely dominant   # ABANDONED TERM !!!
 "ASD": "semi-dominant inheritance"
@@ -53,5 +53,4 @@
 "group_category:15": "platelet disorder, undefined" # "Intrinsic platelet disorder" (was 'DOID:2218')
 "group_category:16": "platelet disorder, undefined" # "Extrinsic platelet disorder" (was 'DOID:2218')
 "group_category:18": "cancer"                       # "Cancer"  (was None)
-
 
