@@ -286,6 +286,7 @@ all_missense_or_inframe: ":all_missense_or_inframe",
 "platelet disorder, undefined": "MONDO:0008254",
 "Cone–rod dystrophy": "MONDO:0015993",
 "inborn errors of metabolism": "MONDO:0019052",  # "DOID:0014667"
+"disorder of sex development": "MONDO:0019592",
 "developmental defect of the eye": "MONDO:0020145",
 "hereditary optic atrophy": "MONDO:0043878",
  # "Mammalian Phenotype": "MP:!!!",
