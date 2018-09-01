@@ -180,9 +180,9 @@ class GeneReviews(Source):
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes =  omim.process_entries(
+        entries_that_are_phenotypes = omim.process_entries(
             list(allomimids), filter_keep_phenotype_entry_ids, None, None,
-            limit=self.limit, globaltt=self.globaltt)
+            limit=limit, globaltt=self.globaltt)
 
         logger.info(
             "Filtered out %d/%d entries that are genes or features",

@@ -241,10 +241,11 @@ class OMIM(Source):
 
         # scrub any omim prefixes from the omimids before processing
         cleanomimids = set()
-        for o in omimids:
-            scrubbed = re.sub(r'O?MIM:', '', str(o))
-            if re.match(r'\d+', str(scrubbed)):
-                cleanomimids.add(scrubbed)
+        for omimid in omimids:
+            scrubbed = str(omimid).split(':')[-1]
+            if re.match(r'^\d+$', str(scrubbed)):
+                cleanomimids.update(scrubbed)
+
         omimids = list(cleanomimids)
 
         it = 0  # for counting
@@ -257,10 +258,11 @@ class OMIM(Source):
         groupsize = 20
         if not self.testMode and limit is not None:
             # just in case the limit is larger than the number of records,
-            # max it out
-            maxit = min((limit, omimids.__len__()))
+            maxit = limit
+            if limit > len(omimids):
+                maxit = len(omimids)
         else:
-            maxit = omimids.__len__()
+            maxit = len(omimids)
 
         while it < maxit:
             end = min((maxit, it + groupsize))

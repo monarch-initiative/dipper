@@ -486,23 +486,22 @@ class OMIA(Source):
         group_summary = row['group_summary']
 
         disease_id = None
-        group_category = row.get('group_category')
+        group_category = 'group_category:' + str(row.get('group_category'))
         # disease_id = self.map_omia_group_category_to_ontology_id(group_category)
         disease_id = self.resolve(group_category, False)
-        if disease_id != group_category:
-            model.addClassToGraph(disease_id, None)
+        if disease_id is None or disease_id == group_category:
+            logger.info(
+                "No disease superclass defined for %s:  %s", omia_id, group_name)
+            # default to general disease  FIXME this may not be desired
+            disease_id = self.globaltt['disease']
+
             if disease_id == self.globaltt['embryonic lethality']:
                 # add this as a phenotype association
                 # add embryonic onset
                 assoc = D2PAssoc(self.graph, self.name, omia_id, disease_id)
                 assoc.add_association_to_graph()
                 disease_id = None
-        else:
-            logger.info(
-                "No disease superclass defined for %s:  %s",
-                omia_id, group_name)
-            # default to general disease  FIXME this may not be desired
-            disease_id = self.globaltt['disease']
+        model.addClassToGraph(disease_id, None)
 
         if group_summary == '':
             group_summary = None
@@ -789,7 +788,7 @@ class OMIA(Source):
 
         entries_that_are_phenotypes = omim.process_entries(
             list(allomimids), filter_keep_phenotype_entry_ids, None, None,
-            self.globaltt)
+            globaltt=self.globaltt)
         logger.info(
             "Filtered out %d/%d entries that are genes or features",
             len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
