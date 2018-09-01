@@ -15,6 +15,7 @@ sparqlwrapper = "*"
 pysftp = "*"
 ontobio = "*"
 gitpython = "*"
+intermine = "*"
 
 [requires]
 python_version = "3.5"
