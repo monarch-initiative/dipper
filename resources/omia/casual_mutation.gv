@@ -1,0 +1,27 @@
+/**
+    casual_mutation.gv
+
+    Example usage:
+    - dot -Tpng casual_mutation.gv  > casual_mutation.png
+    - xdot casual_mutation.gv
+**/
+
+digraph "OMIA casual mutation"{
+rankdir="UD";
+
+subgraph "cluster_monarch_association" {
+"monarch_association" -> "NCBIGene:[ncbi_gene_id]" [label="association has subject"];
+"monarch_association" -> "is genetic basis for condition" [label="association has predicate"];
+"monarch_association" -> "OMIA:[OMIA_id]" [label="association has object"];
+}
+
+"NCBIGene:[ncbi_gene_id]" -> "NCBITaxon:[ncbi_tax_id]" [label="in taxon"];
+"OMIA:[OMIA_id]" -> phene_name [label="label"];
+"monarch_association" -> "OMIA:[OMIA_id]/[ncbi_gene_id]" [label="has_dbxref"]
+
+# All blank nodes should have a type and a
+# UNIQUE (to the dataaset) label to digest as the initial identifier
+# here represented with the string "monarch_association"
+"monarch_association" -> "association" [label="type"];
+"monarch_association" -> "OMIA;[ncbi_tax_id];[ncbi_gene_id];[OMIA_id]" [label="label"];
+}

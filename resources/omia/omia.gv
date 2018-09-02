@@ -1,0 +1,18 @@
+digraph{
+rankdir=UD; charset="utf-8";
+table_data [label = "{<table_data> table_data|name}" shape = "record"];
+options [label = "{<options> options|Index_length|Comment|Engine|Row_format|Data_free|Data_length|Version|Collation|Avg_row_length|Max_data_length|Name|Auto_increment|Create_time|Create_options|Rows}" shape = "record"];
+database [label = "{<database> database|name}" shape = "record"];
+key [label = "{<key> key|Comment|Collation|Non_unique|Seq_in_index|Table|Cardinality|Key_name|Null|Index_type|Column_name}" shape = "record"];
+field [label = "{<field> field|Default|xsi_nil|Type|Extra|name|Field|Null|Key}" shape = "record"];
+mysqldump [label = "{<mysqldump> mysqldump|xmlns_xsi}" shape = "record"];
+table_structure [label = "{<table_structure> table_structure|name}" shape = "record"];
+table_structure -> key [penwidth = "1"];
+table_data -> row [penwidth = "1"];
+mysqldump -> database [penwidth = "1"];
+database -> table_data [penwidth = "1"];
+database -> table_structure [penwidth = "1"];
+table_structure -> options [penwidth = "1"];
+table_structure -> field [penwidth = "1"];
+row -> field [penwidth = "1"];
+}
