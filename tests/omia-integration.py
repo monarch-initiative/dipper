@@ -30,6 +30,7 @@ def main():
     graph = ConjunctiveGraph()
     graph.parse(args.input, format=rdflib_util.guess_format(args.input))
 
+    # "is model of": "RO:0003301"
     model_of = URIRef('http://purl.obolibrary.org/obo/RO_0003301')
 
     models = graph.subject_objects(model_of)
@@ -37,7 +38,7 @@ def main():
 
     if model_len < EXPECTED_PAIRS:
         logger.error(
-            "Not enough model_of predicates in graph: found {}, "
+            "Not enough <RO:is model of> predicates in graph: found {}, "
             "expected {} check omia log for warnings".format(
                 model_len, EXPECTED_PAIRS))
         exit(1)
