@@ -1,0 +1,140 @@
+digraph "omia_schema.sql" {
+	rankdir = "LR"
+	"Article_Breed":added_by -> "OMIA_author":omia_auth_id;
+	"Article_Breed":breed_id -> "Breed":breed_id;
+	"Article_Breed" [
+		label = "Article_Breed| <article_id> article_id | <breed_id> breed_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Article_Gene":added_by -> "OMIA_author":omia_auth_id;
+	"Article_Gene":article_id -> "Articles":article_id;
+	"Article_Gene" [
+		label = "Article_Gene| <article_id> article_id | <gene_id> gene_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Article_Keyword":added_by -> "OMIA_author":omia_auth_id;
+	"Article_Keyword":article_id -> "Articles":article_id;
+	"Article_Keyword" [
+		label = "Article_Keyword| <article_id> article_id | <keyword_id> keyword_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Article_People":added_by -> "OMIA_author":omia_auth_id;
+	"Article_People":article_id -> "Articles":article_id;
+	"Article_People" [
+		label = "Article_People| <article_id> article_id | <person_id> person_id | <position> position | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Article_Phene":added_by -> "OMIA_author":omia_auth_id;
+	"Article_Phene":phene_id -> "Phene":phene_id;
+	"Article_Phene" [
+		label = "Article_Phene| <article_id> article_id | <phene_id> phene_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Articles":publisher -> "Publishers":publish_id;
+	"Articles":added_by -> "OMIA_author":omia_auth_id;
+	"Articles" [
+		label = "Articles| <article_id> article_id | <title> title | <journal> journal | <volume> volume | <pages> pages | <year> year | <locus> locus | <abstract> abstract | <publisher> publisher | <pubmed_id> pubmed_id | <library> library | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Breed":gb_species_id -> "Species_gb":gb_species_id;
+	"Breed":added_by -> "OMIA_author":omia_auth_id;
+	"Breed" [
+		label = "Breed| <breed_id> breed_id | <breed_name> breed_name | <gb_species_id> gb_species_id | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Breed_Phene":added_by -> "OMIA_author":omia_auth_id;
+	"Breed_Phene":breed_id -> "Breed":breed_id;
+	"Breed_Phene" [
+		label = "Breed_Phene| <breed_id> breed_id | <phene_id> phene_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Genes_gb" [
+		label = "Genes_gb| <gene_id> gene_id | <gb_species_id> gb_species_id | <pubmed_id> pubmed_id | <symbol> symbol | <gene_desc> gene_desc | <gene_type> gene_type | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Group_Categories":added_by -> "OMIA_author":omia_auth_id;
+	"Group_Categories" [
+		label = "Group_Categories| <cat_id> cat_id | <cat_name> cat_name | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Group_MPO":added_by -> "OMIA_author":omia_auth_id;
+	"Group_MPO":omia_id -> "OMIA_Group":omia_id;
+	"Group_MPO" [
+		label = "Group_MPO| <omia_id> omia_id | <MPO_no> MPO_no | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Inherit_Type":added_by -> "OMIA_author":omia_auth_id;
+	"Inherit_Type" [
+		label = "Inherit_Type| <inherit_id> inherit_id | <inherit_name> inherit_name | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Keywords":added_by -> "OMIA_author":omia_auth_id;
+	"Keywords" [
+		label = "Keywords| <keyword_id> keyword_id | <keyword> keyword | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Landmark" [
+		label = "Landmark| <article_id> article_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Lida_Links":added_by -> "OMIA_author":omia_auth_id;
+	"Lida_Links":omia_id -> "OMIA_Group":omia_id;
+	"Lida_Links" [
+		label = "Lida_Links| <lidaurl> lidaurl | <omia_id> omia_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"OMIA_Group":added_by -> "OMIA_author":omia_auth_id;
+	"OMIA_Group":group_category -> "Group_Categories":cat_id;
+	"OMIA_Group" [
+		label = "OMIA_Group| <omia_id> omia_id | <group_name> group_name | <group_summary> group_summary | <group_category> group_category | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"OMIA_author" [
+		label = "OMIA_author| <omia_auth_name> omia_auth_name | <omia_auth_id> omia_auth_id"
+		shape = "Mrecord"
+	];
+	"Omim_Xref":added_by -> "OMIA_author":omia_auth_id;
+	"Omim_Xref":omia_id -> "OMIA_Group":omia_id;
+	"Omim_Xref" [
+		label = "Omim_Xref| <omia_id> omia_id | <omim_id> omim_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"People":added_by -> "OMIA_author":omia_auth_id;
+	"People" [
+		label = "People| <person_id> person_id | <name> name | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Phene":added_by -> "OMIA_author":omia_auth_id;
+	"Phene":added_by -> "OMIA_author":omia_auth_id;
+	"Phene" [
+		label = "Phene| <phene_id> phene_id | <omia_id> omia_id | <gb_species_id> gb_species_id | <phene_name> phene_name | <summary> summary | <symbol> symbol | <marker> marker | <clin_feat> clin_feat | <gen_test> gen_test | <inherit> inherit | <inherit_text> inherit_text | <mol_gen> mol_gen | <map_info> map_info | <history> history | <control> control | <pathology> pathology | <prevalence> prevalence | <defect> defect | <singlelocus> singlelocus | <characterised> characterised | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Phene_Gene" [
+		label = "Phene_Gene| <gene_id> gene_id | <phene_id> phene_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Publishers" [
+		label = "Publishers| <publish_id> publish_id | <name> name | <place> place | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Resources":added_by -> "OMIA_author":omia_auth_id;
+	"Resources" [
+		label = "Resources| <phene_id> phene_id | <resource_url> resource_url | <resource_id> resource_id | <added_by> added_by"
+		shape = "Mrecord"
+	];
+	"Species_gb":added_by -> "OMIA_author":omia_auth_id;
+	"Species_gb" [
+		label = "Species_gb| <gb_species_id> gb_species_id | <sci_name> sci_name | <com_name> com_name | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"Synonyms":added_by -> "OMIA_author":omia_auth_id;
+	"Synonyms" [
+		label = "Synonyms| <synonym> synonym | <accepted_word> accepted_word | <added_by> added_by | <date_modified> date_modified"
+		shape = "Mrecord"
+	];
+	"tmp" [
+		label = "tmp| <gene_id> gene_id | <gb_species_id> gb_species_id | <pubmed_id> pubmed_id | <symbol> symbol | <gene_desc> gene_desc | <gene_type> gene_type | <added_by> added_by"
+		shape = "Mrecord"
+	];
+}

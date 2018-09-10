@@ -1,0 +1,162 @@
+On:
+    http://omia.org/download/
+
+OMIA's download page, they state.
+
+"A table of phenes for which there is a causal mutation in a known gene here:"
+
+wget "http://omia.org/curate/causal_mutations/?format=gene_table" -O causal_mutations.tab
+
+this file would typicaly be stored in the 'dipper/raw/omia/'  directory
+
+# causal_mutations.tab tab headers are
+head -1 causal_mutations.tab | tr '\t' '\n'| grep -n .
+
+1:gene_symbol
+2:ncbi_gene_id
+3:OMIA_id
+4:ncbi_tax_id
+5:OMIA_url
+6:phene_name
+
+# it is quite small
+wc -l < causal_mutations.tab
+762
+
+# 92 taxon (without the header)
+cut -f4 causal_mutations.tab  | sort -u | wc -l
+93
+
+# there won't be a uniform 7-ish genes per species ...
+
+# check distribution of genes per species
+cut -f4 causal_mutations.tab  | sort | uniq -c | sort -rn | head -24
+    240 9615
+    146 9913
+     61 9685
+     50 9940
+     44 9796
+     42 9031
+     28 9823
+     12 9986
+     11 9925
+     10 93934
+      6 9793
+      5 452646
+      4 89462
+      4 8090
+      4 30521
+      4 10141
+      4 10036
+      3 9838
+      3 9627
+      3 9544
+      3 9103
+      2 494514
+      2 46218
+      2 32536
+# and the other ~70 have a single gene per species
+# for the pedantic, yes it is possinble the approximation is off because
+# there are double mutants, but I would not hold my breath
+
+# How many genes
+cut -f2 causal_mutations.tab  | wc -l
+762
+# all but a couple hundered are unique
+
+# which genes show up the  most
+cut -f2 causal_mutations.tab  | sort | uniq -c | sort -rn | head
+     87 None
+      9 100141303
+      5 100217402
+      4 396810
+      3 493766
+      3 489652
+      3 483791
+      3 483680
+      3 407219
+      3 399653
+# half are not genes
+
+grep "^None" causal_mutations.tab
+# Nothing.
+# So there are gene symbols which do not have ncbigene ids
+
+# the species with these non ID genes
+
+grep "None" causal_mutations.tab | cut -f4 | sort | uniq -c | sort -nr | head
+      5 452646
+      3 9627
+      3 9615
+      3 93934
+      3 30521
+      2 494514
+      2 46218
+      2 32536
+      1 9986
+      1 9925
+# and the remaing ~60 are singeltons
+# so they are pretty spread out.
+# The fact they have symbols means they were likely named as orthologs in the odd critter
+
+# are there genes (symbols) in a bunch of species?
+cut -f1 causal_mutations.tab  | sort | uniq -c | sort -rn | head
+     37 MC1R
+     19 KIT
+     17 ASIP
+     14 TYR
+     11 TYRP1
+     10 MITF
+      9 HR
+      9 BMP15
+      7 SLC45A2
+      7 MLPH
+
+# bringing in the (per species) gene identifiers
+cut -f1,2 causal_mutations.tab  | sort | uniq -c | sort -rn | head
+     24 MC1R	None
+      9 BMP15	100141303
+      8 ASIP	None
+      7 TYR	None
+      5 HR	None
+      5 GDF9	100217402
+      4 Mc1r	None
+      4 KIT	396810
+      4 ABO	None
+      3 VWF	399544
+
+# which should for example
+# implicate KIT in four diseses/phenotype in the same species
+
+grep  "KIT.396810" causal_mutations.tab  |cut -f 1-4
+KIT	396810	000209	9823
+KIT	396810	001216	9823
+KIT	396810	001743	9823
+KIT	396810	001745	9823
+
+# yep I think I got it
+----------------------------------------------------------------
+curie_map  could be
+OMIA": "http://omia.org/OMIA" instead of 'http://purl.obolibrary.org/obo/OMIA_'
+
+We get a gene in a species linked with an observable
+standrd monarch g2p type association.
+
+
+# association's predicate  --
+# we may need a more specific term which does not exst yet
+# the closest I come up with is:
+
+    "is genetic basis for condition": "RO:0004010"
+
+Made a monarch association model in graphviz dot format using these file headers and
+the global translation table labels.
+Is may be found in the file
+
+    "dipper/resources/omia/casual_mutation.gv"
+
+casual_mutation.gv could serve as
+a guide to parsing the file and
+interperting/checking the results.   _IF_ we decide to ingest it
+
+
