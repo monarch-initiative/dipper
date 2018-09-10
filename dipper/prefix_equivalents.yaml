@@ -1,0 +1,11 @@
+# Alternate prefixes that may be found in the wild
+
+'HPO': 'HP'
+'MIM': 'OMIM'
+'NCBI-Gene': 'NCBIGene'
+'Gene': 'NCBIGene'
+'Entrez': 'NCBIGene'
+'EntrezGene': 'NCBIGene'
+'Entrez-Gene': 'NCBIGene'
+'PubMed': 'PMID'
+'WB': 'WormBase'
