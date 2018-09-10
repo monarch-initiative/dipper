@@ -51,3 +51,7 @@ mychem-test:
 
 trans-test:
 	$(TEST) tests/test_trtable.py
+
+omia-int-test:
+	python tests/omia-integration.py --input ./out/omia.ttl
+
