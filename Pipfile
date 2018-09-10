@@ -16,6 +16,8 @@ pysftp = "*"
 ontobio = "*"
 gitpython = "*"
 intermine = "*"
+py-spy = "*"
+"bs4" = "*"
 
 [requires]
 python_version = "3.5"
