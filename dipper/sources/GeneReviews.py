@@ -4,15 +4,15 @@ import csv
 import logging
 from bs4 import BeautifulSoup
 
-from dipper.sources.Source import Source
+from dipper.sources.Source import Source, USER_AGENT
 from dipper.models.Model import Model
-from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
+# from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
 from dipper.models.Reference import Reference
 
 __author__ = 'nicole'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 GRDL = 'http://ftp.ncbi.nih.gov/pub/GeneReviews'
 
 
@@ -49,12 +49,32 @@ class GeneReviews(Source):
 
     """
 
+    OMIMURL = 'https://data.omim.org/downloads/'
+    OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
+
     files = {
-        'idmap': {'file': 'NBKid_shortname_OMIM.txt',
-                  'url': GRDL + '/NBKid_shortname_OMIM.txt'},
-        'titles': {'file': 'GRtitle_shortname_NBKid.txt',
-                   'url': GRDL + '/GRtitle_shortname_NBKid.txt'}
-        }
+        'idmap': {
+            'file': 'NBKid_shortname_OMIM.txt',
+            'url': GRDL + '/NBKid_shortname_OMIM.txt'
+        },
+        'titles': {
+            'file': 'GRtitle_shortname_NBKid.txt',
+            'url': GRDL + '/GRtitle_shortname_NBKid.txt'
+        },
+        'mimtitles': {
+            'file': 'mimTitles.txt',
+            'url':  OMIMFTP + '/mimTitles.txt',
+            'headers': {'User-Agent': USER_AGENT},
+            'clean': OMIMURL,
+            'columns': (  # expected
+                'Prefix',
+                'Mim Number',
+                'Preferred Title; symbol',
+                'Alternative Title(s); symbol(s)',
+                'Included Title(s); symbols',
+            ),
+        },
+    }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -63,9 +83,9 @@ class GeneReviews(Source):
             'genereviews',
             ingest_title='Gene Reviews',
             ingest_url='http://genereviews.org/',
-            license_url='http://www.ncbi.nlm.nih.gov/books/NBK138602/',
-            data_rights=None,
-            file_handle=None
+            license_url=None,
+            data_rights='http://www.ncbi.nlm.nih.gov/books/NBK138602/',
+            # file_handle=None
         )
 
         self.dataset.set_citation('GeneReviews:NBK1116')
@@ -75,11 +95,14 @@ class GeneReviews(Source):
 
         if 'test_ids' not in config.get_config() or\
                 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+            LOG.warning("not configured with disease test ids.")
             self.test_ids = list()
         else:
             # select ony those test ids that are omim's.
             self.test_ids = config.get_config()['test_ids']['disease']
+
+        self.omim_replaced = {}  # id_num to SET of id nums
+        self.omim_type = {}      # id_num to onto_term
 
         return
 
@@ -88,8 +111,10 @@ class GeneReviews(Source):
         We fetch GeneReviews id-label map and id-omim mapping files from NCBI.
         :return: None
         """
-
         self.get_files(is_dl_forced)
+
+        # load and tag a list of OMIM IDs with types
+        self.omim_type = self.find_omim_type()
 
         return
 
@@ -124,9 +149,11 @@ class GeneReviews(Source):
         Therefore, we need to create a loose coupling here.
         We make the assumption that these NBKs are generally higher-level
         grouping classes; therefore the OMIM ids are treated as subclasses.
+
         (This assumption is poor for those omims that are actually genes,
         but we have no way of knowing what those are here...
-        we will just have to deal with that for now.)
+        we will just have to deal with that for now.)    -- fixed
+
         :param limit:
         :return:
 
@@ -136,7 +163,7 @@ class GeneReviews(Source):
         line_counter = 0
 
         # we look some stuff up in OMIM, so initialize here
-        omim = OMIM(self.graph_type, self.are_bnodes_skized)
+        # omim = OMIM(self.graph_type, self.are_bnodes_skized)
         id_map = {}
         allomimids = set()
         with open(raw, 'r', encoding="utf8") as csvfile:
@@ -147,7 +174,7 @@ class GeneReviews(Source):
                     continue
                 (nbk_num, shortname, omim_num) = row
                 gr_id = 'GeneReviews:'+nbk_num
-                omim_id = 'OMIM:'+omim_num
+                omim_id = 'OMIM:' + omim_num
                 if not (
                         (self.testMode and
                          len(self.test_ids) > 0 and
@@ -156,10 +183,10 @@ class GeneReviews(Source):
                     continue
 
                 # sometimes there's bad omim nums
+                omim_num = omim_num.strip()
                 if len(omim_num) > 6:
-                    logger.warning(
-                        "OMIM number incorrectly formatted " +
-                        "in row %d; skipping:\n%s",
+                    LOG.warning(
+                        "OMIM number incorrectly formatted in row %d; skipping:\n%s",
                         line_counter, '\t'.join(row))
                     continue
 
@@ -180,14 +207,49 @@ class GeneReviews(Source):
             # end looping through file
 
         # get the omim ids that are not genes
-        entries_that_are_phenotypes = omim.process_entries(
-            list(allomimids), filter_keep_phenotype_entry_ids, None, None,
-            limit=limit, globaltt=self.globaltt)
+        # entries_that_are_phenotypes = omim.process_entries(
+        #    list(allomimids), filter_keep_phenotype_entry_ids, None, None,
+        #    limit=limit, globaltt=self.globaltt)
+        #
+        # LOG.info(
+        #    "Filtered out %d/%d entries that are genes or features",
+        #    len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
+        ##########################################################################
 
-        logger.info(
+        # given all_omim_ids from GR,
+        # we want to update any which are changed or removed
+        # before deciding which are disease / phenotypes
+        replaced = allomimids & self.omim_replaced.keys()
+        if replaced is not None and len(replaced) > 0:
+            LOG.warning("These OMIM ID's are past their pull date: %s", str(replaced))
+            for oid in replaced:
+                allomimids.remove(oid)
+                replacements = self.omim_replaced[oid]
+                for rep in replacements:
+                    allomimids.update(rep)
+        # guard against omim identifiers which have been removed
+        obsolete = [
+            o for o in self.omim_type
+            if self.omim_type[o] == self.globaltt['obsolete']]
+        removed = allomimids & set(obsolete)
+        if removed is not None and len(removed) > 0:
+            LOG.warning("These OMIM ID's are gone: %s", str(removed))
+            for oid in removed:
+                allomimids.remove(oid)
+        # filter for disease /phenotype types (we can argue about what is included)
+        omim_phenotypes = set([
+            omim for omim in self.omim_type if self.omim_type[omim] in (
+                self.globaltt['Phenotype'],
+                self.globaltt['has_affected_feature'],  # both a gene and a phenotype
+                self.globaltt['heritable_phenotypic_marker'])])  # probable phenotype
+        LOG.info(
+            "Have %i omim_ids globally typed as phenotypes from OMIM",
+            len(omim_phenotypes))
+
+        entries_that_are_phenotypes = allomimids & omim_phenotypes
+        LOG.info(
             "Filtered out %d/%d entries that are genes or features",
-            len(allomimids)-len(entries_that_are_phenotypes),
-            len(allomimids))
+            len(allomimids - entries_that_are_phenotypes), len(allomimids))
 
         for nbk_num in self.book_ids:
             gr_id = 'GeneReviews:'+nbk_num
@@ -233,13 +295,13 @@ class GeneReviews(Source):
             line_counter = 1
             colcount = len(header)
             if colcount != 4:  # ('GR_shortname', 'GR_Title', 'NBK_id', 'PMID')
-                logger.error("Unexpected Header ", header)
+                LOG.error("Unexpected Header %s", header)
                 exit(-1)
             for row in filereader:
                 line_counter += 1
                 if len(row) != colcount:
-                    logger.error("Unexpected row. got: ", row)
-                    logger.error("Expected data for: ", header)
+                    LOG.error("Unexpected row. got: %s", row)
+                    LOG.error("Expected data for: %s", header)
                     exit(-1)
                 (shortname, title, nbk_num, pmid) = row
                 gr_id = 'GeneReviews:'+nbk_num
@@ -257,8 +319,10 @@ class GeneReviews(Source):
 
         # note that although we put in the url to the book,
         # NCBI Bookshelf does not allow robots to download content
-        book_item = {'file': 'books/',
-                     'url': ''}
+        book_item = {
+            'file': 'books/',
+            'url': ''
+        }
 
         for nbk in self.book_ids:
             b = book_item.copy()
@@ -294,10 +358,10 @@ class GeneReviews(Source):
             book_dir = '/'.join((self.rawdir, 'books'))
             book_files = os.listdir(book_dir)
             if ''.join((nbk, '.html')) not in book_files:
-                # logger.warning("No book found locally for %s; skipping", nbk)
+                # LOG.warning("No book found locally for %s; skipping", nbk)
                 books_not_found.add(nbk)
                 continue
-            logger.info("Processing %s", nbk)
+            LOG.info("Processing %s", nbk)
 
             page = open(url)
             soup = BeautifulSoup(page.read())
@@ -321,7 +385,7 @@ class GeneReviews(Source):
                 # add in the copyright and citation info to description
                 ptext = ' '.join((
                     ptext, '[GeneReviews:NBK1116, GeneReviews:NBK138602, ' +
-                        nbk_id + ']'))
+                    nbk_id + ']'))
 
                 model.addDefinition(nbk_id, ptext.strip())
 
@@ -366,14 +430,81 @@ class GeneReviews(Source):
         l = len(books_not_found)
         if len(books_not_found) > 0:
             if l > 100:
-                logger.warning("There were %d books not found.", l)
+                LOG.warning("There were %d books not found.", l)
             else:
-                logger.warning(
+                LOG.warning(
                     "The following %d books were not found locally: %s", l,
                     str(books_not_found))
-        logger.info("Finished processing %d books for clinical descriptions", c-l)
+        LOG.info("Finished processing %d books for clinical descriptions", c-l)
 
         return
+
+    def find_omim_type(self):
+        '''
+        This f(x) needs to be rehomed and shared.
+        Use OMIM's discription of their identifiers
+        to heuristically partition them into genes | phenotypes-diseases
+        type could be
+            - `obsolete`  Check `omim_replaced`  populated as side effect
+            - 'Suspected' (phenotype)  Ignoring thus far
+            - 'gene'
+            - 'Phenotype'
+            - 'heritable_phenotypic_marker'   Probable phenotype
+            - 'has_affected_feature'  Use as both a gene and a phenotype
+
+        :return hash of omim_number to ontology_curie
+        '''
+        myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
+        omim_type = {}
+        line_counter = 1
+        with open(myfile, 'r') as fh:
+            reader = csv.reader(fh, delimiter='\t')
+            for row in reader:
+                line_counter += 1
+                if row[0][0] == '#':     # skip comments
+                    continue
+                elif row[0] == 'Caret':  # moved|removed|split -> moved twice
+                    # populating a dict from an omim to a set of omims
+                    # here as a side effect which is less than ideal
+                    (prefix, omim_id, destination, empty, empty) = row
+                    omim_type[omim_id] = self.globaltt['obsolete']
+                    if row[2][:9] == 'MOVED TO ':
+                        token = row[2].split(' ')
+                        rep = token[2]
+                        if not re.match(r'^[0-9]{6}$', rep):
+                            LOG.error('Report malformed omim replacement %s', rep)
+                            # clean up ones I know about
+                            if rep[0] == '{' and rep[7] == '}':
+                                rep = rep[1:6]
+                            if len(rep) == 7 and rep[6] == ',':
+                                rep = rep[:5]    
+                        # asuming splits are typically to both gene & phenotype
+                        if len(token) > 3:
+                            self.omim_replaced[omim_id] = {rep, token[4]}
+                        else:
+                            self.omim_replaced[omim_id] = {rep}
+
+                elif row[0] == 'Asterisk':  # declared as gene
+                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                    omim_type[omim_id] = self.globaltt['gene']
+                elif row[0] == 'NULL':
+                    #  potential model of disease?
+                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                    #
+                    omim_type[omim_id] = self.globaltt['Suspected']   # NCIT:C71458
+                elif row[0] == 'Number Sign':
+                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                    omim_type[omim_id] = self.globaltt['Phenotype']
+                elif row[0] == 'Percent':
+                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                    omim_type[omim_id] = self.globaltt['heritable_phenotypic_marker']
+                elif row[0] == 'Plus':
+                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                    # to be interperted as  a gene and/or a phenotype
+                    omim_type[omim_id] = self.globaltt['has_affected_feature']
+                else:
+                    LOG.error('Unlnown OMIM type line ')
+        return omim_type
 
     def getTestSuite(self):
         import unittest

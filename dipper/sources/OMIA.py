@@ -51,7 +51,6 @@ class OMIA(Source):
 
     """
     OMIMURL = 'https://data.omim.org/downloads/'
-
     OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
 
     files = {
@@ -73,7 +72,7 @@ class OMIA(Source):
                 'phene_name'),
             'url': 'http://omia.org/curate/causal_mutations/?format=gene_table',
         },
-        'mimTitles': {
+        'mimtitles': {
             'file': 'mimTitles.txt',
             'url':  OMIMFTP + '/mimTitles.txt',
             'headers': {'User-Agent': USER_AGENT},
@@ -149,7 +148,8 @@ class OMIA(Source):
         self.fetch_from_url(
             gene_group['url'], '/'.join((ncbi.rawdir, gene_group['file'])), False)
 
-        # fetch and tag a list of OMIM IDs with types
+        # load and tag a list of OMIM IDs with types
+        # side effect of populating omim replaced
         self.omim_type = self.find_omim_type()
 
         return
@@ -234,18 +234,20 @@ class OMIA(Source):
 
     def find_omim_type(self):
         '''
-        use OMIM's discription of their identifiers
+        This f(x) needs to be rehomed and shared.
+        Use OMIM's discription of their identifiers
         to heuristically partition them into genes | phenotypes-diseases
         type could be
             - `obsolete`  Check `omim_replaced`  populated as side effect
             - 'Suspected' (phenotype)  Ignoring thus far
             - 'gene'
             - 'Phenotype'
+            - 'heritable_phenotypic_marker'   Probable phenotype
             - 'has_affected_feature'  Use as both a gene and a phenotype
 
-
+        :return hash of omim_number to ontology_curie
         '''
-        myfile = '/'.join((self.rawdir, self.files['mimTitles']['file']))
+        myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
         omim_type = {}
         line_counter = 1
         with open(myfile, 'r') as fh:
@@ -267,6 +269,8 @@ class OMIA(Source):
                             # clean up one I know about
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
+                            if len(rep) == 7 and rep[6] == ',':
+                                rep = rep[:5]     
                         # asuming splits are typically to both gene & phenotype
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = {rep, token[4]}
@@ -875,7 +879,9 @@ class OMIA(Source):
                     allomimids.update(rep)
 
         # guard against omim identifiers which have been removed
-        removed = allomimids & self.omim_replaced.keys()
+        obsolete = [o from self.omim_type
+            if self.omim_type[o] == self.globaltt['obsolete']]
+        removed = allomimids & set(obsolete)
         if removed is not None and len(removed) > 0:
             LOG.warning("These OMIM ID's are gone: %s", str(removed))
             for oid in removed:
@@ -913,6 +919,7 @@ class OMIA(Source):
         LOG.info("Removed %d omim ids from the omia-to-omim map", removed_count)
 
         return
+
     @staticmethod
     def _make_internal_id(prefix, key):
         ''' more blank nodes '''
