@@ -34,6 +34,7 @@
 
 # Group_Categories  to disease identifier label
 
+"group_category:None": "disease or disorder"        # maybe a wonky default
 "group_category:1": "inborn errors of metabolism"   # "Inborn error of metabolism" (was DOID:0014667)
 "group_category:2": "Dwarfism"
 "group_category:3": "congenital heart disease"      # "Congenital heart disease" (was DOID:1682)
