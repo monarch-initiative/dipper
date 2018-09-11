@@ -14,7 +14,7 @@ from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
 USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
              "info@monarchinitiative.org)"
@@ -60,7 +60,7 @@ class Source:
         else:
             self.name = self.whoami().lower()
 
-        logger.info("Processing Source \"%s\"", self.name)
+        LOG.info("Processing Source \"%s\"", self.name)
         self.testOnly = False
         self.path = ""
         # to be used to store a subset of data for testing downstream.
@@ -79,15 +79,15 @@ class Source:
         if not os.path.exists(self.rawdir):
             os.makedirs(self.rawdir)
             pth = os.path.abspath(self.rawdir)
-            logger.info("creating raw directory for %s at %s", self.name, pth)
+            LOG.info("creating raw directory for %s at %s", self.name, pth)
 
         # if output dir doesn't exist, create it
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
             pth = os.path.abspath(self.outdir)
-            logger.info("created output directory %s", pth)
+            LOG.info("created output directory %s", pth)
 
-        logger.info("Creating Test graph %s", self.testname)
+        LOG.info("Creating Test graph %s", self.testname)
         # note: tools such as protoge need slolemized blank nodes
         self.testgraph = RDFGraph(True,  self.testname)
 
@@ -95,7 +95,7 @@ class Source:
             graph_id = ':MONARCH_' + str(self.name) + "_" + \
                 datetime.now().isoformat(' ').split()[0]
 
-            logger.info("Creating graph  %s", graph_id)
+            LOG.info("Creating graph  %s", graph_id)
             self.graph = RDFGraph(are_bnodes_skized, graph_id)
 
         elif graph_type == 'streamed_graph':
@@ -104,13 +104,14 @@ class Source:
             self.graph = StreamedGraph(are_bnodes_skized, source_file)
             # leave test files as turtle (better human readibility)
         else:
-            logger.error(
+            LOG.error(
                 "{} graph type not supported\n"
-                "valid types: rdf_graph, streamed_graph" .format(graph_type))
+                "valid types: rdf_graph, streamed_graph".format(graph_type))
 
         # pull in global ontology mapping datastructures
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
+        #
         self.curie_map = self.graph.curie_map
 
         # will be set to True if the intention is
@@ -183,19 +184,19 @@ class Source:
                 dest = '.'.join((dest, fmt_ext.get(fmt)))
             else:
                 dest = '.'.join((dest, fmt))
-            logger.info("Setting outfile to %s", dest)
+            LOG.info("Setting outfile to %s", dest)
 
             # make the dataset_file name, always format as turtle
             self.datasetfile = '/'.join(
                 (self.outdir, self.name + '_dataset.ttl'))
-            logger.info("Setting dataset file to %s", self.datasetfile)
+            LOG.info("Setting dataset file to %s", self.datasetfile)
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
-                logger.info(
+                LOG.info(
                     "No version for " + self.name + " setting to date issued.")
         else:
-            logger.warning("No output file set. Using stdout")
+            LOG.warning("No output file set. Using stdout")
             stream = 'stdout'
 
         gu = GraphUtils(None)
@@ -205,7 +206,7 @@ class Source:
 
         if self.testMode:
             # unless we stop hardcoding, the test dataset is always turtle
-            logger.info("Setting testfile to %s", self.testfile)
+            LOG.info("Setting testfile to %s", self.testfile)
             gu.write(self.testgraph, 'turtle', file=self.testfile)
 
         # print graph out
@@ -214,14 +215,14 @@ class Source:
         elif stream.lower().strip() == 'stdout':
             f = None
         else:
-            logger.error("I don't understand our stream.")
+            LOG.error("I don't understand our stream.")
             return
 
         gu.write(self.graph, fmt, file=f)
         return
 
     def whoami(self):
-        logger.info("I am %s", self.name)
+        LOG.info("I am %s", self.name)
         return
 
     @staticmethod
@@ -259,16 +260,15 @@ class Source:
         :return: True if the remote file is newer and should be downloaded
 
         """
-        logger.info(
-            "Checking if remote file (%s) is newer than local (%s)...",
-            remote, local)
+        LOG.info(
+            "Checking if remote file (%s) is newer than local (%s)...", remote, local)
 
         # check if local file exists
         # if no local file, then remote is newer
         if os.path.exists(local):
-            logger.info("File does exist locally")
+            LOG.info("File does exist locally")
         else:
-            logger.info("File does not exist locally")
+            LOG.info("File does not exist locally")
             return True
 
         # get remote file details
@@ -276,7 +276,7 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        logger.debug("Request header: %s", str(req.header_items()))
+        LOG.debug("Request header: %s", str(req.header_items()))
 
         response = urllib.request.urlopen(req)
 
@@ -288,13 +288,13 @@ class Source:
             resp_headers = None
             size = 0
             last_modified = None
-            logger.error(e)
+            LOG.error(e)
 
         if size is not None and size != '':
             size = int(size)
 
         st = os.stat(local)
-        logger.info(
+        LOG.info(
             "Local file date: %s",
             datetime.utcfromtimestamp(st[ST_CTIME]))
 
@@ -308,18 +308,15 @@ class Source:
             if dt_obj > datetime.utcfromtimestamp(st[ST_CTIME]):
                 # check if file size is different
                 if st[ST_SIZE] < size:
-                    logger.info("New Remote file exists")
+                    LOG.info("New Remote file exists")
                     return True
                 if st[ST_SIZE] > size:
-                    logger.warning(
-                        "New Remote file existsbut it is SMALLER")
+                    LOG.warning("New Remote file existsbut it is SMALLER")
                     return True
-                else:
-                    logger.info(  # filesize is a fairly imperfect metric here
-                        "New Remote file has same filesize--will not download")
+                else:  # filesize is a fairly imperfect metric here
+                    LOG.info("New Remote file has same filesize--will not download")
         elif st[ST_SIZE] != size:
-            logger.info(
-                "Object on server is difference size to local file")
+            LOG.info("Object on server is difference size to local file")
             return True
 
         return False
@@ -338,7 +335,7 @@ class Source:
         if files is None:
             files = self.files
         for fname in files.keys():
-            logger.info("Getting %s", fname)
+            LOG.info("Getting %s", fname)
             filesource = files.get(fname)
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
@@ -379,7 +376,7 @@ class Source:
         response = None
         if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
-            logger.info("Fetching from %s", remotefile)
+            LOG.info("Fetching from %s", remotefile)
             # TODO url verification, etc
             if headers is None:
                 headers = self._get_default_request_headers()
@@ -395,21 +392,18 @@ class Source:
                             break
                         fd.write(chunk)
 
-                logger.info("Finished.  Wrote file to %s", localfile)
+                LOG.info("Finished.  Wrote file to %s", localfile)
                 if self.compare_local_remote_bytes(remotefile, localfile, headers):
-                    logger.debug(
-                        "local file is same size as remote after download")
+                    LOG.debug("local file is same size as remote after download")
                 else:
                     raise Exception(
                         "Error when downloading files: local file size " +
                         "does not match remote file size")
                 st = os.stat(localfile)
-                logger.info("file size: %s", st[ST_SIZE])
-                logger.info(
-                    "file created: %s",
-                    time.asctime(time.localtime(st[ST_CTIME])))
+                LOG.info("file size: %s", st[ST_SIZE])
+                LOG.info("file created: %s", time.asctime(time.localtime(st[ST_CTIME])))
         else:
-            logger.info("Using existing file %s", localfile)
+            LOG.info("Using existing file %s", localfile)
 
         return response
 
@@ -437,7 +431,7 @@ class Source:
         line_counter = 0
         table_data = elem.find("[@name='"+table_name+"']")
         if table_data is not None:
-            logger.info("Processing "+table_name)
+            LOG.info("Processing "+table_name)
             row = {}
             for r in table_data.findall('row'):
                 for f in r.findall('field'):
@@ -497,7 +491,7 @@ class Source:
             byte_size = resp_header.get('Content-length')
         except OSError as e:
             byte_size = None
-            logger.error(e)
+            LOG.error(e)
 
         return byte_size
 
@@ -509,8 +503,7 @@ class Source:
         byte_size = os.stat(localfile)
         return byte_size[ST_SIZE]
 
-    def compare_local_remote_bytes(
-            self, remotefile, localfile, remote_headers=None):
+    def compare_local_remote_bytes(self, remotefile, localfile, remote_headers=None):
         """
         test to see if fetched file is the same size as the remote file
         using information in the content-length field in the HTTP header
@@ -521,7 +514,7 @@ class Source:
         local_size = self.get_local_file_size(localfile)
         if remote_size is not None and local_size != int(remote_size):
             is_equal = False
-            logger.error(
+            LOG.error(
                 'local file and remote file different sizes\n'
                 '%s has size %s, %s has size %s',
                 localfile, local_size, remotefile, remote_size)
@@ -692,7 +685,7 @@ class Source:
             map = yaml.load(map_file)
             map_file.close()
         else:
-            logger.warn("file: {0} not found".format(file))
+            LOG.warn("file: {0} not found".format(file))
 
         return map
 
