@@ -879,7 +879,7 @@ class OMIA(Source):
                     allomimids.update(rep)
 
         # guard against omim identifiers which have been removed
-        obsolete = [o from self.omim_type
+        obsolete = [o for o in self.omim_type
             if self.omim_type[o] == self.globaltt['obsolete']]
         removed = allomimids & set(obsolete)
         if removed is not None and len(removed) > 0:
