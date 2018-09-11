@@ -3,6 +3,7 @@
 'HPO': 'HP'
 'MIM': 'OMIM'
 'Orpha': 'Orphanet'
+'ORDO': 'Orphanet'
 'NCBI-Gene': 'NCBIGene'
 'Gene': 'NCBIGene'
 'Entrez': 'NCBIGene'
