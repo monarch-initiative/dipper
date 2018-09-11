@@ -1,0 +1,130 @@
+
+Note the gene_info file is over 400 Meg compressed
+it should not be fetched often or be allowed to slip into the dipper repo 
+
+
+wget --timestamping ftp://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz
+
+
+once the file is fetched, we can split off the species we are interested in 
+
+zgrep "^9796[^0-9]" gene_info.gz | gzip > Equus_caballus.gene_info.gz
+zgrep "^9940[^0-9]" gene_info.gz | gzip > Ovis_aries.gene_info.gz
+zgrep "^8022[^0-9]" gene_info.gz | gzip > Oncorhynchus_mykiss.gene_info.gz
+
+
+currently storing these file in
+
+    dipper/resources/animalqtldb/
+
+it is originally about 3 Meg for three species
+
+du -sh ./resources/animalqtldb/
+3.1M    ./resources/animalqtldb/
+
+Maybe it should go off into the data boutique
+###################################################################
+# headers are described in  ftp://ftp.ncbi.nih.gov/gene/DATA/README
+
+1:#tax_id
+2:GeneID
+3:Symbol
+4:LocusTag
+5:Synonyms
+6:dbXrefs
+7:chromosome
+8:map_location
+9:description
+10:type_of_gene
+11:Symbol_from_nomenclature_authority
+12:Full_name_from_nomenclature_authority
+13:Nomenclature_status
+14:Other_designations
+15:Modification_date
+16:Feature_type
+
+
+===========================================================================
+gene_info                                       recalculated daily
+---------------------------------------------------------------------------
+           tab-delimited
+           one line per GeneID
+           Column header line is the first line in the file.
+           Note: subsets of gene_info are available in the DATA/GENE_INFO
+                 directory (described later)
+---------------------------------------------------------------------------
+
+tax_id:
+           the unique identifier provided by NCBI Taxonomy
+           for the species or strain/isolate
+
+GeneID:
+           the unique identifier for a gene
+           ASN1:  geneid
+
+Symbol:
+           the default symbol for the gene
+           ASN1:  gene->locus
+
+LocusTag:
+           the LocusTag value
+           ASN1:  gene->locus-tag
+
+Synonyms:
+           bar-delimited set of unofficial symbols for the gene
+
+dbXrefs:
+           bar-delimited set of identifiers in other databases
+           for this gene.  The unit of the set is database:value.
+           Note that HGNC and MGI include 'HGNC' and 'MGI', respectively,
+           in the value part of their identifier.  Consequently,
+           dbXrefs for these databases will appear like:
+             HGNC:HGNC:1100
+             This would be interpreted as database='HGNC', value='HGNC:1100'
+           Example for MGI:
+             MGI:MGI:104537
+             This would be interpreted as database='MGI', value='MGI:104537'
+
+chromosome:
+           the chromosome on which this gene is placed.
+           for mitochondrial genomes, the value 'MT' is used.
+
+map location:
+           the map location for this gene
+
+description:
+           a descriptive name for this gene
+
+type of gene:
+           the type assigned to the gene according to the list of options
+           provided in https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn
+
+
+Symbol from nomenclature authority:
+            when not '-', indicates that this symbol is from a
+            a nomenclature authority
+
+Full name from nomenclature authority:
+            when not '-', indicates that this full name is from a
+            a nomenclature authority
+
+Nomenclature status:
+            when not '-', indicates the status of the name from the 
+            nomenclature authority (O for official, I for interim)
+
+Other designations:
+            pipe-delimited set of some alternate descriptions that
+            have been assigned to a GeneID
+            '-' indicates none is being reported.
+
+Modification date:
+            the last date a gene record was updated, in YYYYMMDD format
+
+Feature type:
+            pipe-delimited set of annotated features and their classes or 
+            controlled vocabularies, displayed as feature_type:feature_class 
+            or feature_type:controlled_vocabulary, when appropriate; derived 
+            from select feature annotations on RefSeq(s) associated with the 
+            GeneID
+
+===========================================================================

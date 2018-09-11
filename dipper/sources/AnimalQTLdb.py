@@ -2,7 +2,6 @@ import csv
 import logging
 import re
 import gzip
-import requests
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
@@ -11,9 +10,8 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 
-
-logger = logging.getLogger(__name__)
 AQDL = 'http://www.animalgenome.org/QTLdb'
+LOG = logging.getLogger(__name__)
 
 
 class AnimalQTLdb(Source):
@@ -47,6 +45,9 @@ class AnimalQTLdb(Source):
     Any genetic position ranges that are <0, we do not include here.
 
     """
+
+    GENEINFO = 'ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO'
+    GITDIP = 'https://raw.githubusercontent.com/monarch-initiative/dipper/master'
 
     files = {
         # defaulting to this
@@ -87,10 +88,48 @@ class AnimalQTLdb(Source):
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
             'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
+
+        #                  Gene_info from NCBI
+        # to reasure TEC that when we see an integer
+        # it is a gene identifier from NCBI for the species
+        # misses will not block, but they will squawk, (the last three are homemade)
+
+        # pig  # "Sus scrofa"  # NCBITaxon:9823
+        'Sus_scrofa_info': {
+            'file': 'Sus_scrofa.gene_info.gz',
+            'url': GENEINFO + '/Mammalia/Sus_scrofa.gene_info.gz',
+        },
+        # cattle  # "Bos taurus"      # NCBITaxon:9913
+        'Bos_taurus_info': {
+            'file': 'Bos_taurus.gene_info.gz',
+            'url': GENEINFO + '/Mammalia/Bos_taurus.gene_info.gz',
+        },
+        # chicken  # "Gallus gallus"  # NCBITaxon:9031
+        'Gallus_gallus_info': {
+            'file': 'Gallus_gallus.gene_info.gz',
+            'url': GENEINFO + '/Non-mammalian_vertebrates/Gallus_gallus.gene_info.gz',
+        },
+        # horse  # "Equus caballus"  # NCBITaxon:9796
+        'Equus_caballus_info': {
+            'file': 'Equus_caballus.gene_info.gz',
+            'url': GITDIP + '/resources/animalqtldb/Equus_caballus_info.gene_info.gz',
+        },
+        # sheep  # "Ovis aries"  # NCBITaxon:9940
+        'Ovis_aries_info': {
+            'file': 'Ovis_aries.gene_info.gz',
+            'url': GITDIP + '/resources/animalqtldb/Ovis_aries.gene_info.gz',
+        },
+        # rainbow trout  # "Oncorhynchus mykiss"  # NCBITaxon:8022
+        'Oncorhynchus_mykiss_info': {
+            'file': 'Oncorhynchus_mykiss.gene_info.gz',
+            'url': GITDIP + '/resources/animalqtldb/Oncorhynchus_mykiss.gene_info.gz',
+        },
+        ########################################
         # TODO add rainbow_trout_bp when available
         'trait_mappings': {
             'file': 'trait_mappings',
-            'url': AQDL + '/export/trait_mappings.csv'}
+            'url': AQDL + '/export/trait_mappings.csv'
+        },
     }
 
     # QTL ids
@@ -98,22 +137,19 @@ class AnimalQTLdb(Source):
         28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
     }
 
-    def __init__(
-        self,
-        graph_type,
-        are_bnodes_skolemized
-    ):
+    def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
             'animalqtldb',
             ingest_title='Animal QTL db',
             ingest_url='http://www.animalgenome.org/cgi-bin/QTLdb/index',
-            license_url=AQDL + '/faq#32'
-            # data_rights=None,
+            license_url=None,
+            data_rights="'" + AQDL + '/faq#32',
             # file_handle=None
         )
 
+        self.gene_info = set()
         return
 
     def fetch(self, is_dl_forced=False):
@@ -128,9 +164,9 @@ class AnimalQTLdb(Source):
         :return:
         """
         if limit is not None:
-            logger.info("Only parsing first %s rows fo each file", str(limit))
+            LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -146,6 +182,22 @@ class AnimalQTLdb(Source):
 
         for common_name in animals:
             txid_num = self.resolve(common_name).split(':')[1]
+            taxon_label = self.localtt[common_name]
+            taxon_curie = self.globaltt[taxon_label]
+            taxon_num = taxon_curie.split(':')[1]
+            txid_num = taxon_num  # for now
+            taxon_word = taxon_label.replace(' ', '_')
+            gene_info_file = '/'.join(
+                (self.rawdir, self.files[taxon_word + '_info']['file']))
+            self.gene_info = set()
+            with gzip.open(gene_info_file, 'r') as gi_gz:
+                filereader = csv.reader(gi_gz, delimiter='\t')
+                for row in filereader:
+                    if row[0][0] == '#':
+                        continue
+                    else:
+                        self.gene_info.add(row[1])  # yes, tossing lots of good stuff
+
             geno.addGenome(txid_num, self.localtt[common_name])
             build_id = None
             build = None
@@ -155,28 +207,28 @@ class AnimalQTLdb(Source):
                 bpfile = self.files[fname_bp]['file']
                 mch = re.search(r'QTL_([\w\.]+)\.gff.txt.gz', bpfile)
                 if mch is None:
-                    logger.error("Can't match a gff build to " + fname_bp)
+                    LOG.error("Can't match a gff build to " + fname_bp)
                 else:
                     build = mch.group(1)
                     build_id = self._map_build_by_abbrev(build)
-                    logger.info("Build = %s", build_id)
+                    LOG.info("Build = %s", build_id)
                     geno.addReferenceGenome(build_id, build, txid_num)
                 if build_id is not None:
-                    self._process_QTLs_genomic_location(
+                    self._process_qtls_genomic_location(
                         '/'.join((self.rawdir, bpfile)), txid_num, build_id, build,
                         common_name, limit)
 
             fname_cm = common_name + '_cm'
             if fname_cm in self.files:
                 cmfile = self.files[fname_cm]['file']
-                self._process_QTLs_genetic_location(
+                self._process_qtls_genetic_location(
                     '/'.join((self.rawdir, cmfile)), txid_num, common_name, limit)
 
-        logger.info("Finished parsing")
+        LOG.info("Finished parsing")
         return
 
-    def _process_QTLs_genetic_location(
-            self, raw, taxon_id, common_name, limit=None):
+    def _process_qtls_genetic_location(
+            self, raw, txid, common_name, limit=None):
         """
         This function processes
 
@@ -195,8 +247,9 @@ class AnimalQTLdb(Source):
         model = Model(graph)
         eco_id = self.globaltt['quantitative trait analysis evidence']
 
-        logger.info(
-            "Processing genetic location for %s from %s", taxon_id, raw)
+        taxon_curie = 'NCBITaxon:' + txid
+
+        LOG.info("Processing genetic location for %s from %s", taxon_curie, raw)
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -241,16 +294,16 @@ class AnimalQTLdb(Source):
 
                 # Add QTL to graph
                 feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'])
-                feature.addTaxonToFeature(taxon_id)
+                feature.addTaxonToFeature(taxon_curie)
 
                 # deal with the chromosome
-                chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
+                chrom_id = makeChromID(chromosome, taxon_curie, 'CHR')
 
                 # add a version of the chromosome which is defined as
                 # the genetic map
                 build_id = 'MONARCH:'+common_name.strip()+'-linkage'
                 build_label = common_name+' genetic map'
-                geno.addReferenceGenome(build_id, build_label, taxon_id)
+                geno.addReferenceGenome(build_id, build_label, taxon_curie)
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
@@ -269,7 +322,7 @@ class AnimalQTLdb(Source):
                         (start, stop) = [
                             int(float(x.strip())) for x in re.split(r'-', range_cm)]
                     else:
-                        logger.info(
+                        LOG.info(
                             "A cM range we can't handle for QTL %s: %s",
                             qtl_id, range_cm)
                 elif position_cm != '':
@@ -308,16 +361,18 @@ class AnimalQTLdb(Source):
 
                     # we assume if no src is provided and gene_id is an integer,
                     # then it is an NCBI gene ... (okay, lets crank that back a notch)
-                    if gene_id_src == '' and gene_id.isdigit():
-                        url = self.curiemap['NCBIgene'] + gene_id
-                        logger.warrning('checking if %s goes anywhere', url)
-                        try:  # see if it the int _could_ be an ncbi gene hit
-                            response = requests.head(url)
-                        except requests.exceptions.RequestException:
-                            response.raise_for_status()
-                        if response.status_code == requests.codes.ok:
-                            gene_id_src = 'NCBIgene'
-                            logger.warrning('%s  --> Page is Found', url)
+                    if gene_id_src == '' and gene_id.isdigit() and \
+                            gene_id in self.gene_info:
+                        # it is a ncbi gene hit for the species
+                        gene_id_src = 'NCBIgene'
+                    elif gene_id_src == '' and gene_id.isdigit():
+                        LOG.warning(
+                            'Cold & Prickely saying %s is a NCBI gene for %s',
+                            gene_id, common_name)
+                        gene_id_src = 'NCBIgene'
+                    else:
+                        LOG.error('%s is a NOT NCBI gene for %s', gene_id, common_name)
+                        gene_id_src = None
 
                     if gene_id_src == 'NCBIgene':
                         gene_id = 'NCBIGene:' + gene_id
@@ -367,10 +422,10 @@ class AnimalQTLdb(Source):
                 #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                 if p_values != '':
-                    s = re.sub(r'<', '', p_values)
-                    s = re.sub(r',', '.', s)  # international notation
-                    if s.isnumeric():
-                        score = float(s)
+                    scr = re.sub(r'<', '', p_values)
+                    scr = re.sub(r',', '.', scr)  # international notation
+                    if scr.isnumeric():
+                        score = float(scr)
                         assoc.set_score(score)  # todo add score type
                 # TODO add LOD score?
                 assoc.add_association_to_graph()
@@ -394,10 +449,10 @@ class AnimalQTLdb(Source):
                     #     gu.addIndividualToGraph(g, exp_id, None, eco_id)
 
                     if p_values != '':
-                        s = re.sub(r'<', '', p_values)
-                        s = re.sub(r',', '.', s)
-                        if s.isnumeric():
-                            score = float(s)
+                        scr = re.sub(r'<', '', p_values)
+                        scr = re.sub(r',', '.', scr)
+                        if scr.isnumeric():
+                            score = float(scr)
                             assoc.set_score(score)  # todo add score type
                     # TODO add LOD score?
 
@@ -406,11 +461,11 @@ class AnimalQTLdb(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with QTL genetic info")
+        LOG.info("Done with QTL genetic info")
         return
 
-    def _process_QTLs_genomic_location(
-            self, raw, taxon_id, build_id, build_label, common_name, limit=None):
+    def _process_qtls_genomic_location(
+            self, raw, txid, build_id, build_label, common_name, limit=None):
         """
         This method
 
@@ -427,10 +482,10 @@ class AnimalQTLdb(Source):
         line_counter = 0
         geno = Genotype(graph)
         # assume that chrs get added to the genome elsewhere
-        # genome_id = geno.makeGenomeID(taxon_id)  # TODO unused
 
+        taxon_curie = 'NCBITaxon:' + txid
         eco_id = self.globaltt['quantitative trait analysis evidence']
-        logger.info("Processing QTL locations for %s", taxon_id)
+        LOG.info("Processing QTL locations for %s from %s", taxon_curie, raw)
         with gzip.open(raw, 'rt', encoding='ISO-8859-1') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
@@ -440,14 +495,15 @@ class AnimalQTLdb(Source):
 
                 (chromosome, qtl_source, qtl_type, start_bp, stop_bp, frame, strand,
                  score, attr) = row
-
-                # Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
-                # QTL_ID=2242;Name="Spleen percentage";Abbrev="SPLP";PUBMED_ID=17012160;trait_ID=2234;
-                # trait="Spleen percentage";breed="leghorn";"FlankMarkers=ADL0022";VTO_name="spleen mass";
-                # CMO_name="spleen weight to body weight ratio";Map_Type="Linkage";Model="Mendelian";
-                # Test_Base="Chromosome-wise";Significance="Significant";P-value="<0.05";F-Stat="5.52";
-                # Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01"
-
+                example = '''
+Chr.Z   Animal QTLdb    Production_QTL  33954873      34023581...
+QTL_ID=2242;Name="Spleen percentage";Abbrev="SPLP";PUBMED_ID=17012160;trait_ID=2234;
+trait="Spleen percentage";breed="leghorn";"FlankMarkers=ADL0022";VTO_name="spleen mass";
+MO_name="spleen weight to body weight ratio";Map_Type="Linkage";Model="Mendelian";
+Test_Base="Chromosome-wise";Significance="Significant";P-value="<0.05";F-Stat="5.52";
+Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
+                '''
+                str(example)
                 # make dictionary of attributes
                 # keys are:
                 # QTL_ID,Name,Abbrev,PUBMED_ID,trait_ID,trait,FlankMarkers,
@@ -466,7 +522,6 @@ class AnimalQTLdb(Source):
                 bad_attrs = set()
                 for attributes in attr_items:
                     if not re.search(r'=', attributes):
-                        # bad_attr_flag = True  # TODO unused
                         # remove this attribute from the list
                         bad_attrs.add(attributes)
 
@@ -480,7 +535,7 @@ class AnimalQTLdb(Source):
 
                 qtl_id = common_name + 'QTL:' + str(qtl_num)
                 model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'])
-                geno.addTaxon(taxon_id, qtl_id)
+                geno.addTaxon(taxon_curie, qtl_id)
 
                 trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
 
@@ -517,7 +572,7 @@ class AnimalQTLdb(Source):
 
                 # get location of QTL
                 chromosome = re.sub(r'Chr\.', '', chromosome)
-                chrom_id = makeChromID(chromosome, taxon_id, 'CHR')
+                chrom_id = makeChromID(chromosome, taxon_curie, 'CHR')
 
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
@@ -533,14 +588,14 @@ class AnimalQTLdb(Source):
                 qtl_feature.addFeatureEndLocation(
                     stop_bp, chrom_in_build_id, strand,
                     [self.globaltt['FuzzyPosition']])
-                qtl_feature.addTaxonToFeature(taxon_id)
+                qtl_feature.addTaxonToFeature(taxon_curie)
                 qtl_feature.addFeatureToGraph()
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.warning("Bad attribute flags in this file")
-        logger.info("Done with QTL genomic mappings for %s", taxon_id)
+        LOG.warning("Bad attribute flags in this file")
+        LOG.info("Done with QTL genomic mappings for %s", taxon_curie)
         return
 
     def _process_trait_mappings(self, raw, limit=None):
@@ -566,7 +621,7 @@ class AnimalQTLdb(Source):
                 line_counter += 1
                 # need to skip the last line
                 if len(row) < 8:
-                    logger.info("skipping line %d: %s", line_counter, '\t'.join(row))
+                    LOG.info("skipping line %d: %s", line_counter, '\t'.join(row))
                     continue
                 (vto_id, pto_id, cmo_id, ato_column, species, trait_class,
                  trait_type, qtl_count) = row
@@ -590,7 +645,7 @@ class AnimalQTLdb(Source):
                     model.addClassToGraph(cmo_id, None)
                     model.addXref(ato_id, cmo_id)
 
-        logger.info("Done with trait mappings")
+        LOG.info("Done with trait mappings")
         return
 
     def _map_build_by_abbrev(self, build):
