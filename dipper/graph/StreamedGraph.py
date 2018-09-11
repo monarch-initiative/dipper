@@ -5,7 +5,7 @@ import logging
 import re
 import yaml
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class StreamedGraph(DipperGraph):
@@ -34,8 +34,9 @@ class StreamedGraph(DipperGraph):
         self.file_handle = file_handle
         self.identifier = identifier
    
-    def addTriple(self, subject_id, predicate_id, object_id,
-                  object_is_literal=False, literal_type=None):
+    def addTriple(
+        self, subject_id, predicate_id, object_id, object_is_literal=False,
+        literal_type=None):
         subject_iri = self._getNode(subject_id)
         predicate_iri = self._getNode(predicate_id)
         if not object_is_literal:
@@ -47,10 +48,10 @@ class StreamedGraph(DipperGraph):
             literal_type = self._getNode(literal_type)
 
         if object_id is not None:
-            self.serialize(subject_iri, predicate_iri, obj,
-                           object_is_literal, literal_type)
+            self.serialize(
+                subject_iri, predicate_iri, obj, object_is_literal, literal_type)
         else:
-            logger.warn("Null value passed as object")
+            LOG.warn("Null value passed as object")
         return
 
     def skolemizeBlankNode(self, curie):
