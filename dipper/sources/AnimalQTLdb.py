@@ -149,7 +149,7 @@ class AnimalQTLdb(Source):
             # file_handle=None
         )
 
-        self.gene_info = set()
+        self.gene_info = list()
         return
 
     def fetch(self, is_dl_forced=False):
@@ -189,17 +189,18 @@ class AnimalQTLdb(Source):
             taxon_word = taxon_label.replace(' ', '_')
             gene_info_file = '/'.join(
                 (self.rawdir, self.files[taxon_word + '_info']['file']))
-            self.gene_info = set()
+            self.gene_info = list()
             with gzip.open(gene_info_file, 'rt') as gi_gz:
                 filereader = csv.reader(gi_gz, delimiter='\t')
                 for row in filereader:
                     if row[0][0] == '#':
                         continue
                     else:
-                        self.gene_info.add(row[1])  # yes, tossing lots of good stuff
+                        self.gene_info.append(str(row[1]))  # tossing lots of good stuff
+            LOG.info(
+                'Gene Info for %s has %i enteries', common_name, len(self.gene_info))
+            LOG.info('Gene Info entery looks like %s', self.gene_info[5])
 
-            geno.addGenome(txid_num, self.localtt[common_name])
-            build_id = None
             build = None
 
             fname_bp = common_name + '_bp'
@@ -363,15 +364,18 @@ class AnimalQTLdb(Source):
                     # then it is an NCBI gene ... (okay, lets crank that back a notch)
                     if gene_id_src == '' and gene_id.isdigit() and \
                             gene_id in self.gene_info:
-                        # it is a ncbi gene hit for the species
+                        LOG.info(
+                            'Warm & Fuzzy saying %s is a NCBI gene for %s',
+                            gene_id, common_name)
                         gene_id_src = 'NCBIgene'
                     elif gene_id_src == '' and gene_id.isdigit():
                         LOG.warning(
                             'Cold & Prickely saying %s is a NCBI gene for %s',
                             gene_id, common_name)
                         gene_id_src = 'NCBIgene'
-                    else:
-                        LOG.error('%s is a NOT NCBI gene for %s', gene_id, common_name)
+                    elif gene_id_src == '':
+                        LOG.error(
+                            'Number %s is a NOT NCBI gene for %s', gene_id, common_name)
                         gene_id_src = None
 
                     if gene_id_src == 'NCBIgene':
