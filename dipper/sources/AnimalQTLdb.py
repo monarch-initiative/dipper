@@ -199,7 +199,7 @@ class AnimalQTLdb(Source):
                         self.gene_info.append(str(row[1]))  # tossing lots of good stuff
             LOG.info(
                 'Gene Info for %s has %i enteries', common_name, len(self.gene_info))
-            LOG.info('Gene Info entery looks like %s', self.gene_info[5])
+            # LOG.info('Gene Info entery looks like %s', self.gene_info[5])
 
             build = None
 
@@ -364,9 +364,9 @@ class AnimalQTLdb(Source):
                     # then it is an NCBI gene ... (okay, lets crank that back a notch)
                     if gene_id_src == '' and gene_id.isdigit() and \
                             gene_id in self.gene_info:
-                        LOG.info(
-                            'Warm & Fuzzy saying %s is a NCBI gene for %s',
-                            gene_id, common_name)
+                        # LOG.info(
+                        #    'Warm & Fuzzy saying %s is a NCBI gene for %s',
+                        #    gene_id, common_name)
                         gene_id_src = 'NCBIgene'
                     elif gene_id_src == '' and gene_id.isdigit():
                         LOG.warning(
@@ -375,7 +375,7 @@ class AnimalQTLdb(Source):
                         gene_id_src = 'NCBIgene'
                     elif gene_id_src == '':
                         LOG.error(
-                            'Number %s is a NOT NCBI gene for %s', gene_id, common_name)
+                            ' "%s" is a NOT NCBI gene for %s', gene_id, common_name)
                         gene_id_src = None
 
                     if gene_id_src == 'NCBIgene':
