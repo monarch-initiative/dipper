@@ -112,7 +112,7 @@ class AnimalQTLdb(Source):
         # horse  # "Equus caballus"  # NCBITaxon:9796
         'Equus_caballus_info': {
             'file': 'Equus_caballus.gene_info.gz',
-            'url': GITDIP + '/resources/animalqtldb/Equus_caballus_info.gene_info.gz',
+            'url': GITDIP + '/resources/animalqtldb/Equus_caballus.gene_info.gz',
         },
         # sheep  # "Ovis aries"  # NCBITaxon:9940
         'Ovis_aries_info': {
@@ -190,7 +190,7 @@ class AnimalQTLdb(Source):
             gene_info_file = '/'.join(
                 (self.rawdir, self.files[taxon_word + '_info']['file']))
             self.gene_info = set()
-            with gzip.open(gene_info_file, 'r') as gi_gz:
+            with gzip.open(gene_info_file, 'rt') as gi_gz:
                 filereader = csv.reader(gi_gz, delimiter='\t')
                 for row in filereader:
                     if row[0][0] == '#':
