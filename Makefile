@@ -49,9 +49,37 @@ CTD-test:
 mychem-test:
 	$(TEST) tests/test_mychem.py
 
+GTT = "translationtable/GLOBAL_TERMS.yaml"
 trans-test:
+	# python unit test for duplicate keys and invertablility
 	$(TEST) tests/test_trtable.py
+	# is $(GTT) table ordered by ontology curie
+	@ if sort -k 2,3n -t ':' -s -c $(GTT) ; then echo "Order is okay" ; fi
+	# Are there terms found in the source, but not found in $(GTT)
+	@ scripts/check_labels_v_gtt.sh
 
 omia-int-test:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
+# Generate specalized files from our various mapping files
+
+prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
+
+clean_prefix_equivalents:
+	rm translationtable/generated/prefix_equivalents.yaml
+	rm translationtable/generated/curiemap_prefix.txt
+	rm /tmp/local_inverse.tab
+
+translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
+	@ cut -f1 -d ':' dipper/curie_map.yaml  | tr -d "'" | egrep -v "^$|^ *#" |\
+		sed 's|\(.*\)|"\1"|g' | sort > translationtable/generated/curiemap_prefix.txt
+
+/tmp/local_inverse.tab: translationtable/[a-z_-]*.yaml
+	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
+		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
+			print "\"" $$4 "\"\t\"" $$2 "\""}' \
+				translationtable/[a-z_-]*.yaml | sort > /tmp/local_inverse.tab
+
+translationtable/generated/prefix_equivalents.yaml: translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
+	@ join translationtable/generated/curiemap_prefix.txt  /tmp/local_inverse.tab  |\
+		sed 's|" "|": "|g' >translationtable/generated/prefix_equivalents.yaml
