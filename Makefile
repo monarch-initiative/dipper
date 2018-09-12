@@ -47,8 +47,8 @@ CTD-test:
 	$(TEST) tests/test_ctd.py
 
 mychem-test:
-	$(TEST) tests/test_mychem.T
-	
+	$(TEST) tests/test_mychem.py
+
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 trans-test:
 	# python unit test for duplicate keys and invertablility
@@ -64,6 +64,7 @@ omia-int-test:
 # Generate specalized files from our various mapping files
 
 prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
+
 clean_prefix_equivalents:
 	rm translationtable/generated/prefix_equivalents.yaml
 	rm translationtable/generated/curiemap_prefix.txt
