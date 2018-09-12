@@ -96,9 +96,9 @@ ARGPARSER.add_argument(
 
 ARGPARSER.add_argument(
     '-g', "--globaltt",
-    default=RPATH + '/translationtable/global_terms.yaml',
+    default=RPATH + '/translationtable/GLOBAL_TERMS.yaml',
     help="'potato'\t'PREFIX:p123'   default: " +
-    RPATH + '/translationtable/global_term.yaml')
+    RPATH + '/translationtable/GLOBAL_TERM.yaml')
 
 # OUTPUT '/dev/stdout' would be my first choice
 ARGPARSER.add_argument(

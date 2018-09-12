@@ -17,9 +17,9 @@
 "mosaic": ":mosaic",
 "onset": ":onset",
 "part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication",
- # SEPIO:0000019 found in sepio_developer.owl
- # SEPIO:0000111 -- is not found in sepio
- # PATO_0000470 and GENO:0000876
+ # found in sepio_developer.owl:  SEPIO:0000019 
+ # is not found in sepio:  SEPIO:0000111 -- 
+ # ??? PATO_0000470: GENO:0000876
  # Basic Formal Ontology: "BFO:!!!",
 "part_of": "BFO:0000050",
 "has_part": "BFO:0000051",
@@ -756,5 +756,4 @@
  # "ontology for representing scholarship": "VIVO:!!!",
 "project": "VIVO:Project",
  # "Experimental Conditions Ontology": "XCO:!!!",
-"environmental_condition": "XCO:0000000",
-}
+"environmental_condition": "XCO:0000000", }  # keep terminal closing brace on line

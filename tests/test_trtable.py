@@ -40,7 +40,7 @@ class TranslationTestCase(unittest.TestCase):
 
         yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, no_duplicates_constructor)
 
-        file_path = '../translationtable/global_terms.yaml'
+        file_path = '../translationtable/GLOBAL_TERMS.yaml'
         if os.path.exists(os.path.join(os.path.dirname(__file__), file_path)):
             tt_file = open(os.path.join(os.path.dirname(__file__), file_path), 'r')
             try:
@@ -55,7 +55,7 @@ class TranslationTestCase(unittest.TestCase):
         
  
     def testIfTableIsBiMap(self):
-        file_path = '../translationtable/global_terms.yaml'
+        file_path = '../translationtable/GLOBAL_TERMS.yaml'
         if os.path.exists(os.path.join(os.path.dirname(__file__), file_path)):
             tt_file = open(os.path.join(os.path.dirname(__file__), file_path), 'r')
             translation_table = yaml.load(tt_file)

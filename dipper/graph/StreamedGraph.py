@@ -20,7 +20,7 @@ class StreamedGraph(DipperGraph):
     curie_map = curie_map.get()
     curie_util = CurieUtil(curie_map)
     
-    with open('translationtable/global_terms.yaml') as fh:
+    with open('translationtable/GLOBAL_TERMS.yaml') as fh:
         globaltt = yaml.safe_load(fh).copy()
         globaltcid = {v: k for k, v in globaltt.items()}
 

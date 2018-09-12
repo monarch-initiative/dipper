@@ -28,7 +28,7 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
     curie_util = CurieUtil(curie_map)
 
     # make global translation table available outside the ingest
-    with open('translationtable/global_terms.yaml') as fh:
+    with open('translationtable/GLOBAL_TERMS.yaml') as fh:
         globaltt = yaml.safe_load(fh)
         globaltcid = {v: k for k, v in globaltt.items()}
 

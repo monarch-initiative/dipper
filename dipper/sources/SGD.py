@@ -35,8 +35,6 @@ class SGD(Source):
             file_handle=None
         )
 
-        self.global_terms = Source.open_and_parse_yaml(
-            '../../translationtable/global_terms.yaml')
         self.apo_term_id = SGD.make_apo_map()
 
     def fetch(self, is_dl_forced=False):
