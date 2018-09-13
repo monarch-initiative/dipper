@@ -82,4 +82,5 @@ translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
 
 translationtable/generated/prefix_equivalents.yaml: translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
 	@ join translationtable/generated/curiemap_prefix.txt  /tmp/local_inverse.tab  |\
-		sed 's|" "|": "|g' >translationtable/generated/prefix_equivalents.yaml
+		awk '{v=$$1;$$1="";print $$0 ": " v}' > \
+			translationtable/generated/prefix_equivalents.yaml
