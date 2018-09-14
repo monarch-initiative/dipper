@@ -1,6 +1,5 @@
- "DICTYBASE": "dictyBase"
- "Ensembl": "ENSEMBL"
  "ENSEMBL GENE": "ENSEMBL"
+ "Ensembl": "ENSEMBL"
  "FB": "FlyBase"
  "FLYBASE": "FlyBase"
  "GOC": "GO_REF"
@@ -15,3 +14,4 @@
  "WB_REF": "WormBase"
  "WORMBASE": "WormBase"
  "WORMBASE-OLD": "WormBase"
+ "DICTYBASE": "dictyBase"

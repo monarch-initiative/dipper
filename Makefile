@@ -72,15 +72,17 @@ clean_prefix_equivalents:
 
 translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
 	@ cut -f1 -d ':' dipper/curie_map.yaml  | tr -d "'" | egrep -v "^$|^ *#" |\
-		sed 's|\(.*\)|"\1"|g' | sort > translationtable/generated/curiemap_prefix.txt
+		grep .|sed 's|\(.*\)|"\1"|g'| LANG=en_EN sort > \
+			translationtable/generated/curiemap_prefix.txt
 
 /tmp/local_inverse.tab: translationtable/[a-z_-]*.yaml
 	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
 		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
 			print "\"" $$4 "\"\t\"" $$2 "\""}' \
-				translationtable/[a-z_-]*.yaml | sort > /tmp/local_inverse.tab
+				translationtable/[a-z_-]*.yaml | LANG=en_EN sort > \
+					/tmp/local_inverse.tab
 
 translationtable/generated/prefix_equivalents.yaml: translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
-	@ join translationtable/generated/curiemap_prefix.txt  /tmp/local_inverse.tab  |\
+	@ LANG=en_EN join translationtable/generated/curiemap_prefix.txt  /tmp/local_inverse.tab  |\
 		awk '{v=$$1;$$1="";print $$0 ": " v}' > \
 			translationtable/generated/prefix_equivalents.yaml
