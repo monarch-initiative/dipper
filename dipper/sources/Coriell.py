@@ -17,7 +17,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.DipperUtil import DipperUtil
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Coriell(Source):
@@ -49,27 +49,61 @@ class Coriell(Source):
 
     """
 
+    # head -1 NHGRI.csv | tr "[A-Z]," "[a-z]\n" | \
+    #    awk  -v OFS='"' '{print "", $0, ",\t# " NR - 1}'
+    column_labels = [
+        "catalog_id",   # 0
+        "description",  # 1
+        "omim_num",     # 2
+        "sample_type",  # 3
+        "cell_line_available",  # 4
+        "dna_instock",  # 5
+        "dna_ref",      # 6
+        "gender",       # 7
+        "age",          # 8
+        "race",         # 9
+        "ethnicity",    # 10
+        "affected",     # 11
+        "karyotype",    # 12
+        "relprob",      # 13
+        "mutation",     # 14
+        "gene",         # 15
+        "fam",          # 16
+        "collection",   # 17
+        "url",          # 18
+        "cat_remark",   # 19
+        "pubmed_ids",   # 20
+        "fammember",    # 21
+        "variant_id",   # 22
+        "dbsnp_id",     # 23
+        "species",      # 24
+    ]
+
     files = {
         'NINDS': {
             'file': 'NINDS.csv',
             'id': 'NINDS',
             'label': 'NINDS Human Genetics DNA and Cell line Repository',
-            'page': 'https://catalog.coriell.org/1/NINDS'},
+            'page': 'https://catalog.coriell.org/1/NINDS',
+            'columns': column_labels},
         'NIGMS': {
             'file': 'NIGMS.csv',
             'id': 'NIGMS',
             'label': 'NIGMS Human Genetic Cell Repository',
-            'page': 'https://catalog.coriell.org/1/NIGMS'},
+            'page': 'https://catalog.coriell.org/1/NIGMS',
+            'columns': column_labels},
         'NIA': {
             'file': 'NIA.csv',
             'id': 'NIA',
             'label': 'NIA Aging Cell Repository',
-            'page': 'https://catalog.coriell.org/1/NIA'},
+            'page': 'https://catalog.coriell.org/1/NIA',
+            'columns': column_labels},
         'NHGRI': {
             'file': 'NHGRI.csv',
             'id': 'NHGRI',
             'label': 'NHGRI Sample Repository for Human Genetic Research',
-            'page': 'https://catalog.coriell.org/1/NHGRI'}
+            'page': 'https://catalog.coriell.org/1/NHGRI',
+            'columns': column_labels}
     }
 
     # the following will house the specific cell lines to use for test output
@@ -98,17 +132,17 @@ class Coriell(Source):
         # data-source specific warnings
         # (will be removed when issues are cleared)
 
-        logger.warning(
+        LOG.warning(
             'We assume that if a species is not provided, '
             'that it is a Human-derived cell line')  # wow
-        logger.warning(
+        LOG.warning(
             'We map all omim ids as a disease/phenotype entity, '
             'but should be fixed in the future')  # TODO
 
         # check if config exists; if it doesn't, error out and let user know
         if 'dbauth' not in config.get_config() or \
                 'coriell' not in config.get_config()['dbauth']:
-            logger.error("not configured with FTP user/password.")
+            LOG.error("not configured with FTP user/password.")
 
         return
 
@@ -116,7 +150,7 @@ class Coriell(Source):
         """
         Here we connect to the coriell sftp server using private connection
         details.  They dump bi-weekly files with a timestamp in the filename.
-        For each catalog, we poll the remote site and pull the most-recently
+        For each catalog, we ping the remote site and pull the most-recently
         updated file, renaming it to our local  latest.csv.
 
         Be sure to have pg user/password connection details in your conf.json
@@ -144,49 +178,45 @@ class Coriell(Source):
             files_by_repo = {}
             for attr in remote_files:
                 # for each catalog, get the most-recent filename
-                m = re.match('(NIGMS|NIA|NHGRI|NINDS)', attr.filename)
-                if m is not None and len(m.groups()) > 0:
+                mch = re.match('(NIGMS|NIA|NHGRI|NINDS)', attr.filename)
+                if mch is not None and len(mch.groups()) > 0:
                     # there should just be one now
-                    files_by_repo[m.group(1)] = attr
+                    files_by_repo[mch.group(1)] = attr
             # sort each array in hash,
             # & get the name and time of the most-recent file for each catalog
-            for r in self.files:
-                logger.info("Checking on %s catalog file", r)
-                fname = self.files[r]['file']
-                remotef = files_by_repo[r]
+            for rmt in self.files:
+                LOG.info("Checking on %s catalog file", rmt)
+                fname = self.files[rmt]['file']
+                remotef = files_by_repo[rmt]
                 target_name = '/'.join((self.rawdir, fname))
                 # check if the local file is out of date, if so, download.
                 # otherwise, skip.
                 # we rename (for simplicity) the original file
-                st = None
+                fstat = None
                 if os.path.exists(target_name):
-                    st = os.stat(target_name)
-                    logger.info(
+                    fstat = os.stat(target_name)
+                    LOG.info(
                         "Local file date: %s",
-                        datetime.utcfromtimestamp(st[stat.ST_CTIME]))
-                if st is None or remotef.st_mtime > st[stat.ST_CTIME]:
-                    if st is None:
-                        logger.info(
-                            "File does not exist locally; downloading...")
+                        datetime.utcfromtimestamp(fstat[stat.ST_CTIME]))
+                if fstat is None or remotef.st_mtime > fstat[stat.ST_CTIME]:
+                    if fstat is None:
+                        LOG.info("File does not exist locally; downloading...")
                     else:
-                        logger.info(
-                            "There's a new version of %s catalog available; "
-                            "downloading...", r)
+                        LOG.info(
+                            "New version of %s catalog available; downloading...", rmt)
                     sftp.get(remotef.filename, target_name)
-                    logger.info(
-                        "Fetched remote %s -> %s",
-                        remotef.filename, target_name)
-                    st = os.stat(target_name)
+                    LOG.info(
+                        "Fetched remote %s -> %s", remotef.filename, target_name)
+                    fstat = os.stat(target_name)
                     filedate = datetime.utcfromtimestamp(
                         remotef.st_mtime).strftime("%Y-%m-%d")
-                    logger.info(
+                    LOG.info(
                         "New file date: %s",
-                        datetime.utcfromtimestamp(st[stat.ST_CTIME]))
-
+                        datetime.utcfromtimestamp(fstat[stat.ST_CTIME]))
                 else:
-                    logger.info("File %s exists; using local copy", fname)
+                    LOG.info("File %s exists; using local copy", fname)
                     filedate = datetime.utcfromtimestamp(
-                        st[stat.ST_CTIME]).strftime("%Y-%m-%d")
+                        fstat[stat.ST_CTIME]).strftime("%Y-%m-%d")
 
                 self.dataset.setFileAccessUrl(remotef.filename, True)
                 self.dataset.setVersion(filedate)
@@ -194,25 +224,23 @@ class Coriell(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
-
-        logger.info("Parsing files...")
+            LOG.info("Only parsing first %s rows of each file", limit)
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
-        for f in self.files:
-            file = '/'.join((self.rawdir, self.files[f]['file']))
+        for source in self.files:
             self._process_collection(
-                self.files[f]['id'],
-                self.files[f]['label'],
-                self.files[f]['page'])
-            self._process_data(file, limit)
+                self.files[source]['id'],
+                self.files[source]['label'],
+                self.files[source]['page'])
+            self._process_data(source, limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
         return
 
-    def _process_data(self, raw, limit=None):
+    def _process_data(self, source, limit=None):
         """
         This function will process the data files from Coriell.
         We make the assumption that any alleles listed are variants
@@ -255,8 +283,9 @@ class Coriell(Source):
         :return:
 
         """
+        raw = '/'.join((self.rawdir, self.files[source]['file']))
 
-        logger.info("Processing Data from %s", raw)
+        LOG.info("Processing Data from %s", raw)
 
         if self.testMode:      # set the graph to build
             graph = self.testgraph
@@ -266,426 +295,450 @@ class Coriell(Source):
         family = Family(graph)
         model = Model(graph)
 
-        line_counter = 0
+        line_counter = 1
         geno = Genotype(graph)
-        du = DipperUtil()
+        diputil = DipperUtil()
+        col = self.files[source]['columns']
+        # affords access with
+        # x = row[col.index('x')].strip()
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            filereader = csv.reader(csvfile, delimiter=',', quotechar=r'"')
             next(filereader, None)  # skip the header row
             for row in filereader:
-                if not row:
-                    pass
+                line_counter += 1
+                if len(row) != len(col):
+                    LOG.warning(
+                        'Expected %i values but find %i in  row %i',
+                        len(col), len(row), line_counter)
+                    continue
+
+                # (catalog_id, description, omim_number, sample_type,
+                # cell_line_available, dna_in_stock, dna_ref, gender, age,
+                # race, ethnicity, affected, karyotype, relprob, mutation,
+                # gene, family_id, collection, url, cat_remark, pubmed_ids,
+                # family_member, variant_id, dbsnp_id, species) = row
+
+                # example:
+                # GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,
+                #       ,Female,26 YR,Caucasian,,,,
+                # parent,,,39,NIGMS Human Genetic Cell Repository,
+                # http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM00003,
+                # 46;XX; clinically normal mother of a child with Hurler syndrome;
+                #       proband not in Repository,,
+                # 2,,18343,Homo sapiens
+
+                catalog_id = row[col.index('catalog_id')].strip()
+
+                if self.testMode and catalog_id not in self.test_lines:
+                    # skip rows not in our test lines, when in test mode
+                    continue
+
+                # ###########    BUILD REQUIRED VARIABLES    ###########
+
+                # Make the cell line ID
+                cell_line_id = 'Coriell:' + catalog_id
+                # Map the cell/sample type
+                cell_type = self.resolve(row[col.index('sample_type')].strip())
+                # on fail cell_type = self.globaltt['cell'] ?
+
+                # Make a cell line label
+                collection = row[col.index('collection')].strip()
+                line_label = collection.partition(' ')[0] + '-' + catalog_id
+
+                # Map the repository/collection
+                repository = self.localtt[collection]
+
+                # patients are uniquely identified by one of:
+                # dbsnp id (which is == an individual haplotype)
+                # family id + family member (if present) OR
+                # probands are usually family member zero
+                # cell line id
+                # since some patients have >1 cell line derived from them,
+                # we must make sure that the genotype is attached to
+                # the patient, and can be inferred to the cell line
+                # examples of repeated patients are:
+                #   famid=1159, member=1; fam=152,member=1
+
+                # Make the patient ID
+
+                # make an anonymous patient
+                patient_id = '_:person'
+                fam_id = row[col.index('fam')].strip()
+                fammember = row[col.index('fammember')].strip()
+                if fam_id != '':
+                    patient_id = '-'.join((patient_id, fam_id, fammember))
                 else:
-                    line_counter += 1
-
-                    (catalog_id, description, omim_number, sample_type,
-                     cell_line_available, dna_in_stock, dna_ref, gender, age,
-                     race, ethnicity, affected, karyotype, relprob, mutation,
-                     gene, family_id, collection, url, cat_remark, pubmed_ids,
-                     family_member, variant_id, dbsnp_id, species) = row
-
-                    # example:
-                    # GM00003,HURLER SYNDROME,607014,Fibroblast,Yes,No,
-                    #       ,Female,26 YR,Caucasian,,,,
-                    # parent,,,39,NIGMS Human Genetic Cell Repository,
-                    # http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM00003,
-                    # 46;XX; clinically normal mother of a child with Hurler syndrome;
-                    #       proband not in Repository,,
-                    # 2,,18343,Homo sapiens
-
-                    if self.testMode and catalog_id not in self.test_lines:
-                        # skip rows not in our test lines, when in test mode
-                        continue
-
-                    # ###########    BUILD REQUIRED VARIABLES    ###########
-
-                    # Make the cell line ID
-                    cell_line_id = 'Coriell:'+catalog_id.strip()
-
-                    # Map the cell/sample type
-                    cell_type = self.resolve(sample_type)
-                    # on fail cell_type = self.globaltt['cell'] ?
-
-                    # Make a cell line label
-                    line_label = collection.partition(' ')[0]+'-'+catalog_id.strip()
-
-                    # Map the repository/collection
-                    repository = self.localtt[collection]
-
-                    # patients are uniquely identified by one of:
-                    # dbsnp id (which is == an individual haplotype)
-                    # family id + family member (if present) OR
-                    # probands are usually family member zero
-                    # cell line id
-                    # since some patients have >1 cell line derived from them,
-                    # we must make sure that the genotype is attached to
-                    # the patient, and can be inferred to the cell line
-                    # examples of repeated patients are:
-                    #   famid=1159, member=1; fam=152,member=1
-
-                    # Make the patient ID
-
                     # make an anonymous patient
-                    patient_id = '_:person'
-                    if family_id != '':
-                        patient_id = '-'.join((patient_id, family_id, family_member))
-                    else:
-                        # make an anonymous patient
-                        patient_id = '-'.join((patient_id, catalog_id.strip()))
+                    patient_id = '-'.join((patient_id, catalog_id))
 
-                    # properties of the individual patients:  sex, family id,
-                    # member/relproband, description descriptions are
-                    # really long and ugly SCREAMING text, so need to clean up
-                    # the control cases are so odd with this labeling scheme;
-                    # but we'll deal with it as-is for now.
-                    short_desc = (description.split(';')[0]).capitalize()
+                # properties of the individual patients:  sex, family id,
+                # member/relproband, description descriptions are
+                # really long and ugly SCREAMING text, so need to clean up
+                # the control cases are so odd with this labeling scheme;
+                # but we'll deal with it as-is for now.
+                description = row[col.index('description')].strip()
+                short_desc = (description.split(';')[0]).capitalize()
 
-                    gender = gender.lower()
-                    patient_label = ' '.join((self.resolve(affected, False), gender, relprob))
-                    if relprob == 'proband':
-                        patient_label = ' '.join((
-                            patient_label.strip(), 'with', short_desc))
-                    else:
-                        patient_label = ' '.join((
-                            patient_label.strip(), 'of proband with', short_desc))
+                gender = row[col.index('gender')].strip().lower()
+                affected = row[col.index('affected')].strip()
+                relprob = row[col.index('relprob')].strip()
 
-                    # #############    BUILD THE CELL LINE    #############
+                patient_label = ' '.join(
+                    (self.resolve(affected, False), gender, relprob))
+                if relprob == 'proband':
+                    patient_label = ' '.join((
+                        patient_label.strip(), 'with', short_desc))
+                else:
+                    patient_label = ' '.join((
+                        patient_label.strip(), 'of proband with', short_desc))
 
-                    # Adding the cell line as a typed individual.
-                    cell_line_reagent_id = self.globaltt['cell line']
+                # #############    BUILD THE CELL LINE    #############
 
+                # Adding the cell line as a typed individual.
+                cell_line_reagent_id = self.globaltt['cell line']
+
+                model.addIndividualToGraph(
+                    cell_line_id, line_label, cell_line_reagent_id)
+
+                # add the equivalent id == dna_ref
+                dna_ref = row[col.index('dna_ref')].strip()
+                if dna_ref != '' and dna_ref != catalog_id:
+                    equiv_cell_line = 'Coriell:' + dna_ref
+                    # some of the equivalent ids are not defined
+                    # in the source data; so add them
                     model.addIndividualToGraph(
-                        cell_line_id, line_label, cell_line_reagent_id)
+                        equiv_cell_line, None, cell_line_reagent_id)
+                    model.addSameIndividual(cell_line_id, equiv_cell_line)
 
-                    # add the equivalent id == dna_ref
-                    if dna_ref != '' and dna_ref != catalog_id:
-                        equiv_cell_line = 'Coriell:'+dna_ref
-                        # some of the equivalent ids are not defined
-                        # in the source data; so add them
-                        model.addIndividualToGraph(
-                            equiv_cell_line, None, cell_line_reagent_id)
-                        model.addSameIndividual(cell_line_id, equiv_cell_line)
+                # Cell line derives from patient
+                geno.addDerivesFrom(cell_line_id, patient_id)
+                geno.addDerivesFrom(cell_line_id, cell_type)
 
-                    # Cell line derives from patient
-                    geno.addDerivesFrom(cell_line_id, patient_id)
-                    geno.addDerivesFrom(cell_line_id, cell_type)
+                # Cell line a member of repository
+                family.addMember(repository, cell_line_id)
 
-                    # Cell line a member of repository
-                    family.addMember(repository, cell_line_id)
+                cat_remark = row[col.index('cat_remark')].strip()
 
-                    if cat_remark != '':
-                        model.addDescription(cell_line_id, cat_remark)
+                if cat_remark != '':
+                    model.addDescription(cell_line_id, cat_remark)
 
-                    # Cell age_at_sampling
-                    # TODO add the age nodes when modeled properly in #78
-                    # if (age != ''):
-                        # this would give a BNode that is an instance of Age.
-                        # but i don't know how to connect
-                        # the age node to the cell line? we need to ask @mbrush
-                        # age_id = '_'+re.sub('\s+','_',age)
-                        # gu.addIndividualToGraph(
-                        #   graph,age_id,age,self.globaltt['age'])
-                        # gu.addTriple(
-                        #   graph,age_id,self.globaltt['has measurement value'],age,
-                        #   True)
+                # Cell age_at_sampling
+                # TODO add the age nodes when modeled properly in #78
+                # if (age != ''):
+                    # this would give a BNode that is an instance of Age.
+                    # but i don't know how to connect
+                    # the age node to the cell line? we need to ask @mbrush
+                    # age_id = '_'+re.sub('\s+','_',age)
+                    # gu.addIndividualToGraph(
+                    #   graph,age_id,age,self.globaltt['age'])
+                    # gu.addTriple(
+                    #   graph,age_id,self.globaltt['has measurement value'],age,
+                    #   True)
 
-                    # #############    BUILD THE PATIENT    #############
+                # #############    BUILD THE PATIENT    #############
 
-                    # Add the patient ID as an individual.
-                    model.addPerson(patient_id, patient_label)
-                    # TODO map relationship to proband as a class
-                    # (what ontology?)
+                # Add the patient ID as an individual.
+                model.addPerson(patient_id, patient_label)
+                # TODO map relationship to proband as a class
+                # (what ontology?)
 
-                    # Add race of patient
-                    # FIXME: Adjust for subcategories based on ethnicity field
-                    # EDIT: There are 743 different entries for ethnicity...
-                    # Too many to map?
-                    # Add ethnicity as literal in addition to the mapped race?
-                    # Adjust the ethnicity txt (if using)
-                    # to initial capitalization to remove ALLCAPS
+                # Add race of patient
+                # FIXME: Adjust for subcategories based on ethnicity field
+                # EDIT: There are 743 different entries for ethnicity...
+                # Too many to map?
+                # Add ethnicity as literal in addition to the mapped race?
+                # Adjust the ethnicity txt (if using)
+                # to initial capitalization to remove ALLCAPS
 
-                    # TODO race should go into the individual's background
-                    # and abstracted out to the Genotype class punting for now.
-                    # if race != '':
-                    #    mapped_race = self.resolve(race)
-                    #    if mapped_race is not None:
-                    #        gu.addTriple(
-                    #           g,patient_id,self.globaltt['race'], mapped_race)
-                    #        model.addSubClass(
-                    #           mapped_race,self.globaltt['ethnic_group'])
+                # TODO race should go into the individual's background
+                # and abstracted out to the Genotype class punting for now.
+                # if race != '':
+                #    mapped_race = self.resolve(race)
+                #    if mapped_race is not None:
+                #        gu.addTriple(
+                #           g,patient_id,self.globaltt['race'], mapped_race)
+                #        model.addSubClass(
+                #           mapped_race,self.globaltt['ethnic_group'])
 
-                    # #############    BUILD THE FAMILY    #############
+                # #############    BUILD THE FAMILY    #############
 
-                    # Add triples for family_id, if present.
-                    if family_id != '':
-                        family_comp_id = 'CoriellFamily:'+family_id
+                # Add triples for family_id, if present.
+                if fam_id != '':
+                    family_comp_id = 'CoriellFamily:' + fam_id
 
-                        family_label = ' '.join(('Family of proband with', short_desc))
+                    family_label = ' '.join(('Family of proband with', short_desc))
 
-                        # Add the family ID as a named individual
-                        model.addIndividualToGraph(
-                            family_comp_id, family_label, self.globaltt['family'])
+                    # Add the family ID as a named individual
+                    model.addIndividualToGraph(
+                        family_comp_id, family_label, self.globaltt['family'])
 
-                        # Add the patient as a member of the family
-                        family.addMemberOf(patient_id, family_comp_id)
+                    # Add the patient as a member of the family
+                    family.addMemberOf(patient_id, family_comp_id)
 
-                    # #############    BUILD THE GENOTYPE   #############
+                # #############    BUILD THE GENOTYPE   #############
 
-                    # the important things to pay attention to here are:
-                    # karyotype = chr rearrangements  (somatic?)
-                    # mutation = protein-level mutation as a label,
-                    # often from omim
-                    # gene = gene symbol - TODO get id
-                    # variant_id = omim variant ids (; delimited)
-                    # dbsnp_id = snp individual ids = full genotype?
+                # the important things to pay attention to here are:
+                # karyotype = chr rearrangements  (somatic?)
+                # mutation = protein-level mutation as a label,
+                # often from omim
+                # gene = gene symbol - TODO get id
+                # variant_id = omim variant ids (; delimited)
+                # dbsnp_id = snp individual ids = full genotype?
 
-                    # note GM00633 is a good example of chromosomal variation
-                    # - do we have enough to capture this?
-                    # GM00325 has both abnormal karyotype and variation
+                # note GM00633 is a good example of chromosomal variation
+                # - do we have enough to capture this?
+                # GM00325 has both abnormal karyotype and variation
 
-                    # make an assumption that if the taxon is blank,
-                    # that it is human!
-                    if species is None or species == '':
-                        species = 'Homo sapiens'
-                    taxon = self.resolve(species)
+                # make an assumption that if the taxon is blank,
+                # that it is human!
+                species = row[col.index('species')].strip()
+                if species is None or species == '':
+                    species = 'Homo sapiens'
+                taxon = self.resolve(species)
 
-                    # if there's a dbSNP id,
-                    # this is actually the individual's genotype
-                    genotype_id = None
-                    genotype_label = None
-                    if dbsnp_id != '':
-                        genotype_id = 'dbSNPIndividual:' + dbsnp_id.strip()
+                # if there's a dbSNP id,
+                # this is actually the individual's genotype
+                genotype_id = None
+                genotype_label = None
 
+                dbsnp_id = row[col.index('dbsnp_id')].strip()
+                if dbsnp_id != '':
+                    genotype_id = 'dbSNPIndividual:' + dbsnp_id
+
+                omim_map = {}
+                gvc_id = None
+
+                # some of the karyotypes are encoded
+                # with terrible hidden codes. remove them here
+                # i've seen a <98> character
+                karyotype = row[col.index('karyotype')].strip()
+                karyotype = diputil.remove_control_characters(karyotype)
+                karyotype_id = None
+                if karyotype.strip() != '':
+                    karyotype_id = '_:'+re.sub(
+                        'MONARCH:', '', self.make_id(karyotype))
+                    # add karyotype as karyotype_variation_complement
+                    model.addIndividualToGraph(
+                        karyotype_id, karyotype,
+                        self.globaltt['karyotype_variation_complement'])
+                    # TODO break down the karyotype into parts
+                    # and map into GENO. depends on #77
+
+                    # place the karyotype in a location(s).
+                    karyo_chrs = self._get_affected_chromosomes_from_karyotype(
+                        karyotype)
+                    for chrom in karyo_chrs:
+                        chr_id = makeChromID(chrom, taxon, 'CHR')
+                        # add an anonymous sequence feature,
+                        # each located on chr
+                        karyotype_feature_id = '-'.join((karyotype_id, chrom))
+                        karyotype_feature_label = \
+                            'some karyotype alteration on chr' + str(chrom)
+                        feat = Feature(
+                            graph, karyotype_feature_id, karyotype_feature_label,
+                            self.globaltt['sequence_alteration'])
+                        feat.addFeatureStartLocation(None, chr_id)
+                        feat.addFeatureToGraph()
+                        geno.addParts(
+                            karyotype_feature_id, karyotype_id,
+                            self.globaltt['has_variant_part'])
+
+                gene = row[col.index('gene')].strip()
+                mutation = row[col.index('mutation')].strip()
+                if gene != '':
+                    vl = gene + '(' + mutation + ')'
+
+                # fix the variant_id so it's always in the same order
+                variant_id = row[col.index('variant_id')].strip()
+                vids = variant_id.split(';')
+                variant_id = ';'.join(sorted(list(set(vids))))
+
+                if karyotype.strip() != '' and not self._is_normal_karyotype(
+                        karyotype):
+
+                    gvc_id = karyotype_id
+                    if variant_id != '':
+                        gvc_id = '_:' + variant_id.replace(';', '-') + '-' \
+                            + re.sub(r'\w*:', '', karyotype_id)
+                    if mutation.strip() != '':
+                        gvc_label = '; '.join((vl, karyotype))
+                    else:
+                        gvc_label = karyotype
+                elif variant_id.strip() != '':
+                    gvc_id = '_:' + variant_id.replace(';', '-')
+                    gvc_label = vl
+                else:
+                    # wildtype?
+                    pass
+
+                # add the karyotype to the gvc.
+                # use reference if normal karyotype
+                karyo_rel = self.globaltt['has_variant_part']
+                if self._is_normal_karyotype(karyotype):
+                    karyo_rel = self.globaltt['has_reference_part']
+                if karyotype_id is not None \
+                        and not self._is_normal_karyotype(karyotype) \
+                        and gvc_id is not None and karyotype_id != gvc_id:
+                    geno.addParts(karyotype_id, gvc_id, karyo_rel)
+
+                if variant_id.strip() != '':
+                    # split the variants & add them as part of the genotype
+                    # we don't necessarily know their zygosity,
+                    # just that they are part of the genotype variant ids
+                    # are from OMIM, so prefix as such we assume that the
+                    # sequence alts will be defined in OMIM not here
+                    # TODO sort the variant_id list, if the omim prefix is
+                    # the same, then assume it's the locus make a hashmap
+                    # of the omim id to variant id list;
+                    # then build the genotype hashmap is also useful for
+                    # removing the "genes" from the list of "phenotypes"
+
+                    # will hold gene/locus id to variant list
                     omim_map = {}
-                    gvc_id = None
 
-                    # some of the karyotypes are encoded
-                    # with terrible hidden codes. remove them here
-                    # i've seen a <98> character
-                    karyotype = du.remove_control_characters(karyotype)
-                    karyotype_id = None
-                    if karyotype.strip() != '':
-                        karyotype_id = '_:'+re.sub(
-                            'MONARCH:', '', self.make_id(karyotype))
-                        # add karyotype as karyotype_variation_complement
+                    locus_num = None
+                    for var in variant_id.split(';'):
+                        # handle omim-style and odd var ids
+                        # like 610661.p.R401X
+                        mch = re.match(r'(\d+)\.+(.*)', var.strip())
+                        if mch is not None and len(mch.groups()) == 2:
+                            (locus_num, var_num) = mch.groups()
+
+                        if locus_num is not None and locus_num not in omim_map:
+                            omim_map[locus_num] = [var_num]
+                        else:
+                            omim_map[locus_num] += [var_num]
+
+                    for omim in omim_map:
+                        # gene_id = 'OMIM:' + omim  # TODO unused
+                        vslc_id = '_:' + '-'.join(
+                            [omim + '.' + a for a in omim_map.get(omim)])
+                        vslc_label = vl
+                        # we don't really know the zygosity of
+                        # the alleles at all.
+                        # so the vslcs are just a pot of them
                         model.addIndividualToGraph(
-                            karyotype_id, karyotype,
-                            self.globaltt['karyotype_variation_complement'])
-                        # TODO break down the karyotype into parts
-                        # and map into GENO. depends on #77
+                            vslc_id, vslc_label,
+                            self.globaltt['variant single locus complement'])
+                        for var in omim_map.get(omim):
+                            # this is actually a sequence alt
+                            allele1_id = 'OMIM:' + omim + '.' + var
+                            geno.addSequenceAlteration(allele1_id, None)
 
-                        # place the karyotype in a location(s).
-                        karyo_chrs = self._get_affected_chromosomes_from_karyotype(
-                                karyotype)
-                        for c in karyo_chrs:
-                            chr_id = makeChromID(c, taxon, 'CHR')
-                            # add an anonymous sequence feature,
-                            # each located on chr
-                            karyotype_feature_id = '-'.join((karyotype_id, c))
-                            karyotype_feature_label = \
-                                'some karyotype alteration on chr'+str(c)
-                            f = Feature(
-                                graph, karyotype_feature_id,
-                                karyotype_feature_label,
-                                self.globaltt['sequence_alteration'])
-                            f.addFeatureStartLocation(None, chr_id)
-                            f.addFeatureToGraph()
-                            geno.addParts(
-                                karyotype_feature_id, karyotype_id,
+                            # assume that the sa -> var_loc -> gene
+                            # is taken care of in OMIM
+                            geno.addPartsToVSLC(
+                                vslc_id, allele1_id, None,
+                                self.globaltt['indeterminate'],
                                 self.globaltt['has_variant_part'])
 
-                    if gene != '':
-                        vl = gene+'('+mutation+')'
+                        if vslc_id != gvc_id:
+                            geno.addVSLCtoParent(vslc_id, gvc_id)
 
-                    # fix the variant_id so it's always in the same order
-                    vids = variant_id.split(';')
-                    variant_id = ';'.join(sorted(list(set(vids))))
+                if affected == 'unaffected':
+                    # let's just say that this person is wildtype
+                    model.addType(patient_id, self.globaltt['wildtype'])
+                elif genotype_id is None:
+                    # make an anonymous genotype id (aka blank node)
+                    genotype_id = '_:geno' + catalog_id.strip()
 
-                    if karyotype.strip() != '' \
-                            and not self._is_normal_karyotype(karyotype):
-                        mutation = mutation.strip()
-                        gvc_id = karyotype_id
-                        if variant_id != '':
-                            gvc_id = '_:' + variant_id.replace(';', '-') + '-' \
-                                + re.sub(r'\w*:', '', karyotype_id)
-                        if mutation.strip() != '':
-                            gvc_label = '; '.join((vl, karyotype))
+                # add the gvc
+                if gvc_id is not None:
+                    model.addIndividualToGraph(
+                        gvc_id, gvc_label,
+                        self.globaltt['genomic_variation_complement'])
+
+                    # add the gvc to the genotype
+                    if genotype_id is not None:
+                        if affected == 'unaffected':
+                            rel = self.globaltt['has_reference_part']
                         else:
-                            gvc_label = karyotype
-                    elif variant_id.strip() != '':
-                        gvc_id = '_:' + variant_id.replace(';', '-')
-                        gvc_label = vl
-                    else:
-                        # wildtype?
-                        pass
+                            rel = self.globaltt['has_variant_part']
+                        geno.addParts(gvc_id, genotype_id, rel)
 
-                    # add the karyotype to the gvc.
-                    # use reference if normal karyotype
-                    karyo_rel = self.globaltt['has_variant_part']
-                    if self._is_normal_karyotype(karyotype):
-                        karyo_rel = self.globaltt['has_reference_part']
                     if karyotype_id is not None \
-                            and not self._is_normal_karyotype(karyotype) \
-                            and gvc_id is not None and karyotype_id != gvc_id:
-                        geno.addParts(karyotype_id, gvc_id, karyo_rel)
-
-                    if variant_id.strip() != '':
-                        # split the variants & add them as part of the genotype
-                        # we don't necessarily know their zygosity,
-                        # just that they are part of the genotype variant ids
-                        # are from OMIM, so prefix as such we assume that the
-                        # sequence alts will be defined in OMIM not here
-                        # TODO sort the variant_id list, if the omim prefix is
-                        # the same, then assume it's the locus make a hashmap
-                        # of the omim id to variant id list;
-                        # then build the genotype hashmap is also useful for
-                        # removing the "genes" from the list of "phenotypes"
-
-                        # will hold gene/locus id to variant list
-                        omim_map = {}
-
-                        locus_num = None
-                        for v in variant_id.split(';'):
-                            # handle omim-style and odd var ids
-                            # like 610661.p.R401X
-                            m = re.match(r'(\d+)\.+(.*)', v.strip())
-                            if m is not None and len(m.groups()) == 2:
-                                (locus_num, var_num) = m.groups()
-
-                            if locus_num is not None and locus_num not in omim_map:
-                                omim_map[locus_num] = [var_num]
-                            else:
-                                omim_map[locus_num] += [var_num]
-
-                        for o in omim_map:
-                            # gene_id = 'OMIM:' + o  # TODO unused
-                            vslc_id = '_:' + '-'.join(
-                                [o + '.' + a for a in omim_map.get(o)])
-                            vslc_label = vl
-                            # we don't really know the zygosity of
-                            # the alleles at all.
-                            # so the vslcs are just a pot of them
-                            model.addIndividualToGraph(
-                                vslc_id, vslc_label,
-                                self.globaltt['variant single locus complement'])
-                            for v in omim_map.get(o):
-                                # this is actually a sequence alt
-                                allele1_id = 'OMIM:'+o+'.'+v
-                                geno.addSequenceAlteration(allele1_id, None)
-
-                                # assume that the sa -> var_loc -> gene
-                                # is taken care of in OMIM
-                                geno.addPartsToVSLC(
-                                    vslc_id, allele1_id, None,
-                                    self.globaltt['indeterminate'],
-                                    self.globaltt['has_variant_part'])
-
-                            if vslc_id != gvc_id:
-                                geno.addVSLCtoParent(vslc_id, gvc_id)
-
-                    if affected == 'unaffected':
-                        # let's just say that this person is wildtype
-                        model.addType(patient_id, self.globaltt['wildtype'])
-                    elif genotype_id is None:
-                        # make an anonymous genotype id (aka blank node)
-                        genotype_id = '_:geno'+catalog_id.strip()
-
-                    # add the gvc
-                    if gvc_id is not None:
-                        model.addIndividualToGraph(
-                            gvc_id, gvc_label,
-                            self.globaltt['genomic_variation_complement'])
-
-                        # add the gvc to the genotype
-                        if genotype_id is not None:
-                            if affected == 'unaffected':
-                                rel = self.globaltt['has_reference_part']
-                            else:
-                                rel = self.globaltt['has_variant_part']
-                            geno.addParts(gvc_id, genotype_id, rel)
-
-                        if karyotype_id is not None \
-                                and self._is_normal_karyotype(karyotype):
-                            if gvc_label is not None and gvc_label != '':
-                                genotype_label = '; '.join((gvc_label, karyotype))
-                            elif karyotype is not None:
-                                genotype_label = karyotype
-                            if genotype_id is None:
-                                genotype_id = karyotype_id
-                            else:
-                                geno.addParts(
-                                    karyotype_id, genotype_id,
-                                    self.globaltt['has_reference_part'])
+                            and self._is_normal_karyotype(karyotype):
+                        if gvc_label is not None and gvc_label != '':
+                            genotype_label = '; '.join((gvc_label, karyotype))
+                        elif karyotype is not None:
+                            genotype_label = karyotype
+                        if genotype_id is None:
+                            genotype_id = karyotype_id
                         else:
-                            genotype_label = gvc_label
-                            # use the catalog id as the background
-                        genotype_label += ' ['+catalog_id.strip()+']'
-
-                    if genotype_id is not None and gvc_id is not None:
-                        # only add the genotype if it has some parts
-                        geno.addGenotype(
-                            genotype_id, genotype_label,
-                            self.globaltt['intrinsic_genotype'])
-                        geno.addTaxon(taxon, genotype_id)
-                        # add that the patient has the genotype
-                        # TODO check if the genotype belongs to
-                        # the cell line or to the patient
-                        graph.addTriple(
-                            patient_id,
-                            self.globaltt['has_genotype'], genotype_id)
+                            geno.addParts(
+                                karyotype_id, genotype_id,
+                                self.globaltt['has_reference_part'])
                     else:
-                        geno.addTaxon(taxon, patient_id)
+                        genotype_label = gvc_label
+                        # use the catalog id as the background
+                    genotype_label += ' ['+catalog_id.strip()+']'
 
-                    # TODO: Add sex/gender  (as part of the karyotype?)
+                if genotype_id is not None and gvc_id is not None:
+                    # only add the genotype if it has some parts
+                    geno.addGenotype(
+                        genotype_id, genotype_label,
+                        self.globaltt['intrinsic_genotype'])
+                    geno.addTaxon(taxon, genotype_id)
+                    # add that the patient has the genotype
+                    # TODO check if the genotype belongs to
+                    # the cell line or to the patient
+                    graph.addTriple(
+                        patient_id, self.globaltt['has_genotype'], genotype_id)
+                else:
+                    geno.addTaxon(taxon, patient_id)
 
-                    # #############    DEAL WITH THE DISEASES   #############
+                # TODO: Add sex/gender  (as part of the karyotype?)
+                # = row[col.index('')].strip()
+                # #############    DEAL WITH THE DISEASES   #############
+                omim_num = row[col.index('omim_num')].strip()
 
-                    # we associate the disease to the patient
-                    if affected == 'affected':
-                        if omim_number != '':
-                            for d in omim_number.split(';'):
-                                if d is not None and d != '':
-                                    # if the omim number is in omim_map,
-                                    # then it is a gene not a pheno
-                                    if d not in omim_map:
-                                        disease_id = 'OMIM:'+d.strip()
-                                        # assume the label is taken care of
-                                        model.addClassToGraph(disease_id, None)
+                # we associate the disease to the patient
+                if affected == 'affected' and omim_num != '':
+                    for d in omim_num.split(';'):
+                        if d is not None and d != '':
+                            # if the omim number is in omim_map,
+                            # then it is a gene not a pheno
 
-                                        # add the association:
-                                        #   the patient has the disease
-                                        assoc = G2PAssoc(
-                                            graph, self.name,
-                                            patient_id, disease_id)
-                                        assoc.add_association_to_graph()
+                            # TEC - another place to use the mimTitle omim
+                            # classifier onia & genereviews is using
 
-                                        # this line is a model of this disease
-                                        # TODO abstract out model into
-                                        # it's own association class?
-                                        graph.addTriple(
-                                            cell_line_id,
-                                            self.globaltt['is model of'],
-                                            disease_id)
-                                    else:
-                                        logger.info(
-                                            'removing %s from disease list ' +
-                                            'since it is a gene', d)
+                            if d not in omim_map:
+                                disease_id = 'OMIM:' + d.strip()
+                                # assume the label is taken care of in OMIM
+                                model.addClassToGraph(disease_id, None)
 
-                    # #############    ADD PUBLICATIONS   #############
+                                # add the association:
+                                #   the patient has the disease
+                                assoc = G2PAssoc(
+                                    graph, self.name,
+                                    patient_id, disease_id)
+                                assoc.add_association_to_graph()
 
-                    if pubmed_ids != '':
-                        for s in pubmed_ids.split(';'):
-                            pubmed_id = 'PMID:'+s.strip()
-                            ref = Reference(graph, pubmed_id)
-                            ref.setType(self.globaltt['journal article'])
-                            ref.addRefToGraph()
-                            graph.addTriple(
-                                pubmed_id, self.globaltt['mentions'], cell_line_id)
+                                # this line is a model of this disease
+                                # TODO abstract out model into
+                                # it's own association class?
+                                graph.addTriple(
+                                    cell_line_id,
+                                    self.globaltt['is model of'],
+                                    disease_id)
+                            else:
+                                LOG.info('drop gene %s from disease list', d)
 
-                    if not self.testMode and (
-                            limit is not None and line_counter > limit):
-                        break
+                # #############    ADD PUBLICATIONS   #############
+                pubmed_ids = row[col.index('pubmed_ids')].strip()
+                if pubmed_ids != '':
+                    for s in pubmed_ids.split(';'):
+                        pubmed_id = 'PMID:' + s.strip()
+                        ref = Reference(graph, pubmed_id)
+                        ref.setType(self.globaltt['journal article'])
+                        ref.addRefToGraph()
+                        graph.addTriple(
+                            pubmed_id, self.globaltt['mentions'], cell_line_id)
+
+                if not self.testMode and (
+                        limit is not None and line_counter > limit):
+                    break
         return
 
     def _process_collection(self, collection_id, label, page):
@@ -708,7 +761,7 @@ class Coriell(Source):
             # TODO: How to devise a label for each repository?
             model = Model(graph)
             reference = Reference(graph)
-            repo_id = 'CoriellCollection:'+collection_id
+            repo_id = 'CoriellCollection:' + collection_id
             repo_label = label
             repo_page = page
 
@@ -722,6 +775,7 @@ class Coriell(Source):
     def _get_affected_chromosomes_from_karyotype(karyotype):
 
         affected_chromosomes = set()
+        # precompile these?
         chr_regex = r'(\d+|X|Y|M|\?);?'
         abberation_regex = r'(?:add|del|der|i|idic|inv|r|rec|t)\([\w;]+\)'
         sex_regex = r'(?:;)(X{2,}Y+|X?Y{2,}|X{3,}|X|Y)(?:;|$)'
