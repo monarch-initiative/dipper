@@ -393,7 +393,7 @@ class Coriell(Source):
 
                 if affected == '':
                     affected = 'unspecified'
-                if affected in self.localtt:
+                elif affected in self.localtt:
                     affected = self.localtt[affected]
                 else:
                     LOG.warning(
