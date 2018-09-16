@@ -399,8 +399,7 @@ class Coriell(Source):
                     LOG.warning(
                         'Novel Affected status  %s at row: %i of %s',
                         affected, line_counter, raw)
-                patient_label = ' '.join(
-                    (self.resolve(affected, False), gender, relprob))
+                patient_label = ' '.join((affected, gender, relprob))
                 if relprob == 'proband':
                     patient_label = ' '.join((
                         patient_label.strip(), 'with', short_desc))
