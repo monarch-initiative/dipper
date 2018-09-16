@@ -306,7 +306,7 @@ class Coriell(Source):
             filereader = csv.reader(csvfile, delimiter=',', quotechar=r'"')
             # we can keep a close watch on changing file formats
             fileheader = next(filereader, None)
-            fileheader = [c.ascii_lowercase for c in fileheader]
+            fileheader = [c.lower() for c in fileheader]
             if col != fileheader:  # assert
                 LOG.error('Expected  %s to have columns: %s', raw, col)
                 LOG.error('But Found %s to have columns: %s', raw, fileheader)
