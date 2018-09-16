@@ -304,7 +304,14 @@ class Coriell(Source):
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter=',', quotechar=r'"')
-            next(filereader, None)  # skip the header row
+            # we can keep a close watch on changing file formats
+            fileheader = next(filereader, None)
+            fileheader = [c.ascii_lowercase for c in fileheader]
+            if col != fileheader:  # assert
+                LOG.error('Expected  %s to have columns: %s', raw, col)
+                LOG.error('But Found %s to have columns: %s', raw, fileheader)
+                raise AssertionError('Incomming data headers have changed.')
+
             for row in filereader:
                 line_counter += 1
                 if len(row) != len(col):
@@ -384,6 +391,14 @@ class Coriell(Source):
                 affected = row[col.index('affected')].strip()
                 relprob = row[col.index('relprob')].strip()
 
+                if affected == '':
+                    affected = 'unspecified'
+                if affected in self.localtt:
+                    affected = self.localtt[affected]
+                else:
+                    LOG.warning(
+                        'Novel Affected status  %s at row: %i of %s',
+                        affected, line_counter, raw)
                 patient_label = ' '.join(
                     (self.resolve(affected, False), gender, relprob))
                 if relprob == 'proband':
