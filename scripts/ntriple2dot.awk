@@ -122,6 +122,8 @@ BEGIN{
     prefix["http://www.ncbi.nlm.nih.gov/gene/"]="NCBIGene"
 	# kegg
 	prefix["http://identifiers.org/ec-code/"]="EC"
+	# ensembl
+	prefix["http://identifiers.org/hgnc/"]="HGN"
 
 	# playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier
