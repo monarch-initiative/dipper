@@ -195,7 +195,7 @@
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
 
 # proteins
-'EC': 'http://www.enzyme-database.org/query.php?ec='                            # Enzyme Nomenclature
+'EC': 'http://www.enzyme-database.org/query.php?ec='                            # Enzyme Commission (nomenclature)
 'HPRD': 'http://www.hprd.org/protein/'                                          # Human Protein Reference Database
 'NCBIProtein': 'http://www.ncbi.nlm.nih.gov/protein/'                           # NCBI amino acid sequences
 'PDB': 'http://www.ebi.ac.uk/pdbsum/'                                           # Protein Data Bank
