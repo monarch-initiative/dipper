@@ -63,6 +63,7 @@
 # affected
 "Yes": "affected"
 "No": "unaffected"
+#"":  "unspecified"   # defaulting to
 
 
 
