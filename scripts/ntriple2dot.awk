@@ -22,7 +22,7 @@ function usage(){
 }
 
 ##########################################################
-# remove first and last chars from input string <>
+# remove first and last chars from input string
 function trim(str){
 	return substr(str,2,length(str)-2)
 }
@@ -94,30 +94,57 @@ BEGIN{
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
 	############################################################
-	# re-visit whether these exceptions are still necessary often
+	# Often re-visit whether these exceptions are still necessary
 	# they may have been moved into the curie prefix mapping file
+	# or addressed in a local translation table
     # https://raw.githubusercontent.com/monarch-initiative/dipper/master/dipper/curie_map.yaml
 
 	# in mgi
 	prefix["https://www.mousephenotype.org"]="IMPC"
-    	# in IMPC
+    # in IMPC (not httpS)
 	prefix["http://www.mousephenotype.org"]="IMPC"
+	# note in curie_map IMPC is:
+	# http://www.mousephenotype.org/data/genes/
 
-    # http://www.mousephenotype.org/data/genes
 	# in panther
 	# prefix["http://identifiers.org/wormbase/"]="WormBase"
+	# note in curie_map WormBase is
+	# 'https://www.wormbase.org/get?name='
 
 	# in GWAScatalog
 	prefix["http://www.ncbi.nlm.nih.gov/SNP/"]="dbSNP"
+	# note in curie_map WormBase is
+	# 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
 
+	# Ensembl  transient
+	prefix["http://identifiers.org/ensembl/"]="ENSEMBL"
+	# various, transient
+    prefix["http://www.ncbi.nlm.nih.gov/gene/"]="NCBIGene"
+	# kegg
+	prefix["http://identifiers.org/ec-code/"]="EC"
+	# ensembl
+	prefix["http://identifiers.org/hgnc/"]="HGN"
+
+	# playing with the idea of a LOCAL identifier
+    # not the same as a bnode in that tools won't rewrite identifier
+	# and their IRI are unroutable, i.e in same machine (or local net)
+	# this is motivated in part by not wanting to publish
+	# urls to our own servers which go nowhere.
+	prefix["https://127.0.0.1/.well-known/genid"]="BNODE"  # exists, phase out
+	prefix["http://0.0.0.0/.well-known/genid"]="BNODE"     # prefer
+	prefix["http://0.0.0.0/"]="LCL"	                       # ID halfway house
+
+	# LCL's obvious down side is zero options for global collisions
+	# best you can do is go the uuid which is ugly, or
+	# belive your obscure but readable string _is_ a special snowflake
 }
 
 # main loop
 # parse and stash the curie yaml file (first file)
 # YAML format is tic delimited word (the curi prefix)
-# optional whitespace, a colon, optional whitespace
+# a colon, whitespace
 # then a tic delimited url
-# (FNR == NR) && /^'[^']*' *: 'http[^']*'.*/ { # loosing some?
+# (FNR == NR) && /^'[^']*': 'http[^']*'.*/ { # loosing some?
 (FNR == NR) && /^'.*/ {
 	split($0, arr, "'")
 	if(arr[2]=="")
@@ -128,7 +155,7 @@ BEGIN{
 # process the ntriple file(s)  which are not the first file
 
 ### subject predicate and object are all uri
-(FNR != NR) && /^<[^>]*> <[^>]*> <[^>]*> \.$/ {
+(FNR != NR) && /^<[^>]*> <[^>]+> <[^>]+> \.$/ {
 	s = contract(stripid(trim($1)))
 	p =  final(trim($2))
 	ns = contract(stripid(trim($2)))
@@ -187,7 +214,7 @@ BEGIN{
 	printf("ERROR? in %s at line %i:  %s\n",FILENAME,FNR,$0) > "/dev/stderr"
 }
 
-# output dot file, include edge counts
+# output graphviz dot file, include edge counts
 END{
 	print "digraph {"
 	print "rankdir=LR;"

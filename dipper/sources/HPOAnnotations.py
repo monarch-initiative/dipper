@@ -90,8 +90,8 @@ class HPOAnnotations(Source):
             'hpoa',
             ingest_title='Human Phenotype Ontology',
             ingest_url='https://hpo.jax.org/app/',
-            license_url='https://hpo.jax.org/app/license'
-            # data_rights=None,
+            license_url=None,
+            data_rights='https://hpo.jax.org/app/license',
             # file_handle=None
         )
         self.dataset.set_citation('https://hpo.jax.org/app/citation')
@@ -257,7 +257,7 @@ class HPOAnnotations(Source):
 
                 model.addClassToGraph(disease_id, None)
                 model.addClassToGraph(pheno_id, None)
-                eco_id = self._map_evidence_to_codes(eco)
+                eco_id = self.localtt[eco]
                 model.addClassToGraph(eco_id, None)
                 if onset is not None and onset != '':
                     model.addClassToGraph(onset, None)
@@ -540,9 +540,10 @@ class HPOAnnotations(Source):
                         assoc.onset = age_of_onset_id
                     if frequency != '':
                         assoc.frequency = frequency
-                    eco_id = self._map_evidence_to_codes(eid)
+                    eco_id = self.self.localtt[eid]
                     if eco_id is None:
-                        eco_id = self._map_evidence_to_codes('ITM')
+                        eco_id = self.self.localtt['ITM']
+
                     assoc.add_evidence(eco_id)
                     # TODO add sex? - not in dataset yet
                     if description != '':
