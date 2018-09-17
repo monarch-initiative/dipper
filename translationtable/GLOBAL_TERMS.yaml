@@ -117,7 +117,7 @@
 "inference from phenotype manipulation evidence": "ECO:0005612",
 "inference by association of genotype from phenotype": "ECO:0005613",
 # "Data and Methods Ontology": "EDAM-DATA:!!!",
-"gene_family": "EDAM-DATA:3148"
+"gene_family": "EDAM-DATA:3148",
 # "Experimental Factor Ontology": "EFO:!!!",
 "age": "EFO:0000246",
 "sampling_time": "EFO:0000689",
