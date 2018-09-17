@@ -134,7 +134,7 @@ class Coriell(Source):
 
         LOG.warning(
             'We assume that if a species is not provided, '
-            'that it is a Human-derived cell line')  # wow
+            'that it is a Human-derived cell line')
         LOG.warning(
             'We map all omim ids as a disease/phenotype entity, '
             'but should be fixed in the future')  # TODO
@@ -143,6 +143,7 @@ class Coriell(Source):
         if 'dbauth' not in config.get_config() or \
                 'coriell' not in config.get_config()['dbauth']:
             LOG.error("not configured with FTP user/password.")
+            # raise error
 
         return
 
@@ -715,7 +716,7 @@ class Coriell(Source):
                             # then it is a gene not a pheno
 
                             # TEC - another place to use the mimTitle omim
-                            # classifier onia & genereviews is using
+                            # classifier omia & genereviews are using
 
                             if d not in omim_map:
                                 disease_id = 'OMIM:' + d.strip()
