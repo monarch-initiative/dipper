@@ -33,7 +33,7 @@
 'CL': 'http://purl.obolibrary.org/obo/CL_'                          # Cell Ontology (cell types)
 'CLO': 'http://purl.obolibrary.org/obo/CLO_'                        # Cell Line Ontology
 'CMO': 'http://purl.obolibrary.org/obo/CMO_'                        # Clinical Measurements Ontology
-'DATA': 'http://edamontology.org/data_'                             # Data and Methods Ontology (data artifacts)
+'EDAM-DATA': 'http://edamontology.org/data_'                        # Data and Methods Ontology (data artifacts)
 'DC_CL': 'http://purl.obolibrary.org/obo/DC_CL'                     #  *** seeing it fixed in github but not yet live was `DC`
 'DECIPHER': 'http://purl.obolibrary.org/obo/DECIPHER_'              # Deciphering Developmental Disease
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'                      # Human Disease Ontology
@@ -208,6 +208,7 @@
 'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'
 'IMPRESS-protocol': 'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
+
 
 #Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound
