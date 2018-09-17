@@ -16,7 +16,7 @@ from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper import config
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 HPOADL = \
     'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
@@ -97,13 +97,13 @@ class HPOAnnotations(Source):
 
         if 'test_ids' not in config.get_config()\
                 or 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+            LOG.warning("not configured with disease test ids.")
             self.test_ids = []
         else:
             self.test_ids = config.get_config()['test_ids']['disease']
 
         # data-source specific warnings to be removed when issues are cleared
-        logger.warning(
+        LOG.warning(
             "note that some ECO classes are missing for ICE, PCS, and ITM;" +
             " using temporary mappings.")
 
@@ -152,38 +152,38 @@ class HPOAnnotations(Source):
 
         # scrub file of the oddities...lots of publication rewriting
         f = '/'.join((self.rawdir, self.files['annot']['file']))
-        logger.info('scrubbing PubMed:12345 --> PMID:12345')
+        LOG.info('scrubbing PubMed:12345 --> PMID:12345')
         pysed.replace(r'PubMed:', 'PMID:', f)
 
-        logger.info('scrubbing pmid:12345 --> PMID:12345')
+        LOG.info('scrubbing pmid:12345 --> PMID:12345')
         pysed.replace(r'pmid:', 'PMID:', f)
 
-        logger.info('scrubbing PMID:    12345 --> PMID:12345')
+        LOG.info('scrubbing PMID:    12345 --> PMID:12345')
         pysed.replace(r'PMID:  *', 'PMID:', f)
 
-        logger.info('scrubbing PMID12345 --> PMID:12345')
+        LOG.info('scrubbing PMID12345 --> PMID:12345')
         pysed.replace(r'PMID([0-9][0-9]*)', r'PMID:\1', f)
 
-        logger.info('scrubbing MIM12345 --> OMIM:12345')
+        LOG.info('scrubbing MIM12345 --> OMIM:12345')
         pysed.replace(r'MIM([0-9][0-9]*)', r'OMIM:\1', f)
 
-        logger.info('scrubbing MIM:12345 --> OMIM:12345')
+        LOG.info('scrubbing MIM:12345 --> OMIM:12345')
         pysed.replace(r";MIM", ";OMIM", f)
 
-        logger.info('scrubbing ORPHANET --> Orphanet')
+        LOG.info('scrubbing ORPHANET --> Orphanet')
         pysed.replace("ORPHANET", "Orphanet", f)
 
-        logger.info('scrubbing ORPHA --> Orphanet')
+        LOG.info('scrubbing ORPHA --> Orphanet')
         pysed.replace("ORPHA", "Orphanet", f)
         return
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows", limit)
+            LOG.info("Only parsing first %s rows", limit)
 
         self.add_common_files_to_file_list()
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -199,7 +199,7 @@ class HPOAnnotations(Source):
         # common disease-phenotype associations from text mining work
         self.process_all_common_disease_files(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         return
 
@@ -251,7 +251,7 @@ class HPOAnnotations(Source):
                     except AttributeError:
                         continue
 
-                # logger.info('adding %s', disease_id)
+                # LOG.info('adding %s', disease_id)
 
                 model.addClassToGraph(disease_id, None)
                 model.addClassToGraph(pheno_id, None)
@@ -275,7 +275,7 @@ class HPOAnnotations(Source):
                     assoc = DispositionAssoc(
                         graph, self.name, disease_id, pheno_id)
                 else:
-                    logger.error("I don't know what this aspect is: %s", asp)
+                    LOG.error("I don't know what this aspect is: %s", asp)
 
                 assoc.add_evidence(eco_id)
 
@@ -330,7 +330,7 @@ class HPOAnnotations(Source):
                         elif re.match(r'http', pub):
                             pass
                         else:
-                            logger.error(
+                            LOG.error(
                                 'Unknown pub type for %s: %s', disease_id, pub)
                             print(disease_id, 'pubs:', str(publist))
                             continue
@@ -366,7 +366,7 @@ class HPOAnnotations(Source):
         if os.path.isdir(repo_dir):
             shutil.rmtree(repo_dir)
 
-        logger.info("Cloning common disease files from %s", REMOTE_URL)
+        LOG.info("Cloning common disease files from %s", REMOTE_URL)
         try:
             Repo.clone_from(REMOTE_URL, repo_dir)
         except GitCommandError:
@@ -392,7 +392,7 @@ class HPOAnnotations(Source):
                 # need to get git version somehow?
             }
             # TODO add this to the dataset
-        logger.info("Found %d common disease files", fcount)
+        LOG.info("Found %d common disease files", fcount)
 
         return
 
@@ -408,7 +408,7 @@ class HPOAnnotations(Source):
         self.replaced_id_count = 0
         unpadded_doids = self.get_doid_ids_for_unpadding()
         total_processed = 0
-        logger.info("Iterating over all common disease files")
+        LOG.info("Iterating over all common disease files")
         common_file_count = 0
         for f in self.files:
             if not re.match(r'common', f):
@@ -419,8 +419,8 @@ class HPOAnnotations(Source):
                 raw, unpadded_doids, limit)
             if not self.testMode and limit is not None and total_processed > limit:
                 break
-        logger.info("Finished iterating over all common disease files.")
-        logger.info("Fixed %d/%d incorrectly zero-padded ids",
+        LOG.info("Finished iterating over all common disease files.")
+        LOG.info("Fixed %d/%d incorrectly zero-padded ids",
                     self.replaced_id_count, common_file_count)
         return
 
@@ -438,7 +438,7 @@ class HPOAnnotations(Source):
 
         """
 
-        logger.info("Building list of non-zero-padded DOIDs")
+        LOG.info("Building list of non-zero-padded DOIDs")
         raw_file = '/'.join((self.rawdir, self.files['doid']['file']))
         doids = set()
         # scan the file and get all doids
@@ -456,7 +456,7 @@ class HPOAnnotations(Source):
             if not re.match(r'^0', str(num)):
                 nopad_doids.add(num)
 
-        logger.info(
+        LOG.info(
             "Found %d/%d DOIDs are not zero-padded", len(nopad_doids), len(doids))
 
         return nopad_doids
@@ -487,7 +487,7 @@ class HPOAnnotations(Source):
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = csvfile.readline()  # skip the header row
-            logger.info("HEADER: %s", header)
+            LOG.info("HEADER: %s", header)
             disease_id = None
             for row in filereader:
 
@@ -499,10 +499,10 @@ class HPOAnnotations(Source):
                      pub_ids, assigned_by,
                      date_created) = [str(col).strip() for col in row]
                 else:
-                    logger.warning(
+                    LOG.warning(
                         "Wrong number of columns! expected 21, got: %s in: %s",
                         len(row), raw)
-                    logger.warning("%s", row)
+                    LOG.warning("%s", row)
                     continue
                 # b/c "PMID:    17223397"
                 pub_ids = re.sub(r'  *', '', pub_ids)
@@ -510,7 +510,7 @@ class HPOAnnotations(Source):
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
                 if not re.search(r'(DOID\:|MESH\:\w)\d+', disease_id):
-                    logger.warning("Invalid id format: %s", disease_id)
+                    LOG.warning("Invalid id format: %s", disease_id)
 
                 # figure out if the doid should be unpadded,
                 # then use the unpadded version instead
@@ -567,9 +567,9 @@ class HPOAnnotations(Source):
                     break
 
             if replace_id_flag:
-                logger.info("replaced DOID with unpadded version")
+                LOG.info("replaced DOID with unpadded version")
                 self.replaced_id_count += 1
-            logger.info(
+            LOG.info(
                 "Added %d associations for %s.", assoc_count, disease_id)
         return assoc_count
 
