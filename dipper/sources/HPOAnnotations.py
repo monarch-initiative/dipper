@@ -378,7 +378,7 @@ class HPOAnnotations(Source):
 
     def add_common_files_to_file_list(self):
         repo_dir = '/'.join((self.rawdir, 'git'))
-        common_disease_dir = '/'.join((repo_dir, 'common-diseases'))
+        common_disease_dir = '/'.join((repo_dir, 'common-diseases-mondo'))
 
         # add the files to the self.files object
         filelist = os.listdir(common_disease_dir)

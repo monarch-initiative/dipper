@@ -38,7 +38,7 @@
 'DECIPHER': 'http://purl.obolibrary.org/obo/DECIPHER_'              # Deciphering Developmental Disease
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'                      # Human Disease Ontology
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'                        # Evidence Code Ontology
-'EFO': 'http://purl.obolibrary.org/obo/EFO_'                        # Experimental Factor Ontology (all kinds of stuff)
+'EFO': 'http://www.ebi.ac.uk/efo/EFO_'                              # Experimental Factor Ontology (all kinds of stuff)
 'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'                      # Environment Ontology
 'EOM': 'http://purl.obolibrary.org/obo/EOM_'                        # Elements of Morphology phentoypes
 'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource Ontology
