@@ -13,8 +13,7 @@ from dipper.models.Model import Model
 from dipper import config
 from dipper.utils.DipperUtil import DipperUtil
 
-
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class KEGG(Source):
@@ -119,7 +118,7 @@ class KEGG(Source):
         # otherwise, warn
         if 'test_ids' not in config.get_config() or\
                 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+            LOG.warning("not configured with disease test ids.")
         else:
             self.test_ids['disease'] += \
                 config.get_config()['test_ids']['disease']
@@ -145,9 +144,9 @@ class KEGG(Source):
 
         """
         if limit is not None:
-            logger.info("Only parsing first %s rows fo each file", str(limit))
+            LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -172,7 +171,7 @@ class KEGG(Source):
         #     file = '/'.join((self.rawdir, self.files[f]['file']))
         #     self._process_orthologs(file, limit)  # DONE #
 
-        logger.info("Finished parsing")
+        LOG.info("Finished parsing")
 
         return
 
@@ -192,7 +191,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing pathways")
+        LOG.info("Processing pathways")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -222,7 +221,7 @@ class KEGG(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with pathways")
+        LOG.info("Done with pathways")
         return
 
     def _process_diseases(self, limit=None):
@@ -237,7 +236,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing diseases")
+        LOG.info("Processing diseases")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -268,7 +267,7 @@ class KEGG(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with diseases")
+        LOG.info("Done with diseases")
         return
 
     def _process_genes(self, limit=None):
@@ -289,7 +288,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing genes")
+        LOG.info("Processing genes")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -351,7 +350,7 @@ class KEGG(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with genes")
+        LOG.info("Done with genes")
         return
 
     def _process_ortholog_classes(self, limit=None):
@@ -370,7 +369,7 @@ class KEGG(Source):
         :return:
         """
 
-        logger.info("Processing ortholog classes")
+        LOG.info("Processing ortholog classes")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -417,12 +416,12 @@ class KEGG(Source):
                     ec_matches = re.findall(r'((?:\d+|\.|-){5,7})', d)
                     if ec_matches is not None:
                         for ecm in ec_matches:
-                            model.addXref(orthology_class_id, 'EC:'+ecm)
+                            model.addXref(orthology_class_id, 'EC:' + ecm)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with ortholog classes")
+        LOG.info("Done with ortholog classes")
         return
 
     def _process_orthologs(self, raw, limit=None):
@@ -440,7 +439,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing orthologs")
+        LOG.info("Processing orthologs")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -472,7 +471,7 @@ class KEGG(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info("Done with orthologs")
+        LOG.info("Done with orthologs")
         return
 
     def _process_kegg_disease2gene(self, limit=None):
@@ -493,7 +492,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing KEGG disease to gene")
+        LOG.info("Processing KEGG disease to gene")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -525,7 +524,7 @@ class KEGG(Source):
                         disease_label = self.label_hash[disease_id]
                     if re.search(r'includ', str(disease_label)):
                         # they use 'including' when it's a grouping class
-                        logger.info(
+                        LOG.info(
                             "Skipping this association because " +
                             "it's a grouping class: %s",
                             disease_label)
@@ -547,8 +546,8 @@ class KEGG(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with KEGG disease to gene")
-        logger.info("Found %d diseases with no omim id", len(noomimset))
+        LOG.info("Done with KEGG disease to gene")
+        LOG.info("Found %d diseases with no omim id", len(noomimset))
 
         return
 
@@ -572,7 +571,7 @@ class KEGG(Source):
         :return:
         """
 
-        logger.info("Processing OMIM to KEGG gene")
+        LOG.info("Processing OMIM to KEGG gene")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -618,12 +617,12 @@ class KEGG(Source):
 
                 elif link_type == 'original':
                     # these are sometimes a gene, and sometimes a disease
-                    logger.info(
+                    LOG.info(
                         'Unable to handle original link for %s-%s',
                         kegg_gene_id, omim_id)
                 else:
                     # don't know what these are
-                    logger.warning(
+                    LOG.warning(
                         'Unhandled link type for %s-%s: %s',
                         kegg_gene_id, omim_id, link_type)
 
@@ -631,7 +630,7 @@ class KEGG(Source):
                         limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with OMIM to KEGG gene")
+        LOG.info("Done with OMIM to KEGG gene")
 
         return
 
@@ -651,7 +650,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing 1:1 KEGG disease to OMIM disease mappings")
+        LOG.info("Processing 1:1 KEGG disease to OMIM disease mappings")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -702,7 +701,7 @@ class KEGG(Source):
                 # gu.addXref(g, omim_disease_id, kegg_disease_id)
                 # TODO add xrefs if >1:1 mapping?
 
-        logger.info("Done with KEGG disease to OMIM disease mappings.")
+        LOG.info("Done with KEGG disease to OMIM disease mappings.")
         return
 
     def _process_genes_kegg2ncbi(self, limit=None):
@@ -719,7 +718,7 @@ class KEGG(Source):
 
         """
 
-        logger.info("Processing KEGG gene IDs to NCBI gene IDs")
+        LOG.info("Processing KEGG gene IDs to NCBI gene IDs")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -751,7 +750,7 @@ class KEGG(Source):
                 if (not self.testMode) and (limit is not None and line_counter > limit):
                     break
 
-        logger.info("Done with KEGG gene IDs to NCBI gene IDs")
+        LOG.info("Done with KEGG gene IDs to NCBI gene IDs")
         return
 
     def _process_pathway_pubmed(self, limit):
@@ -761,7 +760,7 @@ class KEGG(Source):
         :param limit:
         :return:
         """
-        logger.info("Processing KEGG pathways to pubmed ids")
+        LOG.info("Processing KEGG pathways to pubmed ids")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -801,7 +800,7 @@ class KEGG(Source):
         :return:
 
         """
-        logger.info("Processing KEGG pathways to disease ids")
+        LOG.info("Processing KEGG pathways to disease ids")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -840,7 +839,7 @@ class KEGG(Source):
         :return:
 
         """
-        logger.info("Processing KEGG pathways to other ids")
+        LOG.info("Processing KEGG pathways to other ids")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -876,7 +875,7 @@ class KEGG(Source):
 
         :return:
         """
-        logger.info("Processing KEGG pathways to kegg ortholog classes")
+        LOG.info("Processing KEGG pathways to kegg ortholog classes")
         if self.testMode:
             graph = self.testgraph
         else:
