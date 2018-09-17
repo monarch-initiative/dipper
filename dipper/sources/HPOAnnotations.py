@@ -1,12 +1,10 @@
 import csv
 import os
-from datetime import datetime
-from stat import ST_CTIME
 import logging
 import re
 import shutil
-
-#import git
+from datetime import datetime
+from stat import ST_CTIME
 from git import Repo
 from git import GitCommandError
 
@@ -362,6 +360,7 @@ class HPOAnnotations(Source):
         repo_dir = '/'.join((self.rawdir, 'git'))
         REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
         HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
+        # GITRAW =
 
         # TODO if repo doesn't exist, then clone otherwise pull
         if os.path.isdir(repo_dir):
@@ -369,10 +368,10 @@ class HPOAnnotations(Source):
 
         logger.info("Cloning common disease files from %s", REMOTE_URL)
         try:
-            git.Repo.clone_from(REMOTE_URL, repo_dir)
-        except Exception:  # git.GitCommandError:
+            Repo.clone_from(REMOTE_URL, repo_dir)
+        except GitCommandError:
             # Try with https and if this doesn't work fail
-            git.Repo.clone_from(HTTPS_URL, repo_dir)
+            Repo.clone_from(HTTPS_URL, repo_dir)
 
         return
 
@@ -492,7 +491,7 @@ class HPOAnnotations(Source):
             disease_id = None
             for row in filereader:
 
-                if 21 == len(row):
+                if len(row) == 21:
                     (did, dname, gid, gene_name, genotype, gene_symbols,
                      phenotype_id, phenotype_name, age_of_onset_id,
                      age_of_onset_name, eid, evidence_name, frequency, sex_id,
