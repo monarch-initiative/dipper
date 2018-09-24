@@ -1244,15 +1244,3 @@ def get_omim_id_from_entry(entry):
     return omimid
 
 
-# used in GeneReviews
-# @staticmethod
-# def filter_keep_phenotype_entry_ids(entry, globaltt):
-#    ''' should get rid of this '''
-#    omim_id = get_omim_id_from_entry(entry['entry'])
-#    omim_type = OMIM._get_omimtype(entry['entry'], globaltt)
-#    if omim_type != globaltt['gene'] and omim_type != globaltt['biological_region']:
-#        # note: omim_type is never set to 'biological_region'
-#        # can be set to 'heritable_phenotypic_marker'  (see ~20 lines up)
-#        return omim_id
-#
-#    return None
