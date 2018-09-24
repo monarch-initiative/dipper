@@ -458,6 +458,7 @@
 # "Resource Description Framework": "rdf:!!!",
 "type": "rdf:type",
 # "Resource Description Framework Schema": "rdfs:!!!",
+"domain": "rdfs:domain",
 "label": "rdfs:label",
 "subclass_of": "rdfs:subClassOf",
 "subPropertyOf": "rdfs:subPropertyOf",
