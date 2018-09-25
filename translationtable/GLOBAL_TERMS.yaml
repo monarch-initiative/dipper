@@ -137,6 +137,7 @@
 # "Environment Ontology": "ENVO:!!!",
 "environmental_system": "ENVO:01000254",
 # "Eeagle-i Resource Ontology": "ERO:!!!",
+"reagent": "ERO:0000006",  # to be split into REO terms ...eventually
 "has_author": "ERO:0000232",
 "has_url": "ERO:0000480",
 "Native American": "ERO:0001984",
@@ -462,9 +463,9 @@
 "label": "rdfs:label",
 "subclass_of": "rdfs:subClassOf",
 "subPropertyOf": "rdfs:subPropertyOf",
-# "REO": "REO:!!!"                     _NOT_ in Curie_map.yaml
-"morpholio_reagent": "REO:0000042",
-"talen_reagent": "REO:0001022",
+# "REO": "REO:!!!"                     _NOT_ in Curie_map.yaml (see ERO:6)
+# "morpholio_reagent": "REO:0000042",
+# "talen_reagent": "REO:0001022",
 # "crispr_reagent": "REO:crispr_TBD",
 # "Relationship Ontology": "RO:!!!",
 "has_participant": "RO:0000057",
