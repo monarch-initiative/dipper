@@ -9,10 +9,9 @@ logger = logging.getLogger(__name__)
 # default configuration
 conf = {
   "keys": {
-    "omim" : ''
+    "omim": ''
   }
 }
-
 
 '''
     Load the configuration file 'conf.json', if it exists.
