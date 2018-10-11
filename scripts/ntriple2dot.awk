@@ -93,6 +93,7 @@ BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
+	prefid["https_archive_monarchinitiative_org_"]="MonarchArchive
 	############################################################
 	# Often re-visit whether these exceptions are still necessary
 	# they may have been moved into the curie prefix mapping file
@@ -123,7 +124,7 @@ BEGIN{
 	# kegg
 	prefix["http://identifiers.org/ec-code/"]="EC"
 	# ensembl
-	prefix["http://identifiers.org/hgnc/"]="HGN"
+	prefix["http://identifiers.org/hgnc/HGNC:"]="HGNC"
 
 	# playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier

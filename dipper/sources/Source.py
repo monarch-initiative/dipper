@@ -748,9 +748,9 @@ class Source:
         composite mapping
         given f(x) and g(x)
         here: localtt & globaltt respectivly
-        return g(x)|g(f(x))|f(x)|x in order of preference
+        return g(f(x))|g(x)||f(x)|x in order of preference
         returns x on fall through if finding a mapping
-        is not manditory (by default finding is mandatory).
+        is not mandatory (by default finding is mandatory).
 
         This may be specialized further from any mapping
         to a global mapping only; if need be.
@@ -765,9 +765,11 @@ class Source:
 
         '''
 
-        if word is not None and word in self.globaltt:
-            term_id = self.globaltt[word]
-        elif word is not None and word in self.localtt:
+        assert word is not None
+
+        # we may not agree with a remote sources use of our global term we have
+        # this provides oppertunity for us to overide
+        if word in self.localtt:
             label = self.localtt[word]
             if label in self.globaltt:
                 term_id = self.globaltt[label]
@@ -775,9 +777,11 @@ class Source:
                 logging.info(
                     "Translated to '%s' but no global term_id for: '%s'", label, word)
                 term_id = label
+        elif word in self.globaltt:
+            term_id = self.globaltt[word]
         else:
             if mandatory:
-                raise KeyError("Mapping required for: '%s'", word)
+                raise KeyError("Mapping required for: ", word)
             else:
                 logging.warning("We have no translation for: '%s'", word)
                 term_id = word
