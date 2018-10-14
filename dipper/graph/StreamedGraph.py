@@ -1,9 +1,10 @@
-from dipper.graph.Graph import Graph as DipperGraph
-from dipper.utils.CurieUtil import CurieUtil
-from dipper import curie_map
 import logging
 import re
 import yaml
+
+from dipper.graph.Graph import Graph as DipperGraph
+from dipper.utils.CurieUtil import CurieUtil
+from dipper import curie_map as curimap
 
 LOG = logging.getLogger(__name__)
 
@@ -17,41 +18,38 @@ class StreamedGraph(DipperGraph):
     just support nt
     """
 
-    curie_map = curie_map.get()
+    curie_map = curimap.get()
     curie_util = CurieUtil(curie_map)
-    
-    with open('translationtable/GLOBAL_TERMS.yaml') as fh:
-        globaltt = yaml.safe_load(fh).copy()
+
+    with open('translationtable/GLOBAL_TERMS.yaml') as fhandle:
+        globaltt = yaml.safe_load(fhandle).copy()
         globaltcid = {v: k for k, v in globaltt.items()}
 
-    def __init__(self,
-                are_bnodes_skized=True,
-                identifier=None,
-                file_handle=None,
-                fmt='nt'):
+    def __init__(
+            self, are_bnodes_skized=True, identifier=None, file_handle=None, fmt='nt'):
         self.are_bnodes_skized = are_bnodes_skized
         self.fmt = fmt
         self.file_handle = file_handle
         self.identifier = identifier
-   
+
     def addTriple(
-        self, subject_id, predicate_id, object_id, object_is_literal=False,
-        literal_type=None):
-        subject_iri = self._getNode(subject_id)
-        predicate_iri = self._getNode(predicate_id)
+            self, subject_id, predicate_id, object_id, object_is_literal=False,
+            literal_type=None):
+        subject_iri = self._getnode(subject_id)
+        predicate_iri = self._getnode(predicate_id)
         if not object_is_literal:
-            obj = self._getNode(object_id)
+            obj = self._getnode(object_id)
         else:
             obj = object_id
 
         if literal_type is not None:
-            literal_type = self._getNode(literal_type)
+            literal_type = self._getnode(literal_type)
 
         if object_id is not None:
             self.serialize(
                 subject_iri, predicate_iri, obj, object_is_literal, literal_type)
         else:
-            LOG.warn("Null value passed as object")
+            LOG.warning("Null value passed as object")
         return
 
     def skolemizeBlankNode(self, curie):
@@ -85,7 +83,7 @@ class StreamedGraph(DipperGraph):
         else:
             self.file_handle.write("{}\n".format(triple))
 
-    def _getNode(self, curie):
+    def _getnode(self, curie):
         """
         Returns IRI, or blank node curie/iri depending on
         self.skolemize_blank_node setting
@@ -115,9 +113,9 @@ class StreamedGraph(DipperGraph):
         :return: str - xsd full iri
         """
         if isinstance(literal, int):
-            return self._getNode("xsd:integer")
+            return self._getnode("xsd:integer")
         if isinstance(literal, float):
-            return self._getNode("xsd:double")
+            return self._getnode("xsd:double")
 
     @staticmethod
     def _quote_encode(literal):
