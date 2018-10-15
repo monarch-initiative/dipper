@@ -9,7 +9,6 @@ import csv
 from dipper.sources.Source import Source, USER_AGENT
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.D2PAssoc import D2PAssoc
-from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.sources.NCBIGene import NCBIGene
@@ -270,7 +269,7 @@ class OMIA(Source):
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
                             if len(rep) == 7 and rep[6] == ',':
-                                rep = rep[:5]     
+                                rep = rep[:5]
                         # asuming splits are typically to both gene & phenotype
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = {rep, token[4]}
@@ -511,8 +510,10 @@ class OMIA(Source):
         if row['inherit'] in self.localtt:
             inheritance_id = self.resolve(row['inherit'])
 
-        if inheritance_id is not None:
-            assoc = DispositionAssoc(self.graph, self.name, sp_phene_id, inheritance_id)
+        if inheritance_id is not None:  # observable related to genetic disposition
+            assoc = D2PAssoc(
+                self.graph, self.name, sp_phene_id, inheritance_id,
+                rel=self.globaltt['has disposition'])
             assoc.add_association_to_graph()
 
         if row['characterised'] == 'Yes':
@@ -525,13 +526,12 @@ class OMIA(Source):
 
     def write_molgen_report(self):
         LOG.info("Writing G2P report for OMIA")
-        f = '/'.join((self.outdir, 'omia_molgen_report.txt'))
+        filename = '/'.join((self.outdir, 'omia_molgen_report.txt'))
 
-        with open(f, 'w', newline='\n') as csvfile:
+        with open(filename, 'w', newline='\n') as csvfile:
             writer = csv.writer(csvfile, delimiter='\t')
-            # write header
-            h = ['omia_id', 'molecular_description', 'mapping_info', 'species']
-            writer.writerow(h)
+            writer.writerow(  # write header
+                ['omia_id', 'molecular_description', 'mapping_info', 'species'])
             for phene in self.stored_omia_mol_gen:
                 writer.writerow((
                     str(phene),
@@ -541,7 +541,7 @@ class OMIA(Source):
 
         LOG.info(
             "Wrote %d potential G2P descriptions for curation to %s",
-            len(self.stored_omia_mol_gen), f)
+            len(self.stored_omia_mol_gen), filename)
 
         return
 
@@ -685,9 +685,10 @@ class OMIA(Source):
         # get the omia id
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
-        if breed_id is None or phene_id is None or (self.testMode and \
-                (omia_id not in self.test_ids['disease']  or
-                 int(row['breed_id']) not in self.test_ids['breed'])):
+        if breed_id is None or phene_id is None or (
+                self.testMode and (
+                    omia_id not in self.test_ids['disease'] or
+                    int(row['breed_id']) not in self.test_ids['breed'])):
             return
 
         # FIXME we want a different relationship here
@@ -879,7 +880,8 @@ class OMIA(Source):
                     allomimids.update(rep)
 
         # guard against omim identifiers which have been removed
-        obsolete = [o for o in self.omim_type
+        obsolete = [
+            o for o in self.omim_type
             if self.omim_type[o] == self.globaltt['obsolete']]
         removed = allomimids & set(obsolete)
         if removed is not None and len(removed) > 0:
