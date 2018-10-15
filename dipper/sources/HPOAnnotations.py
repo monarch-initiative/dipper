@@ -3,23 +3,31 @@ import os
 import logging
 import re
 import shutil
+import tarfile
+import glob
 from datetime import datetime
 from stat import ST_CTIME
-from git import Repo
-from git import GitCommandError
 
-from dipper.utils import pysed
+import requests
 from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
-from dipper.models.assoc.DispositionAssoc import DispositionAssoc
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper import config
 
 LOG = logging.getLogger(__name__)
 
-HPOADL = \
-    'http://compbio.charite.de/hudson/job/hpo.annotations/lastStableBuild/artifact/misc'
+# summer 2018 PR mentioned switching to the new format
+# 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018/phenotype.hpoa'
+
+DRSEB = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
+HPOADL2 = DRSEB + '/lastSuccessfulBuild/artifact/misc_2018'
+
+# Fall 2018 CM made a mondo version of common disease (but we decided to hold off now)
+GITAPI = "https://api.github.com/repos/monarch-initiative"
+
+ORPHANET = 'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert='
+CONF = config.get_config()
 
 
 class HPOAnnotations(Source):
@@ -49,36 +57,55 @@ class HPOAnnotations(Source):
     """
 
     files = {
-        'annot': {
-            'file': 'phenotype_annotation.tab',
-            'url': HPOADL + '/phenotype_annotation.tab'},
-        'version': {
-            'file': 'data_version.txt',
-            'url': HPOADL + '/data_version.txt'},
-        # 'neg_annot': {
-        #   'file': 'phenotype_annotation.tab',
-        #    'url': HPOADL + '/negative_phenotype_annotation.tab'},
-        'doid': {
+        'hpoa': {
+            'file': 'phenotype.hpoa',
+            'url':  HPOADL2 + '/phenotype.hpoa',
+            'columns': [
+                'DatabaseID',
+                'DiseaseName',
+                'Qualifier',
+                'HPO_ID',
+                'Reference',
+                'Evidence',
+                'Onset',
+                'Frequency',
+                'Sex',
+                'Modifier',
+                'Aspect',
+                'Biocuration'
+            ]
+        },
+        'doid': {  # DOID plans to remain all about inconsistant left zero padding
             'file': 'doid.owl',
             'url': 'http://purl.obolibrary.org/obo/doid.owl'
         }
     }
-
-    # note, two of these codes are awaiting term requests.  see #114 and
-    # https://code.google.com/p/evidenceontology/issues/detail?id=32
-    # TODO TEC see if the GC issue translated into a GH issue
-    eco_dict = {
-        # FIXME currently using "curator inference used in manual assertion"
-        "ICE": "ECO:0000305",
-        # Inferred from Electronic Annotation
-        "IEA": "ECO:0000501",
-        # FIXME currently is"experimental evidence used in manual assertion"
-        "PCS": "ECO:0000269",
-        # Traceable Author Statement
-        "TAS": "ECO:0000304",
-        # FIXME currently using computational combinatorial evidence
-        # in automatic assertion
-        "ITM": "ECO:0000246",
+    small_files = {
+        # this is a placeholder for the columns in the "common-disease"
+        # small file format which were added to the 'files' dict programaticly
+        'columns': [
+            'Disease ID',
+            'Disease Name',
+            'Gene ID',
+            'Gene Name',
+            'Genotype',
+            'Gene Symbol(s)',
+            'Phenotype ID',
+            'Phenotype Name',
+            'Age of Onset ID',
+            'Age of Onset Name',
+            'Evidence ID',
+            'Evidence Name',
+            'Frequency',
+            'Sex ID',
+            'Sex Name',
+            'Negation ID',
+            'Negation Name',
+            'Description',
+            'Pub',
+            'Assigned by',
+            'Date Created'
+        ]
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -95,126 +122,44 @@ class HPOAnnotations(Source):
         self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
 
-        if 'test_ids' not in config.get_config()\
-                or 'disease' not in config.get_config()['test_ids']:
+        if 'test_ids' not in CONF or 'disease' not in CONF['test_ids']:
             LOG.warning("not configured with disease test ids.")
             self.test_ids = []
         else:
-            self.test_ids = config.get_config()['test_ids']['disease']
-
-        # data-source specific warnings to be removed when issues are cleared
-        LOG.warning(
-            "note that some ECO classes are missing for ICE, PCS, and ITM;" +
-            " using temporary mappings.")
+            self.test_ids = CONF['test_ids']['disease']
 
         return
 
     def fetch(self, is_dl_forced=False):
-
-        self.get_files(is_dl_forced)
-
-        self.scrub()
-
         # get the latest build from jenkins
-
-        # use the files['version'] file as the version
-        fname = '/'.join((self.rawdir, self.files['version']['file']))
-
-        with open(fname, 'r', encoding="utf8") as f:
-            # 2015-04-23 13:01
-            v = f.readline()  # read the first line (the only line, really)
-            d = datetime.strptime(
-                v.strip(), '%Y-%m-%d %H:%M').strftime("%Y-%m-%d-%H-%M")
-        f.close()
-
-        st = os.stat(fname)
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
-
-        # this will cause two dates to be attached to the dataset
-        # (one from the filedate, and the other from here)
-        # TODO when #112 is implemented,
-        # this will result in only the whole dataset being versioned
-        self.dataset.setVersion(filedate, d)
-
-        self.get_common_files()
-
-        return
-
-    def scrub(self):
-        """
-        Perform various data-scrubbing on the raw data files prior to parsing.
-        For this resource, this currently includes:
-        * revise errors in identifiers for some OMIM and PMIDs
-
-        :return: None
-
-        """
-
-        # scrub file of the oddities...lots of publication rewriting
-        f = '/'.join((self.rawdir, self.files['annot']['file']))
-        LOG.info('scrubbing PubMed:12345 --> PMID:12345')
-        pysed.replace(r'PubMed:', 'PMID:', f)
-
-        LOG.info('scrubbing pmid:12345 --> PMID:12345')
-        pysed.replace(r'pmid:', 'PMID:', f)
-
-        LOG.info('scrubbing PMID:    12345 --> PMID:12345')
-        pysed.replace(r'PMID:  *', 'PMID:', f)
-
-        LOG.info('scrubbing PMID12345 --> PMID:12345')
-        pysed.replace(r'PMID([0-9][0-9]*)', r'PMID:\1', f)
-
-        LOG.info('scrubbing MIM12345 --> OMIM:12345')
-        pysed.replace(r'MIM([0-9][0-9]*)', r'OMIM:\1', f)
-
-        LOG.info('scrubbing MIM:12345 --> OMIM:12345')
-        pysed.replace(r";MIM", ";OMIM", f)
-
-        LOG.info('scrubbing ORPHANET --> Orphanet')
-        pysed.replace("ORPHANET", "Orphanet", f)
-
-        LOG.info('scrubbing ORPHA --> Orphanet')
-        pysed.replace("ORPHA", "Orphanet", f)
+        self.get_files(is_dl_forced)
+        # and git repo
+        # self.get_common_files()
         return
 
     def parse(self, limit=None):
         if limit is not None:
             LOG.info("Only parsing first %s rows", limit)
 
-        self.add_common_files_to_file_list()
-
+        # self.add_common_files_to_file_list()
         LOG.info("Parsing files...")
-
         if self.testOnly:
             self.testMode = True
 
-        # rare disease-phenotype associations
-        self._process_phenotype_tab('/'.join((self.rawdir,
-                                              self.files['annot']['file'])),
-                                    limit)
+        self._process_phenotype_hpoa(
+            '/'.join((self.rawdir, self.files['hpoa']['file'])), limit)
 
         # TODO add negative phenotype statements #113
         # self._process_negative_phenotype_tab(self.rawfile,self.outfile,limit)
 
         # common disease-phenotype associations from text mining work
-        self.process_all_common_disease_files(limit)
+        # self.process_all_common_disease_files(limit)
 
         LOG.info("Finished parsing.")
 
         return
 
-    def _map_evidence_to_codes(self, code_string):
-        """
-        A simple mapping of the code_string to it's ECO class
-        using the dictionary defined here
-        Currently includes ICE, IEA, PCS, TAS
-        :param code_string:
-        :return:
-
-        """
-        return self.eco_dict.get(code_string)
-
-    def _process_phenotype_tab(self, raw, limit):
+    def _process_phenotype_hpoa(self, raw, limit):
         """
         see info on format here:
         http://www.human-phenotype-ontology.org/contao/index.php/annotation-guide.html
@@ -229,19 +174,39 @@ class HPOAnnotations(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
-        with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+
+        filedate = datetime.utcfromtimestamp(
+            os.stat(raw)[ST_CTIME]).strftime("%Y-%m-%d")
+
+        # this will cause two dates to be attached to the dataset
+        # (one from the filedate, and the other from here)
+        # TODO when #112 is implemented,
+        # this will result in only the whole dataset being versioned
+
+        col = self.files['hpoa']['columns']
+        with open(raw, 'r', encoding="utf8") as tsvfile:
+            reader = csv.reader(tsvfile, delimiter='\t', quotechar='\"')
+            vers = next(reader)  # drop
+            vers = str(next(reader))[9:19]
+            print(vers)
+            date = datetime.strptime(
+                vers.strip(), '%Y-%m-%d').strftime("%Y-%m-%d-%H-%M")
+
+            self.dataset.setVersion(filedate, date)
+            for row in reader:
+                if row[0][0] == '#' or row[0] == 'DatabaseID':  # headers
+                    continue
                 row = [str(col).strip() for col in row]
-                # Note from Seb in Dec 2017, a 15th column was added
-                # inadverterntly and will be removed in the winter 2018
-                # release of hpo data
-                (db, num, name, qual, pheno_id, publist, eco, onset, freq, w,
-                 asp, syn, date, curator,  # extra
-                 ) = row
-                disease_id = db + ":" + num
+
+                disease_id = row[col.index('DatabaseID')]
+                # 98246 OMIM
+                # 68646 ORPHA
+                # 297 DECIPHER
+
+                # TODO take this out asap.
+                # dipper need to switch over to ORPHA: too.
+                # if disease_id[:6] == 'ORPHA:':
+                #    disease_id = 'Orphanet:' + disease_id[6:]
 
                 if self.testMode:
                     try:
@@ -251,147 +216,164 @@ class HPOAnnotations(Source):
                     except AttributeError:
                         continue
 
-                # LOG.info('adding %s', disease_id)
+                pheno_id = row[col.index('HPO_ID')]
+                eco_id = self.resolve(row[col.index('Evidence')])
+                onset = row[col.index('Onset')]
+                asp = row[col.index('Aspect')]
+                freq = row[col.index('Frequency')]
+                publist = row[col.index('Reference')]
+                sex = row[col.index('Sex')].lower()
 
-                model.addClassToGraph(disease_id, None)
-                model.addClassToGraph(pheno_id, None)
-                eco_id = self.localtt[eco]
-                model.addClassToGraph(eco_id, None)
+                # LOG.info(
+                #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
+
+                model.addClassToGraph(disease_id)
+                model.addClassToGraph(pheno_id)
+                model.addClassToGraph(eco_id)
                 if onset is not None and onset != '':
-                    model.addClassToGraph(onset, None)
+                    model.addClassToGraph(onset)
 
-                # we want to do things differently depending on
-                # the aspect of the annotation
-                # TODO PYLINT Redefinition of assoc type from
-                #   dipper.models.assoc.D2PAssoc.D2PAssoc to
-                #   dipper.models.assoc.DispositionAssoc.DispositionAssoc
-                if asp == 'O' or asp == 'M':  # organ abnormality or mortality
+                if asp in ('P', 'M'):  # phenotype? abnormality or mortality
+                    assoc = D2PAssoc(  # default rel=self.globaltt['has phenotype']
+                        graph, self.name, disease_id, pheno_id,
+                        onset, freq)
+                elif asp in ('I', 'C'):  # inheritance pattern or clinical course/onset
                     assoc = D2PAssoc(
-                        graph, self.name, disease_id, pheno_id, onset, freq)
-                elif asp == 'I':  # inheritance patterns for the whole disease
-                    assoc = DispositionAssoc(
-                        graph, self.name, disease_id, pheno_id)
-                elif asp == 'C':  # clinical course / onset
-                    assoc = DispositionAssoc(
-                        graph, self.name, disease_id, pheno_id)
+                        graph, self.name, disease_id, pheno_id,
+                        rel=self.globaltt['has disposition'])
                 else:
-                    LOG.error("I don't know what this aspect is: %s", asp)
+                    LOG.error("Unknown aspect : %s at line %i", asp, reader.line_num)
 
                 assoc.add_evidence(eco_id)
+                if sex is not None and sex != '':
+                    self.graph.addTriple(
+                        assoc.get_association_id(),
+                        self.globaltt['has_sex_specificty'],
+                        self.globaltt[sex])
 
-                publist = re.split(r'[,;]', publist)
-                # blow these apart if there is a list of pubs
-                for pub in publist:
+                # Publication
+                # cut -f 5 phenotype.hpoa | grep ";" | tr ';' '\n' | cut -f1 -d ':' |\
+                # sort | uniq -c | sort -nr
+                # 629 PMID
+                # 63 OMIM
+                # 42 ISBN-13
+                # 36 http
+
+                for pub in publist.split(';'):
                     pub = pub.strip()
                     pubtype = None
-                    if pub != '':
-                        # if re.match(
-                        #       r'http://www.ncbi.nlm.nih.gov/bookshelf/br\.fcgi\?book=gene',
-                        #        pub):
-                        #     #http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part=ced
-                        #     m = re.search(r'part\=(\w+)', pub)
-                        #     pub_id = 'GeneReviews:'+m.group(1)
-                        # elif re.search(
-                        #        r'http://www.orpha.net/consor/cgi-bin/OC_Exp\.php\?lng\=en\&Expert\=',
-                        #        pub):
-                        #     m = re.search(r'Expert=(\d+)', pub)
-                        #     pub_id = 'Orphanet:'+m.group(1)
 
-                        if re.match(r'(PMID|ISBN-13|ISBN-10|ISBN|HPO)', pub):
-                            if re.match(r'PMID', pub):
-                                pubtype = self.globaltt['journal article']
-                            elif re.match(r'HPO', pub):
-                                pubtype = self.globaltt['person']
-                            else:
-                                pubtype = self.globaltt['publication']
+                    if pub[:5] == 'PMID:':
+                        pubtype = self.globaltt['journal article']
+
+                    elif pub[:4] == 'ISBN':
+                        pubtype = self.globaltt['publication']
+
+                    elif pub[:5] == 'OMIM:':
+                        pub = 'http://omim.org/entry/' + pub[5:]
+                        pubtype = self.globaltt['webpage']
+
+                    elif pub[:9] == 'DECIPHER:':
+                        pubtype = self.globaltt['webpage']
+
+                    elif pub[:6] == 'ORPHA:':
+                        pubtype = self.globaltt['webpage']
+
+                    elif pub[:4] == 'http':
+                        pubtype = self.globaltt['webpage']
+
+                    else:
+                        LOG.error(
+                            'Unknown pub type for disease %s from "%s"',
+                            disease_id, pub)
+                        continue
+
+                    if pub is not None:
+                        assoc.add_source(pub)
+                        if pubtype is not None:
                             ref = Reference(graph, pub, pubtype)
+                            # ref.setTitle('');  ref.setYear()
+
                             ref.addRefToGraph()
-                        elif re.match(r'(OMIM|Orphanet|DECIPHER)', pub):
-                            # make the pubs a reference to the website,
-                            # instead of the curie
-                            if re.match(r'OMIM', pub):
-                                omimnum = re.sub(r'OMIM:', '', pub)
-                                omimurl = '/'.join((
-                                    'http://omim.org/entry', str(omimnum).strip()))
-                                pub = omimurl
-                            elif re.match(r'Orphanet:', pub):
-                                orphanetnum = re.sub(r'Orphanet:', '', pub)
-                                orphaneturl = ''.join((
-                                    'http://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Expert=',
-                                    str(orphanetnum)))
-                                pub = orphaneturl
-                            elif re.match(r'DECIPHER:', pub):
-                                deciphernum = re.sub(r'DECIPHER:', '', pub)
-                                decipherurl = '/'.join((
-                                    'https://decipher.sanger.ac.uk/syndrome',
-                                    deciphernum))
-                                pub = decipherurl
-                            pubtype = self.globaltt['webpage']
-                        elif re.match(r'http', pub):
-                            pass
-                        else:
-                            LOG.error(
-                                'Unknown pub type for %s: %s', disease_id, pub)
-                            print(disease_id, 'pubs:', str(publist))
-                            continue
+                    # TODO add curator
 
-                        if pub is not None:
-                            assoc.add_source(pub)
+                    # pprint.pprint(assoc)
 
-                        # TODO add curator
+                    assoc.add_association_to_graph()
 
-                assoc.add_association_to_graph()
-
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and reader.line_num > limit:
                     break
-
         return
 
     def get_common_files(self):
         """
-        Fetch the raw hpo-annotation-data by cloning/pulling the
+        Fetch the hpo-annotation-data
         [repository](https://github.com/monarch-initiative/hpo-annotation-data.git)
-        These files get added to the files object,
-        and iterated over separately.
+        as a tarball
+
         :return:
 
         """
+        # curl -sLu "username:personal-acess-token" \
+        # GITAPI + "/hpo-annotation-data/tarball/master" > hpoa.tgz
 
-        repo_dir = '/'.join((self.rawdir, 'git'))
-        REMOTE_URL = "git@github.com:monarch-initiative/hpo-annotation-data.git"
-        HTTPS_URL = "https://github.com/monarch-initiative/hpo-annotation-data.git"
-        # GITRAW =
+        repo_dir = self.rawdir + '/git'
+        username = CONF['user']['hpoa']
+        response = requests.get(
+            GITAPI + '/hpo-annotation-data/tarball/master',
+            auth=(username, CONF['keys'][username]))
 
-        # TODO if repo doesn't exist, then clone otherwise pull
-        if os.path.isdir(repo_dir):
+        with open(self.rawdir + '/hpoa.tgz', 'wb') as tgz:
+            tgz.write(response.content)
+
+        if os.path.isdir(repo_dir):  # scoarched earth approach
             shutil.rmtree(repo_dir)
+        os.mkdir(repo_dir)
 
-        LOG.info("Cloning common disease files from %s", REMOTE_URL)
-        try:
-            Repo.clone_from(REMOTE_URL, repo_dir)
-        except GitCommandError:
-            # Try with https and if this doesn't work fail
-            Repo.clone_from(HTTPS_URL, repo_dir)
+        with tarfile.open('raw/hpoa/hpoa.tgz', 'r') as tarball:
+            tarball.extractall(repo_dir)
+
+        # TO-DO add this to the dataset object
+        # hmm ...kay... have git commit-hash in tarball repo name
+
+        repo_hash = glob.glob(
+            str(
+                '/'.join(
+                    (self.rawdir, 'git', 'monarch-initiative-hpo-annotation-data-*')
+                )))[-42:]
+
+        print(repo_hash)
+        repo_hash = str(repo_hash)
+        # (note this makes little sense as it is a private repo)
+        self.dataset.setFileAccessUrl(
+            '/'.join((
+                'https://github.com/monarch-initiative/hpo-annotation-data/tree',
+                repo_hash)))
 
         return
 
     def add_common_files_to_file_list(self):
+        '''
+            The (several thousands) common-disease files from the repo tarball
+            are added to the files object.
+            try adding the 'common-disease-mondo' files as well?
+
+        '''
         repo_dir = '/'.join((self.rawdir, 'git'))
-        common_disease_dir = '/'.join((repo_dir, 'common-diseases-mondo'))
+        common_disease_dir = '/'.join((
+            repo_dir,
+            'monarch-initiative-hpo-annotation-*', 'common-diseases-mondo/*.tab'))
 
         # add the files to the self.files object
-        filelist = os.listdir(common_disease_dir)
+        filelist = glob.glob(common_disease_dir)
         fcount = 0
-        for f in filelist:
-            if not re.search(r'\.tab', f):
-                continue
-            fcount += 1
-            self.files['common'+str(fcount).zfill(7)] = {
-                'file': '/'.join((common_disease_dir, f)),
-                # TODO add url to reference the file?
-                # need to get git version somehow?
-            }
-            # TODO add this to the dataset
+        for small_file in filelist:
+            if small_file[-4:] == '.tab':
+                fcount += 1
+                self.files[
+                    'common' + str(fcount).zfill(7)] = {
+                        'file': '/'.join((common_disease_dir, small_file)),
+                    }
         LOG.info("Found %d common disease files", fcount)
 
         return
@@ -399,67 +381,25 @@ class HPOAnnotations(Source):
     def process_all_common_disease_files(self, limit=None):
         """
         Loop through all of the files that we previously fetched from git,
-        creating the disease-phenotype assoc.
+        creating the disease-phenotype association.
         :param limit:
         :return:
 
         """
-
-        self.replaced_id_count = 0
-        unpadded_doids = self.get_doid_ids_for_unpadding()
-        total_processed = 0
         LOG.info("Iterating over all common disease files")
         common_file_count = 0
-        for f in self.files:
-            if not re.match(r'common', f):
-                continue
-            common_file_count += 1
-            raw = self.files[f]['file']
-            total_processed += self.process_common_disease_file(
-                raw, unpadded_doids, limit)
+        total_processed = ""  # stopgap gill we fix common-disease files
+        unpadded_doids = ""   # stopgap gill we fix common-disease files
+        for ingest in self.files:
+            if ingest[:5] == 'common':
+                common_file_count += 1
+                raw = self.files[ingest]['file']
+                total_processed += self.process_common_disease_file(
+                    raw, unpadded_doids, limit)
             if not self.testMode and limit is not None and total_processed > limit:
                 break
         LOG.info("Finished iterating over all common disease files.")
-        LOG.info("Fixed %d/%d incorrectly zero-padded ids",
-                    self.replaced_id_count, common_file_count)
         return
-
-    def get_doid_ids_for_unpadding(self):
-        """
-        Here, we fetch the doid owl file, and get all the doids.
-        We figure out which are not zero-padded, so we can map the DOID
-        to the correct identifier when processing the common annotation files.
-
-        This may become obsolete when
-        https://github.com/monarch-initiative/hpo-annotation-data/issues/84
-        is addressed.
-
-        :return:
-
-        """
-
-        LOG.info("Building list of non-zero-padded DOIDs")
-        raw_file = '/'.join((self.rawdir, self.files['doid']['file']))
-        doids = set()
-        # scan the file and get all doids
-        with open(raw_file, 'r', encoding="utf8") as f:
-            for line in f:
-                matches = re.search(r'(DOID_\d+)', line)
-                if matches is not None:
-                    for m in matches.groups():
-                        doids.add(re.sub(r'_', ':', m))
-
-        nopad_doids = set()
-        for d in doids:
-            num = re.sub(r'DOID[:_]', '', d)
-            # look for things not starting with zero
-            if not re.match(r'^0', str(num)):
-                nopad_doids.add(num)
-
-        LOG.info(
-            "Found %d/%d DOIDs are not zero-padded", len(nopad_doids), len(doids))
-
-        return nopad_doids
 
     def process_common_disease_file(self, raw, unpadded_doids, limit=None):
         """
@@ -480,35 +420,37 @@ class HPOAnnotations(Source):
         else:
             graph = self.graph
 
-        line_counter = 0
         assoc_count = 0
         replace_id_flag = False
+        col = self.small_files['columns']
 
-        with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = csvfile.readline()  # skip the header row
-            LOG.info("HEADER: %s", header)
+        with open(raw, 'r', encoding="utf8") as tsvfile:
+            reader = csv.reader(tsvfile, delimiter='\t', quotechar='\"')
+            header = tsvfile.readline()
+            if header != col:
+                LOG.error("HEADER: has changed in %s.", raw)
+                raise ValueError(col - header)
+
             disease_id = None
-            for row in filereader:
+            for row in reader:
+                row = [str(x).strip() for x in row]
 
-                if len(row) == 21:
-                    (did, dname, gid, gene_name, genotype, gene_symbols,
-                     phenotype_id, phenotype_name, age_of_onset_id,
-                     age_of_onset_name, eid, evidence_name, frequency, sex_id,
-                     sex_name, negation_id, negation_name, description,
-                     pub_ids, assigned_by,
-                     date_created) = [str(col).strip() for col in row]
-                else:
-                    LOG.warning(
-                        "Wrong number of columns! expected 21, got: %s in: %s",
-                        len(row), raw)
-                    LOG.warning("%s", row)
-                    continue
+                did = row[col.index('Disease ID')]
+                # genotype = row[col.index('Genotype')]
+                phenotype_id = row[col.index('Phenotype ID')]
+                age_of_onset_id = row[col.index('Age of Onset ID')]
+                eid = row[col.index('Evidence ID')]
+                frequency = row[col.index('Frequency')]
+                negation_id = row[col.index('Negation ID')]
+                description = row[col.index('Description')]
+                pub_ids = row[col.index('Pub')]
+
                 # b/c "PMID:    17223397"
-                pub_ids = re.sub(r'  *', '', pub_ids)
+                pub_ids = re.sub(r' *', '', pub_ids)
 
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
+
                 if not re.search(r'(DOID\:|MESH\:\w)\d+', disease_id):
                     LOG.warning("Invalid id format: %s", disease_id)
 
@@ -526,8 +468,6 @@ class HPOAnnotations(Source):
                     # since these are broken up into disease-by-disease,
                     # just skip the whole file
                     return 0
-                else:
-                    line_counter += 1
 
                 if negation_id != '':
                     continue  # TODO add negative associations
@@ -539,31 +479,31 @@ class HPOAnnotations(Source):
                         assoc.onset = age_of_onset_id
                     if frequency != '':
                         assoc.frequency = frequency
-                    eco_id = self.self.localtt[eid]
+                    eco_id = self.localtt[eid]
                     if eco_id is None:
-                        eco_id = self.self.localtt['ITM']
+                        eco_id = self.localtt['ITM']
 
                     assoc.add_evidence(eco_id)
                     # TODO add sex? - not in dataset yet
                     if description != '':
                         assoc.set_description(description)
                     if pub_ids != '':
-                        for p in pub_ids.split(';'):
-                            p = re.sub(r'  *', '', p)
+                        for pub in pub_ids.split(';'):
+                            pub = re.sub(r'  *', '', pub)
                             if re.search(
-                                r'(DOID|MESH)', p) or re.search(
-                                    r'Disease name contained', description):
+                                    r'(DOID|MESH)', pub) or re.search(
+                                        r'Disease name contained', description):
                                 # skip "pubs" that are derived from
                                 # the classes themselves
                                 continue
-                            assoc.add_source(p.strip())
+                            assoc.add_source(pub.strip())
                     # TODO assigned by?
 
                     assoc.add_association_to_graph()
                     assoc_count += 1
 
                 if not self.testMode and limit is not None\
-                        and line_counter > limit:
+                        and reader.line_num > limit:
                     break
 
             if replace_id_flag:
