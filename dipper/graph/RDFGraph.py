@@ -134,9 +134,15 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
             self.bind(prefix, Namespace(iri))
         return
 
-    def serialize(
-            self, subject_iri, predicate_iri, obj, object_is_literal, literal_type):
-        '''
-            abstract in parent class. yet to be implemented here
-        '''
-        raise NotImplementedError
+    # serialize() conflicts between rdflib & Graph.serialize abstractmethod
+    # GraphUtils expects the former.  (too bad there is no multiple dispatch)
+    #
+    # def serialize(
+    #        self, subject_iri, predicate_iri, obj, object_is_literal, literal_type):
+    #    '''
+    #        abstract in parent class. yet to be implemented here
+    #
+    #    '''
+    #    ConjunctiveGraph.serialize(
+    #        subject_iri, predicate_iri, obj, object_is_literal, literal_type)
+    #    # raise NotImplementedError
