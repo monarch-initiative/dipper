@@ -265,7 +265,7 @@ class Assoc:
 
         """
 
-        items_to_hash = [sub, pred, obj, definedby]
+        items_to_hash = [definedby, sub, pred, obj]
         if attributes is not None and len(attributes) > 0:
             items_to_hash += attributes
 
