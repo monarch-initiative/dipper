@@ -202,7 +202,7 @@ class Source:
         gu = GraphUtils(None)
 
         # the  _dataset description is always turtle
-        gu.write(self.dataset.getGraph(), rdf_fmt='turtle', filename=self.datasetfile)
+        gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
 
         if self.testMode:
             # unless we stop hardcoding, the test dataset is always turtle
@@ -218,7 +218,7 @@ class Source:
             LOG.error("I don't understand our stream.")
             return
 
-        gu.write(self.graph, rdf_fmt=fmt, filename=f)
+        gu.write(self.graph, fmt, filename=f)
         return
 
     def whoami(self):
