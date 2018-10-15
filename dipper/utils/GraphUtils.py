@@ -37,7 +37,7 @@ class GraphUtils:
             filewriter = open(filename, 'wb')
 
             LOG.info("Writing triples in %s to %s", fileformat, filename)
-            graph.serialize(filewriter, rdf_fmt=fileformat)
+            graph.serialize(filewriter, fileformat)
             filewriter.close()
         else:
             print(graph.serialize(rdf_fmt=fileformat).decode())
