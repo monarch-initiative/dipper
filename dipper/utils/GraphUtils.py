@@ -40,7 +40,7 @@ class GraphUtils:
             graph.serialize(filewriter, fileformat)
             filewriter.close()
         else:
-            print(graph.serialize(rdf_fmt=fileformat).decode())
+            print(graph.serialize(fileformat).decode())
         return
 
     @staticmethod

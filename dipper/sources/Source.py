@@ -207,7 +207,7 @@ class Source:
         if self.testMode:
             # unless we stop hardcoding, the test dataset is always turtle
             LOG.info("Setting testfile to %s", self.testfile)
-            gu.write(self.testgraph, rdf_fmt='turtle', filename=self.testfile)
+            gu.write(self.testgraph, 'turtle', filename=self.testfile)
 
         # print graph out
         if stream is None:
