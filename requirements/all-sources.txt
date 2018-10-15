@@ -2,7 +2,6 @@ psycopg2
 python-docx
 pysftp
 beautifulsoup4
-GitPython
 intermine
 numpy
 pandas
