@@ -103,7 +103,7 @@
 "OMIA"
 "OMIA-breed"
 "OMIM"
-"Orphanet"
+"ORPHA"
 "PAINT_REF"
 "PANTHER"
 "PATO"
