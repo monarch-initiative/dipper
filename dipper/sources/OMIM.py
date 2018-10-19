@@ -1055,7 +1055,7 @@ class OMIM(Source):
                 items = links['orphanetDiseases'].split(';;;')
                 for item in items:
                     (orpha_num, internal_num, orpha_label) = item.split(';;')
-                    orpha_curie = 'Orphanet:' + orpha_num.strip()
+                    orpha_curie = 'ORPHA:' + orpha_num.strip()
                     orpha_mappings.append(orpha_curie)
                     model.addClassToGraph(orpha_curie, orpha_label.strip())
                     model.addXref(omim_curie, orpha_curie)

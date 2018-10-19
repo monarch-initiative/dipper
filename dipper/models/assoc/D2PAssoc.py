@@ -14,20 +14,26 @@ class D2PAssoc(Assoc):
 
     """
 
-
     def __init__(
-            self, graph, definedby, disease_id, phenotype_id, onset=None,
-            frequency=None, rel=None):
+            self, graph, definedby, disease_id, phenotype_id,
+            onset=None,
+            frequency=None,
+            rel=None
+    ):
         super().__init__(graph, definedby)
-        self.disease_id = disease_id
-        self.phenotype_id = phenotype_id
+
+        if rel is None:  # default
+            rel = self.globaltt['has phenotype']
+        # elif rel == self.globaltt[['has disposition']:  # lacks onset & freq
+
         self.onset = onset
         self.frequency = frequency
-        if rel is None:
-            rel = self.globaltt['has phenotype']
 
-        self.set_relationship(rel)
+        self.disease_id = disease_id
+        self.phenotype_id = phenotype_id
+
         self.set_subject(disease_id)
+        self.set_relationship(rel)
         self.set_object(phenotype_id)
 
         return
@@ -55,16 +61,18 @@ class D2PAssoc(Assoc):
         """
 
         # add the basic association nodes
+        # if rel == self.globaltt[['has disposition']:
+
         self._add_basic_association_to_graph()
+        object_is_literal = True
 
         if self.frequency is not None and self.frequency != '':
-            # FIXME what is the real predicate here?
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['frequency'], self.frequency)
+                self.assoc_id, self.globaltt['frequency'], self.frequency,
+                object_is_literal)
         if self.onset is not None and self.onset != '':
-            # FIXME what is the real predicate here?
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['onset'], self.onset)
+                self.assoc_id, self.globaltt['onset'], self.onset, object_is_literal)
 
         return
 

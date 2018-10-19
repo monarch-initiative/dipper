@@ -9,7 +9,7 @@ from dipper.utils.CurieUtil import CurieUtil
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class GraphUtils:
@@ -20,7 +20,7 @@ class GraphUtils:
 
         return
 
-    def write(self, graph, fileformat=None, file=None):
+    def write(self, graph, fileformat=None, filename=None):
         """
         A basic graph writer (to stdout) for any of the sources.
         this will write raw triples in rdfxml, unless specified.
@@ -32,15 +32,15 @@ class GraphUtils:
 
         filewriter = None
         if fileformat is None:
-            fileformat = 'rdfxml'
-        if file is not None:
-            filewriter = open(file, 'wb')
+            fileformat = 'turtle'
+        if filename is not None:
+            filewriter = open(filename, 'wb')
 
-            logger.info("Writing triples in %s to %s", fileformat, file)
-            graph.serialize(filewriter, format=fileformat)
+            LOG.info("Writing triples in %s to %s", fileformat, filename)
+            graph.serialize(filewriter, fileformat)
             filewriter.close()
         else:
-            print(graph.serialize(format=fileformat).decode())
+            print(graph.serialize(fileformat).decode())
         return
 
     @staticmethod
@@ -78,18 +78,18 @@ class GraphUtils:
         # but it is not exposed by rdflib.parsing
         # so retry once on URLError
         for ontology in ontologies:
-            logger.info("parsing: " + ontology)
+            LOG.info("parsing: " + ontology)
             try:
                 ontology_graph.parse(
                     ontology, format=rdflib_util.guess_format(ontology))
             except SAXParseException as e:
-                logger.error(e)
-                logger.error('Retrying as turtle: ' + ontology)
+                LOG.error(e)
+                LOG.error('Retrying as turtle: ' + ontology)
                 ontology_graph.parse(ontology, format="turtle")
             except OSError as e:  # URLError:
                 # simple retry
-                logger.error(e)
-                logger.error('Retrying: ' + ontology)
+                LOG.error(e)
+                LOG.error('Retrying: ' + ontology)
                 ontology_graph.parse(
                     ontology, format=rdflib_util.guess_format(ontology))
 

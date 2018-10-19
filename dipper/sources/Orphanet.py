@@ -88,7 +88,7 @@ class Orphanet(Source):
                 # id = elem.get('id') # some internal identifier
                 disorder_num = elem.find('OrphaNumber').text
 
-                disorder_id = 'Orphanet:'+str(disorder_num)
+                disorder_id = 'ORPHA:' + str(disorder_num)
 
                 if self.testMode and disorder_id \
                         not in config.get_config()['test_ids']['disease']:
@@ -113,7 +113,7 @@ class Orphanet(Source):
                     gene_name = assoc.find('.//Gene/Name').text
                     gene_symbol = assoc.find('.//Gene/Symbol').text
                     gene_num = assoc.find('./Gene/OrphaNumber').text
-                    gene_id = 'Orphanet:' + str(gene_num)
+                    gene_id = 'ORPHA:' + str(gene_num)
                     gene_type_id = self.resolve(gene_iid_to_type[gene_iid])
                     model.addClassToGraph(
                         gene_id, gene_symbol, gene_type_id, gene_name)

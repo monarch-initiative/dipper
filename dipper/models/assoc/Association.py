@@ -1,4 +1,4 @@
-import re
+
 import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
@@ -47,7 +47,7 @@ class Assoc:
         return
 
     def _is_valid(self):
-        # check if sub/obj/rel are none...throw error
+        # check if sub/obj/rel are none...raise error
         #
         if self.sub is None:
             raise ValueError(
@@ -60,7 +60,8 @@ class Assoc:
                 self.sub, self.rel, self.obj
             )
         if self.rel is None:
-            raise ValueError('No predicate set for this association <%s> <%s> <%s>',
+            raise ValueError(
+                'No predicate set for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
             )
 
@@ -76,6 +77,8 @@ class Assoc:
         if self.assoc_id is None:
             self.set_association_id()
 
+        assert self.assoc_id is not None
+
         self.model.addType(self.assoc_id, self.model.globaltt['association'])
 
         self.graph.addTriple(
@@ -89,20 +92,19 @@ class Assoc:
             self.model.addDescription(self.assoc_id, self.description)
 
         if self.evidence is not None and len(self.evidence) > 0:
-            for e in self.evidence:
+            for evi in self.evidence:
                 self.graph.addTriple(
-                    self.assoc_id, self.globaltt['has evidence'], e)
+                    self.assoc_id, self.globaltt['has evidence'], evi)
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
-                if re.match(r'http', src):
+                object_is_literal = False
+                if src[:4] == 'http':   # not a curie
+                    object_is_literal = True
                     # TODO assume that the source is a publication?
-                    # use Reference class here
-                    self.graph.addTriple(
-                        self.assoc_id, self.globaltt['source'], src, True)
-                else:
-                    self.graph.addTriple(
-                        self.assoc_id, self.globaltt['source'], src)
+                    # use Reference class
+                self.graph.addTriple(
+                    self.assoc_id, self.globaltt['source'], src, object_is_literal)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:
@@ -145,8 +147,7 @@ class Assoc:
 
         return
 
-    # This isn't java, but if we must,
-    # prefer use of property decorator
+    # This isn't java, but predecessors favored the use of property decorators
     def set_subject(self, identifier):
         self.sub = identifier
         return
@@ -177,9 +178,11 @@ class Assoc:
         else:
             self.assoc_id = assoc_id
 
-        return
+        return self.assoc_id
 
     def get_association_id(self):
+        if  self.assoc_id is None:
+            self.set_association_id()
 
         return self.assoc_id
 
@@ -263,13 +266,11 @@ class Assoc:
         """
 
         items_to_hash = [definedby, sub, pred, obj]
-        if attributes is not None:
+        if attributes is not None and len(attributes) > 0:
             items_to_hash += attributes
 
-        for key, val in enumerate(items_to_hash):
-            if val is None:
-                items_to_hash[key] = ''
+        items_to_hash = [x for x in items_to_hash if x is not None]
 
-        byte_string = '+'.join(items_to_hash)
-
-        return ':'.join(('MONARCH', GraphUtils.digest_id(byte_string)))
+        assoc_id = ':'.join(('MONARCH', GraphUtils.digest_id('+'.join(items_to_hash))))
+        assert assoc_id is not None
+        return assoc_id

@@ -40,7 +40,7 @@ class CTDTestCase(unittest.TestCase):
         self.source._process_interactions(self.test_row)
 
         triples = """
-            :MONARCH_b6dc57a9a048c7517a91 a OBAN:association ;
+            :MONARCH_b6c289df47cb72653f79 a OBAN:association ;
                 RO:0002558 ECO:0000033 ;
                 dc:source PMID:12345, PMID:56789 ;
                 OBAN:association_has_object OMIM:188890 ;
