@@ -35,7 +35,7 @@ class NCBIGene(Source):
     by default (human, mouse, fish).
     This can be overridden in the calling script to include additional taxa,
     if desired.
-    The gene ids in the conf.yaml will be used to subset the data when testing.
+    The gene ids in test_ids.yaml will be used to subset the data when testing.
 
     All entries in the gene_history file are added as deprecated classes,
     and linked to the current gene id, with "replaced_by" relationships.
@@ -193,7 +193,8 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if not self.testMode and int(tax_num) not in self.tax_ids:
+                tax_num = int(tax_num)
+                if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
                 line_counter += 1
@@ -368,27 +369,25 @@ class NCBIGene(Source):
         for ref in xrefs.strip().split('|'):
             xref_curie = self._cleanup_id(ref)
             if xref_curie is not None and xref_curie.strip() != '':
-                if re.match(r'HPRD', xref_curie):
-                    # proteins are not == genes.
+                if xref_curie[:5] == 'HPRD:':  # proteins are not == genes.
                     model.addTriple(
-                        gene_id,
-                        self.globaltt['has gene product'], xref_curie)
+                        gene_id, self.globaltt['has gene product'], xref_curie)
                     continue
                     # skip some of these for now
                 if xref_curie.split(':')[0] in filter_out:
                     continue
                 if xref_curie.split(':')[0] in taxon_spec_xref_filters:
                     model.addXref(gene_id, xref_curie)
-                if re.match(r'^OMIM', xref_curie):
+                if xref_curie[:5] == 'OMIM:':
                     if DipperUtil.is_omim_disease(xref_curie):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
                         model.addEquivalentClass(gene_id, xref_curie)
                         if int(taxon) in clique_map:
-                            if clique_map[int(taxon)] == xref_curie.split(':')[0]:
+                            if clique_map[taxon] == xref_curie.split(':')[0]:
                                 model.makeLeader(xref_curie)
-                            elif clique_map[int(taxon)] == gene_id.split(':')[0]:
+                            elif clique_map[taxon] == gene_id.split(':')[0]:
                                 model.makeLeader(gene_id)
                     else:
                         model.addSameIndividual(gene_id, xref_curie)
