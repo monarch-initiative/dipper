@@ -125,7 +125,6 @@
 "SGD"
 "SGD_REF"
 "SIO"
-"SIO"
 "SMPDB"
 "SNOMED"
 "SO"
