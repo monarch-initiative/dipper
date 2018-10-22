@@ -167,6 +167,7 @@
 "faldo"
 "foaf"
 "horseQTL"
+"miRBase"
 "oboInOwl"
 "owl"
 "pav"

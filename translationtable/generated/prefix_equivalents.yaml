@@ -1,4 +1,5 @@
  "DICTYBASE": "dictyBase"
+ "DO:DOID": "DOID"
  "Ensembl": "ENSEMBL"
  "ENSEMBL GENE": "ENSEMBL"
  "Entrez-Gene": "NCBIGene"
@@ -14,6 +15,7 @@
  "HPO": "HP"
  "MGI:MGI": "MGI"
  "MIM": "OMIM"
+ "MIRBASE": "miRBase"
  "NCBI-Gene": "NCBIGene"
  "NCBI.Gene": "NCBIGene"
  "ORDO": "ORPHA"
