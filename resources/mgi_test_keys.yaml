@@ -1,5 +1,7 @@
 ---
 #    test_keys
+#  these are postgres daatabase Primary keys
+#  have no utility here beyond testing
 {
         'allele': [
             1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139,
