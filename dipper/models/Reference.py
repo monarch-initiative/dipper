@@ -47,7 +47,7 @@ class Reference:
             if ref_type[:4] not in ('IAO:', 'SIO:'):
                 LOG.warning("Got Pub ref type of:  %s", ref_type)
 
-        if ref_id[:4] == 'http':
+        if ref_id is not None and ref_id[:4] == 'http':
             self.ref_url = ref_id
 
         return
