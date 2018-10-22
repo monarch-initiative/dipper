@@ -18,8 +18,6 @@ from dipper import config
 LOG = logging.getLogger(__name__)
 
 # summer 2018 PR mentioned switching to the new format
-# 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018/phenotype.hpoa'
-
 DRSEB = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
 HPOADL2 = DRSEB + '/lastSuccessfulBuild/artifact/misc_2018'
 
@@ -47,8 +45,8 @@ class HPOAnnotations(Source):
     [PMID:26119816](http://www.ncbi.nlm.nih.gov/pubmed/26119816).
 
     In order to properly test this class,
-    you should have a conf.json file configured with some test ids, in
-    the structure of:
+    you should have a resources/test_ids.yaml file configured with some test ids,
+    in the structure of:
     # as examples.  put your favorite ids in the config.
     <pre>
     test_ids: {"disease" : ["OMIM:119600", "OMIM:120160"]}
@@ -80,6 +78,8 @@ class HPOAnnotations(Source):
             'url': 'http://purl.obolibrary.org/obo/doid.owl'
         }
     }
+    resources = {'test_ids': '../../resources/test_ids.yaml'}
+
     small_files = {
         # this is a placeholder for the columns in the "common-disease"
         # small file format which were added to the 'files' dict programaticly
@@ -122,11 +122,8 @@ class HPOAnnotations(Source):
         self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
 
-        if 'test_ids' not in CONF or 'disease' not in CONF['test_ids']:
-            LOG.warning("not configured with disease test ids.")
-            self.test_ids = []
-        else:
-            self.test_ids = CONF['test_ids']['disease']
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+        self.test_ids = all_test_ids['disease']
 
         return
 

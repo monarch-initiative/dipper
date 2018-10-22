@@ -7,7 +7,6 @@ import urllib
 import urllib.parse
 import urllib.request
 
-from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
@@ -16,7 +15,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Reference import Reference
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class CTD(Source):
@@ -74,6 +73,7 @@ class CTD(Source):
     static_files = {
         'publications': {'file': 'CTD_curated_references.tsv'}
     }
+    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -82,24 +82,23 @@ class CTD(Source):
             'ctd',
             ingest_title='Comparative Toxicogenomics Database',
             ingest_url='http://ctdbase.org',
-            license_url='http://ctdbase.org/about/legal.jsp'
-            # data_rights=None,
+            license_url=None,
+            data_rights='http://ctdbase.org/about/legal.jsp'
             # file_handle=None
         )
 
-        if 'test_ids' not in config.get_config() \
-                or 'gene' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+        if 'gene' not in all_test_ids:
+            LOG.warning("not configured with gene test ids.")
             self.test_geneids = []
         else:
-            self.test_geneids = config.get_config()['test_ids']['gene']
+            self.test_geneids = all_test_ids['gene']
 
-        if 'test_ids' not in config.get_config() \
-                or 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+        if 'disease' not in all_test_ids:
+            LOG.warning("not configured with disease test ids.")
             self.test_diseaseids = []
         else:
-            self.test_diseaseids = config.get_config()['test_ids']['disease']
+            self.test_diseaseids = all_test_ids['disease']
 
         self.geno = Genotype(self.graph)
         self.pathway = Pathway(self.graph)
@@ -133,9 +132,9 @@ class CTD(Source):
         :return None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
         # pub_map = dict()
         # file_path = '/'.join((self.rawdir,
         # self.static_files['publications']['file']))
@@ -156,7 +155,7 @@ class CTD(Source):
         self._parse_ctd_file(limit, self.files['gene_disease']['file'])
         self._parse_curated_chem_disease(limit)
 
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -265,11 +264,11 @@ class CTD(Source):
             dfile_dt = os.stat(disambig_file)
             afile_dt = os.stat(assoc_file)
             if dfile_dt < afile_dt:
-                logger.info(
+                LOG.info(
                     "Local file date before chem-disease assoc file. "
                     " Downloading...")
             else:
-                logger.info(
+                LOG.info(
                     "Local file date after chem-disease assoc file. "
                     " Skipping download.")
                 return
@@ -306,11 +305,11 @@ class CTD(Source):
         start = 0
         end = min((batch_size, len(all_pubs)))  # get them in batches of 4000
 
-        with open(disambig_file, 'wb') as f:
+        with open(disambig_file, 'wb') as dmbf:
             while start < len(sorted_pubs):
                 params['inputTerms'] = '|'.join(sorted_pubs[start:end])
                 # fetch the data from url
-                logger.info(
+                LOG.info(
                     'fetching %d (%d-%d) refs: %s',
                     len(re.split(r'\|', params['inputTerms'])),
                     start, end, params['inputTerms'])
@@ -319,7 +318,7 @@ class CTD(Source):
                 binary_data = data.encode(encoding)
                 req = urllib.request.Request(url, binary_data)
                 resp = urllib.request.urlopen(req)
-                f.write(resp.read())
+                dmbf.write(resp.read())
                 start = end
                 end = min((start + batch_size, len(sorted_pubs)))
 
@@ -365,7 +364,7 @@ class CTD(Source):
         else:
             # there's dual evidence, but haven't mapped the pubs
             pass
-            # logger.debug(
+            # LOG.debug(
             #   "Dual evidence for %s (%s) and %s (%s)",
             #   chem_name, chem_id, disease_name, disease_id)
 
@@ -418,7 +417,7 @@ class CTD(Source):
             'MESH:D020022']   # genetic predisposition to a disease
 
         if disease_id in diseases_to_scrub:
-            logger.info(
+            LOG.info(
                 "Skipping association between NCBIGene:%s and %s",
                 str(gene_id), disease_id)
             return
@@ -454,7 +453,7 @@ class CTD(Source):
                     # the disease ID is an OMIM ID and
                     # there is only one non-equiv OMIM entry in omim_ids
                     # we preferentially use the disease_id here
-                    logger.warning(
+                    LOG.warning(
                         "There may be alternate identifier for %s: %s",
                         disease_id, omim_ids)
                     # TODO: What should be done with the alternate disease IDs?
@@ -503,9 +502,9 @@ class CTD(Source):
         assoc = G2PAssoc(self.graph, self.name, subject_id, object_id, rel_id)
         if pubmed_ids is not None and len(pubmed_ids) > 0:
             for pmid in pubmed_ids:
-                r = Reference(
+                ref = Reference(
                     self.graph, pmid, self.globaltt['journal article'])
-                r.addRefToGraph()
+                ref.addRefToGraph()
                 assoc.add_source(pmid)
                 assoc.add_evidence(self.globaltt['traceable author statement'])
 
@@ -556,8 +555,9 @@ class CTD(Source):
                 model.addClassToGraph(disease_id, None)
                 if pub_id != '':
                     pub_id = 'PMID:' + pub_id
-                    r = Reference(pub_id, self.globaltt['journal article'])
-                    r.addRefToGraph(self.graph)
+                    ref = Reference(
+                        self.graph, pub_id, ref_type=self.globaltt['journal article'])
+                    ref.addRefToGraph()
                     pubids = [pub_id]
                 else:
                     pubids = None

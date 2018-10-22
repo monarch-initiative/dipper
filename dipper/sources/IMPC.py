@@ -79,16 +79,7 @@ class IMPC(Source):
             'file': 'checksum.md5',
             'url': IMPCDL + '/checksum.md5'},
     }
-
-    # TODO move these into the conf.json
-    # the following are gene ids for testing
-    test_ids = [
-        "MGI:109380", "MGI:1347004", "MGI:1353495", "MGI:1913840",
-        "MGI:2144157", "MGI:2182928", "MGI:88456", "MGI:96704", "MGI:1913649",
-        "MGI:95639", "MGI:1341847", "MGI:104848", "MGI:2442444", "MGI:2444584",
-        "MGI:1916948", "MGI:107403", "MGI:1860086", "MGI:1919305",
-        "MGI:2384936", "MGI:88135", "MGI:1913367", "MGI:1916571",
-        "MGI:2152453", "MGI:1098270"]
+    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -105,7 +96,10 @@ class IMPC(Source):
         # TODO add a citation for impc dataset as a whole
         # :impc cito:citesAsAuthority PMID:24194600
         # self.dataset.citation()
-
+        
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+        self.test_ids = all_test_ids['mouse']
+        
         return
 
     def fetch(self, is_dl_forced=False):
