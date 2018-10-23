@@ -182,7 +182,8 @@
 'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
 'KEGG-hsa': 'http://www.kegg.jp/dbget-bin/www_bget?hsa:'                        # Kyoto Encyclopedia of Genes and Genomes (Human)
 'MGI': 'http://www.informatics.jax.org/accession/MGI:'                          # Mouse Genome Informatics
-'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/'                                 # National Center for Biotechnology Information (Genes)
+'miRBase': 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc='                 # microRNA nomenclature, sequences & annotation
+'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/'                                # National Center for Biotechnology Information (Genes)
 'PomBase': 'https://www.pombase.org/spombe/result/'                             # Database for fission yeast Schizosaccharomyces pombe  ***
 'RefSeq': 'http://www.ncbi.nlm.nih.gov/refseq/?term='                           # NCBI Reference Sequence Database
 'RGD': 'http://rgd.mcw.edu/rgdweb/report/gene/main.html?id='                    # Rat Genome Database

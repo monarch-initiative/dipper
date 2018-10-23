@@ -9,7 +9,7 @@ junk/*
 
 ### Project specific:
 
-dipper/conf.json
+dipper/conf.yaml
 raw
 out
 owltools*

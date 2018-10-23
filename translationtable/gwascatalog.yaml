@@ -3,7 +3,11 @@
 'downstream_gene_variant': 'is downstream of sequence of'
 
 # find a way to parameterize this
-"reference assembly": "GRCh38"
+'reference assembly': 'GRCh38'
 
 # switch from SO!region to falfo!Region
-"region":  "Region"   
+'region':  'Region'
+
+# vaguely implied by a unit test;
+# would switch from more specific SO to a less specific GENO term
+#'intron_variant':  'has_affected_feature'

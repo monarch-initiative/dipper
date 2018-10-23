@@ -2,23 +2,18 @@
 
 import unittest
 import logging
-# import os
-# from rdflib import Graph
-# from tests import test_general, test_source
 from tests.test_source import SourceTestCase
 from dipper.sources.NCBIGene import NCBIGene
-# from dipper import curie_map
 
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class NCBITestCase(SourceTestCase):
 
     def setUp(self):
         self.source = NCBIGene('rdf_graph', True)
-        self.source.test_ids = self._get_conf()['test_ids']['gene']
         self.source.settestonly(True)
         self._setDirToSource()
         return
@@ -31,7 +26,7 @@ class NCBITestCase(SourceTestCase):
     # all parts of the code
     # @unittest.skip('test not yet defined')
     # def test_ncbitest(self):
-    #    logger.info("An NCBI-specific test")
+    #    LOG.info("An NCBI-specific test")
     #
     #    return
 

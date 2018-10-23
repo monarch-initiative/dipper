@@ -566,7 +566,7 @@
 "phenotyping only": "SEPIO:0000186",
 # "has_evidence_with_item": "SEPIO:0000189",
 # "Semanticscience Integrated Ontology": "SIO:!!!",
-"webpage": "SIO:000302",
+"web page": "SIO:000302",
 "count": "SIO:000794",
 "race": "SIO:001015",
 # "Sequence Onrology": "SO:!!!",

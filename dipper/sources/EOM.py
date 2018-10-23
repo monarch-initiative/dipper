@@ -11,7 +11,7 @@ from dipper import config
 from dipper.models.Reference import Reference
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class EOM(PostgreSQLSource):
@@ -23,7 +23,7 @@ class EOM(PostgreSQLSource):
 
     The website is crawled monthly by NIF's DISCO crawler system,
     which we utilize here.
-    Be sure to have pg user/password connection details in your conf.json file,
+    Be sure to have pg user/password connection details in your conf.yaml file,
     like:
     dbauth : {'disco' : {'user' : '<username>', 'password' : '<password>'}}
 
@@ -58,26 +58,20 @@ class EOM(PostgreSQLSource):
             # file_handle=None
         )
 
-        # check if config exists; if it doesn't, error out and let user know
-        if 'dbauth' not in config.get_config() or \
-                'disco' not in config.get_config()['dbauth']:
-            logger.error("not configured with PG user/password.")
-
-        # source-specific warnings.  will be cleared when resolved.
-
         return
 
     def fetch(self, is_dl_forced=False):
-        '''create the connection details for DISCO'''
-
-        cxn = config.get_config()['dbauth']['disco']
-        cxn.update(
-            {'host': 'nif-db.crbs.ucsd.edu', 'database': 'disco_crawler',
-             'port': 5432})
+        '''connection details for DISCO'''
+        cxn = {}
+        cxn['host'] = 'nif-db.crbs.ucsd.edu'
+        cxn['database'] = 'disco_crawler'
+        cxn['port'] = '5432'
+        cxn['user'] = config.get_config()['user']['disco']
+        cxn['password'] = config.get_config()['keys'][cxn['user']]
 
         self.dataset.setFileAccessUrl(
-            ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
-                    '/', cxn['database'])), is_object_literal=True)
+            'jdbc:postgresql://'+cxn['host']+':'+cxn['port']+'/'+cxn['database'],
+            is_object_literal=True)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables,cxn,100)  #for testing
@@ -86,8 +80,8 @@ class EOM(PostgreSQLSource):
         self.get_files(is_dl_forced)
 
         # FIXME: Everything needed for data provenance?
-        st = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        fstat = os.stat('/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')))
+        filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
 
         return
@@ -98,19 +92,19 @@ class EOM(PostgreSQLSource):
         '''
 
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
+            LOG.info("Only parsing first %s rows of each file", limit)
 
         if self.testOnly:
             self.testMode = True
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         self._process_nlx_157874_1_view(
             '/'.join((self.rawdir, 'dvp.pr_nlx_157874_1')), limit)
         self._map_eom_terms(
             '/'.join((self.rawdir, self.files['map']['file'])), limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         # since it's so small,
         # we default to copying the entire graph to the test set
@@ -144,12 +138,10 @@ class EOM(PostgreSQLSource):
         """
 
         model = Model(self.graph)
-        line_counter = 0
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
-            filereader = csv.reader(f1, delimiter='\t', quotechar='\"')
-            for line in filereader:
-                line_counter += 1
+            reader = csv.reader(f1, delimiter='\t', quotechar='\"')
+            for line in reader:
                 (morphology_term_id, morphology_term_num,
                  morphology_term_label, morphology_term_url,
                  terminology_category_label, terminology_category_url,
@@ -166,8 +158,7 @@ class EOM(PostgreSQLSource):
 
                 # Add morphology term to graph as a class
                 # with label, type, and description.
-                model.addClassToGraph(morphology_term_id,
-                                      morphology_term_label)
+                model.addClassToGraph(morphology_term_id, morphology_term_label)
 
                 # Assemble the description text
 
@@ -180,9 +171,8 @@ class EOM(PostgreSQLSource):
                     # add a trailing period.
                     objective_definition = objective_definition.strip() + '.'
 
-                definition = \
-                    '  '.join(
-                        (objective_definition, subjective_definition)).strip()
+                definition = '  '.join(
+                    (objective_definition, subjective_definition)).strip()
 
                 model.addDefinition(morphology_term_id, definition)
 
@@ -204,24 +194,25 @@ class EOM(PostgreSQLSource):
                 if comments != '':
                     model.addComment(morphology_term_id, comments.strip())
 
-                if synonyms != '':
-                    for s in synonyms.split(';'):
-                        model.addSynonym(
-                            morphology_term_id, s.strip(),
-                            self.globaltt['hasExactSynonym'])
+                for syn in synonyms.split(';'):
+                    model.addSynonym(
+                        morphology_term_id, syn.strip(),
+                        self.globaltt['hasExactSynonym'])
 
                 # morphology_term_id hasRelatedSynonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
-                    for s in replaces.split(';'):
+                    for syn in replaces.split(';'):
                         model.addSynonym(
-                            morphology_term_id, s.strip(),
+                            morphology_term_id, syn.strip(),
                             self.globaltt['hasRelatedSynonym'])
 
-                # morphology_term_id has page morphology_term_url
-                reference = Reference(self.graph)
-                reference.addPage(morphology_term_id, morphology_term_url)
+                # <morphology_term_id> <foaf:page> morphology_term_url
+                if morphology_term_id is not None and morphology_term_url is not None:
+                    reference = Reference(
+                        self.graph, morphology_term_url, self.globaltt['web page'])
+                    reference.addPage(morphology_term_id, morphology_term_url)
 
-                if limit is not None and line_counter > limit:
+                if limit is not None and reader.line_num > limit:
                     break
         return
 
@@ -242,8 +233,9 @@ class EOM(PostgreSQLSource):
             for line in f1:
                 line_counter += 1
                 row = line.split('\t')
-                (morphology_term_id, morphology_term_label,
-                    hp_id, hp_label, notes) = row
+                (
+                    morphology_term_id, morphology_term_label, hp_id, hp_label,
+                    notes) = row
 
                 # Sub out the underscores for colons.
                 hp_id = re.sub('_', ':', hp_id)
@@ -253,7 +245,7 @@ class EOM(PostgreSQLSource):
                     # Add the HP ID as an equivalent class
                     model.addEquivalentClass(morphology_term_id, hp_id)
                 else:
-                    logger.warning('No matching HP term for %s', morphology_term_label)
+                    LOG.warning('No matching HP term for %s', morphology_term_label)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -262,7 +254,6 @@ class EOM(PostgreSQLSource):
 
     def getTestSuite(self):
         import unittest
-        # TODO PYLINT: Unable to import 'tests.test_eom'
         from tests.test_eom import EOMTestCase
 
         test_suite = unittest.TestLoader().loadTestsFromTestCase(EOMTestCase)

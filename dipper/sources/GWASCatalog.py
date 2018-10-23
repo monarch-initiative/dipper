@@ -12,7 +12,7 @@ from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.graph.RDFGraph import RDFGraph
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class GWASCatalog(Source):
@@ -54,7 +54,7 @@ class GWASCatalog(Source):
             graph_type,
             are_bnodes_skolemized,
             'gwascatalog',
-            ingest_title='The NHGRI-EBI Catalog of published genome-wide association studies',
+            ingest_title='NHGRI-EBI Catalog of published genome-wide association studies',
             ingest_url='http://www.ebi.ac.uk/gwas/',
             license_url='http://www.ebi.ac.uk/gwas/docs/about',
             data_rights='http://www.ebi.ac.uk/gwas/docs/about'
@@ -66,7 +66,7 @@ class GWASCatalog(Source):
 
         if 'test_ids' not in config.get_config() or 'gene' \
                 not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+            LOG.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']
 
@@ -87,16 +87,16 @@ class GWASCatalog(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
+            LOG.info("Only parsing first %s rows of each file", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
         self.process_catalog(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
         return
 
     def process_catalog(self, limit=None):
@@ -106,18 +106,18 @@ class GWASCatalog(Source):
 
         """
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
-        logger.info("Processing Data from %s", raw)
+        LOG.info("Processing Data from %s", raw)
         efo_ontology = RDFGraph(False, "EFO")
-        logger.info("Loading EFO ontology in separate rdf graph")
+        LOG.info("Loading EFO ontology in separate rdf graph")
         efo_ontology.parse(self.files['efo']['url'], format='xml')
         efo_ontology.bind_all_namespaces()
-        logger.info("Finished loading EFO ontology")
+        LOG.info("Finished loading EFO ontology")
 
         so_ontology = RDFGraph(False, "SO")
-        logger.info("Loading SO ontology in separate rdf graph")
+        LOG.info("Loading SO ontology in separate rdf graph")
         so_ontology.parse(self.files['so']['url'], format='xml')
         so_ontology.bind_all_namespaces()
-        logger.info("Finished loading SO ontology")
+        LOG.info("Finished loading SO ontology")
 
         line_counter = 0
 
@@ -125,7 +125,7 @@ class GWASCatalog(Source):
             filereader = csv.reader(csvfile, delimiter='\t')
             header = next(filereader, None)  # the header row
             header_len = len(header)
-            logger.info('header length:\t %i', header_len)
+            LOG.info('header length:\t %i', header_len)
 
             for row in filereader:
                 if not row:
@@ -133,7 +133,7 @@ class GWASCatalog(Source):
                 else:
                     line_counter += 1
                     if header_len != len(row):
-                        logger.error(
+                        LOG.error(
                             'BadRow: %i has %i columns', line_counter, row)
                         pass
 
@@ -192,7 +192,7 @@ class GWASCatalog(Source):
                         strongest_snp_risk_allele)
 
                     if strongest_snp_risk_allele.strip() == '':
-                        logger.debug(
+                        LOG.debug(
                             "No strongest SNP risk allele for %s:\n%s",
                             pubmed_num, str(row))
                         # still consider adding in the EFO terms
@@ -216,7 +216,7 @@ class GWASCatalog(Source):
                             chrom_pos, context, risk_allele_frequency, mapped_gene,
                             so_ontology)
                     elif variant_type is None:
-                        logger.warning(
+                        LOG.warning(
                             "There's a snp id i can't manage: %s",
                             strongest_snp_risk_allele)
                         continue
@@ -239,7 +239,7 @@ class GWASCatalog(Source):
         for l in self.id_location_map:
             snp_ids = self.id_location_map[l]
             if len(snp_ids) > 1:
-                logger.info("%s has >1 snp id: %s", l, str(snp_ids))
+                LOG.info("%s has >1 snp id: %s", l, str(snp_ids))
         return
 
     def _process_haplotype(
@@ -281,7 +281,7 @@ class GWASCatalog(Source):
         length = len(snp_labels)
         if not all(len(lst) == length
                    for lst in [chrom_nums, chrom_positions, context_list]):
-            logger.warning(
+            LOG.warning(
                 "Unexpected data field for haplotype {} \n "
                 "will not add snp details".format(hap_label))
             return
@@ -295,7 +295,7 @@ class GWASCatalog(Source):
             if len(mapped_genes) == len(snp_labels):
                 so_class = self.resolve(context_list[index])
                 # removed the '+' for recursive  one-or-more rdfs:subClassOf  paths
-                # just so it did not return an empty graph 
+                # just so it did not return an empty graph
                 so_query = """
 SELECT ?variant_label
     WHERE {{
@@ -320,7 +320,7 @@ SELECT ?variant_label
                         snp_curie, self.resolve(context_list[index]), gene_id)
 
             else:
-                logger.warning(
+                LOG.warning(
                     "More mapped genes than snps, cannot disambiguate for {}"
                     .format(hap_label))
 
@@ -379,10 +379,10 @@ SELECT ?variant_label
 
         # also want to add other descriptive info about
         # the variant from the context
-        for c in re.split(r';', context):
-            c = c.strip()
-            cid = self.resolve(c, False)
-            if cid != c:
+        for ctx in re.split(r';', context):
+            ctx = ctx.strip()
+            cid = self.resolve(ctx, False)
+            if cid != ctx:
                 model.addType(snp_id, cid)
 
         return
@@ -531,7 +531,7 @@ SELECT ?variant_label
         variant_id = re.sub(r' -', '-', variant_id)
         if re.search(r' x ', variant_id) or re.search(r',', variant_id):
             # TODO deal with rs1234 x rs234... (haplotypes?)
-            logger.warning("Cannot parse variant groups of this format: %s", variant_id)
+            LOG.warning("Cannot parse variant groups of this format: %s", variant_id)
         elif re.search(r';', variant_id):
             curie = ':haplotype_' + Source.hash_id(variant_id)
             variant_type = "haplotype"
@@ -554,6 +554,6 @@ SELECT ?variant_label
         elif variant_id.strip() == '':
             pass
         else:
-            logger.warning("There's a snp id i can't manage: %s", variant_id)
+            LOG.warning("There's a snp id i can't manage: %s", variant_id)
 
         return curie, variant_type

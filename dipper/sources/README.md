@@ -48,13 +48,16 @@ There are certain conventions that we follow here:
 
 ## Special configurations
 
-Add private configuration parameters into your private conf.json file.
+Add private configuration parameters into your private conf.yaml file.
 Examples of items to put into the config include:  
 * database connection parameters (in the "dbauth" object)  
-* ftp login credentials  
-* api keys (in the "keys" object)  
+* account user names
+* paswords
+  * ftp login credentials  
+  * api keys (in the "keys" object)
+* ssh key pairs    
   
-These are organized such that within any object (dbauth, keys, etc),
+These are organized such that within any object (dbauth, users, keys, etc),
 they are keyed again by the source's name.
   
 ## Testing

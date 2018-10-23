@@ -26,7 +26,7 @@ class Reference:
         else:
             raise ValueError("%s is not a graph", graph)
 
-        assert ref_id is not None
+        # assert ref_id is not None
 
         self.ref_id = ref_id
         self.ref_url = None
@@ -47,7 +47,7 @@ class Reference:
             if ref_type[:4] not in ('IAO:', 'SIO:'):
                 LOG.warning("Got Pub ref type of:  %s", ref_type)
 
-        if ref_id[:4] == 'http':
+        if ref_id is not None and ref_id[:4] == 'http':
             self.ref_url = ref_id
 
         return
@@ -90,7 +90,7 @@ class Reference:
 
     def addPage(self, subject_id, page_url):
         self.graph.addTriple(
-            subject_id, self.globaltt['page'],
+            subject_id, self.globaltt['page'],  # foaf:page  not  <sio:web page>
             page_url, object_is_literal=True)
         return
 

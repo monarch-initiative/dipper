@@ -154,7 +154,7 @@ class Coriell(Source):
         For each catalog, we ping the remote site and pull the most-recently
         updated file, renaming it to our local  latest.csv.
 
-        Be sure to have pg user/password connection details in your conf.json
+        Be sure to have pg user/password connection details in your conf.yaml
         file, like:
         dbauth : {"coriell" : {
         "user" : "<username>", "password" : "<password>",
@@ -167,12 +167,12 @@ class Coriell(Source):
         """
 
         host = config.get_config()['dbauth']['coriell']['host']
-        user = config.get_config()['dbauth']['coriell']['user']
-        passwd = config.get_config()['dbauth']['coriell']['password']
         key = config.get_config()['dbauth']['coriell']['private_key']
+        user = config.get_config()['user']['coriell']
+        passwd = config.get_config()['keys'][user]
 
         with pysftp.Connection(
-                host, username=user, password=passwd, private_key=key) as sftp:
+            host, username=user, password=passwd, private_key=key) as sftp:
             # check to make sure each file is in there
             # get the remote files
             remote_files = sftp.listdir_attr()
@@ -562,7 +562,7 @@ class Coriell(Source):
                 gene = row[col.index('gene')].strip()
                 mutation = row[col.index('mutation')].strip()
                 if gene != '':
-                    vl = gene + '(' + mutation + ')'
+                    varl = gene + '(' + mutation + ')'
 
                 # fix the variant_id so it's always in the same order
                 variant_id = row[col.index('variant_id')].strip()
@@ -577,12 +577,12 @@ class Coriell(Source):
                         gvc_id = '_:' + variant_id.replace(';', '-') + '-' \
                             + re.sub(r'\w*:', '', karyotype_id)
                     if mutation.strip() != '':
-                        gvc_label = '; '.join((vl, karyotype))
+                        gvc_label = '; '.join((varl, karyotype))
                     else:
                         gvc_label = karyotype
                 elif variant_id.strip() != '':
                     gvc_id = '_:' + variant_id.replace(';', '-')
-                    gvc_label = vl
+                    gvc_label = varl
                 else:
                     # wildtype?
                     pass
@@ -629,7 +629,7 @@ class Coriell(Source):
                         # gene_id = 'OMIM:' + omim  # TODO unused
                         vslc_id = '_:' + '-'.join(
                             [omim + '.' + a for a in omim_map.get(omim)])
-                        vslc_label = vl
+                        vslc_label = varl
                         # we don't really know the zygosity of
                         # the alleles at all.
                         # so the vslcs are just a pot of them
@@ -710,16 +710,16 @@ class Coriell(Source):
 
                 # we associate the disease to the patient
                 if affected == 'affected' and omim_num != '':
-                    for d in omim_num.split(';'):
-                        if d is not None and d != '':
+                    for disease in omim_num.split(';'):
+                        if disease is not None and disease != '':
                             # if the omim number is in omim_map,
                             # then it is a gene not a pheno
 
                             # TEC - another place to use the mimTitle omim
                             # classifier omia & genereviews are using
 
-                            if d not in omim_map:
-                                disease_id = 'OMIM:' + d.strip()
+                            if disease not in omim_map:
+                                disease_id = 'OMIM:' + disease.strip()
                                 # assume the label is taken care of in OMIM
                                 model.addClassToGraph(disease_id, None)
 
@@ -738,13 +738,13 @@ class Coriell(Source):
                                     self.globaltt['is model of'],
                                     disease_id)
                             else:
-                                LOG.info('drop gene %s from disease list', d)
+                                LOG.info('drop gene %s from disease list', disease)
 
                 # #############    ADD PUBLICATIONS   #############
                 pubmed_ids = row[col.index('pubmed_ids')].strip()
                 if pubmed_ids != '':
-                    for s in pubmed_ids.split(';'):
-                        pubmed_id = 'PMID:' + s.strip()
+                    for pmid in pubmed_ids.split(';'):
+                        pubmed_id = 'PMID:' + pmid.strip()
                         ref = Reference(graph, pubmed_id)
                         ref.setType(self.globaltt['journal article'])
                         ref.addRefToGraph()
@@ -799,8 +799,8 @@ class Coriell(Source):
         abberations = re.findall(abberation_regex, karyotype)
 
         # iterate over them to get the chromosomes
-        for a in abberations:
-            chrs = re.findall(chr_regex, a)
+        for abbv in abberations:
+            chrs = re.findall(chr_regex, abbv)
             affected_chromosomes = affected_chromosomes.union(set(chrs))
 
         # remove the ? as a chromosome, since it isn't valid
@@ -808,9 +808,9 @@ class Coriell(Source):
             affected_chromosomes.remove('?')
 
         # check to see if there are any abnormal sex chromosomes
-        m = re.search(sex_regex, karyotype)
-        if m is not None:
-            if re.search(r'X?Y{2,}', m.group(1)):
+        mtch = re.search(sex_regex, karyotype)
+        if mtch is not None:
+            if re.search(r'X?Y{2,}', mtch.group(1)):
                 # this is the only case where there is an extra Y chromosome
                 affected_chromosomes.add('Y')
             else:

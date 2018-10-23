@@ -4,7 +4,7 @@ import os
 import psycopg2
 from dipper.sources.Source import Source
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class PostgreSQLSource(Source):
@@ -13,15 +13,15 @@ class PostgreSQLSource(Source):
     """
 
     def __init__(
-        self,
-        graph_type,
-        are_bnodes_skolemized,
-        name=None,
-        ingest_title=None,
-        ingest_url=None,
-        license_url=None,
-        data_rights=None,
-        file_handle=None
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            name=None,
+            ingest_title=None,
+            ingest_url=None,
+            license_url=None,
+            data_rights=None,
+            file_handle=None
     ):
 
         super().__init__(
@@ -53,12 +53,12 @@ class PostgreSQLSource(Source):
 
         con = None
         try:
-            con = psycopg2.connect(host=cxn['host'], database=cxn['database'],
-                                   port=cxn['port'], user=cxn['user'],
-                                   password=cxn['password'])
+            con = psycopg2.connect(
+                host=cxn['host'], database=cxn['database'], port=cxn['port'],
+                user=cxn['user'], password=cxn['password'])
             cur = con.cursor()
             for tab in tables:
-                logger.info("Fetching data from table %s", tab)
+                LOG.info("Fetching data from table %s", tab)
                 self._getcols(cur, tab)
                 query = ' '.join(("SELECT * FROM", tab))
                 countquery = ' '.join(("SELECT COUNT(*) FROM", tab))
@@ -77,9 +77,8 @@ class PostgreSQLSource(Source):
                     if os.path.exists(outfile):
                         # get rows in the file
                         filerowcount = self.file_len(outfile)
-                        logger.info(
-                            "(%s) rows in local file for table %s",
-                            filerowcount, tab)
+                        LOG.info(
+                            "(%s) rows in local file for table %s", filerowcount, tab)
 
                     # get rows in the table
                     # tablerowcount=cur.rowcount
@@ -89,18 +88,18 @@ class PostgreSQLSource(Source):
                 # rowcount-1 because there's a header
                 if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:
                     if force:
-                        logger.info("Forcing download of %s", tab)
+                        LOG.info("Forcing download of %s", tab)
                     else:
-                        logger.info(
+                        LOG.info(
                             "%s local (%d) different from remote (%d); fetching.",
                             tab, filerowcount, tablerowcount)
                     # download the file
-                    logger.info("COMMAND:%s", query)
+                    LOG.info("COMMAND:%s", query)
                     outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
                     with open(outfile, 'w') as f:
                         cur.copy_expert(outputquery, f)
                 else:
-                    logger.info("local data same as remote; reusing.")
+                    LOG.info("local data same as remote; reusing.")
 
         finally:
             if con:
@@ -120,12 +119,12 @@ class PostgreSQLSource(Source):
         :return:
         """
         if con is None and cxn is None:
-            logger.error("ERROR: you need to supply connection information")
+            LOG.error("ERROR: you need to supply connection information")
             return
         if con is None and cxn is not None:
-            con = psycopg2.connect(host=cxn['host'], database=cxn['database'],
-                                   port=cxn['port'], user=cxn['user'],
-                                   password=cxn['password'])
+            con = psycopg2.connect(
+                host=cxn['host'], database=cxn['database'], port=cxn['port'],
+                user=cxn['user'], password=cxn['password'])
 
         outfile = '/'.join((self.rawdir, qname))
         cur = con.cursor()
@@ -148,7 +147,7 @@ class PostgreSQLSource(Source):
             if os.path.exists(outfile):
                 # get rows in the file
                 filerowcount = self.file_len(outfile)
-                logger.info("INFO: rows in local file: %s", filerowcount)
+                LOG.info("INFO: rows in local file: %s", filerowcount)
 
             # get rows in the table
             # tablerowcount=cur.rowcount
@@ -158,13 +157,13 @@ class PostgreSQLSource(Source):
         # rowcount-1 because there's a header
         if force or filerowcount < 0 or (filerowcount-1) != tablerowcount:
             if force:
-                logger.info("Forcing download of %s", qname)
+                LOG.info("Forcing download of %s", qname)
             else:
-                logger.info(
+                LOG.info(
                     "%s local (%s) different from remote (%s); fetching.",
                     qname, filerowcount, tablerowcount)
             # download the file
-            logger.debug("COMMAND:%s", query)
+            LOG.debug("COMMAND:%s", query)
             outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
             with open(outfile, 'w') as f:
                 cur.copy_expert(outputquery, f)
@@ -172,17 +171,14 @@ class PostgreSQLSource(Source):
             filerowcount = self.file_len(outfile)
             if (filerowcount-1) < tablerowcount:
                 raise Exception(
-                    "Download from %s failed, %s != %s",
-                    cxn['host'] + ':'+cxn['database'],
-                    (filerowcount-1), tablerowcount)
+                    "Download from %s failed, %s != %s", cxn['host'] + ':'+
+                    cxn['database'], (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
-                logger.warn(
-                    "Download from %s more rows in file (%s) " +
-                    "than reported in count(%s)",
-                    cxn['host'] + ':'+cxn['database'],
-                    (filerowcount-1), tablerowcount)
+                LOG.warn(
+                    "Fetched from %s more rows in file (%s) than reported in count(%s)",
+                    cxn['host'] + ':'+cxn['database'], (filerowcount-1), tablerowcount)
         else:
-            logger.info("local data same as remote; reusing.")
+            LOG.info("local data same as remote; reusing.")
 
         return
 
@@ -199,6 +195,6 @@ class PostgreSQLSource(Source):
 
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
-        logger.info("COLS (%s): %s", table, colnames)
+        LOG.info("COLS (%s): %s", table, colnames)
 
         return

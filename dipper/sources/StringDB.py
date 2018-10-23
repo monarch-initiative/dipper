@@ -24,6 +24,7 @@ class StringDB(Source):
     """
     STRING_BASE = "http://string-db.org/download/"
     DEFAULT_TAXA = [9606, 10090, 7955, 7227, 6239]
+    # resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
         super().__init__(
@@ -32,8 +33,8 @@ class StringDB(Source):
             'string',
             ingest_title='Known and predicted protein-protein interactions',
             ingest_url='https://string-db.org/',
-            license_url='https://string-db.org/cgi/access.pl?footer_active_subpage=licensing'
-            # data_rights=None,
+            license_url=None,
+            data_rights='https://string-db.org/cgi/access.pl?footer_active_subpage=licensing'
             # file_handle=None
         )
 
@@ -81,6 +82,7 @@ class StringDB(Source):
                 'file': '7955.string2zfin.tsv'
             }
         }
+        # self.all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
 
     def fetch(self, is_dl_forced=False):
         """

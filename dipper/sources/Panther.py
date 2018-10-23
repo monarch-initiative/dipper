@@ -1,6 +1,7 @@
 import tarfile
 import re
 import logging
+import yaml
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
@@ -9,7 +10,7 @@ from dipper import config
 
 __author__ = 'nicole'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Panther(Source):
@@ -32,7 +33,7 @@ class Panther(Source):
     with our standard CURIE prefixes.
 
     The test graph of data is output based on configured
-    "protein" identifiers in conf.json.
+    "protein" identifiers in conf.yaml.
 
     By default, this will produce a file with ALL orthologous relationships.
     IF YOU WANT ONLY A SUBSET, YOU NEED TO PROVIDE A FILTER UPON CALLING THIS
@@ -48,6 +49,7 @@ class Panther(Source):
             'file': 'Orthologs_HCOP.tar.gz',
             'url': PNTHDL+'/Orthologs_HCOP.tar.gz'}
     }
+    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
@@ -65,11 +67,13 @@ class Panther(Source):
         # if self.tax_ids is None:
         #     self.tax_ids = [9606, 10090, 7955]
 
-        if 'test_ids' not in config.get_config() or \
-                'protein' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+
+        if 'protein' in all_test_ids:
+            self.test_ids = all_test_ids['protein']
         else:
-            self.test_ids = config.get_config()['test_ids']['protein']
+            LOG.warning("not configured with protein test ids.")
+            self.test_ids = []
 
         return
 
@@ -95,10 +99,10 @@ class Panther(Source):
             self.testMode = True
 
         if self.tax_ids is None:
-            logger.info(
+            LOG.info(
                 "No taxon filter set; Dumping all orthologous associations.")
         else:
-            logger.info(
+            LOG.info(
                 "Only the following taxa will be dumped: %s",
                 str(self.tax_ids))
 
@@ -145,7 +149,7 @@ class Panther(Source):
         :return:
 
         """
-        logger.info("getting orthologs")
+        LOG.info("getting orthologs")
 
         if self.testMode:
             graph = self.testgraph
@@ -162,19 +166,19 @@ class Panther(Source):
 
             # assume that the first entry is the item
             fname = mytar.getmembers()[0]
-            logger.info("Parsing %s", fname.name)
+            LOG.info("Parsing %s", fname.name)
             line_counter = 0
             with mytar.extractfile(fname) as csvfile:
                 for line in csvfile:
                     # skip comment lines
                     if re.match(r'^#', line.decode()):
-                        logger.info("Skipping header line")
+                        LOG.info("Skipping header line")
                         continue
                     line_counter += 1
 
                     # a little feedback to the user since there's so many
                     if line_counter % 1000000 == 0:
-                        logger.info(
+                        LOG.info(
                             "Processed %d lines from %s",
                             line_counter, fname.name)
 
@@ -275,8 +279,8 @@ class Panther(Source):
                         break
                 # make report on unprocessed_gene_ids
 
-            logger.info("finished processing %s", f)
-            logger.warning(
+            LOG.info("finished processing %s", f)
+            LOG.warning(
                 "The following gene ids were unable to be processed: %s",
                 str(unprocessed_gene_ids))
 
@@ -333,14 +337,14 @@ class Panther(Source):
         # if re.match(r'(Gene|ENSEMBLGenome):', geneid) or \
         #        re.match(r'Gene_ORFName', geneid) or \
         #        re.match(r'Gene_Name', geneid):
-        #    # logger.warning(
+        #    # LOG.warning(
         #    #"Found an identifier I don't know how to fix (species %s): %s",
         #    #   sp, geneid)
 
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
         if pfx is None or pfx not in curie_map:
-            # logger.warning( "No curie prefix for (species %s): %s", sp, geneid)
+            # LOG.warning( "No curie prefix for (species %s): %s", sp, geneid)
             geneid = None
         return geneid
 

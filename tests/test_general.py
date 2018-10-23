@@ -28,7 +28,7 @@ class GeneralGraphTestCase(unittest.TestCase):
         # add one id per curie as classes to the graph
         for p in self.curie_map.keys():
             testid = p+':testme'
-            n = self.graph._getNode(testid)
+            n = self.graph._getnode(testid)
             m = "prefix \""+p+"\" has an error...can't create graph node"
             self.assertTrue(n is not None, m)
 

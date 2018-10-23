@@ -39,7 +39,7 @@ class OMIM(Source):
      (save 20 IDs per call if any include is used)
 
     Note this ingest requires an api Key which is not stored in the repo,
-    but in a separate conf.json file.
+    but in a separate conf.yaml file.
 
     Processing this source serves two purposes:
     1.  the creation of the OMIM classes for merging into the disease ontology
@@ -85,22 +85,7 @@ class OMIM(Source):
             ),
         },
     }
-
-    # the following test ids are in the config.json
-    # (they do not belong there either  -TEC)
-    test_ids = [
-        119600, 120160, 157140, 158900, 166220, 168600, 219700,
-        # coriell
-        253250, 305900, 600669, 601278, 602421, 605073, 607822,
-        # genes
-        102560, 102480, 100678, 102750, 600201,
-        # phenotype/disease -- indicate that here?
-        104200, 105400, 114480, 115300, 121900,
-        # gene of known sequence and has a phenotype
-        107670, 11600, 126453,
-        102150, 104000, 107200, 100070, 611742, 611100,
-        # disease with known locus
-        102480]
+    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -122,17 +107,9 @@ class OMIM(Source):
                 'omim' not in config.get_config()['keys']:
             LOG.error("not configured with API key.")
 
-        # check to see if there's any ids configured in the config;
-        # otherwise, warn
-        if 'test_ids' not in config.get_config() or \
-                'disease' not in config.get_config()['test_ids']:
-            LOG.warning("not configured with disease test ids.")
-        else:
-            # select ony those test ids that are omim's.
-            self.test_ids += \
-                [obj.replace('OMIM:', '')
-                 for obj in config.get_config()['test_ids']['disease']
-                 if re.match(r'OMIM:', obj)]
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+        # integer portion of omim identifier
+        self.test_ids = [x[5:] for x in all_test_ids['disease'] if x[:5] == 'OMIM:']
 
         self.omim_type = {}
 
@@ -330,7 +307,7 @@ class OMIM(Source):
                     msg = "API Key not valid"
                     raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
                 else:
-                    LOG.warning("url {} returned 404, skipping".format(url))
+                    LOG.warning("url %s returned 404, skipping", url)
                     break
 
             resp = req.read().decode()
@@ -735,7 +712,8 @@ class OMIM(Source):
 
         return
 
-    def _make_anonymous_feature(self, omim_num):
+    @staticmethod
+    def _make_anonymous_feature(omim_num):
         ''' more blank nodes '''
         return '_:feature' + omim_num
 
@@ -1242,5 +1220,3 @@ def get_omim_id_from_entry(entry):
     else:
         omimid = None
     return omimid
-
-

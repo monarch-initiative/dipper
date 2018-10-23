@@ -13,7 +13,7 @@ from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MGI(PostgreSQLSource):
@@ -28,7 +28,7 @@ class MGI(PostgreSQLSource):
     then iterate over the tables.  We end up effectively performing joins
     when adding nodes to the graph.
     In order to use this parser, you will need to have user/password connection
-    details in your conf.json file, like:
+    details in your conf.yaml file, like:
     dbauth : {'mgi' : {'user' : '<username>', 'password' : '<password>'}}
     You can request access by contacting mgi-help@jax.org
 
@@ -50,167 +50,92 @@ class MGI(PostgreSQLSource):
     #    eventually i think we want this because
     # it has other relevant markers that are affected
 
-    resources = [
-        {
-          'query': '../../resources/sql/mgi/mgi_dbinfo.sql',
-          'outfile': 'mgi_dbinfo',
-          'Force': True
-        },
-        {
-          'query': '../../resources/sql/mgi/gxd_genotype_view.sql',
-          'outfile': 'gxd_genotype_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/gxd_genotype_summary_view.sql',
-          'outfile': 'gxd_genotype_summary_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/gxd_allelepair_view.sql',
-          'outfile': 'gxd_allelepair_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/all_summary_view.sql',
-          'outfile': 'all_summary_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/all_allele_view.sql',
-          'outfile': 'all_allele_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/all_allele_mutation_view.sql',
-          'outfile': 'all_allele_mutation_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mrk_marker_view.sql',
-          'outfile': 'mrk_marker_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/voc_annot_view.sql',
-          'outfile': 'voc_annot_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/evidence.sql',
-          'outfile': 'evidence_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/bib_acc_view.sql',
-          'outfile': 'bib_acc_view'
-        },
-        {
-           'query': '../../resources/sql/mgi/prb_strain_view.sql',
-           'outfile': 'prb_strain_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mrk_summary_view.sql',
-          'outfile': 'mrk_summary_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mrk_acc_view.sql',
-          'outfile': 'mrk_acc_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/prb_strain_acc_view.sql',
-          'outfile': 'prb_strain_acc_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/prb_strain_genotype_view.sql',
-          'outfile': 'prb_strain_genotype_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mgi_note_vocevidence_view.sql',
-          'outfile': 'mgi_note_vocevidence_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mgi_note_allele_view.sql',
-          'outfile': 'mgi_note_allele_view'
-        },
-        {
-          'query': '../../resources/sql/mgi/mrk_location_cache.sql',
-          'outfile': 'mrk_location_cache'  # gene locations
-        }
-    ]
+    resources = {
+        'query_map': [
+            {
+              'query': '../../resources/sql/mgi/mgi_dbinfo.sql',
+              'outfile': 'mgi_dbinfo',
+              'Force': True
+            },
+            {
+              'query': '../../resources/sql/mgi/gxd_genotype_view.sql',
+              'outfile': 'gxd_genotype_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/gxd_genotype_summary_view.sql',
+              'outfile': 'gxd_genotype_summary_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/gxd_allelepair_view.sql',
+              'outfile': 'gxd_allelepair_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/all_summary_view.sql',
+              'outfile': 'all_summary_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/all_allele_view.sql',
+              'outfile': 'all_allele_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/all_allele_mutation_view.sql',
+              'outfile': 'all_allele_mutation_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mrk_marker_view.sql',
+              'outfile': 'mrk_marker_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/voc_annot_view.sql',
+              'outfile': 'voc_annot_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/evidence.sql',
+              'outfile': 'evidence_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/bib_acc_view.sql',
+              'outfile': 'bib_acc_view'
+            },
+            {
+               'query': '../../resources/sql/mgi/prb_strain_view.sql',
+               'outfile': 'prb_strain_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mrk_summary_view.sql',
+              'outfile': 'mrk_summary_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mrk_acc_view.sql',
+              'outfile': 'mrk_acc_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/prb_strain_acc_view.sql',
+              'outfile': 'prb_strain_acc_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/prb_strain_genotype_view.sql',
+              'outfile': 'prb_strain_genotype_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mgi_note_vocevidence_view.sql',
+              'outfile': 'mgi_note_vocevidence_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mgi_note_allele_view.sql',
+              'outfile': 'mgi_note_allele_view'
+            },
+            {
+              'query': '../../resources/sql/mgi/mrk_location_cache.sql',
+              'outfile': 'mrk_location_cache'  # gene locations
+            }
+        ],
+        'test_ids': '../../resources/test_ids.yaml',
+        'test_keys': '../../resources/mgi_test_keys.yaml'    
+    }
 
     # for testing purposes, this is a list of internal db keys
     # to match and select only portions of the source
-    test_keys = {
-        'allele': [
-            1612, 1609, 1303, 56760, 816699, 51074, 14595, 816707, 246, 38139,
-            4334, 817387, 8567, 476, 42885, 3658, 1193, 6978, 6598, 16698,
-            626329, 33649, 835532, 7861, 33649, 6308, 1285, 827608],
-        'marker': [
-            357, 38043, 305574, 444020, 34578, 9503, 38712, 17679, 445717,
-            38415, 12944, 377, 77197, 18436, 30157, 14252, 412465, 38598,
-            185833, 35408, 118781, 37270, 31169, 25040, 81079],
-        'annot': [
-            6778, 12035, 189442, 189443, 189444, 189445, 189446, 189447,
-            189448, 189449, 189450, 189451, 189452, 318424, 717023, 717024,
-            717025, 717026, 717027, 717028, 717029, 5123647, 928426, 5647502,
-            6173775, 6173778, 6173780, 6173781, 6620086, 13487622, 13487623,
-            13487624, 23241933, 23534428, 23535949, 23546035, 24722398,
-            29645663, 29645664, 29645665, 29645666, 29645667, 29645682,
-            43803707, 43804057, 43805682, 43815003, 43838073, 58485679,
-            59357863, 59357864, 59357865, 59357866, 59357867, 60448185,
-            60448186, 60448187, 62628962, 69611011, 69611253, 79642481,
-            79655585, 80436328, 83942519, 84201418, 90942381, 90942382,
-            90942384, 90942385, 90942386, 90942389, 90942390, 90942391,
-            90942392, 92947717, 92947729, 92947735, 92947757, 92948169,
-            92948441, 92948518, 92949200, 92949301, 93092368, 93092369,
-            93092370, 93092371, 93092372, 93092373, 93092374, 93092375,
-            93092376, 93092377, 93092378, 93092379, 93092380, 93092381,
-            93092382, 93401080, 93419639, 93436973, 93436974, 93436975,
-            93436976, 93436977, 93459094, 93459095, 93459096, 93459097,
-            93484431, 93484432, 93491333, 93491334, 93491335, 93491336,
-            93491337, 93510296, 93510297, 93510298, 93510299, 93510300,
-            93548463, 93551440, 93552054, 93576058, 93579091, 93579870,
-            93581813, 93581832, 93581841, 93581890, 93583073, 93583786,
-            93584586, 93587213, 93604448, 93607816, 93613038, 93614265,
-            93618579, 93620355, 93621390, 93624755, 93626409, 93626918,
-            93636629, 93642680, 93643814, 93643825, 93647695, 93648755,
-            93652704, 5123647, 71668107, 71668108, 71668109, 71668110,
-            71668111, 71668112, 71668113, 71668114, 74136778, 107386012,
-            58485691],
-        'genotype': [
-            81, 87, 142, 206, 281, 283, 286, 287, 341, 350, 384, 406, 407, 411,
-            425, 457, 458, 461, 476, 485, 537, 546, 551, 553, 11702, 12910,
-            13407, 13453, 14815, 26655, 28610, 37313, 38345, 59766, 60082,
-            65406, 64235],
-        'pub': [
-            73197, 165659, 134151, 76922, 181903, 26681, 128938, 80054, 156949,
-            159965, 53672, 170462, 206876, 87798, 100777, 176693, 139205,
-            73199, 74017, 102010, 152095, 18062, 216614, 61933, 13385, 32366,
-            114625, 182408, 140802],
-        'strain': [
-            30639, 33832, 33875, 33940, 36012, 59504, 34338, 34382, 47670,
-            59802, 33946, 31421, 64, 40, 14, -2, 30639, 15975, 35077, 12610,
-            -1, 28319, 27026, 141, 62299],
-        'notes': [
-            5114, 53310, 53311, 53312, 53313, 53314, 53315, 53316, 53317,
-            53318, 53319, 53320, 71099, 501751, 501752, 501753, 501754, 501755,
-            501756, 501757, 744108, 1055341, 6049949, 6621213, 6621216,
-            6621218, 6621219, 7108498, 14590363, 14590364, 14590365, 25123358,
-            25123360, 26688159, 32028545, 32028546, 32028547, 32028548,
-            32028549, 32028564, 37833486, 47742903, 47743253, 47744878,
-            47754199, 47777269, 65105483, 66144014, 66144015, 66144016,
-            66144017, 66144018, 70046116, 78382808, 78383050, 103920312,
-            103920318, 103920319, 103920320, 103920322, 103920323, 103920324,
-            103920325, 103920326, 103920328, 103920330, 103920331, 103920332,
-            103920333, 106390006, 106390018, 106390024, 106390046, 106390458,
-            106390730, 106390807, 106391489, 106391590, 106579450, 106579451,
-            106579452, 106579453, 106579454, 106579455, 106579456, 106579457,
-            106579458, 106579459, 106579460, 106579461, 106579462, 106579463,
-            106579464, 106949909, 106949910, 106969368, 106969369, 106996040,
-            106996041, 106996042, 106996043, 106996044, 107022123, 107022124,
-            107022125, 107022126, 107052057, 107052058, 107058959, 107058960,
-            107058961, 107058962, 107058963, 107077922, 107077923, 107077924,
-            107077925, 107077926, 107116089, 107119066, 107119680, 107154485,
-            107155254, 107158128, 107159385, 107160435, 107163154, 107163183,
-            107163196, 107163271, 107164877, 107165872, 107166942, 107168838,
-            107170557, 107174867, 107194346, 107198590, 107205179, 107206725,
-            107212120, 107214364, 107214911, 107215700, 107218519, 107218642,
-            107219974, 107221415, 107222064, 107222717, 107235068, 107237686,
-            107242709, 107244121, 107244139, 107248964, 107249091, 107250401,
-            107251870, 107255383, 107256603]
-    }
 
     def __init__(
         self,
@@ -248,13 +173,19 @@ class MGI(PostgreSQLSource):
 
         self.wildtype_alleles = set()
 
-        # also add the gene ids from the config
+        # also add the gene ids from the test_ids
         # in order to capture transgenes of the test set
-        if 'test_ids' not in config.get_config() \
-                or 'gene' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+
+        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+
+        if 'gene' in all_test_ids:
+            self.test_ids = all_test_ids['gene']
         else:
-            self.test_ids = config.get_config()['test_ids']['gene']
+            LOG.warning("not configured with gene test ids.")
+            self.test_ids = []
+
+        self.test_keys = self.open_and_parse_yaml(self.resources['test_keys'])
+            
         return
 
     def fetch(self, is_dl_forced=False):
@@ -264,26 +195,23 @@ class MGI(PostgreSQLSource):
         We'll check the local table versions against the remote version
         :return:
         """
-
         # check if config exists; if it doesn't, error out and let user know
         if 'dbauth' not in config.get_config() and 'mgi' \
                 not in config.get_config()['dbauth']:
-            logger.error("not configured with PG user/password.")
+            LOG.error("not configured with PG user/password.")
 
         # create the connection details for MGI
         cxn = config.get_config()['dbauth']['mgi']
-        cxn.update(
-            {'host': 'mgi-adhoc.jax.org', 'database': 'mgd', 'port': 5432})
 
-        self.dataset.setFileAccessUrl(
-            ''.join(('jdbc:postgresql://', cxn['host'], ':', str(cxn['port']),
-                    '/', cxn['database'])), is_object_literal=True)
+        self.dataset.setFileAccessUrl(''.join((
+            'jdbc:postgresql://', cxn['host'], ':', str(cxn['port']), '/',
+            cxn['database'])), is_object_literal=True)
 
         # process the tables
         # self.fetch_from_pgdb(self.tables, cxn, 100)  # for testing only
         # self.fetch_from_pgdb(self.tables, cxn, None, is_dl_forced)
 
-        for query_map in self.resources:
+        for query_map in self.resources['query_map']:
             query_fh = open(os.path.join(
                 os.path.dirname(__file__), query_map['query']), 'r')
             query = query_fh.read()
@@ -332,8 +260,8 @@ class MGI(PostgreSQLSource):
 
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows of each file", limit)
-        logger.info("Parsing files...")
+            LOG.info("Only parsing first %d rows of each file", limit)
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -364,9 +292,9 @@ class MGI(PostgreSQLSource):
         self.process_mgi_relationship_transgene_genes(limit)
         self.process_mgi_note_allele_view(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
-        logger.info("Loaded %d nodes", len(self.graph))
+        LOG.info("Loaded %d nodes", len(self.graph))
         return
 
     def fetch_transgene_genes_from_db(self, cxn):
@@ -439,7 +367,7 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
 
         raw = '/'.join((self.rawdir, 'gxd_genotype_view'))
-        logger.info("getting genotypes and their backgrounds")
+        LOG.info("getting genotypes and their backgrounds")
         with open(raw, 'r') as f1:
             f1.readline()  # read the header row; skip
             for line in f1:
@@ -487,7 +415,7 @@ SELECT  r._relationship_key as rel_key,
                             'unspecified_genomic_background']
 
                     # add it back to the idhash
-                    logger.info(
+                    LOG.info(
                         "adding background as internal id: %s %s: %s",
                         strain_key, strain, strain_id)
 
@@ -530,7 +458,7 @@ SELECT  r._relationship_key as rel_key,
         line_counter = 0
         geno_hash = {}
         raw = '/'.join((self.rawdir, 'gxd_genotype_summary_view'))
-        logger.info("building labels for genotypes")
+        LOG.info("building labels for genotypes")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -597,7 +525,7 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_summary_view'))
-        logger.info(
+        LOG.info(
             "alleles with labels and descriptions from all_summary_view")
         with open(raw, 'r') as f:
             col_count = f.readline().count('\t')  # read the header row; skip
@@ -610,9 +538,9 @@ SELECT  r._relationship_key as rel_key,
                 cols = line.count('\t')
                 # bail if the row is malformed
                 if cols != col_count:
-                    logger.warning('Expected ' + str(col_count) + ' columns.')
-                    logger.warning('Received ' + str(cols) + ' columns.')
-                    logger.warning(line.format())
+                    LOG.warning('Expected ' + str(col_count) + ' columns.')
+                    LOG.warning('Received ' + str(cols) + ' columns.')
+                    LOG.warning(line.format())
                     continue
                 # no stray tab in the description column
                 (object_key, preferred, mgiid, description,
@@ -681,7 +609,7 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
         geno = Genotype(graph)
         line_counter = 0
-        logger.info(
+        LOG.info(
             "adding alleles, mapping to markers, " +
             "extracting their sequence alterations " +
             "from all_allele_view")
@@ -694,9 +622,9 @@ SELECT  r._relationship_key as rel_key,
                 cols = line.count('\t')
                 # bail if the row is malformed
                 if cols != col_count:
-                    logger.warning('Expected ' + str(col_count) + ' columns.')
-                    logger.warning('Received ' + str(cols) + ' columns.')
-                    logger.warning(line.format())
+                    LOG.warning('Expected ' + str(col_count) + ' columns.')
+                    LOG.warning('Received ' + str(cols) + ' columns.')
+                    LOG.warning(line.format())
                     continue
 
                 (allele_key, marker_key, strain_key, symbol,
@@ -711,7 +639,7 @@ SELECT  r._relationship_key as rel_key,
 
                 allele_id = self.idhash['allele'].get(allele_key)
                 if allele_id is None:
-                    logger.error(
+                    LOG.error(
                         "what to do! can't find allele_id. skipping %s %s",
                         allele_key, symbol)
                     continue
@@ -723,7 +651,7 @@ SELECT  r._relationship_key as rel_key,
                     # have already been added to the table
                     marker_id = self.idhash['marker'].get(marker_key)
                     if marker_id is None:
-                        logger.error(
+                        LOG.error(
                             "what to do! can't find marker_id. skipping %s %s",
                             marker_key, symbol)
                         continue
@@ -829,7 +757,7 @@ SELECT  r._relationship_key as rel_key,
         geno = Genotype(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'gxd_allelepair_view'))
-        logger.info("processing allele pairs (VSLCs) for genotypes")
+        LOG.info("processing allele pairs (VSLCs) for genotypes")
         geno_hash = {}
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -854,8 +782,8 @@ SELECT  r._relationship_key as rel_key,
                 if genotype_id not in geno_hash:
                     geno_hash[genotype_id] = set()
                 if genotype_id is None:
-                    logger.error("genotype_id not found for key %s; skipping",
-                                 genotype_key)
+                    LOG.error(
+                        "genotype_id not found for key %s; skipping", genotype_key)
                     continue
 
                 allele1_id = self.idhash['allele'].get(allele_key_1)
@@ -885,7 +813,7 @@ SELECT  r._relationship_key as rel_key,
                         # we shouldn't get here, but for testing this is handy
                         vslc_label += allele1
                     else:  # heteroplasmic,  homoplasmic,  FIXME add these if possible
-                        logger.info(
+                        LOG.info(
                             "A different kind of zygosity found is: %s",
                             self.globaltcid[zygosity_id])
                         vslc_label += '?'
@@ -942,7 +870,7 @@ SELECT  r._relationship_key as rel_key,
                     gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
                 geno.addVSLCtoParent(gvc_id, gt)
             else:
-                logger.info("No VSLCs for %s", gt)
+                LOG.info("No VSLCs for %s", gt)
 
             # make the genotype label = gvc + background
             bkgd_id = self.geno_bkgd.get(gt)
@@ -981,7 +909,7 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'all_allele_mutation_view'))
-        logger.info("getting mutation types for sequence alterations")
+        LOG.info("getting mutation types for sequence alterations")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -1003,8 +931,8 @@ SELECT  r._relationship_key as rel_key,
 
                 seq_alt_type_id = self.resolve(mutation, False)
                 if seq_alt_type_id == mutation:
-                    logger.error("No mappjng found for seq alt '%s'", mutation)
-                    logger.info("Defaulting to 'sequence_alteration'")
+                    LOG.error("No mappjng found for seq alt '%s'", mutation)
+                    LOG.info("Defaulting to 'sequence_alteration'")
                     seq_alt_type_id = self.globaltt['sequence_alteration']
 
                 # HACK - if the seq alteration is a transgene,
@@ -1013,7 +941,7 @@ SELECT  r._relationship_key as rel_key,
                 if allele_id is not None:
                     allele_label = self.label_hash.get(allele_id)
                     if allele_label is not None and re.search(r'Tg\(', allele_label):
-                        logger.info(
+                        LOG.info(
                             "Found a transgenic insertion for %s", allele_label)
                         # transgenic_insertion, instead of plain old insertion
                         seq_alt_type_id = self.globaltt["transgenic_insertion"]
@@ -1047,7 +975,7 @@ SELECT  r._relationship_key as rel_key,
             graph = self.graph
         model = Model(graph)
         line_counter = 0
-        logger.info("getting G2P associations")
+        LOG.info("getting G2P associations")
         raw = '/'.join((self.rawdir, 'voc_annot_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1075,7 +1003,7 @@ SELECT  r._relationship_key as rel_key,
 
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error(
+                        LOG.error(
                             "can't find genotype id for %s", object_key)
                     else:
                         # add the association
@@ -1089,7 +1017,7 @@ SELECT  r._relationship_key as rel_key,
                         continue
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:
-                        logger.error("can't find genotype id for %s", object_key)
+                        LOG.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = Assoc(graph, self.name)
@@ -1119,7 +1047,7 @@ SELECT  r._relationship_key as rel_key,
                 elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
                     if allele_id is None:
-                        logger.error("can't find genotype id for %s", object_key)
+                        LOG.error("can't find genotype id for %s", object_key)
                     else:
                         # add the association
                         assoc = Assoc(graph, self.name)
@@ -1169,7 +1097,7 @@ SELECT  r._relationship_key as rel_key,
             graph = self.graph
         model = Model(graph)
         line_counter = 0
-        logger.info("getting evidence and pubs for annotations")
+        LOG.info("getting evidence and pubs for annotations")
         raw = '/'.join((self.rawdir, 'evidence_view'))
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1242,13 +1170,13 @@ SELECT  r._relationship_key as rel_key,
         model = Model(graph)
         # firstpass, get the J number mapping, and add to the global hash
         line_counter = 1
-        logger.info('populating pub id hash')
+        LOG.info('populating pub id hash')
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
             if len(header) != 6:
-                logger.error('bib_acc_view expected 6 columns got: %s', header)
+                LOG.error('bib_acc_view expected 6 columns got: %s', header)
             for line in filereader:
                 line_counter += 1
                 (accid, prefixpart, numericpart, object_key,
@@ -1270,7 +1198,7 @@ SELECT  r._relationship_key as rel_key,
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
-        logger.info("getting pub equivalent ids")
+        LOG.info("getting pub equivalent ids")
         line_counter = 1
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1323,7 +1251,7 @@ SELECT  r._relationship_key as rel_key,
 
                     model.addSameIndividual(jid, pub_id)
                 else:
-                    logger.warning(
+                    LOG.warning(
                         "Publication from (%s) not mapped for %s",
                         logical_db, object_key)
 
@@ -1358,7 +1286,7 @@ SELECT  r._relationship_key as rel_key,
         line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'prb_strain_view'))
-        logger.info("getting strains and adding their taxa")
+        LOG.info("getting strains and adding their taxa")
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for line in filereader:
@@ -1380,8 +1308,8 @@ SELECT  r._relationship_key as rel_key,
                     species = species.strip()
                     sp = self.resolve(species, False)
                     if sp == species:
-                        logger.error("No taxon mapping for " + species)
-                        logger.warning("defaulting to Mus Genus")
+                        LOG.error("No taxon mapping for " + species)
+                        LOG.warning("defaulting to Mus Genus")
                         sp = self.globaltt['Mus']
 
                     model.addClassToGraph(sp, None)
@@ -1418,7 +1346,7 @@ SELECT  r._relationship_key as rel_key,
         geno = Genotype(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_marker_view'))
-        logger.info("getting markers and assigning types")
+        LOG.info("getting markers and assigning types")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
@@ -1442,7 +1370,7 @@ SELECT  r._relationship_key as rel_key,
                         continue
 
                     if marker_id is None:
-                        logger.error(
+                        LOG.error(
                             "can't find %s %s in the id hash", marker_key, symbol)
 
                     mapped_marker_type = self.resolve(marker_type.strip())
@@ -1497,7 +1425,7 @@ SELECT  r._relationship_key as rel_key,
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("getting markers and equivalent ids from mrk_summary_view")
+        LOG.info("getting markers and equivalent ids from mrk_summary_view")
         line_counter = 0
         raw = '/'.join((self.rawdir, 'mrk_summary_view'))
         with open(raw, 'r') as fh:
@@ -1518,7 +1446,7 @@ SELECT  r._relationship_key as rel_key,
                     if self.idhash['marker'].get(object_key) is None:
                         # can't find the marker in the hash; add it here:
                         self.idhash['marker'][object_key] = mgiid
-                        logger.error(
+                        LOG.error(
                             "this marker hasn't been seen before %s %s",
                             mgiid, short_description)
 
@@ -1564,7 +1492,7 @@ SELECT  r._relationship_key as rel_key,
         # make a pass through the table first,
         # to create the mapping between the external and internal identifiers
         line_counter = 0
-        logger.info("mapping markers to internal identifiers")
+        LOG.info("mapping markers to internal identifiers")
         raw = '/'.join((self.rawdir, 'mrk_acc_view'))
         with open(raw, 'r') as fh:
             fh.readline()  # read the header row; skip
@@ -1603,7 +1531,7 @@ SELECT  r._relationship_key as rel_key,
         # TODO verify the difference between what the
         # mrk_acc_view vs mrk_summary_view buys us here.
         # if nothing, then we should remove one or the other.
-        logger.info("mapping marker equivalent identifiers in mrk_acc_view")
+        LOG.info("mapping marker equivalent identifiers in mrk_acc_view")
         line_counter = 0
         with open('/'.join((self.rawdir, 'mrk_acc_view')), 'r') as f:
             f.readline()  # read the header row; skip
@@ -1625,7 +1553,7 @@ SELECT  r._relationship_key as rel_key,
                 if mgiid is None:
                     # presumably we've already added the relevant MGI ids,
                     # so skip those that we can't find
-                    logger.debug("can't find mgiid for %s", object_key)
+                    LOG.debug("can't find mgiid for %s", object_key)
                     continue
                 marker_id = None
                 if preferred == '1':  # TODO what does it mean if it's 0?
@@ -1645,7 +1573,7 @@ SELECT  r._relationship_key as rel_key,
                         model.addIndividualToGraph(marker_id, None)
                         model.addSameIndividual(mgiid, marker_id)
                     else:
-                        logger.error("mgiid not in class or indiv hash %s", mgiid)
+                        LOG.error("mgiid not in class or indiv hash %s", mgiid)
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1675,7 +1603,7 @@ SELECT  r._relationship_key as rel_key,
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("mapping strains to internal identifiers")
+        LOG.info("mapping strains to internal identifiers")
         raw = '/'.join((self.rawdir, 'prb_strain_acc_view'))
 
         tax_id = self.globaltt["Mus musculus"]
@@ -1730,7 +1658,7 @@ SELECT  r._relationship_key as rel_key,
 
         # pass through the file again,
         # and make the equivalence statements to a subset of the idspaces
-        logger.info("mapping strain equivalent identifiers")
+        LOG.info("mapping strain equivalent identifiers")
         line_counter = 0
         with open(raw, 'r') as fh:
             fh.readline()  # read the header row; skip
@@ -1749,7 +1677,7 @@ SELECT  r._relationship_key as rel_key,
                 if mgiid is None:
                     # presumably we've already added the relevant MGI ids,
                     # so skip those that we can't find
-                    # logger.info("can't find mgiid for %s",object_key)
+                    # LOG.info("can't find mgiid for %s",object_key)
                     continue
                 strain_id = None
                 deprecated = False
@@ -1830,7 +1758,7 @@ SELECT  r._relationship_key as rel_key,
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("getting free text descriptions for annotations")
+        LOG.info("getting free text descriptions for annotations")
         raw = '/'.join((self.rawdir, 'mgi_note_vocevidence_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -1864,7 +1792,7 @@ SELECT  r._relationship_key as rel_key,
             graph = self.testgraph
         else:
             graph = self.graph
-        logger.info("getting marker locations")
+        LOG.info("getting marker locations")
         raw = '/'.join((self.rawdir, 'mrk_location_cache'))
         geno = Genotype(graph)
 
@@ -1925,7 +1853,7 @@ SELECT  r._relationship_key as rel_key,
                     feature.addFeatureToGraph(True, None, add_as_class)
 
                 else:
-                    logger.warning('marker key %s not in idhash', str(marker_key))
+                    LOG.warning('marker key %s not in idhash', str(marker_key))
 
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
@@ -1947,7 +1875,7 @@ SELECT  r._relationship_key as rel_key,
             graph = self.testgraph
         else:
             graph = self.graph
-        logger.info("getting transgene genes")
+        LOG.info("getting transgene genes")
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
         geno = Genotype(graph)
 
@@ -1995,7 +1923,7 @@ SELECT  r._relationship_key as rel_key,
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Assembling notes on alleles")
+        LOG.info("Assembling notes on alleles")
         raw = '/'.join((self.rawdir, 'mgi_note_allele_view'))
 
         notehash = {}
@@ -2032,7 +1960,7 @@ SELECT  r._relationship_key as rel_key,
             if allele_id is None:
                 continue
             for n in notehash[allele_key]:
-                logger.info(
+                LOG.info(
                     "found %d %s notes for %s",
                     len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
@@ -2059,7 +1987,7 @@ SELECT  r._relationship_key as rel_key,
             graph = self.testgraph
         else:
             graph = self.graph
-        logger.info("Getting genotypes for strains")
+        LOG.info("Getting genotypes for strains")
         raw = '/'.join((self.rawdir, 'prb_strain_genotype_view'))
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')

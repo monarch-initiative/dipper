@@ -8,13 +8,12 @@ from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
-from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Reference import Reference
 from dipper.utils.DipperUtil import DipperUtil
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class NCBIGene(Source):
@@ -36,7 +35,7 @@ class NCBIGene(Source):
     by default (human, mouse, fish).
     This can be overridden in the calling script to include additional taxa,
     if desired.
-    The gene ids in the conf.json will be used to subset the data when testing.
+    The gene ids in test_ids.yaml will be used to subset the data when testing.
 
     All entries in the gene_history file are added as deprecated classes,
     and linked to the current gene id, with "replaced_by" relationships.
@@ -67,15 +66,16 @@ class NCBIGene(Source):
     }
 
     resources = {
-        'clique_leader': '../../resources/clique_leader.yaml'
+        'clique_leader': '../../resources/clique_leader.yaml',
+        'test_ids': '../../resources/test_ids.yaml'
     }
 
     def __init__(
-        self,
-        graph_type,
-        are_bnodes_skolemized,
-        tax_ids=None,
-        gene_ids=None
+            self,
+            graph_type,
+            are_bnodes_skolemized,
+            tax_ids=None,
+            gene_ids=None
     ):
         super().__init__(
             graph_type,
@@ -93,19 +93,20 @@ class NCBIGene(Source):
         self.gene_ids = gene_ids
         self.id_filter = 'taxids'   # 'geneids
 
+        self.test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
+
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
-            logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
+            LOG.info("No taxa set.  Defaulting to %s", str(tax_ids))
         else:
-            logger.info("Filtering on the following taxa: %s", str(tax_ids))
+            LOG.info("Filtering on the following taxa: %s", str(tax_ids))
 
-        self.gene_ids = []
-        if 'test_ids' not in config.get_config() or 'gene' \
-                not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        if 'gene' in self.test_ids:
+            self.gene_ids = self.test_ids['gene']
         else:
-            self.gene_ids = config.get_config()['test_ids']['gene']
+            LOG.warning("not configured with gene test ids.")
+            self.gene_ids = []
 
         self.class_or_indiv = {}
 
@@ -119,9 +120,9 @@ class NCBIGene(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -130,7 +131,7 @@ class NCBIGene(Source):
         self._get_gene_history(limit)
         self._get_gene2pubmed(limit)
 
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -156,10 +157,10 @@ class NCBIGene(Source):
         model = Model(graph)
 
         # not unzipping the file
-        logger.info("Processing 'Gene Info' records")
+        LOG.info("Processing 'Gene Info' records")
         line_counter = 0
         gene_info = '/'.join((self.rawdir, self.files['gene_info']['file']))
-        logger.info("FILE: %s", gene_info)
+        LOG.info("FILE: %s", gene_info)
         # Add taxa and genome classes for those in our filter
         for tax_num in self.tax_ids:
             tax_id = ':'.join(('NCBITaxon', str(tax_num)))
@@ -169,7 +170,7 @@ class NCBIGene(Source):
             model.addClassToGraph(tax_id, None)
         with gzip.open(gene_info, 'rb') as f:
             row = f.readline().decode().strip().split('\t')
-            logger.info("Header has %i columns", len(row))
+            LOG.info("Header has %i columns", len(row))
             for line in f:
                 # skip comments
                 line = line.decode().strip()
@@ -192,7 +193,8 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if not self.testMode and int(tax_num) not in self.tax_ids:
+                tax_num = int(tax_num)
+                if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
                 line_counter += 1
@@ -265,26 +267,27 @@ class NCBIGene(Source):
 
                 # FIXME remove the chr mapping below
                 # when we pull in the genomic coords
-                if str(chrom) != '-' and str(chrom) != '':
-                    if re.search(r'\|', str(chrom)) and \
-                            str(chrom) not in ['X|Y', 'X; Y']:
+                chrom = str(chrom)
+                if chrom != '-' and chrom != '':
+                    if re.search(r'\|', chrom) and \
+                            chrom not in ['X|Y', 'X; Y']:
                         # means that there's uncertainty in the mapping.
                         # so skip it
                         # TODO we'll need to figure out how to deal with
                         # >1 loc mapping
-                        logger.info(
+                        LOG.info(
                             '%s is non-uniquely mapped to %s.' +
-                            ' Skipping for now.', gene_id, str(chr))
+                            ' Skipping for now.', gene_id, chrom)
                         continue
                         # X|Y	Xp22.33;Yp11.3
 
                     # if(not re.match(
                     #        r'(\d+|(MT)|[XY]|(Un)$',str(chr).strip())):
                     #    print('odd chr=',str(chr))
-                    if str(chrom) == 'X; Y':
+                    if chrom == 'X; Y':
                         chrom = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
-                    for c in re.split(r'\|', str(chrom)):
+                    for c in re.split(r'\|', chrom):
                         # assume that the chromosome label is added elsewhere
                         geno.addChromosomeClass(c, tax_id, None)
                         mychrom = makeChromID(c, tax_num, 'CHR')
@@ -322,7 +325,7 @@ class NCBIGene(Source):
                             # 15q11-q22,Xp21.2-p11.23,15q22-qter,10q11.1-q24,
                             # 12p13.3-p13.2|12p13-p12,1p13.3|1p21.3-p13.1,
                             # 12cen-q21,22q13.3|22q13.3
-                            logger.debug(
+                            LOG.debug(
                                 'not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             graph.addTriple(
@@ -366,32 +369,30 @@ class NCBIGene(Source):
         for ref in xrefs.strip().split('|'):
             xref_curie = self._cleanup_id(ref)
             if xref_curie is not None and xref_curie.strip() != '':
-                if re.match(r'HPRD', xref_curie):
-                    # proteins are not == genes.
+                if xref_curie[:5] == 'HPRD:':  # proteins are not == genes.
                     model.addTriple(
-                        gene_id,
-                        self.globaltt['has gene product'], xref_curie)
+                        gene_id, self.globaltt['has gene product'], xref_curie)
                     continue
                     # skip some of these for now
                 if xref_curie.split(':')[0] in filter_out:
                     continue
                 if xref_curie.split(':')[0] in taxon_spec_xref_filters:
                     model.addXref(gene_id, xref_curie)
-                if re.match(r'^OMIM', xref_curie):
+                if xref_curie[:5] == 'OMIM:':
                     if DipperUtil.is_omim_disease(xref_curie):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
                         model.addEquivalentClass(gene_id, xref_curie)
                         if int(taxon) in clique_map:
-                            if clique_map[int(taxon)] == xref_curie.split(':')[0]:
+                            if clique_map[taxon] == xref_curie.split(':')[0]:
                                 model.makeLeader(xref_curie)
-                            elif clique_map[int(taxon)] == gene_id.split(':')[0]:
+                            elif clique_map[taxon] == gene_id.split(':')[0]:
                                 model.makeLeader(gene_id)
                     else:
                         model.addSameIndividual(gene_id, xref_curie)
                 except AssertionError as e:
-                    logger.warn("Error parsing {0}: {1}".format(gene_id, e))
+                    LOG.warn("Error parsing %s: %s", gene_id, e)
         return
 
     def _get_gene_history(self, limit):
@@ -408,10 +409,10 @@ class NCBIGene(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Processing Gene records")
+        LOG.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
-        logger.info("FILE: %s", myfile)
+        LOG.info("FILE: %s", myfile)
         with gzip.open(myfile, 'rb') as f:
             for line in f:
                 # skip comments
@@ -483,10 +484,10 @@ class NCBIGene(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Processing Gene records")
+        LOG.info("Processing Gene records")
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
-        logger.info("FILE: %s", myfile)
+        LOG.info("FILE: %s", myfile)
         assoc_counter = 0
         with gzip.open(myfile, 'rb') as f:
             for line in f:
@@ -534,7 +535,7 @@ class NCBIGene(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     break
 
-        logger.info(
+        LOG.info(
             "Processed %d pub-gene associations", assoc_counter)
 
         return
@@ -594,7 +595,7 @@ class NCBIGene(Source):
 
         """
 
-        logger.info("getting gene groups")
+        LOG.info("getting gene groups")
         line_counter = 0
         f = '/'.join((self.rawdir, self.files['gene_group']['file']))
         found_counter = 0
@@ -641,8 +642,8 @@ class NCBIGene(Source):
                 group_to_orthology[gene_a].add(gene_a)
 
             # end loop through gene_group file
-        logger.debug("Finished hashing gene groups")
-        logger.debug("Making orthology associations")
+        LOG.debug("Finished hashing gene groups")
+        LOG.debug("Making orthology associations")
         for gid in gene_ids:
             gene_num = re.sub(r'NCBIGene:', '', gid)
             group_nums = gene_to_group.get(gene_num)
@@ -664,7 +665,7 @@ class NCBIGene(Source):
                             found_counter += 1
 
             # finish loop through annotated genes
-        logger.info(
+        LOG.info(
             "Made %d orthology relationships for %d genes",
             found_counter, len(gene_ids))
         return
