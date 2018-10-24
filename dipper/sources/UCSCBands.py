@@ -472,7 +472,7 @@ class UCSCBands(Source):
         model = Model(graph)
         logger.info("Adding equivalent assembly identifiers")
         for sp in self.species:
-            tax_id = self.resolve(sp)
+            tax_id = self.globaltt[sp]
             txid_num = tax_id.split(':')[1]
             for key in self.files[txid_num]['assembly']:
                 ucsc_id = key
