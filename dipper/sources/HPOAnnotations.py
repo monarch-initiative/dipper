@@ -268,16 +268,16 @@ class HPOAnnotations(Source):
 
                     elif pub[:5] == 'OMIM:':
                         pub = 'http://omim.org/entry/' + pub[5:]
-                        pubtype = self.globaltt['webpage']
+                        pubtype = self.globaltt['web page']
 
                     elif pub[:9] == 'DECIPHER:':
-                        pubtype = self.globaltt['webpage']
+                        pubtype = self.globaltt['web page']
 
                     elif pub[:6] == 'ORPHA:':
-                        pubtype = self.globaltt['webpage']
+                        pubtype = self.globaltt['web page']
 
                     elif pub[:4] == 'http':
-                        pubtype = self.globaltt['webpage']
+                        pubtype = self.globaltt['web page']
 
                     else:
                         LOG.error(
