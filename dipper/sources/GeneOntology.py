@@ -4,11 +4,12 @@ import logging
 import gzip
 import io
 import sys
-import yaml
 import os
+
+import yaml
+
 from dipper.sources.ZFIN import ZFIN
 from dipper.sources.WormBase import WormBase
-
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -18,8 +19,7 @@ from dipper.models.Model import Model
 from dipper.utils.GraphUtils import GraphUtils
 from dipper import config
 
-
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 GOGA = 'http://geneontology.org/gene-associations'
 FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
 UPCRKB = 'uniprot/current_release/knowledgebase/'
@@ -115,13 +115,13 @@ class GeneOntology(Source):
         self.test_ids = list()
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
-            logger.info("No taxa set.  Defaulting to %s", str(tax_ids))
+            LOG.info("No taxa set.  Defaulting to %s", str(tax_ids))
         else:
-            logger.info("Filtering on the following taxa: %s", str(tax_ids))
+            LOG.info("Filtering on the following taxa: %s", str(tax_ids))
 
         if 'test_ids' not in config.get_config() or 'gene' \
                 not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+            LOG.warning("not configured with gene test ids.")
         else:
             self.test_ids = config.get_config()['test_ids']['gene']
 
@@ -136,8 +136,8 @@ class GeneOntology(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
-        logger.info("Parsing files...")
+            LOG.info("Only parsing first %s rows of each file", limit)
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -153,7 +153,7 @@ class GeneOntology(Source):
             gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
             self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.eco_map)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         return
 
@@ -166,7 +166,7 @@ class GeneOntology(Source):
 
         model = Model(graph)
         geno = Genotype(graph)
-        logger.info("Processing Gene Associations from %s", file)
+        LOG.info("Processing Gene Associations from %s", file)
         line_counter = 0
         uniprot_hit = 0
         uniprot_miss = 0
@@ -185,16 +185,15 @@ class GeneOntology(Source):
                     continue
 
                 if len(row) > 17 or len(row) < 15:
-                    logger.warning(
-                        "Wrong number of columns {}, expected 15 or 17\n{}"
-                        .format(len(row), row)
-                    )
+                    LOG.warning(
+                        "Wrong number of columns %i, expected 15 or 17\n%s",
+                        len(row), row)
                     continue
 
                 if 17 > len(row) >= 15:
                     row += [""] * (17 - len(row))
 
-                (db,
+                (dbase,
                  gene_num,
                  gene_symbol,
                  qualifier,
@@ -213,11 +212,11 @@ class GeneOntology(Source):
                  gene_product_form_id) = row
 
                 # test for required fields
-                if (db == '' or gene_num == '' or gene_symbol == '' or
+                if (dbase == '' or gene_num == '' or gene_symbol == '' or
                         go_id == '' or ref == '' or eco_symbol == '' or
                         aspect == '' or object_type == '' or taxon == '' or
                         date == '' or assigned_by == ''):
-                    logger.error(
+                    LOG.error(
                         "Missing required part of annotation on row %d:\n"+'\t'
                         .join(row), line_counter)
                     continue
@@ -226,25 +225,25 @@ class GeneOntology(Source):
                 if re.search(r'NOT', qualifier):
                     continue
 
-                if db in self.localtt:
-                    db = self.localtt[db]
+                if dbase in self.localtt:
+                    dbase = self.localtt[dbase]
                 uniprotid = None
                 gene_id = None
-                if db == 'UniProtKB':
+                if dbase == 'UniProtKB':
                     if id_map is not None and gene_num in id_map:
                         gene_id = id_map[gene_num]
-                        uniprotid = ':'.join((db, gene_num))
-                        (db, gene_num) = gene_id.split(':')
+                        uniprotid = ':'.join((dbase, gene_num))
+                        (dbase, gene_num) = gene_id.split(':')
                         uniprot_hit += 1
                     else:
-                        # logger.warning(
+                        # LOG.warning(
                         #   "UniProt id %s  is without a 1:1 mapping to entrez/ensembl",
                         #    gene_num)
                         uniprot_miss += 1
                         continue
                 else:
                     gene_num = gene_num.split(':')[-1]  # last
-                    gene_id = ':'.join((db, gene_num))
+                    gene_id = ':'.join((dbase, gene_num))
 
                 if self.testMode and not(
                         re.match(r'NCBIGene', gene_id) and
@@ -255,11 +254,11 @@ class GeneOntology(Source):
                 if gene_name != '':
                     model.addDescription(gene_id, gene_name)
                 if gene_synonym != '':
-                    for s in re.split(r'\|', gene_synonym):
-                        model.addSynonym(gene_id, s.strip())
+                    for syn in re.split(r'\|', gene_synonym):
+                        model.addSynonym(gene_id, syn.strip())
                 if re.search(r'\|', taxon):
                     # TODO add annotations with >1 taxon
-                    logger.info(
+                    LOG.info(
                         ">1 taxon (%s) on line %d.  skipping", taxon, line_counter)
                 else:
                     tax_id = re.sub(r'taxon:', 'NCBITaxon:', taxon)
@@ -273,7 +272,7 @@ class GeneOntology(Source):
                     eco_id = eco_map[eco_symbol]
                     assoc.add_evidence(eco_id)
                 except KeyError:
-                    logger.error("Evidence code (%s) not mapped", eco_symbol)
+                    LOG.error("Evidence code (%s) not mapped", eco_symbol)
 
                 refs = re.split(r'\|', ref)
                 for ref in refs:
@@ -284,7 +283,7 @@ class GeneOntology(Source):
                             prefix = self.localtt[prefix]
                         ref = ':'.join((prefix, ref.split(':')[-1]))
                         refg = Reference(graph, ref)
-                        if 'PMID' == prefix:
+                        if prefix == 'PMID':
                             ref_type = self.globaltt['journal article']
                             refg.setType(ref_type)
                         refg.addRefToGraph()
@@ -297,14 +296,14 @@ class GeneOntology(Source):
                     if aspect == 'F' and re.search(r'contributes_to', qualifier):
                         assoc.set_relationship(self.globaltt['contributes to'])
                     else:
-                        logger.error(
+                        LOG.error(
                             "Aspect: %s with qualifier: %s  is not recognized",
                             aspect, qualifier)
                 elif rel is not None:
                     assoc.set_relationship(rel)
                     assoc.add_association_to_graph()
                 else:
-                    logger.warning("No predicate for association \n%s\n", str(assoc))
+                    LOG.warning("No predicate for association \n%s\n", str(assoc))
 
                 if uniprotid is not None:
                     assoc.set_description('Mapped from ' + uniprotid)
@@ -327,7 +326,7 @@ class GeneOntology(Source):
                     for i in withitems:
                         if i == '' or re.match(
                                 r'(UniProtKB|WBPhenotype|InterPro|HGNC)', i):
-                            logger.warning(
+                            LOG.warning(
                                 "Don't know what having a uniprot id " +
                                 "in the 'with' column means of %s", uniprotid)
                             continue
@@ -339,7 +338,7 @@ class GeneOntology(Source):
                         if re.search('MRPHLNO|CRISPR|TALEN', i):
                             targeted_gene_id = zfin.make_targeted_gene_id(gene_id, i)
                             geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
-                            # TODO PYLINT why is this:
+                            # TODO PYLINT why is this needed?
                             # Redefinition of assoc type from
                             # dipper.models.assoc.Association.Assoc to
                             # dipper.models.assoc.G2PAssoc.G2PAssoc
@@ -374,7 +373,7 @@ class GeneOntology(Source):
             uniprot_per = 0.0
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
-            logger.info(
+            LOG.info(
                 "Uniprot: %f.2%% of %i benifited from the 1/4 day id mapping download",
                 uniprot_per, uniprot_tot)
         return
@@ -388,11 +387,11 @@ class GeneOntology(Source):
         # if processed smallfile exists and is newer use it instesd
         if os.path.isfile(smallfile) and \
                 os.path.getctime(smallfile) > os.path.getctime(bigfile):
-            logger.info("Using the cheap mapping file %s", smallfile)
+            LOG.info("Using the cheap mapping file %s", smallfile)
             with open(smallfile, 'r') as fh:
                 id_map = yaml.safe_load(fh)
         else:
-            logger.info(
+            LOG.info(
                 "Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids for %s",
                 str(self.tax_ids))
             self.fetch_from_url(self.files['id-map']['url'], bigfile)
@@ -414,11 +413,11 @@ class GeneOntology(Source):
                     elif ensembl.strip() != '' and ';' not in ensembl:
                         id_map[uniprotkb_ac.strip()] = 'ENSEMBL:' + ensembl.strip()
 
-            logger.info("Writing id_map out as %s", smallfile)
+            LOG.info("Writing id_map out as %s", smallfile)
             with open(smallfile, 'w') as fh:
                 yaml.dump(id_map, fh)
 
-        logger.info(
+        LOG.info(
             "Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map.keys()))
 
         return id_map
