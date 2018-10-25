@@ -172,9 +172,9 @@ class NCBIGene(Source):
             row = f.readline().decode().strip().split('\t')
             LOG.info("Header has %i columns", len(row))
             for line in f:
-                # skip comments
                 line = line.decode().strip()
-                if re.match(r'^#', line):
+                line_counter += 1
+                if line[0] == '#':  # skip comments
                     continue
                 (tax_num, gene_num, symbol, locustag, synonyms, xrefs, chrom,
                  map_loc, desc, gtype, authority_symbol, name,
@@ -193,11 +193,8 @@ class NCBIGene(Source):
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                tax_num = int(tax_num)
                 if not self.testMode and tax_num not in self.tax_ids:
                     continue
-
-                line_counter += 1
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
