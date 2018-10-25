@@ -60,10 +60,12 @@ class Panther(Source):
             data_rights='http://pantherdb.org/publications.jsp#HowToCitePANTHER'
             # file_handle=None
         )
-        self.tax_ids = [str(x) for x in tax_ids]
+
         # Defaults
-        # if self.tax_ids is None:
-        #   self.tax_ids = ['9606', '10090', '7955']
+        if tax_ids is None:
+            self.tax_ids = ['9606', '10090', '7955']
+        else:
+            self.tax_ids = [str(x) for x in tax_ids]
 
         all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
 
@@ -97,12 +99,9 @@ class Panther(Source):
             self.testMode = True
 
         if self.tax_ids is None:
-            LOG.info(
-                "No taxon filter set; Dumping all orthologous associations.")
+            LOG.info("No taxon filter set; Dumping all orthologous associations.")
         else:
-            LOG.info(
-                "Only the following taxa will be dumped: %s",
-                str(self.tax_ids))
+            LOG.info("Only the following taxa will be dumped: %s", self.tax_ids)
 
         self._get_orthologs(limit)
 
