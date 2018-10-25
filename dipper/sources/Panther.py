@@ -1,12 +1,10 @@
 import tarfile
 import re
 import logging
-import yaml
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
-from dipper import config
 
 __author__ = 'nicole'
 
@@ -62,10 +60,10 @@ class Panther(Source):
             data_rights='http://pantherdb.org/publications.jsp#HowToCitePANTHER'
             # file_handle=None
         )
-        self.tax_ids = tax_ids
-        # # Defaults
+        self.tax_ids = [str(x) for x in tax_ids]
+        # Defaults
         # if self.tax_ids is None:
-        #     self.tax_ids = [9606, 10090, 7955]
+        #   self.tax_ids = ['9606', '10090', '7955']
 
         all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
 
