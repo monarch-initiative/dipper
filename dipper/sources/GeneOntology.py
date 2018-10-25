@@ -395,7 +395,7 @@ class GeneOntology(Source):
             logger.info(
                 "Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids for %s",
                 str(self.tax_ids))
-
+            self.fetch_from_url(self.files['id-map']['url'], bigfile)
             with gzip.open(bigfile, 'rb') as csvfile:
                 csv.field_size_limit(sys.maxsize)
                 filereader = csv.reader(  # warning this file is over 10GB unzipped
