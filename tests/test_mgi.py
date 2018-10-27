@@ -50,10 +50,11 @@ class EvidenceTestCase(unittest.TestCase):
 
     def test_sex_specificity_model(self):
         self.mgi.graph = RDFGraph(True)  # Reset graph
+
         self.mgi._process_evidence_view(limit=None)
         logger.debug(
-            "Reference graph: %s", self.mgi.graph.serialize(
-                format="turtle").decode("utf-8"))
+            "Reference graph: %s",
+            self.mgi.graph.serialize(format="turtle").decode("utf-8"))
         expected_triples = """
         :association RO:0002558 ECO:0000006 ;
             dc:source J:74619 ;
