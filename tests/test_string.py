@@ -59,7 +59,6 @@ class StringTestFakeData(unittest.TestCase):
 
         self.assertTrue(self.test_util.test_graph_equality(triples, string_db.graph))
 
-
     def testFakeDataSet2(self):
         """
         Dataset contains a deprecated protein ID

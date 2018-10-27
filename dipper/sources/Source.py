@@ -44,8 +44,8 @@ class Source:
         name=None,                  # identifier; make an IRI for nquads
         ingest_title=None,
         ingest_url=None,
-        license_url=None,
-        data_rights=None,
+        license_url=None,           # only if it is _our_ lic
+        data_rights=None,           # external page that points to their current lic
         file_handle=None
     ):
 
@@ -72,7 +72,7 @@ class Source:
         self.testname = name + "_test"
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
 
-        # still need to pull in file suffix
+        # still need to pull in file suffix  -- this ia a curie not a url
         self.archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
 
         # if raw data dir doesn't exist, create it
@@ -89,7 +89,7 @@ class Source:
 
         LOG.info("Creating Test graph %s", self.testname)
         # note: tools such as protoge need slolemized blank nodes
-        self.testgraph = RDFGraph(True,  self.testname)
+        self.testgraph = RDFGraph(True, self.testname)
 
         if graph_type == 'rdf_graph':
             graph_id = ':MONARCH_' + str(self.name) + "_" + \
@@ -100,13 +100,13 @@ class Source:
 
         elif graph_type == 'streamed_graph':
             # need to expand on export formats
-            source_file = open(self.outfile.replace(".ttl", ".nt"), 'w')
-            self.graph = StreamedGraph(are_bnodes_skized, source_file)
+            dest_file = open(pth + '/' + name + '.nt', 'w')    # where is the close?
+            self.graph = StreamedGraph(are_bnodes_skized, dest_file)
             # leave test files as turtle (better human readibility)
         else:
             LOG.error(
-                "{} graph type not supported\n"
-                "valid types: rdf_graph, streamed_graph".format(graph_type))
+                "%s graph type not supported\n"
+                "valid types: rdf_graph, streamed_graph", graph_type)
 
         # pull in global ontology mapping datastructures
         self.globaltt = self.graph.globaltt
@@ -521,9 +521,9 @@ class Source:
         return is_equal
 
     def file_len(self, fname):
-        with open(fname) as f:
-            l = sum(1 for line in f)
-        return l
+        with open(fname) as lines:
+            length = sum(1 for line in lines)
+        return length
 
     @staticmethod
     def get_eco_map(url):
@@ -662,9 +662,8 @@ class Source:
 
         """
 
-        f = open(filename, 'r', encoding=encoding, newline=r'\n')
-        contents = f.read()
-        f.close()
+        with open(filename, 'r', encoding=encoding, newline=r'\n') as f:
+            contents = f.read()
         contents = re.sub(r'\r', '', contents)
         with open(filename, "w") as f:
             f.truncate()
@@ -673,21 +672,24 @@ class Source:
         return
 
     @staticmethod
-    def open_and_parse_yaml(file):
+    def open_and_parse_yaml(yamlfile):
         """
         :param file: String, path to file containing label-id mappings in
                              the first two columns of each row
         :return: dict where keys are labels and values are ids
         """
-        map = dict()
-        if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            map_file = open(os.path.join(os.path.dirname(__file__), file), 'r')
-            map = yaml.load(map_file)
+
+        # ??? what if the yaml file does not contain a dict datastructure?
+        #  the yaml lib has a "safe load"  method for wonky input protection
+        mapping = dict()
+        if os.path.exists(os.path.join(os.path.dirname(__file__), yamlfile)):
+            map_file = open(os.path.join(os.path.dirname(__file__), yamlfile), 'r')
+            mapping = yaml.load(map_file)
             map_file.close()
         else:
-            LOG.warn("file: {0} not found".format(file))
+            LOG.warn("file: %s not found", yamlfile)
 
-        return map
+        return mapping
 
     @staticmethod
     def parse_mapping_file(file):

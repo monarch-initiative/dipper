@@ -34,11 +34,11 @@ class GraphUtils:
         if fileformat is None:
             fileformat = 'turtle'
         if filename is not None:
-            filewriter = open(filename, 'wb')
 
-            LOG.info("Writing triples in %s to %s", fileformat, filename)
-            graph.serialize(filewriter, fileformat)
-            filewriter.close()
+            with open(filename, 'wb') as filewriter:
+                LOG.info("Writing triples in %s to %s", fileformat, filename)
+                # rdflib serialize
+                graph.serialize(filewriter, format=fileformat)
         else:
             print(graph.serialize(fileformat).decode())
         return

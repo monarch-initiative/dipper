@@ -1,23 +1,18 @@
 import re
 import logging
 import sys
-import yaml
 
+import yaml
 from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
+
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map
 
 LOG = logging.getLogger(__name__)
 
-# have yet to notice a feature of conjunctive graph used
-# perhaps it was more aspirational
-# I think dropping to a single graph per ingest
-# and leaving more complicated processes to dedicated graph engines
-# would be possible here. TEC
 
-
-class RDFGraph(ConjunctiveGraph, DipperGraph):
+class RDFGraph(DipperGraph, ConjunctiveGraph):
     """
     Extends RDFLibs ConjunctiveGraph
     The goal of this class is wrap the creation
@@ -64,11 +59,11 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
                 LOG.warning(
                     "None as literal object for subj: %s and pred: %s",
                     subject_id, predicate_id)
-
-                # magic number here is "steps up the stack"
-                LOG.warning('\tfrom: %s', sys._getframe(2).f_code.co_name)
-                LOG.warning('\t\tfrom: %s', sys._getframe(1).f_code.co_name)
-                LOG.warning('\t\t\tfrom: %s', sys._getframe(0).f_code.co_name)
+                # get a sense of where the None is comming from
+                # magic number here is "steps up the call stack"
+                for call in range(2, 0, -1):
+                    LOG.warning(
+                        '\t%sfrom: %s', '\t' * call, sys._getframe(call).f_code.co_name)
 
         elif obj is not None and obj != '':  # object is a resourse
             self.add((
@@ -136,13 +131,6 @@ class RDFGraph(ConjunctiveGraph, DipperGraph):
 
     # serialize() conflicts between rdflib & Graph.serialize abstractmethod
     # GraphUtils expects the former.  (too bad there is no multiple dispatch)
-    #
-    # def serialize(
-    #        self, subject_iri, predicate_iri, obj, object_is_literal, literal_type):
-    #    '''
-    #        abstract in parent class. yet to be implemented here
-    #
-    #    '''
-    #    ConjunctiveGraph.serialize(
-    #        subject_iri, predicate_iri, obj, object_is_literal, literal_type)
-    #    # raise NotImplementedError
+    def serialize(  # rdflib version
+            self, destination=None, format='turtle', base=None, encoding=None):
+        return ConjunctiveGraph.serialize(self, destination, format)
