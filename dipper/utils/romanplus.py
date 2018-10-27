@@ -37,7 +37,7 @@ class NotIntegerError(RomanError):
 class InvalidRomanNumeralError(RomanError):
     pass
 
-# Define digit mapping
+# Define digit's regular expression mapping
 romanNumeralMap = (('M', 1000),
                    ('CM', 900),
                    ('D', 500),
@@ -56,9 +56,9 @@ romanNumeralMap = (('M', 1000),
 def toRoman(n):
     """convert integer to Roman numeral"""
     if not 0 < n < 5000:
-        raise(OutOfRangeError, "number out of range (must be 1..4999)")
+        raise ValueError("number out of range (must be 1..4999)")
     if int(n) != n:
-        raise(NotIntegerError, "decimals can not be converted")
+        raise TypeError("decimals can not be converted")
 
     result = ""
     for numeral, integer in romanNumeralMap:
@@ -88,9 +88,9 @@ romanNumeralPattern = re.compile("""
 def fromRoman(s):
     """convert Roman numeral to integer"""
     if not s:
-        raise(InvalidRomanNumeralError, 'Input can not be blank')
+        raise TypeError('Input can not be blank')
     if not romanNumeralPattern.search(s):
-        raise(InvalidRomanNumeralError, 'Invalid Roman numeral: %s' % s)
+        raise ValueError('Invalid Roman numeral: %s', s)
 
     result = 0
     index = 0
