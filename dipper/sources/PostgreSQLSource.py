@@ -35,7 +35,7 @@ class PostgreSQLSource(Source):
             file_handle)
 
         # used downstream
-        globaltt = self.globaltt
+        # globaltt = self.globaltt
         # globaltcid = self.globaltcid
         return
 
@@ -95,7 +95,8 @@ class PostgreSQLSource(Source):
                             tab, filerowcount, tablerowcount)
                     # download the file
                     LOG.info("COMMAND:%s", query)
-                    outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
+                    outputquery = """
+    COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER""".format(query)
                     with open(outfile, 'w') as f:
                         cur.copy_expert(outputquery, f)
                 else:
@@ -164,14 +165,15 @@ class PostgreSQLSource(Source):
                     qname, filerowcount, tablerowcount)
             # download the file
             LOG.debug("COMMAND:%s", query)
-            outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
+            outputquery = """
+    COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER""".format(query)
             with open(outfile, 'w') as f:
                 cur.copy_expert(outputquery, f)
             # Regenerate row count to check integrity
             filerowcount = self.file_len(outfile)
             if (filerowcount-1) < tablerowcount:
                 raise Exception(
-                    "Download from %s failed, %s != %s", cxn['host'] + ':'+
+                    "Download from %s failed, %s != %s", cxn['host'] + ':' +
                     cxn['database'], (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
                 LOG.warn(
