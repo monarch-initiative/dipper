@@ -13,6 +13,5 @@ class Graph(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def serialize(
-            self, subject_iri, predicate_iri, obj, object_is_literal, literal_type):
+    def serialize(self, **kwargs):
         pass
