@@ -276,7 +276,9 @@ def make_spo(sub, prd, obj):
 
         return subjt + ' <' + CURIEMAP[prdcuri] + prdid.strip() + '> ' + objt + ' .'
     else:
-        LOG.error('Cant work with: ', subcuri, subid,  prdcuri, prdid, objt)
+        LOG.error(
+            'Cant work with: <%s> %s , <%s> %s, %s',
+            subcuri, subid, prdcuri, prdid, objt)
         return None
 
 
@@ -1025,7 +1027,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         scv_evidence_type = resolve(SCV_OIMT.text.strip(), localtt)
                         if scv_evidence_type is None:
                             LOG.warning(
-                                'No mapping for scv_evidence_type: ', SCV_OIMT.text)
+                                'No mapping for scv_evidence_type: %s', SCV_OIMT.text)
                             continue
                         # blank node
                         _provenance_id = '_:' + digest_id(
