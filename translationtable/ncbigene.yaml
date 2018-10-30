@@ -13,5 +13,12 @@
 "unknown": "sequence_feature"
 "scRNA": "scRNA_gene"
 "miscRNA": "mature_transcript"
-
 "biological-region": "region"
+
+# Curie prefixs
+"MIM": "OMIM"
+"HGNC:HGNC": "HGNC"
+"MGI:MGI": "MGI"
+"Ensembl": "ENSEMBL"
+"FLYBASE": "FlyBase"
+"VGNC:VGNC": "VGNC"
