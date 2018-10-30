@@ -524,7 +524,7 @@ SELECT ?variant_label
             # TODO deal with rs1234 x rs234... (haplotypes?)
             LOG.warning("Cannot parse variant groups of this format: %s", variant_id)
         elif re.search(r';', variant_id):
-            curie = ':haplotype_' + variant_id   # deliberate 404
+            curie = ':haplotype_' + Source.hash_id(variant_id)   # deliberate 404
             variant_type = "haplotype"
         elif variant_id[:2] == 'rs':
             curie = 'dbSNP:' + variant_id.split('-')[0]
