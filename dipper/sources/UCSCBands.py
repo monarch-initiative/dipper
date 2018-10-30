@@ -1,4 +1,5 @@
 import re
+import sys
 import gzip
 import logging
 from dipper.sources.Source import Source
@@ -8,7 +9,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class UCSCBands(Source):
@@ -137,7 +138,7 @@ class UCSCBands(Source):
         # TODO rainbow trout, 8022, when available
     }
 
-    def __init__(self,  graph_type, are_bnodes_skolemized, tax_ids=None):
+    def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
             graph_type,
             are_bnodes_skolemized,
@@ -186,9 +187,9 @@ class UCSCBands(Source):
     def parse(self, limit=None):
 
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -200,7 +201,7 @@ class UCSCBands(Source):
 
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -210,11 +211,13 @@ class UCSCBands(Source):
         :return:
 
         """
+
+        if limit is None:
+            limit = sys.maxsize   # practical limit anyway
         model = Model(self.graph)
-        # TODO PYLINT figure out what limit was for and why it is unused
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
-        logger.info("Processing Chr bands from FILE: %s", myfile)
+        LOG.info("Processing Chr bands from FILE: %s", myfile)
         geno = Genotype(self.graph)
         monochrom = Monochrom(self.graph_type, self.are_bnodes_skized)
 
@@ -238,16 +241,21 @@ class UCSCBands(Source):
         geno.addReferenceGenome(build_id, build_num, taxon_id)
 
         # process the bands
+        col = ['scaffold', 'start', 'stop', 'band_num', 'rtype']
         with gzip.open(myfile, 'rb') as f:
             for line in f:
+                line_counter += 1
                 # skip comments
                 line = line.decode().strip()
-                if re.match('^#', line):
+                if line[0] == '#' or line_counter > limit:
                     continue
-
                 # chr13	4500000	10000000	p12	stalk
-                (scaffold, start, stop, band_num, rtype) = line.split('\t')
-                line_counter += 1
+                row = line.split('\t')
+                scaffold = row[col.index('scaffold')]
+                start = row[col.index('start')]
+                stop = row[col.index('stop')]
+                band_num = row[col.index('band_num')].strip()
+                rtype = row[col.index('rtype')]
 
                 # NOTE some less-finished genomes have
                 # placed and unplaced scaffolds
@@ -274,7 +282,7 @@ class UCSCBands(Source):
                 else:
                     # skip over anything that isn't a placed_scaffold
                     # at the class level
-                    logger.info("Found non-placed chromosome %s", scaffold)
+                    LOG.info("Found non-placed chromosome %s", scaffold)
                     chrom_num = None
 
                 m_chr_unloc = re.match(unlocalized_scaffold_pattern, scaffold)
@@ -289,7 +297,7 @@ class UCSCBands(Source):
                 elif m_chr_unplaced is not None and len(m_chr_unplaced.groups()) == 1:
                     scaffold_num = m_chr_unplaced.group(1)
                 else:
-                    logger.error(
+                    LOG.error(
                         "There's a chr pattern that we aren't matching: %s", scaffold)
 
                 if chrom_num is not None:
@@ -333,7 +341,8 @@ class UCSCBands(Source):
                         'type': self.globaltt['assembly_component'],
                         'synonym': scaffold}
 
-                if band_num is not None and band_num.strip() != '':
+                parents = list()
+                if band_num is not None and band_num != '':
                     # add the specific band
                     mybands[chrom_num+band_num] = {
                         'min': start,
@@ -358,10 +367,6 @@ class UCSCBands(Source):
 
                     if len(parents) > 0:
                         mybands[chrom_num + band_num]['parent'] = chrom_num + parents[0]
-                else:
-                    # TODO PYLINT why is 'parent'
-                    # a list() a couple of lines up and a set() here?
-                    parents = set()
 
                 # loop through the parents and add them to the hash
                 # add the parents to the graph, in hierarchical order
@@ -470,7 +475,7 @@ class UCSCBands(Source):
         graph = self.graph
         geno = Genotype(graph)
         model = Model(graph)
-        logger.info("Adding equivalent assembly identifiers")
+        LOG.info("Adding equivalent assembly identifiers")
         for sp in self.species:
             tax_id = self.globaltt[sp]
             txid_num = tax_id.split(':')[1]
@@ -479,12 +484,12 @@ class UCSCBands(Source):
                 try:
                     ucsc_label = ucsc_id.split(':')[1]
                 except IndexError:
-                    logger.error('%s Assembly id:  "%s" is problematic', sp, key)
+                    LOG.error('%s Assembly id:  "%s" is problematic', sp, key)
                     continue
                 if key in self.localtt:
                     mapped_id = self.localtt[key]
                 else:
-                    logger.error(
+                    LOG.error(
                         '%s Assembly id:  "%s" is not in local translation table',
                         sp, key)
 

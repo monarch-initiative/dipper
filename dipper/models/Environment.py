@@ -4,8 +4,8 @@ from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
-
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 class Environment():
     """
@@ -13,7 +13,7 @@ class Environment():
     to add items related to an experimental environment
     and it's parts to a supplied graph.
 
-    This is a stub ready for expansion.
+    This is a stub.
     """
 
 
@@ -21,7 +21,7 @@ class Environment():
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid

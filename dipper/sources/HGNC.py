@@ -10,7 +10,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.DipperUtil import DipperUtil
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class HGNC(Source):
@@ -37,8 +37,8 @@ class HGNC(Source):
             'hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',
-            license_url='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt'
-            # data_rights=None,
+            license_url=None
+            data_rights='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt',
             # file_handle=None
         )
 
@@ -46,11 +46,10 @@ class HGNC(Source):
         self.gene_ids = gene_ids
 
         self.gene_ids = []
-        if 'test_ids' not in config.get_config() \
-                or 'gene' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        if  'gene' not in self.all_test_ids:
+            LOG.warning("not configured with gene test ids.")
         else:
-            self.gene_ids = config.get_config()['test_ids']['gene']
+            self.gene_ids = self.all_test_ids['gene']
 
         self.hs_txid = self.globaltt['Homo sapiens']
 
@@ -64,16 +63,16 @@ class HGNC(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         if self.testOnly:
             self.testMode = True
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         self._process_genes(limit)
 
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -88,7 +87,7 @@ class HGNC(Source):
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['genes']['file']))
         line_counter = 0
-        logger.info("Processing HGNC genes")
+        LOG.info("Processing HGNC genes")
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')

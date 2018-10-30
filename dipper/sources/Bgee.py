@@ -3,16 +3,17 @@ import os
 import re
 import time
 import ftplib
-import pandas as pd
-from stat import ST_SIZE
 import gzip
 from datetime import datetime
+from stat import ST_SIZE
+
+import pandas as pd
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.Association import Assoc
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Bgee(Source):
@@ -61,7 +62,7 @@ class Bgee(Source):
         if tax_ids is None:
             self.tax_ids = Bgee.DEFAULT_TAXA
         else:
-            logger.info("Filtering on taxa {}".format(tax_ids))
+            LOG.info("Filtering on taxa %s", tax_ids)
             self.tax_ids = tax_ids
 
         if version is None:
@@ -79,12 +80,12 @@ class Bgee(Source):
                 self.files[group]['path'], self.files[group]['pattern'])
             for name, info in files_to_download:
                 localfile = '/'.join((self.rawdir, name))
-                if not os.path.exists(localfile)\
-                        or is_dl_forced or self.checkIfRemoteIsNewer(
-                            localfile, info['size'], info['modify']):
-                    logger.info("Fetching {}".format(name))
-                    logger.info("Writing to {}".format(localfile))
-                    ftp.retrbinary('RETR {}'.format(name), open(localfile, 'wb').write)
+                if not os.path.exists(localfile) or is_dl_forced or \
+                        self.checkIfRemoteIsNewer(
+                        localfile, info['size'], info['modify']):
+                    LOG.info("Fetching %s", name)
+                    LOG.info("Writing to %s", localfile)
+                    ftp.retrbinary('RETR %s'.format(name), open(localfile, 'wb').write)
                     remote_dt = Bgee._convert_ftp_time_to_iso(info['modify'])
                     os.utime(localfile, (
                         time.mktime(remote_dt.timetuple()),
@@ -108,7 +109,7 @@ class Bgee(Source):
         for name, info in files_to_download:
             localfile = '/'.join((self.rawdir, name))
             with gzip.open(localfile, 'rt', encoding='ISO-8859-1') as fh:
-                logger.info("Processing {}".format(localfile))
+                LOG.info("Processing %s", localfile)
                 self._parse_gene_anatomy(fh, limit)
         return
 
@@ -149,7 +150,7 @@ class Bgee(Source):
         g2a_association = Assoc(self.graph, self.name)
         model = Model(self.graph)
         gene_curie = "ENSEMBL:{}".format(gene_id)
-  
+
         rank = re.sub(r',', '', str(rank))  # ? can't do RE on a float ...
         model.addIndividualToGraph(gene_curie, None)
         g2a_association.sub = gene_curie
@@ -172,17 +173,17 @@ class Bgee(Source):
         """
         is_remote_newer = False
         status = os.stat(localfile)
-        logger.info(
-            "Local file date: {0}, size: {1}"
-            .format(datetime.fromtimestamp(status.st_mtime), status[ST_SIZE]))
+        LOG.info(
+            "Local file date: %s, size: %i",
+            datetime.fromtimestamp(status.st_mtime), status[ST_SIZE])
         remote_dt = Bgee._convert_ftp_time_to_iso(remote_modify)
 
-        if remote_dt != datetime.fromtimestamp(status.st_mtime) \
-                or status[ST_SIZE] != int(remote_size):
+        if remote_dt != datetime.fromtimestamp(status.st_mtime) or \
+                status[ST_SIZE] != int(remote_size):
             is_remote_newer = True
-            logger.info(
-                "Object on server is has different size {0} and/or date {1}"
-                .format(remote_size, remote_dt))
+            LOG.info(
+                "Object on server is has different size %i and/or date %s",
+                remote_size, remote_dt)
 
         return is_remote_newer
 

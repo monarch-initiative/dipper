@@ -5,7 +5,8 @@ from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class Pathway():
@@ -18,7 +19,7 @@ class Pathway():
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
@@ -79,7 +80,6 @@ class Pathway():
         :param component_id:
         :return:
         """
-        self.graph.addTriple(
-            component_id, self.globaltt['involved in'], pathway_id)
+        self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id)
 
         return

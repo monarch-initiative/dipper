@@ -5,9 +5,10 @@ import time
 import logging
 import urllib
 import csv
-import yaml
 from datetime import datetime
 from stat import ST_CTIME, ST_SIZE
+
+import yaml
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
@@ -38,16 +39,19 @@ class Source:
     files = {}
 
     def __init__(
-        self,
-        graph_type='rdf_graph',     # or streamed_graph
-        are_bnodes_skized=False,    # typically True
-        name=None,                  # identifier; make an IRI for nquads
-        ingest_title=None,
-        ingest_url=None,
-        license_url=None,           # only if it is _our_ lic
-        data_rights=None,           # external page that points to their current lic
-        file_handle=None
+            self,
+            graph_type='rdf_graph',     # or streamed_graph
+            are_bnodes_skized=False,    # typically True
+            name=None,                  # identifier; make an IRI for nquads
+            ingest_title=None,
+            ingest_url=None,
+            license_url=None,           # only if it is _our_ lic
+            data_rights=None,           # external page that points to their current lic
+            file_handle=None
     ):
+
+        # pull in the common test identifiers
+        self.all_test_ids = self.open_and_parse_yaml('../../resources/test_ids.yaml')
 
         self.graph_type = graph_type
         self.are_bnodes_skized = are_bnodes_skized
@@ -71,6 +75,7 @@ class Source:
         self.rawdir = '/'.join((self.rawdir, self.name))
         self.testname = name + "_test"
         self.testfile = '/'.join((self.outdir, self.testname + ".ttl"))
+        self.datasetfile = None
 
         # still need to pull in file suffix  -- this ia a curie not a url
         self.archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
@@ -237,7 +242,7 @@ class Source:
         return ':'.join((prefix, Source.hash_id(long_string)))
 
     @staticmethod
-    def hash_id(long_string):
+    def hash_id(wordage):  # same as graph/GraphUtils.digest_id(wordage)
         """
         prepend 'b' to avoid leading with digit
         truncate to 64bit sized word
@@ -245,8 +250,7 @@ class Source:
         :param long_string: str string to be hashed
         :return: str hash of id
         """
-        return r'b' + hashlib.sha1(
-            long_string.encode('utf-8')).hexdigest()[0:15]
+        return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
 
     def checkIfRemoteIsNewer(self, remote, local, headers):
         """
@@ -284,7 +288,7 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
-        except Exception as e:  # OSError as e:  # URLError?
+        except urllib.error.URLError as e:  # OSError as e:  # URLError?
             resp_headers = None
             size = 0
             last_modified = None
@@ -358,8 +362,7 @@ class Source:
         return
 
     def fetch_from_url(
-            self, remotefile, localfile=None, is_dl_forced=False,
-            headers=None):
+            self, remotefile, localfile=None, is_dl_forced=False, headers=None):
         """
         Given a remote url and a local filename, attempt to determine
         if the remote file is newer; if it is,
@@ -446,7 +449,8 @@ class Source:
 
         return
 
-    def _check_list_len(self, row, length):
+    @staticmethod
+    def _check_list_len(row, length):
         """
         Sanity check for csv parser
         :param row
@@ -456,21 +460,22 @@ class Source:
         if len(row) != length:
             raise Exception(
                 "row length does not match expected length of " +
-                str(length)+"\nrow: "+str(row))
+                str(length) + "\nrow: " + str(row))
 
         return
 
-    def get_file_md5(self, directory, file, blocksize=2**20):
-        # reference: http://stackoverflow.com/questions/
-        #            1131220/get-md5-hash-of-big-files-in-python
+    @staticmethod
+    def get_file_md5(directory, filename, blocksize=2**20):
+        # reference:
+        # http://stackoverflow.com/questions/1131220/get-md5-hash-of-big-files-in-python
 
         md5 = hashlib.md5()
-        with open(os.path.join(directory, file), "rb") as f:
+        with open(os.path.join(directory, filename), "rb") as bin_reader:
             while True:
-                buffer = f.read(blocksize)
-                if not buffer:
+                buff = bin_reader.read(blocksize)
+                if not buff:
                     break
-                md5.update(buffer)
+                md5.update(buff)
 
         return md5.hexdigest()
 
@@ -495,7 +500,8 @@ class Source:
 
         return byte_size
 
-    def get_local_file_size(self, localfile):
+    @staticmethod
+    def get_local_file_size(localfile):
         """
         :param localfile:
         :return: size of file
@@ -520,7 +526,8 @@ class Source:
                 localfile, local_size, remotefile, remote_size)
         return is_equal
 
-    def file_len(self, fname):
+    @staticmethod
+    def file_len(fname):
         with open(fname) as lines:
             length = sum(1 for line in lines)
         return length
@@ -595,6 +602,7 @@ class Source:
         return None
 
     # TODO: pramaterising the release date
+
     def declareAsOntology(self, graph):
         """
         The file we output needs to be declared as an ontology,
@@ -687,15 +695,15 @@ class Source:
             mapping = yaml.load(map_file)
             map_file.close()
         else:
-            LOG.warn("file: %s not found", yamlfile)
+            LOG.warning("file: %s not found", yamlfile)
 
         return mapping
 
     @staticmethod
     def parse_mapping_file(file):
         """
-        :param file: String, path to file containing label-id mappings in
-                             the first two columns of each row
+        :param file: String, path to file containing label-id mappings
+                in the first two columns of each row
         :return: dict where keys are labels and values are ids
         """
         id_map = {}
@@ -703,9 +711,9 @@ class Source:
             with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
-                    label = row[0]
-                    id = row[1]
-                    id_map[label] = id
+                    key = row[0]
+                    value = row[1]
+                    id_map[key] = value
 
         return id_map
 
@@ -715,7 +723,18 @@ class Source:
             'User-Agent': USER_AGENT
         }
 
-    def load_local_translationtable(self, name):  # wip
+    # @staticmethod
+    # def getTestSuite(ingest):  # WIP
+    #    '''
+    #    try to avoid having one of these per ingest
+    #    '''
+    #    import unittest
+    #    testcase = ingest + 'TestCase'
+    #    # construct import names ... how
+    #    from tests.test_ + ingest import testcase
+    #    return unittest.TestLoader().loadTestsFromTestCase(testcase)
+
+    def load_local_translationtable(self, name):
         '''
         Load "ingest specific" translation from whatever they called something
         to the ontology label we need to map it to.
@@ -745,7 +764,7 @@ class Source:
 
         return localtt
 
-    def resolve(self, word, mandatory=True):  # wip
+    def resolve(self, word, mandatory=True):
         '''
         composite mapping
         given f(x) and g(x)

@@ -12,7 +12,7 @@ from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class WormBase(Source):
@@ -49,7 +49,7 @@ class WormBase(Source):
         'gene_ids': {
             'file': 'c_elegans.PRJNA13758.geneIDs.txt.gz',
             'url': wbprod + species +
-            '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
+                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.geneIDs.txt.gz'},
         # 'gene_desc': { # TEC: missing as of 2016 Mar 03
         #    'file': 'c_elegans.PRJNA13758.functional_descriptions.txt.gz',
         #    'url': wbdev + species +
@@ -62,11 +62,12 @@ class WormBase(Source):
             'url': wbprod + '/ONTOLOGY/rnai_phenotypes.WSNUMBER.wb'},
         'pub_xrefs': {
             'file': 'pub_xrefs.txt',
-            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?action=WpaXref'},
+            'url': 'http://tazendra.caltech.edu/~azurebrd/cgi-bin/forms/generic.cgi?'+
+                   'action=WpaXref'},
         'feature_loc': {
             'file': 'c_elegans.PRJNA13758.annotations.gff3.gz',
             'url': wbprod + species +
-            '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
+                   '/c_elegans.PRJNA13758.WSNUMBER.annotations.gff3.gz'},
         'disease_assoc': {
             'file': 'disease_association.wb',
             'url': wbprod + '/ONTOLOGY/disease_association.WSNUMBER.wb'},
@@ -87,7 +88,7 @@ class WormBase(Source):
         'xrefs': {  # moved under 'annotation' 2017-11-10
             'file': 'c_elegans.PRJNA13758.xrefs.txt.gz',
             'url': wbprod + species +
-            '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
+                   '/annotation/c_elegans.PRJNA13758.WSNUMBER.xrefs.txt.gz'},
         # 'letter': { # no longer exists 2016-11-18
         #    'file': 'letter.WSNUMBER',
         #    'url': wbprod + '/letter.WSNUMBER'},
@@ -99,8 +100,8 @@ class WormBase(Source):
 
     test_ids = {
         'gene': [
-            'WBGene00001414', 'WBGene00004967', 'WBGene00003916',
-            'WBGene00004397', 'WBGene00001531'],
+            'WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397',
+            'WBGene00001531'],
         'allele': [
             'WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869',
             'WBVar00250630'],
@@ -141,7 +142,7 @@ class WormBase(Source):
         ftp.quit()
         wsver = re.search(r'releases\/(WS\d+)', pwd)
         if wsver is None or len(wsver.groups()) < 1:
-            logger.error(
+            LOG.error(
                 "Couldn't figure out version number from FTP site.  Exiting.")
             exit(1)
         else:
@@ -168,7 +169,7 @@ class WormBase(Source):
             url = self.files[f].get('url')
             url = re.sub(r'WSNUMBER', self.version_num, url)
             self.files[f]['url'] = url
-            logger.debug(
+            LOG.debug(
                 "Replacing WSNUMBER in %s with %s", f, self.version_num)
 
         # also the letter file - keep this so we know the version number
@@ -178,10 +179,10 @@ class WormBase(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
+            LOG.info("Only parsing first %s rows of each file", limit)
 
         if self.version_num is None:
-            logger.info("Figuring out version num for files")
+            LOG.info("Figuring out version num for files")
             # probe the raw directory for the WSnumber incthe "CHECKSUMS" file.
             # 20f7d39c73012c9cfc8444a657af2b80  acedb/md5sum.WS255
 
@@ -191,7 +192,7 @@ class WormBase(Source):
             self.update_wsnum_in_files(vernum.group(1))
             checksums.close()
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -219,7 +220,7 @@ class WormBase(Source):
         # TODO add this when when complete
         # self.process_gene_interaction(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
         return
 
     def process_gene_ids(self, limit):
@@ -231,7 +232,7 @@ class WormBase(Source):
             graph = self.graph
 
         model = Model(graph)
-        logger.info("Processing: %s", self.files['gene_ids']['file'])
+        LOG.info("Processing: %s", self.files['gene_ids']['file'])
         line_counter = 0
         geno = Genotype(graph)
         with gzip.open(raw, 'rb') as csvfile:
@@ -279,7 +280,7 @@ class WormBase(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Processing: %s", self.files['gene_desc']['file'])
+        LOG.info("Processing: %s", self.files['gene_desc']['file'])
         line_counter = 0
         # geno = Genotype(graph)  # TODO unused
         with gzip.open(raw, 'rb') as csvfile:
@@ -347,7 +348,7 @@ class WormBase(Source):
         else:
             graph = self.graph
 
-        logger.info("Processing Allele phenotype associations")
+        LOG.info("Processing Allele phenotype associations")
         line_counter = 0
         geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
@@ -388,15 +389,15 @@ class WormBase(Source):
 
                 allele_list = re.split(r'\|', with_or_from)
                 if len(allele_list) == 0:
-                    logger.error(
+                    LOG.error(
                         "Missing alleles from phenotype assoc at line %d",
                         line_counter)
                     continue
                 else:
-                    for a in allele_list:
-                        allele_num = re.sub(r'WB:', '', a.strip())
-                        allele_id = 'WormBase:'+allele_num
-                        gene_id = 'WormBase:'+gene_num
+                    for allele in allele_list:
+                        allele_num = re.sub(r'WB:', '', allele.strip())
+                        allele_id = 'WormBase:' + allele_num
+                        gene_id = 'WormBase:' + gene_num
 
                         if re.search(r'WBRNAi', allele_id):
                             # make the reagent-targeted gene,
@@ -406,10 +407,9 @@ class WormBase(Source):
                             rtg_id = self.make_reagent_targeted_gene_id(
                                 gene_num, rnai_num)
                             geno.addReagentTargetedGene(
-                                rnai_id, 'WormBase:'+gene_num, rtg_id)
+                                rnai_id, 'WormBase:' + gene_num, rtg_id)
                             geno.addGeneTargetingReagent(
-                                rnai_id, None, self.globaltt['RNAi_reagent'],
-                                gene_id)
+                                rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
                             allele_id = rtg_id
                         elif re.search(r'WBVar', allele_id):
                             # this may become deprecated by using wormmine
@@ -423,9 +423,8 @@ class WormBase(Source):
                                 allele_id, vl_id)
                             geno.addAlleleOfGene(vl_id, gene_id)
                         else:
-                            logger.warning(
-                                "Some kind of allele I don't recognize: %s",
-                                allele_num)
+                            LOG.warning(
+                                "Some kind of allele I don't recognize: %s", allele_num)
                             continue
                         assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
 
@@ -437,9 +436,9 @@ class WormBase(Source):
                             reference = Reference(graph, ref)
                             if re.search(r'Person', ref):
                                 reference.setType(self.globaltt['person'])
-                                # also add
-                                # inferred from background scientific knowledge
-                                assoc.add_evidence('ECO:0000001')
+                                assoc.add_evidence(
+                                    self.globaltt[
+                                        'inference from background scientific knowledge'])
                             reference.addRefToGraph()
                             assoc.add_source(ref)
 
@@ -461,7 +460,7 @@ class WormBase(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        logger.info("Processing RNAi phenotype associations")
+        LOG.info("Processing RNAi phenotype associations")
         line_counter = 0
         geno = Genotype(graph)
         with open(raw, 'r') as csvfile:
@@ -492,7 +491,7 @@ class WormBase(Source):
                     # get the rnai_id
                     (rnai_num, ref_num) = re.split(r'\|', s)
                     if len(re.split(r'\|', s)) > 2:
-                        logger.warning(
+                        LOG.warning(
                             "There's an unexpected number of items in %s", s)
                     if rnai_num not in self.rnai_gene_map:
                         self.rnai_gene_map[rnai_num] = set()
@@ -533,7 +532,7 @@ class WormBase(Source):
             graph = self.graph
 
         model = Model(graph)
-        logger.info("Processing publication xrefs")
+        LOG.info("Processing publication xrefs")
         line_counter = 0
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
@@ -564,7 +563,7 @@ class WormBase(Source):
                     # TODO not sure what to do here with cgc xrefs
                     continue
                 else:
-                    # logger.debug("Other xrefs like %s", xref)
+                    # LOG.debug("Other xrefs like %s", xref)
                     continue
 
                 if xref_id is not None:
@@ -586,7 +585,7 @@ class WormBase(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Processing Feature location and attributes")
+        LOG.info("Processing Feature location and attributes")
         line_counter = 0
         geno = Genotype(graph)
         strain_to_variant_map = {}
@@ -636,7 +635,7 @@ class WormBase(Source):
                     elif re.match(r'(gmap|landmark)', fid):
                         continue
                     else:
-                        logger.info('other identifier %s', fid)
+                        LOG.info('other identifier %s', fid)
                         fid = None
                 elif 'variation' in attribute_dict:
                     fid = 'WormBase:'+attribute_dict.get('variation')
@@ -751,7 +750,7 @@ class WormBase(Source):
             graph = self.graph
 
         model = Model(graph)
-        logger.info("Processing disease models")
+        LOG.info("Processing disease models")
         geno = Genotype(graph)
         line_counter = 0
         worm_taxon = self.globaltt['Caenorhabditis elegans']
@@ -826,7 +825,7 @@ class WormBase(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        logger.info("Processing gene interaction associations")
+        LOG.info("Processing gene interaction associations")
         line_counter = 0
 
         with gzip.open(raw, 'rb') as csvfile:
@@ -853,12 +852,12 @@ class WormBase(Source):
                 elif interaction_type == 'Regulatory':
                     interaction_type_id = self.globaltt['regulates']
                 else:
-                    logger.info(
+                    LOG.info(
                         "An interaction type I don't understand %s", interaction_type)
 
                 num_interactors = (len(row) - 5) / 3
                 if num_interactors != 2:
-                    logger.info(
+                    LOG.info(
                         "Skipping interactions with !=2 participants:\n %s",
                         str(row))
                     continue
@@ -884,20 +883,14 @@ class WormBase(Source):
 
         return
 
-    def make_reagent_targeted_gene_id(
-            self, gene_id, reagent_id):
-
-        rtg_id = '_:'+'-'.join((gene_id, reagent_id))
-        # TODO targeted_gene_id unused
-        # targeted_gene_id = re.sub(r'W(orm)?B(ase)?:', '', rtg_id)
-
-        return rtg_id
+    @staticmethod
+    def make_reagent_targeted_gene_id(gene_id, reagent_id):
+        return '_:'+'-'.join((gene_id, reagent_id))
 
     def getTestSuite(self):
         import unittest
         from tests.test_wormbase import WormBaseTestCase
 
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(WormBaseTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(WormBaseTestCase)
 
         return test_suite

@@ -7,10 +7,9 @@ import xml.etree.ElementTree as etree
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
-from dipper import config
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Ensembl(Source):
@@ -45,6 +44,18 @@ class Ensembl(Source):
         '8364': {'file': 'ensembl_8364.txt'},  #
         '4932': {'file': 'ensembl_4932.txt'},  #
     }
+    columns = {
+        'biomart_query': [
+            'ensembl_gene_id',
+            'external_gene_name',
+            'description',
+            'gene_biotype',
+            'entrezgene',
+            'peptide_id',
+            'uniprot_swissprot',  # not in all queries
+        ],
+
+    }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
         super().__init__(
@@ -65,46 +76,47 @@ class Ensembl(Source):
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
-        self.gene_ids = []
-        if 'test_ids' not in config.get_config() \
-                or 'gene' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
-        else:
-            self.gene_ids = config.get_config()['test_ids']['gene']
+        self.tax_ids = [str(x) for x in self.tax_ids]
 
-        logger.setLevel(logging.INFO)
+        self.gene_ids = []
+        if 'gene' not in  self.all_test_ids:
+            LOG.warning("not configured with gene test ids.")
+        else:
+            self.gene_ids = self.all_test_ids['gene']
+
+        LOG.setLevel(logging.INFO)
 
         return
 
     def fetch(self, is_dl_forced=False):
 
-        for t in self.tax_ids:
-            logger.info("Fetching genes for %s", str(t))
-            loc_file = '/'.join((self.rawdir, 'ensembl_'+str(t)+'.txt'))
+        for txid in self.tax_ids:
+            LOG.info("Fetching genes for %s", txid)
+            loc_file = '/'.join((self.rawdir, 'ensembl_' + txid + '.txt'))
             # todo move into util?
             params = urllib.parse.urlencode(
-                {'query': self._build_biomart_gene_query(str(t))})
+                {'query': self._build_biomart_gene_query(txid)})
             conn = http.client.HTTPConnection('uswest.ensembl.org')
-            conn.request("GET", '/biomart/martservice?'+params)
+            conn.request("GET", '/biomart/martservice?' + params)
             resp = conn.getresponse()
-            with open(loc_file, 'wb') as f:
-                f.write(resp.read())
+            with open(loc_file, 'wb') as bin_writer:
+                bin_writer.write(resp.read())
 
         return
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         if self.testOnly:
             self.testMode = True
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
-        for t in self.tax_ids:
-            self._process_genes(str(t), limit)
+        for txid in self.tax_ids:
+            self._process_genes(txid, limit)
 
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -120,16 +132,14 @@ class Ensembl(Source):
         conn = http.client.HTTPConnection('www.ensembl.org')
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
+        col = self.columns['biomart_query']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
-            if len(row) < 6:
-                logger.warning("Data error for query on %d", taxon_id)
+            if len(row) != len(col)-1:
+                LOG.warning("Data error for p-list query on %d", taxon_id)
                 continue
-            (ensembl_gene_id, external_gene_name,
-             description, gene_biotype, entrezgene,
-             peptide_id) = row[0:6]
-            protein_list.append(peptide_id)
+            protein_list.append(row[col.index('peptide_id')])
         conn.close()
         return protein_list
 
@@ -141,20 +151,21 @@ class Ensembl(Source):
         """
         protein_dict = dict()
         params = urllib.parse.urlencode(
-            {'query': self._build_biomart_gene_query(str(taxon_id))})
+            {'query': self._build_biomart_gene_query(taxon_id)})
         conn = http.client.HTTPConnection('www.ensembl.org')
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
+        col = self.columns['biomart_query']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
-            if len(row) < 6:
-                logger.warning("Data error for query on %d", taxon_id)
+            if len(row) != (len(col)-1):
+                LOG.warning("Data error for p2g query on %d", taxon_id)
                 continue
-            (ensembl_gene_id, external_gene_name,
-             description, gene_biotype, entrezgene,
-             peptide_id) = row[0:6]
-            protein_dict[str(peptide_id)] = ensembl_gene_id
+
+            protein_dict[
+                row[col.index('peptide_id')]] = row[col.index('ensembl_gene_id')]
+
         conn.close()
         return protein_dict
 
@@ -166,19 +177,19 @@ class Ensembl(Source):
         """
         protein_dict = dict()
         params = urllib.parse.urlencode(
-            {'query': self._build_biomart_gene_query(str(taxon_id))})
+            {'query': self._build_biomart_gene_query(taxon_id)})
         conn = http.client.HTTPConnection('www.ensembl.org')
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
+        col = self.columns['biomart_query']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
-            if len(row) < 7:
+            if len(row) != len(col):
                 continue
-            (ensembl_gene_id, external_gene_name,
-             description, gene_biotype, entrezgene,
-             peptide_id, uniprot_swissprot) = row[0:7]
-            protein_dict[str(uniprot_swissprot)] = ensembl_gene_id
+
+            protein_dict[
+                row[col.index('uniprot_swissprot')]] = row[col.index('ensembl_gene_id')]
         conn.close()
         return protein_dict
 
@@ -191,7 +202,7 @@ class Ensembl(Source):
         :return:
 
         """
-        # basic stuff for ensembl ids
+        # basic stuff for ensembl ids.
         cols_to_fetch = [
             "ensembl_gene_id", "external_gene_name", "description",
             "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
@@ -229,12 +240,12 @@ class Ensembl(Source):
 
         raw = '/'.join((self.rawdir, self.files[taxid]['file']))
         line_counter = 0
-        logger.info("Processing Ensembl genes for tax %s", taxid)
+        LOG.info("Processing Ensembl genes for tax %s", taxid)
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t')
             for row in filereader:
                 if len(row) < 4:
-                    logger.warning("Too few columns in: " + row)
+                    LOG.warning("Too few columns in: " + row)
                     raise ValueError("Data error for file %s", raw)
                 (ensembl_gene_id, external_gene_name,
                  description, gene_biotype, entrezgene,
@@ -247,8 +258,8 @@ class Ensembl(Source):
                 else:
                     hgnc_id = None
 
-                if self.testMode and entrezgene != '' \
-                        and int(entrezgene) not in self.gene_ids:
+                if self.testMode and entrezgene != ''and \
+                        int(entrezgene) not in self.gene_ids:
                     continue
 
                 line_counter += 1
@@ -293,8 +304,4 @@ class Ensembl(Source):
     def getTestSuite(self):
         import unittest
         from tests.test_ensembl import EnsemblTestCase
-
-        test_suite = \
-            unittest.TestLoader().loadTestsFromTestCase(EnsemblTestCase)
-
-        return test_suite
+        return unittest.TestLoader().loadTestsFromTestCase(EnsemblTestCase)

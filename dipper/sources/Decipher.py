@@ -7,12 +7,11 @@ from zipfile import ZipFile
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from dipper import config
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.HGNC import HGNC
 from dipper.models.Genotype import Genotype
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Decipher(Source):
@@ -52,15 +51,14 @@ class Decipher(Source):
             # file_handle=None
         )
 
-        if 'test_ids' not in config.get_config() \
-                or 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+        if 'disease' not in self.all_test_ids:
+            LOG.warning("not configured with disease test ids.")
             self.test_ids = []
         else:
-            self.test_ids = config.get_config()['test_ids']['disease']
+            self.test_ids = self.all_test_ids['disease']
 
         self.graph = self.graph
-        self.geno = Genotype(self.g)
+        self.geno = Genotype(self.graph)
         self.model = Model(self.graph)
 
         return
@@ -78,9 +76,9 @@ class Decipher(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows", limit)
+            LOG.info("Only parsing first %s rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -93,7 +91,7 @@ class Decipher(Source):
         # rare disease-phenotype associations
         self._process_ddg2p_annotations(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         return
 
@@ -154,7 +152,7 @@ class Decipher(Source):
 
                 hgnc_id = hgnc_symbol_id_map.get(gencode_gene_name.strip())
                 if hgnc_id is None:
-                    logger.error(
+                    LOG.error(
                         "Couldn't map the gene symbol %s to HGNC.",
                         gencode_gene_name)
                     unmapped_gene_count += 1
@@ -203,7 +201,7 @@ class Decipher(Source):
                     # note that some match OMIM disease labels
                     # but the identifiers are just not included.
                     # TODO consider mapping to OMIM or DOIDs in other ways
-                    logger.warning(
+                    LOG.warning(
                         "No omim id on line %d\n%s", line_counter, str(row))
                     unmapped_omim_counter += 1
 
@@ -217,10 +215,10 @@ class Decipher(Source):
                     break
 
         myzip.close()
-        logger.warning(
+        LOG.warning(
             "gene-disorder associations with no omim id: %d",
             unmapped_omim_counter)
-        logger.warning("unmapped gene count: %d", unmapped_gene_count)
+        LOG.warning("unmapped gene count: %d", unmapped_gene_count)
 
         return
 
@@ -261,7 +259,7 @@ class Decipher(Source):
 
         type_id = self.resolve(consequence, mandatory=False)
         if type_id == consequence:
-            logger.warning("Consequence type unmapped: %s", str(consequence))
+            LOG.warning("Consequence type unmapped: %s", str(consequence))
             type_id = self.globaltt['sequence_variant']
 
         # make the allele

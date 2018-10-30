@@ -119,11 +119,10 @@ class GeneOntology(Source):
         else:
             LOG.info("Filtering on the following taxa: %s", str(tax_ids))
 
-        if 'test_ids' not in config.get_config() or 'gene' \
-                not in config.get_config()['test_ids']:
+        if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
-            self.test_ids = config.get_config()['test_ids']['gene']
+            self.test_ids = self.all_test_ids['gene']
 
         # build the id map for mapping uniprot ids to genes ... ONCE
         self.uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()

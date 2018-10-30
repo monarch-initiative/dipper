@@ -2,19 +2,17 @@ import logging
 import itertools
 import re
 import functools
-import lxml.etree
 import os
-
 import time
+import lxml.etree
 
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
-from dipper import config
 
 __author__ = "Adrian Altenhoff"
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class OrthoXMLParser(object):
@@ -108,14 +106,13 @@ class OrthoXML(Source):
 
         self.tax_ids = tax_ids
         self._map_orthology_code_to_RO_FOO = {
-            'orthologGroup': OrthologyAssoc.ortho_rel['orthologous'],
-            'paralogGroup': OrthologyAssoc.ortho_rel['paralogous']}
+            'orthologGroup': self.globaltt['orthologous'],
+            'paralogGroup': self.globaltt['paralogous']}
 
-        if 'test_ids' not in config.get_config() \
-                or 'protein' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        if 'protein' not in self.all_test_ids:
+            LOG.warning("not configured with gene test ids.")
         else:
-            self.test_ids = config.get_config()['test_ids']['protein']
+            self.test_ids = self.all_test_ids['protein']
 
         return
 
@@ -135,10 +132,10 @@ class OrthoXML(Source):
             self.testMode = True
 
         if self.tax_ids is None:
-            logger.info(
+            LOG.info(
                 "No taxon filter set; Dumping all orthologous associations.")
         else:
-            logger.info(
+            LOG.info(
                 "Only the following taxa will be dumped: %s",
                 str(self.tax_ids))
 
@@ -169,7 +166,7 @@ class OrthoXML(Source):
         :return: None
 
         """
-        logger.info("getting ortholog and paralog relations")
+        LOG.info("getting ortholog and paralog relations")
 
         graph = self.testgraph if self.testMode else self.graph
         model = Model(graph)
@@ -177,12 +174,12 @@ class OrthoXML(Source):
         for k in self.files.keys():
             f = os.path.join(self.rawdir, self.files[k]['file'])
             matchcounter = 0
-            logger.info("Parsing %s", f)
+            LOG.info("Parsing %s", f)
 
             time_start = time.time()
             xml = lxml.etree.parse(f)
             parser = OrthoXMLParser(xml)
-            logger.info(
+            LOG.info(
                 "loaded {} into memory. Took {}sec. Starting to extract relations..."
                 .format(f, time.time()-time_start))
 
@@ -197,7 +194,7 @@ class OrthoXML(Source):
                 protein_id_b = protein_b.get('protId')
 
                 if cnts % 100 == 0 and time.time()-time0 > 30:
-                    logger.info(
+                    LOG.info(
                         "processed {0:d} rels in {1:.1f}sec: "
                         "{2:.3f}/sec; overall {3:d} in {4:1f}sec "
                         "({5:.3f}/sec); cache ratio: {6.hits}/{6.misses}"
@@ -214,15 +211,13 @@ class OrthoXML(Source):
                     continue
 
                 matchcounter += 1
-                taxon_a = self.extract_taxon_info(protein_a)
-                taxon_b = self.extract_taxon_info(protein_b)
+                taxon_a = self.extract_taxon_info(protein_a).rstrip()
+                taxon_b = self.extract_taxon_info(protein_b).rstrip()
 
                 # check if both protein belong to taxa that are selected
-                if (self.tax_ids is not None and
-                        ((int(re.sub(r'NCBITaxon:', '', taxon_a.rstrip()))
-                            not in self.tax_ids) or
-                            (int(re.sub(r'NCBITaxon:', '', taxon_b.rstrip()))
-                                not in self.tax_ids))):
+                if (self.tax_ids is not None and ((
+                        int(taxon_a.split(':')[-1]) not in self.tax_ids) or
+                        int(taxon_b.split(':')[-1]) not in self.tax_ids)):
                     continue
 
                 protein_id_a = self.clean_protein_id(protein_id_a)
@@ -232,7 +227,7 @@ class OrthoXML(Source):
                 self.add_protein_to_graph(protein_id_a, taxon_a, model)
                 self.add_protein_to_graph(protein_id_b, taxon_b, model)
 
-                rel = self.seelf.globaltt[rel_type]
+                rel = self.globaltt[rel_type]
                 evidence_id = self.globaltt['phylogenetic evidence']  # 'ECO:0000080'
                 # add the association and relevant nodes to graph
                 assoc = OrthologyAssoc(
@@ -241,12 +236,12 @@ class OrthoXML(Source):
                 assoc.add_association_to_graph()
 
                 if not self.testMode and limit is not None and matchcounter > limit:
-                    logger.warning(
+                    LOG.warning(
                         "reached limit of relations to extract. Stopping early...")
                     break
                     # make report on unprocessed_gene_ids
 
-            logger.info("finished processing %s", f)
+            LOG.info("finished processing %s", f)
         return
 
     @functools.lru_cache(2**15)
@@ -278,5 +273,5 @@ class OrthoXML(Source):
         elif self._up_re.match(protein_id):
             return "UniProtKB:" + protein_id
         else:
-            logger.warning("namespace of protein id is not known: "+protein_id)
+            LOG.warning("namespace of protein id is not known: "+protein_id)
             return "UNKNOWN:" + protein_id

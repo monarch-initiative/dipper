@@ -4,9 +4,8 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper import config
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Orphanet(Source):
@@ -34,12 +33,11 @@ class Orphanet(Source):
             # file_handle=None
         )
 
-        # check to see if there's any ids configured in the config;
-        # otherwise, warn
-        # TODO remove
-        if 'test_ids' not in config.get_config() or 'disease' \
-                not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+        if 'disease' not in self.all_test_ids:
+            LOG.warning("not configured with disease test ids.")
+            self.test_ids = []
+        else:
+            self.test_ids = self.all_test_ids['disease']
 
         return
 
@@ -54,16 +52,16 @@ class Orphanet(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
         self._process_diseasegene(limit)
 
-        logger.info("Done parsing.")
+        LOG.info("Done parsing.")
 
         return
 
@@ -90,8 +88,7 @@ class Orphanet(Source):
 
                 disorder_id = 'ORPHA:' + str(disorder_num)
 
-                if self.testMode and disorder_id \
-                        not in config.get_config()['test_ids']['disease']:
+                if self.testMode and disorder_id not in self.all_test_ids['disease']:
                     continue
 
                 disorder_label = elem.find('Name').text
@@ -127,7 +124,7 @@ class Orphanet(Source):
                     # rel_id = self.resolve(dgtype)
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
                     # if rel_id is None:
-                    #    logger.warning(
+                    #    LOG.warning(
                     #        "Cannot map association type (%s) to RO " +
                     #        "for association (%s | %s).  Skipping.",
                     #        dg_label, disorder_label, gene_symbol)
@@ -248,19 +245,16 @@ class Orphanet(Source):
 
         model = Model(self.graph)
         geno = Genotype(self.graph)
-
         gene_or_variant = ""
 
-        # If we know something about the variant
-        # such as functional consequence or cellular origin
-        # make a blank node and attach the attributes
+        # If we know something about the variant such as functional consequence or
+        # cellular origin make a blank node and attach the attributes
         is_variant = False
         variant_id_string = "{}{}".format(gene_id, disease_id)
         functional_consequence = None
         cell_origin = None
 
-        # hard fail for no mappings/new terms,
-        # otherwise they go unnoticed
+        # hard fail for no mappings/new terms, otherwise they go unnoticed
         if "{}|gene phenotype".format(association_type) not in self.localtt:
             raise ValueError(
                 'Disease-gene association type {} not mapped'.format(association_type)

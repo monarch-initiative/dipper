@@ -1,14 +1,14 @@
 import logging
 import io
 from dipper.graph.RDFGraph import RDFGraph
-from unittest.mock import patch, mock_open
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class TestUtils:
 
-    def test_graph_equality(self, turtlish, graph):
+    @staticmethod
+    def test_graph_equality(turtlish, graph):
         """
 
         :param turtlish: String of triples in turtle
@@ -20,8 +20,8 @@ class TestUtils:
         turtle_graph = RDFGraph()
         turtle_graph.bind_all_namespaces()
         prefixes = "\n".join(
-            ["@prefix {}: <{}> .".format(n[0], n[1])
-            for n in turtle_graph.namespace_manager.namespaces()]
+            ["@prefix {}: <{}> .".format(
+                n[0], n[1]) for n in turtle_graph.namespace_manager.namespaces()]
         )
 
         turtle_string = prefixes + turtlish
@@ -31,10 +31,11 @@ class TestUtils:
         ref_triples = set(list(graph))
         equality = turtle_triples == ref_triples
         if not equality:
-            logger.warning("Triples do not match\n"
-                           "Left hand difference: {}\n"
-                           "Right hand difference:{}".format(
-                turtle_triples - ref_triples,
-                ref_triples - turtle_triples
-            ))
+            LOG.warning(
+                "Triples do not match\n"
+                "\tLeft hand difference: %s\n"
+                "\tRight hand difference: %s",
+                sorted(turtle_triples - ref_triples),
+                sorted(ref_triples - turtle_triples)
+            )
         return equality

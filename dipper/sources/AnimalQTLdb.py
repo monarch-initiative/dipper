@@ -132,7 +132,7 @@ class AnimalQTLdb(Source):
         },
     }
 
-    # QTL ids
+    # AQTL ids
     test_ids = {
         28483, 29016, 29018, 8945, 29385, 12532, 31023, 14234, 17138, 1795, 1798, 32133
     }
@@ -211,7 +211,7 @@ class AnimalQTLdb(Source):
                     LOG.error("Can't match a gff build to " + fname_bp)
                 else:
                     build = mch.group(1)
-                    build_id = self._map_build_by_abbrev(build)
+                    build_id = self.localtt[build]
                     LOG.info("Build = %s", build_id)
                     geno.addReferenceGenome(build_id, build, txid_num)
                 if build_id is not None:
@@ -651,41 +651,6 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
 
         LOG.info("Done with trait mappings")
         return
-
-    def _map_build_by_abbrev(self, build):
-
-        build_id = None
-        build_map = {
-            'Btau_4.6': {
-                'UCSC': 'bosTau7',
-                'NCBIGenome': 82,
-                'NCBIAssembly': 'GCF_000003205.5'},
-            'UMD_3.1': {
-                'NCBIAssembly': 'GCF_000003055.6',
-                'NCBIGenome': 82},
-            'GG_4.0': {
-                'NCBIAssembly': '317958',
-                'UCSC': 'galGal4'},
-            'SS_10.2': {
-                'NCBIAssembly': '304498',
-                'UCSC': 'susScr3'},
-            'OAR_3.1': {
-                'UCSC': 'oviAri3',
-                'NCBIAssembly': 'GCF_000298735.1',
-                'NCBIGenome':  83},
-            'EquCab2.0': {
-                'UCSC': 'equCab2',
-                'NCBIAssembly': 'GCF_000002305.2'}
-        }
-
-        build = build_map.get(build)
-        if build is not None:
-            if 'UCSC' in build.keys():
-                build_id = 'UCSC:' + build.get('UCSC')
-            else:
-                build_id = 'NCBIAssembly:' + build.get('NCBIAssembly')
-
-        return build_id
 
     def getTestSuite(self):
         import unittest

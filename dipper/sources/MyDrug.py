@@ -1,15 +1,14 @@
 import logging
+from pathlib import Path
+import json
 import requests
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Evidence import Evidence
 from dipper.models.Provenance import Provenance
 from dipper.models.Model import Model
-from dipper import curie_map
-from pathlib import Path
-import json
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MyDrug(Source):
@@ -69,7 +68,7 @@ class MyDrug(Source):
                     else:
                         aeolis_fh.write(",\n{}".format(json.dumps(doc)))
                 if params['from'] % 500 == 0:
-                    logger.info("Fetched {} documents".format(params['from']))
+                    LOG.info("Fetched %s documents", params['from'])
                 result_count = response['total']
                 params['from'] += params['rows']
 
@@ -96,7 +95,7 @@ class MyDrug(Source):
                                         or_limit=or_limit)
                 count += 1
             if count % 500 == 0:
-                    logger.info("Processed {} documents".format(count))
+                LOG.info("Processed %i documents", count)
 
         aeolus_fh.close()
         return
@@ -148,7 +147,7 @@ class MyDrug(Source):
         :return: None
         """
         provenance = Provenance(self.graph)
-        base = curie_map.get_base()
+        base = self.curie_map.get_base()
 
         provenance.add_agent_to_graph(base, 'Monarch Initiative')
         self.graph.addTriple(association, self.globaltt['asserted_by'], base)
@@ -221,8 +220,8 @@ class MyDrug(Source):
         """
         is_remote_newer = False
         if localfile.exists() and localfile.stat().st_size > 0:
-            logger.info("File exists locally, using cache")
+            LOG.info("File exists locally, using cache")
         else:
             is_remote_newer = True
-            logger.info("No cache file, fetching entries")
+            LOG.info("No cache file, fetching entries")
         return is_remote_newer

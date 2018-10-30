@@ -3,7 +3,6 @@ import csv
 import re
 
 from dipper.sources.Source import Source
-from dipper import config
 from dipper.utils.DipperUtil import DipperUtil
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
@@ -56,7 +55,7 @@ class GWASCatalog(Source):
             'gwascatalog',
             ingest_title='NHGRI-EBI Catalog of published genome-wide association studies',
             ingest_url='http://www.ebi.ac.uk/gwas/',
-            license_url='http://www.ebi.ac.uk/gwas/docs/about',
+            license_url=None,
             data_rights='http://www.ebi.ac.uk/gwas/docs/about'
             # file_handle=None
         )
@@ -64,11 +63,10 @@ class GWASCatalog(Source):
         if graph_type != 'rdf_graph':
             raise ValueError("GWAS Catalog requires a rdf_graph")
 
-        if 'test_ids' not in config.get_config() or 'gene' \
-                not in config.get_config()['test_ids']:
-            LOG.warning("not configured with gene test ids.")
+        if 'gene' not in self.all_test_ids:
+            LOG.warning("not configured with test ids.")
         else:
-            self.test_ids = config.get_config()['test_ids']
+            self.test_ids = self.all_test_ids
 
         # build a dictionary of genomic location to identifiers,
         # to try to get the equivalences
@@ -119,8 +117,6 @@ class GWASCatalog(Source):
         so_ontology.bind_all_namespaces()
         LOG.info("Finished loading SO ontology")
 
-        line_counter = 0
-
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t')
             header = next(filereader, None)  # the header row
@@ -131,11 +127,8 @@ class GWASCatalog(Source):
                 if not row:
                     pass
                 else:
-                    line_counter += 1
                     if header_len != len(row):
-                        LOG.error(
-                            'BadRow: %i has %i columns', line_counter, row)
-                        pass
+                        LOG.error('BadRow: %i has %i columns', filereader.line_num, row)
 
                     (date_added_to_catalog,
                      pubmed_num,
@@ -175,7 +168,7 @@ class GWASCatalog(Source):
                      mapped_trait_uri,
                      study_accession,
                      GENOTYPING_TECHNOLOGY
-                     ) = row
+                    ) = row
 
                     if self.testMode:
                         continue
@@ -231,7 +224,7 @@ class GWASCatalog(Source):
                         pubmed_num, description)
 
                     if not self.testMode and (
-                            limit is not None and line_counter > limit):
+                            limit is not None and filereader.line_num > limit):
                         break
 
         # TODO loop through the location hash,
@@ -282,8 +275,8 @@ class GWASCatalog(Source):
         if not all(len(lst) == length
                    for lst in [chrom_nums, chrom_positions, context_list]):
             LOG.warning(
-                "Unexpected data field for haplotype {} \n "
-                "will not add snp details".format(hap_label))
+                "Unexpected data field for haplotype %s \n "
+                "will not add snp details", hap_label)
             return
 
         variant_in_gene_count = 0
@@ -321,8 +314,8 @@ SELECT ?variant_label
 
             else:
                 LOG.warning(
-                    "More mapped genes than snps, cannot disambiguate for {}"
-                    .format(hap_label))
+                    "More mapped genes than snps, cannot disambiguate for %s",
+                    hap_label)
 
         # Seperate in case we want to apply a different relation
         # If not this is redundant with triples added above
@@ -517,10 +510,8 @@ SELECT ?variant_label
     @staticmethod
     def _get_curie_and_type_from_id(variant_id):
         """
-        Given a variant id, our best guess at its curie
-        and type (snp, haplotype, etc)
-        None will be used for both curie and type
-        for IDs that we can't process
+        Given a variant id, our best guess at its curie and type (snp, haplotype, etc)
+        'None' will be used for both curie and type  for IDs that we can't process
         :param variant_id:
         :return:
         """
@@ -528,28 +519,28 @@ SELECT ?variant_label
         variant_type = None
 
         # remove space before hyphens
-        variant_id = re.sub(r' -', '-', variant_id)
+        variant_id = re.sub(r' -', '-', variant_id).strip()
         if re.search(r' x ', variant_id) or re.search(r',', variant_id):
             # TODO deal with rs1234 x rs234... (haplotypes?)
             LOG.warning("Cannot parse variant groups of this format: %s", variant_id)
         elif re.search(r';', variant_id):
-            curie = ':haplotype_' + Source.hash_id(variant_id)
+            curie = ':haplotype_' + variant_id   # deliberate 404
             variant_type = "haplotype"
-        elif re.match(r'rs', variant_id):
-            curie = 'dbSNP:' + variant_id.strip()
-            curie = re.sub(r'-.*$', '', curie).strip()
+        elif variant_id[:2] == 'rs':
+            curie = 'dbSNP:' + variant_id.split('-')[0]
+            # curie = re.sub(r'-.*$', '', curie).strip()
             variant_type = "snp"
             # remove the alteration
-        elif re.match(r'kgp', variant_id):
+        elif variant_id[:3] == 'kgp':
             # http://www.1000genomes.org/faq/what-are-kgp-identifiers
-            curie = ':kgp-' + variant_id.strip()
+            curie = ':kgp-' + variant_id   # deliberate 404
             variant_type = "snp"
-        elif re.match(r'chr', variant_id):
+        elif variant_id[:3] == 'chr':
             # like: chr10:106180121-G
             #
             variant_id = re.sub(r'-?', '-N', variant_id)
             variant_id = re.sub(r' ', '', variant_id)
-            curie = ':gwas-' + re.sub(r':', '-', variant_id.strip())
+            curie = ':gwas-' + re.sub(r':', '-', variant_id)   # deliberate 404
             variant_type = "snp"
         elif variant_id.strip() == '':
             pass

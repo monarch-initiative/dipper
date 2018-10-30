@@ -85,7 +85,6 @@ class OMIM(Source):
             ),
         },
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -107,9 +106,13 @@ class OMIM(Source):
                 'omim' not in config.get_config()['keys']:
             LOG.error("not configured with API key.")
 
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-        # integer portion of omim identifier
-        self.test_ids = [x[5:] for x in all_test_ids['disease'] if x[:5] == 'OMIM:']
+        if 'disease' in self.all_test_ids:
+            # local_id (numeric) portion of omim identifier
+            self.test_ids = [
+                x[5:] for x in self.all_test_ids['disease'] if x[:5] == 'OMIM:']
+        else:
+            LOG.warning("not configured with gene test ids.")
+            self.test_ids = []
 
         self.omim_type = {}
 
@@ -1013,8 +1016,8 @@ class OMIM(Source):
 
         return
 
-    # TODO PYLINT Method could be a function
-    def _get_mappedids(self, entry, graph):
+    @staticmethod
+    def _get_mappedids(entry, graph):
         """
         Extract the Orphanet and UMLS ids as equivalences from the entry
         :param entry:

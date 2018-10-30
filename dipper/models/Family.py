@@ -11,12 +11,11 @@ class Family():
     reflect the meaning of the relations it is modeling
     """
 
-
     def __init__(self, graph):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map

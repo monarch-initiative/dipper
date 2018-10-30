@@ -2,7 +2,8 @@ import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note currently no log issued
 
 
 class Provenance:
@@ -22,7 +23,7 @@ class Provenance:
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid

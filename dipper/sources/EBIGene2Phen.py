@@ -1,17 +1,17 @@
 import logging
 import csv
 import gzip
-import requests
 from contextlib import closing
-from typing import List, Optional
+from typing import Optional
 
+import requests
 from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class EBIGene2Phen(Source):
@@ -45,7 +45,24 @@ class EBIGene2Phen(Source):
     files = {
         'developmental_disorders': {
             'file': 'DDG2P.csv.gz',
-            'url': EBI_BASE + 'DDG2P.csv.gz'}
+            'url': EBI_BASE + 'DDG2P.csv.gz',
+            'columns': [
+                'gene_symbol',
+                'gene_omim_id',
+                'disease_label',
+                'disease_omim_id',
+                'g2p_relation_label',
+                'allelic_requirement',
+                'mutation_consequence',
+                'phenotypes',
+                'organ_specificity_list',
+                'pmids',
+                'panel',
+                'prev_symbols',
+                'hgnc_id',
+                'entry_date'
+            ]
+        }
     }
 
     map_files = {
@@ -116,24 +133,22 @@ class EBIGene2Phen(Source):
         :return: None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
-        row_count = 0
-        file_path = '/'.join((self.rawdir,
-                              self.files['developmental_disorders']['file']))
+        LOG.info("Parsing files...")
+        file_path = '/'.join((
+            self.rawdir, self.files['developmental_disorders']['file']))
 
         with gzip.open(file_path, 'rt') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)  # header
             for row in reader:
-                if limit is None or row_count <= (limit + 1):
+                if limit is None or reader.line_num <= (limit + 1):
                     self._add_gene_disease(row)
                 else:
                     break
-                row_count += 1
 
-        logger.info("Done parsing.")
+        LOG.info("Done parsing.")
 
         return
 
@@ -145,55 +160,44 @@ class EBIGene2Phen(Source):
         :param row {List}: single row from DDG2P.csv
         :return: None
         """
-        if len(row) != 14:
+        col = self.files['developmental_disorders']['columns']
+        if len(row) != len(col):
             raise ValueError("Unexpected number of fields for row {}".format(row))
 
-        (
-            gene_symbol,
-            gene_omim_id,
-            disease_label,
-            disease_omim_id,
-            g2p_relation_label,
-            allelic_requirement,
-            mutation_consequence,
-            phenotypes,
-            organ_specificity_list,
-            pmids,
-            panel,
-            prev_symbols,
-            hgnc_id,
-            entry_date,
-        ) = row
-        variant_label = "variant of {}".format(gene_symbol)
+        variant_label = "variant of {}".format(row[col.index('gene_symbol')])
+        disease_omim_id = row[col.index('disease_omim_id')]
         if disease_omim_id == 'No disease mim':
             # check if we've manually curated
+            disease_label = row[col.index('disease_label')]
             if disease_label in self.mondo_map:
                 disease_id = self.mondo_map[disease_label]
             else:
                 return  # sorry for this
         else:
-            disease_id = 'OMIM:'+disease_omim_id
+            disease_id = 'OMIM:' + disease_omim_id
 
-        hgnc_curie = 'HGNC:' + hgnc_id
-        relation_curie = self.resolve(g2p_relation_label)
+        hgnc_curie = 'HGNC:' + row[col.index('hgnc_id')]
 
+        relation_curie = self.resolve(row[col.index('g2p_relation_label')])
+        mutation_consequence = row[col.index('mutation_consequence')]
         if mutation_consequence != 'uncertain' and mutation_consequence != '':
             consequence_relation = self.resolve(
-                self._get_consequence_predicate(mutation_consequence)
-            )
+                self._get_consequence_predicate(mutation_consequence))
             consequence_curie = self.resolve(mutation_consequence)
             variant_label = "{} {}".format(mutation_consequence, variant_label)
         else:
             consequence_relation = None
             consequence_curie = None
 
+        allelic_requirement = row[col.index('allelic_requirement')]
         if allelic_requirement != '':
             requirement_curie = self.resolve(allelic_requirement)
         else:
             requirement_curie = None
 
+        pmids = row[col.index('pmids')]
         if pmids != '':
-            pmid_list = ['PMID:'+pmid for pmid in pmids.split(';')]
+            pmid_list = ['PMID:' + pmid for pmid in pmids.split(';')]
         else:
             pmid_list = []
 
@@ -268,12 +272,13 @@ class EBIGene2Phen(Source):
         assoc.add_association_to_graph()
 
         if allelic_requirement is not None and is_variant is False:
-            model.addTriple(assoc.assoc_id,
-                            self.globaltt['has_allelic_requirement'],
-                            allelic_requirement)
+            model.addTriple(
+                assoc.assoc_id, self.globaltt['has_allelic_requirement'],
+                allelic_requirement)
             if allelic_requirement.startswith(':'):
-                model.addLabel(allelic_requirement,
-                               allelic_requirement.strip(':').replace('_', ' '))
+                model.addLabel(
+                    allelic_requirement,
+                    allelic_requirement.strip(':').replace('_', ' '))
 
         return
 

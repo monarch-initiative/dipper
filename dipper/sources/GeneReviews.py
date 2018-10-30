@@ -2,8 +2,8 @@ import re
 import os
 import csv
 import logging
-from bs4 import BeautifulSoup
 
+from bs4 import BeautifulSoup
 from dipper.sources.Source import Source, USER_AGENT
 from dipper.models.Model import Model
 # from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
@@ -93,13 +93,12 @@ class GeneReviews(Source):
         self.book_ids = set()
         self.all_books = {}
 
-        if 'test_ids' not in config.get_config() or\
-                'disease' not in config.get_config()['test_ids']:
+        if 'disease' not in self.all_test_ids:
             LOG.warning("not configured with disease test ids.")
             self.test_ids = list()
         else:
             # select ony those test ids that are omim's.
-            self.test_ids = config.get_config()['test_ids']['disease']
+            self.test_ids = self.all_test_ids['disease']
 
         self.omim_replaced = {}  # id_num to SET of id nums
         self.omim_type = {}      # id_num to onto_term
@@ -262,8 +261,8 @@ class GeneReviews(Source):
                     if omim_id in entries_that_are_phenotypes:
                         model.addClassToGraph(omim_id, None)
                         model.addSubClass(omim_id, gr_id)
-            # add this as a generic subclass of DOID:4
-            model.addSubClass(gr_id, 'DOID:4')
+            # add this as a generic subclass  -- TEC: this is the job of inference
+            model.addSubClass(gr_id, self.globaltt['disease'])
 
         return
 
@@ -288,29 +287,25 @@ class GeneReviews(Source):
         """
         raw = '/'.join((self.rawdir, self.files['titles']['file']))
         model = Model(self.graph)
-        line_counter = 0
+        col = ['GR_shortname', 'GR_Title', 'NBK_id', 'PMID']
         with open(raw, 'r', encoding='latin-1') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
-            line_counter = 1
-            colcount = len(header)
-            if colcount != 4:  # ('GR_shortname', 'GR_Title', 'NBK_id', 'PMID')
+            colcount = len(col)
+            if  header != col:
                 LOG.error("Unexpected Header %s", header)
                 exit(-1)
             for row in filereader:
-                line_counter += 1
                 if len(row) != colcount:
                     LOG.error("Unexpected row. got: %s", row)
-                    LOG.error("Expected data for: %s", header)
+                    LOG.error("Expected data for: %s", col)
                     exit(-1)
-                (shortname, title, nbk_num, pmid) = row
-                gr_id = 'GeneReviews:'+nbk_num
-
+                nbk_num = row[col.index('NBK_id')]
+                gr_id = 'GeneReviews:' + nbk_num
                 self.book_ids.add(nbk_num)  # a global set of the book nums
-
-                if limit is None or line_counter < limit:
-                    model.addClassToGraph(gr_id, title)
-                    model.addSynonym(gr_id, shortname)
+                if limit is None or filereader.line_num < limit:
+                    model.addClassToGraph(gr_id, row[col.index('GR_Title')])
+                    model.addSynonym(gr_id, row[col.index('GR_shortname')])
                 # TODO include the new PMID?
 
         return
@@ -457,49 +452,46 @@ class GeneReviews(Source):
         myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
         omim_type = {}
         line_counter = 1
+        col = ['prefix', 'omim_id', 'pref_label', 'alt_label', 'inc_label']
         with open(myfile, 'r') as fh:
             reader = csv.reader(fh, delimiter='\t')
             for row in reader:
                 line_counter += 1
-                if row[0][0] == '#':     # skip comments
+                prefix = row[col.index('prefix')]
+                pref_label = row[col.index('pref_label')]
+                if prefix[0] == '#':     # skip comments
                     continue
-                elif row[0] == 'Caret':  # moved|removed|split -> moved twice
+                elif prefix == 'Caret':  # moved|removed|split -> moved twice
                     # populating a dict from an omim to a set of omims
                     # here as a side effect which is less than ideal
-                    (prefix, omim_id, destination, empty, empty) = row
+                    omim_id = row[col.index('omim_id')]
                     omim_type[omim_id] = self.globaltt['obsolete']
-                    if row[2][:9] == 'MOVED TO ':
-                        token = row[2].split(' ')
+                    destination = pref_label  # they overload the column semantics
+                    if destination[:9] == 'MOVED TO ':
+                        token = destination.split(' ')
                         rep = token[2]
                         if not re.match(r'^[0-9]{6}$', rep):
                             LOG.error('Report malformed omim replacement %s', rep)
-                            # clean up ones I know about
+                            # clean up oddities I know about
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
                             if len(rep) == 7 and rep[6] == ',':
-                                rep = rep[:5]    
+                                rep = rep[:5]
                         # asuming splits are typically to both gene & phenotype
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = {rep, token[4]}
                         else:
                             self.omim_replaced[omim_id] = {rep}
-
-                elif row[0] == 'Asterisk':  # declared as gene
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                elif prefix == 'Asterisk':  # declared as gene
                     omim_type[omim_id] = self.globaltt['gene']
-                elif row[0] == 'NULL':
+                elif prefix == 'NULL':
                     #  potential model of disease?
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    #
                     omim_type[omim_id] = self.globaltt['Suspected']   # NCIT:C71458
-                elif row[0] == 'Number Sign':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                elif prefix == 'Number Sign':
                     omim_type[omim_id] = self.globaltt['Phenotype']
-                elif row[0] == 'Percent':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                elif prefix == 'Percent':
                     omim_type[omim_id] = self.globaltt['heritable_phenotypic_marker']
-                elif row[0] == 'Plus':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
+                elif prefix == 'Plus':
                     # to be interperted as  a gene and/or a phenotype
                     omim_type[omim_id] = self.globaltt['has_affected_feature']
                 else:

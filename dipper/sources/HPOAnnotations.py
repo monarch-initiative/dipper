@@ -78,7 +78,6 @@ class HPOAnnotations(Source):
             'url': 'http://purl.obolibrary.org/obo/doid.owl'
         }
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     small_files = {
         # this is a placeholder for the columns in the "common-disease"
@@ -121,9 +120,7 @@ class HPOAnnotations(Source):
         )
         self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
-
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-        self.test_ids = all_test_ids['disease']
+        self.test_ids = self.all_test_ids['disease']
 
         return
 

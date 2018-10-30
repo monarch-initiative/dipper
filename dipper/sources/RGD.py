@@ -1,14 +1,16 @@
+import logging
+
+from ontobio.io.gafparser import GafParser
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-from ontobio.io.gafparser import GafParser
-import logging
+
 
 
 __author__ = 'timputman'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class RGD(Source):
@@ -57,7 +59,7 @@ class RGD(Source):
             :return None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         rgd_file = '/'.join(
             (self.rawdir, self.files['rat_gene2mammalian_phenotype']['file']))

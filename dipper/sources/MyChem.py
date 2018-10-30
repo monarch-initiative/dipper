@@ -1,12 +1,12 @@
-from dipper.sources.Source import Source
-from dipper.models.Model import Model
 import logging
 from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
+from dipper.sources.Source import Source
+from dipper.models.Model import Model
 
 __author__ = 'timputman'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MyChem(Source):
@@ -17,8 +17,8 @@ class MyChem(Source):
             'mychem',
             ingest_title='BioThings chemical and drug annotation data',
             ingest_url='http://mychem.info/',
-            license_url='http://mychem.info/terms'
-            # data_rights=None,
+            license_url=None,
+            data_rights='http://mychem.info/terms'
             # file_handle=None
         )
 
@@ -105,7 +105,7 @@ class MyChem(Source):
                 else:
                     continue
                 self.make_triples(source='drugcentral', package=record_data)
-        except Exception as e:
+        except Exception as e:  # FIXME too broad-except
             print(e)
         return
 

@@ -12,9 +12,38 @@
 # This is not yet confirmed, thus is not utilized.
 
 #    "chicken": "Wageningen-chicken"    # PMID:10645958
-#    "cattle": "USDA-MARC"              # PMID:9074927
-#    "pig": "USDA-MARC"                 # PMID:8743988
+#    "cattle": "USDA-MARC"          # PMID:9074927
+#    "pig": "USDA-MARC"         # PMID:8743988
 #    # -- this is an assumption
 #    "sheep": "Wageningen-sheep"        # PMID:11435411
 #    "horse": "Swinburne-Penedo"        # PMID:16314071 PMID:16093715
 #    "rainbow_trout": "USDA-NCCCWA"     # PMID:19019240 PMID:22101344
+
+"Btau_4.6": "bosTau7" # UCSC prefered
+# not prefered
+#   "NCBIGenome:82"
+# Not Used
+#   "NCBIAssembly:GCF_000003205.5"
+
+"UMD_3.1": "NCBIGenome:82"
+# Not Used
+#   "NCBIAssembly:GCF_000003055.6"
+
+"GG_4.0": "galGal4"  # UCSC prefered
+# Not Used
+#   "NCBIAssembly:317958"
+
+"SS_10.2": "susScr3"  # UCSC prefered
+# Not Used
+#   "NCBIAssembly:304498"
+
+
+"OAR_3.1": "oviAri3"   # UCSC prefered
+# not prefered
+#   "NCBIGenome:83
+# Not Used
+#   "NCBIAssembly": "GCF_000298735.1"
+
+"EquCab2.0": "equCab2"  # UCSC prefered
+# Not Used
+#   "NCBIAssembly:GCF_000002305.2"

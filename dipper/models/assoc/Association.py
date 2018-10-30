@@ -6,7 +6,8 @@ from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class Assoc:
@@ -21,7 +22,7 @@ class Assoc:
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
@@ -112,10 +113,10 @@ class Assoc:
                     self.assoc_id, self.globaltt['has_provenance'], prov)
 
         if self.date is not None and len(self.date) > 0:
-            for dt in self.date:
+            for dat in self.date:
                 self.graph.addTriple(
                     object_is_literal=True, subject_id=self.assoc_id,
-                    predicate_id=self.globaltt['created_on'], obj=dt)
+                    predicate_id=self.globaltt['created_on'], obj=dat)
 
         if self.score is not None:
             self.graph.addTriple(
@@ -148,6 +149,7 @@ class Assoc:
         return
 
     # This isn't java, but predecessors favored the use of property decorators
+    # and CamelCase and ...
     def set_subject(self, identifier):
         self.sub = identifier
         return
@@ -181,7 +183,7 @@ class Assoc:
         return self.assoc_id
 
     def get_association_id(self):
-        if  self.assoc_id is None:
+        if self.assoc_id is None:
             self.set_association_id()
 
         return self.assoc_id

@@ -1,9 +1,10 @@
-from .OrthoXML import OrthoXML
 import logging
+from .OrthoXML import OrthoXML
+# from dipper.util.OrthoXML import OrthoXML  # TODO move non-source out of source
 
 __author__ = 'Adrian Altenhoff'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class OMA(OrthoXML):

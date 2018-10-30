@@ -1,12 +1,15 @@
+import csv
+import logging
+
 from dipper.models.Reference import Reference
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.sources.ZFIN import ZFIN
 from dipper.models.Model import Model
-import csv
-import logging
 
-logger = logging.getLogger(__name__)
+
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class ZFINSlim(Source):
@@ -17,8 +20,8 @@ class ZFINSlim(Source):
     files = {
         'g2p_clean': {
             'file': 'phenoGeneCleanData_fish.txt.txt',
-            'url': 'https://zfin.org/downloads/phenoGeneCleanData_fish.txt'
-            # https://zfin.org/downloads#  header Documentation is hidden in crap
+            'url': 'https://zfin.org/downloads/phenoGeneCleanData_fish.txt',
+            # https://zfin.org/downloads#  header Documentation is burried in UI crap
         },
         'zpmap': {
             'file': 'zp-mapping.txt',
@@ -53,7 +56,6 @@ class ZFINSlim(Source):
         with open(g2p_file, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
-
                 (internal_id,
                  symbol,
                  gene_id,
@@ -80,7 +82,7 @@ class ZFINSlim(Source):
                  pub_id,
                  figure_id
                  # ,unknown_field   # just leave this here for next time
-                 ) = row
+                ) = row
 
                 zp_id = zfin_parser._map_sextuple_to_phenotype(
                     superterm1_id, subterm1_id, quality_id, superterm2_id,
@@ -97,5 +99,6 @@ class ZFINSlim(Source):
                         reference.addRefToGraph()
                         assoc.add_source(pub_curie)
 
-                    assoc.add_evidence('ECO:0000059')
+                    assoc.add_evidence(
+                        self.globaltt['experimental phenotypic evidence'])
                     assoc.add_association_to_graph()

@@ -1,14 +1,16 @@
+import logging
+import pandas as pd
+
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
 from ontobio.ontol_factory import OntologyFactory
-import logging
-import pandas as pd
+
 
 __author__ = 'timputman'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class SGD(Source):
@@ -61,7 +63,7 @@ class SGD(Source):
             :return None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         sgd_file = '/'.join((self.rawdir, self.files['sgd_phenotype']['file']))
         columns = [
@@ -106,8 +108,7 @@ class SGD(Source):
                 'term': None,
                 'apo_id': None
             },
-            'has_quality': False
-            # False = phenotype was descriptive and don't bother looking for a quality
+            'has_quality': False  # descriptive and don't bother looking for a quality
         }
         phenotype = record['Phenotype']
         if ':' in phenotype:

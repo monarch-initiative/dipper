@@ -53,94 +53,93 @@ class MGI(PostgreSQLSource):
     resources = {
         'query_map': [
             {
-              'query': '../../resources/sql/mgi/mgi_dbinfo.sql',
-              'outfile': 'mgi_dbinfo',
-              'Force': True
+                'query': '../../resources/sql/mgi/mgi_dbinfo.sql',
+                'outfile': 'mgi_dbinfo',
+                'Force': True
             },
             {
-              'query': '../../resources/sql/mgi/gxd_genotype_view.sql',
-              'outfile': 'gxd_genotype_view'
+                'query': '../../resources/sql/mgi/gxd_genotype_view.sql',
+                'outfile': 'gxd_genotype_view'
             },
             {
-              'query': '../../resources/sql/mgi/gxd_genotype_summary_view.sql',
-              'outfile': 'gxd_genotype_summary_view'
+                'query': '../../resources/sql/mgi/gxd_genotype_summary_view.sql',
+                'outfile': 'gxd_genotype_summary_view'
             },
             {
-              'query': '../../resources/sql/mgi/gxd_allelepair_view.sql',
-              'outfile': 'gxd_allelepair_view'
+                'query': '../../resources/sql/mgi/gxd_allelepair_view.sql',
+                'outfile': 'gxd_allelepair_view'
             },
             {
-              'query': '../../resources/sql/mgi/all_summary_view.sql',
-              'outfile': 'all_summary_view'
+                'query': '../../resources/sql/mgi/all_summary_view.sql',
+                'outfile': 'all_summary_view'
             },
             {
-              'query': '../../resources/sql/mgi/all_allele_view.sql',
-              'outfile': 'all_allele_view'
+                'query': '../../resources/sql/mgi/all_allele_view.sql',
+                'outfile': 'all_allele_view'
             },
             {
-              'query': '../../resources/sql/mgi/all_allele_mutation_view.sql',
-              'outfile': 'all_allele_mutation_view'
+                'query': '../../resources/sql/mgi/all_allele_mutation_view.sql',
+                'outfile': 'all_allele_mutation_view'
             },
             {
-              'query': '../../resources/sql/mgi/mrk_marker_view.sql',
-              'outfile': 'mrk_marker_view'
+                'query': '../../resources/sql/mgi/mrk_marker_view.sql',
+                'outfile': 'mrk_marker_view'
             },
             {
-              'query': '../../resources/sql/mgi/voc_annot_view.sql',
-              'outfile': 'voc_annot_view'
+                'query': '../../resources/sql/mgi/voc_annot_view.sql',
+                'outfile': 'voc_annot_view'
             },
             {
-              'query': '../../resources/sql/mgi/evidence.sql',
-              'outfile': 'evidence_view'
+                'query': '../../resources/sql/mgi/evidence.sql',
+                'outfile': 'evidence_view'
             },
             {
-              'query': '../../resources/sql/mgi/bib_acc_view.sql',
-              'outfile': 'bib_acc_view'
+                'query': '../../resources/sql/mgi/bib_acc_view.sql',
+                'outfile': 'bib_acc_view'
             },
             {
-               'query': '../../resources/sql/mgi/prb_strain_view.sql',
-               'outfile': 'prb_strain_view'
+                'query': '../../resources/sql/mgi/prb_strain_view.sql',
+                'outfile': 'prb_strain_view'
             },
             {
-              'query': '../../resources/sql/mgi/mrk_summary_view.sql',
-              'outfile': 'mrk_summary_view'
+                'query': '../../resources/sql/mgi/mrk_summary_view.sql',
+                'outfile': 'mrk_summary_view'
             },
             {
-              'query': '../../resources/sql/mgi/mrk_acc_view.sql',
-              'outfile': 'mrk_acc_view'
+                'query': '../../resources/sql/mgi/mrk_acc_view.sql',
+                'outfile': 'mrk_acc_view'
             },
             {
-              'query': '../../resources/sql/mgi/prb_strain_acc_view.sql',
-              'outfile': 'prb_strain_acc_view'
+                'query': '../../resources/sql/mgi/prb_strain_acc_view.sql',
+                'outfile': 'prb_strain_acc_view'
             },
             {
-              'query': '../../resources/sql/mgi/prb_strain_genotype_view.sql',
-              'outfile': 'prb_strain_genotype_view'
+                'query': '../../resources/sql/mgi/prb_strain_genotype_view.sql',
+                'outfile': 'prb_strain_genotype_view'
             },
             {
-              'query': '../../resources/sql/mgi/mgi_note_vocevidence_view.sql',
-              'outfile': 'mgi_note_vocevidence_view'
+                'query': '../../resources/sql/mgi/mgi_note_vocevidence_view.sql',
+                'outfile': 'mgi_note_vocevidence_view'
             },
             {
-              'query': '../../resources/sql/mgi/mgi_note_allele_view.sql',
-              'outfile': 'mgi_note_allele_view'
+                'query': '../../resources/sql/mgi/mgi_note_allele_view.sql',
+                'outfile': 'mgi_note_allele_view'
             },
             {
-              'query': '../../resources/sql/mgi/mrk_location_cache.sql',
-              'outfile': 'mrk_location_cache'  # gene locations
+                'query': '../../resources/sql/mgi/mrk_location_cache.sql',
+                'outfile': 'mrk_location_cache'  # gene locations
             }
         ],
-        'test_ids': '../../resources/test_ids.yaml',
-        'test_keys': '../../resources/mgi_test_keys.yaml'    
+        'test_keys': '../../resources/mgi_test_keys.yaml'
     }
 
     # for testing purposes, this is a list of internal db keys
     # to match and select only portions of the source
 
     def __init__(
-        self,
-        graph_type,
-        are_bnodes_skolemized
+            self,
+            graph_type,
+            are_bnodes_skolemized
     ):
         super().__init__(
             graph_type,
@@ -176,16 +175,14 @@ class MGI(PostgreSQLSource):
         # also add the gene ids from the test_ids
         # in order to capture transgenes of the test set
 
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-
-        if 'gene' in all_test_ids:
-            self.test_ids = all_test_ids['gene']
+        if 'gene' in self.all_test_ids:
+            self.test_ids = self.all_test_ids['gene']
         else:
             LOG.warning("not configured with gene test ids.")
             self.test_ids = []
 
         self.test_keys = self.open_and_parse_yaml(self.resources['test_keys'])
-            
+
         return
 
     def fetch(self, is_dl_forced=False):
@@ -239,9 +236,9 @@ class MGI(PostgreSQLSource):
                 # use it instead of the download date
                 # datestamp in the table: 2014-12-23 00:14:20[.12345]
                 # modification date without micro seconds
-                (d, ms) = cols[1].strip().split('.')
+                dat = cols[1].strip().split('.')[0]
                 datestamp = datetime.strptime(
-                    d, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+                    dat, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
                 f.close()
         self.dataset.setVersion(datestamp, ver)
 
@@ -725,8 +722,8 @@ SELECT  r._relationship_key as rel_key,
 
                     strain_id = self.idhash['strain'].get(strain_key)
                     # scrub out if the strain is "not specified"
-                    if strain_id is not None and strain_id not in [
-                                'MGI:4867032', 'MGI:5649511']:
+                    if strain_id is not None and \
+                            strain_id not in ['MGI:4867032', 'MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id)
 
                 if not self.testMode and limit is not None and line_counter > limit:
@@ -977,13 +974,25 @@ SELECT  r._relationship_key as rel_key,
         line_counter = 0
         LOG.info("getting G2P associations")
         raw = '/'.join((self.rawdir, 'voc_annot_view'))
+        col = [
+            'annot_key', 'annot_type', 'object_key', 'term_key', 'qualifier_key',
+            'qualifier', 'term', 'accid']
         with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
-                line = line.rstrip("\n")
+            header = f.readline()  # read the header row; skip
+            if header != col:
+                LOG.error("header expectation mismatch \n%s", header - col)
 
-                (annot_key, annot_type, object_key, term_key,
-                 qualifier_key, qualifier, term, accid) = line.split('\t')
+            for line in f:
+                row = line.split('\t')
+
+                annot_key = row[col.index('annot_key')]
+                annot_type = row[col.index('annot_type')]
+                object_key = row[col.index('object_key')]
+                term_key = row[col.index('term_key')]
+                qualifier_key = row[col.index('qualifier_key')]
+                # qualifier,
+                # term,
+                accid = row[col.index('accid')]
 
                 if self.testMode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
@@ -1095,27 +1104,32 @@ SELECT  r._relationship_key as rel_key,
             graph = self.testgraph
         else:
             graph = self.graph
+
         model = Model(graph)
         line_counter = 0
         LOG.info("getting evidence and pubs for annotations")
         raw = '/'.join((self.rawdir, 'evidence_view'))
+        col = [
+            'annot_evidence_key', 'annot_key', 'evidence_code', 'jnumid', 'qualifier',
+            'qualifier_value', 'annotation_type']
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             for line in f:
                 line = line.rstrip("\n")
                 line_counter += 1
+                row = line.split('\t')
 
-                (annot_evidence_key,
-                 annot_key,
-                 evidence_code,
-                 jnumid,
-                 qualifier,
-                 qualifier_value,
-                 annotation_type
-                 ) = line.split('\t')
-                if self.testMode is True:
-                    if int(annot_key) not in self.test_keys.get('annot'):
-                        continue
+                annot_evidence_key = row[col.index('annot_evidence_key')]
+                annot_key = int(row[col.index('annot_key')])
+                evidence_code = row[col.index('evidence_code')]
+                jnumid = row[col.index('jnumid')]
+                qualifier = row[col.index('qualifier')]
+                qualifier_value = row[col.index('qualifier_value')]
+                # annotation_type = row[col.index('annotation_type')]
+
+                if self.testMode is True and \
+                        annot_key not in self.test_keys.get('annot'):
+                    continue
 
                 # add the association id to map to the evidence key
                 # (to attach the right note to the right assn)
@@ -1169,22 +1183,28 @@ SELECT  r._relationship_key as rel_key,
             graph = self.graph
         model = Model(graph)
         # firstpass, get the J number mapping, and add to the global hash
-        line_counter = 1
+
         LOG.info('populating pub id hash')
         raw = '/'.join((self.rawdir, 'bib_acc_view'))
+        col = [
+            'accid', 'prefixpart', 'numericpart', 'object_key', 'logical_db',
+            'logicaldb_key']
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
-            if len(header) != 6:
-                LOG.error('bib_acc_view expected 6 columns got: %s', header)
-            for line in filereader:
-                line_counter += 1
-                (accid, prefixpart, numericpart, object_key,
-                 logical_db, logicaldb_key) = line
+            if header != col:
+                LOG.error('bib_acc_view expected:\n%s\n\tBut got:\n%s', col, header)
+            for row in filereader:
 
-                if self.testMode is True:
-                    if int(object_key) not in self.test_keys.get('pub'):
-                        continue
+                accid = row[col.index('accid')]
+                prefixpart = row[col.index('prefixpart')]
+                # 'numericpart'
+                object_key = int(row[col.index('object_key')])
+                # logical_db = row[col.index('logical_db')]
+                # logicaldb_key = row[col.index('logicaldb_key')]
+
+                if self.testMode and object_key not in self.test_keys.get('pub'):
+                    continue
 
                 # we use the J number here because
                 # it is the externally-accessible identifier
@@ -1194,29 +1214,29 @@ SELECT  r._relationship_key as rel_key,
                 reference = Reference(graph, accid)
                 reference.addRefToGraph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and \
+                        filereader.line_num > limit:
                     break
 
         # 2nd pass, look up the MGI identifier in the hash
         LOG.info("getting pub equivalent ids")
-        line_counter = 1
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
 
-            for line in filereader:
-                line_counter += 1
-                (accid, prefixpart, numericpart, object_key,
-                 logical_db, logicaldb_key) = line
+            for row in filereader:
+                accid = row[col.index('accid')]
+                prefixpart = row[col.index('prefixpart')]
+                # 'numericpart'
+                object_key = int(row[col.index('object_key')])
+                logical_db = row[col.index('logical_db')]
+                logicaldb_key = row[col.index('logicaldb_key')]
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
                         continue
-
                 logical_db = logical_db.strip()
-
                 jid = self.idhash['publication'].get(object_key)
-
                 pub_id = None
                 if logicaldb_key == '29':  # pubmed
                     pub_id = 'PMID:' + accid
@@ -1255,7 +1275,8 @@ SELECT  r._relationship_key as rel_key,
                         "Publication from (%s) not mapped for %s",
                         logical_db, object_key)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and \
+                        filereader.line_num > limit:
                     break
 
         return
@@ -1494,13 +1515,22 @@ SELECT  r._relationship_key as rel_key,
         line_counter = 0
         LOG.info("mapping markers to internal identifiers")
         raw = '/'.join((self.rawdir, 'mrk_acc_view'))
+        col = [
+            'accid', 'prefix_part', 'logicaldb_key', 'object_key', 'preferred',
+            'organism_key']
         with open(raw, 'r') as fh:
             fh.readline()  # read the header row; skip
             for line in fh:
                 line = line.rstrip('\n')
                 line_counter += 1
-                (accid, prefix_part, logicaldb_key, object_key,
-                 preferred, organism_key) = line.split('\t')
+                row = line.split('\t')
+
+                accid = row[col.index('accid')]
+                prefix_part = row[col.index('prefix_part')]
+                logicaldb_key = row[col.index('logicaldb_key')]
+                object_key = row[col.index('object_key')]
+                preferred = row[col.index('preferred')]
+                # organism_key)
 
                 if self.testMode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
@@ -1870,7 +1900,6 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        line_counter = 0
         if self.testMode:
             graph = self.testgraph
         else:
@@ -1878,23 +1907,31 @@ SELECT  r._relationship_key as rel_key,
         LOG.info("getting transgene genes")
         raw = '/'.join((self.rawdir, 'mgi_relationship_transgene_genes'))
         geno = Genotype(graph)
-
+        col = [
+            'rel_key', 'allele_key', 'allele_id', 'allele_label', 'category_key',
+            'category_name', 'property_key', 'property_name', 'gene_num'
+        ]
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for line in filereader:
-                line_counter += 1
-                if line_counter == 1:
+            header = next(filereader)
+            if header != col:
+                LOG.error('expected columns:  %s\n\tBut got:\n%s', col, header)
+            for row in filereader:
+                # rel_key,
+                allele_key = int(row[col.index('allele_key')])
+                allele_id = row[col.index('allele_id')]
+                # allele_label,
+                # category_key,
+                # category_name,
+                # property_key,
+                # property_name,
+                gene_num = int(row[col.index('gene_num')])
+
+                if self.testMode and allele_key not in self.test_keys.get('allele')\
+                        and gene_num not in self.test_ids:
                     continue
 
-                (rel_key, allele_key, allele_id, allele_label, category_key,
-                 category_name, property_key, property_name, gene_num) = line
-
-                if self.testMode is True:
-                    if int(allele_key) not in self.test_keys.get('allele')\
-                            and int(gene_num) not in self.test_ids:
-                        continue
-
-                gene_id = 'NCBIGene:'+gene_num
+                gene_id = 'NCBIGene:' + str(gene_num)
 
                 # geno.addParts(gene_id, allele_id, self.globaltt['has_variant_part'])
                 seqalt_id = self.idhash['seqalt'].get(allele_key)
@@ -1902,7 +1939,8 @@ SELECT  r._relationship_key as rel_key,
                     seqalt_id = allele_id
                 geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and \
+                        filereader.line_num > limit:
                     break
 
         return
@@ -1944,8 +1982,10 @@ SELECT  r._relationship_key as rel_key,
                 if len(notehash[object_key][notetype]) < int(sequencenum):
                     for i in range(
                             len(notehash[object_key][notetype]),
-                            int(sequencenum)):
-                        notehash[object_key][notetype].append('')
+                            int(sequencenum)
+                    ):
+                        notehash[object_key][notetype].append('')  # ??? I don't get it
+
                 notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
 
             # finish iteration over notes

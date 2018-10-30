@@ -1,10 +1,11 @@
+import logging
+import csv
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Pathway import Pathway
-import logging
-import csv
 
-logger = logging.getLogger(__name__)
+
+LOG = logging.getLogger(__name__)
 
 
 class Reactome(Source):
@@ -33,8 +34,8 @@ class Reactome(Source):
             'reactome',
             ingest_title='Reactome',
             ingest_url='http://reactome.org/',
-            license_url='https://reactome.org/license/'
-            # data_rights=None,
+            license_url=None,
+            data_rights='https://reactome.org/license/'
             # file_handle=None
         )
 
@@ -60,7 +61,7 @@ class Reactome(Source):
             :return None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         ensembl_file = '/'.join((self.rawdir, self.files['ensembl2pathway']['file']))
         self._parse_reactome_association_file(

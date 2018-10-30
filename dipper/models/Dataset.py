@@ -6,7 +6,7 @@ from dipper.models.Model import Model
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Dataset:
@@ -33,8 +33,7 @@ class Dataset:
         if graph_type is None:
             self.graph = RDFGraph(None, identifier)
         elif graph_type == 'streamed_graph':
-            self.graph = StreamedGraph(
-                True, identifier, file_handle=file_handle)
+            self.graph = StreamedGraph(True, identifier, file_handle=file_handle)
         elif graph_type == 'rdf_graph':
             self.graph = RDFGraph(True, identifier)
 
@@ -73,13 +72,13 @@ class Dataset:
             self.graph.addTriple(
                 self.identifier, 'dcterms:license', license_url)
         else:
-            logger.debug('No license provided.')
+            LOG.debug('No license provided.')
         if data_rights is not None:
             self.graph.addTriple(
                 self.identifier, 'dcterms:rights',
                 data_rights, object_is_literal=True)
         else:
-            logger.debug('No rights provided.')
+            LOG.debug('No rights provided.')
 
         if ingest_desc is not None:
             self.model.addDescription(self.identifier, ingest_desc)
@@ -113,17 +112,17 @@ class Dataset:
         elif version_id is not None:
             self.set_version_by_num(version_id)
         else:
-            logger.error("date or version not set!")
+            LOG.error("date or version not set!")
             # TODO throw error
             return
 
         if version_id is not None:
             self.set_version_by_num(version_id)
         else:
-            logger.info("set version to %s", self.version)
+            LOG.info("set version to %s", self.version)
             self.set_version_by_date(date_issued)
 
-        logger.info("set version to %s", self.version)
+        LOG.info("set version to %s", self.version)
 
         return
 
@@ -133,7 +132,7 @@ class Dataset:
         self.graph.addTriple(
             self.identifier, 'dcterms:issued', date_issued,
             object_is_literal=True)
-        logger.info("setting date to %s", date_issued)
+        LOG.info("setting date to %s", date_issued)
 
         return
 
@@ -147,29 +146,26 @@ class Dataset:
         """
 
         if date_issued is not None:
-            d = date_issued
+            dat = date_issued
         elif self.date_issued is not None:
-            d = self.date_issued
+            dat = self.date_issued
         else:
-            d = self.date_accessed
-            logger.info(
-                "No date supplied for setting version; "
-                "using download timestamp for date_issued")
-
-        logger.info("setting version by date")
-        self.set_version_by_num(d)
+            dat = self.date_accessed
+            LOG.info(
+                "No date supplied, using download timestamp for date_issued")
+        LOG.info("setting version by date to: %s", dat)
+        self.set_version_by_num(dat)
 
         return
 
     def set_version_by_num(self, version_num):
 
         self.version = self.identifier+version_num
-        self.graph.addTriple(
-            self.version, 'dcterms:isVersionOf', self.identifier)
+        self.graph.addTriple(self.version, 'dcterms:isVersionOf', self.identifier)
         self.graph.addTriple(
             self.version, 'pav:version', version_num, object_is_literal=True)
 
-        logger.info("setting version to %s", self.version)
+        LOG.info("setting version to %s", self.version)
 
         # set the monarch-generated-version of the resource-version
         # TODO sync this up with the ontology version

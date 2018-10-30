@@ -4,7 +4,7 @@ from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Feature():
@@ -30,7 +30,7 @@ class Feature():
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
@@ -41,6 +41,7 @@ class Feature():
         self.description = description
         self.start = None
         self.stop = None
+        self.taxon = None
         return
 
     def addFeatureStartLocation(
@@ -123,7 +124,7 @@ class Feature():
         elif strand is None:  # assume this is Unknown
             pass
         else:
-            logger.warning("strand type could not be mapped: %s", str(strand))
+            LOG.warning("strand type could not be mapped: %s", str(strand))
 
         return strand_id
 
@@ -244,7 +245,7 @@ class Feature():
         """
 
         if reference is None:
-            logger.error("Trying to make position with no reference.")
+            LOG.error("Trying to make position with no reference.")
             return None
 
         curie = '_:'
@@ -267,13 +268,13 @@ class Feature():
 
         if begin_position_id is None:
             pass
-            # logger.warn("No begin position specified for region %s", region_id)
+            # LOG.warn("No begin position specified for region %s", region_id)
         else:
             self.graph.addTriple(region_id, self.globaltt['begin'], begin_position_id)
 
         if end_position_id is None:
             pass
-            # logger.warn("No end position specified for region %s", region_id)
+            # LOG.warn("No end position specified for region %s", region_id)
         else:
             self.graph.addTriple(region_id, self.globaltt['end'], end_position_id)
 
@@ -354,8 +355,8 @@ class Feature():
 
         return
 
-    def addFeatureProperty(self, property_type, property):
-        self.graph.addTriple(self.fid, property_type, property)
+    def addFeatureProperty(self, property_type, feature_property):
+        self.graph.addTriple(self.fid, property_type, feature_property)
         return
 
 
@@ -375,7 +376,7 @@ def makeChromID(chrom, reference=None, prefix=None):
     """
     # blank nodes
     if reference is None:
-        logger.warning('No reference for this chr. You may have conflicting ids')
+        LOG.warning('No reference for this chr. You may have conflicting ids')
 
     # replace any chr-like prefixes with blank to standardize
     chrid = re.sub(r'ch(r?)[omse]*', '', str(chrom))

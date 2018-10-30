@@ -64,6 +64,7 @@ class D2PAssoc(Assoc):
         # if rel == self.globaltt[['has disposition']:
 
         self._add_basic_association_to_graph()
+
         object_is_literal = True
 
         if self.frequency is not None and self.frequency != '':

@@ -66,8 +66,7 @@ class NCBIGene(Source):
     }
 
     resources = {
-        'clique_leader': '../../resources/clique_leader.yaml',
-        'test_ids': '../../resources/test_ids.yaml'
+        'clique_leader': '../../resources/clique_leader.yaml'
     }
 
     def __init__(
@@ -93,8 +92,6 @@ class NCBIGene(Source):
         self.gene_ids = gene_ids
         self.id_filter = 'taxids'   # 'geneids
 
-        self.test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
@@ -102,8 +99,8 @@ class NCBIGene(Source):
         else:
             LOG.info("Filtering on the following taxa: %s", str(tax_ids))
 
-        if 'gene' in self.test_ids:
-            self.gene_ids = self.test_ids['gene']
+        if 'gene' in self.all_test_ids:
+            self.gene_ids = self.all_test_ids['gene']
         else:
             LOG.warning("not configured with gene test ids.")
             self.gene_ids = []
@@ -388,8 +385,8 @@ class NCBIGene(Source):
                                 model.makeLeader(gene_id)
                     else:
                         model.addSameIndividual(gene_id, xref_curie)
-                except AssertionError as e:
-                    LOG.warn("Error parsing %s: %s", gene_id, e)
+                except AssertionError as err:
+                    LOG.warning("Error parsing %s: %s", gene_id, err)
         return
 
     def _get_gene_history(self, limit):

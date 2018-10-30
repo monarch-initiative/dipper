@@ -1,9 +1,10 @@
 import logging
 import hashlib
-from rdflib import URIRef, ConjunctiveGraph
-from rdflib import util as rdflib_util
-from rdflib.namespace import DC, RDF, OWL
+
 from xml.sax import SAXParseException
+from rdflib import URIRef, ConjunctiveGraph, util as rdflib_util
+from rdflib.namespace import DC, RDF, OWL
+
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -20,7 +21,8 @@ class GraphUtils:
 
         return
 
-    def write(self, graph, fileformat=None, filename=None):
+    @staticmethod
+    def write(graph, fileformat=None, filename=None):
         """
         A basic graph writer (to stdout) for any of the sources.
         this will write raw triples in rdfxml, unless specified.
@@ -116,11 +118,12 @@ class GraphUtils:
 
         # Hardcoded properties
         graph.add((
-            URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'),
-            RDF['type'], OWL['AnnotationProperty']))
+            URIRef('https://monarchinitiative.org/MONARCH_cliqueLeader'), RDF['type'],
+            OWL['AnnotationProperty']))
 
-        graph.add((URIRef('https://monarchinitiative.org/MONARCH_anonymous'),
-                  RDF['type'], OWL['AnnotationProperty']))
+        graph.add((
+            URIRef('https://monarchinitiative.org/MONARCH_anonymous'), RDF['type'],
+            OWL['AnnotationProperty']))
 
         return graph
 
@@ -133,7 +136,7 @@ class GraphUtils:
         return graph
 
     @staticmethod
-    def digest_id(wordage):
+    def digest_id(wordage):   # same as source/Source.hash_id(wordage)
         '''
         Form a deterministic digest of input
         Leading 'b' is an experiment forcing the first char to be non numeric

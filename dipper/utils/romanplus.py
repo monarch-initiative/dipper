@@ -1,5 +1,3 @@
-import re
-
 """
 Convert to and from Roman numerals
 This program is part of "Dive Into Python", a free Python tutorial for
@@ -14,28 +12,12 @@ Note:
 This has been modified to add optional characters
 after the initial roman numbers by nlw.
 """
+import re
 
 __author__ = "Mark Pilgrim (f8dy@diveintopython.org)"
 __version__ = "1.4"
 __date__ = "8 August 2001"
 __copyright__ = "Copyright (c) 2001 Mark Pilgrim"
-
-
-# Define exceptions
-class RomanError(Exception):
-    pass
-
-
-class OutOfRangeError(RomanError):
-    pass
-
-
-class NotIntegerError(RomanError):
-    pass
-
-
-class InvalidRomanNumeralError(RomanError):
-    pass
 
 # Define digit's regular expression mapping
 romanNumeralMap = (('M', 1000),
@@ -53,18 +35,18 @@ romanNumeralMap = (('M', 1000),
                    ('I', 1))
 
 
-def toRoman(n):
+def toRoman(num):
     """convert integer to Roman numeral"""
-    if not 0 < n < 5000:
-        raise ValueError("number out of range (must be 1..4999)")
-    if int(n) != n:
-        raise TypeError("decimals can not be converted")
+    if not 0 < num < 5000:
+        raise ValueError("number %n out of range (must be 1..4999)", num)
+    if int(num) != num:
+        raise TypeError("decimals %n can not be converted", num)
 
     result = ""
     for numeral, integer in romanNumeralMap:
-        while n >= integer:
+        while num >= integer:
             result += numeral
-            n -= integer
+            num -= integer
     return result
 
 
@@ -85,17 +67,17 @@ romanNumeralPattern = re.compile("""
     """, re.VERBOSE)
 
 
-def fromRoman(s):
+def fromRoman(strng):
     """convert Roman numeral to integer"""
-    if not s:
+    if not strng:
         raise TypeError('Input can not be blank')
-    if not romanNumeralPattern.search(s):
-        raise ValueError('Invalid Roman numeral: %s', s)
+    if not romanNumeralPattern.search(strng):
+        raise ValueError('Invalid Roman numeral: %s', strng)
 
     result = 0
     index = 0
     for numeral, integer in romanNumeralMap:
-        while s[index:index+len(numeral)] == numeral:
+        while strng[index:index+len(numeral)] == numeral:
             result += integer
             index += len(numeral)
     return result

@@ -2,7 +2,8 @@ import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class Evidence:
@@ -17,7 +18,6 @@ class Evidence:
 
     """
 
-
     def __init__(self, graph, association):
         if isinstance(graph, Graph):
             self.graph = graph
@@ -31,33 +31,33 @@ class Evidence:
 
         return
 
-    def add_supporting_evidence(self, evidence_line, type=None, label=None):
+    def add_supporting_evidence(self, evidence_line, evidence_type=None, label=None):
         """
         Add supporting line of evidence node to association id
 
-        :param assoc_id: curie or iri, association id
         :param evidence_line: curie or iri, evidence line
+        :param evidence_type: curie or iri, evidence type if available
         :return: None
         """
-        self.graph.addTriple(self.association,
-                             self.globaltt['has_supporting_evidence_line'],
-                             evidence_line)
-        if type is not None:
-            self.model.addIndividualToGraph(evidence_line, label, type)
+        self.graph.addTriple(
+            self.association, self.globaltt['has_supporting_evidence_line'],
+            evidence_line)
+        if  evidence_type is not None:
+            self.model.addIndividualToGraph(evidence_line, label, evidence_type)
         return
 
-    def add_evidence(self, evidence_line, ev_type=None, label=None):
+    def add_evidence(self, evidence_line, evidence_type=None, label=None):
         """
         Add line of evidence node to association id
 
-        :param assoc_id: curie or iri, association id
         :param evidence_line: curie or iri, evidence line
+        :param evidence_type: curie or iri, evidence type if available
         :return: None
         """
         self.graph.addTriple(
             self.association, self.globaltt['has_evidence_line'], evidence_line)
-        if ev_type is not None:
-            self.model.addIndividualToGraph(evidence_line, label, ev_type)
+        if evidence_type is not None:
+            self.model.addIndividualToGraph(evidence_line, label, evidence_type)
         return
 
     def add_data_individual(self, data_curie, label=None, ind_type=None):
@@ -105,7 +105,7 @@ class Evidence:
     def add_supporting_publication(
             self, evidence_line, publication, label=None, pub_type=None):
         """
-        <evidence> <SEPIO:0000124> <source>
+        <evidence> <has_supporting_reference> <source>
         <source> <rdf:type> <type>
         <source> <rdfs:label> "label"
         :param evidence_line: str curie
