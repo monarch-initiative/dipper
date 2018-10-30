@@ -262,7 +262,7 @@ class TestGwasHaplotypeModel(unittest.TestCase):
             self.test_data['allele_freq'], self.test_data['mapped_gene'], so_ontology)
 
         triples = """
-:haplotype_bcb627b1f64039b0 a OBO:GENO_0000871 ;
+:haplotype_bb627b1f64039b0f751a a OBO:GENO_0000871 ;
     rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
     OBO:GENO_0000382 dbSNP:rs1329573,
         dbSNP:rs3758171,
