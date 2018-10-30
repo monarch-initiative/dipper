@@ -127,20 +127,20 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             self.study_curie)
 
         triples = """
-    :MONARCH_test_association SEPIO:0000007 <https://monarchinitiative.org/.well-known/genid/b097a98087df7a99> .
+:MONARCH_test_association SEPIO:0000007 <https://monarchinitiative.org/.well-known/genid/b97a98087df7a99d8a38> .
 
-    <https://monarchinitiative.org/.well-known/genid/b097a98087df7a99> a ECO:0000015 ;
-        SEPIO:0000084 <https://monarchinitiative.org/.well-known/genid/b89ee584330837c9>,
-            <https://monarchinitiative.org/.well-known/genid/bc0eeccdea27a1d8> ;
-        SEPIO:0000085 <https://monarchinitiative.org/.well-known/genid/study> .
+<https://monarchinitiative.org/.well-known/genid/b97a98087df7a99d8a38> a ECO:0000015 ;
+    SEPIO:0000084 <https://monarchinitiative.org/.well-known/genid/b41ad2bfd375c9de8888>,
+        <https://monarchinitiative.org/.well-known/genid/b216606de82749b03956> ;
+    SEPIO:0000085 <https://monarchinitiative.org/.well-known/genid/study> .
 
-    <https://monarchinitiative.org/.well-known/genid/bc0eeccdea27a1d8> a OBI:0000175 ;
-        RO:0002353 <https://monarchinitiative.org/.well-known/genid/study> ;
-        STATO:0000129 1.637023e-10 .
+<https://monarchinitiative.org/.well-known/genid/b216606de82749b03956> a OBI:0000175 ;
+    RO:0002353 <https://monarchinitiative.org/.well-known/genid/study> ;
+    STATO:0000129 1.637023e-10 .
 
-    <https://monarchinitiative.org/.well-known/genid/b89ee584330837c9> a STATO:0000085 ;
-        RO:0002353 <https://monarchinitiative.org/.well-known/genid/study> ;
-        STATO:0000129 "8.885439E-007" .
+<https://monarchinitiative.org/.well-known/genid/b41ad2bfd375c9de8888> a STATO:0000085 ;
+    RO:0002353 <https://monarchinitiative.org/.well-known/genid/study> ;
+    STATO:0000129 "8.885439E-007" .
         """
 
         self.assertTrue(self.test_util.test_graph_equality(
@@ -175,7 +175,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
         )
 
         triples = """
-<https://monarchinitiative.org/.well-known/genid/bbdd05a8ca155dda> a OBI:0000471 ;
+<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> a OBI:0000471 ;
   BFO:0000051 OBO:STATO_0000076,
       <https://www.mousephenotype.org/impress/protocol/175/15> ;
   BFO:0000050  IMPRESS-procedure:15 ,
@@ -183,7 +183,7 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
   SEPIO:0000114 <https://www.mousephenotype.org/impress/parameterontologies/1867/91> ;
   SEPIO:0000017 <http://www.sanger.ac.uk/>  .
 
-<https://monarchinitiative.org/.well-known/genid/bc0b26361b8687b5> a owl:NamedIndividual ;
+<https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> a owl:NamedIndividual ;
     rdfs:label "MEFW" .
 
 <http://www.sanger.ac.uk/> a foaf:organization ;
@@ -221,8 +221,8 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
         impc._add_assertion_provenance(self.assoc_curie, self.evidence_curie)
 
         triples = """
-    MONARCH:test_association SEPIO:0000015 <https://monarchinitiative.org/.well-known/genid/bff92df374a88496> .
-    <https://monarchinitiative.org/.well-known/genid/bff92df374a88496> a SEPIO:0000001 ;
+    MONARCH:test_association SEPIO:0000015 <https://monarchinitiative.org/.well-known/genid/bf92df374a884963e805> .
+    <https://monarchinitiative.org/.well-known/genid/bf92df374a884963e805> a SEPIO:0000001 ;
         SEPIO:0000018 <https://www.mousephenotype.org/> ;
         SEPIO:0000111 <https://monarchinitiative.org/.well-known/genid/evidence>  .
 
