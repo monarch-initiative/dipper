@@ -1,4 +1,5 @@
 ---
+# evidence code
 "EXP": "experimental evidence"                                          # ECO:0000006
 "IBA": "biological aspect of ancestor evidence used in manual assertion"  # ECO:0000318
 "IC": "inference from background scientific knowledge"                  # ECO:0000001
@@ -286,5 +287,3 @@
 "M. m. castaneus": "Mus musculus castaneus"
 "Wild and M. m. domesticus": "Mus setulosus"
 "M. m. molossinus (Nagoya)": "Mus musculus molossinus"
-
-
