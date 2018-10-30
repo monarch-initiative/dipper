@@ -232,7 +232,7 @@ class NCBIGene(Source):
                         model.addSynonym(
                             gene_id, s.strip(), model.globaltt['hasRelatedSynonym'])
                 if xrefs.strip() != '-':
-                    self._add_gene_equivalencies(xrefs, gene_id, tax_num)
+                    self._add_gene_equivalencies(xrefs, gene_id, tax_id)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -337,7 +337,7 @@ class NCBIGene(Source):
 
         Uses external resource map located in
         /resources/clique_leader.yaml to determine
-        if an ID space is a clique leader
+        if an NCBITaxon ID space is a clique leader
         """
 
         clique_map = self.open_and_parse_yaml(self.resources['clique_leader'])
@@ -346,45 +346,42 @@ class NCBIGene(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-
-        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
-        # These will be made xrefs
-        taxon_spec_xref_filters = {
-            '10090': ['ENSEMBL'],
-            '9606': ['ENSEMBL']
-        }
-        # taxon_spec_filters = []
-        # if taxon in taxon_spec_xref_filters:
-        #    taxon_spec_filters = taxon_spec_xref_filters[taxon]
-
         model = Model(graph)
+        filter_out = ['Vega', 'IMGT/GENE-DB', 'Araport']
+
         # deal with the dbxrefs
         # MIM:614444|HGNC:HGNC:16851|Ensembl:ENSG00000136828|HPRD:11479|Vega:OTTHUMG00000020696
-        for ref in xrefs.strip().split('|'):
-            xref_curie = self._cleanup_id(ref)
-            if xref_curie is not None and xref_curie.strip() != '':
-                if xref_curie[:5] == 'HPRD:':  # proteins are not == genes.
+
+        for dbxref in xrefs.strip().split('|'):
+            prefix = ':'.join(dbxref.split(':')[:-1]).strip()
+            if prefix in self.localtt:
+                prefix = self.localtt[prefix]
+            dbxref_curie = ':'.join((prefix, dbxref.split(':')[-1]))
+
+            if dbxref_curie is not None and prefix != '':
+                if prefix == 'HPRD':  # proteins are not == genes.
                     model.addTriple(
-                        gene_id, self.globaltt['has gene product'], xref_curie)
+                        gene_id, self.globaltt['has gene product'], dbxref_curie)
                     continue
-                    # skip some of these for now
-                if xref_curie.split(':')[0] in filter_out:
+                    # skip some of these for now based on curie prefix
+                if prefix in filter_out:
                     continue
-                if xref_curie.split(':')[0] in taxon_spec_xref_filters:
-                    model.addXref(gene_id, xref_curie)
-                if xref_curie[:5] == 'OMIM:':
-                    if DipperUtil.is_omim_disease(xref_curie):
+
+                if prefix == 'ENSEMBL':
+                    model.addXref(gene_id, dbxref_curie)
+                if prefix == 'OMIM':
+                    if DipperUtil.is_omim_disease(dbxref_curie):
                         continue
                 try:
                     if self.class_or_indiv.get(gene_id) == 'C':
-                        model.addEquivalentClass(gene_id, xref_curie)
-                        if int(taxon) in clique_map:
-                            if clique_map[taxon] == xref_curie.split(':')[0]:
-                                model.makeLeader(xref_curie)
+                        model.addEquivalentClass(gene_id, dbxref_curie)
+                        if taxon in clique_map:
+                            if clique_map[taxon] == prefix:
+                                model.makeLeader(dbxref_curie)
                             elif clique_map[taxon] == gene_id.split(':')[0]:
                                 model.makeLeader(gene_id)
                     else:
-                        model.addSameIndividual(gene_id, xref_curie)
+                        model.addSameIndividual(gene_id, dbxref_curie)
                 except AssertionError as err:
                     LOG.warning("Error parsing %s: %s", gene_id, err)
         return
@@ -533,31 +530,6 @@ class NCBIGene(Source):
             "Processed %d pub-gene associations", assoc_counter)
 
         return
-
-    @staticmethod
-    def _cleanup_id(i):
-        """
-        Clean up messy id prefixes
-        :param i:
-        :return:
-        """
-        # move to localtt.
-        cleanid = i
-        # MIM:123456 --> #OMIM:123456
-        cleanid = re.sub(r'^MIM', 'OMIM', cleanid)
-
-        # HGNC:HGNC --> HGNC
-        cleanid = re.sub(r'^HGNC:HGNC', 'HGNC', cleanid)
-
-        # Ensembl --> ENSEMBL
-        cleanid = re.sub(r'^Ensembl', 'ENSEMBL', cleanid)
-
-        # MGI:MGI --> MGI
-        cleanid = re.sub(r'^MGI:MGI', 'MGI', cleanid)
-
-        cleanid = re.sub(r'FLYBASE', 'FlyBase', cleanid)
-
-        return cleanid
 
     def getTestSuite(self):
         import unittest
