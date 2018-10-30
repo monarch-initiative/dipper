@@ -503,11 +503,10 @@ class UDP(Source):
             'segregates_with', 'locus', 'exon', 'inheritance_model', 'zygosity',
             'dbsnp_id', 'frequency', 'num_of_alleles'
         ]
-        row = reader.next()
-        row = [x.lower for x in row]
-        if row != col:
-            LOG.error('BOO %s', row - col)
-            raise TypeError('header does not match expected format')
+        # row = next(reader)   # there is no header
+        # if len(row) != len(col):
+        #    LOG.error('Got:\n\t%s\nExpected:\n\t%s\n', row, col)
+        #    raise TypeError('header does not match expected format')
         for row in reader:
 
             patient = row[col.index('patient')]
