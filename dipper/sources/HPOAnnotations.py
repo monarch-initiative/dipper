@@ -18,8 +18,8 @@ from dipper import config
 LOG = logging.getLogger(__name__)
 
 # summer 2018 PR mentioned switching to the new format
-DRSEB = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
-HPOADL2 = DRSEB + '/lastSuccessfulBuild/artifact/misc_2018'
+PNR = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
+HPOADL2 = PNR + '/lastSuccessfulBuild/artifact/misc_2018'
 
 # Fall 2018 CM made a mondo version of common disease (but we decided to hold off now)
 GITAPI = "https://api.github.com/repos/monarch-initiative"
