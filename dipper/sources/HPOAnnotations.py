@@ -197,11 +197,6 @@ class HPOAnnotations(Source):
                 # 68646 ORPHA
                 # 297 DECIPHER
 
-                # TODO take this out asap.
-                # dipper need to switch over to ORPHA: too.
-                # if disease_id[:6] == 'ORPHA:':
-                #    disease_id = 'Orphanet:' + disease_id[6:]
-
                 if self.testMode:
                     try:
                         id_list = self.test_ids

@@ -46,9 +46,9 @@
 "group_category:7": "hereditary optic atrophy"      # "Progressive retinal atrophy (PRA)"  (was DOID:8466)
 "group_category:8": "Cone–rod dystrophy"            # "Cone–rod dystrophy (CRD)" (was 'DOID:0050572')
 "group_category:9": "hereditary retinal dystrophy"  # "Stationary retinal disorder" (was 'MESH:C536122')
-"group_category:10": "developmental defect of the eye"  # "Developmental retinal disorder"  (was 'Orphanet:98553')
+"group_category:10": "developmental defect of the eye"  # "Developmental retinal disorder"  (was 'ORPHA:98553')
 "group_category:11": "retinal disease"              # "Retinal disorder"   (was 'DOID:5679')
-"group_category:12": "disorder of sex development"  # "Disorder of Sexual Development (DSD)"  (was 'Orphanet:90771')
+"group_category:12": "disorder of sex development"  # "Disorder of Sexual Development (DSD)"  (was 'ORPHA:90771')
 "group_category:13": "embryonic lethality"          # "Embryonic lethal"
 "group_category:14": "hematological system disease"     # "Blood group system"  (was None)
 "group_category:15": "platelet disorder, undefined" # "Intrinsic platelet disorder" (was 'DOID:2218')

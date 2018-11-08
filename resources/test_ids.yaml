@@ -13,12 +13,12 @@
         # gene of known sequence and has a phenotype
         "OMIM:102150", "OMIM:104000", "OMIM:107200", "OMIM:100070", "OMIM:193500",
         "OMIM:267700", "OMIM:611100", "OMIM:612226", "OMIM:605727",
-        # phenotype/disease -- indicate that here?
+        # phenotype/disease
         "OMIM:104200", "OMIM:105400", "OMIM:114480", "OMIM:115300", "OMIM:121900",
         "OMIM:267430", "OMIM:174500", "OMIM:277580", "OMIM:256370", "OMIM:610168",
         "OMIM:600309", "OMIM:188890", "OMIM:102530",
-        "Orphanet:99889", "Orphanet:99", "Orphanet:99798", "Orphanet:99798",
-        "Orphanet:166282", "Orphanet:242",
+        "ORPHA:99889", "ORPHA:99", "ORPHA:99798", "ORPHA:99798", "ORPHA:166282",
+        "ORPHA:242",
         "DECIPHER:14", "DECIPHER:1", "MESH:D003520","MESH:D003928", "DOID:9258"
     ],
     # NCBI gene
