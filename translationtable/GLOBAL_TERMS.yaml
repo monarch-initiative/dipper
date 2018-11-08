@@ -13,7 +13,7 @@
 "has_molecular_consequence": ":has_molecular_consequence",
 "has_sex_specificty": ":has_sex_specificity",
 "increased_gene_dosage": ":increased_gene_dosage",
-"monoallelic": ":monoallelic:",
+"monoallelic": ":monoallelic",
 "mosaic": ":mosaic",
 "onset": ":onset",
 "part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication",
