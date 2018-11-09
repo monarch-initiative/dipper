@@ -300,7 +300,6 @@ class UDP(Source):
                 genotype.addSequenceAlteration(variant_bnode, None)
                 # check if it we have built the label
                 # in _add_variant_gene_relationship()
-                # FIXME: what is 'objects' here suppose to be  ???
                 labels = self.graph.objects(
                     BNode(re.sub(r'^_:', '', variant_bnode, 1)), RDFS['label'])
 
