@@ -10,6 +10,7 @@ from dipper.models.Genotype import Genotype
 
 
 LOG = logging.getLogger(__name__)
+ENS_URL = 'uswest.ensembl.org'    #  'www.ensembl.org'
 
 
 class Ensembl(Source):
@@ -45,7 +46,7 @@ class Ensembl(Source):
         '4932': {'file': 'ensembl_4932.txt'},  #
     }
     columns = {
-        'biomart_query': [
+        'bmq_prot_gene': [
             'ensembl_gene_id',
             'external_gene_name',
             'description',
@@ -54,7 +55,16 @@ class Ensembl(Source):
             'peptide_id',
             'uniprot_swissprot',  # not in all queries
         ],
-
+        "bmq_gene": [
+            "ensembl_gene_id",
+            "external_gene_name",
+            "description",
+            "gene_biotype",
+            "entrezgene",
+            "ensembl_peptide_id",
+            "uniprotswissprot"
+            "hgnc_id",              # not in all queries (human only)
+        ]
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, gene_ids=None):
@@ -79,7 +89,7 @@ class Ensembl(Source):
         self.tax_ids = [str(x) for x in self.tax_ids]
 
         self.gene_ids = []
-        if 'gene' not in  self.all_test_ids:
+        if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
             self.gene_ids = self.all_test_ids['gene']
@@ -96,7 +106,7 @@ class Ensembl(Source):
             # todo move into util?
             params = urllib.parse.urlencode(
                 {'query': self._build_biomart_gene_query(txid)})
-            conn = http.client.HTTPConnection('uswest.ensembl.org')
+            conn = http.client.HTTPConnection(ENS_URL)
             conn.request("GET", '/biomart/martservice?' + params)
             resp = conn.getresponse()
             with open(loc_file, 'wb') as bin_writer:
@@ -129,7 +139,7 @@ class Ensembl(Source):
         protein_list = list()
         params = urllib.parse.urlencode(
             {'query': self._build_biomart_gene_query(str(taxon_id))})
-        conn = http.client.HTTPConnection('www.ensembl.org')
+        conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
         col = self.columns['biomart_query']
@@ -150,15 +160,24 @@ class Ensembl(Source):
         :return: dict
         """
         protein_dict = dict()
-        params = urllib.parse.urlencode(
-            {'query': self._build_biomart_gene_query(taxon_id)})
-        conn = http.client.HTTPConnection('www.ensembl.org')
+        raw_query = self._build_biomart_gene_query(taxon_id)
+        print("Species  Query ", raw_query)
+        params = urllib.parse.urlencode({'query': raw_query})
+
+        conn = http.client.HTTPConnection(ENS_URL)
+        print('##########################################################')
+        print('TAXON ID is: ', taxon_id)
+        # print(params)
+        print('##########################################################')
         conn.request("GET", '/biomart/martservice?' + params)
+
         response = conn.getresponse()
-        col = self.columns['biomart_query']
+
+        col = self.columns['bmq_prot_gene']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
+
             if len(row) != (len(col)-1):
                 LOG.warning("Data error for p2g query on %d", taxon_id)
                 continue
@@ -167,6 +186,7 @@ class Ensembl(Source):
                 row[col.index('peptide_id')]] = row[col.index('ensembl_gene_id')]
 
         conn.close()
+        print("length protien list: ", len(protein_dict))
         return protein_dict
 
     def fetch_uniprot_gene_map(self, taxon_id):
@@ -178,7 +198,7 @@ class Ensembl(Source):
         protein_dict = dict()
         params = urllib.parse.urlencode(
             {'query': self._build_biomart_gene_query(taxon_id)})
-        conn = http.client.HTTPConnection('www.ensembl.org')
+        conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
         col = self.columns['biomart_query']
@@ -203,12 +223,15 @@ class Ensembl(Source):
 
         """
         # basic stuff for ensembl ids.
-        cols_to_fetch = [
-            "ensembl_gene_id", "external_gene_name", "description",
-            "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
+        cols_to_fetch = self.columns['bmq_gene']
+        #    ["ensembl_gene_id", "external_gene_name", "description",
+        #    "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
 
-        if taxid == '9606':
-            cols_to_fetch.append("hgnc_id")
+        taxid = str(taxid)
+        if taxid != '9606':  # drop trailing hgnc column
+            cols_to_fetch = cols_to_fetch[:-1]
+
+        # LOG.info('Build BMQ with taxon %s and mapping %s', taxid, self.localtt)
 
         query_attributes = {
             "virtualSchemaName": "default", "formatter": "TSV", "header": "0",
@@ -225,6 +248,7 @@ class Ensembl(Source):
             query = '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query>' \
                 + etree.tostring(qry, encoding="unicode")
         else:
+            LOG.warning("not finding taxon  %s in the local translation table", taxid)
             query = None
 
         return query
