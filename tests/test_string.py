@@ -53,6 +53,7 @@ class StringTestFakeData(unittest.TestCase):
 
         string_db._process_protein_links(dataframe, prot_map, 9606)
 
+        # g1 <interacts with> g2
         triples = """
             ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
         """
