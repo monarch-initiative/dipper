@@ -335,7 +335,7 @@ class Source:
         :return: None
         """
 
-        st = None
+        fstat = None
         if files is None:
             files = self.files
         for fname in files.keys():
@@ -351,12 +351,13 @@ class Source:
             else:
                 self.dataset.setFileAccessUrl(filesource['url'])
 
-            st = os.stat('/'.join((self.rawdir, filesource['file'])))
+            fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
 
-        filedate = datetime.utcfromtimestamp(st[ST_CTIME]).strftime("%Y-%m-%d")
+        # only keeping the date from the last file
+        filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
 
-        # FIXME change this so the date is attached only to each file,
-        # not the entire dataset
+        # FIXME
+        # change this so the date is attached only to each file, not the entire dataset
         self.dataset.set_date_issued(filedate)
 
         return
@@ -388,23 +389,27 @@ class Source:
             response = urllib.request.urlopen(request)
 
             if localfile is not None:
-                with open(localfile, 'wb') as fd:
+                with open(localfile, 'wb') as binwrite:
                     while True:
                         chunk = response.read(CHUNK)
                         if not chunk:
                             break
-                        fd.write(chunk)
+                        binwrite.write(chunk)
 
                 LOG.info("Finished.  Wrote file to %s", localfile)
                 if self.compare_local_remote_bytes(remotefile, localfile, headers):
                     LOG.debug("local file is same size as remote after download")
                 else:
                     raise Exception(
-                        "Error when downloading files: local file size " +
-                        "does not match remote file size")
-                st = os.stat(localfile)
-                LOG.info("file size: %s", st[ST_SIZE])
-                LOG.info("file created: %s", time.asctime(time.localtime(st[ST_CTIME])))
+                        "Error downloading file: local file size  != remote file size")
+
+                fstat = os.stat(localfile)
+                LOG.info("file size: %s", fstat[ST_SIZE])
+                LOG.info(
+                    "file created: %s", time.asctime(time.localtime(fstat[ST_CTIME])))
+            else:
+                LOG.error('Local filename is required')
+                exit(-1)
         else:
             LOG.info("Using existing file %s", localfile)
 
