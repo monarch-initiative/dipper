@@ -49,7 +49,6 @@ class Assoc:
 
     def _is_valid(self):
         # check if sub/obj/rel are none...raise error
-        #
         if self.sub is None:
             raise ValueError(
                 'No subject set for this association <%s> <%s> <%s>',
@@ -65,10 +64,23 @@ class Assoc:
                 'No predicate set for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
             )
+        # Are subject & predicate, either a curie or IRI
+        pfx = self.sub.split(':')[0]
+        if pfx not in self.curie_map.keys() and pfx not in ['_', 'http', 'https', 'ftp']:
+            raise ValueError(
+                'Invalid Subject for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
+        pfx = self.rel.split(':')[0]
+        if pfx not in self.curie_map.keys() and pfx not in ['_', 'http', 'https', 'ftp']:
+            raise ValueError(
+                'Invalid Predicate for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
 
         return True
 
-    def _add_basic_association_to_graph(self):
+    def add_association_to_graph(self):
 
         if not self._is_valid():
             return
@@ -125,12 +137,6 @@ class Assoc:
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
-
-        return
-
-    def add_association_to_graph(self):
-
-        self._add_basic_association_to_graph()
 
         return
 

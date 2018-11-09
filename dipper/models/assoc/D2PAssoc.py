@@ -63,7 +63,7 @@ class D2PAssoc(Assoc):
         # add the basic association nodes
         # if rel == self.globaltt[['has disposition']:
 
-        self._add_basic_association_to_graph()
+        Assoc.add_association_to_graph(self)
 
         object_is_literal = True
 

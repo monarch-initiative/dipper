@@ -77,7 +77,7 @@ class G2PAssoc(Assoc):
         :return:
         """
 
-        self._add_basic_association_to_graph()
+        Assoc.add_association_to_graph(self)
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:
