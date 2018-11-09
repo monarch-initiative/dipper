@@ -21,8 +21,9 @@ class GeneVariantDiseaseTest(unittest.TestCase):
         self.test_util = TestUtils()
         self.orphanet = Orphanet('rdf_graph', True)
         # Override so tests don't break when we update terms
-        self.globaltt = self.orphanet.open_and_parse_yaml(
-            os.path.join(os.path.dirname(__file__), './resources/test_terms.yaml'))
+        # Note there is no such file ./resources/test_terms.yaml
+        # self.globaltt = self.orphanet.open_and_parse_yaml(
+        #    os.path.join(os.path.dirname(__file__), './resources/test_terms.yaml'))
         self.orphanet.rawdir = os.path.join(
             os.path.dirname(__file__), 'resources/orphanet')
 
@@ -40,11 +41,11 @@ class GeneVariantDiseaseTest(unittest.TestCase):
             self.orphanet.graph.serialize(format="turtle").decode("utf-8")
         )
         expected_triples = """
-MONARCH:b2cd4dfacc21d0e28c39 a OBAN:association ;
+MONARCH:ba33894a0f54646f7d96 a OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object ORPHA:938475 ;
     OBAN:association_has_predicate RO:0003303 ;
-    OBAN:association_has_subject <https://monarchinitiative.org/.well-known/genid/b56f798350412a34> .
+    OBAN:association_has_subject <https://monarchinitiative.org/.well-known/genid/b454ee49d99271e9b98a> .
 
 ENSEMBL:ENSG00000166813 a owl:Class .
 
@@ -58,7 +59,7 @@ ORPHA:268061 a owl:Class ;
     owl:equivalentClass ENSEMBL:ENSG00000166813,
         HGNC:30497 .
 
-<https://monarchinitiative.org/.well-known/genid/b56f798350412a34> a GENO:0000002 ;
+<https://monarchinitiative.org/.well-known/genid/b454ee49d99271e9b98a> a GENO:0000002 ;
     rdfs:label "germline variant of KS1" ;
     GENO:0000418 ORPHA:268061 ;
     RO:0003303 ORPHA:938475 ;
@@ -70,18 +71,19 @@ ORPHA:938475 a owl:Class ;
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))
+        return
 
     def test_germline_lof_variant_to_disease(self):
         self.orphanet.graph = RDFGraph()  # Reset graph
         self.orphanet.files['disease-gene']['file'] = 'orph-germline-lof.xml'
 
         self.orphanet._process_diseasegene(limit=None)
-        logger.debug(
+        logger.warning(
             "Reference graph: %s",
             self.orphanet.graph.serialize(format="turtle").decode("utf-8")
         )
         expected_triples = """
-MONARCH:b53dada0eb229a75e705 OBAN:association ;
+MONARCH:b0802e44ff2d0beaf960 OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object ORPHA:938475 ;
     OBAN:association_has_predicate RO:0003303 ;
@@ -106,6 +108,7 @@ ORPHA:938475 a owl:Class ;
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))
+        return
 
     def test_gene_to_disease(self):
         self.orphanet.graph = RDFGraph()  # Reset graph
@@ -117,7 +120,7 @@ ORPHA:938475 a owl:Class ;
             self.orphanet.graph.serialize(format="turtle") .decode("utf-8")
         )
         expected_triples = """
-MONARCH:b64684a0ea6ae59fdb09 a OBAN:association ;
+MONARCH:bd8eebdc522f33aca860 a OBAN:association ;
     RO:0002558 ECO:0000322 ;
     OBAN:association_has_object ORPHA:938475 ;
     OBAN:association_has_predicate RO:0003304 ;
@@ -135,6 +138,7 @@ ORPHA:938475 a owl:Class ;
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))
+        return
 
     def test_unmapped_disease_assoc_type(self):
         """
@@ -146,6 +150,7 @@ ORPHA:938475 a owl:Class ;
         self.orphanet.files['disease-gene']['file'] = 'orph-no-mapping.xml'
         self.assertRaises(
             ValueError, lambda: self.orphanet._process_diseasegene(limit=None))
+        return
 
 
 if __name__ == '__main__':
