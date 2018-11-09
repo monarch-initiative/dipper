@@ -1112,9 +1112,9 @@ SELECT  r._relationship_key as rel_key,
         col = [
             'annot_evidence_key', 'annot_key', 'evidence_code', 'jnumid', 'qualifier',
             'qualifier_value', 'annotation_type']
-        with open(raw, 'r') as f:
-            f.readline()  # read the header row; skip
-            for line in f:
+        with open(raw, 'r') as reader:
+            reader.readline()  # read the header row; skip
+            for line in reader:
                 line = line.rstrip("\n")
                 line_counter += 1
                 row = line.split('\t')
@@ -1127,8 +1127,7 @@ SELECT  r._relationship_key as rel_key,
                 qualifier_value = row[col.index('qualifier_value')]
                 # annotation_type = row[col.index('annotation_type')]
 
-                if self.testMode is True and \
-                        annot_key not in self.test_keys.get('annot'):
+                if self.testMode and annot_key not in self.test_keys.get('annot'):
                     continue
 
                 # add the association id to map to the evidence key
@@ -1153,8 +1152,7 @@ SELECT  r._relationship_key as rel_key,
 
                 # For Mammalian Phenotype/Genotype annotation types
                 # MGI adds sex specificity qualifiers here
-                if qualifier == 'MP-Sex-Specificity'\
-                        and (qualifier_value == 'M' or qualifier_value == 'F'):
+                if qualifier == 'MP-Sex-Specificity' and qualifier_value in ('M', 'F'):
                     model._addSexSpecificity(assoc_id, self.resolve(qualifier_value))
 
                 if not self.testMode and limit is not None and line_counter > limit:
