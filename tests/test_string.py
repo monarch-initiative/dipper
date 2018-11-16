@@ -13,23 +13,21 @@ class StringTestFakeData(unittest.TestCase):
     def setUp(self):
         self.test_util = TestUtils()
         # Test set with two proteins from same species
-        self.test_set_1 = \
-            [['9606.ENSP00000000233', '9606.ENSP00000003084',
-             0, 0, 0, 0, 300, 0, 150, 800]]
+        self.test_set_1 = [[
+            '9606.ENSP00000000233', '9606.ENSP00000003084',
+            0, 0, 0, 0, 300, 0, 150, 800]]
 
         # Test set with deprecated protein id
-        self.test_set_2 = \
-            [['9606.ENSP00000000233', '9606.ENSP00000006101',
-              0, 0, 0, 0, 300, 0, 150, 800]]
+        self.test_set_2 = [[
+            '9606.ENSP00000000233', '9606.ENSP00000006101',
+            0, 0, 0, 0, 300, 0, 150, 800]]
 
         self.columns = [
-            'protein1', 'protein2', 'neighborhood', 'fusion',
-            'cooccurence', 'coexpression', 'experimental',
-            'database', 'textmining', 'combined_score'
-        ]
+            'protein1', 'protein2', 'neighborhood', 'fusion', 'cooccurence',
+            'coexpression', 'experimental', 'database', 'textmining', 'combined_score']
 
         ensembl = Ensembl('rdf_graph', True)
-        self.protein_list = ensembl.fetch_protein_gene_map(9606)
+        self.protein_list = ensembl.fetch_protein_gene_map('9606')
 
         return
 
@@ -42,7 +40,7 @@ class StringTestFakeData(unittest.TestCase):
         self.assertEqual(len(string_db.graph), 0)
 
         ensembl = Ensembl('rdf_graph', True)
-        prot_map = ensembl.fetch_protein_gene_map(9606)
+        prot_map = ensembl.fetch_protein_gene_map('9606')
         for key in prot_map.keys():
             prot_map[key] = "ENSEMBL:{}".format(prot_map[key])
 
@@ -51,11 +49,11 @@ class StringTestFakeData(unittest.TestCase):
             .format(len(prot_map.keys())))
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
-        string_db._process_protein_links(dataframe, prot_map, 9606)
+        string_db._process_protein_links(dataframe, prot_map, '9606')
 
         # g1 <interacts with> g2
         triples = """
-            ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
+ENSEMBL:ENSG00000001626 RO:0002434 ENSEMBL:ENSG00000004059 .
         """
 
         self.assertTrue(self.test_util.test_graph_equality(triples, string_db.graph))
@@ -72,5 +70,5 @@ class StringTestFakeData(unittest.TestCase):
         self.assertEqual(len(string_db.graph), 0)
 
         dataframe = pd.DataFrame(data=self.test_set_2, columns=self.columns)
-        string_db._process_protein_links(dataframe, self.protein_list, 9606)
+        string_db._process_protein_links(dataframe, self.protein_list, '9606')
         self.assertEqual(len(string_db.graph), 0)
