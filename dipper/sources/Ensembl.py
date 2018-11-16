@@ -10,7 +10,7 @@ from dipper.models.Genotype import Genotype
 
 
 LOG = logging.getLogger(__name__)
-ENS_URL = 'uswest.ensembl.org'    #  'www.ensembl.org'
+ENS_URL = 'uswest.ensembl.org'    # 'www.ensembl.org'
 
 
 class Ensembl(Source):
@@ -52,17 +52,17 @@ class Ensembl(Source):
             'description',
             'gene_biotype',
             'entrezgene',
-            'peptide_id',
-            'uniprot_swissprot',  # not in all queries
+            'ensembl_peptide_id',
+            'uniprotswissprot',
         ],
-        "bmq_gene": [
+        "ensembl_biomart": [
             "ensembl_gene_id",
             "external_gene_name",
             "description",
             "gene_biotype",
             "entrezgene",
             "ensembl_peptide_id",
-            "uniprotswissprot"
+            "uniprotswissprot",     # not in all queries
             "hgnc_id",              # not in all queries (human only)
         ]
     }
@@ -84,9 +84,9 @@ class Ensembl(Source):
 
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
+            self.tax_ids = ['9606', '10090', '7955']
 
-        self.tax_ids = [str(x) for x in self.tax_ids]
+        self.tax_ids = [str(x) for x in self.tax_ids]  # for bare ints from commandline
 
         self.gene_ids = []
         if 'gene' not in self.all_test_ids:
@@ -100,12 +100,13 @@ class Ensembl(Source):
 
     def fetch(self, is_dl_forced=False):
 
+        col = self.columns['ensembl_biomart']
         for txid in self.tax_ids:
             LOG.info("Fetching genes for %s", txid)
             loc_file = '/'.join((self.rawdir, 'ensembl_' + txid + '.txt'))
             # todo move into util?
             params = urllib.parse.urlencode(
-                {'query': self._build_biomart_gene_query(txid)})
+                {'query': self._build_biomart_gene_query(txid, col)})
             conn = http.client.HTTPConnection(ENS_URL)
             conn.request("GET", '/biomart/martservice?' + params)
             resp = conn.getresponse()
@@ -137,19 +138,22 @@ class Ensembl(Source):
         :return: list
         """
         protein_list = list()
+        # col = self.columns['ensembl_biomart']
+        col = ['ensembl_peptide_id', ]
+
         params = urllib.parse.urlencode(
-            {'query': self._build_biomart_gene_query(str(taxon_id))})
+            {'query': self._build_biomart_gene_query(taxon_id, col)})
         conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
-        col = self.columns['biomart_query']
+
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
-            if len(row) != len(col)-1:
+            if len(row) != len(col):
                 LOG.warning("Data error for p-list query on %d", taxon_id)
                 continue
-            protein_list.append(row[col.index('peptide_id')])
+            protein_list.append(row[col.index('ensembl_peptide_id')])
         conn.close()
         return protein_list
 
@@ -160,33 +164,33 @@ class Ensembl(Source):
         :return: dict
         """
         protein_dict = dict()
-        raw_query = self._build_biomart_gene_query(taxon_id)
-        print("Species  Query ", raw_query)
+        # col = self.columns['ensembl_biomart']
+        col = ['ensembl_peptide_id', 'ensembl_gene_id']
+        raw_query = self._build_biomart_gene_query(taxon_id, col)
+
         params = urllib.parse.urlencode({'query': raw_query})
 
         conn = http.client.HTTPConnection(ENS_URL)
-        print('##########################################################')
-        print('TAXON ID is: ', taxon_id)
-        # print(params)
-        print('##########################################################')
         conn.request("GET", '/biomart/martservice?' + params)
-
         response = conn.getresponse()
 
-        col = self.columns['bmq_prot_gene']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
 
-            if len(row) != (len(col)-1):
-                LOG.warning("Data error for p2g query on %d", taxon_id)
+            if len(row) != len(col):
+                LOG.warning("Data error for p2g query on %s", taxon_id)
+                LOG.warning("Expected columns for \n%s", col)
+                LOG.warning("Got data \n%s", row)
                 continue
 
             protein_dict[
-                row[col.index('peptide_id')]] = row[col.index('ensembl_gene_id')]
+                row[col.index('ensembl_peptide_id')]] = \
+                row[col.index('ensembl_gene_id')]
 
         conn.close()
-        print("length protien list: ", len(protein_dict))
+        LOG.info(
+            "length protien list for taxon: %s is %i", taxon_id, len(protein_dict))
         return protein_dict
 
     def fetch_uniprot_gene_map(self, taxon_id):
@@ -196,40 +200,39 @@ class Ensembl(Source):
         :return: dict
         """
         protein_dict = dict()
+        # col = self.columns['biomart_query']
+        col = ['uniprotswissprot', 'ensembl_gene_id']
         params = urllib.parse.urlencode(
-            {'query': self._build_biomart_gene_query(taxon_id)})
+            {'query': self._build_biomart_gene_query(taxon_id, col)})
         conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
-        col = self.columns['biomart_query']
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
             if len(row) != len(col):
                 continue
-
             protein_dict[
-                row[col.index('uniprot_swissprot')]] = row[col.index('ensembl_gene_id')]
+                row[col.index('uniprotswissprot')]] = row[col.index('ensembl_gene_id')]
         conn.close()
         return protein_dict
 
-    def _build_biomart_gene_query(self, taxid):
+    def _build_biomart_gene_query(self, taxid, cols_to_fetch):
         """
         Building url to fetch equivalent identifiers via Biomart Restful API.
         Documentation at
         http://uswest.ensembl.org/info/data/biomart/biomart_restful.html
         :param taxid:
+        :param array of ensembl biomart attributes to include
         :return:
 
         """
-        # basic stuff for ensembl ids.
-        cols_to_fetch = self.columns['bmq_gene']
-        #    ["ensembl_gene_id", "external_gene_name", "description",
-        #    "gene_biotype", "entrezgene", "ensembl_peptide_id", "uniprotswissprot"]
 
         taxid = str(taxid)
-        if taxid != '9606':  # drop trailing hgnc column
-            cols_to_fetch = cols_to_fetch[:-1]
+        # basic stuff for ensembl ids.
+
+        if taxid != '9606':  # drop hgnc column
+            cols_to_fetch = cols_to_fetch - ['hgnc_id']
 
         # LOG.info('Build BMQ with taxon %s and mapping %s', taxid, self.localtt)
 
@@ -271,9 +274,8 @@ class Ensembl(Source):
                 if len(row) < 4:
                     LOG.warning("Too few columns in: " + row)
                     raise ValueError("Data error for file %s", raw)
-                (ensembl_gene_id, external_gene_name,
-                 description, gene_biotype, entrezgene,
-                 peptide_id, uniprot_swissprot) = row[0:7]
+                (ensembl_gene_id, external_gene_name, description, gene_biotype,
+                 entrezgene, ensembl_peptide_id, uniprotswissprot) = row[0:7]
 
                 # in the case of human genes, we also get the hgnc id,
                 # and is the last col
@@ -282,24 +284,23 @@ class Ensembl(Source):
                 else:
                     hgnc_id = None
 
-                if self.testMode and entrezgene != ''and \
+                if self.testMode and entrezgene != '' and \
                         int(entrezgene) not in self.gene_ids:
                     continue
 
                 line_counter += 1
                 gene_id = 'ENSEMBL:' + ensembl_gene_id
-                peptide_curie = 'ENSEMBL:{}'.format(peptide_id)
-                uniprot_curie = 'UniProtKB:{}'.format(uniprot_swissprot)
+                peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
+                uniprot_curie = 'UniProtKB:{}'.format(uniprotswissprot)
                 entrez_curie = 'NCBIGene:{}'.format(entrezgene)
 
                 if description == '':
                     description = None
-
-                # gene_type_id = self._get_gene_type(gene_biotype)
-                # this had been punted on. ... see what happens
-                gene_type_id = self.resolve(gene_biotype.strip(), False)
-                if gene_type_id == gene_biotype.strip():
+                gene_biotype = gene_biotype.strip()
+                gene_type_id = self.resolve(gene_biotype, False)
+                if gene_type_id == gene_biotype.strip():   # did not resolve
                     gene_type_id = self.globaltt['polypeptide']
+
                 model.addClassToGraph(
                     gene_id, external_gene_name, gene_type_id, description)
                 model.addIndividualToGraph(peptide_curie, None, gene_type_id)
@@ -314,9 +315,9 @@ class Ensembl(Source):
                 if hgnc_id is not None and hgnc_id != '':
                     model.addEquivalentClass(gene_id, hgnc_id)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
-                if peptide_id != '':
+                if ensembl_peptide_id != '':
                     geno.addGeneProduct(gene_id, peptide_curie)
-                    if uniprot_swissprot != '':
+                    if uniprotswissprot != '':
                         geno.addGeneProduct(gene_id, uniprot_curie)
                         model.addXref(peptide_curie, uniprot_curie)
 
