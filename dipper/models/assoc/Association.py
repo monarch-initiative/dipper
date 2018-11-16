@@ -66,13 +66,15 @@ class Assoc:
             )
         # Are subject & predicate, either a curie or IRI
         pfx = self.sub.split(':')[0]
-        if pfx not in self.curie_map.keys() and pfx not in ['_', 'http', 'https', 'ftp']:
+        if pfx not in self.curie_map.keys() and \
+                pfx not in ['_', 'http', 'https', 'ftp']:
             raise ValueError(
                 'Invalid Subject for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
             )
         pfx = self.rel.split(':')[0]
-        if pfx not in self.curie_map.keys() and pfx not in ['_', 'http', 'https', 'ftp']:
+        if pfx not in self.curie_map.keys() and \
+                pfx not in ['_', 'http', 'https', 'ftp']:
             raise ValueError(
                 'Invalid Predicate for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
