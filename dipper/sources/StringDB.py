@@ -8,7 +8,7 @@ from dipper.sources.Ensembl import Ensembl
 LOG = logging.getLogger(__name__)
 
 STRING_BASE = "http://string-db.org/download/"
-DEFAULT_TAXA = [9606, 10090, 7955, 7227, 6239]
+DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239']
 
 
 class StringDB(Source):
@@ -57,27 +57,27 @@ class StringDB(Source):
         }
 
         self.id_map_files = {
-            9606: {
+            '9606': {
                 'url': 'https://string-db.org/mapping_files/entrez_mappings/'
                        'entrez_gene_id.vs.string.v10.28042015.tsv',
                 'file': 'entrez_gene_id.vs.string.v10.28042015.tsv'
             },
-            10090: {
+            '10090': {
                 'url': 'https://data.monarchinitiative.org/dipper/'
                        'cache/10090.string2mgi.tsv',
                 'file': '10090.string2mgi.tsv'
             },
-            6239: {
+            '6239': {
                 'url': 'https://data.monarchinitiative.org/dipper/'
                        'cache/6239.string2ensembl_gene.tsv',
                 'file': '6239.string2ensembl_gene.tsv'
             },
-            7227: {
+            '7227': {
                 'url': 'https://data.monarchinitiative.org/dipper/'
                        'cache/7227.string2ensembl_gene.tsv',
                 'file': '7227.string2ensembl_gene.tsv'
             },
-            7955: {
+            '7955': {
                 'url': 'https://data.monarchinitiative.org/dipper/'
                        'cache/7955.string2zfin.tsv',
                 'file': '7955.string2zfin.tsv'
@@ -128,23 +128,24 @@ class StringDB(Source):
             if taxon in self.id_map_files:
                 map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
-                mfile_handle = open(map_file, 'r')
-                if taxon == 9606:
-                    for line in mfile_handle.readlines():
-                        gene, prot = line.rstrip("\n").split("\t")
-                        p2gene_map[prot.replace('9606.', '')] \
-                            = "NCBIGene:{}".format(gene)
-                else:
-                    for line in mfile_handle.readlines():
-                        prot, gene = line.rstrip("\n").split("\t")
-                        p2gene_map[prot] = gene
-                mfile_handle.close()
+                with open(map_file, 'r') as reader:
+                    if taxon == '9606':
+                        for line in reader.readlines():
+                            gene, prot = line.rstrip("\n").split("\t")
+                            p2gene_map[
+                                prot.replace('9606.', '')]  = "NCBIGene:"+str(gene)
+                    else:
+                        for line in reader.readlines():
+                            prot, gene = line.rstrip("\n").split("\t")
+                            p2gene_map[prot] = gene
+
             else:
                 LOG.info("Fetching ensembl proteins for taxon %s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in p2gene_map.keys():
                     p2gene_map[key] = "ENSEMBL:{}".format(p2gene_map[key])
-            if taxon == 9606:
+
+            if taxon == '9606':
                 temp_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in temp_map:
                     if key not in p2gene_map:
@@ -165,8 +166,8 @@ class StringDB(Source):
         filtered_out_count = 0
         for index, row in filtered_df.iterrows():
             # Check if proteins are in same species
-            protein1 = row['protein1'].replace('{}.'.format(str(taxon)), '')
-            protein2 = row['protein2'].replace('{}.'.format(str(taxon)), '')
+            protein1 = row['protein1'].replace('{}.'.format(taxon), '')
+            protein2 = row['protein2'].replace('{}.'.format(taxon), '')
 
             gene1_curie = None
             gene2_curie = None
@@ -207,9 +208,9 @@ class StringDB(Source):
             raise KeyError("file type {} not configured".format(file_type))
         for taxon in tax_ids:
             file_paths[taxon] = {
-                'file': "{}.{}".format(str(taxon), self.files[file_type]['pattern']),
+                'file': "{}.{}".format(taxon, self.files[file_type]['pattern']),
                 'url': "{}{}.{}".format(
-                    self.files[file_type]['path'], str(taxon),
+                    self.files[file_type]['path'], taxon,
                     self.files[file_type]['pattern'])
             }
         return file_paths
