@@ -1,0 +1,23 @@
+# proposed target model fall 2018
+
+digraph "cmap_model"{
+
+    rankdir="LR";
+    Predicate [
+        label="{<Association> RO:has_phenotype|RO:allele_of|RO:contributes_to}"
+        shape="record"
+    ];
+
+    "MONARCH:123" -> "OBAN:Association"[label="rdf:type"];
+    "MONARCH:123" -> "PMID:123" [label="dc:evidence"];
+
+    "MONARCH:123" -> "HGNC:123" [label="OBAN:Subject"];
+
+    "MONARCH:123" -> "Predicate" [label="OBAN:predicate"];
+
+    "MONARCH:123" -> "ORPHA:123" [label="OBAN:Object"];
+
+    "ORPHA:123" -> "Literal Name" [label="rdfs:label"];
+
+
+}

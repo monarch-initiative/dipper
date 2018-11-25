@@ -1,29 +1,39 @@
 ---
-# Disease-causing germline mutation(s) in (RO:0002200)
-"17949": "has phenotype"
-# Disease-causing somatic mutation(s) in
-"17955": "has phenotype"
-# Major susceptibility factor in  ("RO:0002326")
-"17961": "contributes_to"
-# Modifying germline mutation in
-"17967": "contributes_to"
-# Modifying somatic mutation in
-"17973": "contributes_to"
-# Part of a fusion gene in
-"17979": "contributes_to"
-# Role in the phenotype of
-"17985": "contributes_to"
-"18273": None,  # Candidate gene tested in  FIXME?
-# Disease-causing germline mutation(s) (gain of function) in
-"25979": "has phenotype"
-# Disease-causing germline mutation(s) (loss of function) in
-"25972": "has phenotype"
+# (RO:0002200)
+"Disease-causing germline mutation(s) in": "has phenotype"
+"Disease-causing somatic mutation(s) in": "has phenotype"
+# ("RO:0002326")
+"Major susceptibility factor in": "contributes_to"
+"Modifying germline mutation in": "contributes_to"
+"Modifying somatic mutation in": "contributes_to"  # none included fall 2018
+"Part of a fusion gene in": "contributes_to"
+"Role in the phenotype of": "contributes_to"
+
+# SO:0000703
+"Candidate gene tested in": "experimental_result_region"
+"Biomarker tested in": "experimental_result_region"
+
+# SO:0002053
+"Disease-causing germline mutation(s) (gain of function) in": "gain_of_function_variant"
+# SO:0002054
+"Disease-causing germline mutation(s) (loss of function) in": "loss_of_function_variant"
+
+# these next three are no longer available fall 2018
 # locus
-"25986": "sequence_feature"
+# "25986": "sequence_feature"
 # gene with protein product
-"25993": "protein_coding_gene"
+# "25993": "protein_coding_gene"
 # Non-coding RNA
-"26046": "ncRNA_gene"
+# "26046": "ncRNA_gene"
+
+
+# status to ECO code
+"Assessed": "imported manually asserted information used in automatic assertion"
+"Not yet assessed": "imported automatically asserted information used in automatic assertion"
+
+# matching curie_map
+"Ensembl": "ENSEMBL"
+"Reactome": "REACT"
 
 # Orphanet stores variant-disease associations
 # in the DisorderGeneAssociationType element
