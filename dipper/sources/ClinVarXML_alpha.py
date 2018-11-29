@@ -199,7 +199,7 @@ CURIEMAP = {
     'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
     'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
     'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
-    'NCBIGene': 'http://www.ncbi.nlm.nih.gov/gene/',
+    'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/',
     'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
     'SEPIO':    'http://purl.obolibrary.org/obo/SEPIO_',
     'SO':   'http://purl.obolibrary.org/obo/SO_',
