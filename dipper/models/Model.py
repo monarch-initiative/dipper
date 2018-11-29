@@ -2,7 +2,8 @@ import logging
 import re
 from dipper.graph.Graph import Graph
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class Model():
@@ -19,10 +20,11 @@ class Model():
             self.curie_map = self.graph.curie_map
 
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
 
     def addTriple(
-        self, subject_id, predicate_id, obj, object_is_literal=False, literal_type=None
+            self, subject_id, predicate_id, obj, object_is_literal=False,
+            literal_type=None
     ):
         self.graph.addTriple(
             subject_id, predicate_id, obj, object_is_literal, literal_type)
@@ -38,7 +40,7 @@ class Model():
         return
 
     def addClassToGraph(
-        self, class_id, label=None, class_type=None, description=None
+            self, class_id, label=None, class_type=None, description=None
     ):
         """
         Any node added to the graph will get at least 3 triples:
@@ -212,7 +214,7 @@ class Model():
 
     def addDefinition(self, class_id, definition):
         self.graph.addTriple(
-            class_id, self.globaltt['definition'],  definition, object_is_literal=True)
+            class_id, self.globaltt['definition'], definition, object_is_literal=True)
         return
 
     def addXref(self, class_id, xref_id, xref_as_literal=False):

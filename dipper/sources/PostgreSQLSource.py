@@ -12,6 +12,8 @@ class PostgreSQLSource(Source):
     Class for interfacing with remote Postgres databases
     """
 
+    files = {}
+
     def __init__(
             self,
             graph_type,
@@ -34,9 +36,10 @@ class PostgreSQLSource(Source):
             data_rights,
             file_handle)
 
-        # used downstream
+        # used downstream but handled in Source
         # globaltt = self.globaltt
         # globaltcid = self.globaltcid
+        # all_test_ids = self.all_test_ids
         return
 
     def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):
@@ -107,8 +110,7 @@ class PostgreSQLSource(Source):
                 con.close()
         return
 
-    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None,
-                              force=False):
+    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None, force=False):
         """
         Supply either an already established connection, or connection parameters.
         The supplied connection will override any separate cxn parameter
@@ -176,7 +178,7 @@ class PostgreSQLSource(Source):
                     "Download from %s failed, %s != %s", cxn['host'] + ':' +
                     cxn['database'], (filerowcount-1), tablerowcount)
             elif (filerowcount-1) > tablerowcount:
-                LOG.warn(
+                LOG.warning(
                     "Fetched from %s more rows in file (%s) than reported in count(%s)",
                     cxn['host'] + ':'+cxn['database'], (filerowcount-1), tablerowcount)
         else:
@@ -185,8 +187,8 @@ class PostgreSQLSource(Source):
         return
 
     # TODO generalize this to a set of utils
-    # TODO PYLINT  Method could be a function
-    def _getcols(self, cur, table):
+    @staticmethod
+    def _getcols(cur, table):
         """
         Will execute a pg query to get the column names for the given table.
         :param cur:
@@ -200,3 +202,23 @@ class PostgreSQLSource(Source):
         LOG.info("COLS (%s): %s", table, colnames)
 
         return
+
+    # abstract
+    def fetch(self, is_dl_forced=False):
+        """
+        abstract method to fetch all data from an external resource.
+        this should be overridden by subclasses
+        :return: None
+
+        """
+        raise NotImplementedError
+
+    def parse(self, limit):
+        """
+        abstract method to parse all data from an external resource,
+        that was fetched in fetch() this should be overridden by subclasses
+        :return: None
+
+        """
+        raise NotImplementedErrors
+

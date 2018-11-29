@@ -2,15 +2,13 @@ import logging
 import unicodedata
 import requests
 
-__author__ = ('nlw', 'tec')
-logger = logging.getLogger(__name__)
-urllib3_log = logging.getLogger("urllib3")
-urllib3_log.setLevel(logging.ERROR)
+__author__ = 'nlw'
+LOG = logging.getLogger(__name__)
 
-session = requests.Session()
-adapter = requests.adapters.HTTPAdapter(max_retries=3)
-session.mount('https://', adapter)
-session.mount('http://', adapter)
+SESSION = requests.Session()
+ADAPTER = requests.adapters.HTTPAdapter(max_retries=3)
+SESSION.mount('https://', ADAPTER)
+SESSION.mount('http://', ADAPTER)
 
 EUTIL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 ESEARCH = EUTIL + '/esearch.fcgi'
@@ -33,8 +31,8 @@ class DipperUtil:
     is less likely to result in another ban for peppering them with one offs
 
     """
-
-    def remove_control_characters(self, s):
+    @staticmethod
+    def remove_control_characters(string):
         '''
         Filters out charcters in any of these unicode catagories
         [Cc] 	Other, Control      ( 65 characters) \n,\t ...
@@ -43,7 +41,7 @@ class DipperUtil:
         [Co] 	Other, Private Use  (  6 characters)
         [Cs] 	Other, Surrogate    (  6 characters)
         '''
-        return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
+        return "".join(ch for ch in string if unicodedata.category(ch)[0] != "C")
 
     @staticmethod
     def get_ncbi_taxon_num_by_label(label):
@@ -57,16 +55,16 @@ class DipperUtil:
         req = {'db': 'taxonomy', 'retmode': 'json', 'term': label}
         req.update(EREQ)
 
-        request = session.get(ESEARCH, params=req)
-        logger.info('fetching: %s', request.url)
+        request = SESSION.get(ESEARCH, params=req)
+        LOG.info('fetching: %s', request.url)
         request.raise_for_status()
         result = request.json()['esearchresult']
 
         # Occasionally eutils returns the json blob
         # {'ERROR': 'Invalid db name specified: taxonomy'}
         if 'ERROR' in result:
-            request = session.get(ESEARCH, params=req)
-            logger.info('fetching: %s', request.url)
+            request = SESSION.get(ESEARCH, params=req)
+            LOG.info('fetching: %s', request.url)
             request.raise_for_status()
             result = request.json()['esearchresult']
 
@@ -75,9 +73,7 @@ class DipperUtil:
             tax_num = result['idlist'][0]
         else:
             # TODO throw errors
-            logger.warning(
-                'ESEARCH for taxon label "%s"  returns %s', label, str(result))
-            pass
+            LOG.warning('ESEARCH for taxon label "%s"  returns %s', label, str(result))
 
         return tax_num
 
@@ -88,20 +84,20 @@ class DipperUtil:
         req = {
             'db': 'homologene',
             'retmode': 'json',
-            'term': str(gene_num) + "[Gene ID]"
+            'term': str(gene_num) + "[Gene ID]",
             # 'usehistory': None  # y/n
             # 'rettype':  [uilist|count]
         }
         req.update(EREQ)
-        r = requests.get(ESEARCH, params=req)
-        homologene_ids = r.json()['esearchresult']['idlist']
+        ereq = requests.get(ESEARCH, params=req)
+        homologene_ids = ereq.json()['esearchresult']['idlist']
         if len(homologene_ids) != 1:
             return
         hid = homologene_ids[0]
         # now, fetch the homologene record
         req = {'db': 'homologene', 'id': hid, 'retmode': 'json'}
         req.update(EREQ)
-        request = session.get(ESUMMARY, params=req)
+        request = SESSION.get(ESUMMARY, params=req)
         data = request.json()
 
         if 'result' in data and hid in data['result']:
@@ -139,7 +135,7 @@ class DipperUtil:
                 if 'meta' in results['nodes'][0] \
                         and 'category' in results['nodes'][0]['meta'] \
                         and 'disease' in results['nodes'][0]['meta']['category']:
-                    logger.info("{0} is a disease, skipping".format(gene_id))
+                    LOG.info("%s is a disease, skipping", gene_id)
                     isOmimDisease = True
         except ValueError:
             pass

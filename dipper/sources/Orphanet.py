@@ -4,9 +4,8 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper import config
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Orphanet(Source):
@@ -29,17 +28,16 @@ class Orphanet(Source):
             'orphanet',
             ingest_title='Orphanet',
             ingest_url='http://www.orpha.net',
-            license_url='http://creativecommons.org/licenses/by-nd/3.0/',
-            data_rights='http://omim.org/help/agreement'
+            license_url=None,
+            data_rights='http://www.orphadata.org/cgi-bin/index.php'
             # file_handle=None
         )
 
-        # check to see if there's any ids configured in the config;
-        # otherwise, warn
-        # TODO remove
-        if 'test_ids' not in config.get_config() or 'disease' \
-                not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+        if 'disease' not in self.all_test_ids:
+            LOG.warning("not configured with disease test ids.")
+            self.test_ids = []
+        else:
+            self.test_ids = self.all_test_ids['disease']
 
         return
 
@@ -54,16 +52,16 @@ class Orphanet(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
         self._process_diseasegene(limit)
 
-        logger.info("Done parsing.")
+        LOG.info("Done parsing.")
 
         return
 
@@ -84,85 +82,94 @@ class Orphanet(Source):
 
         for event, elem in ET.iterparse(myfile):
             if elem.tag == 'Disorder':
-                # get the element name and id, ignoreS element name
+                # get the element name and id, ignore element name
                 # id = elem.get('id') # some internal identifier
                 disorder_num = elem.find('OrphaNumber').text
-
                 disorder_id = 'ORPHA:' + str(disorder_num)
 
-                if self.testMode and disorder_id \
-                        not in config.get_config()['test_ids']['disease']:
+                if self.testMode and disorder_id not in self.all_test_ids['disease']:
                     continue
-
                 disorder_label = elem.find('Name').text
 
-                # make a hash of internal gene id to type for later lookup
-                gene_iid_to_type = {}
-                gene_list = elem.find('GeneList')
-                for gene in gene_list.findall('Gene'):
-                    gene_iid = gene.get('id')
-                    gene_type = gene.find('GeneType').get('id')
-                    gene_iid_to_type[gene_iid] = gene_type
-
-                # assuming that these are in the ontology
+                # assuming that these are in the ontology (...any particular one?)
                 model.addClassToGraph(disorder_id, disorder_label)
-
                 assoc_list = elem.find('DisorderGeneAssociationList')
+                expected_genes = assoc_list.get('count')
+                LOG.info(
+                    'Expecting %s genes assdciated with disorder %s.',
+                    expected_genes, disorder_id)
+                processed_genes = 0
                 for assoc in assoc_list.findall('DisorderGeneAssociation'):
-                    gene_iid = assoc.find('.//Gene').get('id')
-                    gene_name = assoc.find('.//Gene/Name').text
-                    gene_symbol = assoc.find('.//Gene/Symbol').text
-                    gene_num = assoc.find('./Gene/OrphaNumber').text
-                    gene_id = 'ORPHA:' + str(gene_num)
-                    gene_type_id = self.resolve(gene_iid_to_type[gene_iid])
-                    model.addClassToGraph(
-                        gene_id, gene_symbol, gene_type_id, gene_name)
-                    syn_list = assoc.find('./Gene/SynonymList')
-                    if int(syn_list.get('count')) > 0:
-                        for s in syn_list.findall('./Synonym'):
-                            model.addSynonym(gene_id, s.text)
+                    processed_genes += 1
+                    gene = assoc.find('Gene')
 
-                    # IDs appear stable but removing for now  KS
-                    # dgtype = assoc.find('DisorderGeneAssociationType').get('id')
-                    # rel_id = self.resolve(dgtype)
+                    # get gene's curie  HGNC or Ensembl ...
+
+                    lclid = gene.find('OrphaNumber').text
+                    gene_curie = 'ORPHA:' + lclid
+                    gene_set = {'ORPHA': lclid}
+                    for gene_ref in gene.findall(
+                            './ExternalReferenceList/ExternalReference'):
+                        gene_set[gene_ref.find('Source').text] = \
+                            gene_ref.find('Reference').text
+
+                    # set priority (clique leader if available)
+                    for pfx in ('HGNC', 'Ensembl', 'SwissProt'):
+                        #       'OMIM', 'Genatlas','Reactome', 'IUPHAR'):
+                        if pfx in gene_set:
+                            if pfx in self.localtt:
+                                pfx = self.localtt[pfx]
+                            gene_curie = pfx + ':' + gene_set[pfx]
+                            gene_set.pop(pfx)
+                            model.addClassToGraph(gene_curie, None)
+                            break
+
+                    # TEC have reservations w.r.t aggerator links being gene classes
+                    for prefix in gene_set:
+                        lclid = gene_set[prefix]
+                        if prefix in self.localtt:
+                            prefix = self.localtt[prefix]
+
+                        dbxref = prefix + ':' + lclid
+
+                        if gene_curie != dbxref:
+                            model.addClassToGraph(dbxref, None)
+                            model.addEquivalentClass(gene_curie, dbxref)
+
+                    # TEC. would prefer this not happen here. let HGNC handle it
+                    # except there are some w/o explicit external links ...
+
+                    # gene_name = gene.find('Name').text
+                    gene_symbol = gene.find('Symbol').text
+                    # gene_iid = assoc.find('DisorderGeneAssociationType').get('id')
+                    # gene_type_id = self.resolve(gene_iid)
+                    # don't  know the 'type' of the gene for this class anymore
+                    # model.addClassToGraph(
+                    #    gene_curie, gene_symbol, gene_type_id, gene_name)
+
+                    syn_list = gene.find('./SynonymList')
+                    if int(syn_list.get('count')) > 0:
+                        for syn in syn_list.findall('./Synonym'):
+                            model.addSynonym(gene_curie, syn.text)
+
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
-                    # if rel_id is None:
-                    #    logger.warning(
-                    #        "Cannot map association type (%s) to RO " +
-                    #        "for association (%s | %s).  Skipping.",
-                    #        dg_label, disorder_label, gene_symbol)
-                    #    continue
+                    # rel_id = self.resolve(dg_label)
 
                     # alt_locus_id = '_:' + gene_num + '-' + disorder_num + 'VL'
                     # alt_label = ' '.join((
                     #    'some variant of', gene_symbol.strip(), disorder_label))
-
                     # model.addIndividualToGraph(
                     #    alt_locus_id, alt_label, self.globaltt['variant_locus'])
                     # geno.addAffectedLocus(alt_locus_id, gene_id)
                     # model.addBlankNodeAnnotation(alt_locus_id)
-
                     # consider typing the gain/loss-of-function variants like:
                     # http://sequenceontology.org/browser/current_svn/term/SO:0002054
                     # http://sequenceontology.org/browser/current_svn/term/SO:0002053
 
-                    # use "assessed" status to issue an evidence code
+                    # use dg association status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
-                    status_code = assoc.find('DisorderGeneAssociationStatus').get('id')
-                    # imported automatically asserted information
-                    # used in automatic assertion
-                    eco_id = self.globaltt[
-                        # can we get a more consice label, this reads like a description
-                        'imported automatically asserted information used in automatic assertion']
-                    # Assessed
-                    # TODO are these internal ids stable between releases?
-                    if status_code == '17991':
-                        # imported manually asserted information
-                        # used in automatic assertion
-                        eco_id = self.globaltt[
-                            'imported manually asserted information used in automatic assertion']
-                    # Non-traceable author statement ECO_0000034
-                    # imported information in automatic assertion ECO_0000313
+                    eco_id = self.resolve(
+                        assoc.find('DisorderGeneAssociationStatus/Name').text)
 
                     # assoc = G2PAssoc(
                     #    graph, self.name, alt_locus_id, disorder_id, rel_id)
@@ -170,24 +177,13 @@ class Orphanet(Source):
                     # assoc.add_association_to_graph()
 
                     self.add_gene_to_disease(
-                        dg_label, gene_id, gene_symbol, disorder_id, eco_id)
+                        dg_label, gene_curie, gene_symbol, disorder_id, eco_id)
 
-                    rlist = assoc.find('./Gene/ExternalReferenceList')
-                    eqid = None
-
-                    for r in rlist.findall('ExternalReference'):
-                        if r.find('Source').text == 'Ensembl':
-                            eqid = 'ENSEMBL:' + r.find('Reference').text
-                        elif r.find('Source').text == 'HGNC':
-                            eqid = 'HGNC:' + r.find('Reference').text
-                        elif r.find('Source').text == 'OMIM':
-                            eqid = 'OMIM:' + r.find('Reference').text
-                        else:
-                            pass  # skip the others for now
-                        if eqid is not None:
-                            model.addClassToGraph(eqid, None)
-                            model.addEquivalentClass(gene_id, eqid)
                 elem.clear()  # empty the element
+                if int(expected_genes) != processed_genes:
+                    LOG.warning(
+                        '% expected %s associated genes but we processed %i',
+                        disorder_id, expected_genes, processed_genes)
 
             if self.testMode and limit is not None and line_counter > limit:
                 return
@@ -202,12 +198,16 @@ class Orphanet(Source):
             disease_id,
             eco_id):
         """
-        Composes triples based on the DisorderGeneAssociationType
-        element:
+        Composes triples based on the DisorderGeneAssociationType element:
+        AND the suffixes:
 
-        xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/
-        DisorderGeneAssociationList/DisorderGeneAssociation/
-        DisorderGeneAssociationType/Name" en_product6.xml | sort -u
+            - "gene phenotype"
+            - "function consequence"
+            - "cell origin"
+
+        xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
+            DisorderGeneAssociation/DisorderGeneAssociationType/Name" en_product6.xml  \
+            | sort -u
 
         Biomarker tested in
         Candidate gene tested in
@@ -238,6 +238,7 @@ class Orphanet(Source):
 
         :param association_type: {str} DisorderGeneAssociationType/Name,
                                        eg Role in the phenotype of
+
         :param gene_id: {str} gene id as curie
         :param gene_symbol: {str} HGVS gene symbol
         :param disease_id: {str} disease id as curie
@@ -248,19 +249,16 @@ class Orphanet(Source):
 
         model = Model(self.graph)
         geno = Genotype(self.graph)
-
         gene_or_variant = ""
 
-        # If we know something about the variant
-        # such as functional consequence or cellular origin
-        # make a blank node and attach the attributes
+        # If we know something about the variant such as functional consequence or
+        # cellular origin make a blank node and attach the attributes
         is_variant = False
         variant_id_string = "{}{}".format(gene_id, disease_id)
         functional_consequence = None
         cell_origin = None
 
-        # hard fail for no mappings/new terms,
-        # otherwise they go unnoticed
+        # hard fail for no mappings/new terms, otherwise they go unnoticed
         if "{}|gene phenotype".format(association_type) not in self.localtt:
             raise ValueError(
                 'Disease-gene association type {} not mapped'.format(association_type)

@@ -6,14 +6,13 @@ from datetime import datetime
 from stat import ST_CTIME
 from zipfile import ZipFile
 
-from dipper import config
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 
 __author__ = 'nicole'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 BGDL = 'http://thebiogrid.org/downloads/archives/Latest%20Release'
 
 
@@ -58,15 +57,14 @@ class BioGrid(Source):
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
 
-        if 'test_ids' not in config.get_config() or \
-                'gene' not in config.get_config()['test_ids']:
-            logger.warning("not configured with gene test ids.")
+        if 'gene' not in self.all_test_ids:
+            LOG.warning("not configured with gene test ids.")
         else:
-            self.test_ids = config.get_config()['test_ids']['gene']
+            self.test_ids = self.all_test_ids['gene']
 
         # data-source specific warnings
         # (will be removed when issues are cleared)
-        logger.warning(
+        LOG.warning(
             "several MI experimental codes do not exactly map to ECO; "
             "using approximations.")
         return
@@ -112,13 +110,13 @@ class BioGrid(Source):
         self._get_interactions(limit)
         self._get_identifiers(limit)
 
-        logger.info("Loaded %d test graph nodes", len(self.testgraph))
-        logger.info("Loaded %d full graph nodes", len(self.graph))
+        LOG.info("Loaded %d test graph nodes", len(self.testgraph))
+        LOG.info("Loaded %d full graph nodes", len(self.graph))
 
         return
 
     def _get_interactions(self, limit):
-        logger.info("getting interactions")
+        LOG.info("getting interactions")
         line_counter = 0
         f = '/'.join((self.rawdir, self.files['interactions']['file']))
         myzip = ZipFile(f, 'r')
@@ -130,7 +128,7 @@ class BioGrid(Source):
             for line in csvfile:
                 # skip comment lines
                 if re.match(r'^#', line.decode()):
-                    logger.debug("Skipping header line")
+                    LOG.debug("Skipping header line")
                     continue
                 line_counter += 1
                 line = line.decode().strip()
@@ -139,13 +137,13 @@ class BioGrid(Source):
                  aliases_b, detection_method, pub_author, pub_id, taxid_a,
                  taxid_b, interaction_type, source_db, interaction_id,
                  confidence_val) = line.split('\t')
+                taxid_a = taxid_a.rstrip()
+                taxid_b = taxid_b.rstrip()
 
                 # get the actual gene ids,
                 # typically formated like: gene/locuslink:351|BIOGRID:106848
-                gene_a_num = re.search(
-                    r'locuslink\:(\d+)\|?', interactor_a).groups()[0]
-                gene_b_num = re.search(
-                    r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
+                gene_a_num = re.search(r'locuslink\:(\d+)\|?', interactor_a).groups()[0]
+                gene_b_num = re.search(r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
                 if self.testMode:
                     graph = self.testgraph
@@ -156,11 +154,8 @@ class BioGrid(Source):
                 else:
                     graph = self.graph
                     # when not in test mode, filter by taxon
-                    if int(re.sub(r'taxid:', '', taxid_a.rstrip())) not in\
-                            self.tax_ids or\
-                            int(re.sub(
-                                r'taxid:', '', taxid_b.rstrip())) not in\
-                            self.tax_ids:
+                    if int(taxid_a.split(':')[-1]) not in self.tax_ids or \
+                            int(taxid_b.split(':')[-1]) not in self.tax_ids:
                         continue
                     else:
                         matchcounter += 1
@@ -214,7 +209,7 @@ class BioGrid(Source):
 
         """
 
-        logger.info("getting identifier mapping")
+        LOG.info("getting identifier mapping")
         line_counter = 0
         f = '/'.join((self.rawdir, self.files['identifiers']['file']))
         myzip = ZipFile(f, 'r')

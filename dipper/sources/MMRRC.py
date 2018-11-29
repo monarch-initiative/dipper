@@ -11,7 +11,7 @@ from dipper.models.Reference import Reference
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MMRRC(Source):
@@ -81,16 +81,16 @@ class MMRRC(Source):
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows", limit)
+            LOG.info("Only parsing first %s rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
         self._process_phenotype_data(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         return
 
@@ -161,7 +161,7 @@ class MMRRC(Source):
 
                 # clean up the bad one
                 if mgi_allele_id == 'multiple mutation':
-                    logger.error("Erroneous gene id: %s", mgi_allele_id)
+                    LOG.error("Erroneous gene id: %s", mgi_allele_id)
                     mgi_allele_id = ''
 
                 if mgi_allele_id != '':
@@ -185,18 +185,18 @@ class MMRRC(Source):
                         mgi_gene_id = re.sub(
                             r'Gene\s*ID:\s*', 'NCBIGene:', mgi_gene_id)
                     elif not re.match(r'MGI', mgi_gene_id):
-                        logger.info("Gene id not recognized: %s", mgi_gene_id)
+                        LOG.info("Gene id not recognized: %s", mgi_gene_id)
                         if re.match(r'\d+$', mgi_gene_id):
                             # assume that if it's all numbers, then it's MGI
                             mgi_gene_id = 'MGI:'+str(mgi_gene_id)
-                            logger.info("Assuming numerics are MGI.")
+                            LOG.info("Assuming numerics are MGI.")
                     self.strain_hash[strain_id]['genes'].add(mgi_gene_id)
                     self.id_label_hash[mgi_gene_id.strip()] = mgi_gene_symbol
 
                 # catch some errors -
                 # some things have gene labels, but no identifiers - report
                 if mgi_gene_symbol.strip() != '' and mgi_gene_id == '':
-                    logger.error(
+                    LOG.error(
                         "Gene label with no identifier for strain %s: %s",
                         strain_id, mgi_gene_symbol)
                     genes_with_no_ids.add(mgi_gene_symbol.strip())
@@ -255,7 +255,7 @@ class MMRRC(Source):
                             assoc.add_source(p)
                         assoc.add_association_to_graph()
                     else:
-                        logger.info("Phenotypes and no allele for %s", strain_id)
+                        LOG.info("Phenotypes and no allele for %s", strain_id)
 
                 if not self.testMode and (
                         limit is not None and line_counter > limit):
@@ -346,11 +346,11 @@ class MMRRC(Source):
                     graph.addTriple(
                         s, self.globaltt['has_genotype'], genotype_id)
                 else:
-                    # logger.debug(
+                    # LOG.debug(
                     #   "Strain %s is not making a proper genotype.", s)
                     pass
 
-            logger.warning(
+            LOG.warning(
                 "The following gene symbols did not list identifiers: %s",
                 str(sorted(list(genes_with_no_ids))))
 

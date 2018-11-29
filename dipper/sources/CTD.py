@@ -73,7 +73,6 @@ class CTD(Source):
     static_files = {
         'publications': {'file': 'CTD_curated_references.tsv'}
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -87,18 +86,17 @@ class CTD(Source):
             # file_handle=None
         )
 
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-        if 'gene' not in all_test_ids:
+        if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
             self.test_geneids = []
         else:
-            self.test_geneids = all_test_ids['gene']
+            self.test_geneids = self.all_test_ids['gene']
 
-        if 'disease' not in all_test_ids:
+        if 'disease' not in self.all_test_ids:
             LOG.warning("not configured with disease test ids.")
             self.test_diseaseids = []
         else:
-            self.test_diseaseids = all_test_ids['disease']
+            self.test_diseaseids = self.all_test_ids['disease']
 
         self.geno = Genotype(self.graph)
         self.pathway = Pathway(self.graph)

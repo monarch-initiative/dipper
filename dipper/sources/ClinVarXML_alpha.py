@@ -35,7 +35,7 @@
     python3 ./scripts/add-properties2turtle.py --input ./out/ClinVarTestSet_`datestamp`.nt --output ./out/ClinVarTestSet_`datestamp`.nt --format nt
 
 '''
-import yaml
+
 import os
 import re
 import gzip
@@ -45,7 +45,8 @@ import logging
 import argparse
 import xml.etree.ElementTree as ET
 
-# import Requests
+import yaml
+# import requests
 # from dipper.sources.Source import Source
 #
 # from dipper import curie_map  # hangs on to stale data?
@@ -361,16 +362,16 @@ with open(MAPFILE, 'rt') as tsvfile:
 # Global translation table
 # Translate labels found in ontologies
 # to the terms they are for
-globaltt = {}
+GLOBALTT = {}
 with open(ARGS.globaltt) as fh:
-    globaltt = yaml.safe_load(fh)
+    GLOBALTT = yaml.safe_load(fh)
 
 # Local translation table
 # Translate external strings found in datasets
 # to specific labels found in ontologies
-localtt = {}
+LOCALTT = {}
 with open(ARGS.localtt) as fh:
-    localtt = yaml.safe_load(fh)
+    LOCALTT = yaml.safe_load(fh)
 
 # Overide the given Skolem IRI for our blank nodes
 # with an unresovable alternative.
@@ -378,30 +379,28 @@ if ARGS.skolemize is False:
     CURIEMAP['_'] = '_:'
 
 
-def resolve(label, localtt):
+def resolve(label):
     '''
     composite mapping
-    given f(x) and g(x)    here:  globaltt & localtt respectivly
+    given f(x) and g(x)    here:  GLOBALTT & LOCALTT respectivly
     in order of preference
     return g(f(x))|f(x)|g(x) | x
     TODO consider returning x on fall through
     : return label's mapping
 
     '''
-
-    if label is not None and label in localtt:
-        term_id = localtt[label]
-        if term_id in globaltt:
-            term_id = globaltt[term_id]
+    term_id = label
+    if label is not None and label in LOCALTT:
+        term_id = LOCALTT[label]
+        if term_id in GLOBALTT:
+            term_id = GLOBALTT[term_id]
         else:
             LOG.warning(
                 'Local translation but do not have a global term_id for %s', label)
-    elif label is not None and label in globaltt:
-        term_id = globaltt[label]
+    elif label is not None and label in GLOBALTT:
+        term_id = GLOBALTT[label]
     else:
         LOG.error('Do not have any mapping for label: ' + label)
-        # term_id = label
-        term_id = None
     return term_id
 
 
@@ -500,16 +499,16 @@ with gzip.open(FILENAME, 'rt') as fh:
         for RCV_Measure in RCV_MeasureSet.findall('./Measure'):
 
             if rcv_variant_supertype == "Variant":
-                rcv_variant_type = resolve(RCV_Measure.get('Type').strip(), localtt)
+                rcv_variant_type = resolve(RCV_Measure.get('Type').strip())
             elif rcv_variant_supertype == "Haplotype":
-                rcv_variant_type = globaltt['haplotype']
+                rcv_variant_type = GLOBALTT['haplotype']
             elif rcv_variant_supertype == "CompoundHeterozygote":
-                rcv_variant_type = globaltt['variant single locus complement']
-                # this resolve('has_zygosity', localtt)
-                # resolve('complex heterozygous', localtt)
+                rcv_variant_type = GLOBALTT['variant single locus complement']
+                # this resolve('has_zygosity')
+                # resolve('complex heterozygous')
 
             elif rcv_variant_supertype == "Phase unknown":
-                rcv_variant_type = resolve(RCV_Measure.get('Type').strip(), localtt)
+                rcv_variant_type = resolve(RCV_Measure.get('Type').strip())
             else:
                 rcv_variant_id = None
                 LOG.warning(
@@ -693,24 +692,24 @@ with gzip.open(FILENAME, 'rt') as fh:
                     continue
                 rcv_ncbigene_curi = 'NCBIGene:' + str(ncbigene_id)
                 #  RCV only TRIPLES
-                term_id = resolve(variant_relationship.strip(), localtt)
-                if term_id is not None:
+                curie = resolve(variant_relationship.strip())
+                if curie is not None:
                     if medgen_id is not None and ncbigene_id in G2PMAP \
                             and medgen_id in G2PMAP[ncbigene_id]:
                         # <rcv_variant_id> <GENO:0000418> <scv_ncbigene_id>
-                        write_spo(rcv_variant_id, term_id, rcv_ncbigene_curi)
+                        write_spo(rcv_variant_id, curie, rcv_ncbigene_curi)
                     # Here we override our type mapping
                     # and use has_reference_part
                     elif medgen_id is not None \
-                            and localtt[variant_relationship] == 'has_affected_locus':
+                            and LOCALTT[variant_relationship] == 'has_affected_locus':
                         write_spo(
                             rcv_variant_id,
-                            globaltt['has_reference_part'],
+                            GLOBALTT['has_reference_part'],
                             rcv_ncbigene_curi)
                     else:
                         write_spo(
                             rcv_variant_id,
-                            term_id,
+                            curie,
                             rcv_ncbigene_curi)
         else:
             # LOG.warning(
@@ -787,9 +786,9 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(rcv_variant_id, 'rdf:type', rcv_variant_type)
             if rcv_variant_supertype == "CompoundHeterozygote":
                 write_spo(
-                   rcv_variant_id,
-                   globaltt['has_zygosity'],
-                   globaltt['compound heterozygous'])
+                    rcv_variant_id,
+                    GLOBALTT['has_zygosity'],
+                    GLOBALTT['compound heterozygous'])
 
             # <ClinVarVariant:rcv_variant_id><GENO:0000418>
 
@@ -803,7 +802,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             rcv_dbsnps = []
             # <ClinVarVariant:rcv_variant_id><in_taxon><human>
             write_spo(
-                rcv_variant_id, globaltt['in taxon'], globaltt['Homo sapiens'])
+                rcv_variant_id, GLOBALTT['in taxon'], GLOBALTT['Homo sapiens'])
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
@@ -816,29 +815,29 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(rcv_disease_curi, 'rdfs:label', rcv_disease_label)
             # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
             write_spo(
-                monarch_assoc, globaltt['has_supporting_evidence_line'], _evidence_id)
+                monarch_assoc, GLOBALTT['has_supporting_evidence_line'], _evidence_id)
             # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
-            write_spo(monarch_assoc, globaltt['is_asserted_in'], _assertion_id)
+            write_spo(monarch_assoc, GLOBALTT['is_asserted_in'], _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
-            write_spo(_evidence_id, 'rdf:type', globaltt['evidence'])
+            write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'])
 
             # <:_assertion_id><rdf:type><SEPIO:0000001> .
-            write_spo(_assertion_id, 'rdf:type', globaltt['assertion'])
+            write_spo(_assertion_id, 'rdf:type', GLOBALTT['assertion'])
             # <:_assertion_id><rdfs:label><'assertion'>  .
             write_spo(_assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id)
 
             # <:_assertion_id><SEPIO_0000111><:_evidence_id>
             write_spo(
                 _assertion_id,
-                globaltt['is_assertion_supported_by_evidence'], _evidence_id)
+                GLOBALTT['is_assertion_supported_by_evidence'], _evidence_id)
 
             # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
             write_spo(
                 _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver)
             # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
             write_spo(
-                _assertion_id, globaltt['created_by'], 'ClinVarSubmitters:' + scv_orgid)
+                _assertion_id, GLOBALTT['created_by'], 'ClinVarSubmitters:' + scv_orgid)
             # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
             write_spo(
                 'ClinVarSubmitters:' + scv_orgid, 'rdf:type', 'foaf:organization')
@@ -861,12 +860,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
                     if scv_eval_date != "None":
                         write_spo(
-                            _assertion_id, globaltt['date_created'], scv_eval_date)
+                            _assertion_id, GLOBALTT['date_created'], scv_eval_date)
 
                     scv_assert_method = SCV_Attribute.text
                     #  need to be mapped to a <sepio:100...n> curie ????
                     # if scv_assert_method in TT:
-                    # scv_assert_id = resolve(scv_assert_method, localtt)
+                    # scv_assert_id = resolve(scv_assert_method)
                     # _assertion_method_id = '_:' + monarch_id + \
                     #    '_assertionmethod_' + digest_id(scv_assert_method)
                     #
@@ -882,12 +881,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                     #       TRIPLES   specified_by
                     # <:_assertion_id><SEPIO:0000041><_assertion_method_id>
                     write_spo(
-                        _assertion_id, globaltt['is_specified_by'],
+                        _assertion_id, GLOBALTT['is_specified_by'],
                         _assertion_method_id)
 
                     # <_assertion_method_id><rdf:type><SEPIO:0000037>
                     write_spo(
-                        _assertion_method_id, 'rdf:type', globaltt['assertion method'])
+                        _assertion_method_id, 'rdf:type', GLOBALTT['assertion method'])
 
                     # <_assertion_method_id><rdfs:label><scv_assert_method>
                     write_spo(_assertion_method_id, 'rdfs:label', scv_assert_method)
@@ -897,7 +896,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         SCV_Citation_URL = SCV_Citation.find('./URL')
                         if SCV_Citation_URL is not None:
                             write_spo(
-                                _assertion_method_id, globaltt['has_url'],
+                                _assertion_method_id, GLOBALTT['has_url'],
                                 SCV_Citation_URL.text)
 
             # scv_type = ClinVarAccession.get('Type')  # assert == 'SCV' ?
@@ -918,14 +917,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 write_spo(
                     _evidence_id,
-                    globaltt['has_supporting_reference'], 'PMID:' + scv_citation_id)
+                    GLOBALTT['has_supporting_reference'], 'PMID:' + scv_citation_id)
                 # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                 write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id)
 
                 # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                 write_spo(
                     'PMID:' + scv_citation_id,
-                    'rdf:type', globaltt['journal article'])
+                    'rdf:type', GLOBALTT['journal article'])
 
                 # <PMID:scv_citation_id><SEPIO:0000123><literal>
 
@@ -933,7 +932,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             SCV_Description = ClinicalSignificance.find('./Description')
             if SCV_Description is not None:
                 scv_significance = SCV_Description.text.strip()
-                scv_geno = resolve(scv_significance, localtt)
+                scv_geno = resolve(scv_significance)
                 if scv_geno is not None and \
                         scv_significance != 'uncertain significance' and\
                         scv_significance != 'protective':
@@ -979,12 +978,12 @@ with gzip.open(FILENAME, 'rt') as fh:
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                             write_spo(
                                 _evidence_id,
-                                globaltt['has_supporting_reference'],
+                                GLOBALTT['has_supporting_reference'],
                                 'PMID:' + scv_citation_id.text)
                             # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                             write_spo(
                                 'PMID:' + scv_citation_id.text,
-                                'rdf:type', globaltt['journal article'])
+                                'rdf:type', GLOBALTT['journal article'])
 
                             # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                             write_spo(
@@ -1024,7 +1023,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 # /SCV/ObservedIn/Method/MethodType
                 for SCV_OIMT in SCV_ObsIn.findall('./Method/MethodType'):
                     if SCV_OIMT.text != 'not provided':
-                        scv_evidence_type = resolve(SCV_OIMT.text.strip(), localtt)
+                        scv_evidence_type = resolve(SCV_OIMT.text.strip())
                         if scv_evidence_type is None:
                             LOG.warning(
                                 'No mapping for scv_evidence_type: %s', SCV_OIMT.text)
@@ -1042,7 +1041,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         write_spo(
                             _evidence_id,
-                            globaltt['has_supporting_activity'], _provenance_id)
+                            GLOBALTT['has_supporting_activity'], _provenance_id)
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         write_spo(
@@ -1066,7 +1065,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         LOG.warning('Not a full release')
     rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
     releasetriple.add(
-         make_spo('MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
+        make_spo('MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
     # not finalized
     # releasetriple.add(
     #     make_spo(

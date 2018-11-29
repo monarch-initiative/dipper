@@ -3,7 +3,7 @@ import logging
 
 __author__ = 'condit@sdsc.edu'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class CurieUtil(object):
@@ -19,9 +19,10 @@ class CurieUtil(object):
         self.curie_map = curie_map
         if curie_map is not None:  # inverse the map
             if len(set(curie_map.keys())) != len(set(curie_map.values())):
-                logger.warrning("Curie map is NOT one to one!")
-                logger.warrning(
-                    "`get_curie_prefix(IRI)` may return the same prefix for different base IRI")
+                LOG.warning("Curie map is NOT one to one!")
+                LOG.warning(
+                    "`get_curie_prefix(IRI)` "
+                    "may return the same prefix for different base IRI")
             self.uri_map = {}
             for key, value in curie_map.items():
                 self.uri_map[value] = key
@@ -49,13 +50,13 @@ class CurieUtil(object):
         parts = curie.split(':')
         if len(parts) == 1:
             if curie != '':
-                logger.error("Not a properly formed curie: \"%s\"", curie)
+                LOG.error("Not a properly formed curie: \"%s\"", curie)
             return None
         prefix = parts[0]
         if prefix in self.curie_map:
             return '%s%s' % (self.curie_map.get(prefix),
                              curie[(curie.index(':') + 1):])
-        logger.error("Curie prefix not defined for %s", curie)
+        LOG.error("Curie prefix not defined for %s", curie)
         return None
 
     def prefix_exists(self, pfx):

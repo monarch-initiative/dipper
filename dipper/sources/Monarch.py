@@ -8,7 +8,7 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Model import Model
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Monarch(Source):
@@ -38,21 +38,21 @@ class Monarch(Source):
         # fetch all the files
         # self.get_files(is_dl_forced)
 
-        logger.info(
+        LOG.info(
             "Temporarily using local files until they move to public git")
 
         return
 
     def parse(self, limit=None):
         if limit is not None:
-            logger.info("Only parsing first %s rows of each file", limit)
-        logger.info("Parsing files...")
+            LOG.info("Only parsing first %s rows of each file", limit)
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
 
         self.process_omia_phenotypes(limit)
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
 
         return
 
@@ -67,7 +67,7 @@ class Monarch(Source):
 
         model = Model(graph)
 
-        logger.info(
+        LOG.info(
             "Processing Monarch OMIA Animal disease-phenotype associations")
 
         # get file listing
@@ -76,23 +76,18 @@ class Monarch(Source):
             f for f in listdir(mypath)
             if isfile(join(mypath, f)) and re.search(r'.txt$', f)]
 
-        for f in file_list:
-            logger.info("Processing %s", f)
-            print(f)
-            line_counter = 0
+        for filename in file_list:
+            LOG.info("Processing %s", filename)
             count_missing = 0
             bad_rows = list()
-            fname = '/'.join((mypath, f))
+            fname = '/'.join((mypath, filename))
             with open(fname, 'r') as csvfile:
-                filereader = csv.reader(
-                    csvfile, delimiter='\t', quotechar='\"')
+                filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+                header = next(filereader)
                 for row in filereader:
-                    line_counter += 1
-                    if line_counter <= 1:
-                        continue  # skip header
-                    if len(row) != 22:
-                        logger.info("Not enough cols (%d) in %s - please fix",
-                                    len(row), f)
+                    if len(row) != 22 or len(row) != len(header):
+                        LOG.info(
+                            "Not enough cols %d in %s - please fix", len(row), filename)
                         continue
                     (disease_num, species_id, breed_name, variant, inheritance,
                      phenotype_id, phenotype_name, entity_id, entity_name,
@@ -102,13 +97,13 @@ class Monarch(Source):
                      pub_description, curator_notes, date_created) = row
 
                     if phenotype_id == '':
-                        # logger.warning('Missing phenotype in row:\n%s', row)
+                        # LOG.warning('Missing phenotype in row:\n%s', row)
                         count_missing += 1
                         bad_rows.append(row)
                         continue
                     if len(str(disease_num)) < 6:
                         disease_num = str(disease_num).zfill(6)
-                    disease_id = 'OMIA:'+disease_num.strip()
+                    disease_id = 'OMIA:' + disease_num.strip()
                     species_id = species_id.strip()
                     if species_id != '':
                         disease_id = '-'.join((disease_id, species_id))
@@ -120,8 +115,7 @@ class Monarch(Source):
                     else:
                         assoc.add_source(
                             '/'.join(('http://omia.angis.org.au/OMIA' +
-                                      disease_num.strip(),
-                                      species_id.strip())))
+                                      disease_num.strip(), species_id.strip())))
                     assoc.add_association_to_graph()
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
@@ -135,15 +129,14 @@ class Monarch(Source):
                         model.addComment(aid, curator_notes.strip())
 
                     if entity_id != '' or quality_id != '':
-                        logger.info("EQ not empty for %s: %s + %s", disease_id,
-                                    entity_name, quality_name)
+                        LOG.info(
+                            "EQ not empty for %s: %s + %s",
+                            disease_id, entity_name, quality_name)
             if count_missing > 0:
-                logger.warning(
-                    "You are missing %d/%d D2P annotations from id %s",
-                    count_missing, line_counter-1, f)
-                # TODO PYLINT Used builtin function 'map'.
-                # Using a list comprehension can be clearer.
-                logger.warning("Bad rows:\n"+"\n".join(map(str, bad_rows)))
+                LOG.warning(
+                    "We are missing %d of %d D2P annotations from id %s",
+                    count_missing, filereader.line_num-1, filename)
+                LOG.warning("Bad rows:\n%s", '\n'.join([str(x) for x in bad_rows]))
             # finish loop through all files
 
         return

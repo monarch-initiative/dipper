@@ -6,7 +6,7 @@ from dipper.graph.Graph import Graph
 from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 
 __author__ = 'nlw'
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class Genotype():
@@ -24,7 +24,7 @@ class Genotype():
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
@@ -223,7 +223,6 @@ class Genotype():
 
         # vslc has parts allele1/allele2
 
-        # vslc = gu.getNode(vslc_id)  # TODO unused
         if allele1_id is not None:
             self.addParts(allele1_id, vslc_id, allele1_rel)
         if allele2_id is not None and allele2_id.strip() != '':
@@ -453,22 +452,21 @@ class Genotype():
             build_id, build_label, self.globaltt['reference_genome'])
         self.model.addType(build_id, genome_id)
         if re.match(r'[0-9]+', taxon_id):
-             taxon_id = 'NCBITaxon:' + taxon_id
+            taxon_id = 'NCBITaxon:' + taxon_id
         self.addTaxon(taxon_id, build_id)
 
         return
 
-    def makeGenomeID(self, taxon_id):
+    @staticmethod
+    def makeGenomeID(taxon_id):
         # scrub off the taxon prefix.  put it in base space
-        # TODO: revisit as BNODE?
-
+        # TODO: revisit as yet another BNODE?
         # genome_id = re.sub(r'.*\:', '_:', taxon_id) + 'genome'
         genome_id = '_:' + taxon_id + 'genome'
         return genome_id
 
     def addChromosome(
-            self, chr, tax_id, tax_label=None, build_id=None,
-            build_label=None):
+            self, chrom, tax_id, tax_label=None, build_id=None, build_label=None):
         """
         if it's just the chromosome, add it as an instance of a SO:chromosome,
         and add it to the genome. If a build is included,
@@ -476,28 +474,26 @@ class Genotype():
         build-specific chromosome an instance of the supplied chr.
         The chr then becomes part of the build or genome.
         """
-        family = Family()
+        family = Family(self.graph)
         # first, make the chromosome class, at the taxon level
-        chr_id = makeChromID(str(chr), tax_id)
+        chr_id = makeChromID(str(chrom), tax_id)
         if tax_label is not None:
-            chr_label = makeChromLabel(chr, tax_label)
+            chr_label = makeChromLabel(chrom, tax_label)
         else:
-            chr_label = makeChromLabel(chr)
+            chr_label = makeChromLabel(chrom)
         genome_id = self.makeGenomeID(tax_id)
-        self.model.addClassToGraph(
-            chr_id, chr_label, self.globaltt['chromosome'])
+        self.model.addClassToGraph(chr_id, chr_label, self.globaltt['chromosome'])
         self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
 
         if build_id is not None:
             # the build-specific chromosome
-            chrinbuild_id = makeChromID(chr, build_id)
+            chrinbuild_id = makeChromID(chrom, build_id)
             if build_label is None:
                 build_label = build_id
-            chrinbuild_label = makeChromLabel(chr, build_label)
+            chrinbuild_label = makeChromLabel(chrom, build_label)
             # add the build-specific chromosome as an instance of the chr class
 
-            self.model.addIndividualToGraph(
-                chrinbuild_id, chrinbuild_label, chr_id)
+            self.model.addIndividualToGraph(chrinbuild_id, chrinbuild_label, chr_id)
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
@@ -533,8 +529,7 @@ class Genotype():
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-        self.model.addIndividualToGraph(
-            chr_id, chr_label, self.globaltt['chromosome'])
+        self.model.addIndividualToGraph(chr_id, chr_label, self.globaltt['chromosome'])
         if chr_type is not None:
             self.model.addType(chr_id, chr_type)
 
@@ -545,7 +540,8 @@ class Genotype():
 
         return
 
-    def make_variant_locus_label(self, gene_label, allele_label):
+    @staticmethod 
+    def make_variant_locus_label(gene_label, allele_label):
         if gene_label is None:
             gene_label = ''
         label = gene_label.strip()+'<' + allele_label.strip() + '>'
@@ -564,7 +560,7 @@ class Genotype():
         vslc_label = ''
 
         if gene_label is None and allele1_label is None and allele2_label is None:
-            logger.error("Not enough info to make vslc label")
+            LOG.error("Not enough info to make vslc label")
             return None
 
         top = self.make_variant_locus_label(gene_label, allele1_label)
@@ -577,7 +573,7 @@ class Genotype():
         return vslc_label
 
     def make_experimental_model_with_genotype(
-             self, genotype_id, genotype_label, taxon_id, taxon_label):
+            self, genotype_id, genotype_label, taxon_id, taxon_label):
 
         animal_id = '-'.join((taxon_id, 'with', genotype_id))
         animal_id = re.sub(r':', '', animal_id)

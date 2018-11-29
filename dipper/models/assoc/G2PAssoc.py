@@ -5,7 +5,8 @@ from dipper.models.assoc.Association import Assoc
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class G2PAssoc(Assoc):
@@ -76,7 +77,7 @@ class G2PAssoc(Assoc):
         :return:
         """
 
-        self._add_basic_association_to_graph()
+        Assoc.add_association_to_graph(self)
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:
@@ -91,7 +92,6 @@ class G2PAssoc(Assoc):
 
             self.graph.addTriple(
                 stage_process_id, self.globaltt['ends_during'], self.end_stage_id)
-
 
             self.stage_process_id = stage_process_id
             self.graph.addTriple(

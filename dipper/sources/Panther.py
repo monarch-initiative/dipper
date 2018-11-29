@@ -47,7 +47,6 @@ class Panther(Source):
             'file': 'Orthologs_HCOP.tar.gz',
             'url': PNTHDL+'/Orthologs_HCOP.tar.gz'}
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
         super().__init__(
@@ -56,10 +55,12 @@ class Panther(Source):
             'panther',
             ingest_title='Protein ANalysis THrough Evolutionary Relationships',
             ingest_url='http://pantherdb.org',
-            license_url='http://www.pantherdb.org/terms/disclaimer.jsp',
-            data_rights='http://pantherdb.org/publications.jsp#HowToCitePANTHER'
+            license_url=None,
+            data_rights='http://www.pantherdb.org/terms/disclaimer.jsp'
             # file_handle=None
         )
+        self.dataset.set_citation(
+            'http://pantherdb.org/publications.jsp#HowToCitePANTHER')
 
         # Defaults
         if tax_ids is None:
@@ -67,10 +68,8 @@ class Panther(Source):
         else:
             self.tax_ids = [str(x) for x in tax_ids]
 
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-
-        if 'protein' in all_test_ids:
-            self.test_ids = all_test_ids['protein']
+        if 'protein' in self.all_test_ids:
+            self.test_ids = self.all_test_ids['protein']
         else:
             LOG.warning("not configured with protein test ids.")
             self.test_ids = []

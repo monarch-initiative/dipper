@@ -10,7 +10,6 @@ from dipper.models.Family import Family
 from dipper.models.Reference import Reference
 from dipper.models.Pathway import Pathway
 from dipper.models.Model import Model
-from dipper import config
 from dipper.utils.DipperUtil import DipperUtil
 
 LOG = logging.getLogger(__name__)
@@ -109,19 +108,17 @@ class KEGG(Source):
             'kegg',
             ingest_title='Kyoto Encyclopedia of Genes and Genomes',
             ingest_url='http://www.genome.jp/kegg/',
-            license_url='http://www.kegg.jp/kegg/legal.html'
-            # data_rights=None,
+            license_url=None,
+            data_rights='http://www.kegg.jp/kegg/legal.html'
             # file_handle=None
         )
 
         # check to see if there are any ids configured in the config;
         # otherwise, warn
-        if 'test_ids' not in config.get_config() or\
-                'disease' not in config.get_config()['test_ids']:
-            LOG.warning("not configured with disease test ids.")
+        if 'disease' not in self.all_test_ids:
+            LOG.warning("not configured with addtional disease test ids.")
         else:
-            self.test_ids['disease'] += \
-                config.get_config()['test_ids']['disease']
+            self.test_ids['disease'] += self.all_test_ids['disease']
 
         self.label_hash = {}
         self.omim_disease_hash = {}  # to hold the mappings of omim:kegg ids
@@ -397,7 +394,7 @@ class KEGG(Source):
 
                 orthology_class_id = 'KEGG-'+orthology_class_id.strip()
 
-                orthology_type = OrthologyAssoc.terms['gene_family']
+                orthology_type = self.globaltt['gene_family']
                 model.addClassToGraph(
                     orthology_class_id, orthology_label, orthology_type)
                 if len(other_labels) > 1:

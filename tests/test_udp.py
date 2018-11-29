@@ -140,18 +140,17 @@ class UDPTestCase(unittest.TestCase):
         udp._parse_patient_variants(mock_file)
 
         triples = """
-        :patient_1 GENO:0000222 <https://monarchinitiative.org/.well-known/genid/b8a5f377fc8c95d4> .
+        :patient_1 GENO:0000222 <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> .
 
-        <https://monarchinitiative.org/.well-known/genid/b641e8da0787b45e> a SO:0001059 ;
+        <https://monarchinitiative.org/.well-known/genid/b41e8da0787b45e24c4f> a SO:0001059 ;
             rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
             GENO:0000418 HGNC:2069 ;
             RO:0002162 NCBITaxon:9606 ;
             owl:sameAs dbSNP:rs11557757 .
 
-        <https://monarchinitiative.org/.well-known/genid/b8a5f377fc8c95d4> a GENO:0000000 ;
+        <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> a GENO:0000000 ;
             rdfs:label "patient_1 genotype" ;
-            GENO:0000382 <https://monarchinitiative.org/.well-known/genid/b641e8da0787b45e> .
+            GENO:0000382 <https://monarchinitiative.org/.well-known/genid/b41e8da0787b45e24c4f> .
         """
 
-        self.assertTrue(self.test_util.test_graph_equality(
-            triples, udp.graph))
+        self.assertTrue(self.test_util.test_graph_equality(triples, udp.graph))

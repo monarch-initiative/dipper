@@ -7,7 +7,7 @@ from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
 
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
-from dipper import curie_map
+from dipper import curie_map as curie_map_class
 
 LOG = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
     Bnodes, and literals from an input curie
     """
 
-    curie_map = curie_map.get()
+    curie_map = curie_map_class.get()
     curie_util = CurieUtil(curie_map)
 
     # make global translation table available outside the ingest
@@ -35,8 +35,8 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         # Can be removed when this is resolved
         # https://github.com/RDFLib/rdflib/issues/632
-        obo_map = curie_map.get()['OBO']
-        self.bind('OBO', Namespace(obo_map))
+        for pfx in ('OBO',):  # , 'ORPHA'):
+            self.bind(pfx, Namespace(self.curie_map[pfx]))
 
         # try adding them all
         # self.bind_all_namespaces()  # too much
@@ -112,7 +112,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                 # Bind prefix map to graph
                 prefix = curie.split(':')[0]
                 if prefix not in self.namespace_manager.namespaces():
-                    mapped_iri = curie_map.get()[prefix]
+                    mapped_iri = self.curie_map[prefix]
                     self.bind(prefix, Namespace(mapped_iri))
             else:
                 LOG.error("couldn't make URI for %s", curie)
@@ -124,8 +124,8 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
             being added to this ingest.
 
         '''
-        for prefix in curie_map.get().keys():
-            iri = curie_map.get()[prefix]
+        for prefix in self.curie_map.keys():
+            iri = self.curie_map[prefix]
             self.bind(prefix, Namespace(iri))
         return
 

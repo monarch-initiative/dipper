@@ -610,6 +610,7 @@
 "ncRNA": "SO:0000655",
 "insertion": "SO:0000667",
 "SNP": "SO:0000694",
+"experimental_result_region": "SO:0000703",
 "gene": "SO:0000704",
 "cDNA": "SO:0000756",
 "QTL": "SO:0000771",

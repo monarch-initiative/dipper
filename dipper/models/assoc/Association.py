@@ -6,7 +6,8 @@ from dipper.utils.GraphUtils import GraphUtils
 
 __author__ = 'nlw'
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
+# note: currently no log issued
 
 
 class Assoc:
@@ -21,7 +22,7 @@ class Assoc:
         if isinstance(graph, Graph):
             self.graph = graph
         else:
-            raise ValueError("{} is not a graph".graph)
+            raise ValueError("{} is not a graph".format(graph))
         self.model = Model(self.graph)
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
@@ -48,7 +49,6 @@ class Assoc:
 
     def _is_valid(self):
         # check if sub/obj/rel are none...raise error
-        #
         if self.sub is None:
             raise ValueError(
                 'No subject set for this association <%s> <%s> <%s>',
@@ -64,10 +64,25 @@ class Assoc:
                 'No predicate set for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
             )
+        # Are subject & predicate, either a curie or IRI
+        pfx = self.sub.split(':')[0]
+        if pfx not in self.curie_map.keys() and \
+                pfx not in ['_', 'http', 'https', 'ftp']:
+            raise ValueError(
+                'Invalid Subject for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
+        pfx = self.rel.split(':')[0]
+        if pfx not in self.curie_map.keys() and \
+                pfx not in ['_', 'http', 'https', 'ftp']:
+            raise ValueError(
+                'Invalid Predicate for this association <%s> <%s> <%s>',
+                self.sub, self.rel, self.obj
+            )
 
         return True
 
-    def _add_basic_association_to_graph(self):
+    def add_association_to_graph(self):
 
         if not self._is_valid():
             return
@@ -112,10 +127,10 @@ class Assoc:
                     self.assoc_id, self.globaltt['has_provenance'], prov)
 
         if self.date is not None and len(self.date) > 0:
-            for dt in self.date:
+            for dat in self.date:
                 self.graph.addTriple(
                     object_is_literal=True, subject_id=self.assoc_id,
-                    predicate_id=self.globaltt['created_on'], obj=dt)
+                    predicate_id=self.globaltt['created_on'], obj=dat)
 
         if self.score is not None:
             self.graph.addTriple(
@@ -124,12 +139,6 @@ class Assoc:
             # TODO
             # update with some kind of instance of scoring object
             # that has a unit and type
-
-        return
-
-    def add_association_to_graph(self):
-
-        self._add_basic_association_to_graph()
 
         return
 
@@ -148,6 +157,7 @@ class Assoc:
         return
 
     # This isn't java, but predecessors favored the use of property decorators
+    # and CamelCase and ...
     def set_subject(self, identifier):
         self.sub = identifier
         return
@@ -181,7 +191,7 @@ class Assoc:
         return self.assoc_id
 
     def get_association_id(self):
-        if  self.assoc_id is None:
+        if self.assoc_id is None:
             self.set_association_id()
 
         return self.assoc_id

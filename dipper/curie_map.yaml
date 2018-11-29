@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # Local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201809/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201811/'   # Release RDF data
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
@@ -66,7 +66,7 @@
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
 'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'                      # Online Mendelian Inheritance in Man (human disease and variants)
-'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                   # Rare diseases and Orphan drugs
+'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology
 'PCO': 'http://purl.obolibrary.org/obo/PCO_'                        # Population and Community Ontology
 'PR': 'http://purl.obolibrary.org/obo/PR_'                          # Protein ontology
@@ -93,7 +93,6 @@
 'NCIT': 'http://purl.obolibrary.org/obo/NCIT_'                      # National Cancer Institute Thesaurus
 'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'                    # Scientific Evidence and Provenance Information Ontology
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
-
 
 # publication/reference sources
 'DOI': 'http://dx.doi.org/'                                         # Digital Object identifier
@@ -177,6 +176,7 @@
 'EcoGene': 'http://ecogene.org/gene/'                                           # Escherichia coli K-1
 'ENSEMBL': 'http://ensembl.org/id/'                                             # joint EMBL, EBI, Sanger Institute central resource
 'FlyBase': 'http://flybase.org/reports/'                                        # Fruitfly database
+'Genatlas': 'http://genatlas.medecine.univ-paris5.fr/fiche.php?symbol='         # gene mapping and genetic diseases (Human)
 'GenBank': 'http://www.ncbi.nlm.nih.gov/nuccore/'                               # NCBI nucleotide sequences
 'HGNC': 'http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id='          # HUGO Gene Nomenclature Committee (Human) *** chk pfx
 'IMPC': 'http://www.mousephenotype.org/data/genes/'                             # International Mouse Phenotyping Consortium (MGI:nnn)
@@ -191,6 +191,7 @@
 'SGD': 'https://www.yeastgenome.org/locus/'                                     # Saccharomyces Genome Database
 'SGD_REF': 'https://www.yeastgenome.org/reference/'                             # Saccharomyces Genome Database Reference publications
 'TAIR': 'https://www.arabidopsis.org/servlets/TairObject?type=locus&id='        # The Arabidopsis Information Resource
+'VGNC': 'https://vertebrate.genenames.org/data/gene-symbol-report/#!/vgnc_id/'  # Vertebrate Gene Nomenclature Committee
 'WormBase': 'https://www.wormbase.org/get?name='                                # Caenorhabditis elegans Database (nematodes) ie WBGene00000001
 'Xenbase': 'http://www.xenbase.org/gene/showgene.do?method=display&geneId='     # Xenopus Database (frog)
 'ZFIN': 'http://zfin.org/'                                                      # Zebrafish Information Network
@@ -207,9 +208,11 @@
 
                                                             # International Mouse Phenotyping Resource of Standardised Screens
 'IMPRESS-procedure': 'https://www.mousephenotype.org/impress/procedures/'
-'IMPRESS-protocol': 'https://www.mousephenotype.org/impress/protocol/'
+'IMPRESS-protocol':  'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
 
+                                                                                  # may become "GtoPdb"
+'IUPHAR': http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=' # Omnibus pharmacological information portal
 
 #Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound

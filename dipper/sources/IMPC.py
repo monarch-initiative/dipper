@@ -11,8 +11,11 @@ from dipper.models.Evidence import Evidence
 from dipper.models.Provenance import Provenance
 from dipper.models.Model import Model
 
-logger = logging.getLogger(__name__)
-IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
+LOG = logging.getLogger(__name__)
+# temp? detour
+# IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/latest/csv'
+# through stopgap
+IMPCDL = 'ftp://ftp.ebi.ac.uk/pub/databases/impc/release-8.0/csv'
 GITHUBRAW = 'https://raw.githubusercontent.com/'
 
 
@@ -79,7 +82,6 @@ class IMPC(Source):
             'file': 'checksum.md5',
             'url': IMPCDL + '/checksum.md5'},
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
@@ -88,25 +90,28 @@ class IMPC(Source):
             'impc',
             ingest_title='International Mouse Phenotyping Consortium',
             ingest_url='http://www.mousephenotype.org',
-            license_url=GITHUBRAW + 'mpi2/PhenotypeArchive/master/LICENSE',
-            data_rights=None,
+            license_url=None,
+            data_rights=GITHUBRAW + 'mpi2/PhenotypeArchive/master/LICENSE',
             file_handle=None
         )
 
         # TODO add a citation for impc dataset as a whole
         # :impc cito:citesAsAuthority PMID:24194600
         # self.dataset.citation()
-        
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-        self.test_ids = all_test_ids['mouse']
-        
+
+        if 'mouse' in self.all_test_ids:
+            self.gene_ids = self.all_test_ids['mouse']
+        else:
+            LOG.warning("not configured with gene test ids.")
+            self.gene_ids = []
+
         return
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-        logger.info("Verifying checksums...")
+        LOG.info("Verifying checksums...")
         if self.compare_checksums():
-            logger.debug('Files have same checksum as reference')
+            LOG.debug('Files have same checksum as reference')
         else:
             raise Exception('Reference checksums do not match disk')
         return
@@ -121,9 +126,9 @@ class IMPC(Source):
 
         """
         if limit is not None:
-            logger.info("Only parsing first %s rows fo each file", str(limit))
+            LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -133,12 +138,12 @@ class IMPC(Source):
             file = '/'.join((self.rawdir, self.files[f]['file']))
             self._process_data(file, limit)
 
-        logger.info("Finished parsing")
+        LOG.info("Finished parsing")
 
         return
 
     def _process_data(self, raw, limit=None):
-        logger.info("Processing Data from %s", raw)
+        LOG.info("Processing Data from %s", raw)
 
         if self.testMode:
             graph = self.testgraph
@@ -190,14 +195,14 @@ class IMPC(Source):
                     resource_name
                     ) = row
 
-                if self.testMode and marker_accession_id not in self.test_ids:
+                if self.testMode and marker_accession_id not in self.gene_ids:
                     continue
 
                 # ##### cleanup some of the identifiers ######
                 zygosity = zygosity.strip()
                 zygosity_id = self.resolve(zygosity)
                 if zygosity_id == zygosity:
-                    logger.warning(
+                    LOG.warning(
                         "Zygosity '%s' unmapped. detting to indeterminate", zygosity)
                     zygosity_id = self.globaltt['indeterminate']
 
@@ -216,9 +221,8 @@ class IMPC(Source):
                     strain_accession_id = '_:' + strain_accession_id
 
                 elif not re.match(r'MGI', strain_accession_id):
-                    logger.info(
-                        "Found a strange strain accession...%s",
-                        strain_accession_id)
+                    LOG.info(
+                        "Found a strange strain accession...%s", strain_accession_id)
                     strain_accession_id = 'IMPC:'+strain_accession_id
 
                 ######################
@@ -237,8 +241,7 @@ class IMPC(Source):
                     sequence_alteration_name = allele_symbol
 
                 if marker_accession_id is not None and marker_accession_id == '':
-                    logger.warning(
-                        "Marker unspecified on row %d", line_counter)
+                    LOG.warning("Marker unspecified on row %d", line_counter)
                     marker_accession_id = None
 
                 if marker_accession_id is not None:
@@ -347,7 +350,7 @@ class IMPC(Source):
                     allele2_label = re.sub(r'<.*', '<?>', allele1_label)
                     allele2_id = None
                 else:
-                    logger.warning("found unknown zygosity %s", zygosity)
+                    LOG.warning("found unknown zygosity %s", zygosity)
                     break
                 vslc_name = '/'.join((allele1_label, allele2_label))
 
@@ -425,9 +428,9 @@ class IMPC(Source):
 
                 if sq_type_id == sex:
                     sq_type_id = self.globaltt['intrinsic_genotype']
-                    logger.warning(
-                        "Unknown sex qualifier {}, adding as intrinsic_genotype"
-                        .format(sex))
+                    LOG.warning(
+                        "Unknown sex qualifier %s, adding as intrinsic_genotype",
+                        sex)
 
                 geno.addGenotype(
                     sex_qualified_genotype_id, sex_qualified_genotype_label, sq_type_id)
@@ -452,7 +455,7 @@ class IMPC(Source):
                 # it seems that sometimes phenotype ids are missing.
                 # indicate here
                 if phenotype_id is None or phenotype_id == '':
-                    logger.warning(
+                    LOG.warning(
                         "No phenotype id specified for row %d: %s",
                         line_counter, str(row))
                     continue
@@ -528,7 +531,7 @@ class IMPC(Source):
         provenance_model = Provenance(self.graph)
         model = Model(self.graph)
         assertion_bnode = self.make_id(
-            "assertion{0}{1}".format(assoc_id, self.localtt['IMPC']),  '_')
+            "assertion{0}{1}".format(assoc_id, self.localtt['IMPC']), '_')
 
         model.addIndividualToGraph(assertion_bnode, None, self.globaltt['assertion'])
 
@@ -547,19 +550,19 @@ class IMPC(Source):
         return
 
     def _add_study_provenance(
-        self,
-        phenotyping_center,
-        colony,
-        project_fullname,
-        pipeline_name,
-        pipeline_stable_id,
-        procedure_stable_id,
-        procedure_name,
-        parameter_stable_id,
-        parameter_name,
-        statistical_method,
-        resource_name,
-        row_num
+            self,
+            phenotyping_center,
+            colony,
+            project_fullname,
+            pipeline_name,
+            pipeline_stable_id,
+            procedure_stable_id,
+            procedure_name,
+            parameter_stable_id,
+            parameter_name,
+            statistical_method,
+            resource_name,
+            row_num
     ):
         """
         :param phenotyping_center: str, from self.files['all']
@@ -639,13 +642,13 @@ class IMPC(Source):
         return study_bnode
 
     def _add_evidence(
-        self,
-        assoc_id,
-        eco_id,
-        p_value,
-        percentage_change,
-        effect_size,
-        study_bnode
+            self,
+            assoc_id,
+            eco_id,
+            p_value,
+            percentage_change,
+            effect_size,
+            study_bnode
     ):
         """
         :param assoc_id: assoc curie used to reify a
@@ -733,7 +736,7 @@ class IMPC(Source):
             if os.path.isfile('/'.join((self.rawdir, file))):
                 if self.get_file_md5(self.rawdir, file) != md5:
                     is_match = False
-                    logger.warning('%s was not downloaded completely', file)
+                    LOG.warning('%s was not downloaded completely', file)
                     return is_match
 
         return is_match

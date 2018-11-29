@@ -22,15 +22,15 @@ def replace(oldstr, newstr, infile, dryrun=False):
     """
 
     linelist = []
-    with open(infile) as f:
-        for item in f:
+    with open(infile) as reader:
+        for item in reader:
             newitem = re.sub(oldstr, newstr, item)
             linelist.append(newitem)
     if dryrun is False:
-        with open(infile, "w") as f:
-            f.truncate()
+        with open(infile, "w") as writer:
+            writer.truncate()
             for line in linelist:
-                f.writelines(line)
+                writer.writelines(line)
     elif dryrun is True:
         for line in linelist:
             print(line, end='')
@@ -51,16 +51,16 @@ def rmlinematch(oldstr, infile, dryrun=False):
     """
 
     linelist = []
-    with open(infile) as f:
-        for item in f:
+    with open(infile) as reader:
+        for item in reader:
             rmitem = re.match(r'.*{}'.format(oldstr), item)
             if isinstance(rmitem) == isinstance(None):
                 linelist.append(item)
     if dryrun is False:
-        with open(infile, "w") as f:
-            f.truncate()
+        with open(infile, "w") as writer:
+            writer.truncate()
             for line in linelist:
-                f.writelines(line)
+                writer.writelines(line)
     elif dryrun is True:
         for line in linelist:
             print(line, end='')
@@ -83,16 +83,16 @@ def rmlinenumber(linenumber, infile, dryrun=False):
     linecounter = 0
     if isinstance(linenumber) != isinstance(linecounter):
         exit("""'linenumber' argument must be an integer.""")
-    with open(infile) as f:
-        for item in f:
+    with open(infile) as reader:
+        for item in reader:
             linecounter = linecounter + 1
             if linecounter != linenumber:
                 linelist.append(item)
     if dryrun is False:
-        with open(infile, "w") as f:
-            f.truncate()
+        with open(infile, "w") as writer:
+            writer.truncate()
             for line in linelist:
-                f.writelines(line)
+                writer.writelines(line)
     elif dryrun is True:
         for line in linelist:
             print(line, end='')

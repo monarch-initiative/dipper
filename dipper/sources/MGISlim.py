@@ -1,11 +1,12 @@
+import logging
+import datetime
+
 from intermine.webservice import Service
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.models.Reference import Reference
-import logging
-import datetime
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MGISlim(Source):
@@ -25,7 +26,7 @@ class MGISlim(Source):
             # file_handle=None
         )
 
-    def fetch(self, is_dl_forced):
+    def fetch(self, is_dl_forced=False):
         return
 
     def parse(self, limit=None):
@@ -69,8 +70,8 @@ class MGISlim(Source):
 
             if not count % 10 and count != 0:
                 count_from = count - 10
-                logger.info("{0} processed ids from MGI:{1}* to MGI:{2}*".format(
-                    datetime.datetime.now(), count_from, count))
+                LOG.info("%s processed ids from MGI:%i* to MGI:%i*",
+                    datetime.datetime.now(), count_from, count)
 
             count += 1
             if limit and count >= limit:

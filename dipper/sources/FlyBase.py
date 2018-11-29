@@ -3,7 +3,6 @@ import re
 import csv
 import gzip
 import io
-import hashlib
 import os
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
@@ -13,10 +12,9 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Environment import Environment
 from dipper.utils.DipperUtil import DipperUtil
-from dipper import config
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class FlyBase(PostgreSQLSource):
@@ -129,33 +127,32 @@ class FlyBase(PostgreSQLSource):
         # move towards joining there as well.
         # instead of pulling full tables accross the wire
         # then rejoining them here in python, take advantages of
-        # the indexes and mature relational engine to the the
-        # work on someone elses machine.
+        # the indexes and mature relational engine to the work on someone elses machine.
         # we can call it "in the cloud"
         # from Lilly: http://gmod.org/wiki/FlyBase_Field_Mapping_Tables
 
         'feature_dbxref_WIP': """  -- 17M rows in ~2 minutes
-            SELECT
-            feature.name feature_name, feature.uniquename feature_id,
-            organism.abbreviation abbrev, organism.genus, organism.species,
-            cvterm.name frature_type, db.name db, dbxref.accession
-            FROM feature_dbxref
-            JOIN dbxref ON  feature_dbxref.dbxref_id = dbxref.dbxref_id
-            JOIN db ON  dbxref.db_id = db.db_id
-            JOIN feature ON feature_dbxref.feature_id  = feature.feature_id
-            JOIN organism ON feature.organism_id = organism.organism_id
-            JOIN cvterm ON feature.type_id = cvterm.cvterm_id
-            WHERE feature_dbxref.is_current = true
-            AND feature.is_analysis = false
-            AND feature.is_obsolete = false
-            AND cvterm.is_obsolete = 0
-            ;
+SELECT
+    feature.name feature_name, feature.uniquename feature_id,
+    organism.abbreviation abbrev, organism.genus, organism.species,
+    cvterm.name frature_type, db.name db, dbxref.accession
+  FROM feature_dbxref
+  JOIN dbxref ON  feature_dbxref.dbxref_id = dbxref.dbxref_id
+  JOIN db ON  dbxref.db_id = db.db_id
+  JOIN feature ON feature_dbxref.feature_id  = feature.feature_id
+  JOIN organism ON feature.organism_id = organism.organism_id
+  JOIN cvterm ON feature.type_id = cvterm.cvterm_id
+    WHERE feature_dbxref.is_current = true
+      AND feature.is_analysis = false
+      AND feature.is_obsolete = false
+      AND cvterm.is_obsolete = 0
+;
         """,
         'feature': """
-            SELECT feature_id, dbxref_id, organism_id, name, uniquename,
-                null as residues, seqlen, md5checksum, type_id, is_analysis,
-                timeaccessioned, timelastmodified
-            FROM feature WHERE is_analysis = false and is_obsolete = 'f'
+SELECT feature_id, dbxref_id, organism_id, name, uniquename,
+    null as residues, seqlen, md5checksum, type_id, is_analysis,
+    timeaccessioned, timelastmodified
+FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         """
     }
 
@@ -204,17 +201,17 @@ class FlyBase(PostgreSQLSource):
             'flybase',
             ingest_title='FlyBase',
             ingest_url='http://www.flybase.org/',
-            license_url=None,  # 'https://wiki.flybase.org/wiki/Main_Page'
+            license_url=None,
             data_rights='https://wiki.flybase.org/wiki/FlyBase_Wiki:General_disclaimer',
             file_handle=None
             )
 
-        logger.setLevel(logging.INFO)
+        LOG.setLevel(logging.INFO)
         # to be used to store the version number to be acquired later
         self.version_num = None
 
         # source-specific warnings.  will be cleared when resolved.
-        logger.warning("we are ignoring normal phenotypes for now")
+        LOG.warning("we are ignoring normal phenotypes for now")
 
         # so that we don't have to deal with BNodes, we will create
         # hash lookups for the internal identifiers the hash will
@@ -245,15 +242,14 @@ class FlyBase(PostgreSQLSource):
         self.checked_organisms = set()
         self.deprecated_features = set()
 
-        # check to see if there's any ids configured in the config;
+        # check to see if there's any ids configured resource/test_ids.yaml;
         # otherwise, warn
-        if 'test_ids' not in config.get_config() \
-                or 'disease' not in config.get_config()['test_ids']:
-            logger.warning("not configured with disease test ids.")
+        if 'disease' not in self.all_test_ids:
+            LOG.warning("not configured with disease test ids.")
             self.test_ids = None
         else:
-            # select ony those test ids that are omim's.
-            self.test_ids = config.get_config()['test_ids']
+            # select ony those test ids that are omim's.  --TEC not sure this agrees
+            self.test_ids = self.all_test_ids['disease']
 
         return
 
@@ -313,8 +309,8 @@ class FlyBase(PostgreSQLSource):
 
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows of each file", limit)
-        logger.info("Parsing files...")
+            LOG.info("Only parsing first %d rows of each file", limit)
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -355,8 +351,8 @@ class FlyBase(PostgreSQLSource):
         # TODO add version info from file somehow
         # (in parser rather than during fetching)
 
-        logger.info("Finished parsing.")
-        logger.info("Loaded %d nodes", len(self.graph))
+        LOG.info("Finished parsing.")
+        LOG.info("Loaded %d nodes", len(self.graph))
         return
 
     def _process_genotypes(self, limit):
@@ -379,7 +375,7 @@ class FlyBase(PostgreSQLSource):
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'genotype'))
-        logger.info("building labels for genotypes")
+        LOG.info("building labels for genotypes")
         geno = Genotype(graph)
         fly_tax = self.globaltt['Drosophila melanogaster']
         with open(raw, 'r') as f:
@@ -444,7 +440,7 @@ class FlyBase(PostgreSQLSource):
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'stock'))
-        logger.info("building labels for stocks")
+        LOG.info("building labels for stocks")
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -467,8 +463,7 @@ class FlyBase(PostgreSQLSource):
                 # from what i can tell, the dbxrefs are just more FBst,
                 # so no added information vs uniquename
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     pass
                 else:
                     if self.testMode \
@@ -501,7 +496,7 @@ class FlyBase(PostgreSQLSource):
         line_counter = 0
 
         raw = '/'.join((self.rawdir, 'pub'))
-        logger.info("building labels for pubs")
+        LOG.info("building labels for pubs")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -562,7 +557,7 @@ class FlyBase(PostgreSQLSource):
         else:
             graph = self.graph
         raw = '/'.join((self.rawdir, 'environment'))
-        logger.info("building labels for environment")
+        LOG.info("building labels for environment")
         env_parts = {}
         label_map = {}
         env = Environment(graph)
@@ -624,7 +619,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'feature'))
-        logger.info("building labels for features")
+        LOG.info("building labels for features")
 
         line_counter = 0
         with open(raw, 'r') as f:
@@ -639,8 +634,7 @@ class FlyBase(PostgreSQLSource):
                 if re.search(r'[\|\s\[\]\{\}\\<\>]', uniquename):
                     # some uniquenames have pipes or other nasty chars!
                     # for example: FB||||FBrf0133242|Hugh-u1
-                    feature_id = self._makeInternalIdentifier(
-                        'feature', feature_key)
+                    feature_id = self._makeInternalIdentifier('feature', feature_key)
                 else:
                     feature_id = 'FlyBase:'+uniquename
                 self.idhash['feature'][feature_key] = feature_id
@@ -662,8 +656,7 @@ class FlyBase(PostgreSQLSource):
                 elif re.search(r'FBt[ip]', feature_id):
                     self.idhash['feature'][feature_key] = feature_id
 
-                if self.testMode and \
-                        int(feature_key) not in self.test_keys['gene'] + \
+                if self.testMode and int(feature_key) not in self.test_keys['gene']+\
                         self.test_keys['allele'] + self.test_keys['feature']:
                     continue
 
@@ -724,8 +717,8 @@ class FlyBase(PostgreSQLSource):
                     tax_id = self.idhash['organism'][organism_id]
 
                 tax_label = self.label_hash.get(tax_id)
-                if not re.search(r'FBog', feature_id) \
-                        and re.search(r'Drosophila', tax_label):
+                if not re.search(r'FBog', feature_id) and \
+                        re.search(r'Drosophila', tax_label):
                     # make only fly things leaders
                     model.makeLeader(feature_id)
 
@@ -733,11 +726,8 @@ class FlyBase(PostgreSQLSource):
                     pass
                 else:
                     if is_gene:
-                        model.addClassToGraph(
-                            feature_id, name, type_id)
-                        graph.addTriple(
-                            feature_id, self.globaltt['in taxon'],
-                            tax_id)
+                        model.addClassToGraph(feature_id, name, type_id)
+                        graph.addTriple(feature_id, self.globaltt['in taxon'], tax_id)
                     else:
                         if re.search('FBa[lb]', feature_id):
                             type_id = self.globaltt['allele']
@@ -771,7 +761,7 @@ class FlyBase(PostgreSQLSource):
         else:
             graph = self.graph
         raw = '/'.join((self.rawdir, 'feature_genotype'))
-        logger.info("processing genotype features")
+        LOG.info("processing genotype features")
         geno = Genotype(graph)
         line_counter = 0
 
@@ -829,7 +819,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'phendesc'))
-        logger.info("processing G2P")
+        LOG.info("processing G2P")
 
         line_counter = 0
         with open(raw, 'r') as f:
@@ -894,7 +884,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
 
         raw = '/'.join((self.rawdir, 'feature_pub'))
-        logger.info("processing feature_pub")
+        LOG.info("processing feature_pub")
 
         line_counter = 0
 
@@ -941,7 +931,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
 
         raw = '/'.join((self.rawdir, 'stock_genotype'))
-        logger.info("processing stock genotype")
+        LOG.info("processing stock genotype")
         line_counter = 0
 
         with open(raw, 'r') as f:
@@ -982,7 +972,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'pub_dbxref'))
-        logger.info("processing pub_dbxref")
+        LOG.info("processing pub_dbxref")
 
         line_counter = 0
 
@@ -1024,14 +1014,12 @@ class FlyBase(PostgreSQLSource):
 
                         if dbxref_id is not None:
                             reference = Reference(
-                                graph, dbxref_id,
-                                self.globaltt['publication'])
+                                graph, dbxref_id, self.globaltt['publication'])
                             reference.addRefToGraph()
                             model.addSameIndividual(pub_id, dbxref_id)
                             line_counter += 1
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1051,7 +1039,7 @@ class FlyBase(PostgreSQLSource):
         """
 
         raw = '/'.join((self.rawdir, 'dbxref'))
-        logger.info("processing dbxrefs")
+        LOG.info("processing dbxrefs")
         line_counter = 0
 
         with open(raw, 'r') as f:
@@ -1079,7 +1067,7 @@ class FlyBase(PostgreSQLSource):
                         accession = re.sub(r'\:', '', accession)
                     elif re.search(r'\s', accession):
                         # skip anything with a space
-                        # logger.debug(
+                        # LOG.debug(
                         #   'dbxref %s accession has a space: %s', dbxref_id, accession)
                         continue
 
@@ -1089,7 +1077,7 @@ class FlyBase(PostgreSQLSource):
                         prefix = self.localtt[db_id]
                         did = ':'.join((prefix, accession))
                         if re.search(r'\:', accession) and prefix != 'DOI':
-                            logger.warning('id %s may be malformed; skipping', did)
+                            LOG.warning('id %s may be malformed; skipping', did)
 
                     self.dbxrefs[dbxref_id] = {db_id: did}
 
@@ -1099,8 +1087,7 @@ class FlyBase(PostgreSQLSource):
                     continue
 
                 # the following are some special cases that we scrub
-                if int(db_id) == 2 \
-                        and accession.strip() == 'transgenic_transposon':
+                if int(db_id) == 2 and accession.strip() == 'transgenic_transposon':
                     # transgenic_transposable_element
                     self.dbxrefs[dbxref_id] = {
                         db_id: self.globaltt['transgenic_transposable_element']}
@@ -1137,7 +1124,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'phenotype'))
-        logger.info("processing phenotype")
+        LOG.info("processing phenotype")
 
         line_counter = 0
 
@@ -1170,17 +1157,16 @@ class FlyBase(PostgreSQLSource):
                 elif observable_id in self.idhash['cvterm']:
                     # observations to anatomical classes
                     cvterm_id = self.idhash['cvterm'][observable_id]
-                    phenotype_id = \
-                        self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
+                    phenotype_id = self.idhash['cvterm'][observable_id] + 'PHENOTYPE'
                     if cvterm_id is not None and cvterm_id in self.label_hash:
                         phenotype_label = self.label_hash[cvterm_id]
                         phenotype_label += ' phenotype'
                         self.label_hash[phenotype_id] = phenotype_label
                     else:
-                        logger.info('cvtermid=%s not in label_hash', cvterm_id)
+                        LOG.info('cvtermid=%s not in label_hash', cvterm_id)
 
                 else:
-                    logger.info(
+                    LOG.info(
                         "No observable id or label for %s: %s",
                         phenotype_key, uniquename)
 
@@ -1220,7 +1206,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'phenstatement'))
-        logger.info("processing phenstatement")
+        LOG.info("processing phenstatement")
 
         line_counter = 0
 
@@ -1268,13 +1254,12 @@ class FlyBase(PostgreSQLSource):
                         s = stages.pop()
                         assoc.set_stage(s, s)
                     elif len(stages) > 1:
-                        logger.warning(
-                            "There's more than one stage specified per " +
+                        LOG.warning(
+                            "There's more than one stage specified per "
                             "phenotype. I don't know what to do. %s",
                             str(stages))
                     non_stage_ids = self.phenocv[phenotype_id] - stages
-                    logger.debug(
-                        'Other non-stage bits: %s', str(non_stage_ids))
+                    LOG.debug('Other non-stage bits: %s', str(non_stage_ids))
                     # TODO do something with the other parts
                     # of a pheno-cv relationship
                 assoc.set_environment(environment_id)
@@ -1285,8 +1270,7 @@ class FlyBase(PostgreSQLSource):
                 model.addComment(assoc_id, phenstatement_id)
                 model.addDescription(assoc_id, phenotype_internal_label)
 
-                if not self.testMode \
-                        and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1304,7 +1288,7 @@ class FlyBase(PostgreSQLSource):
 
         line_counter = 0
         raw = '/'.join((self.rawdir, 'phenotype_cvterm'))
-        logger.info("processing phenotype cvterm mappings")
+        LOG.info("processing phenotype cvterm mappings")
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1327,8 +1311,7 @@ class FlyBase(PostgreSQLSource):
                         self.phenocv[phenotype_id] = set()
                     self.phenocv[phenotype_id].add(cvterm_id)
                 else:
-                    logger.info(
-                        "Not storing the cvterm info for %s", cvterm_key)
+                    LOG.info("Not storing the cvterm info for %s", cvterm_key)
 
         return
 
@@ -1347,7 +1330,7 @@ class FlyBase(PostgreSQLSource):
 
         line_counter = 0
         raw = '/'.join((self.rawdir, 'cvterm'))
-        logger.info("processing cvterms")
+        LOG.info("processing cvterms")
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1386,7 +1369,7 @@ class FlyBase(PostgreSQLSource):
                 dbxrefs = self.dbxrefs.get(dbxref_id)
                 if dbxrefs is not None:
                     if len(dbxrefs) > 1:
-                        logger.info(
+                        LOG.info(
                             ">1 dbxref for this cvterm (%s: %s): %s",
                             str(cvterm_id), name, dbxrefs.values())
                     elif len(dbxrefs) == 1:
@@ -1410,7 +1393,7 @@ class FlyBase(PostgreSQLSource):
 
         line_counter = 0
         raw = '/'.join((self.rawdir, 'environment_cvterm'))
-        logger.info("processing environment to cvterm mappings")
+        LOG.info("processing environment to cvterm mappings")
 
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
@@ -1449,7 +1432,7 @@ class FlyBase(PostgreSQLSource):
         model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'feature_dbxref'))
-        logger.info("processing feature_dbxref mappings")
+        LOG.info("processing feature_dbxref mappings")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1469,15 +1452,14 @@ class FlyBase(PostgreSQLSource):
 
                 feature_key = feature_id
 
-                if self.testMode \
-                        and int(feature_key) not in \
+                if self.testMode and int(feature_key) not in \
                         self.test_keys['gene'] + self.test_keys['allele']:
                     continue
 
                 if feature_key not in self.idhash['feature']:
                     # some features may not be found in the hash
                     # if they are "analysis features"
-                    # logger.debug("Feature %s not found in hash", feature_key)
+                    # LOG.debug("Feature %s not found in hash", feature_key)
                     continue
                 feature_id = self.idhash['feature'][feature_key]
                 dbxref_key = dbxref_id
@@ -1502,7 +1484,7 @@ class FlyBase(PostgreSQLSource):
                                 # we shouldn't be adding these here anyway
                                 # model.addClassToGraph(did, dlabel)
                                 # model.addXref(feature_id, did)
-                                True  # that
+                                pass  # True  # that
                         elif did is not None and dlabel is not None \
                                 and feature_id is not None:
                             model.addIndividualToGraph(did, dlabel)
@@ -1538,7 +1520,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
-        logger.info("determining some feature types based on relationships")
+        LOG.info("determining some feature types based on relationships")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1577,7 +1559,7 @@ class FlyBase(PostgreSQLSource):
         line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, 'feature_relationship'))
-        logger.info("processing feature relationships")
+        LOG.info("processing feature relationships")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1600,7 +1582,7 @@ class FlyBase(PostgreSQLSource):
 
                 if subject_id in self.deprecated_features \
                         or object_id in self.deprecated_features:
-                    logger.debug(
+                    LOG.debug(
                         "Skipping deprecated feature_relationship %s %s",
                         str(subject_id), str(object_id))
                     continue
@@ -1624,7 +1606,8 @@ class FlyBase(PostgreSQLSource):
                         'deletes',
                         'part_deletes',
                         'duplicates',
-                        'part_duplicates']:
+                        'part_duplicates'
+                ]:
                     allele_id = None
                     gene_id = None
                     if subject_id in self.idhash['allele']:
@@ -1633,15 +1616,15 @@ class FlyBase(PostgreSQLSource):
                         gene_id = self.idhash['gene'][object_id]
                     if gene_id is not None and gene_id in self.label_hash:
                         # TODO FAIL: KeyError: None   default?
-                        logger.info("getting label for gene_id:\t%s", gene_id)
+                        LOG.info("getting label for gene_id:\t%s", gene_id)
                         gene_label = self.label_hash[gene_id]
                     else:
                         if gene_id is None:
-                            logger.error(
+                            LOG.error(
                                 "The gene_id for object_id is None: %s \t %s",
                                 str(subject_id), str(object_id))
                         if not gene_id not in self.label_hash:
-                            logger.error(
+                            LOG.error(
                                 "gene_id's label missing for: %s\t%s\t%s",
                                 str(subject_id), str(object_id), str(object_id))
                         continue
@@ -1667,16 +1650,12 @@ class FlyBase(PostgreSQLSource):
                             # assume that the gene is in the same species
                             geno.addAlleleOfGene(allele_id, gene_id)
                     else:
-                        if allele_id is None \
-                                and subject_id in self.idhash['feature']:
+                        if allele_id is None and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
-                            logger.debug(
-                                "this thing %s is not an allele", feature_id)
-                        if gene_id is None \
-                                and subject_id in self.idhash['feature']:
+                            LOG.debug("this thing %s is not an allele", feature_id)
+                        if gene_id is None and subject_id in self.idhash['feature']:
                             feature_id = self.idhash['feature'][subject_id]
-                            logger.debug(
-                                "this thing %s is not a gene", feature_id)
+                            LOG.debug("this thing %s is not a gene", feature_id)
                 elif name == 'associated_with':
 
                     allele_id = None
@@ -1711,8 +1690,7 @@ class FlyBase(PostgreSQLSource):
                             reagent_id, reagent_label, None, gene_id)
                         geno.addReagentTargetedGene(reagent_id, gene_id)
                     elif reagent_id is not None and allele_id is not None:
-                        geno.addReagentTargetedGene(
-                                reagent_id, None, allele_id)
+                        geno.addReagentTargetedGene(reagent_id, None, allele_id)
                     # elif allele_id is not None and ti_id is not None:
                     #     # the FBti == transgenic insertion,
                     #     which is basically the sequence alteration
@@ -1820,7 +1798,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'organism'))
-        logger.info("processing organisms")
+        LOG.info("processing organisms")
 
         line_counter = 0
         with open(raw, 'r') as f:
@@ -1898,7 +1876,7 @@ class FlyBase(PostgreSQLSource):
         model = Model(graph)
         line_counter = 0
         raw = '/'.join((self.rawdir, 'organism_dbxref'))
-        logger.info("processing organsim dbxref mappings")
+        LOG.info("processing organsim dbxref mappings")
         with open(raw, 'r') as f:
             f.readline()  # read the header row; skip
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
@@ -1951,7 +1929,7 @@ class FlyBase(PostgreSQLSource):
         else:
             graph = self.graph
         raw = '/'.join((self.rawdir, self.files['disease_models']['file']))
-        logger.info("processing disease models")
+        LOG.info("processing disease models")
 
         line_counter = 0
         geno = Genotype(graph)
@@ -2016,7 +1994,7 @@ class FlyBase(PostgreSQLSource):
             graph = self.graph
         model = Model(graph)
         raw = '/'.join((self.rawdir, 'stockprop'))
-        logger.info("processing stock-image depictions")
+        LOG.info("processing stock-image depictions")
 
         line_counter = 0
 
@@ -2072,9 +2050,9 @@ class FlyBase(PostgreSQLSource):
             i for i, x in enumerate(l)
             if re.match(r'allele_human_disease_model', x)]
         if len(f_list) == 0:
-            logger.error("Can't find the human_disease_model file")
+            LOG.error("Can't find the human_disease_model file")
         elif len(f_list) > 1:
-            logger.error(
+            LOG.error(
                 "There's >1 human disease model file, " +
                 "and I don't know which to choose: %s", str(l))
         else:
@@ -2095,29 +2073,27 @@ class FlyBase(PostgreSQLSource):
 
         return
 
-    def _makeInternalIdentifier(self, prefix, key):
+    @staticmethod
+    def _makeInternalIdentifier(prefix, key):
         """
         This is a special Flybase-to-MONARCH-ism.
+        TEC -- no, it is not. It is just another blank node created w/o label or type
+            i.e. Source.make_id('fb' + prefix + 'key' + key, '_')
+
         Flybase tables have unique keys that we use here, but don't want to
         re-distribute those internal identifiers.
         Therefore, we make them into keys in a consistent way here.
 
         :param prefix: the object type to prefix the key with,
-                    since the numbers themselves are not unique across tables
-                    nor guarenteed stable within a table over time
-
-        TEC: blank nodes created that way would not allways be valid RDF
-        Better is to use the input as a rdfs:label & maybe rdf:type
-        then digest to poduce a known valid key string.
-        Also other rdf tools DO rewrite blank node identifiers
+            since the row numbers themselves are not unique across tables
+            & guarenteed unstable over time
 
         :param key: the number (unique key)
         :return:
 
         """
 
-        return '_:b' + hashlib.sha1(
-            ('fb'+prefix+'key'+key).encode('utf-8')).hexdigest()[1:20]
+        return PostgreSQLSource.make_id('fb' + prefix + 'key' + key, '_')
 
     def getTestSuite(self):
         import unittest

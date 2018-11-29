@@ -9,7 +9,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Model import Model
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class MPD(Source):
@@ -119,9 +119,9 @@ class MPD(Source):
         :return:
         """
         if limit is not None:
-            logger.info("Only parsing first %s rows fo each file", str(limit))
+            LOG.info("Only parsing first %s rows fo each file", str(limit))
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         self._process_straininfo(limit)
         # the following will provide us the hash-lookups
@@ -138,11 +138,11 @@ class MPD(Source):
         # to lookup the ids when filling in the graph
         self._fill_provenance_graph(limit)
 
-        logger.info("Finished parsing.")
+        LOG.info("Finished parsing.")
         return
 
     def _process_ontology_mappings_file(self, limit):
-        logger.info("Processing ontology mappings...")
+        LOG.info("Processing ontology mappings...")
         raw = '/'.join((self.rawdir, 'ontology_mappings.csv'))
 
         with open(raw, 'r') as f:
@@ -172,7 +172,7 @@ class MPD(Source):
             graph = self.graph
         model = Model(graph)
 
-        logger.info("Processing measurements ...")
+        LOG.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, self.files['straininfo']['file']))
 
         tax_id = self.globaltt['Mus musculus']
@@ -222,7 +222,7 @@ class MPD(Source):
     def _process_measurements_file(self, limit):
         line_counter = 0
 
-        logger.info("Processing measurements ...")
+        LOG.info("Processing measurements ...")
         raw = '/'.join((self.rawdir, 'measurements.csv'))
 
         with open(raw, 'r') as f:
@@ -264,7 +264,7 @@ class MPD(Source):
         :return:
 
         """
-        logger.info("Processing strain means ...")
+        LOG.info("Processing strain means ...")
         line_counter = 0
         raw = '/'.join((self.rawdir, self.files['strainmeans']['file']))
         with gzip.open(raw, 'rb') as f:
@@ -279,7 +279,7 @@ class MPD(Source):
                     #  cv, minval, maxval, logmean, logsd, zscore, logzscore)
                     (measnum, varname, strain, strainid, sex, mean, nmice, sd, sem,
                      cv, minval, maxval, zscore
-                     ) = row
+                    ) = row
 
                 except ValueError:
 
@@ -312,7 +312,7 @@ class MPD(Source):
         return
 
     def _fill_provenance_graph(self, limit):
-        logger.info("Building graph ...")
+        LOG.info("Building graph ...")
         if self.testMode:
             graph = self.testgraph
         else:
@@ -341,7 +341,7 @@ class MPD(Source):
                         zscore = measures[m]['zscore']
                         if abs(zscore) >= self.stdevthreshold:
                             scores_passing_threshold_count += 1
-                            # logger.info(
+                            # LOG.info(
                             #   "Score passing threshold: %s | %s | %s",
                             #   strain_id, assay_id, zscore)
                             # add the G2P assoc
@@ -372,12 +372,12 @@ class MPD(Source):
                         else:
                             scores_not_passing_threshold_count += 1
 
-        logger.info(
+        LOG.info(
             "Scores passing threshold: %d", scores_passing_threshold_count)
-        logger.info(
+        LOG.info(
             "Scores passing threshold with ontologies: %d",
             scores_passing_threshold_with_ontologies_count)
-        logger.info(
+        LOG.info(
             "Scores not passing threshold: %d", scores_not_passing_threshold_count)
 
         return
@@ -488,7 +488,7 @@ class MPD(Source):
         if sextested in localtt:
             sextested = localtt[sextested]
         else:
-            logger.warning("Unknown sex tested key: %s", sextested)
+            LOG.warning("Unknown sex tested key: %s", sextested)
         description = "This is an assay of [" + descrip + "] shown as a [" + \
                       datatype + "] measured in [" + units + "]"
 

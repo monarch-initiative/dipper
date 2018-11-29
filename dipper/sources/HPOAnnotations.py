@@ -18,8 +18,8 @@ from dipper import config
 LOG = logging.getLogger(__name__)
 
 # summer 2018 PR mentioned switching to the new format
-DRSEB = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
-HPOADL2 = DRSEB + '/lastSuccessfulBuild/artifact/misc_2018'
+PNR = 'http://compbio.charite.de/jenkins/job/hpo.annotations.2018'
+HPOADL2 = PNR + '/lastSuccessfulBuild/artifact/misc_2018'
 
 # Fall 2018 CM made a mondo version of common disease (but we decided to hold off now)
 GITAPI = "https://api.github.com/repos/monarch-initiative"
@@ -78,7 +78,6 @@ class HPOAnnotations(Source):
             'url': 'http://purl.obolibrary.org/obo/doid.owl'
         }
     }
-    resources = {'test_ids': '../../resources/test_ids.yaml'}
 
     small_files = {
         # this is a placeholder for the columns in the "common-disease"
@@ -121,9 +120,7 @@ class HPOAnnotations(Source):
         )
         self.dataset.set_citation('https://hpo.jax.org/app/citation')
         self.replaced_id_count = 0
-
-        all_test_ids = self.open_and_parse_yaml(self.resources['test_ids'])
-        self.test_ids = all_test_ids['disease']
+        self.test_ids = self.all_test_ids['disease']
 
         return
 
@@ -199,11 +196,6 @@ class HPOAnnotations(Source):
                 # 98246 OMIM
                 # 68646 ORPHA
                 # 297 DECIPHER
-
-                # TODO take this out asap.
-                # dipper need to switch over to ORPHA: too.
-                # if disease_id[:6] == 'ORPHA:':
-                #    disease_id = 'Orphanet:' + disease_id[6:]
 
                 if self.testMode:
                     try:

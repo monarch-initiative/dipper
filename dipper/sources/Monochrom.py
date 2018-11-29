@@ -2,12 +2,12 @@ import re
 import gzip
 import logging
 from dipper.sources.Source import Source
-from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
+from dipper.models.GenomicFeature import makeChromID, makeChromLabel
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 MCDL = 'http://hgdownload.cse.ucsc.edu/goldenPath'
 
 
@@ -142,9 +142,10 @@ class Monochrom(Source):
         self.tax_ids = tax_ids
         # Defaults
         if self.tax_ids is None:
-            self.tax_ids = [
-                9606, 10090, 7955, 10116, 9913, 9031, 9823, 9940, 9796]
-
+            self.tax_ids = [9606, 10090, 7955, 10116, 9913, 9031, 9823, 9940, 9796]
+                
+        self.tax_ids [str(x) for x in self.tax_ids]
+        
         self._check_tax_ids()
 
         return
@@ -157,9 +158,9 @@ class Monochrom(Source):
     def parse(self, limit=None):
 
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
-        logger.info("Parsing files...")
+        LOG.info("Parsing files...")
 
         if self.testOnly:
             self.testMode = True
@@ -169,7 +170,7 @@ class Monochrom(Source):
 
         # using the full graph as the test here
         self.testgraph = self.graph
-        logger.info("Done parsing files.")
+        LOG.info("Done parsing files.")
 
         return
 
@@ -185,7 +186,7 @@ class Monochrom(Source):
         model = Model(self.graph)
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files[taxon]['file']))
-        logger.info("Processing Chr bands from FILE: %s", myfile)
+        LOG.info("Processing Chr bands from FILE: %s", myfile)
         geno = Genotype(self.graph)
 
         # build the organism's genome from the taxon
@@ -199,20 +200,26 @@ class Monochrom(Source):
         genome_id = geno.makeGenomeID(taxon_id)
         geno.addGenome(taxon_id, genome_label)
         model.addOWLPropertyClassRestriction(
-            genome_id, self.globaltt['in taxon'],
-            taxon_id)
+            genome_id, self.globaltt['in taxon'], taxon_id)
 
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
+        placed_scaffold_pattern = r'chr(\d+|X|Y|Z|W|MT|M)'
+        # currently unused patterns
+        # unlocalized_scaffold_pattern = placed_scaffold_pattern + r'_(\w+)_random'
+        # unplaced_scaffold_pattern = r'chrUn_(\w+)'
+
+        col = ['chrom', 'start', 'stop', 'band', 'rtype']
+        with gzip.open(myfile, 'rb') as reader:
+            for line in reader:
+                line_counter += 1
                 # skip comments
                 line = line.decode().strip()
-                if re.match(r'^#', line):
+                if line[0] == '#':
                     continue
-
                 # chr13	4500000	10000000	p12	stalk
-                (chrom, start, stop, band, rtype) = line.split('\t')
-                line_counter += 1
-
+                row = line.split('\t')
+                chrom = row[col.index('chrom')]
+                band = row[col.index('band')]
+                rtype = row[col.index('rtype')]
                 # NOTE
                 # some less-finished genomes have placed and unplaced scaffolds
                 # * Placed scaffolds:
@@ -222,26 +229,18 @@ class Monochrom(Source):
                 #     scaffold's position, orientation or both is not known.
                 # *Unplaced scaffolds:
                 #   it is not known which chromosome the scaffold belongs to.
-
                 # find out if the thing is a full on chromosome, or a scaffold:
                 # ex: unlocalized scaffold: chr10_KL568008v1_random
                 # ex: unplaced scaffold: chrUn_AABR07022428v1
-                placed_scaffold_pattern = r'chr(\d+|X|Y|Z|W|MT|M)'
 
-                # TODO unused
-                # unlocalized_scaffold_pattern = \
-                #    placed_scaffold_pattern + r'_(\w+)_random'
-                # unplaced_scaffold_pattern = r'chrUn_(\w+)'
-
-                m = re.match(placed_scaffold_pattern+r'$', chrom)
-                if m is not None and len(m.groups()) == 1:
+                mch = re.match(placed_scaffold_pattern+r'$', chrom)
+                if mch is not None and len(mch.groups()) == 1:
                     # the chromosome is the first match of the pattern
-                    # ch = m.group(1)  # TODO unused
+                    # chrom = m.group(1)  # TODO unused
                     pass
                 else:
                     # let's skip over anything that isn't a placed_scaffold
-                    # at the class level
-                    logger.info("Skipping non-placed chromosome %s", chrom)
+                    LOG.info("Skipping non-placed chromosome %s", chrom)
                     continue
                 # the chrom class, taxon as the reference
                 cclassid = makeChromID(chrom, taxon, 'CHR')
@@ -275,55 +274,54 @@ class Monochrom(Source):
                     else:
                         # usually happens if it's a chromosome because
                         # they don't actually have banding info
-                        logger.info("feature type %s != chr band",
-                                    region_type_id)
+                        LOG.info("feature type %s != chr band", region_type_id)
                 else:
-                    logger.warning('staining type not found: %s', rtype)
+                    LOG.warning('staining type not found: %s', rtype)
 
                 # get the parent bands, and make them unique
                 parents = list(self.make_parent_bands(band, set()))
                 # alphabetical sort will put them in smallest to biggest
                 parents.sort(reverse=True)
 
-                # print("PARENTS of",maplocclass_id,"=",parents)
+                # print("PARENTS of", maplocclass_id, "=", parents)
                 # add the parents to the graph, in hierarchical order
                 # TODO this is somewhat inefficient due to
                 # re-adding upper-level nodes when iterating over the file
-                # TODO PYLINT Consider using enumerate
-                # instead of iterating with range and len
-                for i in range(len(parents)):
-                    parent_i = parents[i].strip()
-                    if parent_i is not None and parent_i != "":
-                        pclassid = cclassid + parent_i # class chr parts
-                        pclass_label = makeChromLabel(chrom + parent_i, genome_label)
-                        rti = getChrPartTypeByNotation(parent_i, self.graph)
-                        model.addClassToGraph(pclassid, pclass_label, rti)
+                for prnt in parents:
+                    parent = prnt.strip()
+                    if parent is None or parent == "":
+                        continue
+                    pclassid = cclassid + parent  # class chr parts
+                    pclass_label = makeChromLabel(chrom + parent, genome_label)
+                    rti = getChrPartTypeByNotation(parent, self.graph)
+                    model.addClassToGraph(pclassid, pclass_label, rti)
 
                     # for canonical chromosomes,
                     # then the subbands are subsequences of the full band
                     # add the subsequence stuff as restrictions
-                    if i < len(parents) - 1:
-                        pid = cclassid+parents[i+1]   # the instance
+
+                    if prnt != parents[-1]:
+                        grandparent = 1 + parents.index(prnt)
+                        pid = cclassid + parents[grandparent]   # the instance
                         model.addOWLPropertyClassRestriction(
                             pclassid, self.globaltt['is subsequence of'], pid)
                         model.addOWLPropertyClassRestriction(
-                            pid, self.globaltt['has subsequence'],  pclassid)
-
+                            pid, self.globaltt['has subsequence'], pclassid)
                     else:
                         # add the last one (p or q usually)
                         # as attached to the chromosome
                         model.addOWLPropertyClassRestriction(
                             pclassid, self.globaltt['is subsequence of'], cclassid)
                         model.addOWLPropertyClassRestriction(
-                            cclassid, self.globaltt['has subsequence'],  pclassid)
+                            cclassid, self.globaltt['has subsequence'], pclassid)
 
                 # connect the band here to the first one in the parent list
                 if len(parents) > 0:
                     model.addOWLPropertyClassRestriction(
                         maplocclass_id, self.globaltt['is subsequence of'],
-                        cclassid+parents[0])
+                        cclassid + parents[0])
                     model.addOWLPropertyClassRestriction(
-                        cclassid+parents[0],  self.globaltt['has subsequence'],
+                        cclassid + parents[0], self.globaltt['has subsequence'],
                         maplocclass_id)
 
                 if limit is not None and line_counter > limit:
@@ -368,7 +366,7 @@ class Monochrom(Source):
             so_id = self.resolve(regiontype)
         else:
             so_id = self.globaltt['chromosome_part']
-            logger.warning(
+            LOG.warning(
                 "Unmapped code %s. Defaulting to chr_part '" +
                 self.globaltt['chromosome_part'] + "'.", regiontype)
 

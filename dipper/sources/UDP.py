@@ -1,17 +1,18 @@
-from dipper.sources.Source import Source
-from dipper.models.Genotype import Genotype
-from dipper.models.Model import Model
-from dipper.utils.DipperUtil import DipperUtil
-from rdflib import RDFS, BNode
-from dipper import config
-import requests
 import logging
 import csv
 import re
 import os
+from rdflib import RDFS, BNode
 
+import requests
 
-logger = logging.getLogger(__name__)
+from dipper.sources.Source import Source
+from dipper.models.Genotype import Genotype
+from dipper.models.Model import Model
+from dipper.utils.DipperUtil import DipperUtil
+from dipper import config
+
+LOG = logging.getLogger(__name__)
 
 
 class UDP(Source):
@@ -72,9 +73,9 @@ class UDP(Source):
     UDP_SERVER = 'https://udplims-collab.nhgri.nih.gov/api'
 
     def __init__(
-        self,
-        graph_type,
-        are_bnodes_skolemized
+            self,
+            graph_type,
+            are_bnodes_skolemized
     ):
         super().__init__(
             graph_type,
@@ -197,7 +198,7 @@ class UDP(Source):
             :return None
         """
         if limit is not None:
-            logger.info("Only parsing first %d rows", limit)
+            LOG.info("Only parsing first %d rows", limit)
 
         phenotype_file = '/'.join(
             (self.rawdir, self.files['patient_phenotypes']['file']))
@@ -220,9 +221,9 @@ class UDP(Source):
             params['limit'] = 100
             while result_count > 0:
 
-                logger.debug(
-                    "processing {0} lines starting at {1} for patient {2}"
-                    .format(params['limit'], params['start'], patient))
+                LOG.debug(
+                    "processing %s lines starting at %s for patient %s",
+                    params['limit'], params['start'], patient)
 
                 req = requests.get(self.UDP_SERVER, params=params, auth=credentials)
                 results = req.json()
@@ -309,7 +310,7 @@ class UDP(Source):
 
                 self.graph.addTriple(
                     variant_bnode, self.globaltt['in taxon'],
-                    'NCBITaxon:9606')
+                    self.globaltt['Homo sapiens'])
                 self.graph.addTriple(
                     intrinsic_geno_bnode, self.globaltt['has_variant_part'],
                     variant_bnode)
@@ -413,17 +414,17 @@ class UDP(Source):
                                     r_gene['symbol'], variant_bnode, gene_id,
                                     self.globaltt['has_affected_feature'])
                         else:
-                            logger.warn("unable to map intron variant"
-                                        " to gene coordinates: {0}"
-                                        .format(variant))
+                            LOG.warning(
+                                "unable to map intron variant to gene coordinates: %s",
+                                variant)
                             for r_gene in ref_gene:
                                 self._add_gene_to_graph(
                                     r_gene['symbol'], variant_bnode, gene_id,
                                     self.globaltt['causally_influences'])
                     elif re.search(r'intron', variant['type'], flags=re.I):
-                        logger.warn("unable to map intron variant"
-                                    " to gene coordinates: {0}"
-                                    .format(variant))
+                        LOG.warning(
+                            "unable to map intron variant to gene coordinates_2: %s",
+                            variant)
                     for neighbor in up_down_gene:
                         self._add_gene_to_graph(
                             neighbor, variant_bnode, gene_id,
@@ -438,7 +439,7 @@ class UDP(Source):
         return
 
     @staticmethod
-    def _convert_variant_file_to_dict(file):
+    def _convert_variant_file_to_dict(varfile):
         """
         Converts tsv to dicts with this structure
         {
@@ -492,20 +493,44 @@ class UDP(Source):
         :return: dict
         """
         patient_variant_map = {}
-        line_num = 0
-        reader = csv.reader(file, delimiter="\t")
+        # line_num = 0   note this is builtin to the reader as reader.line_num
+        reader = csv.reader(varfile, delimiter="\t")
+        col = [
+            'patient', 'family', 'chromosome', 'build', 'position', 'reference_allele',
+            'variant_allele', 'parent_of_origin', 'allele_type', 'mutation_type',
+            'gene_symbol', 'transcript', 'reference_aa', 'variant_aa, aa_change',
+            'segregates_with', 'locus', 'exon', 'inheritance_model', 'zygosity',
+            'dbsnp_id', 'frequency', 'num_of_alleles'
+        ]
+        # row = next(reader)   # there is no header
+        # if len(row) != len(col):
+        #    LOG.error('Got:\n\t%s\nExpected:\n\t%s\n', row, col)
+        #    raise TypeError('header does not match expected format')
         for row in reader:
 
-            (patient, family, chromosome, build, position,
-             reference_allele, variant_allele, parent_of_origin,
-             allele_type, mutation_type, gene_symbol, transcript,
-             reference_aa, variant_aa, aa_change, segregates_with,
-             locus, exon, inheritance_model, zygosity, dbSNP_ID, frequency,
-             num_of_alleles) = row
-
-            if patient == 'Patient':  # skip header
-                line_num += 1
-                continue
+            patient = row[col.index('patient')]
+            # family,
+            chromosome = row[col.index('chromosome')]
+            build = row[col.index('build')]
+            position = row[col.index('position')]
+            reference_allele = row[col.index('reference_allele')]
+            variant_allele = row[col.index('variant_allele')]
+            # parent_of_origin,
+            # allele_type,
+            mutation_type = row[col.index('mutation_type')]
+            gene_symbol = row[col.index('gene_symbol')]
+            # transcript,
+            # reference_aa,
+            # variant_aa,
+            # aa_change,
+            # segregates_with,
+            # locus,
+            # exon,
+            # inheritance_model,
+            # zygosity,
+            dbsnp_id = row[col.index('dbsnp_id')]
+            # frequency,
+            # num_of_alleles
 
             if patient not in patient_variant_map:
                 patient_variant_map[patient] = {}
@@ -527,8 +552,8 @@ class UDP(Source):
             if re.search(r'LEFT FLANK|NM_|EXON', var_base):
                 var_base = ''
 
-            if dbSNP_ID != '':
-                match = re.fullmatch(r'^(rs\d+).*', dbSNP_ID)
+            if dbsnp_id != '':
+                match = re.fullmatch(r'^(rs\d+).*', dbsnp_id)
                 if match:
                     rs_id = match.group(1)
 
@@ -538,7 +563,7 @@ class UDP(Source):
 
             if '' in variant_info:
                 filt_list = [info for info in variant_info if info != '']
-                variant_id = str(line_num) + '-' + '-'.join(filt_list)
+                variant_id = str(reader.line_num) + '-' + '-'.join(filt_list)
             else:
                 variant_id = '-'.join(variant_info)
 
@@ -560,8 +585,6 @@ class UDP(Source):
 
                 patient_variant_map[patient][variant_id]['genes_of_interest']\
                     = [gene_symbol]
-
-            line_num += 1
 
         return patient_variant_map
 
@@ -602,22 +625,21 @@ class UDP(Source):
         :return: dict
         """
         id_map = {}
+        col = ['gene_curie', 'start', 'end', 'strand', 'build']
         if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(
-                    os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
-                    (gene_curie, start, end, strand, build) = row
-                    id_map[gene_curie] = {
-                        'start': start,
-                        'end': end,
-                        'strand': strand,
-                        'build': build
+                    id_map[row[col.index('gene_curie')]] = {
+                        'start': row[col.index('start')],
+                        'end': row[col.index('end')],
+                        'strand': row[col.index('strand')],
+                        'build': row[col.index('build')]
                     }
         return id_map
 
     @staticmethod
-    def _parse_rs_map_file(file):
+    def _parse_rs_map_file(rsfile):
         """
         Parses rsID mapping file from dbSNP
         Outputs dict where keys are coordinates in the format
@@ -638,16 +660,19 @@ class UDP(Source):
         :return: dict
         """
         rs_map = {}
-        if os.path.exists(os.path.join(os.path.dirname(__file__), file)):
-            with open(os.path.join(os.path.dirname(__file__), file)) as tsvfile:
+        col = ['chromosome', 'position', 'rs_id', 'var_type', 'alleles']
+        if os.path.exists(os.path.join(os.path.dirname(__file__), rsfile)):
+            with open(os.path.join(os.path.dirname(__file__), rsfile)) as tsvfile:
                 reader = csv.reader(tsvfile, delimiter="\t")
                 for row in reader:
-                    (chromosome, position, rs_id, var_type, alleles) = row
+                    chromosome = row[col.index('chromosome')]
+                    position = row[col.index('position')]
+                    # rs_id, var_type, alleles) = row
                     map_key = "chr{0}-{1}".format(chromosome, position)
                     rs_info = {
-                        'type': var_type,
-                        'rs_id': rs_id,
-                        'alleles': alleles
+                        'type': row[col.index('var_type')],
+                        'rs_id': row[col.index('rs_id')],
+                        'alleles': row[col.index('alleles')]
                     }
                     if map_key in rs_map:
                         rs_map[map_key].append(rs_info)
@@ -656,9 +681,10 @@ class UDP(Source):
         return rs_map
 
     @staticmethod
-    def _build_variant_label(build, chromosome, position,
-                             reference_allele, variant_allele,
-                             gene_symbols=None):
+    def _build_variant_label(
+            build, chromosome, position, reference_allele, variant_allele,
+            gene_symbols=None
+    ):
         """
         Function to build HGVS variant labels
         :param build: {str} build id
@@ -676,11 +702,10 @@ class UDP(Source):
         else:
             prefix = "{0}{1}".format(build, chromosome)
         if reference_allele == '-':
-            variant_label = "{0}:g.{1}ins{2}".format(
-                            prefix, position, variant_allele)
+            variant_label = "{0}:g.{1}ins{2}".format(prefix, position, variant_allele)
         elif variant_allele == '-':
             variant_label = "{0}:g.{1}del{2}".format(
-                            prefix, position, reference_allele)
+                prefix, position, reference_allele)
         else:
             variant_label = "{0}:g.{1}{2}>{3}".format(
                 prefix, position, reference_allele, variant_allele)
@@ -696,8 +721,7 @@ class UDP(Source):
         if gene_id:
             self.graph.addTriple(variant_bnode, relation, gene_id)
         elif gene:
-            logger.info("gene {0} not mapped to NCBI gene,"
-                        " making blank node".format(gene))
+            LOG.info("gene %s not mapped to NCBI gene, making blank node", gene)
             gene_bnode = self.make_id("{0}".format(gene), "_")
             model.addIndividualToGraph(gene_bnode, gene)
             self.graph.addTriple(variant_bnode, relation, gene_bnode)
@@ -784,14 +808,14 @@ class UDP(Source):
                 if len(rs_candidates) == 1:
                     rs_id = rs_candidates[0]
                 elif len(rs_candidates) > 1:
-                    logger.info(
-                        "ambiguous rs mapping for: {0}\n"
-                        "candidate ids: {1}".format(variant, rs_candidates))
+                    LOG.info(
+                        "ambiguous rs mapping for: %s\ncandidate ids: %s",
+                        variant, rs_candidates)
                 else:
-                    logger.info(
+                    LOG.info(
                         "rs at coordinate but no match found"
-                        " for variant {0}\n candidate ids: {1}".format(
-                            variant, rs_map[variant_key]))
+                        " for variant %s\n candidate ids: %s",
+                        variant, rs_map[variant_key])
         else:
-            logger.warn("type: {0} unsupported".format(variant_type))
+            LOG.warning("type: %s unsupported", variant_type)
         return rs_id
