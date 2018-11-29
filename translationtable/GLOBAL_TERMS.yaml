@@ -247,6 +247,7 @@
 "benign_for_condition": "GENO:0000843",
 "likely_benign_for_condition": "GENO:0000844",
 "uncertain significance": "GENO:0000845",
+"protective_for_condition": "RO:0003307"
 "short repeat": "GENO:0000846",
 "microsatellite": "GENO:0000847",
 "coding sequence alteration": "GENO:0000848",
