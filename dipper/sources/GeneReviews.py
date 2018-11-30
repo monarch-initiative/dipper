@@ -6,7 +6,6 @@ import logging
 from bs4 import BeautifulSoup
 from dipper.sources.Source import Source, USER_AGENT
 from dipper.models.Model import Model
-# from dipper.sources.OMIM import OMIM, filter_keep_phenotype_entry_ids
 from dipper import config
 from dipper.models.Reference import Reference
 
@@ -159,20 +158,28 @@ class GeneReviews(Source):
         """
         raw = '/'.join((self.rawdir, self.files['idmap']['file']))
         model = Model(self.graph)
-        line_counter = 0
-
+        LOG.info('Looping over %s', raw)
         # we look some stuff up in OMIM, so initialize here
         # omim = OMIM(self.graph_type, self.are_bnodes_skized)
         id_map = {}
         allomimids = set()
+        col = ['NBK_id', 'GR_shortname', 'OMIM']
+
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            header = next(filereader)
+            header[0] = header[0][1:]
+            if header != col:
+                LOG.error(
+                    '\nExpected header: %s\nRecieved header: %s', col, header)
+                exit(-1)
+
             for row in filereader:
-                line_counter += 1
-                if line_counter == 1:  # skip header
-                    continue
-                (nbk_num, shortname, omim_num) = row
-                gr_id = 'GeneReviews:'+nbk_num
+
+                nbk_num = row[col.index('NBK_id')]
+                shortname = row[col.index('GR_shortname')]
+                omim_num = row[col.index('OMIM')]
+                gr_id = 'GeneReviews:' + nbk_num
                 omim_id = 'OMIM:' + omim_num
                 if not (
                         (self.testMode and
@@ -186,7 +193,7 @@ class GeneReviews(Source):
                 if len(omim_num) > 6:
                     LOG.warning(
                         "OMIM number incorrectly formatted in row %d; skipping:\n%s",
-                        line_counter, '\t'.join(row))
+                        filereader.line_num, '\t'.join(row))
                     continue
 
                 # build up a hashmap of the mappings; then process later
@@ -200,7 +207,8 @@ class GeneReviews(Source):
 
                 allomimids.add(omim_num)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.testMode and limit is not None \
+                        and filereader.line_num > limit:
                     break
 
             # end looping through file
@@ -286,14 +294,17 @@ class GeneReviews(Source):
         :return:
         """
         raw = '/'.join((self.rawdir, self.files['titles']['file']))
+
         model = Model(self.graph)
         col = ['GR_shortname', 'GR_Title', 'NBK_id', 'PMID']
         with open(raw, 'r', encoding='latin-1') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             header = next(filereader)
+            header[0] = header[0][1:]
             colcount = len(col)
-            if  header != col:
-                LOG.error("Unexpected Header %s", header)
+            if header != col:
+                LOG.error(
+                    '\nExpected header: %s\nRecieved header: %s', col, header)
                 exit(-1)
             for row in filereader:
                 if len(row) != colcount:
@@ -320,10 +331,10 @@ class GeneReviews(Source):
         }
 
         for nbk in self.book_ids:
-            b = book_item.copy()
-            b['file'] = '/'.join(('books', nbk+'.html'))
-            b['url'] = 'http://www.ncbi.nlm.nih.gov/books/'+nbk
-            self.all_books[nbk] = b
+            nbki = book_item.copy()
+            nbki['file'] = '/'.join(('books', nbk + '.html'))
+            nbki['url'] = 'http://www.ncbi.nlm.nih.gov/books/' + nbk
+            self.all_books[nbk] = nbki
 
         return
 
@@ -341,10 +352,13 @@ class GeneReviews(Source):
         :return:
         """
         model = Model(self.graph)
-        c = 0
+        cnt = 0
         books_not_found = set()
+        clin_des_regx = re.compile(r".*Summary.sec0")
+        lit_cite_regex = re.compile(r".*Literature_Cited")
+        pubmed_regex =  re.compile(r"pubmed")  # ??? for a static string?
         for nbk in self.book_ids:
-            c += 1
+            cnt += 1
             nbk_id = 'GeneReviews:'+nbk
             book_item = self.all_books.get(nbk)
             url = '/'.join((self.rawdir, book_item['file']))
@@ -362,19 +376,16 @@ class GeneReviews(Source):
             soup = BeautifulSoup(page.read())
 
             # sec0 == clinical description
-            clin_summary = \
-                soup.find(
-                    'div', id=re.compile(".*Summary.sec0"))
+            clin_summary = soup.find('div', id=clin_des_regx)
             if clin_summary is not None:
-                p = clin_summary.find('p')
-                ptext = p.text
+                ptext = clin_summary.find('p').text
                 ptext = re.sub(r'\s+', ' ', ptext)
 
-                ul = clin_summary.find('ul')
-                if ul is not None:
+                unlst = clin_summary.find('ul')
+                if unlst is not None:
                     item_text = list()
-                    for li in ul.find_all('li'):
-                        item_text.append(re.sub(r'\s+', ' ', li.text))
+                    for lst_itm in unlst.find_all('li'):
+                        item_text.append(re.sub(r'\s+', ' ', lst_itm.text))
                     ptext += ' '.join(item_text)
 
                 # add in the copyright and citation info to description
@@ -386,16 +397,17 @@ class GeneReviews(Source):
 
             # get the pubs
             pmid_set = set()
-            pub_div = soup.find('div', id=re.compile(r".*Literature_Cited"))
+            pub_div = soup.find('div', id=lit_cite_regex)
             if pub_div is not None:
                 ref_list = pub_div.find_all('div', attrs={'class': "bk_ref"})
-                for r in ref_list:
-                    for a in r.find_all(
-                            'a', attrs={'href': re.compile(r"pubmed")}):
-                        if re.match(r'PubMed:', a.text):
-                            pmnum = re.sub(r'PubMed:\s*', '', a.text)
+                for ref in ref_list:
+                    for anchor in ref.find_all(
+                            'a', attrs={'href': pubmed_regex}):
+                        if re.match(r'PubMed:', anchor.text):
+                            pmnum = re.sub(r'PubMed:\s*', '', anchor.text)
                         else:
-                            pmnum = re.search(r'\/pubmed\/(\d+)$', a['href']).group(1)
+                            pmnum = re.search(
+                                r'\/pubmed\/(\d+)$', anchor['href']).group(1)
                         if pmnum is not None:
                             pmid = 'PMID:'+str(pmnum)
                             self.graph.addTriple(
@@ -417,20 +429,21 @@ class GeneReviews(Source):
             # add the book to the dataset
             self.dataset.setFileAccessUrl(book_item['url'])
 
-            if limit is not None and c > limit:
+            if limit is not None and cnt > limit:
                 break
 
             # finish looping through books
 
-        l = len(books_not_found)
+        bknfd = len(books_not_found)
         if len(books_not_found) > 0:
-            if l > 100:
-                LOG.warning("There were %d books not found.", l)
+            if bknfd > 100:
+                LOG.warning("There were %d books not found.", bknfd)
             else:
                 LOG.warning(
-                    "The following %d books were not found locally: %s", l,
+                    "The following %d books were not found locally: %s", bknfd,
                     str(books_not_found))
-        LOG.info("Finished processing %d books for clinical descriptions", c-l)
+        LOG.info(
+            "Finished processing %d books for clinical descriptions", cnt - bknfd)
 
         return
 
@@ -450,28 +463,51 @@ class GeneReviews(Source):
         :return hash of omim_number to ontology_curie
         '''
         myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
+        LOG.info("Looping over: %s", myfile)
         omim_type = {}
-        line_counter = 1
-        col = ['prefix', 'omim_id', 'pref_label', 'alt_label', 'inc_label']
+
+        col = [
+            'Prefix',                           # prefix
+            'Mim Number',                       # omim_id
+            'Preferred Title; symbol',          # pref_label
+            'Alternative Title(s); symbol(s)',  # alt_label
+            'Included Title(s); symbols'        # inc_label
+        ]
+
         with open(myfile, 'r') as fh:
             reader = csv.reader(fh, delimiter='\t')
+            # Copyright (c) ...
+            header = next(reader)
+            # Generated: 2018-11-29
+            header = next(reader)
+            # date_generated = header[0].split(':')[1].strip()
+            header = next(reader)
+            header[0] = header[0][2:]
+            if header != col:
+                LOG.error(
+                    'Header is not as expected: %s',
+                    set(header).symmetric_difference(set(col)))
+                exit(-1)
+
             for row in reader:
-                line_counter += 1
-                prefix = row[col.index('prefix')]
-                pref_label = row[col.index('pref_label')]
-                if prefix[0] == '#':     # skip comments
+                if row[0][0] == '#':
                     continue
-                elif prefix == 'Caret':  # moved|removed|split -> moved twice
+                prefix = row[col.index('Prefix')]
+                pref_label = row[col.index('Preferred Title; symbol')]
+                omim_id = row[col.index('Mim Number')]
+
+                if prefix == 'Caret':  # moved|removed|split -> moved twice
                     # populating a dict from an omim to a set of omims
                     # here as a side effect which is less than ideal
-                    omim_id = row[col.index('omim_id')]
-                    omim_type[omim_id] = self.globaltt['obsolete']
+
                     destination = pref_label  # they overload the column semantics
                     if destination[:9] == 'MOVED TO ':
                         token = destination.split(' ')
                         rep = token[2]
                         if not re.match(r'^[0-9]{6}$', rep):
-                            LOG.error('Report malformed omim replacement %s', rep)
+                            LOG.error(
+                                'Malformed omim replacement %s in %s  line %i',
+                                rep, myfile, reader.line_num)
                             # clean up oddities I know about
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
@@ -495,7 +531,7 @@ class GeneReviews(Source):
                     # to be interperted as  a gene and/or a phenotype
                     omim_type[omim_id] = self.globaltt['has_affected_feature']
                 else:
-                    LOG.error('Unlnown OMIM type line ')
+                    LOG.error('Unknown OMIM type line %i', reader.line_num)
         return omim_type
 
     def getTestSuite(self):
