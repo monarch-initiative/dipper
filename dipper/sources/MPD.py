@@ -407,10 +407,10 @@ class MPD(Source):
         eco_id = self.globaltt['experimental phenotypic evidence']
         strain_label = self.idlabel_hash.get(strain_id)
         # strain genotype
-        genotype_id = '_'+'-'.join((re.sub(r':', '', strain_id), 'genotype'))
+        genotype_id = '_:'+'-'.join((re.sub(r':', '', strain_id), 'genotype'))
         genotype_label = '[' + strain_label + ']'
 
-        sex_specific_genotype_id = '_'+'-'.join((
+        sex_specific_genotype_id = '_:'+'-'.join((
             re.sub(r':', '', strain_id), sex, 'genotype'))
         if strain_label is not None:
             sex_specific_genotype_label = strain_label + ' (' + sex + ')'

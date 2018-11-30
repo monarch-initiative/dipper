@@ -5,7 +5,6 @@ import re
 from dipper.sources.Source import Source
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
-from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.utils.DipperUtil import DipperUtil
 
@@ -37,7 +36,7 @@ class HGNC(Source):
             'hgnc',
             ingest_title='HGNC',
             ingest_url='https://www.genenames.org/',
-            license_url=None
+            license_url=None,
             data_rights='ftp://ftp.ebi.ac.uk/pub/databases/genenames/README.txt',
             # file_handle=None
         )
@@ -46,7 +45,7 @@ class HGNC(Source):
         self.gene_ids = gene_ids
 
         self.gene_ids = []
-        if  'gene' not in self.all_test_ids:
+        if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
             self.gene_ids = self.all_test_ids['gene']
@@ -149,19 +148,21 @@ class HGNC(Source):
                 if line_counter <= 1:
                     continue
 
-                if self.testMode and entrez_id != ''  and \
+                if self.testMode and entrez_id != '' and \
                         int(entrez_id) not in self.gene_ids:
                     continue
 
                 if name == '':
                     name = None
-                gene_type_id = self.resolve(locus_type, False)  # withdrawn -> None?
-                if gene_type_id != locus_type:
-                    model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
+
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
                 else:
+                    gene_type_id = self.resolve(locus_type, False)  # withdrawn -> None?
+                    if gene_type_id != locus_type:
+                        model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                     model.makeLeader(hgnc_id)
+
                 if entrez_id != '':
                     model.addEquivalentClass(
                         hgnc_id, 'NCBIGene:' + entrez_id)

@@ -143,9 +143,9 @@ class Monochrom(Source):
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955, 10116, 9913, 9031, 9823, 9940, 9796]
-                
-        self.tax_ids [str(x) for x in self.tax_ids]
-        
+
+        self.tax_ids = [str(x) for x in self.tax_ids]  # needed, if they are passed in
+
         self._check_tax_ids()
 
         return

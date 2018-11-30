@@ -232,7 +232,7 @@ class Ensembl(Source):
         # basic stuff for ensembl ids.
 
         if taxid != '9606':  # drop hgnc column
-            cols_to_fetch = cols_to_fetch - ['hgnc_id']
+            cols_to_fetch = [x for x in cols_to_fetch if x != 'hgnc_id']
 
         # LOG.info('Build BMQ with taxon %s and mapping %s', taxid, self.localtt)
 
