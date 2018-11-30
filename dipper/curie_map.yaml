@@ -211,8 +211,8 @@
 'IMPRESS-protocol':  'https://www.mousephenotype.org/impress/protocol/'
 'IMPRESS-parameter': 'https://www.mousephenotype.org/impress/parameterontologies/'
 
-                                                                                  # may become "GtoPdb"
-'IUPHAR': http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=' # Omnibus pharmacological information portal
+                                                                                   # may become "GtoPdb"
+'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=' # Omnibus pharmacological information portal
 
 #Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound

@@ -113,7 +113,7 @@ class Orphanet(Source):
                         gene_set[gene_ref.find('Source').text] = \
                             gene_ref.find('Reference').text
 
-                    # set priority (clique leader if available)
+                    # set priority (clique leader if available) but default to OPRHA
                     for pfx in ('HGNC', 'Ensembl', 'SwissProt'):
                         #       'OMIM', 'Genatlas','Reactome', 'IUPHAR'):
                         if pfx in gene_set:

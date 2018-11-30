@@ -2649,7 +2649,7 @@ class ZFIN(Source):
 
         return p
 
-    @staticmetod
+    @staticmethod
     def _make_variant_locus_id(gene_id, allele_id):
         """
         A convenience method to uniformly create variant loci.
@@ -2664,7 +2664,7 @@ class ZFIN(Source):
         varloci = '-'.join((gene_id, allele_id))
         varloci = '_:' + re.sub(r'(ZFIN)?:', '', varloci)
 
-        return i
+        return varloci
 
     def _make_effective_genotype_id(self, intrinsic_id, extrinsic_id):
         effective_genotype_id = self.make_id(

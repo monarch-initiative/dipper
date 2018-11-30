@@ -980,7 +980,7 @@ SELECT  r._relationship_key as rel_key,
         with open(raw, 'r') as f:
             header = f.readline()  # read the header row; skip
             if header != col:
-                LOG.error("header expectation mismatch \n%s", header - col)
+                LOG.error("\nExpected header: %s\nReceived header: %s", col, header)
 
             for line in f:
                 row = line.split('\t')
