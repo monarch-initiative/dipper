@@ -166,49 +166,10 @@ REJECT = open(REJECT, 'w')
 #
 #    CURIEMAP = curie_map.get()
 #
-#    # print("\n".join(CURIEMAP))
-#    # this still fails miserably and returns a copy
-#    # other than the one in this tree that I am updating. i.e.
-#    print(CURIEMAP['SEPIO']) # -> key error
-#    # after it is added to the .yaml
-
-
-# hardcoding this while my loading from curie_map.yaml is wonky
-CURIEMAP = {
-    '':     'https://monarchinitiative.org',
-    '_':    'https://monarchinitiative.org/.well-known/genid/',
-    'MONARCH':  'https://monarchinitiative.org/MONARCH_',
-    'MonarchData': 'https://data.monarchinitiative.org/ttl/',
-    'dc':   'http://purl.org/dc/elements/1.1/',
-    'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
-    'foaf': 'http://xmlns.com/foaf/0.1/',
-    'owl':  'http://www.w3.org/2002/07/owl#',
-    'BFO':  'http://purl.obolibrary.org/obo/BFO_',
-    'ECO':  'http://purl.obolibrary.org/obo/ECO_',
-    'ERO':  'http://purl.obolibrary.org/obo/ERO_',
-    'dbSNP': 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=',
-    'GENO': 'http://purl.obolibrary.org/obo/GENO_',
-    'GO':   'http://purl.obolibrary.org/obo/GO_',
-    'RO':   'http://purl.obolibrary.org/obo/RO_',
-    'MP':   'http://purl.obolibrary.org/obo/MP_',
-    'OBAN': 'http://purl.org/oban/',
-    'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
-    'OBO':  'http://purl.obolibrary.org/obo/',
-    'oboInOwl':  'http://www.geneontology.org/formats/oboInOwl#',
-    'IAO':  'http://purl.obolibrary.org/obo/IAO_',
-    'Orphanet': 'http://www.orpha.net/ORDO/Orphanet_',
-    'MedGen':   'http://www.ncbi.nlm.nih.gov/medgen/',
-    'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_',
-    'NCBIGene': 'https://www.ncbi.nlm.nih.gov/gene/',
-    'MmusDv':   'http://purl.obolibrary.org/obo/MmusDv_',
-    'SEPIO':    'http://purl.obolibrary.org/obo/SEPIO_',
-    'SO':   'http://purl.obolibrary.org/obo/SO_',
-    'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/',
-    'ClinVarSubmitters': 'http://www.ncbi.nlm.nih.gov/clinvar/submitters/',
-    'ClinVarVariant':    'http://www.ncbi.nlm.nih.gov/clinvar/variation/',
-    'ClinVar':           'http://www.ncbi.nlm.nih.gov/clinvar/',
-}
+# punt with:
+with open('dipper/curie_map.yaml', 'r') as fh:
+    CURIEMAP = yaml.safe_load(fh)
+CURIEMAP['_'] = 'https://monarchinitiative.org/.well-known/genid/'
 
 
 # Buffer to store the triples below a MONARCH_association
@@ -247,8 +208,8 @@ def make_spo(sub, prd, obj):
 
     # object is a curie or bnode or literal [string|number]
 
-    match = re.match(CURIERE, obj)
     objcuri = None
+    match = re.match(CURIERE, obj)
     if match is not None:
         try:
             (objcuri, objid) = re.split(r':', obj)
@@ -337,20 +298,25 @@ def scv_link(scv_sig, rcv_trip):
     return
 
 
-# return a deterministic digest of input
-# the 'b' is an experiment forcing the first char to be
-# non numeric but valid hex
-# which is in no way required for RDF
-# but can help when using the identifier in other contexts
-# which do not allow identifiers to begin with a digit
 def digest_id(wordage):
-    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[0:15]
+    '''
+    return a deterministic digest of input
+    the 'b' is an experiment forcing the first char to be non numeric
+    but valid hex; which is in no way required for RDF
+    but may help when using the identifier in other contexts
+    which do not allow identifiers to begin with a digit
+
+    :param wordage  the string to hash
+    :returns 20 hex char digest
+    '''
+    return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
 
 
 G2PMAP = {}
 # this needs to be read first
 with open(MAPFILE, 'rt') as tsvfile:
     reader = csv.reader(tsvfile, delimiter="\t")
+
     next(reader)  # header
     for row in reader:
         if row[0] in G2PMAP:
@@ -502,12 +468,13 @@ with gzip.open(FILENAME, 'rt') as fh:
                 rcv_variant_type = resolve(RCV_Measure.get('Type').strip())
             elif rcv_variant_supertype == "Haplotype":
                 rcv_variant_type = GLOBALTT['haplotype']
+            elif rcv_variant_supertype == "Diplotype":
+                rcv_variant_type = GLOBALTT['diplotype']
             elif rcv_variant_supertype == "CompoundHeterozygote":
                 rcv_variant_type = GLOBALTT['variant single locus complement']
-                # this resolve('has_zygosity')
-                # resolve('complex heterozygous')
-
             elif rcv_variant_supertype == "Phase unknown":
+                rcv_variant_type = resolve(RCV_Measure.get('Type').strip())
+            elif rcv_variant_supertype == 'Distinct chromosomes':
                 rcv_variant_type = resolve(RCV_Measure.get('Type').strip())
             else:
                 rcv_variant_id = None
@@ -627,7 +594,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         break
                     for RCV_TraitXRef in RCV_Trait.findall(
                             './XRef[@DB="Orphanet"]'):
-                        rcv_disease_db = RCV_TraitXRef.get('DB')
+                        rcv_disease_db = 'ORPHA'  # RCV_TraitXRef.get('DB')
                         rcv_disease_id = RCV_TraitXRef.get('ID')
                         break
 

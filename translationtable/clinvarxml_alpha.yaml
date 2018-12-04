@@ -67,11 +67,10 @@
 "unknown significance": "uncertain significance"
 "likely pathogenic - adrenal bilateral pheochromocy": "likely_pathogenic_for_condition"
 "Associated with leiomyomas": "likely_benign_for_condition"
-# this next set are still unmapped
-
-# VSB
-# POLY
-# VOUS
+"VSB": "likely_benign_for_condition"  # "variant(s) suspected benign"
+"VOUS": "uncertain significance"  # "variant of unknown significance"
+# this next one is ambigous think it implies
+"POLY": "uncertain significance"  # diff disorder with diff calls?
 ###  Variant (Subject) Sequence Types
 #############################################################
 "single nucleotide variant": "SNV"
@@ -79,13 +78,13 @@
 "copy number gain": "copy_number_gain"
 "copy number loss": "copy_number_loss"
 "Duplication": "duplication"
+"Diplotype": "diplotype"
 "Insertion": "insertion"
 "Indel": "indel"
 "Variation": "sequence_alteration"
 "Translocation": "translocation"
 "Tandem duplication": "tandem_duplication"
 "Complex": "complex_structural_alteration"
-"fusion": "feature_fusion"
 "Structural variant": "structural_alteration"
 "NT expansion": "direct_tandem_duplication"
 "undetermined variant": "sequence_alteration"
