@@ -136,8 +136,8 @@ class Source:
             file_handle
         )
 
-        for g in [self.graph, self.testgraph]:
-            self.declareAsOntology(g)
+        for graph in [self.graph, self.testgraph]:
+            self.declareAsOntology(graph)
 
         return
 
