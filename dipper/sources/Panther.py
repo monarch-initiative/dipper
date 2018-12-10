@@ -258,9 +258,9 @@ class Panther(Source):
 
                     # might as well add the taxon info for completeness
                     graph.addTriple(
-                        gene_a, self.globaltt['in taxon'], 'NCBIGene:' + taxon_a)
+                        gene_a, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_a)
                     graph.addTriple(
-                        gene_b, self.globaltt['in taxon'], 'NCBIGene:' + taxon_b)
+                        gene_b, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_b)
 
                     assoc.add_association_to_graph()
 
