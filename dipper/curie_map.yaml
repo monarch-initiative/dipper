@@ -1,7 +1,7 @@
 # Monarch-specific
 '': 'https://monarchinitiative.org/'                                # local BASE IRI
 'MONARCH': 'https://monarchinitiative.org/MONARCH_'                 # local BOGUS IRI effectivly bnodes but less
-'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # Local RDF Skolemized Blank Node
+'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
 'MonarchArchive': 'https://archive.monarchinitiative.org/201811/'   # Release RDF data
@@ -65,7 +65,7 @@
 'OBO': 'http://purl.obolibrary.org/obo/'                            # Biological Ontology namespace (this is not itself an ontology)
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
-'OMIM': 'http://purl.obolibrary.org/obo/OMIM_'                      # Online Mendelian Inheritance in Man (human disease and variants)
+'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology
 'PCO': 'http://purl.obolibrary.org/obo/PCO_'                        # Population and Community Ontology
