@@ -2,7 +2,7 @@
 # panther.yaml
 
 # taxon_abbr to txid_num (ptax):
-# change the txid_num to the formal scientific name
+# change the txid_num to the formal scientific binomial latin name
 # then extract the txid_num from the NCBITaxon
 
 "ANOCA": "Anolis carolinensis"          # green lizard
