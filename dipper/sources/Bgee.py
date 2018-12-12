@@ -14,6 +14,7 @@ from dipper.models.assoc.Association import Assoc
 
 
 LOG = logging.getLogger(__name__)
+BGEE_FTP = 'ftp.bgee.org'
 
 
 class Bgee(Source):
@@ -30,22 +31,55 @@ class Bgee(Source):
     between developmental stages, are designed.
     """
 
-    BGEE_FTP = 'ftp.bgee.org'
-    # would like to see these as names
-    DEFAULT_TAXA = [
-        10090, 10116, 13616, 28377, 6239, 7227, 7955, 8364, 9031, 9258, 9544, 9593,
-        9597, 9598, 9606, 9823, 9913
-    ]
+    default_taxa = {
+        "Cavia porcellus": '10141',                 # guinea pig
+        "Mus musculus": '10090',                    # mouse
+        "Rattus norvegicus": '10116',               # rat
+        "Monodelphis domestica": '13616',           # gray short-tailed opossum
+        "Anolis carolinensis": '28377',             # lizard
+        "Caenorhabditis elegans": '6239',           # worm
+        "Drosophila melanogaster": '7227',          # fly
+        "Danio rerio": '7955',                      # zebrafish
+        "Xenopus (Silurana) tropicalis": '8364',    # frog
+        "Gallus gallus": '9031',                    # chicken
+        "Ornithorhynchus anatinus": '9258',         # platypus
+        "Erinaceus europaeus": '9365',              # hedgehog
+        "Macaca mulatta": '9544',                   # monkey (rhesus macaque)
+        "Gorilla gorilla": '9593',                  # gorilla
+        "Pan paniscus": '9597',                     # bonobo
+        "Pan troglodytes": '9598',                  # chimp
+        "Homo sapiens": '9606',                     # corporal people
+        "Canis familiaris": '9615',                 # dog
+        "Felis catus": '9685',                      # cat
+        "Equus caballus": '9796',                   # horse
+        "Sus scrofa": '9823',                       # pig
+        "Bos taurus": '9913',                       # cow
+        "Oryctolagus cuniculus": '9986',            # rabbit
+        # 7217	Drosophila_ananassae
+        # 7230	Drosophila_mojavensis
+        # 7237	Drosophila_pseudoobscura
+        # 7240	Drosophila_simulans
+        # 7244	Drosophila_virilis
+        # 7245	Drosophila_yakuba
+    }
     files = {
         'anat_entity': {
             'path': '/download/ranks/anat_entity/',
-            'pattern': re.compile(r'.*_all_data_.*.gz')
+            'pattern': re.compile(r'^[0-9]+_anat_entity_all_data_.*.tsv.gz'),
+            'columns': [
+                'Ensembl gene ID',
+                'gene name',
+                'anatomical entity ID',     # uberon
+                'anatomical entity name',
+                'rank score',
+                'XRefs to BTO',
+            ]
         }
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None, version=None):
         """
-        :param tax_ids: [int,], List of taxa
+        :param tax_ids: [str,], List of NCBI taxon  identifiers
         :return:
         """
         super().__init__(
@@ -58,12 +92,15 @@ class Bgee(Source):
             data_rights='https://bgee.org/?page=about'
             # file_handle=None
         )
+        # names for logging
+        self.txid_name = {v: k for k, v in self.default_taxa.items()}
 
         if tax_ids is None:
-            self.tax_ids = Bgee.DEFAULT_TAXA
-        else:
-            LOG.info("Filtering on taxa %s", tax_ids)
-            self.tax_ids = tax_ids
+            self.tax_ids = self.default_taxa.values()
+        self.tax_ids = [str(x) for x in self.tax_ids]  # incase they were passed in
+        LOG.info(
+            "Filtering on tax_ids %s",
+            [{t: self.txid_name[t]} for t in self.tax_ids])
 
         if version is None:
             self.version = 'current'
@@ -75,22 +112,44 @@ class Bgee(Source):
         :param is_dl_forced: boolean, force download
         :return:
         """
-        for group in self.files:
-            files_to_download, ftp = self._get_file_list(
-                self.files[group]['path'], self.files[group]['pattern'])
-            for name, info in files_to_download:
-                localfile = '/'.join((self.rawdir, name))
-                if not os.path.exists(localfile) or is_dl_forced or \
-                        self.checkIfRemoteIsNewer(
-                        localfile, info['size'], info['modify']):
-                    LOG.info("Fetching %s", name)
-                    LOG.info("Writing to %s", localfile)
-                    ftp.retrbinary('RETR %s'.format(name), open(localfile, 'wb').write)
-                    remote_dt = Bgee._convert_ftp_time_to_iso(info['modify'])
-                    os.utime(localfile, (
-                        time.mktime(remote_dt.timetuple()),
-                        time.mktime(remote_dt.timetuple())))
 
+        (files_to_download, ftp) = self._get_file_list(
+            self.files['anat_entity']['path'],
+            self.files['anat_entity']['pattern'])
+
+        LOG.info(
+            'Will Check \n%s\nfrom %s',
+            '\n'.join(list(files_to_download)), ftp.getwelcome())
+
+        for dlname in files_to_download:
+            localfile = '/'.join((self.rawdir, dlname))
+            info = ftp.sendcmd("MLST {}".format(dlname))   # fetch remote file stats
+            info = info.split('\n')[1].strip()              # drop pre & post script
+            info = info.split(';')                          # partition fields
+            info = [item.strip() for item in info[:-1]]     # cleanup an drop final name
+            info = [item.split('=') for item in info]       # make pairs
+            info = {item[0]: item[1] for item in info}      # transform list to dict
+
+            LOG.info(
+                '%s\n'
+                'Remote File Size: %i\n'
+                'Remote timestamp: %s',
+                dlname, int(info['size']),
+                self._convert_ftp_time_to_iso(info['modify']))
+
+            if not os.path.exists(localfile) or is_dl_forced or \
+                    self.checkIfRemoteIsNewer(
+                        localfile, int(info['size']), info['modify']):
+
+                LOG.info("Fetching %s", dlname)
+                LOG.info("Writing to %s", localfile)
+
+                ftp.retrbinary('RETR {}'.format(dlname), open(localfile, 'wb').write)
+                remote_dt = Bgee._convert_ftp_time_to_iso(info['modify'])
+                os.utime(
+                    localfile,
+                    (time.mktime(remote_dt.timetuple()),
+                     time.mktime(remote_dt.timetuple())))
         ftp.quit()
 
         return
@@ -103,11 +162,12 @@ class Bgee(Source):
         :param limit: int Limit to top ranked anatomy associations per group
         :return: None
         """
+
         files_to_download, ftp = self._get_file_list(
             self.files['anat_entity']['path'],
             self.files['anat_entity']['pattern'])
-        for name, info in files_to_download:
-            localfile = '/'.join((self.rawdir, name))
+        for dlname in files_to_download:
+            localfile = '/'.join((self.rawdir, dlname))
             with gzip.open(localfile, 'rt', encoding='ISO-8859-1') as fh:
                 LOG.info("Processing %s", localfile)
                 self._parse_gene_anatomy(fh, limit)
@@ -124,11 +184,18 @@ class Bgee(Source):
         :return: None
         """
         dataframe = pd.read_csv(fh, sep='\t')
+        col = self.files['anat_entity']['columns']
+        if list(dataframe) != col:
+            LOG.warning(
+                '\nExpected headers:  %s\nRecived headers:  %s',
+                col, list(dataframe))
+
         gene_groups = dataframe.sort_values(
             'rank score', ascending=False).groupby('Ensembl gene ID')
 
-        if limit is not None:
-            gene_groups = gene_groups.head(limit).groupby('Ensembl gene ID')
+        if limit is None:
+            limit = 20
+        gene_groups = gene_groups.head(limit).groupby('Ensembl gene ID')
 
         for gene, group in gene_groups:
             for index, row in group.iterrows():
@@ -137,6 +204,7 @@ class Bgee(Source):
                     row['anatomical entity ID'].strip(),
                     row['rank score']
                 )
+                # uberon <==> bto equivelance?
         return
 
     def _add_gene_anatomy_association(self, gene_id, anatomy_curie, rank):
@@ -174,8 +242,9 @@ class Bgee(Source):
         is_remote_newer = False
         status = os.stat(localfile)
         LOG.info(
-            "Local file date: %s, size: %i",
-            datetime.fromtimestamp(status.st_mtime), status[ST_SIZE])
+            "\nLocal file size: %i"
+            "\nLocal Timestamp: %s",
+            status[ST_SIZE], datetime.fromtimestamp(status.st_mtime))
         remote_dt = Bgee._convert_ftp_time_to_iso(remote_modify)
 
         if remote_dt != datetime.fromtimestamp(status.st_mtime) or \
@@ -205,18 +274,26 @@ class Bgee(Source):
         :return: Tuple of (Generator object with Tuple(
             file name, info object), ftp object)
         """
+
         if ftp is None:
-            ftp = ftplib.FTP(Bgee.BGEE_FTP)
-            ftp.login("anonymous", "info@monarchinitiative.edu")
+            ftp = ftplib.FTP(BGEE_FTP)
+            ftp.login("anonymous", "info@monarchinitiative.org")
 
         working_dir = "{}{}".format(self.version, working_dir)
 
+        LOG.info('Looking for remote files in %s', working_dir)
+
         ftp.cwd(working_dir)
 
-        directory = ftp.mlsd()
-        files = (value for value in directory if value[1]['type'] == 'file')
-        files_to_download = (
-            value for value in files if re.match(file_regex, value[0]) and
-            int(re.findall(r'^\d+', value[0])[0]) in self.tax_ids)
+        # directory = ftp.mlsd()
+        # files = (value for value in directory if value[1]['type'] == 'file')
+        remote_files = ftp.nlst()
+
+        # LOG.info('All remote files \n%s', '\n'.join(remote_files))
+        files_to_download = [
+            dnload for dnload in remote_files if re.match(file_regex, dnload) and
+            re.findall(r'^\d+', dnload)[0] in self.tax_ids]
+
+        # LOG.info('Choosing remote files \n%s', '\n'.join(list(files_to_download)))
 
         return files_to_download, ftp
