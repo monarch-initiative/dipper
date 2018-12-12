@@ -11,8 +11,8 @@ all: test prefix_equivalents
 ### Tests
 ###
 
-test: trans-test MGI-test  UDP-test IMPC-fetch IMPC-test  reactome-test \
-      RGD-test string-test  CTD-test mychem-test  # Orphanet-test  # GWAS-test
+test: trans-test IMPC-fetch IMPC-test  reactome-test RGD-test CTD-test mychem-test \
+      string-test  UDP-test  # Orphanet-test MGI-test GWAS-test
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
