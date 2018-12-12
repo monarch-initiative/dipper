@@ -683,7 +683,7 @@
 "novel_sequence_insertion": "SO:0001838",
 "polymorphic_pseudogene": "SO:0001841",
 "lnc_RNA": "SO:0001877",
-"fusion": "SO:0001882",
+"feature_fusion": "SO:0001882",
 "transposable_element_pseudogene": "SO:0001897",
 "antisense_lncRNA": "SO:0001904",
 "MNV": "SO:0002007",
