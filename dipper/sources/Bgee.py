@@ -280,20 +280,15 @@ class Bgee(Source):
             ftp.login("anonymous", "info@monarchinitiative.org")
 
         working_dir = "{}{}".format(self.version, working_dir)
-
         LOG.info('Looking for remote files in %s', working_dir)
 
         ftp.cwd(working_dir)
-
-        # directory = ftp.mlsd()
-        # files = (value for value in directory if value[1]['type'] == 'file')
         remote_files = ftp.nlst()
 
         # LOG.info('All remote files \n%s', '\n'.join(remote_files))
         files_to_download = [
             dnload for dnload in remote_files if re.match(file_regex, dnload) and
             re.findall(r'^\d+', dnload)[0] in self.tax_ids]
-
         # LOG.info('Choosing remote files \n%s', '\n'.join(list(files_to_download)))
 
         return files_to_download, ftp
