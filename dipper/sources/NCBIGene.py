@@ -50,19 +50,57 @@ class NCBIGene(Source):
     files = {
         'gene_info': {
             'file': 'gene_info.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz'
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz',
+            'columns': (
+                'tax_id',
+                'GeneID',
+                'Symbol',
+                'LocusTag',
+                'Synonyms',
+                'dbXrefs',
+                'chromosome',
+                'map_location',
+                'description',
+                'type_of_gene',
+                'Symbol_from_nomenclature_authority',
+                'Full_name_from_nomenclature_authority',
+                'Nomenclature_status',
+                'Other_designations',
+                'Modification_date',
+                'Feature_type',
+            )
         },
         'gene_history': {
             'file': 'gene_history.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz'
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz',
+            'columns': (
+                'tax_id',
+                'GeneID',
+                'Discontinued_GeneID',
+                'Discontinued_Symbol',
+                'Discontinue_Date',
+            )
         },
         'gene2pubmed': {
             'file': 'gene2pubmed.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz'
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz',
+            'columns': (
+                'tax_id',
+                'GeneID',
+                'PubMed_ID',
+            )
         },
         'gene_group': {
             'file': 'gene_group.gz',
-            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz'}
+            'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz',
+            'columns': (
+                'tax_id',
+                'GeneID',
+                'relationship',
+                'Other_tax_id',
+                'Other_GeneID',
+            )
+        }
     }
 
     resources = {
@@ -95,9 +133,10 @@ class NCBIGene(Source):
         # Defaults
         if self.tax_ids is None:
             self.tax_ids = [9606, 10090, 7955]
-            LOG.info("No taxa set.  Defaulting to %s", str(tax_ids))
-        else:
-            LOG.info("Filtering on the following taxa: %s", str(tax_ids))
+
+        self.tax_ids = [str(x) for x in self.tax_ids]
+
+        LOG.info("Filtering on the following taxa: %s", tax_ids)
 
         if 'gene' in self.all_test_ids:
             self.gene_ids = self.all_test_ids['gene']
@@ -145,6 +184,7 @@ class NCBIGene(Source):
         :return:
 
         """
+        src_key = 'gene_info'
         if self.testMode:
             graph = self.testgraph
         else:
@@ -156,48 +196,60 @@ class NCBIGene(Source):
         # not unzipping the file
         LOG.info("Processing 'Gene Info' records")
         line_counter = 0
-        gene_info = '/'.join((self.rawdir, self.files['gene_info']['file']))
+        gene_info = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("FILE: %s", gene_info)
         # Add taxa and genome classes for those in our filter
+
+        band_regex = re.compile(r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$')
         for tax_num in self.tax_ids:
-            tax_id = ':'.join(('NCBITaxon', str(tax_num)))
+            tax_id = ':'.join(('NCBITaxon', tax_num))
             # tax label can get added elsewhere
-            geno.addGenome(tax_id, str(tax_num))
+            geno.addGenome(tax_id, tax_num)
             # label added elsewhere
             model.addClassToGraph(tax_id, None)
-        with gzip.open(gene_info, 'rb') as f:
-            row = f.readline().decode().strip().split('\t')
-            LOG.info("Header has %i columns", len(row))
-            for line in f:
+
+        col = self.files[src_key]['columns']
+        with gzip.open(gene_info, 'rb') as tsv:
+            row = tsv.readline().decode().strip().split('\t')
+            row[0] = row[1:]  # strip comment
+            if col != row:
+                LOG.info(
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    src_key, col, row)
+
+            for line in tsv:
                 line = line.decode().strip()
                 line_counter += 1
                 if line[0] == '#':  # skip comments
                     continue
-                (tax_num, gene_num, symbol, locustag, synonyms, xrefs, chrom,
-                 map_loc, desc, gtype, authority_symbol, name,
-                 nomenclature_status, other_designations,
-                 modification_date, feature_type) = line.split('\t')
+                row = line.split('\t')
+                # (tax_num, gene_num, symbol, locustag, synonyms, xrefs, chrom,
+                # map_loc, desc, gtype, authority_symbol, name,
+                # nomenclature_status, other_designations,
+                # modification_date, feature_type) = line.split('\t')
 
                 # ##set filter=None in init if you don't want to have a filter
                 # if self.id_filter is not None:
                 #     if ((self.id_filter == 'taxids' and \
-                #          (int(tax_num) not in self.tax_ids))
+                #          (tax_num not in self.tax_ids))
                 #           or (self.id_filter == 'geneids' and \
                 #               (int(gene_num) not in self.gene_ids))):
                 #         continue
                 # #### end filter
 
+                gene_num = row[col.index('GeneID')]
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
+                tax_num = row[col.index('tax_id')]
                 if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 tax_id = ':'.join(('NCBITaxon', tax_num))
-                gtype = gtype.strip()
+                gtype = row[col.index('type_of_gene')].strip()
                 gene_type_id = self.resolve(gtype)
-
+                symbol = row[col.index('Symbol')]
                 if symbol == 'NEWENTRY':
                     label = None
                 else:
@@ -211,28 +263,31 @@ class NCBIGene(Source):
                 if not self.testMode and limit is not None and line_counter > limit:
                     continue
 
+                desc = row[col.index('description')]
                 if self.class_or_indiv[gene_id] == 'C':
                     model.addClassToGraph(gene_id, label, gene_type_id, desc)
                     # NCBI will be the default leader,
                     # so we will not add the leader designation here.
                 else:
-                    model.addIndividualToGraph(
-                        gene_id, label, gene_type_id, desc)
+                    model.addIndividualToGraph(gene_id, label, gene_type_id, desc)
                     # in this case, they aren't genes.
-                    # so we want someone else to be the leader.
-
+                    # so we want someone else to be the leader
+                name = row[col.index('Full_name_from_nomenclature_authority')]
                 if name != '-':
                     model.addSynonym(gene_id, name)
-                if synonyms.strip() != '-':
-                    for s in synonyms.split('|'):
+                synonyms = row[col.index('Synonyms')].strip()
+                if synonyms != '-':
+                    for syn in synonyms.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(), model.globaltt['hasRelatedSynonym'])
-                if other_designations.strip() != '-':
-                    for s in other_designations.split('|'):
+                            gene_id, syn.strip(), model.globaltt['hasRelatedSynonym'])
+                other_designations = row[col.index('Other_designations')].strip()
+                if other_designations != '-':
+                    for syn in other_designations.split('|'):
                         model.addSynonym(
-                            gene_id, s.strip(), model.globaltt['hasRelatedSynonym'])
-                if xrefs.strip() != '-':
-                    self._add_gene_equivalencies(xrefs, gene_id, tax_id)
+                            gene_id, syn.strip(), model.globaltt['hasRelatedSynonym'])
+                dbxrefs = row[col.index('dbXrefs')].strip()
+                if dbxrefs != '-':
+                    self._add_gene_equivalencies(dbxrefs, gene_id, tax_id)
 
                 # edge cases of id | symbol | chr | map_loc:
                 # 263     AMD1P2    X|Y  with   Xq28 and Yq12
@@ -261,17 +316,16 @@ class NCBIGene(Source):
 
                 # FIXME remove the chr mapping below
                 # when we pull in the genomic coords
-                chrom = str(chrom)
+                chrom = row[col.index('chromosome')].strip()
                 if chrom != '-' and chrom != '':
-                    if re.search(r'\|', chrom) and \
-                            chrom not in ['X|Y', 'X; Y']:
+                    if re.search(r'\|', chrom) and chrom not in ['X|Y', 'X; Y']:
                         # means that there's uncertainty in the mapping.
                         # so skip it
                         # TODO we'll need to figure out how to deal with
                         # >1 loc mapping
                         LOG.info(
-                            '%s is non-uniquely mapped to %s.' +
-                            ' Skipping for now.', gene_id, chrom)
+                            '%s is non-uniquely mapped to %s. Skipping for now.',
+                            gene_id, chrom)
                         continue
                         # X|Y	Xp22.33;Yp11.3
 
@@ -288,10 +342,9 @@ class NCBIGene(Source):
                         # temporarily use taxnum for the disambiguating label
                         mychrom_syn = makeChromLabel(c, tax_num)
                         model.addSynonym(mychrom, mychrom_syn)
-                        band_match = re.match(
-                            r'[0-9A-Z]+[pq](\d+)?(\.\d+)?$', map_loc)
-                        if band_match is not None and \
-                                len(band_match.groups()) > 0:
+                        map_loc = row[col.index('map_location')].strip()
+                        band_match = re.match(band_regex, map_loc)
+                        if band_match is not None and len(band_match.groups()) > 0:
                             # if tax_num != '9606':
                             #     continue
                             # this matches the regular kind of chrs,
@@ -323,9 +376,7 @@ class NCBIGene(Source):
                                 'not regular band pattern for %s: %s', gene_id, map_loc)
                             # add the gene as a subsequence of the chromosome
                             graph.addTriple(
-                                gene_id,
-                                self.globaltt['is subsequence of'],
-                                mychrom)
+                                gene_id, self.globaltt['is subsequence of'], mychrom)
 
                 geno.addTaxon(tax_id, gene_id)
 
@@ -404,14 +455,20 @@ class NCBIGene(Source):
         line_counter = 0
         myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
         LOG.info("FILE: %s", myfile)
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
+        col = self.files['gene_history']['columns']
+        with gzip.open(myfile, 'rb') as tsv:
+            row = tsv.readline().decode().strip().split('\t')
+            row[0] = row[1:]  # strip comment
+            if col != row:
+                LOG.info('\nExpected Headers:\t%s\nRecived Headers:\t %s', col, row)
+
+            for line in tsv:
                 # skip comments
-                line = line.decode().strip()
-                if re.match(r'^#', line):
+                row = line.decode().strip().split('\t')
+                if row[0][0] == '#':
                     continue
-                (tax_num, gene_num, discontinued_num, discontinued_symbol,
-                 discontinued_date) = line.split('\t')
+                # (tax_num, gene_num, discontinued_num, discontinued_symbol,
+                # discontinued_date) = line.split('\t')
 
                 # set filter=None in init if you don't want to have a filter
                 # if self.id_filter is not None:
@@ -422,19 +479,23 @@ class NCBIGene(Source):
                 #         continue
                 #  end filter
 
+                gene_num = row[col.index('GeneID')].strip()
+                discontinued_num = row[col.index('Discontinued_GeneID')].strip()
+
                 if gene_num == '-' or discontinued_num == '-':
                     continue
 
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if not self.testMode and int(tax_num) not in self.tax_ids:
+                tax_num = row[col.index('tax_id')].strip()
+                if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
                 line_counter += 1
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 discontinued_gene_id = ':'.join(('NCBIGene', discontinued_num))
-
+                discontinued_symbol = row[col.index('Discontinued_Symbol')].strip()
                 # add the two genes
                 if self.class_or_indiv.get(gene_id) == 'C':
                     model.addClassToGraph(gene_id, None)
@@ -447,13 +508,12 @@ class NCBIGene(Source):
                     model.addIndividualToGraph(gene_id, None)
                     model.addIndividualToGraph(
                         discontinued_gene_id, discontinued_symbol)
-                    model.addDeprecatedIndividual(
-                        discontinued_gene_id, [gene_id])
+                    model.addDeprecatedIndividual(discontinued_gene_id, [gene_id])
 
                 # also add the old symbol as a synonym of the new gene
                 model.addSynonym(gene_id, discontinued_symbol)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if not self.testMode and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -470,6 +530,7 @@ class NCBIGene(Source):
         :return:
 
         """
+        src_key = 'gene2pubmed'
         if self.testMode:
             graph = self.testgraph
         else:
@@ -477,16 +538,24 @@ class NCBIGene(Source):
         model = Model(graph)
         LOG.info("Processing Gene records")
         line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene2pubmed']['file']))
+        myfile = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("FILE: %s", myfile)
         assoc_counter = 0
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
+        col = self.files[src_key]['columns']
+        with gzip.open(myfile, 'rb') as tsv:
+            row = tsv.readline().decode().strip().split('\t')
+            row[0] = row[1:]  # strip comment
+            if col != row:
+                LOG.info(
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    src_key, col, row)
+            for line in tsv:
+                line_counter += 1
                 # skip comments
-                line = line.decode().strip()
-                if re.match(r'^#', line):
+                row = line.decode().strip().split('\t')
+                if row[0][0] == '#':
                     continue
-                (tax_num, gene_num, pubmed_num) = line.split('\t')
+                # (tax_num, gene_num, pubmed_num) = line.split('\t')
 
                 # ## set id_filter=None in init if you don't want to have a filter
                 # if self.id_filter is not None:
@@ -497,16 +566,18 @@ class NCBIGene(Source):
                 #         continue
                 # #### end filter
 
+                gene_num = row[col.index('GeneID')].strip()
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
 
-                if not self.testMode and int(tax_num) not in self.tax_ids:
+                tax_num = row[col.index('tax_id')].strip()
+                if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
+                pubmed_num = row[col.index('PubMed_ID')].strip()
                 if gene_num == '-' or pubmed_num == '-':
                     continue
 
-                line_counter += 1
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 pubmed_id = ':'.join(('PMID', pubmed_num))
 
@@ -560,10 +631,9 @@ class NCBIGene(Source):
         :return:
 
         """
-
+        src_key = 'gene_group'
         LOG.info("getting gene groups")
-        line_counter = 0
-        f = '/'.join((self.rawdir, self.files['gene_group']['file']))
+        src_file = '/'.join((self.rawdir, self.files[src_key]['file']))
         found_counter = 0
         # because many of the orthologous groups are grouped by human gene,
         # we need to do this by generating two-way hash
@@ -576,19 +646,27 @@ class NCBIGene(Source):
         group_to_orthology = {}
         gene_to_group = {}
         gene_to_taxon = {}
+        col = self.files[src_key]['columns']
 
-        with gzip.open(f, 'rb') as csvfile:
-            filereader = csv.reader(
-                io.TextIOWrapper(csvfile, newline=""),
-                delimiter='\t',
-                quotechar='\"')
-
-            for row in filereader:
+        with gzip.open(src_file, 'rb') as tsvfile:
+            tsv = csv.reader(
+                io.TextIOWrapper(tsvfile, newline=""), delimiter='\t', quotechar='\"')
+            row = tsv.readline()
+            row[0] = row[0][1:]  # strip octothorp
+            if col != row:
+                LOG.info(
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    src_key, col, row)
+            for row in tsv:
                 # skip comment lines
-                if re.match(r'\#', ''.join(row)):
+                if row[0][0] == '#':
                     continue
-                line_counter += 1
-                (tax_a, gene_a, rel, tax_b, gene_b) = row
+
+                tax_a = row[col.index('tax_id')]
+                gene_a = row[col.index('GeneID')]
+                rel = row[col.index('relationship')]
+                tax_b = row[col.index('Other_tax_id')]
+                gene_b = row[col.index('Other_GeneID')]
 
                 if rel != 'Ortholog':
                     continue
@@ -617,11 +695,10 @@ class NCBIGene(Source):
                 for group_num in group_nums:
                     orthologs = group_to_orthology.get(group_num)
                     if orthologs is not None:
-                        for o in orthologs:
-                            oid = 'NCBIGene:'+str(o)
-                            model.addClassToGraph(
-                                oid, None, self.globaltt['gene'])
-                            otaxid = 'NCBITaxon:'+str(gene_to_taxon[o])
+                        for orth in orthologs:
+                            oid = 'NCBIGene:' + str(orth)
+                            model.addClassToGraph(oid, None, self.globaltt['gene'])
+                            otaxid = 'NCBITaxon:' + str(gene_to_taxon[orth])
                             geno.addTaxon(otaxid, oid)
                             assoc = OrthologyAssoc(graph, self.name, gid, oid)
                             assoc.add_source('PMID:24063302')
