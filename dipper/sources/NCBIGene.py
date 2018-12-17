@@ -1,8 +1,8 @@
 import re
 import gzip
 import logging
-import csv
-import io
+# import csv
+# import io
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
@@ -11,7 +11,6 @@ from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID, makeChromLabel
 from dipper.models.Reference import Reference
 from dipper.utils.DipperUtil import DipperUtil
-
 
 LOG = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class NCBIGene(Source):
         'gene_info': {
             'file': 'gene_info.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_info.gz',
-            'columns': (
+            'columns': [
                 'tax_id',
                 'GeneID',
                 'Symbol',
@@ -68,38 +67,38 @@ class NCBIGene(Source):
                 'Other_designations',
                 'Modification_date',
                 'Feature_type',
-            )
+            ]
         },
         'gene_history': {
             'file': 'gene_history.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz',
-            'columns': (
+            'columns': [
                 'tax_id',
                 'GeneID',
                 'Discontinued_GeneID',
                 'Discontinued_Symbol',
                 'Discontinue_Date',
-            )
+            ]
         },
         'gene2pubmed': {
             'file': 'gene2pubmed.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene2pubmed.gz',
-            'columns': (
+            'columns': [
                 'tax_id',
                 'GeneID',
                 'PubMed_ID',
-            )
+            ]
         },
         'gene_group': {
             'file': 'gene_group.gz',
             'url': 'http://ftp.ncbi.nih.gov/gene/DATA/gene_group.gz',
-            'columns': (
+            'columns': [
                 'tax_id',
                 'GeneID',
                 'relationship',
                 'Other_tax_id',
                 'Other_GeneID',
-            )
+            ]
         }
     }
 
@@ -211,22 +210,19 @@ class NCBIGene(Source):
         col = self.files[src_key]['columns']
         with gzip.open(gene_info, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
-            row[0] = row[1:]  # strip comment
+            row[0] = row[0][1:]  # strip comment
             if col != row:
                 LOG.info(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t%s\n',
                     src_key, col, row)
+                LOG.info(set(col) - set(row))
 
             for line in tsv:
-                line = line.decode().strip()
+                line = line.strip()
                 line_counter += 1
                 if line[0] == '#':  # skip comments
                     continue
-                row = line.split('\t')
-                # (tax_num, gene_num, symbol, locustag, synonyms, xrefs, chrom,
-                # map_loc, desc, gtype, authority_symbol, name,
-                # nomenclature_status, other_designations,
-                # modification_date, feature_type) = line.split('\t')
+                row = line.decode().strip().split('\t')
 
                 # ##set filter=None in init if you don't want to have a filter
                 # if self.id_filter is not None:
@@ -240,13 +236,11 @@ class NCBIGene(Source):
                 gene_num = row[col.index('GeneID')]
                 if self.testMode and int(gene_num) not in self.gene_ids:
                     continue
-
                 tax_num = row[col.index('tax_id')]
                 if not self.testMode and tax_num not in self.tax_ids:
                     continue
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
-                tax_id = ':'.join(('NCBITaxon', tax_num))
                 gtype = row[col.index('type_of_gene')].strip()
                 gene_type_id = self.resolve(gtype)
                 symbol = row[col.index('Symbol')]
@@ -266,7 +260,7 @@ class NCBIGene(Source):
                 desc = row[col.index('description')]
                 if self.class_or_indiv[gene_id] == 'C':
                     model.addClassToGraph(gene_id, label, gene_type_id, desc)
-                    # NCBI will be the default leader,
+                    # NCBI will be the default leader (for non mods),
                     # so we will not add the leader designation here.
                 else:
                     model.addIndividualToGraph(gene_id, label, gene_type_id, desc)
@@ -335,12 +329,12 @@ class NCBIGene(Source):
                     if chrom == 'X; Y':
                         chrom = 'X|Y'  # rewrite the PAR regions for processing
                     # do this in a loop to allow PAR regions like X|Y
-                    for c in re.split(r'\|', chrom):
+                    for chromosome in re.split(r'\|', chrom):
                         # assume that the chromosome label is added elsewhere
-                        geno.addChromosomeClass(c, tax_id, None)
-                        mychrom = makeChromID(c, tax_num, 'CHR')
+                        geno.addChromosomeClass(chromosome, tax_id, None)
+                        mychrom = makeChromID(chromosome, tax_num, 'CHR')
                         # temporarily use taxnum for the disambiguating label
-                        mychrom_syn = makeChromLabel(c, tax_num)
+                        mychrom_syn = makeChromLabel(chromosome, tax_num)
                         model.addSynonym(mychrom, mychrom_syn)
                         map_loc = row[col.index('map_location')].strip()
                         band_match = re.match(band_regex, map_loc)
@@ -355,9 +349,9 @@ class NCBIGene(Source):
                             # per organism
                             # the maploc_id already has the numeric chromosome
                             # in it, strip it first
-                            bid = re.sub(r'^'+c, '', map_loc)
+                            bid = re.sub(r'^' + chromosome, '', map_loc)
                             # the generic location (no coordinates)
-                            maploc_id = makeChromID(c+bid, tax_num, 'CHR')
+                            maploc_id = makeChromID(chromosome + bid, tax_num, 'CHR')
                             # print(map_loc,'-->',bid,'-->',maploc_id)
                             # Assume it's type will be added elsewhere
                             band = Feature(graph, maploc_id, None, None)
@@ -446,6 +440,7 @@ class NCBIGene(Source):
         :return:
 
         """
+        src_key = 'gene_history'
         if self.testMode:
             graph = self.testgraph
         else:
@@ -453,14 +448,16 @@ class NCBIGene(Source):
         model = Model(graph)
         LOG.info("Processing Gene records")
         line_counter = 0
-        myfile = '/'.join((self.rawdir, self.files['gene_history']['file']))
+        myfile = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("FILE: %s", myfile)
-        col = self.files['gene_history']['columns']
+        col = self.files[src_key]['columns']
         with gzip.open(myfile, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
-            row[0] = row[1:]  # strip comment
+            row[0] = row[0][1:]  # strip comment
             if col != row:
-                LOG.info('\nExpected Headers:\t%s\nRecived Headers:\t %s', col, row)
+                LOG.info(
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s\n',
+                    src_key, col, row)
 
             for line in tsv:
                 # skip comments
@@ -544,10 +541,10 @@ class NCBIGene(Source):
         col = self.files[src_key]['columns']
         with gzip.open(myfile, 'rb') as tsv:
             row = tsv.readline().decode().strip().split('\t')
-            row[0] = row[1:]  # strip comment
+            row[0] = row[0][1:]  # strip comment
             if col != row:
                 LOG.info(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s\n',
                     src_key, col, row)
             for line in tsv:
                 line_counter += 1
@@ -648,18 +645,20 @@ class NCBIGene(Source):
         gene_to_taxon = {}
         col = self.files[src_key]['columns']
 
-        with gzip.open(src_file, 'rb') as tsvfile:
-            tsv = csv.reader(
-                io.TextIOWrapper(tsvfile, newline=""), delimiter='\t', quotechar='\"')
-            row = tsv.readline()
+        with gzip.open(src_file, 'rb') as tsv:
+            # none of the other files use csv ...
+            # tsv = csv.reader(
+            #    io.TextIOWrapper(tsvfile, newline=""), delimiter='\t', quotechar='\"')
+            # row = tsv.readline()
+
+            row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip octothorp
             if col != row:
                 LOG.info(
-                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s',
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t %s\n',
                     src_key, col, row)
             for row in tsv:
-                # skip comment lines
-                if row[0][0] == '#':
+                if row[0][0] == '#':   # skip comment lines
                     continue
 
                 tax_a = row[col.index('tax_id')]
