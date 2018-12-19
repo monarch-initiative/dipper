@@ -65,7 +65,7 @@ class Source:
             self.name = self.whoami().lower()
 
         LOG.info("Processing Source \"%s\"", self.name)
-        self.testOnly = False
+        self.test_only = False
         self.path = ""
         # to be used to store a subset of data for testing downstream.
         self.triple_count = 0
@@ -121,8 +121,8 @@ class Source:
 
         # will be set to True if the intention is
         # to only process and write the test data
-        self.testOnly = False
-        self.testMode = False
+        self.test_only = False
+        self.test_mode = False
 
         # this may eventually support Bagits
         self.dataset = Dataset(
@@ -176,9 +176,9 @@ class Source:
         fmt_ext = {
             'rdfxml': 'xml',
             'turtle': 'ttl',
-            'nt': 'nt',        # ntriples
+            'nt': 'nt',         # ntriples
             'nquads':  'nq',
-            'n3': 'n3'
+            'n3': 'n3'          # notation3
         }
 
         # make the regular graph output file
@@ -209,25 +209,28 @@ class Source:
         # the  _dataset description is always turtle
         gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
 
-        if self.testMode:
+        if self.test_mode:
             # unless we stop hardcoding, the test dataset is always turtle
             LOG.info("Setting testfile to %s", self.testfile)
             gu.write(self.testgraph, 'turtle', filename=self.testfile)
 
         # print graph out
         if stream is None:
-            f = dest
+            outfile = dest
         elif stream.lower().strip() == 'stdout':
-            f = None
+            outfile = None
         else:
             LOG.error("I don't understand our stream.")
             return
 
-        gu.write(self.graph, fmt, filename=f)
+        gu.write(self.graph, fmt, filename=outfile)
         return
 
     def whoami(self):
-        LOG.info("I am %s", self.name)
+        '''
+            pointless convieniance
+        '''
+        LOG.info("Ingest is %s", self.name)
         return
 
     @staticmethod
@@ -288,19 +291,19 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
-        except urllib.error.URLError as e:  # OSError as e:  # URLError?
+        except urllib.error.URLError as err:
             resp_headers = None
             size = 0
             last_modified = None
-            LOG.error(e)
+            LOG.error(err)
 
         if size is not None and size != '':
             size = int(size)
 
-        st = os.stat(local)
+        fstat = os.stat(local)
         LOG.info(
             "Local file date: %s",
-            datetime.utcfromtimestamp(st[ST_CTIME]))
+            datetime.utcfromtimestamp(fstat[ST_CTIME]))
 
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
@@ -309,17 +312,17 @@ class Source:
             # get local file details
 
             # check date on local vs remote file
-            if dt_obj > datetime.utcfromtimestamp(st[ST_CTIME]):
+            if dt_obj > datetime.utcfromtimestamp(fstat[ST_CTIME]):
                 # check if file size is different
-                if st[ST_SIZE] < size:
+                if fstat[ST_SIZE] < size:
                     LOG.info("New Remote file exists")
                     return True
-                if st[ST_SIZE] > size:
+                if fstat[ST_SIZE] > size:
                     LOG.warning("New Remote file existsbut it is SMALLER")
                     return True
                 else:  # filesize is a fairly imperfect metric here
                     LOG.info("New Remote file has same filesize--will not download")
-        elif st[ST_SIZE] != size:
+        elif fstat[ST_SIZE] != size:
             LOG.info("Object on server is difference size to local file")
             return True
 
@@ -437,17 +440,17 @@ class Source:
         """
 
         line_counter = 0
-        table_data = elem.find("[@name='"+table_name+"']")
+        table_data = elem.find("[@name='" + table_name + "']")
         if table_data is not None:
-            LOG.info("Processing "+table_name)
+            LOG.info("Processing " + table_name)
             row = {}
-            for r in table_data.findall('row'):
-                for f in r.findall('field'):
-                    ats = f.attrib
-                    row[ats['name']] = f.text
+            for row in table_data.findall('row'):
+                for field in row.findall('field'):
+                    ats = field.attrib
+                    row[ats['name']] = field.text
                 processing_function(row)
                 line_counter += 1
-                if self.testMode and limit is not None and line_counter > limit:
+                if self.test_mode and limit is not None and line_counter > limit:
                     continue
 
             elem.clear()  # discard the element
@@ -499,9 +502,9 @@ class Source:
             response = urllib.request.urlopen(req)
             resp_header = response.info()
             byte_size = resp_header.get('Content-length')
-        except OSError as e:
+        except OSError as err:
             byte_size = None
-            LOG.error(e)
+            LOG.error(err)
 
         return byte_size
 
@@ -579,7 +582,7 @@ class Source:
         :return: None
         """
 
-        self.testOnly = testonly
+        self.test_only = testonly
 
         return
 
@@ -593,7 +596,7 @@ class Source:
 
         """
 
-        self.testMode = mode
+        self.test_mode = mode
 
         return
 
@@ -645,8 +648,8 @@ class Source:
 
         # add timestamp as version info
 
-        t = datetime.now()
-        t_string = t.strftime("%Y-%m-%d")
+        cur_time = datetime.now()
+        t_string = cur_time.strftime("%Y-%m-%d")
         ontology_version = t_string
         # TEC this means the MonarchArchive IRI needs the release updated
         # maybe extract the version info from there
@@ -675,12 +678,12 @@ class Source:
 
         """
 
-        with open(filename, 'r', encoding=encoding, newline=r'\n') as f:
-            contents = f.read()
+        with open(filename, 'r', encoding=encoding, newline=r'\n') as filereader:
+            contents = filereader.read()
         contents = re.sub(r'\r', '', contents)
-        with open(filename, "w") as f:
-            f.truncate()
-            f.write(contents)
+        with open(filename, "w") as filewriter:
+            filewriter.truncate()
+            filewriter.write(contents)
 
         return
 
@@ -756,11 +759,11 @@ class Source:
                 pass
         except IOError:
             # write a stub file as a place holder if none exists
-            with open(localtt_file, 'w') as fh:
-                yaml.dump({name: name}, fh)
+            with open(localtt_file, 'w') as write_yaml:
+                yaml.dump({name: name}, write_yaml)
         finally:
-            with open(localtt_file, 'r') as fh:
-                localtt = yaml.safe_load(fh)
+            with open(localtt_file, 'r') as read_yaml:
+                localtt = yaml.safe_load(read_yaml)
 
         # inverse local translation.
         # note: keeping this invertable will be work.

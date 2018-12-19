@@ -85,8 +85,8 @@ class MMRRC(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self._process_phenotype_data(limit)
 
@@ -114,7 +114,7 @@ class MMRRC(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -142,7 +142,7 @@ class MMRRC(Source):
                  mgi_gene_name, sds_url, accepted_date, mp_ids, pubmed_nums,
                  research_areas) = row
 
-                if self.testMode and (strain_id not in self.test_ids) \
+                if self.test_mode and (strain_id not in self.test_ids) \
                         or mgi_gene_name == 'withdrawn':
                     continue
 
@@ -257,7 +257,7 @@ class MMRRC(Source):
                     else:
                         LOG.info("Phenotypes and no allele for %s", strain_id)
 
-                if not self.testMode and (
+                if not self.test_mode and (
                         limit is not None and line_counter > limit):
                     break
 

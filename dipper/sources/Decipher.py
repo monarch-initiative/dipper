@@ -80,8 +80,8 @@ class Decipher(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
             self.graph = self.testgraph
         else:
             self.graph = self.graph
@@ -211,7 +211,7 @@ class Decipher(Source):
                 # are they about the gene?  the omim disease?  something else?
                 # So, we wont create associations until this is clarified
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()

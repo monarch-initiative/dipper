@@ -312,8 +312,8 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
             LOG.info("Only parsing first %d rows of each file", limit)
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         # the following will provide us the hash-lookups
         self._process_dbxref()
@@ -367,7 +367,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -386,7 +386,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 (genotype_num, uniquename, description, name) = line
 
-                # if self.testMode is True:
+                # if self.test_mode is True:
                 #     if int(object_key) not in self.test_keys.get('genotype'):
                 #         continue
 
@@ -397,10 +397,10 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 if description == '':
                     description = None
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and int(genotype_num) \
+                    if self.test_mode and int(genotype_num) \
                             not in self.test_keys['genotype']:
                         continue
 
@@ -432,7 +432,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -463,10 +463,10 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 # from what i can tell, the dbxrefs are just more FBst,
                 # so no added information vs uniquename
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode \
+                    if self.test_mode \
                             and int(stock_num) not in self.test_keys['strain']:
                         continue
 
@@ -488,7 +488,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -505,7 +505,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                  pages, miniref, type_id, is_obsolete, publisher, pubplace,
                  uniquename) = line
 # 2       12153979        1       2       FBst0000002     w[*]; betaTub60D[2] Kr[If-1]/CyO        10670
-                # if self.testMode is True:
+                # if self.test_mode is True:
                 #     if int(object_key) not in self.test_keys.get('genotype'):
                 #         continue
 
@@ -526,10 +526,10 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 if miniref != '':
                     reference.setShortCitation(miniref)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
-                    if self.testMode and int(pub_num) not in self.test_keys['pub']:
+                    if self.test_mode and int(pub_num) not in self.test_keys['pub']:
                         continue
 
                     if is_obsolete == 't':
@@ -552,7 +552,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -613,7 +613,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -656,7 +656,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 elif re.search(r'FBt[ip]', feature_id):
                     self.idhash['feature'][feature_key] = feature_id
 
-                if self.testMode and int(feature_key) not in self.test_keys['gene']+\
+                if self.test_mode and int(feature_key) not in self.test_keys['gene']+\
                         self.test_keys['allele'] + self.test_keys['feature']:
                     continue
 
@@ -722,7 +722,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                     # make only fly things leaders
                     model.makeLeader(feature_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
                     if is_gene:
@@ -756,7 +756,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
     def _process_feature_genotype(self, limit):
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -782,7 +782,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode and not (
+                if self.test_mode and not (
                         int(feature_key) in
                         self.test_keys['gene']+self.test_keys['allele'] and
                         int(genotype_key) in self.test_keys['genotype']):
@@ -800,7 +800,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 # TODO we will build up the genotypes here... lots to do
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -813,7 +813,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -844,7 +844,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 environment_key = environment_id
                 environment_id = self.idhash['environment'][environment_key]
 
-                if self.testMode and\
+                if self.test_mode and\
                         int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
@@ -864,7 +864,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 assoc_id = assoc.get_association_id()
                 model.addComment(assoc_id, phendesc_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -878,7 +878,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -897,7 +897,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 # 2       3160606 99159
 
                 feature_key = feature_id
-                if self.testMode and not (
+                if self.test_mode and not (
                         int(feature_key)
                         in self.test_keys['gene'] + self.test_keys['allele'] and
                         int(pub_id) in self.test_keys['pub']):
@@ -912,7 +912,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 line_counter += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -925,7 +925,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -945,7 +945,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 genotype_key = genotype_id
                 genotype_id = self.idhash['genotype'][genotype_key]
 
-                if self.testMode \
+                if self.test_mode \
                         and int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
@@ -953,7 +953,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 line_counter += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -966,7 +966,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -986,7 +986,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 pub_key = pub_id
                 pub_id = self.idhash['publication'][pub_key]
 
-                if self.testMode and int(pub_key) not in self.test_keys['pub']:
+                if self.test_mode and int(pub_key) not in self.test_keys['pub']:
                     continue
 
                 # get any dbxrefs for pubs, including pmids and dois
@@ -1019,7 +1019,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                             model.addSameIndividual(pub_id, dbxref_id)
                             line_counter += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1118,7 +1118,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1176,7 +1176,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 # assay_id is currently only "undefined" key=60468
 
-                if not self.testMode and\
+                if not self.test_mode and\
                         limit is not None and line_counter > limit:
                     pass
                 else:
@@ -1200,7 +1200,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1227,7 +1227,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                     'phenstatement', phenstatement_key)
                 genotype_key = genotype_id
 
-                if self.testMode and \
+                if self.test_mode and \
                         int(genotype_key) not in self.test_keys['genotype']:
                     continue
 
@@ -1270,7 +1270,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 model.addComment(assoc_id, phenstatement_id)
                 model.addDescription(assoc_id, phenotype_internal_label)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1425,7 +1425,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1452,7 +1452,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 feature_key = feature_id
 
-                if self.testMode and int(feature_key) not in \
+                if self.test_mode and int(feature_key) not in \
                         self.test_keys['gene'] + self.test_keys['allele']:
                     continue
 
@@ -1491,7 +1491,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                             model.addXref(feature_id, did)
                         line_counter += 1
 
-                if not self.testMode \
+                if not self.test_mode \
                         and limit is not None and line_counter > limit:
                     break
 
@@ -1514,7 +1514,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1549,7 +1549,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         return
 
     def _process_feature_relationship(self, limit):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1572,7 +1572,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 # 18513041        23683101        11507448        26      0
                 # 7130197 9346315 11507821        26      0
 
-                if self.testMode and not (
+                if self.test_mode and not (
                         int(subject_id) in self.test_keys['gene'] +
                         self.test_keys['allele']+self.test_keys['feature'] and
                         int(object_id) in self.test_keys['gene'] +
@@ -1778,7 +1778,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                     if tp_id is not None and allele_id is not None:
                         geno.addSequenceDerivesFrom(allele_id, tp_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
         return
 
@@ -1792,7 +1792,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1823,10 +1823,10 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 # unless we actually use it therefore it is added outside of
                 # this function
 
-                if self.testMode and int(organism_id) not in self.test_keys['organism']:
+                if self.test_mode and int(organism_id) not in self.test_keys['organism']:
                     continue
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
                     model.addClassToGraph(tax_id)
@@ -1869,7 +1869,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1884,7 +1884,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 (organism_dbxref_id, organism_id, dbxref_id, is_current) = line
 
-                if self.testMode and int(organism_id) not in self.test_keys['organism']:
+                if self.test_mode and int(organism_id) not in self.test_keys['organism']:
                     continue
 
                 organism_key = organism_id
@@ -1908,7 +1908,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                             model.addIndividualToGraph(did, dlabel)
                         line_counter += 1
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1924,7 +1924,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1947,7 +1947,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                  evidence_or_interacting_allele, pub_id) = line
                 line_counter += 1
 
-                if self.testMode and self.test_ids['disease'] is not None \
+                if self.test_mode and self.test_ids['disease'] is not None \
                         and doid_id not in self.test_ids['disease']:
                     continue
 
@@ -1974,7 +1974,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1988,7 +1988,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2009,7 +2009,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 line_counter += 1
 
-                if self.testMode and self.test_keys['strain'] is not None \
+                if self.test_mode and self.test_keys['strain'] is not None \
                         and int(stock_id) not in self.test_keys['strain']:
                     continue
 
@@ -2024,7 +2024,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 # TODO add the stockprop_pub table when there is data to pull
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

@@ -64,8 +64,8 @@ class HGNC(Source):
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         LOG.info("Parsing files...")
 
@@ -77,7 +77,7 @@ class HGNC(Source):
 
     def _process_genes(self, limit=None):
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -148,7 +148,7 @@ class HGNC(Source):
                 if line_counter <= 1:
                     continue
 
-                if self.testMode and entrez_id != '' and \
+                if self.test_mode and entrez_id != '' and \
                         int(entrez_id) not in self.gene_ids:
                     continue
 
@@ -212,7 +212,7 @@ class HGNC(Source):
                         model.addClassToGraph(chrom_id, None)
                         feat.addSubsequenceOfFeature(chrom_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
             # end loop through file

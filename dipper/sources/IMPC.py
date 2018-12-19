@@ -130,8 +130,8 @@ class IMPC(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         # for f in ['impc', 'euro', 'mgd', '3i']:
         for f in ['all']:
@@ -145,7 +145,7 @@ class IMPC(Source):
     def _process_data(self, raw, limit=None):
         LOG.info("Processing Data from %s", raw)
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -195,7 +195,7 @@ class IMPC(Source):
                     resource_name
                     ) = row
 
-                if self.testMode and marker_accession_id not in self.gene_ids:
+                if self.test_mode and marker_accession_id not in self.gene_ids:
                     continue
 
                 # ##### cleanup some of the identifiers ######
@@ -512,7 +512,7 @@ class IMPC(Source):
                 # resource_id = resource_name
                 # assoc.addSource(graph, assoc_id, resource_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

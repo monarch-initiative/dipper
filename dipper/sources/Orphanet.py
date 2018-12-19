@@ -56,8 +56,8 @@ class Orphanet(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self._process_diseasegene(limit)
 
@@ -70,7 +70,7 @@ class Orphanet(Source):
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -87,7 +87,7 @@ class Orphanet(Source):
                 disorder_num = elem.find('OrphaNumber').text
                 disorder_id = 'ORPHA:' + str(disorder_num)
 
-                if self.testMode and disorder_id not in self.all_test_ids['disease']:
+                if self.test_mode and disorder_id not in self.all_test_ids['disease']:
                     continue
                 disorder_label = elem.find('Name').text
 
@@ -185,7 +185,7 @@ class Orphanet(Source):
                         '% expected %s associated genes but we processed %i',
                         disorder_id, expected_genes, processed_genes)
 
-            if self.testMode and limit is not None and line_counter > limit:
+            if self.test_mode and limit is not None and line_counter > limit:
                 return
 
         return

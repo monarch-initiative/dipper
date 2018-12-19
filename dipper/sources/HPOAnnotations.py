@@ -137,8 +137,8 @@ class HPOAnnotations(Source):
 
         # self.add_common_files_to_file_list()
         LOG.info("Parsing files...")
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self._process_phenotype_hpoa(
             '/'.join((self.rawdir, self.files['hpoa']['file'])), limit)
@@ -163,7 +163,7 @@ class HPOAnnotations(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -197,7 +197,7 @@ class HPOAnnotations(Source):
                 # 68646 ORPHA
                 # 297 DECIPHER
 
-                if self.testMode:
+                if self.test_mode:
                     try:
                         id_list = self.test_ids
                         if id_list is None or disease_id not in id_list:
@@ -290,7 +290,7 @@ class HPOAnnotations(Source):
 
                     assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and reader.line_num > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
         return
 
@@ -385,7 +385,7 @@ class HPOAnnotations(Source):
                 raw = self.files[ingest]['file']
                 total_processed += self.process_common_disease_file(
                     raw, unpadded_doids, limit)
-            if not self.testMode and limit is not None and total_processed > limit:
+            if not self.test_mode and limit is not None and total_processed > limit:
                 break
         LOG.info("Finished iterating over all common disease files.")
         return
@@ -404,7 +404,7 @@ class HPOAnnotations(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -453,7 +453,7 @@ class HPOAnnotations(Source):
                         replace_id_flag = True
                         disease_id = fixed_id.strip()
 
-                if self.testMode and disease_id not in self.test_ids:
+                if self.test_mode and disease_id not in self.test_ids:
                     # since these are broken up into disease-by-disease,
                     # just skip the whole file
                     return 0
@@ -491,7 +491,7 @@ class HPOAnnotations(Source):
                     assoc.add_association_to_graph()
                     assoc_count += 1
 
-                if not self.testMode and limit is not None\
+                if not self.test_mode and limit is not None\
                         and reader.line_num > limit:
                     break
 

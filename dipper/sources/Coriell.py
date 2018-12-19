@@ -228,8 +228,8 @@ class Coriell(Source):
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         for source in self.files:
             self._process_collection(
@@ -288,7 +288,7 @@ class Coriell(Source):
 
         LOG.info("Processing Data from %s", raw)
 
-        if self.testMode:      # set the graph to build
+        if self.test_mode:      # set the graph to build
             graph = self.testgraph
         else:
             graph = self.graph
@@ -338,7 +338,7 @@ class Coriell(Source):
 
                 catalog_id = row[col.index('catalog_id')].strip()
 
-                if self.testMode and catalog_id not in self.test_lines:
+                if self.test_mode and catalog_id not in self.test_lines:
                     # skip rows not in our test lines, when in test mode
                     continue
 
@@ -751,7 +751,7 @@ class Coriell(Source):
                         graph.addTriple(
                             pubmed_id, self.globaltt['mentions'], cell_line_id)
 
-                if not self.testMode and (
+                if not self.test_mode and (
                         limit is not None and line_counter > limit):
                     break
         return

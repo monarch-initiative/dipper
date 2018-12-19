@@ -191,8 +191,8 @@ class UCSCBands(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         for taxon in self.tax_ids:
             self._get_chrbands(limit, str(taxon))

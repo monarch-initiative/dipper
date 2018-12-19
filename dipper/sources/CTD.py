@@ -141,8 +141,8 @@ class CTD(Source):
         #         self.static_files['publications']['file']
         #     )
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self.geno = Genotype(self.graph)
         self.pathway = Pathway(self.graph)
@@ -195,7 +195,7 @@ class CTD(Source):
                     elif file == self.files['gene_disease']['file']:
                         self._process_disease2gene(row)
 
-                if not self.testMode and limit is not None and row_count >= limit:
+                if not self.test_mode and limit is not None and row_count >= limit:
                     break
 
         return
@@ -213,7 +213,7 @@ class CTD(Source):
         self._check_list_len(row, 4)
         (gene_symbol, gene_id, pathway_name, pathway_id) = row
 
-        if self.testMode and (int(gene_id) not in self.test_geneids):
+        if self.test_mode and (int(gene_id) not in self.test_geneids):
             return
 
         entrez_id = 'NCBIGene:' + gene_id
@@ -350,7 +350,7 @@ class CTD(Source):
         intersect = list(
             set(['OMIM:' + str(i) for i in omim_ids.split('|')] +
                 [disease_id]) & set(self.test_diseaseids))
-        if self.testMode and len(intersect) < 1:
+        if self.test_mode and len(intersect) < 1:
             return
         chem_id = 'MESH:' + chem_id
         reference_list = self._process_pubmed_ids(pubmed_ids)
@@ -390,7 +390,7 @@ class CTD(Source):
 
         """
 
-        # if self.testMode:
+        # if self.test_mode:
         # graph = self.testgraph
         # else:
         #     graph = self.graph
@@ -423,7 +423,7 @@ class CTD(Source):
         intersect = list(
             set(['OMIM:' + str(i) for i in omim_ids.split('|')] +
                 [disease_id]) & set(self.test_diseaseids))
-        if self.testMode and (
+        if self.test_mode and (
                 int(gene_id) not in self.test_geneids or len(intersect) < 1):
             return
 
@@ -561,7 +561,7 @@ class CTD(Source):
                     pubids = None
                 self._make_association(chem_id, disease_id, rel_id, pubids)
 
-                if not self.testMode and limit is not None and line_counter >= limit:
+                if not self.test_mode and limit is not None and line_counter >= limit:
                     break
         return
 

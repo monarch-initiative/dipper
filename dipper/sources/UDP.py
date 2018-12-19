@@ -613,7 +613,7 @@ class UDP(Source):
                     patient_curie, self.globaltt['has phenotype'], hpo_curie)
 
             line_counter += 1
-            if not self.testMode and limit is not None \
+            if not self.test_mode and limit is not None \
                     and line_counter >= limit:
                 break
 

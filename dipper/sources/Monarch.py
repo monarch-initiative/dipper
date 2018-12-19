@@ -48,8 +48,8 @@ class Monarch(Source):
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self.process_omia_phenotypes(limit)
         LOG.info("Finished parsing.")
@@ -60,7 +60,7 @@ class Monarch(Source):
 
         # process the whole directory
         # TODO get the file listing
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph

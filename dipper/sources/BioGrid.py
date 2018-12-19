@@ -104,8 +104,8 @@ class BioGrid(Source):
         :return:
 
         """
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         self._get_interactions(limit)
         self._get_identifiers(limit)
@@ -145,7 +145,7 @@ class BioGrid(Source):
                 gene_a_num = re.search(r'locuslink\:(\d+)\|?', interactor_a).groups()[0]
                 gene_b_num = re.search(r'locuslink\:(\d+)\|?', interactor_b).groups()[0]
 
-                if self.testMode:
+                if self.test_mode:
                     graph = self.testgraph
                     # skip any genes that don't match our test set
                     if (int(gene_a_num) not in self.test_ids) or\
@@ -190,7 +190,7 @@ class BioGrid(Source):
                 assoc.add_source(pub_id)
                 assoc.add_association_to_graph()
 
-                if not self.testMode and (
+                if not self.test_mode and (
                         limit is not None and line_counter > limit):
                     break
 
@@ -239,7 +239,7 @@ class BioGrid(Source):
                 (biogrid_num, id_num, id_type,
                  organism_label) = line.split('\t')
 
-                if self.testMode:
+                if self.test_mode:
                     graph = self.testgraph
                     # skip any genes that don't match our test set
                     if int(biogrid_num) not in self.biogrid_ids:
@@ -273,7 +273,7 @@ class BioGrid(Source):
                     #   FIXME - i am not sure these are synonyms, altids?
                     #   gu.addSynonym(g,biogrid_id,id_num)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         myzip.close()

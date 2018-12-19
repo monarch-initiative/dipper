@@ -138,15 +138,15 @@ class GeneOntology(Source):
             LOG.info("Only parsing first %s rows of each file", limit)
         LOG.info("Parsing files...")
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         for txid_num in self.files:
 
             if txid_num in ['go-references', 'id-map']:
                 continue
 
-            if not self.testMode and int(txid_num) not in self.tax_ids:
+            if not self.test_mode and int(txid_num) not in self.tax_ids:
                 continue
 
             gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
@@ -158,7 +158,7 @@ class GeneOntology(Source):
 
     def process_gaf(self, file, limit, id_map=None, eco_map=None):
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -244,7 +244,7 @@ class GeneOntology(Source):
                     gene_num = gene_num.split(':')[-1]  # last
                     gene_id = ':'.join((dbase, gene_num))
 
-                if self.testMode and not(
+                if self.test_mode and not(
                         re.match(r'NCBIGene', gene_id) and
                         int(gene_num) in self.test_ids):
                     continue
@@ -366,7 +366,7 @@ class GeneOntology(Source):
                         # TODO should the G2PAssoc be
                         # the evidence for the GO assoc?
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
             uniprot_tot = (uniprot_hit + uniprot_miss)
             uniprot_per = 0.0

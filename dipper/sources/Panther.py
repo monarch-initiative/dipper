@@ -94,8 +94,8 @@ class Panther(Source):
         :return: None
         """
 
-        if self.testOnly:
-            self.testMode = True
+        if self.test_only:
+            self.test_mode = True
 
         if self.tax_ids is None:
             LOG.info("No taxon filter set; Dumping all orthologous associations.")
@@ -147,7 +147,7 @@ class Panther(Source):
         """
         LOG.info("getting orthologs")
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
 
         else:
@@ -191,7 +191,7 @@ class Panther(Source):
 
                     # skip the entries that don't have homolog relationships
                     # with the test ids
-                    if self.testMode and not (
+                    if self.test_mode and not (
                             re.sub(r'UniProtKB=', '',
                                    protein_a) in self.test_ids or
                             re.sub(r'UniProtKB=', '', protein_b)
@@ -270,7 +270,7 @@ class Panther(Source):
                     assoc.add_gene_family_to_graph(
                         ':'.join(('PANTHER', panther_id)))
 
-                    if not self.testMode \
+                    if not self.test_mode \
                             and limit is not None and line_counter > limit:
                         break
                 # make report on unprocessed_gene_ids
