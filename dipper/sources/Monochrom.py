@@ -162,7 +162,7 @@ class Monochrom(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         for taxon in self.tax_ids:

@@ -159,7 +159,7 @@ class NCBIGene(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         self._get_gene_info(limit)

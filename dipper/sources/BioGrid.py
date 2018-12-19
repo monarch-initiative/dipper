@@ -104,7 +104,7 @@ class BioGrid(Source):
         :return:
 
         """
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         self._get_interactions(limit)

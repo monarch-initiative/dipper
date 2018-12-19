@@ -94,7 +94,7 @@ class Panther(Source):
         :return: None
         """
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         if self.tax_ids is None:

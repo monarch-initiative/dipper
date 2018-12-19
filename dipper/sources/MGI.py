@@ -260,7 +260,7 @@ class MGI(PostgreSQLSource):
             LOG.info("Only parsing first %d rows of each file", limit)
         LOG.info("Parsing files...")
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         # the following will provide us the hash-lookups

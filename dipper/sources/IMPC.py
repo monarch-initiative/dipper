@@ -130,7 +130,7 @@ class IMPC(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         # for f in ['impc', 'euro', 'mgd', '3i']:

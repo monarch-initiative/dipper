@@ -121,7 +121,7 @@ class GeneReviews(Source):
         :return: None
         """
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         self._get_titles(limit)

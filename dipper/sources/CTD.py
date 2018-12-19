@@ -141,7 +141,7 @@ class CTD(Source):
         #         self.static_files['publications']['file']
         #     )
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         self.geno = Genotype(self.graph)

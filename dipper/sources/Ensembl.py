@@ -119,7 +119,7 @@ class Ensembl(Source):
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         LOG.info("Parsing files...")

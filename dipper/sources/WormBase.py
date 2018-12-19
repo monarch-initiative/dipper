@@ -194,7 +194,7 @@ class WormBase(Source):
 
         LOG.info("Parsing files...")
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         # to hold any label for a given id

@@ -341,7 +341,7 @@ class ZFIN(Source):
         zp_file = '/'.join((self.rawdir, self.files['zpmap']['file']))
         self.zp_map = self._load_zp_mappings(zp_file)
 
-        if self.testOnly:
+        if self.test_only:
             self.test_mode = True
 
         # if self.test_mode:   # unused
