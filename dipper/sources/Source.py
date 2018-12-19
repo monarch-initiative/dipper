@@ -176,9 +176,9 @@ class Source:
         fmt_ext = {
             'rdfxml': 'xml',
             'turtle': 'ttl',
-            'nt': 'nt',        # ntriples
+            'nt': 'nt',         # ntriples
             'nquads':  'nq',
-            'n3': 'n3'
+            'n3': 'n3'          # notation3
         }
 
         # make the regular graph output file
@@ -288,19 +288,19 @@ class Source:
             resp_headers = response.info()
             size = resp_headers.get('Content-Length')
             last_modified = resp_headers.get('Last-Modified')
-        except urllib.error.URLError as e:  # OSError as e:  # URLError?
+        except urllib.error.URLError as err:
             resp_headers = None
             size = 0
             last_modified = None
-            LOG.error(e)
+            LOG.error(err)
 
         if size is not None and size != '':
             size = int(size)
 
-        st = os.stat(local)
+        fstat = os.stat(local)
         LOG.info(
             "Local file date: %s",
-            datetime.utcfromtimestamp(st[ST_CTIME]))
+            datetime.utcfromtimestamp(fstat[ST_CTIME]))
 
         if last_modified is not None:
             # Thu, 07 Aug 2008 16:20:19 GMT
@@ -309,17 +309,17 @@ class Source:
             # get local file details
 
             # check date on local vs remote file
-            if dt_obj > datetime.utcfromtimestamp(st[ST_CTIME]):
+            if dt_obj > datetime.utcfromtimestamp(fstat[ST_CTIME]):
                 # check if file size is different
-                if st[ST_SIZE] < size:
+                if fstat[ST_SIZE] < size:
                     LOG.info("New Remote file exists")
                     return True
-                if st[ST_SIZE] > size:
+                if fstat[ST_SIZE] > size:
                     LOG.warning("New Remote file existsbut it is SMALLER")
                     return True
                 else:  # filesize is a fairly imperfect metric here
                     LOG.info("New Remote file has same filesize--will not download")
-        elif st[ST_SIZE] != size:
+        elif fstat[ST_SIZE] != size:
             LOG.info("Object on server is difference size to local file")
             return True
 
@@ -499,9 +499,9 @@ class Source:
             response = urllib.request.urlopen(req)
             resp_header = response.info()
             byte_size = resp_header.get('Content-length')
-        except OSError as e:
+        except OSError as err:
             byte_size = None
-            LOG.error(e)
+            LOG.error(err)
 
         return byte_size
 
@@ -756,11 +756,11 @@ class Source:
                 pass
         except IOError:
             # write a stub file as a place holder if none exists
-            with open(localtt_file, 'w') as fh:
-                yaml.dump({name: name}, fh)
+            with open(localtt_file, 'w') as write_yaml:
+                yaml.dump({name: name}, write_yaml)
         finally:
-            with open(localtt_file, 'r') as fh:
-                localtt = yaml.safe_load(fh)
+            with open(localtt_file, 'r') as read_yaml:
+                localtt = yaml.safe_load(read_yaml)
 
         # inverse local translation.
         # note: keeping this invertable will be work.
