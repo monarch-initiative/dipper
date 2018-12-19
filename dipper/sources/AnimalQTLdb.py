@@ -10,7 +10,9 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 
-AQDL = 'http://www.animalgenome.org/QTLdb'
+#       https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
+# mapDwnLd36738TDWS.txt.gz   
+AQDL = 'https://www.animalgenome.org/QTLdb'
 LOG = logging.getLogger(__name__)
 
 
@@ -169,7 +171,7 @@ class AnimalQTLdb(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
             graph = self.testgraph
         else:
             graph = self.graph
@@ -239,7 +241,7 @@ class AnimalQTLdb(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -287,7 +289,7 @@ class AnimalQTLdb(Source):
                  gene_id_type,
                  empty2) = row
 
-                if self.testMode and int(qtl_id) not in self.test_ids:
+                if self.test_mode and int(qtl_id) not in self.test_ids:
                     continue
 
                 qtl_id = common_name + 'QTL:' + qtl_id.strip()
@@ -462,7 +464,7 @@ class AnimalQTLdb(Source):
 
                     assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with QTL genetic info")
@@ -478,7 +480,7 @@ class AnimalQTLdb(Source):
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -533,7 +535,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 attribute_dict = dict(item.split("=") for item in attr_set)
 
                 qtl_num = attribute_dict.get('QTL_ID')
-                if self.testMode and int(qtl_num) not in self.test_ids:
+                if self.test_mode and int(qtl_num) not in self.test_ids:
                     continue
                 # make association between QTL and trait based on taxon
 
@@ -595,7 +597,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 qtl_feature.addTaxonToFeature(taxon_curie)
                 qtl_feature.addFeatureToGraph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.warning("Bad attribute flags in this file")
@@ -611,7 +613,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph

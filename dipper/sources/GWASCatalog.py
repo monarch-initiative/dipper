@@ -90,7 +90,7 @@ class GWASCatalog(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         self.process_catalog(limit)
 
@@ -170,7 +170,7 @@ class GWASCatalog(Source):
                      GENOTYPING_TECHNOLOGY
                     ) = row
 
-                    if self.testMode:
+                    if self.test_mode:
                         continue
 
 # 06-May-2015	25917933
@@ -223,7 +223,7 @@ class GWASCatalog(Source):
                         variant_curie, mapped_trait_uri, efo_ontology,
                         pubmed_num, description)
 
-                    if not self.testMode and (
+                    if not self.test_mode and (
                             limit is not None and filereader.line_num > limit):
                         break
 
@@ -239,7 +239,7 @@ class GWASCatalog(Source):
             self, hap_id, hap_label, chrom_num, chrom_pos, context,
             risk_allele_frequency, mapped_gene, so_ontology):
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -329,7 +329,7 @@ SELECT ?variant_label
             self, snp_id, snp_label, chrom_num, chrom_pos, context,
             risk_allele_frequency=None):
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -382,7 +382,7 @@ SELECT ?variant_label
 
     def _add_deprecated_snp(
             self, snp_id, snp_id_current, merged, chrom_num, chrom_pos):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -410,7 +410,7 @@ SELECT ?variant_label
 
     def _add_snp_gene_relation(
             self, snp_id, snp_gene_nums, upstream_gene_num, downstream_gene_num):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -440,7 +440,7 @@ SELECT ?variant_label
     def _add_variant_trait_association(
             self, variant_id, mapped_trait_uri, efo_ontology, pubmed_id,
             description=None):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph

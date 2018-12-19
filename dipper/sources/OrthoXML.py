@@ -129,7 +129,7 @@ class OrthoXML(Source):
         """
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         if self.tax_ids is None:
             LOG.info(
@@ -168,7 +168,7 @@ class OrthoXML(Source):
         """
         LOG.info("getting ortholog and paralog relations")
 
-        graph = self.testgraph if self.testMode else self.graph
+        graph = self.testgraph if self.test_mode else self.graph
         model = Model(graph)
 
         for k in self.files.keys():
@@ -206,7 +206,7 @@ class OrthoXML(Source):
                             self.add_protein_to_graph.cache_info()))
                     time0, last_cnt = time.time(), cnts
 
-                if self.testMode and not (
+                if self.test_mode and not (
                         protein_id_a in self.test_ids or protein_id_b in self.test_ids):
                     continue
 
@@ -235,7 +235,7 @@ class OrthoXML(Source):
                 assoc.add_evidence(evidence_id)
                 assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and matchcounter > limit:
+                if not self.test_mode and limit is not None and matchcounter > limit:
                     LOG.warning(
                         "reached limit of relations to extract. Stopping early...")
                     break

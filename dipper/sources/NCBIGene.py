@@ -160,7 +160,7 @@ class NCBIGene(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         self._get_gene_info(limit)
         self._get_gene_history(limit)
@@ -184,7 +184,7 @@ class NCBIGene(Source):
 
         """
         src_key = 'gene_info'
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -234,10 +234,10 @@ class NCBIGene(Source):
                 # #### end filter
 
                 gene_num = row[col.index('GeneID')]
-                if self.testMode and int(gene_num) not in self.gene_ids:
+                if self.test_mode and int(gene_num) not in self.gene_ids:
                     continue
                 tax_num = row[col.index('tax_id')]
-                if not self.testMode and tax_num not in self.tax_ids:
+                if not self.test_mode and tax_num not in self.tax_ids:
                     continue
 
                 gene_id = ':'.join(('NCBIGene', gene_num))
@@ -254,7 +254,7 @@ class NCBIGene(Source):
                 else:
                     self.class_or_indiv[gene_id] = 'C'
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     continue
 
                 desc = row[col.index('description')]
@@ -387,7 +387,7 @@ class NCBIGene(Source):
 
         clique_map = self.open_and_parse_yaml(self.resources['clique_leader'])
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -441,7 +441,7 @@ class NCBIGene(Source):
 
         """
         src_key = 'gene_history'
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -482,11 +482,11 @@ class NCBIGene(Source):
                 if gene_num == '-' or discontinued_num == '-':
                     continue
 
-                if self.testMode and int(gene_num) not in self.gene_ids:
+                if self.test_mode and int(gene_num) not in self.gene_ids:
                     continue
 
                 tax_num = row[col.index('tax_id')].strip()
-                if not self.testMode and tax_num not in self.tax_ids:
+                if not self.test_mode and tax_num not in self.tax_ids:
                     continue
 
                 line_counter += 1
@@ -510,7 +510,7 @@ class NCBIGene(Source):
                 # also add the old symbol as a synonym of the new gene
                 model.addSynonym(gene_id, discontinued_symbol)
 
-                if not self.testMode and (limit is not None and line_counter > limit):
+                if not self.test_mode and (limit is not None and line_counter > limit):
                     break
 
         return
@@ -528,7 +528,7 @@ class NCBIGene(Source):
 
         """
         src_key = 'gene2pubmed'
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -564,11 +564,11 @@ class NCBIGene(Source):
                 # #### end filter
 
                 gene_num = row[col.index('GeneID')].strip()
-                if self.testMode and int(gene_num) not in self.gene_ids:
+                if self.test_mode and int(gene_num) not in self.gene_ids:
                     continue
 
                 tax_num = row[col.index('tax_id')].strip()
-                if not self.testMode and tax_num not in self.tax_ids:
+                if not self.test_mode and tax_num not in self.tax_ids:
                     continue
 
                 pubmed_num = row[col.index('PubMed_ID')].strip()
@@ -591,7 +591,7 @@ class NCBIGene(Source):
                 graph.addTriple(
                     pubmed_id, self.globaltt['is_about'], gene_id)
                 assoc_counter += 1
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info(

@@ -122,7 +122,7 @@ class GeneReviews(Source):
         """
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         self._get_titles(limit)
         self._get_equivids(limit)
@@ -182,10 +182,10 @@ class GeneReviews(Source):
                 gr_id = 'GeneReviews:' + nbk_num
                 omim_id = 'OMIM:' + omim_num
                 if not (
-                        (self.testMode and
+                        (self.test_mode and
                          len(self.test_ids) > 0 and
                          omim_id in self.test_ids) or not
-                        self.testMode):
+                        self.test_mode):
                     continue
 
                 # sometimes there's bad omim nums
@@ -207,7 +207,7 @@ class GeneReviews(Source):
 
                 allomimids.add(omim_num)
 
-                if not self.testMode and limit is not None \
+                if not self.test_mode and limit is not None \
                         and filereader.line_num > limit:
                     break
 

@@ -120,7 +120,7 @@ class Ensembl(Source):
             LOG.info("Only parsing first %d rows", limit)
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         LOG.info("Parsing files...")
 
@@ -257,7 +257,7 @@ class Ensembl(Source):
         return query
 
     def _process_genes(self, taxid, limit=None):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -284,7 +284,7 @@ class Ensembl(Source):
                 else:
                     hgnc_id = None
 
-                if self.testMode and entrezgene != '' and \
+                if self.test_mode and entrezgene != '' and \
                         int(entrezgene) not in self.gene_ids:
                     continue
 
@@ -321,7 +321,7 @@ class Ensembl(Source):
                         geno.addGeneProduct(gene_id, uniprot_curie)
                         model.addXref(peptide_curie, uniprot_curie)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

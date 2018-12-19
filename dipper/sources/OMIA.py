@@ -169,9 +169,9 @@ class OMIA(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
-        if self.testMode:
+        if self.test_mode:
             self.graph = self.testgraph
         else:
             self.graph = self.graph
@@ -408,7 +408,7 @@ class OMIA(Source):
         sci_name = row['sci_name']
         com_name = row['com_name']
         model = Model(self.graph)
-        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        if self.test_mode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         model.addClassToGraph(tax_id)
@@ -423,7 +423,7 @@ class OMIA(Source):
     def _process_breed_row(self, row):
         model = Model(self.graph)
         # in test mode, keep all breeds of our test species
-        if self.testMode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
+        if self.test_mode and (int(row['gb_species_id']) not in self.test_ids['taxon']):
             return
 
         # save the breed keys in the test_ids for later processing
@@ -455,7 +455,7 @@ class OMIA(Source):
         else:
             omia_id = 'OMIA:' + str(row['omia_id'])
 
-        if self.testMode and not(  # demorgan this
+        if self.test_mode and not(  # demorgan this
                 int(row['gb_species_id']) in self.test_ids['taxon'] and omia_id
                 in self.test_ids['disease']):
             return
@@ -548,7 +548,7 @@ class OMIA(Source):
     def _process_article_row(self, row):
         model = Model(self.graph)
         # don't bother in test mode
-        if self.testMode:
+        if self.test_mode:
             return
 
         iarticle_id = self._make_internal_id('article', row['article_id'])
@@ -576,7 +576,7 @@ class OMIA(Source):
         model = Model(self.graph)
         omia_id = 'OMIA:' + row['omia_id']
 
-        if self.testMode and omia_id not in self.test_ids['disease']:
+        if self.test_mode and omia_id not in self.test_ids['disease']:
             return
 
         group_name = row['group_name']
@@ -616,7 +616,7 @@ class OMIA(Source):
     def _process_gene_row(self, row):
         model = Model(self.graph)
         geno = Genotype(self.graph)
-        if self.testMode and row['gene_id'] not in self.test_ids['gene']:
+        if self.test_mode and row['gene_id'] not in self.test_ids['gene']:
             return
         gene_id = 'NCBIGene:'+str(row['gene_id'])
         self.id_hash['gene'][row['gene_id']] = gene_id
@@ -636,7 +636,7 @@ class OMIA(Source):
         # don't bother putting these into the test... too many!
 
         # and int(row['breed_id']) not in self.test_ids['breed']:
-        if self.testMode:
+        if self.test_mode:
             return
 
         article_id = self.id_hash['article'].get(row['article_id'])
@@ -664,7 +664,7 @@ class OMIA(Source):
         article_id = self.id_hash['article'].get(row['article_id'])
 
         omia_id = self._get_omia_id_from_phene_id(phenotype_id)
-        if self.testMode or omia_id not in self.test_ids['disease'] \
+        if self.test_mode or omia_id not in self.test_ids['disease'] \
                 or phenotype_id is None or article_id is None:
             return
 
@@ -686,7 +686,7 @@ class OMIA(Source):
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
         if breed_id is None or phene_id is None or (
-                self.testMode and (
+                self.test_mode and (
                     omia_id not in self.test_ids['disease'] or
                     int(row['breed_id']) not in self.test_ids['breed'])):
             return
@@ -749,7 +749,7 @@ class OMIA(Source):
         omia_id = 'OMIA:'+row['omia_id']
         lidaurl = row['lidaurl']
 
-        if self.testMode and omia_id not in self.test_ids['disease']:
+        if self.test_mode and omia_id not in self.test_ids['disease']:
             return
 
         model.addXref(omia_id, lidaurl, True)
@@ -764,7 +764,7 @@ class OMIA(Source):
 
         omia_id = self._get_omia_id_from_phene_id(phene_id)
 
-        if self.testMode and not (
+        if self.test_mode and not (
                 omia_id in self.test_ids['disease'] and
                 row['gene_id'] in self.test_ids['gene']) or\
                 gene_id is None or phene_id is None:
@@ -808,7 +808,7 @@ class OMIA(Source):
             self.omia_omim_map[omia_id] = set()
         self.omia_omim_map[omia_id].add(omim_id)
 
-        if self.testMode and omia_id not in self.test_ids['disease']:
+        if self.test_mode and omia_id not in self.test_ids['disease']:
             return
 
         model.addXref(omia_id, omim_id)

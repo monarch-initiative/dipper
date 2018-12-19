@@ -95,7 +95,7 @@ class EOM(PostgreSQLSource):
             LOG.info("Only parsing first %s rows of each file", limit)
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         LOG.info("Parsing files...")
 

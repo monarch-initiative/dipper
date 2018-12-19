@@ -146,7 +146,7 @@ class KEGG(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         self._process_diseases(limit)
         self._process_genes(limit)
@@ -189,7 +189,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing pathways")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -203,7 +203,7 @@ class KEGG(Source):
                 line_counter += 1
                 (pathway_id, pathway_name) = row
 
-                if self.testMode and pathway_id not in self.test_ids['pathway']:
+                if self.test_mode and pathway_id not in self.test_ids['pathway']:
                     continue
 
                 pathway_id = 'KEGG-'+pathway_id.strip()
@@ -215,7 +215,7 @@ class KEGG(Source):
                 image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
                 model.addDepiction(pathway_id, image_url)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with pathways")
@@ -234,7 +234,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing diseases")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -251,7 +251,7 @@ class KEGG(Source):
                 if disease_id not in self.label_hash:
                     self.label_hash[disease_id] = disease_name
 
-                if self.testMode and disease_id not in self.test_ids['disease']:
+                if self.test_mode and disease_id not in self.test_ids['disease']:
                     continue
 
                 # Add the disease as a class.
@@ -261,7 +261,7 @@ class KEGG(Source):
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.test_mode) and (limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with diseases")
@@ -286,7 +286,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing genes")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -322,7 +322,7 @@ class KEGG(Source):
                 if gene_id not in self.label_hash:
                     self.label_hash[gene_id] = first_symbol
 
-                if self.testMode and gene_id not in self.test_ids['genes']:
+                if self.test_mode and gene_id not in self.test_ids['genes']:
                     continue
 
                 # Add the gene as a class.
@@ -344,7 +344,7 @@ class KEGG(Source):
                         ko = 'KEGG-ko:'+ko_match.group(1)
                         family.addMemberOf(gene_id, ko)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with genes")
@@ -367,7 +367,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing ortholog classes")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -380,7 +380,7 @@ class KEGG(Source):
                 line_counter += 1
                 (orthology_class_id, orthology_class_name) = row
 
-                if self.testMode and orthology_class_id \
+                if self.test_mode and orthology_class_id \
                         not in self.test_ids['orthology_classes']:
                     continue
 
@@ -415,7 +415,7 @@ class KEGG(Source):
                         for ecm in ec_matches:
                             model.addXref(orthology_class_id, 'EC:' + ecm)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with ortholog classes")
@@ -437,7 +437,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing orthologs")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -465,7 +465,7 @@ class KEGG(Source):
                 model.addClassToGraph(gene_id, None)
                 model.addClassToGraph(orthology_class_id, None)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with orthologs")
@@ -490,7 +490,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing KEGG disease to gene")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -506,7 +506,7 @@ class KEGG(Source):
                 line_counter += 1
                 (gene_id, disease_id) = row
 
-                if self.testMode and gene_id not in self.test_ids['genes']:
+                if self.test_mode and gene_id not in self.test_ids['genes']:
                     continue
 
                 gene_id = 'KEGG-' + gene_id.strip()
@@ -540,7 +540,7 @@ class KEGG(Source):
                     assoc = G2PAssoc(graph, self.name, alt_locus_id, disease_id, rel)
                     assoc.add_association_to_graph()
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.test_mode) and (limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with KEGG disease to gene")
@@ -569,7 +569,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing OMIM to KEGG gene")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -583,7 +583,7 @@ class KEGG(Source):
                 line_counter += 1
                 (kegg_gene_id, omim_id, link_type) = row
 
-                if self.testMode and kegg_gene_id not in self.test_ids['genes']:
+                if self.test_mode and kegg_gene_id not in self.test_ids['genes']:
                     continue
 
                 kegg_gene_id = 'KEGG-' + kegg_gene_id.strip()
@@ -623,7 +623,7 @@ class KEGG(Source):
                         'Unhandled link type for %s-%s: %s',
                         kegg_gene_id, omim_id, link_type)
 
-                if (not self.testMode) and (
+                if (not self.test_mode) and (
                         limit is not None and line_counter > limit):
                     break
 
@@ -648,7 +648,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing 1:1 KEGG disease to OMIM disease mappings")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -678,10 +678,10 @@ class KEGG(Source):
         # Now process the disease hashes
         # and only pass 1:1 omim disease:KEGG disease entries.
         for omim_disease_id in self.omim_disease_hash:
-            if self.testMode and omim_disease_id not in self.test_ids['disease']:
+            if self.test_mode and omim_disease_id not in self.test_ids['disease']:
                 continue
 
-            if (not self.testMode) and (limit is not None and line_counter > limit):
+            if (not self.test_mode) and (limit is not None and line_counter > limit):
                 break
             line_counter += 1
 
@@ -716,7 +716,7 @@ class KEGG(Source):
         """
 
         LOG.info("Processing KEGG gene IDs to NCBI gene IDs")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -730,7 +730,7 @@ class KEGG(Source):
                 line_counter += 1
                 (kegg_gene_id, ncbi_gene_id, link_type) = row
 
-                if self.testMode and kegg_gene_id not in self.test_ids['genes']:
+                if self.test_mode and kegg_gene_id not in self.test_ids['genes']:
                     continue
 
                 # Adjust the NCBI gene ID prefix.
@@ -744,7 +744,7 @@ class KEGG(Source):
                 model.addClassToGraph(ncbi_gene_id, None)
                 model.addEquivalentClass(kegg_gene_id, ncbi_gene_id)
 
-                if (not self.testMode) and (limit is not None and line_counter > limit):
+                if (not self.test_mode) and (limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with KEGG gene IDs to NCBI gene IDs")
@@ -758,7 +758,7 @@ class KEGG(Source):
         :return:
         """
         LOG.info("Processing KEGG pathways to pubmed ids")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -770,7 +770,7 @@ class KEGG(Source):
                 line_counter += 1
                 (pubmed_id, kegg_pathway_num) = row
 
-                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                if self.test_mode and kegg_pathway_num not in self.test_ids['pathway']:
                     continue
 
                 pubmed_id = pubmed_id.upper()
@@ -781,7 +781,7 @@ class KEGG(Source):
                 r.addRefToGraph()
                 graph.addTriple(pubmed_id, self.globaltt['is_about'], kegg_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -798,7 +798,7 @@ class KEGG(Source):
 
         """
         LOG.info("Processing KEGG pathways to disease ids")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -811,7 +811,7 @@ class KEGG(Source):
                 line_counter += 1
                 (disease_id, kegg_pathway_num) = row
 
-                if self.testMode and kegg_pathway_num not in self.test_ids['pathway']:
+                if self.test_mode and kegg_pathway_num not in self.test_ids['pathway']:
                     continue
 
                 disease_id = 'KEGG-' + disease_id
@@ -823,7 +823,7 @@ class KEGG(Source):
                     self.globaltt['causally_upstream_of_or_within'],
                     disease_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -837,7 +837,7 @@ class KEGG(Source):
 
         """
         LOG.info("Processing KEGG pathways to other ids")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -851,7 +851,7 @@ class KEGG(Source):
                 line_counter += 1
                 (pathway_id_1, pathway_id_2) = row
 
-                if self.testMode and pathway_id_1 not in self.test_ids['pathway']:
+                if self.test_mode and pathway_id_1 not in self.test_ids['pathway']:
                     continue
 
                 pathway_id_1 = 'KEGG-' + pathway_id_1
@@ -861,7 +861,7 @@ class KEGG(Source):
                 if pathway_id_1 != pathway_id_2:
                     model.addEquivalentClass(pathway_id_1, pathway_id_2)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
         return
 
@@ -873,7 +873,7 @@ class KEGG(Source):
         :return:
         """
         LOG.info("Processing KEGG pathways to kegg ortholog classes")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -886,7 +886,7 @@ class KEGG(Source):
                 line_counter += 1
                 (ko_id, pathway_id) = row
 
-                if self.testMode and pathway_id not in self.test_ids['pathway']:
+                if self.test_mode and pathway_id not in self.test_ids['pathway']:
                     continue
 
                 pathway_id = 'KEGG-' + pathway_id
@@ -895,7 +895,7 @@ class KEGG(Source):
                 p = Pathway(graph)
                 p.addGeneToPathway(ko_id, pathway_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

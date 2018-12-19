@@ -166,7 +166,7 @@ class MPD(Source):
 
     def _process_straininfo(self, limit):
         # line_counter = 0  # TODO unused
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -185,7 +185,7 @@ class MPD(Source):
                  straintype, n_proj, n_snp_datasets, mpdshortname, url) = row
                 # C57BL/6J,J,000664,,7,IN,225,17,,http://jaxmice.jax.org/strain/000664.html
                 # create the strain as an instance of the taxon
-                if self.testMode and \
+                if self.test_mode and \
                         'MPD:' + str(mpd_strainid) not in self.test_ids:
                     continue
                 strain_id = 'MPD-strain:' + str(mpd_strainid)
@@ -313,7 +313,7 @@ class MPD(Source):
 
     def _fill_provenance_graph(self, limit):
         LOG.info("Building graph ...")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -328,7 +328,7 @@ class MPD(Source):
         # loop through all the strains,
         # and make G2P assoc for those with scores beyond threshold
         for strain_num in self.strain_scores_by_measure:
-            if self.testMode and 'MPD:'+str(strain_num) not in self.test_ids:
+            if self.test_mode and 'MPD:'+str(strain_num) not in self.test_ids:
                 continue
             strain_id = 'MPD-strain:'+str(strain_num)
             for sex in self.strain_scores_by_measure[strain_num]:

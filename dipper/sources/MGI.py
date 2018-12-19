@@ -261,7 +261,7 @@ class MGI(PostgreSQLSource):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         # the following will provide us the hash-lookups
         # These must be processed in a specific order
@@ -355,7 +355,7 @@ SELECT  r._relationship_key as rel_key,
         """
 
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -372,7 +372,7 @@ SELECT  r._relationship_key as rel_key,
                 line_counter += 1
                 (genotype_key, strain_key, strain, mgiid) = line.split('\t')
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(genotype_key) not in self.test_keys.get('genotype'):
                         continue
 
@@ -424,7 +424,7 @@ SELECT  r._relationship_key as rel_key,
                 # add BG to a hash so we can build the genotype label later
                 self.geno_bkgd[mgiid] = strain_id
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -446,7 +446,7 @@ SELECT  r._relationship_key as rel_key,
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -465,7 +465,7 @@ SELECT  r._relationship_key as rel_key,
                 (object_key, preferred, mgiid, subtype,
                  short_description) = line.split('\t')
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('genotype'):
                         continue
 
@@ -484,7 +484,7 @@ SELECT  r._relationship_key as rel_key,
                     pass
                     # TODO what to do with != preferred
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         # now, loop through the hash and add the genotypes as individuals
@@ -515,7 +515,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -547,7 +547,7 @@ SELECT  r._relationship_key as rel_key,
                 # (24288, to be exact...
                 # Reduced to 480 if filtered on preferred = 1)
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('allele'):
                         continue
 
@@ -569,7 +569,7 @@ SELECT  r._relationship_key as rel_key,
 
                 # TODO deal with non-preferreds, are these deprecated?
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -599,7 +599,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
         # transmission_key -> inheritance? Need to locate related table.
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -630,7 +630,7 @@ SELECT  r._relationship_key as rel_key,
                 # TODO update processing to use this view better
                 # including jnums!
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(allele_key) not in self.test_keys.get('allele'):
                         continue
 
@@ -726,7 +726,7 @@ SELECT  r._relationship_key as rel_key,
                             strain_id not in ['MGI:4867032', 'MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -746,7 +746,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -771,7 +771,7 @@ SELECT  r._relationship_key as rel_key,
                 # FIXME Need to handle alleles not in the *<*> format,
                 # incl gene traps, induced mut, & transgenics
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(genotype_key) not in self.test_keys.get('genotype'):
                         continue
 
@@ -834,7 +834,7 @@ SELECT  r._relationship_key as rel_key,
                 # else:
                 #     geno_hash[genotype_id] += [vslc_label]
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         # build the gvc and the genotype label
@@ -899,7 +899,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -918,7 +918,7 @@ SELECT  r._relationship_key as rel_key,
                 if iseqalt_id is None:
                     iseqalt_id = self._makeInternalIdentifier('seqalt', allele_key)
 
-                if self.testMode and int(allele_key) \
+                if self.test_mode and int(allele_key) \
                         not in self.test_keys.get('allele'):
                     continue
 
@@ -945,7 +945,7 @@ SELECT  r._relationship_key as rel_key,
 
                 model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -966,7 +966,7 @@ SELECT  r._relationship_key as rel_key,
         # TODO what is Phenotype (Derived) vs
         # non-derived?  (annottypekey = 1015)
         # TODO is evidence in this table?  what is the evidence vocab key?
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -994,7 +994,7 @@ SELECT  r._relationship_key as rel_key,
                 # term,
                 accid = row[col.index('accid')]
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(annot_key) not in self.test_keys.get('annot'):
                         continue
 
@@ -1071,7 +1071,7 @@ SELECT  r._relationship_key as rel_key,
                     self.idhash['annot'][annot_key] = assoc_id
                     model.addComment(assoc_id, "annot_key:" + annot_key)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1100,7 +1100,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1127,7 +1127,7 @@ SELECT  r._relationship_key as rel_key,
                 qualifier_value = row[col.index('qualifier_value')]
                 # annotation_type = row[col.index('annotation_type')]
 
-                if self.testMode and annot_key not in self.test_keys.get('annot'):
+                if self.test_mode and annot_key not in self.test_keys.get('annot'):
                     continue
 
                 # add the association id to map to the evidence key
@@ -1155,7 +1155,7 @@ SELECT  r._relationship_key as rel_key,
                 if qualifier == 'MP-Sex-Specificity' and qualifier_value in ('M', 'F'):
                     model._addSexSpecificity(assoc_id, self.resolve(qualifier_value))
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1175,7 +1175,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1201,7 +1201,7 @@ SELECT  r._relationship_key as rel_key,
                 # logical_db = row[col.index('logical_db')]
                 # logicaldb_key = row[col.index('logicaldb_key')]
 
-                if self.testMode and object_key not in self.test_keys.get('pub'):
+                if self.test_mode and object_key not in self.test_keys.get('pub'):
                     continue
 
                 # we use the J number here because
@@ -1212,7 +1212,7 @@ SELECT  r._relationship_key as rel_key,
                 reference = Reference(graph, accid)
                 reference.addRefToGraph()
 
-                if not self.testMode and limit is not None and \
+                if not self.test_mode and limit is not None and \
                         filereader.line_num > limit:
                     break
 
@@ -1230,7 +1230,7 @@ SELECT  r._relationship_key as rel_key,
                 logical_db = row[col.index('logical_db')]
                 logicaldb_key = row[col.index('logicaldb_key')]
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('pub'):
                         continue
                 logical_db = logical_db.strip()
@@ -1273,7 +1273,7 @@ SELECT  r._relationship_key as rel_key,
                         "Publication from (%s) not mapped for %s",
                         logical_db, object_key)
 
-                if not self.testMode and limit is not None and \
+                if not self.test_mode and limit is not None and \
                         filereader.line_num > limit:
                     break
 
@@ -1297,7 +1297,7 @@ SELECT  r._relationship_key as rel_key,
         #   congenic,               consomic,       coisogenic,
         #   recombinant inbred,     NS,             conplastic
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1314,7 +1314,7 @@ SELECT  r._relationship_key as rel_key,
                     continue
                 (strain_key, strain, species) = line
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(strain_key) not in self.test_keys.get('strain'):
                         continue
 
@@ -1335,7 +1335,7 @@ SELECT  r._relationship_key as rel_key,
                     geno.addTaxon(sp, strain_id)
                     model.addIndividualToGraph(strain_id, strain, sp)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1357,7 +1357,7 @@ SELECT  r._relationship_key as rel_key,
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1375,7 +1375,7 @@ SELECT  r._relationship_key as rel_key,
                 (marker_key, organism_key, marker_status_key,
                  symbol, name, latin_name, marker_type) = line.split('\t')
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
                         continue
 
@@ -1423,7 +1423,7 @@ SELECT  r._relationship_key as rel_key,
                     if taxon_id == self.globaltt['Mus musculus']:
                         model.makeLeader(marker_id)
 
-                    if not self.testMode and limit is not None and line_counter > limit:
+                    if not self.test_mode and limit is not None and line_counter > limit:
                         break
 
         return
@@ -1439,7 +1439,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1456,7 +1456,7 @@ SELECT  r._relationship_key as rel_key,
                 (accid, logicaldb_key, object_key, preferred,
                  mgiid, subtype, short_description) = line.split('\t')
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
                         continue
 
@@ -1494,7 +1494,7 @@ SELECT  r._relationship_key as rel_key,
                     # could parse the "subtype" string
                     # to get the kind of thing the marker is
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1530,7 +1530,7 @@ SELECT  r._relationship_key as rel_key,
                 preferred = row[col.index('preferred')]
                 # organism_key)
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
                         continue
 
@@ -1549,7 +1549,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1569,7 +1569,7 @@ SELECT  r._relationship_key as rel_key,
                 (accid, prefix_part, logicaldb_key, object_key,
                  preferred, organism_key) = line.split('\t')
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('marker'):
                         continue
 
@@ -1603,7 +1603,7 @@ SELECT  r._relationship_key as rel_key,
                     else:
                         LOG.error("mgiid not in class or indiv hash %s", mgiid)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1626,7 +1626,7 @@ SELECT  r._relationship_key as rel_key,
         # make a pass through the table first,
         # to create the mapping between the external and internal identifiers
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1646,7 +1646,7 @@ SELECT  r._relationship_key as rel_key,
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
 
@@ -1698,7 +1698,7 @@ SELECT  r._relationship_key as rel_key,
                 # scrub out the backticks from accids
                 # TODO notify the source upstream
                 accid = re.sub(r'`', '', accid).strip()
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('strain'):
                         continue
                 mgiid = self.idhash['strain'].get(object_key)
@@ -1765,7 +1765,7 @@ SELECT  r._relationship_key as rel_key,
                     if comment is not None:
                         model.addComment(strain_id, comment)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1781,7 +1781,7 @@ SELECT  r._relationship_key as rel_key,
         """
 
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1797,7 +1797,7 @@ SELECT  r._relationship_key as rel_key,
 
                 (object_key, note) = line
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(object_key) not in self.test_keys.get('notes'):
                         continue
                 # object_key == evidence._annotevidence_key
@@ -1809,14 +1809,14 @@ SELECT  r._relationship_key as rel_key,
                 if annot_id is not None:
                     model.addDescription(annot_id, note.strip())
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
 
     def _process_mrk_location_cache(self, limit):
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1838,7 +1838,7 @@ SELECT  r._relationship_key as rel_key,
                 if str(organism_key) != '1' or str(chromosome) == 'UN':
                     continue
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(marker_key) not in self.test_keys.get('marker'):
                         continue
 
@@ -1883,7 +1883,7 @@ SELECT  r._relationship_key as rel_key,
                 else:
                     LOG.warning('marker key %s not in idhash', str(marker_key))
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1898,7 +1898,7 @@ SELECT  r._relationship_key as rel_key,
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1925,7 +1925,7 @@ SELECT  r._relationship_key as rel_key,
                 # property_name,
                 gene_num = int(row[col.index('gene_num')])
 
-                if self.testMode and allele_key not in self.test_keys.get('allele')\
+                if self.test_mode and allele_key not in self.test_keys.get('allele')\
                         and gene_num not in self.test_ids:
                     continue
 
@@ -1937,7 +1937,7 @@ SELECT  r._relationship_key as rel_key,
                     seqalt_id = allele_id
                 geno.addSequenceDerivesFrom(seqalt_id, gene_id)
 
-                if not self.testMode and limit is not None and \
+                if not self.test_mode and limit is not None and \
                         filereader.line_num > limit:
                     break
 
@@ -1954,7 +1954,7 @@ SELECT  r._relationship_key as rel_key,
         """
 
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1990,7 +1990,7 @@ SELECT  r._relationship_key as rel_key,
 
         line_counter = 0
         for allele_key in notehash:
-            if self.testMode is True:
+            if self.test_mode is True:
                 if int(allele_key) not in self.test_keys.get('allele'):
                     continue
             line_counter += 1
@@ -2005,7 +2005,7 @@ SELECT  r._relationship_key as rel_key,
                 notes += ' ['+n+']'
                 model.addDescription(allele_id, notes)
 
-            if not self.testMode and limit is not None and line_counter > limit:
+            if not self.test_mode and limit is not None and line_counter > limit:
                 break
 
         return
@@ -2021,7 +2021,7 @@ SELECT  r._relationship_key as rel_key,
         """
 
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2036,7 +2036,7 @@ SELECT  r._relationship_key as rel_key,
 
                 (strain_key, genotype_key) = line
 
-                if self.testMode is True:
+                if self.test_mode is True:
                     if int(genotype_key) not in self.test_keys.get('genotype') \
                             and int(strain_key) not in self.test_keys.get('strain'):
                         continue
@@ -2064,7 +2064,7 @@ SELECT  r._relationship_key as rel_key,
                 # else:
                 #     gu.addXref(graph, strain_id, genotype_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

@@ -139,7 +139,7 @@ class OMIM(Source):
         LOG.info("Parsing files...")
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
         self._process_all(limit)
         self._process_morbidmap(limit)
@@ -273,7 +273,7 @@ class OMIM(Source):
         # are producing python None for RDF triple Objects
 
         groupsize = 20
-        if not self.testMode and limit is not None:
+        if not self.test_mode and limit is not None:
             # just in case the limit is larger than the number of records,
             maxit = limit
             if limit > len(omimids):
@@ -286,7 +286,7 @@ class OMIM(Source):
             # iterate through the omim ids list,
             # and fetch from the OMIM api in batches of 20
 
-            if self.testMode:
+            if self.test_mode:
                 intersect = list(
                     set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
                 # some of the test ids are in the omimids
@@ -358,7 +358,7 @@ class OMIM(Source):
         LOG.info('Have %i omim numbers to fetch records from their API', len(omimids))
         LOG.info('Have %i omim types ', len(self.omim_type))
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -613,7 +613,7 @@ class OMIM(Source):
         :param limit:
         :return:
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -658,7 +658,7 @@ class OMIM(Source):
                     disorder_parts = disorder_match.groups()
                     (disorder_label, disorder_num, phene_key) = disorder_parts
 
-                    if self.testMode and (
+                    if self.test_mode and (
                             int(disorder_num) not in self.test_ids or
                             int(gene_num) not in self.test_ids):
                         continue
@@ -676,7 +676,7 @@ class OMIM(Source):
                     disorder_num = gene_num
                     # make what's in the gene column the disease
                     disorder_id = 'OMIM:' + str(disorder_num)
-                    if self.testMode and int(disorder_num) not in self.test_ids:
+                    if self.test_mode and int(disorder_num) not in self.test_ids:
                         continue
                     if disorder_id in self.omim_ncbigene_idmap:
                         # get the gene ids
@@ -703,13 +703,13 @@ class OMIM(Source):
                             "We don't have an NCBIGene feature id to link %s with %s",
                             disorder_id, disorder_label)
 
-                    if self.testMode and int(gene_num) not in self.test_ids:
+                    if self.test_mode and int(gene_num) not in self.test_ids:
                         continue
 
                 else:
                     LOG.warning(
                         "There are misformatted rows %d:%s", line_counter, str(line))
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
             LOG.info("Added %d G2P associations", assoc_count)
 
@@ -947,7 +947,7 @@ class OMIM(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -978,7 +978,7 @@ class OMIM(Source):
                 omim_curie = 'OMIM:' + ps_num
                 model.addClassToGraph(omim_curie, ps_label)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return

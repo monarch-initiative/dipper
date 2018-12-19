@@ -342,9 +342,9 @@ class ZFIN(Source):
         self.zp_map = self._load_zp_mappings(zp_file)
 
         if self.testOnly:
-            self.testMode = True
+            self.test_mode = True
 
-        # if self.testMode:   # unused
+        # if self.test_mode:   # unused
         #    graph = self.testgraph
         # else:
         #    graph = self.graph
@@ -412,7 +412,7 @@ class ZFIN(Source):
 
         raw = '/'.join((self.rawdir, self.files['fish_components']['file']))
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -471,7 +471,7 @@ class ZFIN(Source):
         line_counter = 0
 
         for fish_num in self.fish_parts:
-            if self.testMode and fish_num not in self.test_ids['fish']:
+            if self.test_mode and fish_num not in self.test_ids['fish']:
                 continue
 
             line_counter += 1
@@ -604,7 +604,7 @@ class ZFIN(Source):
             model.addSynonym(fish_id, fish['fish_label'])
             self.id_label_map[fish_id] = fish_label
 
-            if not self.testMode and limit is not None and line_counter > limit:
+            if not self.test_mode and limit is not None and line_counter > limit:
                 break
 
             # ###finish iterating over fish
@@ -612,7 +612,7 @@ class ZFIN(Source):
         # iterate of the alleles and attache the constructs to them
         LOG.info("Adding Allele/Construct relationships")
         for a in allele_to_construct_hash:
-            if self.testMode and a not in self.test_ids['allele']:
+            if self.test_mode and a not in self.test_ids['allele']:
                 continue
             allele_id = 'ZFIN:' + a
             constructs = allele_to_construct_hash.get(a)
@@ -669,7 +669,7 @@ class ZFIN(Source):
         """
         raw = '/'.join((self.rawdir, self.files['geno']['file']))
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -695,7 +695,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and genotype_num not in self.test_ids['genotype']:
+                if self.test_mode and genotype_num not in self.test_ids['genotype']:
                     continue
 
                 # add the genotype to the graph
@@ -811,7 +811,7 @@ class ZFIN(Source):
                         if other_allele is not None:
                             genoparts[gh].append(other_allele)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
                     # end loop through file
@@ -830,7 +830,7 @@ class ZFIN(Source):
 
         LOG.info("Building intrinsic genotypes from partonomy")
         for gt in geno_hash:
-            if self.testMode and re.sub(r'ZFIN:', '', gt) \
+            if self.test_mode and re.sub(r'ZFIN:', '', gt) \
                     not in self.test_ids['genotype']:
                 print('skipping ', gt)
                 continue
@@ -953,7 +953,7 @@ class ZFIN(Source):
         LOG.info('Build pretty genotype labels')
         # now loop through the gvc_hash, and build the gvc
         for gt in gvc_hash:
-            if self.testMode and re.sub(r'ZFIN:', '', gt) \
+            if self.test_mode and re.sub(r'ZFIN:', '', gt) \
                     not in self.test_ids['genotype']:
                 continue
 
@@ -1060,7 +1060,7 @@ class ZFIN(Source):
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1081,7 +1081,7 @@ class ZFIN(Source):
                 # Genotype_ID 	Genotype_Name 	Background 	Background_Name
                 (genotype_id, genotype_name, background_id, unused) = row
 
-                if self.testMode and genotype_id not in self.test_ids['genotype']:
+                if self.test_mode and genotype_id not in self.test_ids['genotype']:
                     continue
 
                 genotype_id = 'ZFIN:' + genotype_id.strip()
@@ -1106,7 +1106,7 @@ class ZFIN(Source):
                 # Add background to the intrinsic genotype
                 geno.addGenomicBackgroundToGenotype(background_id, genotype_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with genotype backgrounds")
@@ -1128,7 +1128,7 @@ class ZFIN(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1165,7 +1165,7 @@ class ZFIN(Source):
                 # store these in a special hash to look up later
                 self.wildtype_genotypes += [genotype_id]
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with wildtype genotypes")
@@ -1183,7 +1183,7 @@ class ZFIN(Source):
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1204,7 +1204,7 @@ class ZFIN(Source):
                 model.addClassToGraph(stage_id, stage_name)
                 model.addEquivalentClass(stage_id, stage_obo_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with stages")
@@ -1233,7 +1233,7 @@ class ZFIN(Source):
         """
         LOG.info("Processing G2P")
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1259,7 +1259,7 @@ class ZFIN(Source):
                  # , empty  # till next time
                 ) = row
 
-                if self.testMode and (
+                if self.test_mode and (
                         fish_num not in self.test_ids['fish'] or
                         env_id not in self.test_ids['environment']):
                     continue
@@ -1346,7 +1346,7 @@ class ZFIN(Source):
                     if pub_id != '':
                         graph.addTriple(pub_id, self.globaltt['mentions'], fish_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         myset = set([','.join(x) for x in mapped_zpids])
@@ -1402,7 +1402,7 @@ class ZFIN(Source):
         """
 
         LOG.info("Processing genes")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1419,7 +1419,7 @@ class ZFIN(Source):
                  # , empty  # till next time
                 ) = row
 
-                if self.testMode and gene_id not in self.test_ids['gene']:
+                if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
 
                 gene_id = 'ZFIN:' + gene_id.strip()
@@ -1427,7 +1427,7 @@ class ZFIN(Source):
 
                 self.id_label_map[gene_id] = gene_symbol
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     pass
                 else:
                     geno.addGene(gene_id, gene_symbol)
@@ -1452,7 +1452,7 @@ class ZFIN(Source):
         :return:
 
         """
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1473,7 +1473,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and (
+                if self.test_mode and (
                         genomic_feature_id not in self.test_ids['allele']):
                     continue
 
@@ -1498,7 +1498,7 @@ class ZFIN(Source):
                     genomic_feature_id] = genomic_feature_abbreviation
                 self.id_label_map[construct_id] = construct_name
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with features")
@@ -1541,7 +1541,7 @@ class ZFIN(Source):
         line_counter = 0
         raw = '/'.join(
             (self.rawdir, self.files['feature_affected_gene']['file']))
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1574,7 +1574,7 @@ class ZFIN(Source):
                     genomic_feature_id] = genomic_feature_abbreviation
                 self.id_label_map[gene_id] = gene_symbol
 
-                if self.testMode and (
+                if self.test_mode and (
                         re.sub(r'ZFIN:', '', gene_id) not in self.test_ids['gene'] and
                         re.sub(r'ZFIN:', '', genomic_feature_id)
                         not in self.test_ids['allele']):
@@ -1622,7 +1622,7 @@ class ZFIN(Source):
                     # TODO review this
                     pass
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with feature affected genes")
@@ -1659,7 +1659,7 @@ class ZFIN(Source):
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1679,7 +1679,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and not (
+                if self.test_mode and not (
                         gene_id in self.test_ids['gene'] or
                         marker_id in self.test_ids['allele'] or
                         marker_id in self.test_ids['morpholino']):
@@ -1757,7 +1757,7 @@ class ZFIN(Source):
                 # just in case we haven't seen it before
                 self.id_label_map[gene_id] = gene_symbol
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with gene marker relationships")
@@ -1790,7 +1790,7 @@ class ZFIN(Source):
         """
 
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1812,7 +1812,7 @@ class ZFIN(Source):
                     except ValueError:
                         LOG.warning("Error parsing row %s: ", row)
 
-                if self.testMode and (
+                if self.test_mode and (
                         'ZFIN:' + pub_id not in self.test_ids['pub'] and
                         'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
@@ -1845,7 +1845,7 @@ class ZFIN(Source):
 
                 ref.addRefToGraph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1866,7 +1866,7 @@ class ZFIN(Source):
         :return:
         """
         line_counter = 0
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1880,7 +1880,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and (
+                if self.test_mode and (
                         'ZFIN:' + pub_id not in self.test_ids['pub'] and
                         'PMID:' + pubmed_id not in self.test_ids['pub']):
                     continue
@@ -1895,7 +1895,7 @@ class ZFIN(Source):
                     model.addSameIndividual(pub_id, pubmed_id)
                 ref = Reference(graph, pub_id, rtype)
                 ref.addRefToGraph()
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -1934,7 +1934,7 @@ class ZFIN(Source):
         """
 
         LOG.info("Processing Gene Targeting Reagents")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -1975,7 +1975,7 @@ class ZFIN(Source):
 
                 self.id_label_map[reagent_id] = reagent_symbol
 
-                if self.testMode and (
+                if self.test_mode and (
                         reagent_num not in self.test_ids['morpholino'] and
                         gene_num not in self.test_ids['gene']):
                     continue
@@ -2007,7 +2007,7 @@ class ZFIN(Source):
                     if gene_id not in self.variant_loci_genes[reagent_id]:
                         self.variant_loci_genes[reagent_id] += [gene_id]
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with Reagent type %s", reagent_type)
@@ -2041,7 +2041,7 @@ class ZFIN(Source):
         """
 
         LOG.info("Processing environments")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2066,7 +2066,7 @@ class ZFIN(Source):
                  ncbi_taxon_name, ncbi_taxon_id) = row
 
                 environment_id = 'ZFIN:' + environment_id.strip()
-                if self.testMode and environment_id not in self.test_ids['environment']:
+                if self.test_mode and environment_id not in self.test_ids['environment']:
                     continue
 
                 # We can start to build the extrinsic genotype using this file.
@@ -2114,7 +2114,7 @@ class ZFIN(Source):
                 # envo.addEnvironmentalCondition(
                 #    env_component_id, env_component_label)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
                 # End of loop through pheno_env file
@@ -2156,7 +2156,7 @@ class ZFIN(Source):
         """
 
         LOG.info("Processing chromosome mappings")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2181,7 +2181,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and zfin_num \
+                if self.test_mode and zfin_num \
                         not in self.test_ids['gene'] + self.test_ids['allele']:
                     continue
 
@@ -2226,7 +2226,7 @@ class ZFIN(Source):
                     LOG.error(
                         "There's a panel (%s) we don't have info for", panel_symbol)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with chromosome mappings")
@@ -2250,7 +2250,7 @@ class ZFIN(Source):
         """
 
         LOG.info("Processing UniProt IDs")
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2267,7 +2267,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and gene_id not in self.test_ids['gene']:
+                if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
 
                 gene_id = 'ZFIN:' + gene_id.strip()
@@ -2280,7 +2280,7 @@ class ZFIN(Source):
                 graph.addTriple(
                     gene_id, self.globaltt['has gene product'], uniprot_id)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with UniProt IDs")
@@ -2309,7 +2309,7 @@ class ZFIN(Source):
 
         """
 
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2327,7 +2327,7 @@ class ZFIN(Source):
                  omim_id, gene_id, hgnc_id, evidence_code, pub_id
                  # , empty
                 ) = row
-                if self.testMode and zfin_id not in self.test_ids['gene']:
+                if self.test_mode and zfin_id not in self.test_ids['gene']:
                     continue
 
                 # Add the zebrafish gene.
@@ -2352,14 +2352,14 @@ class ZFIN(Source):
 
                 assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with human orthos")
         return
 
     def _process_gene_coordinates(self, limit=None):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2388,7 +2388,7 @@ class ZFIN(Source):
                         for item in re.sub(r'"', '', attributes).split(";"))
                     gene_id = attribute_dict.get('gene_id')
 
-                if self.testMode and gene_id not in self.test_ids['gene']:
+                if self.test_mode and gene_id not in self.test_ids['gene']:
                     continue
                 gene_id = 'ZFIN:' + gene_id
 
@@ -2407,7 +2407,7 @@ class ZFIN(Source):
                 feat.addFeatureEndLocation(end, chrom_in_build, strand)
                 feat.addFeatureToGraph(True, None, True)
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         LOG.info("Done with gene coordinates")
@@ -2415,7 +2415,7 @@ class ZFIN(Source):
         return
 
     def process_fish_disease_models(self, limit=None):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2447,7 +2447,7 @@ class ZFIN(Source):
                  # , empty
                 ) = row
 
-                if self.testMode and (
+                if self.test_mode and (
                         fish not in self.test_ids['fish'] and
                         disease_id not in self.test_ids['disease']):
                     continue
@@ -2489,7 +2489,7 @@ class ZFIN(Source):
                     model.makeLeader(pubmed_id)
                 assoc.add_association_to_graph()
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
         return
@@ -2745,7 +2745,7 @@ class ZFIN(Source):
         return
 
     def process_orthology_evidence(self, limit):
-        if self.testMode:
+        if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
@@ -2764,7 +2764,7 @@ class ZFIN(Source):
                  ortholog_ncbigene_num, evidence_code, zfin_pub_num,
                  pubmed_num) = row
 
-                if self.testMode and (zfin_gene_num not in self.test_ids['gene']):
+                if self.test_mode and (zfin_gene_num not in self.test_ids['gene']):
                     continue
 
                 zfin_gene_id = 'ZFIN:'+str(zfin_gene_num)
@@ -2791,7 +2791,7 @@ class ZFIN(Source):
                 # FIXME need to update with proper provenance model
                 # so the papers get attached with the relevant eco code
 
-                if not self.testMode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and line_counter > limit:
                     break
         return
 
