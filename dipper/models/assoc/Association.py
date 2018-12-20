@@ -1,5 +1,6 @@
 
 import logging
+import re
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
@@ -44,6 +45,7 @@ class Assoc:
         self.score = None
         self.score_type = None
         self.score_unit = None
+        self.curie_pat = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
 
         return
 
@@ -108,16 +110,16 @@ class Assoc:
 
         if self.evidence is not None and len(self.evidence) > 0:
             for evi in self.evidence:
-                self.graph.addTriple(
-                    self.assoc_id, self.globaltt['has evidence'], evi)
+                self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi)
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
                 object_is_literal = False
-                if src[:4] == 'http':   # not a curie
+
+                if src[:4] != 'http' and self.curie_pat.match(src) is not None:
+
                     object_is_literal = True
-                    # TODO assume that the source is a publication?
-                    # use Reference class
+                    # TODO assume that the source is a publication? use Reference class
                 self.graph.addTriple(
                     self.assoc_id, self.globaltt['source'], src, object_is_literal)
 

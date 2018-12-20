@@ -78,7 +78,7 @@ class EBIGene2Phen(Source):
             'ebi_g2p',
             ingest_title='EBI',
             ingest_url='https://www.ebi.ac.uk/gene2phenotype',
-            license_url='https://www.ebi.ac.uk/about/terms-of-use',
+            license_url=None,
             data_rights='https://www.ebi.ac.uk/about/terms-of-use',
             file_handle=None
         )

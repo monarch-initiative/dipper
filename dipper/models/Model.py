@@ -66,8 +66,7 @@ class Model():
                 class_id, self.globaltt['label'], label, object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(
-                class_id, self.globaltt['subclass_of'], class_type)
+            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.globaltt['description'], description,
@@ -75,21 +74,15 @@ class Model():
         return
 
     def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None):
-
         if label is not None:
             self.graph.addTriple(
-                ind_id, self.globaltt['label'], label,
-                object_is_literal=True
-            )
+                ind_id, self.globaltt['label'], label, object_is_literal=True)
         if ind_type is not None:
             self.graph.addTriple(
-                ind_id, self.globaltt['type'], ind_type
-            )
+                ind_id, self.globaltt['type'], ind_type, object_is_literal=False)
         else:
             self.graph.addTriple(
-                ind_id, self.globaltt['type'],
-                self.globaltt['named_individual']
-            )
+                ind_id, self.globaltt['type'], self.globaltt['named_individual'])
         if description is not None:
             self.graph.addTriple(
                 ind_id, self.globaltt['description'], description,
