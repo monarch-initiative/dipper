@@ -1,6 +1,5 @@
 
 import logging
-import re
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
@@ -45,7 +44,6 @@ class Assoc:
         self.score = None
         self.score_type = None
         self.score_unit = None
-        self.curie_pat = re.compile(r'^.*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
 
         return
 
@@ -81,7 +79,6 @@ class Assoc:
                 'Invalid Predicate for this association <%s> <%s> <%s>',
                 self.sub, self.rel, self.obj
             )
-
         return True
 
     def add_association_to_graph(self):
@@ -114,14 +111,8 @@ class Assoc:
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
-                object_is_literal = False
-
-                if src[:4] != 'http' and self.curie_pat.match(src) is not None:
-
-                    object_is_literal = True
-                    # TODO assume that the source is a publication? use Reference class
-                self.graph.addTriple(
-                    self.assoc_id, self.globaltt['source'], src, object_is_literal)
+                # TODO assume that the source is a publication? use Reference class
+                self.graph.addTriple(self.assoc_id, self.globaltt['source'], src)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:
@@ -131,8 +122,8 @@ class Assoc:
         if self.date is not None and len(self.date) > 0:
             for dat in self.date:
                 self.graph.addTriple(
-                    object_is_literal=True, subject_id=self.assoc_id,
-                    predicate_id=self.globaltt['created_on'], obj=dat)
+                    self.assoc_id,self.globaltt['created_on'], dat,
+                    object_is_literal=True)
 
         if self.score is not None:
             self.graph.addTriple(
