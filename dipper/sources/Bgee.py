@@ -96,8 +96,8 @@ class Bgee(Source):
         self.txid_name = {v: k for k, v in self.default_taxa.items()}
 
         if tax_ids is None:
-            self.tax_ids = self.default_taxa.values()
-        self.tax_ids = [str(x) for x in self.tax_ids]  # incase they were passed in
+            tax_ids = self.default_taxa.values()
+        self.tax_ids = [str(x) for x in tax_ids]  # incase they were passed in
         LOG.info(
             "Filtering on tax_ids %s",
             [{t: self.txid_name[t]} for t in self.tax_ids])
