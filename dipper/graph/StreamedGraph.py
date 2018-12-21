@@ -33,19 +33,25 @@ class StreamedGraph(DipperGraph):
         self.identifier = identifier
 
     def addTriple(
-            self, subject_id, predicate_id, object_id, object_is_literal=False,
+            self, subject_id, predicate_id, obj, object_is_literal=None,
             literal_type=None):
+        # trying making infrence on type of object if none is supplied
+        if object_is_literal is None:
+            if self.curie_regexp.match(obj) or\
+                    obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
+                object_is_literal = False
+        else:
+            object_is_literal = True
+
         subject_iri = self._getnode(subject_id)
         predicate_iri = self._getnode(predicate_id)
         if not object_is_literal:
-            obj = self._getnode(object_id)
-        else:
-            obj = object_id
+            obj = self._getnode(obj)
 
         if literal_type is not None:
             literal_type = self._getnode(literal_type)
 
-        if object_id is not None:
+        if obj is not None:
             self.serialize(
                 subject_iri, predicate_iri, obj, object_is_literal, literal_type)
         else:
