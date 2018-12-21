@@ -64,16 +64,13 @@ class D2PAssoc(Assoc):
         # if rel == self.globaltt[['has disposition']:
 
         Assoc.add_association_to_graph(self)
-
-        object_is_literal = True
+        # anticipating trouble with onsets ranges that look like curies
+        if self.onset is not None and self.onset != '':
+            self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['frequency'], self.frequency,
-                object_is_literal)
-        if self.onset is not None and self.onset != '':
-            self.graph.addTriple(
-                self.assoc_id, self.globaltt['onset'], self.onset, object_is_literal)
+                self.assoc_id, self.globaltt['frequency'], self.frequency)
 
         return
 
