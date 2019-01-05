@@ -13,7 +13,7 @@ from dipper.models.assoc.InteractionAssoc import InteractionAssoc
 __author__ = 'nicole'
 
 LOG = logging.getLogger(__name__)
-BGDL = 'http://thebiogrid.org/downloads/archives/Latest%20Release'
+BGDL = 'https://downloads.thebiogrid.org/Download/BioGRID/Latest-Release'
 
 
 class BioGrid(Source):
@@ -27,7 +27,7 @@ class BioGrid(Source):
         'interactions': {
             'file': 'interactions.mitab.zip',
             'url': BGDL + '/BIOGRID-ALL-LATEST.mitab.zip'},
-        'identifiers':  {
+        'identifiers':  {  # /BIOGRID-IDENTIFIERS-LATEST.tab.zip
             'file': 'identifiers.tab.zip',
             'url': BGDL + '/BIOGRID-IDENTIFIERS-LATEST.tab.zip'}
     }
@@ -45,8 +45,8 @@ class BioGrid(Source):
             'biogrid',
             ingest_title='Biological General Repository for Interaction Datasets',
             ingest_url='http://thebiogrid.org',
-            license_url='https://wiki.thebiogrid.org/doku.php/terms_and_conditions'
-            # data_rights=None,
+            license_url='https://downloads.thebiogrid.org/Download/LICENSE.txt',
+            data_rights='https://wiki.thebiogrid.org/doku.php/terms_and_conditions',
             # file_handle=None
         )
 
@@ -64,7 +64,7 @@ class BioGrid(Source):
 
         # data-source specific warnings
         # (will be removed when issues are cleared)
-        LOG.warning(
+        LOG.info(
             "several MI experimental codes do not exactly map to ECO; "
             "using approximations.")
         return
