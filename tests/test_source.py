@@ -3,14 +3,13 @@
 import unittest
 import logging
 import os
-import json
+import yaml
 from tests import test_general
-from tests import test_dataset
+# from tests import test_dataset
 from dipper.utils.GraphUtils import GraphUtils
-# from dipper.sources.Source import Source
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class SourceTestCase(unittest.TestCase):
@@ -19,9 +18,12 @@ class SourceTestCase(unittest.TestCase):
     You would never call these tests directly;
     rather this should be called for any specific source subclasses
     """
+    all_test_ids = yaml.safe_load('../resources/test_ids.yaml')
 
     def setUp(self):
         self.source = None
+        # pull in the common test identifiers
+        self.all_test_ids = SourceTestCase.all_test_ids
         return
 
     def tearDown(self):
@@ -37,7 +39,7 @@ class SourceTestCase(unittest.TestCase):
             try:
                 self.source.parse()
             except Exception as ParseException:  # tec too broad?
-                logger.error(ParseException)
+                LOG.error(ParseException)
                 self.assertFalse(True, "Parsing failed")
             """
             try:
@@ -45,10 +47,10 @@ class SourceTestCase(unittest.TestCase):
                     self.source.graph)
                 GraphUtils.add_property_axioms(self.source.graph, properties)
                 self.source.write()  # default to  fmt='turtle'
-                #self.source.write(fmt='nt')
-                #self.source.write(fmt='nquads')
+                # self.source.write(fmt='nt')
+                # self.source.write(fmt='nquads')
             except Exception as WriteException:
-                logger.error(WriteException)
+                LOG.error(WriteException)
                 self.assertFalse(True, "Write failed")
 
         return
@@ -80,14 +82,16 @@ class SourceTestCase(unittest.TestCase):
             logging.info("Resetting the rawdir to %s", p)
         return
 
-    def _get_conf(self):
-        if os.path.exists(
-                os.path.join(os.path.dirname(__file__), 'test_ids.json')):
-            with open(
-                os.path.join(
-                    os.path.dirname(__file__), 'test_ids.json')) as json_file:
-                conf = json.load(json_file)
-        return conf
+    # no such 'test_ids.json' file exists
+    # def _get_conf(self):
+    #    if os.path.exists(
+    #            os.path.join(os.path.dirname(__file__), 'test_ids.json')):
+    #        with open(
+    #            os.path.join(
+    #                os.path.dirname(__file__), 'test_ids.json')) as json_file:
+    #             conf = json.load(json_file)
+    #    return conf
+
     """
     Commenting out as most of our sources do not have licenses
     def test_source_has_license(self):
