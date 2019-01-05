@@ -57,6 +57,9 @@ ncbi-test:
 OMIM-test:
 	$(TEST) tests/test_omim.py
 
+biogrid-test:
+	$(TEST) tests/test_biogrid.py
+
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 trans-test:
 	# python unit test for duplicate keys and invertablility

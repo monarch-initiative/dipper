@@ -11,10 +11,12 @@ class Graph(metaclass=ABCMeta):
     # https://www.w3.org/TR/curie/
     # https://www.w3.org/TR/xml/
     # https://www.w3.org/TR/rdfa-core/#s_curies
-    #
+    # TEC:
+    #   adding a hyphen as a non-first-last char in the local_id portion of curie
+    #   because that is reality on the street (i.e Reactome)
 
     curie_regexp = re.compile(
-        r'^[a-zA-Z_][a-zA-Z_0-9-]*:[A-Za-z0-9_][A-Za-z0-9_.]*[A-Za-z0-9_]*$')
+        r'^[a-zA-Z_][a-zA-Z_0-9-]*:[A-Za-z0-9_][A-Za-z0-9_.-]*[A-Za-z0-9_]*$')
 
     @abstractmethod
     def addTriple(

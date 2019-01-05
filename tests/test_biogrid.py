@@ -5,7 +5,7 @@ from dipper.sources.BioGrid import BioGrid
 from tests.test_source import SourceTestCase
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class BioGridTestCase(SourceTestCase):
@@ -13,7 +13,6 @@ class BioGridTestCase(SourceTestCase):
     def setUp(self):
         self.source = BioGrid('rdf_graph', True)
         self.source.settestonly(True)
-        self.source.test_ids = self._get_conf()['test_ids']['gene']
         self._setDirToSource()
         return
 
@@ -23,7 +22,7 @@ class BioGridTestCase(SourceTestCase):
 
     # @unittest.skip('Biogrid-specific tests not yet defined')
     # def test_biogrid(self):
-    #    logger.info("A BioGrid-specific test")
+    #    LOG.info("A BioGrid-specific test")
     #
     #    return
 

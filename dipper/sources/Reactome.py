@@ -85,8 +85,8 @@ class Reactome(Source):
         with open(file, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter="\t")
             for row in reader:
-                (component, pathway_id, pathway_iri, pathway_label,
-                 go_ecode, species_name) = row
+                (component, pathway_id, pathway_iri, pathway_label, go_ecode,
+                species_name) = row
                 count += 1
                 self._add_component_pathway_association(
                     eco_map, component, subject_prefix, pathway_id, object_prefix,

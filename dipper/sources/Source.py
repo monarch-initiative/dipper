@@ -268,14 +268,14 @@ class Source:
 
         """
         LOG.info(
-            "Checking if remote file (%s) is newer than local (%s)...", remote, local)
+            "Checking if remote file \n(%s)\n is newer than local \n(%s)", remote, local)
 
         # check if local file exists
         # if no local file, then remote is newer
         if os.path.exists(local):
-            LOG.info("File does exist locally")
+            LOG.info("Local File exists as %s", local)
         else:
-            LOG.info("File does not exist locally")
+            LOG.info("Local File does NOT exist as %s", local)
             return True
 
         # get remote file details
@@ -299,10 +299,12 @@ class Source:
 
         if size is not None and size != '':
             size = int(size)
+        else :
+            size = 0
 
         fstat = os.stat(local)
         LOG.info(
-            "Local file date: %s",
+            "Local File date: %s",
             datetime.utcfromtimestamp(fstat[ST_CTIME]))
 
         if last_modified is not None:
@@ -315,15 +317,16 @@ class Source:
             if dt_obj > datetime.utcfromtimestamp(fstat[ST_CTIME]):
                 # check if file size is different
                 if fstat[ST_SIZE] < size:
-                    LOG.info("New Remote file exists")
+                    LOG.info("New Remote File exists")
                     return True
                 if fstat[ST_SIZE] > size:
-                    LOG.warning("New Remote file existsbut it is SMALLER")
+                    LOG.warning("New Remote File exists but it is SMALLER")
                     return True
                 else:  # filesize is a fairly imperfect metric here
-                    LOG.info("New Remote file has same filesize--will not download")
+                    LOG.info("New Remote fFle has same filesize--will not download")
         elif fstat[ST_SIZE] != size:
-            LOG.info("Object on server is difference size to local file")
+            LOG.info(
+                "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
             return True
 
         return False
