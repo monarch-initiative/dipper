@@ -46,7 +46,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
             literal_type=None):
         # trying making infrence on type of object if none is supplied
         if object_is_literal is None:
-            if self.curie_regexp.match(obj) or\
+            if self.curie_regexp.match(obj) is not None or\
                     obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
                 object_is_literal = False
             else:
