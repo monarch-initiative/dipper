@@ -1,8 +1,6 @@
 import re
 import gzip
 import logging
-# import csv
-# import io
 
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
@@ -658,9 +656,7 @@ class NCBIGene(Source):
                     '%s\nExpected Headers:\t%s\nRecived Headers:\t %s\n',
                     src_key, col, row)
             for row in tsv:
-                if row[0][0] == '#':   # skip comment lines
-                    continue
-
+                row = row.decode().strip().split('\t')
                 tax_a = row[col.index('tax_id')]
                 gene_a = row[col.index('GeneID')]
                 rel = row[col.index('relationship')]

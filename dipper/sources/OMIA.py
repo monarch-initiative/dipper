@@ -268,8 +268,10 @@ class OMIA(Source):
                             # clean up one I know about
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
+                                LOG.info('cleaned up %s', rep)
                             if len(rep) == 7 and rep[6] == ',':
                                 rep = rep[:5]
+                                LOG.info('cleaned up %s', rep)
                         # asuming splits are typically to both gene & phenotype
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = {rep, token[4]}
@@ -317,7 +319,7 @@ class OMIA(Source):
         filereader.readline()  # remove the xml declaration line
 
         for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
-            # Species ids are == genbank species ids!
+            # Species ids are == NCBITaxon ids
             self.process_xml_table(
                 elem, 'Species_gb', self._process_species_table_row, limit)
 
@@ -401,10 +403,11 @@ class OMIA(Source):
         return
 
     # ############ INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ################
+    # 'row' seems to be passed as  a dict 
 
-    def _process_species_table_row(self, row):
+    def _process_species_table_row(self, row):  # row is expected as a dict
         # gb_species_id, sci_name, com_name, added_by, date_modified
-        tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
+        tax_id = 'NCBITaxon:' + str(row['gb_species_id'])
         sci_name = row['sci_name']
         com_name = row['com_name']
         model = Model(self.graph)
