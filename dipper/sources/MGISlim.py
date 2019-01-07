@@ -13,6 +13,8 @@ class MGISlim(Source):
     """
     slim mgi model only containing Gene to phenotype associations
     Uses mousemine: http://www.mousemine.org/mousemine/begin.do
+    python lib api  http://intermine.org/intermine-ws-python/
+
     """
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -26,6 +28,9 @@ class MGISlim(Source):
             # file_handle=None
         )
 
+        # "NCBITaxon:
+        self.txid = self.globaltt['Mus musculus'][9:]
+
     def fetch(self, is_dl_forced=False):
         return
 
@@ -36,8 +41,8 @@ class MGISlim(Source):
             fuzzy_gene = "MGI:{0}*".format(num)
             gene = "MGI:{0}".format(num)
             service = Service("http://www.mousemine.org/mousemine/service")
-            logging.getLogger('Model').setLevel(logging.CRITICAL)
-            logging.getLogger('JSONIterator').setLevel(logging.CRITICAL)
+            logging.getLogger('Model').setLevel(logging.ERROR)
+            logging.getLogger('JSONIterator').setLevel(logging.ERROR)
             query = service.new_query("OntologyAnnotation")
             query.add_constraint("subject", "SequenceFeature")
             query.add_constraint("ontologyTerm", "MPTerm")
@@ -48,7 +53,7 @@ class MGISlim(Source):
                 "evidence.comments.type", "evidence.comments.description"
             )
             query.add_sort_order("OntologyAnnotation.ontologyTerm.name", "ASC")
-            query.add_constraint("subject.organism.taxonId", "=", "10090", code="A")
+            query.add_constraint("subject.organism.taxonId", "=", self.txid, code="A")
             query.add_constraint("subject", "LOOKUP", fuzzy_gene, code="B")
             query.add_constraint(
                 "subject.primaryIdentifier", "CONTAINS", gene, code="C")
@@ -70,7 +75,8 @@ class MGISlim(Source):
 
             if not count % 10 and count != 0:
                 count_from = count - 10
-                LOG.info("%s processed ids from MGI:%i* to MGI:%i*",
+                LOG.info(
+                    "%s processed ids from MGI:%i* to MGI:%i*",
                     datetime.datetime.now(), count_from, count)
 
             count += 1
