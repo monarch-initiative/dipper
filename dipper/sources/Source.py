@@ -268,7 +268,8 @@ class Source:
 
         """
         LOG.info(
-            "Checking if remote file \n(%s)\n is newer than local \n(%s)", remote, local)
+            "Checking if remote file \n(%s)\n is newer than local \n(%s)",
+            remote, local)
 
         # check if local file exists
         # if no local file, then remote is newer
@@ -299,7 +300,7 @@ class Source:
 
         if size is not None and size != '':
             size = int(size)
-        else :
+        else:
             size = 0
 
         fstat = os.stat(local)
@@ -421,15 +422,13 @@ class Source:
 
         return response
 
+    # TODO: rephrase as mysql-dump-xml specific format
     def process_xml_table(self, elem, table_name, processing_function, limit):
         """
-        This is a convenience function to process the elements of an
-        xml document, when the xml is used as an alternative way of
-        distributing sql-like tables.  In this case, the "elem" is akin to an
-        sql table, with it's name of ```table_name```.
-        It will then process each ```row``` given the ```processing_function```
-        supplied.
-
+        This is a convenience function to process the elements of an xml dump of
+        a mysql relational database.
+        The "elem" is akin to a mysql table, with it's name of ```table_name```.
+        It will process each ```row``` given the ```processing_function``` supplied.
         :param elem: The element data
         :param table_name: The name of the table to process
         :param processing_function: The row processing function
@@ -447,10 +446,10 @@ class Source:
         if table_data is not None:
             LOG.info("Processing " + table_name)
             row = {}
-            for row in table_data.findall('row'):
-                for field in row.findall('field'):
-                    ats = field.attrib
-                    row[ats['name']] = field.text
+            for line in table_data.findall('row'):
+                for field in line.findall('field'):
+                    atts = dict(field.attrib)
+                    row[atts['name']] = field.text
                 processing_function(row)
                 line_counter += 1
                 if self.test_mode and limit is not None and line_counter > limit:
