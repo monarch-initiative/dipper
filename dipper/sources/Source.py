@@ -450,7 +450,7 @@ class Source:
                 for field in line.findall('field'):
                     atts = dict(field.attrib)
                     row[atts['name']] = field.text
-                processing_function(line)
+                processing_function(row)
                 line_counter += 1
                 if self.test_mode and limit is not None and line_counter > limit:
                     continue
