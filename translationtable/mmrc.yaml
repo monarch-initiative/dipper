@@ -1,6 +1,6 @@
 ---
 
-# these are ids translated to lables as found
+# these are ids translated to labels as found
 # the comments are perhaps more specific
 "SM": "sequence_alteration"         # spontaneous mutation
 "TM": "sequence_alteration"         # targeted mutation
