@@ -205,13 +205,20 @@ class HPOAnnotations(Source):
                     except AttributeError:
                         continue
 
+                # row[col.index('DiseaseName')]  unused
+
+                if row[col.index('Qualifier')] == 'NOT':
+                    continue
+
                 pheno_id = row[col.index('HPO_ID')]
+                publist = row[col.index('Reference')]
                 eco_id = self.resolve(row[col.index('Evidence')])
                 onset = row[col.index('Onset')]
-                asp = row[col.index('Aspect')]
                 freq = row[col.index('Frequency')]
-                publist = row[col.index('Reference')]
                 sex = row[col.index('Sex')].lower()
+                # row[col.index('Modifier')]   unused
+                asp = row[col.index('Aspect')]
+                # row[col.index('Biocuration')]  unused
 
                 # LOG.info(
                 #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
