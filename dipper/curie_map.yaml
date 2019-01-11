@@ -147,7 +147,7 @@
 
 # variants / traits
 
-# 'AQTL-BT': https://www.animalgenome.org/cgi-bin/QTLdb/BT/search       # maybe?
+# 'AnimalQTLdb': 'previously'
 'horseQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
 'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_D='
 'catfishQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/IP/qdetails?QTL_ID='

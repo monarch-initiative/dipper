@@ -163,6 +163,8 @@ class HPOAnnotations(Source):
         :return:
 
         """
+        src_key = 'hpoa'
+
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -177,16 +179,26 @@ class HPOAnnotations(Source):
         # TODO when #112 is implemented,
         # this will result in only the whole dataset being versioned
 
-        col = self.files['hpoa']['columns']
+        col = self.files[src_key]['columns']
         with open(raw, 'r', encoding="utf8") as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t', quotechar='\"')
-            vers = next(reader)  # drop
-            vers = str(next(reader))[9:19]
-            print(vers)
+            row = next(reader)  # drop Description
+            row = str(next(reader))[9:19]
+            LOG.info("Ingest from %s", row)
             date = datetime.strptime(
-                vers.strip(), '%Y-%m-%d').strftime("%Y-%m-%d-%H-%M")
-
+                row.strip(), '%Y-%m-%d').strftime("%Y-%m-%d-%H-%M")
             self.dataset.setVersion(filedate, date)
+
+            row = next(reader)  # drop tracker url
+            row = next(reader)  # drop release url
+            row = next(reader)  # headers
+            row[0] = row[0][1:]  # uncomment
+            if col != row:
+                LOG.info(
+                    '%s\nExpected Headers:\t%s\nRecived Headers:\t%s\n',
+                    src_key, col, row)
+                LOG.info(set(col) - set(row))
+
             for row in reader:
                 if row[0][0] == '#' or row[0] == 'DatabaseID':  # headers
                     continue
@@ -205,13 +217,20 @@ class HPOAnnotations(Source):
                     except AttributeError:
                         continue
 
+                # row[col.index('DiseaseName')]  unused
+
+                if row[col.index('Qualifier')] == 'NOT':
+                    continue
+
                 pheno_id = row[col.index('HPO_ID')]
+                publist = row[col.index('Reference')]
                 eco_id = self.resolve(row[col.index('Evidence')])
                 onset = row[col.index('Onset')]
-                asp = row[col.index('Aspect')]
                 freq = row[col.index('Frequency')]
-                publist = row[col.index('Reference')]
                 sex = row[col.index('Sex')].lower()
+                # row[col.index('Modifier')]   unused
+                asp = row[col.index('Aspect')]
+                # row[col.index('Biocuration')]  unused
 
                 # LOG.info(
                 #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
@@ -250,6 +269,14 @@ class HPOAnnotations(Source):
 
                 for pub in publist.split(';'):
                     pub = pub.strip()
+
+                    # there have been several malformed PMIDs
+                    if pub[:4] != 'http' and \
+                            graph.curie_regexp.fullmatch(pub) is None:
+                        LOG.warning(
+                            'Record %s has a malformed Reference %s', disease_id, pub)
+                        continue
+
                     pubtype = None
 
                     if pub[:5] == 'PMID:':
@@ -434,9 +461,6 @@ class HPOAnnotations(Source):
                 description = row[col.index('Description')]
                 pub_ids = row[col.index('Pub')]
 
-                # b/c "PMID:    17223397"
-                pub_ids = re.sub(r' *', '', pub_ids)
-
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
 
@@ -478,7 +502,15 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for pub in pub_ids.split(';'):
-                            pub = re.sub(r'  *', '', pub)
+                            pub = re.sub(r'  *', '', pub)  # fixed now but just in case
+
+                            # there have been several malformed PMIDs curies
+                            if pub[:4] != 'http' and \
+                                    graph.curie_regexp.fullmatch(pub) is None:
+                                LOG.warning(
+                                    'Record %s has a malformed Pub %s', did, pub)
+                                continue
+
                             if re.search(
                                     r'(DOID|MESH)', pub) or re.search(
                                         r'Disease name contained', description):
