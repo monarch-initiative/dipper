@@ -486,7 +486,7 @@ class HPOAnnotations(Source):
                             pub = re.sub(r'  *', '', pub)  # fixed now but just in case
 
                             # there have been several malformed PMIDs curies
-                            if pub[:4] != 'http' or \
+                            if pub[:4] != 'http' and \
                                     graph.curie_regexp.fullmatch(pub) is None:
                                 LOG.warning(
                                     'Record %s has a malformed Pub %s', did, pub)
