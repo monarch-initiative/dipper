@@ -250,6 +250,14 @@ class HPOAnnotations(Source):
 
                 for pub in publist.split(';'):
                     pub = pub.strip()
+
+                    # there have been several malformed PMIDs
+                    if pub[:4] != 'http' and \
+                            graph.curie_regexp.fullmatch(pub) is None:
+                        LOG.warning(
+                            'Record %s has a malformed Reference %s', disease_id, pub)
+                        continue
+
                     pubtype = None
 
                     if pub[:5] == 'PMID:':
@@ -434,9 +442,6 @@ class HPOAnnotations(Source):
                 description = row[col.index('Description')]
                 pub_ids = row[col.index('Pub')]
 
-                # b/c "PMID:    17223397"
-                pub_ids = re.sub(r' *', '', pub_ids)
-
                 disease_id = re.sub(r'DO(ID)?[-\:](DOID:)?', 'DOID:', did)
                 disease_id = re.sub(r'MESH-', 'MESH:', disease_id)
 
@@ -478,7 +483,15 @@ class HPOAnnotations(Source):
                         assoc.set_description(description)
                     if pub_ids != '':
                         for pub in pub_ids.split(';'):
-                            pub = re.sub(r'  *', '', pub)
+                            pub = re.sub(r'  *', '', pub)  # fixed now but just in case
+
+                            # there have been several malformed PMIDs curies
+                            if pub[:4] != 'http' or \
+                                    graph.curie_regexp.fullmatch(pub) is None:
+                                LOG.warning(
+                                    'Record %s has a malformed Pub %s', did, pub)
+                                continue
+
                             if re.search(
                                     r'(DOID|MESH)', pub) or re.search(
                                         r'Disease name contained', description):
