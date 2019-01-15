@@ -138,7 +138,8 @@
 'NCBIGenome': 'http://www.ncbi.nlm.nih.gov/genome/'                     #   Genome
 'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon
 'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'         # Local IRI for Online Inheritance In Animal breeds
-'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz Assembly
+'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz golden path
+'UCSCBuild': 'http://genome.ucsc.edu/cgi-bin/hgGateway?db='             # University of California, Santa Cruz genome build
 
 # homology
 'HOMOLOGENE': 'http://www.ncbi.nlm.nih.gov/homologene/'                 # Putative Homology Groups
@@ -149,7 +150,7 @@
 
 # 'AnimalQTLdb': 'previously'
 'horseQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/EC/qdetails?QTL_ID='
-'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_D='
+'cattleQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qdetails?QTL_ID='
 'catfishQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/IP/qdetails?QTL_ID='
 'chickenQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/GG/qdetails?QTL_ID='
 'pigQTL': 'https://www.animalgenome.org/cgi-bin/QTLdb/SS/qdetails?QTL_ID='
