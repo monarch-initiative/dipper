@@ -11,7 +11,7 @@ from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 
 #       https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
-# mapDwnLd36738TDWS.txt.gz   
+# mapDwnLd36738TDWS.txt.gz
 AQDL = 'https://www.animalgenome.org/QTLdb'
 LOG = logging.getLogger(__name__)
 
@@ -55,41 +55,65 @@ class AnimalQTLdb(Source):
         # defaulting to this
         'cattle_bp': {
             'file': 'QTL_Btau_4.6.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_Btau_4.6.gff.txt.gz',
+            'curie': 'cattleQTL',
+        },
         # disabling this for now
         # 'cattle_umd_bp': {
         #   'file': 'QTL_UMD_3.1.gff.txt.gz',
-        #   'url': AQDL + '/tmp/QTL_UMD_3.1.gff.txt.gz'},
+        #   'url': AQDL + '/tmp/QTL_UMD_3.1.gff.txt.gz',
+        #   'curie': 'cattleQTL',
+        # },
         'cattle_cm': {
             'file': 'cattle_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/cattle_QTLdata.txt',
+            'curie': 'cattleQTL',
+        },
         'chicken_bp': {
             'file': 'QTL_GG_4.0.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_GG_4.0.gff.txt.gz',
+            'curie': 'chickenQTL',
+        },
         'chicken_cm': {
             'file': 'chicken_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/chicken_QTLdata.txt',
+            'curie': 'chickenQTL',
+        },
         'pig_bp': {
             'file': 'QTL_SS_10.2.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_SS_10.2.gff.txt.gz',
+            'curie': 'pigQTL',
+        },
         'pig_cm': {
             'file': 'pig_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/pig_QTLdata.txt',
+            'curie': 'pigQTL',
+        },
         'sheep_bp': {
             'file': 'QTL_OAR_3.1.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_OAR_3.1.gff.txt.gz',
+            'curie': 'sheepQTL',
+        },
         'sheep_cm': {
             'file': 'sheep_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/sheep_QTLdata.txt',
+            'curie': 'sheepQTL',
+        },
         'horse_bp': {
             'file': 'QTL_EquCab2.0.gff.txt.gz',
-            'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz'},
+            'url': AQDL + '/tmp/QTL_EquCab2.0.gff.txt.gz',
+            'curie': 'horseQTL',
+        },
         'horse_cm': {
             'file': 'horse_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/horse_QTLdata.txt',
+            'curie': 'horseQTL',
+        },
         'rainbow_trout_cm': {
             'file': 'rainbow_trout_QTLdata.txt',
-            'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt'},
+            'url': AQDL + '/export/KSUI8GFHOT6/rainbow_trout_QTLdata.txt',
+            'curie': 'rainbow_troutQTL',
+        },
 
         #                  Gene_info from NCBI
         # to reasure TEC that when we see an integer
@@ -189,9 +213,10 @@ class AnimalQTLdb(Source):
             taxon_num = taxon_curie.split(':')[1]
             txid_num = taxon_num  # for now
             taxon_word = taxon_label.replace(' ', '_')
-            gene_info_file = '/'.join(
-                (self.rawdir, self.files[taxon_word + '_info']['file']))
+            gene_info_file = '/'.join((
+                self.rawdir, self.files[taxon_word + '_info']['file']))
             self.gene_info = list()
+            LOG.info('Ingesting %s', gene_info_file)
             with gzip.open(gene_info_file, 'rt') as gi_gz:
                 filereader = csv.reader(gi_gz, delimiter='\t')
                 for row in filereader:
@@ -214,8 +239,12 @@ class AnimalQTLdb(Source):
                 else:
                     build = mch.group(1)
                     build_id = self.localtt[build]
-                    LOG.info("Build = %s", build_id)
+                    LOG.info("Build UCSC label is: %s", build_id)
+
+                    # NCBI assembly curie is
+
                     geno.addReferenceGenome(build_id, build, txid_num)
+
                 if build_id is not None:
                     self._process_qtls_genomic_location(
                         '/'.join((self.rawdir, bpfile)), txid_num, build_id, build,
@@ -241,6 +270,8 @@ class AnimalQTLdb(Source):
         :return:
 
         """
+        aql_curie = self.files[common_name + '_cm']['curie']
+
         if self.test_mode:
             graph = self.testgraph
         else:
@@ -293,7 +324,7 @@ class AnimalQTLdb(Source):
                     continue
 
                 qtl_id = common_name + 'QTL:' + qtl_id.strip()
-                trait_id = 'AQTLTrait:' + trait_id.strip()
+                trait_id = ':'.join((aql_curie, trait_id.strip()))
 
                 # Add QTL to graph
                 feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'])
@@ -543,6 +574,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'])
                 geno.addTaxon(taxon_curie, qtl_id)
 
+                #
                 trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
 
                 # if pub is in attributes, add it to the association
@@ -600,7 +632,7 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        LOG.warning("Bad attribute flags in this file")
+        # LOG.warning("Bad attribute flags in this file")  # what does this even mean??
         LOG.info("Done with QTL genomic mappings for %s", taxon_curie)
         return
 
