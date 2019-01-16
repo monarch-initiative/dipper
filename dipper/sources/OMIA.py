@@ -39,7 +39,7 @@ class OMIA(Source):
     We make links between OMIA and OMIM in two ways:
     1.  mappings between OMIA and OMIM are created as OMIA --> hasdbXref OMIM
     2.  mappings between a breed and OMIA disease are created
-        to be a model for the mapped OMIM disease,
+        to be a 'is model of' the mapped OMIM disease,
         IF AND ONLY IF it is a 1:1 mapping.
         there are some 1:many mappings,
         and these often happen if the OMIM item is a gene.
@@ -119,9 +119,11 @@ class OMIA(Source):
                 'OMIA:001702', 'OMIA:001867', 'OMIA:000478', 'OMIA:000201',
                 'OMIA:000810', 'OMIA:001400'],
             'gene': [
-                492297, 434, 492296, 3430235, 200685834, 394659996, 200685845,
-                28713538, 291822383],
-            'taxon': [9691, 9685, 9606, 9615, 9913, 93934, 37029, 9627, 9825],
+                '492297', '434', '492296', '3430235', '200685834', '394659996',
+                '200685845', '28713538', '291822383'],
+            'taxon': [
+                '9691', '9685', '9606', '9615', '9913', '93934', '37029', '9627',
+                '9825'],
             # to be filled in during parsing of breed table
             # for lookup by breed-associations
             'breed': []
@@ -403,7 +405,7 @@ class OMIA(Source):
         return
 
     # ############ INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ################
-    # 'row' seems to be passed as  a dict 
+    # hmmm 'row' seems to be passed in as  a dict not a list
 
     def _process_species_table_row(self, row):  # row is expected as a dict
         # gb_species_id, sci_name, com_name, added_by, date_modified
@@ -435,7 +437,7 @@ class OMIA(Source):
         breed_id = 'OMIA-breed:' + str(row['breed_id'])
 
         self.id_hash['breed'][row['breed_id']] = breed_id
-        tax_id = 'NCBITaxon:'+str(row['gb_species_id'])
+        tax_id = 'NCBITaxon:' + str(row['gb_species_id'])
         breed_label = row['breed_name']
         species_label = self.label_hash.get(tax_id)
         if species_label is not None:
@@ -691,7 +693,7 @@ class OMIA(Source):
         if breed_id is None or phene_id is None or (
                 self.test_mode and (
                     omia_id not in self.test_ids['disease'] or
-                    int(row['breed_id']) not in self.test_ids['breed'])):
+                    row['breed_id'] not in self.test_ids['breed'])):
             return
 
         # FIXME we want a different relationship here
@@ -749,7 +751,7 @@ class OMIA(Source):
     def _process_lida_links_row(self, row):
         model = Model(self.graph)
         # lidaurl, omia_id, added_by
-        omia_id = 'OMIA:'+row['omia_id']
+        omia_id = 'OMIA:' + row ['omia_id']
         lidaurl = row['lidaurl']
 
         if self.test_mode and omia_id not in self.test_ids['disease']:

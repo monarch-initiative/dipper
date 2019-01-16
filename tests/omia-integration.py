@@ -12,7 +12,7 @@ There are some odd bugs, see https://github.com/monarch-initiative/dipper/issues
 This script ensures we are getting the full set of model_of relationships
 """
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 EXPECTED_PAIRS = 175
 
 
@@ -22,8 +22,7 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(
-        '--input', '-i', type=str, required=True,
-        help='Location of input ttl file')
+        '--input', '-i', type=str, required=True, help='Location of input ttl file')
 
     args = parser.parse_args()
 
@@ -31,38 +30,42 @@ def main():
     graph.parse(args.input, format=rdflib_util.guess_format(args.input))
 
     # "is model of": "RO:0003301"
-    model_of = URIRef('http://purl.obolibrary.org/obo/RO_0003301')
+    # is_model_of = URIRef('OBO:RO_0003301')
+    is_model_of = URIRef('http://purl.obolibrary.org/obo/RO_0003301')
 
-    models = graph.subject_objects(model_of)
+    # if we curie_map & globaltt here we could ...
+    # (pfx lcl) = globaltt["is model of"].split(':')
+    # iri = curie_map[pfx] + '_'.join((pfx, lcl))
+    # is_model_of = URIRef(iri)
+
+    models = graph.subject_objects(is_model_of)
     model_len = len(set(list(models)))
 
     if model_len < EXPECTED_PAIRS:
-        logger.error(
+        LOG.error(
             "Not enough <RO:is model of> predicates in graph: found {}, "
             "expected {} check omia log for warnings".format(
                 model_len, EXPECTED_PAIRS))
         exit(1)
     # else:
-    #    logger.info(
+    #    LOG.info(
     #        "Found {} model_of predicates in graph, expected at least: {}".format(
     #            model_len, EXPECTED_PAIRS))
 
-
-
-    breed = 'https://monarchinitiative.org/model/OMIA-breed:758' 
-    disease = 'http://purl.obolibrary.org/obo/OMIM_305100'
+    breed = 'https://monarchinitiative.org/model/OMIA-breed:758'
+    disease = 'http://omim.org/entry/305100'
 
     omim_diseases = graph.objects(
-        subject = URIRef(breed),
-        predicate = model_of
+        subject=URIRef(breed),
+        predicate=is_model_of
     )
 
     if list(omim_diseases) != [URIRef(disease)]:
-        logger.error("Missing breed to omim triple for ".format(breed))
-        logger.error(list(omim_diseases))
+        LOG.error("Missing breed to omim triple for %s", breed)
+        LOG.error(list(omim_diseases))
         exit(1)
 
-    logger.info("PASSED")
+    LOG.info("PASSED")
 
 
 if __name__ == "__main__":
