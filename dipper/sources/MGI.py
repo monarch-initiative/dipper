@@ -983,7 +983,7 @@ SELECT  r._relationship_key as rel_key,
                 LOG.error("\nExpected header: %s\nReceived header: %s", col, header)
 
             for line in f:
-                row = line.split('\t')
+                row = line.rstrip('\n').split('\t')
 
                 annot_key = row[col.index('annot_key')]
                 annot_type = row[col.index('annot_type')]
