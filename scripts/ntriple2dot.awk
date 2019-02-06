@@ -18,7 +18,7 @@
 
 
 function usage(){
-	print "usage: ntriple2dot.awk curie_map.yaml rdf.nt > rdf.dot"
+	print "usage: ntriple2dot.awk prefix_baseurl.yaml rdf.nt > dot.gv"
 }
 
 ##########################################################
@@ -93,7 +93,7 @@ BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
-	prefid["https_archive_monarchinitiative_org_"]="MonarchArchive
+	prefid["https_archive_monarchinitiative_org_"]="MonarchArchive"
 	############################################################
 	# Often re-visit whether these exceptions are still necessary
 	# they may have been moved into the curie prefix mapping file
@@ -102,7 +102,7 @@ BEGIN{
 
 	# in mgi
 	prefix["https://www.mousephenotype.org"]="IMPC"
-    # in IMPC (not httpS)
+	# in IMPC (not httpS)
 	prefix["http://www.mousephenotype.org"]="IMPC"
 	# note in curie_map IMPC is:
 	# http://www.mousephenotype.org/data/genes/
