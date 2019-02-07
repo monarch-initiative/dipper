@@ -5,7 +5,6 @@ import logging
 import os
 import yaml
 from tests import test_general
-# from tests import test_dataset
 from dipper.utils.GraphUtils import GraphUtils
 
 logging.basicConfig(level=logging.WARNING)
