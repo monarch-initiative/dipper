@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201901/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201902/'   # Release RDF data
 
 # other semantic-web items
 'rdf': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'                # Resource Description Framework
@@ -66,6 +66,7 @@
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
 'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
 'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
+'OMIMPS': 'http://www.omim.org/phenotypicSeries/'                   # Online Mendelian Inheritance in Man (phenotypes)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
 'PATO': 'http://purl.obolibrary.org/obo/PATO_'                      # Phenotypic Quality Ontology
 'PCO': 'http://purl.obolibrary.org/obo/PCO_'                        # Population and Community Ontology
