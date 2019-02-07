@@ -17,7 +17,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.utils.GraphUtils import GraphUtils
-from dipper import config
+
 
 LOG = logging.getLogger(__name__)
 GOGA = 'http://geneontology.org/gene-associations'

@@ -58,18 +58,35 @@ class OMIM(Source):
         'all': {
             'file': 'mim2gene.txt',
             'url': 'https://omim.org/static/omim/data/mim2gene.txt',
-            'clean': OMIMURL
+            'clean': OMIMURL,
+            'columns': (  # expected  -- not used yet
+                'MIM Number',
+                'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)',
+                'Entrez Gene ID (NCBI)',
+                'Approved Gene Symbol (HGNC)',
+                'Ensembl Gene ID (Ensembl)',
+            )
         },
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url': OMIMFTP + '/morbidmap.txt',
-            'clean': OMIMURL
+            'clean': OMIMURL,
+            'columns': (  # expected  -- not used yet
+                '# Phenotype',
+                'Gene Symbols',
+                'MIM Number',
+                'Cyto Location',
+            )
         },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
             'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
             'headers': {'User-Agent': USER_AGENT},
-            'clean': OMIMURL
+            'clean': OMIMURL,
+            'columns': (  # expected  -- not used yet
+                "Phenotypic Series Title",
+                "Phenotypic Series number",
+            ),
         },
         'mimTitles': {
             'file': 'mimTitles.txt',
@@ -115,6 +132,9 @@ class OMIM(Source):
             self.test_ids = []
 
         self.omim_type = {}
+
+        self.disorder_regex = re.compile(r'(.*), (\d{6})\s*(?:\((\d+)\))?')
+        self.nogene_regex = re.compile(r'(.*)\s+\((\d+)\)')
 
         return
 
@@ -300,17 +320,17 @@ class OMIM(Source):
                 omimparams.update({'mimNumber': ','.join(omimids[it:end])})
 
             url = OMIMAPI + urllib.parse.urlencode(omimparams)
-            LOG.info('fetching: %s', url)
 
             try:
                 req = urllib.request.urlopen(url)
             except HTTPError as e:  # URLError?
+                LOG.warning('fetching: %s', url)
                 error_msg = e.read()
                 if re.search(r'The API key: .* is invalid', str(error_msg)):
                     msg = "API Key not valid"
                     raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
                 else:
-                    LOG.warning("url %s returned 404, skipping", url)
+                    LOG.error("Failed with: %s", str(error_msg))
                     break
 
             resp = req.read().decode()
@@ -318,6 +338,7 @@ class OMIM(Source):
 
             myjson = json.loads(resp)
             # snag a copy, hopefully we will get the ftp dl soon
+            # don't hold your breath
             with open('./raw/omim/_' + str(it) + '.json', 'w') as fp:
                 json.dump(myjson, fp)
 
@@ -410,8 +431,9 @@ class OMIM(Source):
         # remove the abbreviation (comes after the ;) from the preferredTitle,
         # and add it as a synonym
         abbrev = None
-        if len(re.split(r';', label)) > 1:
-            abbrev = (re.split(r';', label)[1].strip())
+        lab_lst = label.split(';')
+        if len(lab_lst) > 1:
+            abbrev = lab_lst[1].strip()
         newlabel = self._cleanup_label(label)
 
         omim_curie = 'OMIM:' + omim_num
@@ -650,9 +672,8 @@ class OMIM(Source):
                 # Alopecia areata 1 (2)|AA1|104000|18p11.3-p11.2
                 # when there's a gene and disease
 
-                disorder_match = re.match(
-                    r'(.*), (\d{6})\s*(?:\((\d+)\))?', disorder)
-                nogene_match = re.match(r'(.*)\s+\((\d+)\)', disorder)
+                disorder_match = self.disorder_regex.match(disorder)
+                nogene_match = self.nogene_regex.match(disorder)
 
                 if disorder_match is not None:
                     disorder_parts = disorder_match.groups()
@@ -861,8 +882,8 @@ class OMIM(Source):
                         if 'clinvarAccessions' in al['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each >1 like RCV000020059;;;
-                            rcv_ids = re.split(
-                                r';;;', al['allelicVariant']['clinvarAccessions'])
+                            rcv_ids = \
+                                al['allelicVariant']['clinvarAccessions'].split(';;;')
                             rcv_ids = [
                                 (re.match(r'(RCV\d+);*', r)).group(1) for r in rcv_ids]
                             for rnum in rcv_ids:
@@ -870,7 +891,7 @@ class OMIM(Source):
                                 model.addXref(al_id, rid)
                         reference.addPage(
                             al_id, "http://omim.org/entry/" +
-                            str(entry_num)+"#" + str(al_num).zfill(4))
+                            str(entry_num) + "#" + str(al_num).zfill(4))
                     elif re.search(
                             r'moved', al['allelicVariant']['status']):
                         # for both 'moved' and 'removed'
@@ -904,45 +925,47 @@ class OMIM(Source):
         articles = ['a', 'an', 'the']
 
         # remove the abbreviation
-        l = re.split(r';', label)[0]
+        lbl = label.split(r';')[0]
 
         fixedwords = []
         i = 0
-        for w in l.split():
+        for wrd in lbl.split():
             i += 1
             # convert the roman numerals to numbers,
             # but assume that the first word is not
             # a roman numeral (this permits things like "X inactivation"
-            if i > 1 and re.match(romanNumeralPattern, w):
-                n = fromRoman(w)
+            if i > 1 and re.match(romanNumeralPattern, wrd):
+                n = fromRoman(wrd)
                 # make the assumption that the number of syndromes are <100
                 # this allows me to retain "SYNDROME C"
                 # and not convert it to "SYNDROME 100"
                 if 0 < n < 100:
                     # get the non-roman suffix, if present.
                     # for example, IIIB or IVA
-                    suffix = w.replace(toRoman(n), '', 1)
+                    suffix = wrd.replace(toRoman(n), '', 1)
                     fixed = ''.join((str(n), suffix))
-                    w = fixed
+                    wrd = fixed
 
             # capitalize first letter
-            w = w.title()
+            wrd = wrd.title()
 
             # replace interior conjunctions, prepositions,
             # and articles with lowercase
-            if w.lower() in (conjunctions+little_preps+articles) and i != 1:
-                w = w.lower()
+            if wrd.lower() in (conjunctions+little_preps+articles) and i != 1:
+                wrd = wrd.lower()
 
-            fixedwords.append(w)
+            fixedwords.append(wrd)
 
-        l = ' '.join(fixedwords)
-        # print (label,'-->',l)
-        return l
+        lbl = ' '.join(fixedwords)
+        # print (label, '-->', lbl)
+        return lbl
 
     def _process_phenotypicseries(self, limit):
         """
         Creates classes from the OMIM phenotypic series list.
         These are grouping classes to hook the more granular OMIM diseases.
+        # TEC what does 'hook' mean here?
+
         :param limit:
         :return:
 
@@ -954,8 +977,8 @@ class OMIM(Source):
         LOG.info("getting phenotypic series titles")
         model = Model(graph)
         line_counter = 0
-        with open('/'.join((self.rawdir,
-                            self.files['phenotypicSeries']['file']))) as fh:
+        with open(
+                '/'.join((self.rawdir, self.files['phenotypicSeries']['file']))) as fh:
 
             for i in range(5):  # yep, header blurb is not commented
                 fh.readline()
@@ -975,8 +998,8 @@ class OMIM(Source):
                 ps_label = row[0]
                 ps_num = row[1]
 
-                omim_curie = 'OMIM:' + ps_num
-                model.addClassToGraph(omim_curie, ps_label)
+                omimps_curie = 'OMIMPS:' + ps_num
+                model.addClassToGraph(omimps_curie, ps_label)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1010,7 +1033,7 @@ class OMIM(Source):
                                 p['phenotypeMap']['phenotypicSeriesNumber'])
         # add this entry as a subclass of the series entry
         for ser in serieslist:
-            series_id = 'OMIM:' + ser
+            series_id = 'OMIMPS:' + ser
             model.addClassToGraph(series_id, None)
             model.addSubClass(omim_curie, series_id)
 
