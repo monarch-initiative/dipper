@@ -248,8 +248,18 @@ class Source:
     def hash_id(wordage):  # same as graph/GraphUtils.digest_id(wordage)
         """
         prepend 'b' to avoid leading with digit
-        truncate to 64bit sized word
-        return sha1 hash of string
+        truncate to a 20 char sized word with a leading 'b'
+        return truncated sha1 hash of string.
+
+        by the birthday paradox;
+            expect 50% chance of collision after 69 billion invocations
+            however these are only hoped to be unique within a single file
+
+        Consider reducing to 17 hex chars to fit in a 64 bit word
+        16 discounting a leading constant
+        gives a 50% chance of collision at about 4.3b billion unique input strings
+        (currently _many_ orders of magnitude below that)
+
         :param long_string: str string to be hashed
         :return: str hash of id
         """
