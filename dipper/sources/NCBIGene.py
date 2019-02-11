@@ -237,7 +237,7 @@ class NCBIGene(Source):
                 tax_num = row[col.index('tax_id')]
                 if not self.test_mode and tax_num not in self.tax_ids:
                     continue
-
+                tax_id = ':'.join(('NCBITaxon:', tax_num))
                 gene_id = ':'.join(('NCBIGene', gene_num))
                 gtype = row[col.index('type_of_gene')].strip()
                 gene_type_id = self.resolve(gtype)
