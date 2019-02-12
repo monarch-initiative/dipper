@@ -29,7 +29,7 @@ class MGISlim(Source):
         )
 
         # "NCBITaxon:
-        self.txid = self.globaltt['Mus musculus'][9:]
+        self.txid = self.globaltt['Mus musculus'][10:]
 
     def fetch(self, is_dl_forced=False):
         return
