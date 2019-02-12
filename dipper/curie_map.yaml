@@ -35,7 +35,7 @@
 'CMO': 'http://purl.obolibrary.org/obo/CMO_'                        # Clinical Measurements Ontology
 'EDAM-DATA': 'http://edamontology.org/data_'                        # Data and Methods Ontology (data artifacts)
 'DC_CL': 'http://purl.obolibrary.org/obo/DC_CL'                     #  *** seeing it fixed in github but not yet live was `DC`
-'DECIPHER': 'http://purl.obolibrary.org/obo/DECIPHER_'              # Deciphering Developmental Disease
+'DECIPHER': 'https://decipher.sanger.ac.uk/syndrome/'               # Deciphering Developmental Disease
 'DOID': 'http://purl.obolibrary.org/obo/DOID_'                      # Human Disease Ontology
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'                        # Evidence Code Ontology
 'EFO': 'http://www.ebi.ac.uk/efo/EFO_'                              # Experimental Factor Ontology (all kinds of stuff)
@@ -64,7 +64,8 @@
 'OBI': 'http://purl.obolibrary.org/obo/OBI_'                        # Ontology of Biomedical Investigations
 'OBO': 'http://purl.obolibrary.org/obo/'                            # Biological Ontology namespace (this is not itself an ontology)
 'oboInOwl': 'http://www.geneontology.org/formats/oboInOwl#'         # obo-specific annotation properties, like synonym types
-'OMIA': 'http://purl.obolibrary.org/obo/OMIA_'                      # Online Mendelian Inheritance in Animals (animal diseases)
+# 'OMIA' was http://omia.angis.org.au/ IS https://omia.org/         # (see about helping to update original data)
+'OMIA': 'https://omia.org/OMIA'                                     # Online Mendelian Inheritance in Animals (disease/species)
 'OMIM': 'http://omim.org/entry/'                                    # Online Mendelian Inheritance in Man (human disease and variants)
 'OMIMPS': 'http://www.omim.org/phenotypicSeries/'                   # Online Mendelian Inheritance in Man (phenotypes)
 'ORPHA': 'http://www.orpha.net/ORDO/Orphanet_'                      # Rare diseases and Orphan drugs
