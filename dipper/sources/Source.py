@@ -116,8 +116,9 @@ class Source:
         # pull in global ontology mapping datastructures
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
-        #
+
         self.curie_map = self.graph.curie_map
+        # self.prefix_base = {v: k for k, v in self.curie_map.items()}
 
         # will be set to True if the intention is
         # to only process and write the test data

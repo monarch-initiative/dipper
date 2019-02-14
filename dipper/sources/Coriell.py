@@ -172,7 +172,7 @@ class Coriell(Source):
         passwd = config.get_config()['keys'][user]
 
         with pysftp.Connection(
-            host, username=user, password=passwd, private_key=key) as sftp:
+                host, username=user, password=passwd, private_key=key) as sftp:
             # check to make sure each file is in there
             # get the remote files
             remote_files = sftp.listdir_attr()
@@ -231,17 +231,17 @@ class Coriell(Source):
         if self.test_only:
             self.test_mode = True
 
-        for source in self.files:
+        for src_key in self.files:
             self._process_collection(
-                self.files[source]['id'],
-                self.files[source]['label'],
-                self.files[source]['page'])
-            self._process_data(source, limit)
+                self.files[src_key]['id'],
+                self.files[src_key]['label'],
+                self.files[src_key]['page'])
+            self._process_data(src_key, limit)
 
         LOG.info("Finished parsing.")
         return
 
-    def _process_data(self, source, limit=None):
+    def _process_data(self, src_key, limit=None):
         """
         This function will process the data files from Coriell.
         We make the assumption that any alleles listed are variants
@@ -284,7 +284,8 @@ class Coriell(Source):
         :return:
 
         """
-        raw = '/'.join((self.rawdir, self.files[source]['file']))
+
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
 
         LOG.info("Processing Data from %s", raw)
 
@@ -299,7 +300,7 @@ class Coriell(Source):
         line_counter = 1
         geno = Genotype(graph)
         diputil = DipperUtil()
-        col = self.files[source]['columns']
+        col = self.files[src_key]['columns']
         # affords access with
         # x = row[col.index('x')].strip()
 

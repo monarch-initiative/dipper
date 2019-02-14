@@ -93,7 +93,7 @@ class OMIA(Source):
             are_bnodes_skolemized,
             'omia',
             ingest_title='Online Mendelian Inheritance in Animals',
-            ingest_url='http://omia.angis.org.au',
+            ingest_url='https://omia.org',
             # ingest_desc=None,
             license_url=None,
             data_rights='http://sydney.edu.au/disclaimer.shtml',
@@ -248,13 +248,14 @@ class OMIA(Source):
 
         :return hash of omim_number to ontology_curie
         '''
-        myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
+        src_key = 'mimtitles'
+        myfile = '/'.join((self.rawdir, self.files[src_key]['file']))
+        # col = self.files[src_key]['columns']
         omim_type = {}
-        line_counter = 1
-        with open(myfile, 'r') as fh:
-            reader = csv.reader(fh, delimiter='\t')
+        with open(myfile, 'r') as filereader:
+            reader = csv.reader(filereader, delimiter='\t')
+            # todo header check
             for row in reader:
-                line_counter += 1
                 if row[0][0] == '#':     # skip comments
                     continue
                 elif row[0] == 'Caret':  # moved|removed|split -> moved twice
@@ -299,7 +300,7 @@ class OMIA(Source):
                     # to be interperted as  a gene and/or a phenotype
                     omim_type[omim_id] = self.globaltt['has_affected_feature']
                 else:
-                    LOG.error('Unlnown OMIM type line ')
+                    LOG.error('Unlnown OMIM type line %s', reader.line_num)
         return omim_type
 
     # ###################### XML LOOPING FUNCTIONS ##################
@@ -312,42 +313,32 @@ class OMIA(Source):
         :param limit:
         :return:
         """
-
         myfile = '/'.join((self.rawdir, self.files['data']['file']))
-
         fh = gzip.open(myfile, 'rb')
         filereader = io.TextIOWrapper(fh, newline="")
-
         filereader.readline()  # remove the xml declaration line
-
         for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
             # Species ids are == NCBITaxon ids
             self.process_xml_table(
                 elem, 'Species_gb', self._process_species_table_row, limit)
-
         fh.close()
-
         return
 
     def process_classes(self, limit):
         """
+        After all species have been processed .
         Loop through the xml file and process the articles,
         breed, genes, phenes, and phenotype-grouping classes.
         We add elements to the graph,
         and store the id-to-label in the label_hash dict,
         along with the internal key-to-external id in the id_hash dict.
         The latter are referenced in the association processing functions.
-
         :param limit:
         :return:
-
         """
-
         myfile = '/'.join((self.rawdir, self.files['data']['file']))
-
         fh = gzip.open(myfile, 'rb')
         filereader = io.TextIOWrapper(fh, newline="")
-
         filereader.readline()  # remove the xml declaration line
 
         # iterparse is not deprecated
@@ -360,7 +351,6 @@ class OMIA(Source):
             self.process_xml_table(elem, 'Phene', self._process_phene_row, limit)
             self.process_xml_table(
                 elem, 'Omim_Xref', self._process_omia_omim_map, limit)
-
         fh.close()
 
         # post-process the omia-omim associations to filter out the genes
@@ -380,12 +370,9 @@ class OMIA(Source):
         """
 
         myfile = '/'.join((self.rawdir, self.files['data']['file']))
-
         f = gzip.open(myfile, 'rb')
         filereader = io.TextIOWrapper(f, newline="")
-
         filereader.readline()  # remove the xml declaration line
-
         for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
             self.process_xml_table(
                 elem, 'Article_Breed', self._process_article_breed_row, limit)
@@ -399,9 +386,7 @@ class OMIA(Source):
                 elem, 'Phene_Gene', self._process_phene_gene_row, limit)
             self.process_xml_table(
                 elem, 'Group_MPO', self._process_group_mpo_row, limit)
-
         f.close()
-
         return
 
     # ############ INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ################
@@ -751,7 +736,7 @@ class OMIA(Source):
     def _process_lida_links_row(self, row):
         model = Model(self.graph)
         # lidaurl, omia_id, added_by
-        omia_id = 'OMIA:' + row ['omia_id']
+        omia_id = 'OMIA:' + row['omia_id']
         lidaurl = row['lidaurl']
 
         if self.test_mode and omia_id not in self.test_ids['disease']:
