@@ -19,6 +19,36 @@ class Monarch(Source):
 
     """
 
+    files = {
+        'omia_d2p': {
+            'file': r'[0-9]{6}.txt',
+            'columns': [
+                'Disease ID',
+                'Species ID',
+                'Breed Name',
+                'Variant',
+                'Inheritance',
+                'Phenotype ID',
+                'Phenotype Name',
+                'Entity ID',
+                'Entity Name',
+                'Quality ID',
+                'Quality Name',
+                'Related Entity ID',
+                'Related Entity Name',
+                'Abnormal ID',
+                'Abnormal Name',
+                'Phenotype Desc',
+                'Assay',
+                'Frequency',
+                'Pubmed ID',
+                'Pub Desc',
+                'Curator Notes',
+                'Date Created',
+            ]
+        }
+    }
+
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
             graph_type,
@@ -31,6 +61,7 @@ class Monarch(Source):
             # file_handle=None
         )
 
+        print(self.prefix_base)
         return
 
     def fetch(self, is_dl_forced=False):
@@ -67,14 +98,21 @@ class Monarch(Source):
 
         model = Model(graph)
 
-        LOG.info(
-            "Processing Monarch OMIA Animal disease-phenotype associations")
+        LOG.info("Processing Monarch OMIA Animal disease-phenotype associations")
+
+        src_key = 'omia_d2p'
 
         # get file listing
         mypath = '/'.join((self.rawdir, 'OMIA-disease-phenotype'))
         file_list = [
             f for f in listdir(mypath)
             if isfile(join(mypath, f)) and re.search(r'.txt$', f)]
+
+        col = self.files[src_key]['columns']
+        # reusable initial code generator
+        # for c in col:
+        #   print(
+        #    '# '+str.lower(c.replace(" ",""))+" = row[col.index('"+c+"')].strip()")
 
         for filename in file_list:
             LOG.info("Processing %s", filename)
@@ -83,18 +121,40 @@ class Monarch(Source):
             fname = '/'.join((mypath, filename))
             with open(fname, 'r') as csvfile:
                 filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-                header = next(filereader)
+                fileheader = next(filereader)
+                if fileheader != col:
+                    LOG.error('Expected  %s to have columns: %s', fname, col)
+                    LOG.error('But Found %s to have columns: %s', fname, fileheader)
+                    raise AssertionError('Incomming data headers have changed.')
+
                 for row in filereader:
-                    if len(row) != 22 or len(row) != len(header):
+                    if len(row) != len(col):
                         LOG.info(
                             "Not enough cols %d in %s - please fix", len(row), filename)
                         continue
-                    (disease_num, species_id, breed_name, variant, inheritance,
-                     phenotype_id, phenotype_name, entity_id, entity_name,
-                     quality_id, quality_name, related_entity_id,
-                     related_entity_name, abnormal_id, abnormal_name,
-                     phenotype_description, assay, frequency, pubmed_id,
-                     pub_description, curator_notes, date_created) = row
+
+                    disease_num = row[col.index('Disease ID')].strip()
+                    species_id = row[col.index('Species ID')].strip()
+                    breed_name = row[col.index('Breed Name')].strip()
+                    # variant = row[col.index('Variant')]
+                    # inheritance = row[col.index('Inheritance')]
+                    phenotype_id = row[col.index('Phenotype ID')].strip()
+                    # phenotype_name = row[col.index('Phenotype Name')]
+                    entity_id = row[col.index('Entity ID')].strip()
+                    entity_name = row[col.index('Entity Name')]
+                    quality_id = row[col.index('Quality ID')].strip()
+                    quality_name = row[col.index('Quality Name')]
+                    # related_entity_id = row[col.index('Related Entity ID')]
+                    # related_entity_name = row[col.index('Related Entity Name')]
+                    # abnormal_id = row[col.index('Abnormal ID')]
+                    # abnormal_name = row[col.index('Abnormal Name')]
+                    # phenotype_desc = row[col.index('Phenotype Desc')]
+                    assay = row[col.index('Assay')].strip()
+                    # frequency = row[col.index('Frequency')]
+                    pubmed_id = row[col.index('Pubmed ID')].strip()
+                    phenotype_description = row[col.index('Pub Desc')].strip()
+                    curator_notes = row[col.index('Curator Notes')].strip()
+                    # date_created = row[col.index('Date Created')]
 
                     if phenotype_id == '':
                         # LOG.warning('Missing phenotype in row:\n%s', row)
@@ -103,30 +163,29 @@ class Monarch(Source):
                         continue
                     if len(str(disease_num)) < 6:
                         disease_num = str(disease_num).zfill(6)
-                    disease_id = 'OMIA:' + disease_num.strip()
-                    species_id = species_id.strip()
+                    disease_id = 'OMIA:' + disease_num
                     if species_id != '':
                         disease_id = '-'.join((disease_id, species_id))
                     assoc = D2PAssoc(graph, self.name, disease_id, phenotype_id)
                     if pubmed_id != '':
-                        for p in re.split(r'[,;]', pubmed_id):
-                            pmid = 'PMID:'+p.strip()
+                        for pnum in re.split(r'[,;]', pubmed_id):
+                            pnum = re.sub(r'[^0-9]', '', pnum)
+                            pmid = 'PMID:' + pnum
                             assoc.add_source(pmid)
                     else:
                         assoc.add_source(
-                            '/'.join(('http://omia.angis.org.au/OMIA' +
-                                      disease_num.strip(), species_id.strip())))
+                            '/'.join((
+                                self.curie_map['OMIA'] + disease_num, species_id)))
                     assoc.add_association_to_graph()
                     aid = assoc.get_association_id()
                     if phenotype_description != '':
                         model.addDescription(aid, phenotype_description)
                     if breed_name != '':
-                        model.addDescription(
-                            aid, breed_name.strip()+' [observed in]')
+                        model.addDescription(aid, breed_name + ' [observed in]')
                     if assay != '':
-                        model.addDescription(aid, assay.strip()+' [assay]')
+                        model.addDescription(aid, assay + ' [assay]')
                     if curator_notes != '':
-                        model.addComment(aid, curator_notes.strip())
+                        model.addComment(aid, curator_notes)
 
                     if entity_id != '' or quality_id != '':
                         LOG.info(
