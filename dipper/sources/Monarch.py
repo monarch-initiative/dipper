@@ -60,8 +60,6 @@ class Monarch(Source):
             # data_rights=None,
             # file_handle=None
         )
-
-        print(self.prefix_base)
         return
 
     def fetch(self, is_dl_forced=False):
