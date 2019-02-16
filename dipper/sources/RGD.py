@@ -6,8 +6,6 @@ from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
 
-
-
 __author__ = 'timputman'
 
 LOG = logging.getLogger(__name__)
@@ -32,8 +30,8 @@ class RGD(Source):
             'rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
-            license_url=None
-            data_rights='https://rgd.mcw.edu/wg/disclaimer/'
+            license_url=None,
+            data_rights='https://rgd.mcw.edu/wg/disclaimer/',
             # file_handle=None
         )
         self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
@@ -92,7 +90,7 @@ class RGD(Source):
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
 
         # add the references
-        references = record['evidence']['evidence_has_supporting_reference']
+        references = record['evidence']['has_supporting_reference']
         # created RGDRef prefix in curie map to route to proper reference URL in RGD
         references = [
             x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
