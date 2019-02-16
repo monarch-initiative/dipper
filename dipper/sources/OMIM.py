@@ -470,14 +470,14 @@ class OMIM(Source):
 
             # add the alternate labels and includes as synonyms
             for label in other_labels:
-                model.addSynonym(omim_curie, label, model.globaltt['hasRelatedSynonym'])
+                model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
 
             # KS: commenting out, we will get disease descriptions
             # from MONDO, and gene descriptions from the mygene API
 
             if abbrev is not None:
                 model.addSynonym(
-                    omim_curie, abbrev, model.globaltt['hasRelatedSynonym'])
+                    omim_curie, abbrev, model.globaltt['has_related_synonym'])
 
             # if this is a genetic locus (but not sequenced)
             #   then add the chrom loc info
