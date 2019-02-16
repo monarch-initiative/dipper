@@ -88,7 +88,7 @@ class G2PAssoc(Assoc):
                 stage_process_id, None, self.globaltt['developmental_process'])
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['starts_during'], self.start_stage_id)
+                stage_process_id, self.globaltt['starts during'], self.start_stage_id)
 
             self.graph.addTriple(
                 stage_process_id, self.globaltt['ends_during'], self.end_stage_id)
