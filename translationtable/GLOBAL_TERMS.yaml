@@ -561,7 +561,7 @@
 "is_assertion_supported_by_evidence": "SEPIO:0000111",
 # "is_assertion_supported_by": "SEPIO:0000111",
 "measures_parameter": "SEPIO:0000114",
-"has_supporting_reference": "SEPIO:0000124",
+"evidence_has_supporting_reference": "SEPIO:0000124",
 "asserted_by": "SEPIO:0000130",
 "phenotyping only": "SEPIO:0000186",
 # "has_evidence_with_item": "SEPIO:0000189",

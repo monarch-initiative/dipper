@@ -32,8 +32,8 @@ class RGD(Source):
             'rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
-            license_url='https://rgd.mcw.edu/wg/disclaimer/'
-            # data_rights=None
+            license_url=None
+            data_rights='https://rgd.mcw.edu/wg/disclaimer/'
             # file_handle=None
         )
         self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
@@ -92,7 +92,7 @@ class RGD(Source):
         g2p_assoc = Assoc(self.graph, self.name, sub=gene, obj=phenotype, pred=relation)
 
         # add the references
-        references = record['evidence']['has_supporting_reference']
+        references = record['evidence']['evidence_has_supporting_reference']
         # created RGDRef prefix in curie map to route to proper reference URL in RGD
         references = [
             x.replace('RGD', 'RGDRef') if 'PMID' not in x else x for x in references]
@@ -115,7 +115,7 @@ class RGD(Source):
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])
-        g2p_assoc.add_evidence(self.resolve(record['evidence']['type']))
+        g2p_assoc.add_evidence(self.resolve(record['evidence']['type']))  # ?set where?
         g2p_assoc.add_association_to_graph()
 
         return
