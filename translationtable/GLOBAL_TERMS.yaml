@@ -491,7 +491,7 @@
 "member of": "RO:0002350",
 "has member": "RO:0002351",
 "output_of": "RO:0002353",
-"causally_upstream_of_or_within": "RO:0002418",
+"causally upstream of or within": "RO:0002418",
 "interacts with": "RO:0002434",
 "genetically interacts with": "RO:0002435",
 "molecularly_interacts_with": "RO:0002436",
