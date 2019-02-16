@@ -552,7 +552,7 @@
 "literature only": "SEPIO:0000080",
 "curation": "SEPIO:0000081",
 "has_evidence_item": "SEPIO:0000084",
-"has_supporting_activity": "SEPIO:0000085",
+"has_evidence_item_output_from": "SEPIO:0000085",
 "is_equilavent_to": "SEPIO:0000098",
 "is_consistent_with": "SEPIO:0000099",
 "strongly_contradicts": "SEPIO:0000100",

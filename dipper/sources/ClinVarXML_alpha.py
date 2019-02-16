@@ -1008,7 +1008,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         write_spo(
                             _evidence_id,
-                            GLOBALTT['has_supporting_activity'], _provenance_id)
+                            GLOBALTT['has_evidence_item_output_from'], _provenance_id)
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         write_spo(

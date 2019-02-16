@@ -703,7 +703,7 @@ class IMPC(Source):
         # Link evidence to provenance by connecting to study node
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         self.graph.addTriple(
-            evidence_line_bnode, self.globaltt['has_supporting_activity'], study_bnode)
+            evidence_line_bnode, self.globaltt['has_evidence_item_output_from'], study_bnode)
 
         return evidence_line_bnode
 
