@@ -124,7 +124,7 @@ class EOM(PostgreSQLSource):
         Turtle:
             <eom id> a owl:Class
                 rdf:label Literal(eom label)
-                OIO:hasRelatedSynonym Literal(synonym list)
+                oboInOwl:has_related_synonym Literal(synonym list)
                 IAO:definition Literal(objective_def. subjective def)
                 foaf:depiction Literal(small_image_url),
                                Literal(large_image_url)
@@ -197,14 +197,14 @@ class EOM(PostgreSQLSource):
                 for syn in synonyms.split(';'):
                     model.addSynonym(
                         morphology_term_id, syn.strip(),
-                        self.globaltt['hasExactSynonym'])
+                        self.globaltt['has_exact_synonym'])
 
-                # morphology_term_id hasRelatedSynonym replaces (; delimited)
+                # morphology_term_id has_related_synonym replaces (; delimited)
                 if replaces != '' and replaces != synonyms:
                     for syn in replaces.split(';'):
                         model.addSynonym(
                             morphology_term_id, syn.strip(),
-                            self.globaltt['hasRelatedSynonym'])
+                            self.globaltt['has_related_synonym'])
 
                 # <morphology_term_id> <foaf:page> morphology_term_url
                 if morphology_term_id is not None and morphology_term_url is not None:

@@ -773,7 +773,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
-                write_spo(rcv_variant_id, 'oboInOwl:hasExactSynonym', syn)
+                write_spo(rcv_variant_id, GLOBALTT['has_exact_synonym'], syn)
             rcv_synonyms = []
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(

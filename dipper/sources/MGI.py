@@ -1405,13 +1405,13 @@ SELECT  r._relationship_key as rel_key,
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name, self.globaltt['hasExactSynonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym'])
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
-                            marker_id, name, self.globaltt['hasExactSynonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym'])
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
