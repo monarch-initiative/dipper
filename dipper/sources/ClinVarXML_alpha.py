@@ -784,7 +784,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(
                 monarch_assoc, GLOBALTT['has_supporting_evidence_line'], _evidence_id)
             # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
-            write_spo(monarch_assoc, GLOBALTT['is_asserted_in'], _assertion_id)
+            write_spo(monarch_assoc, GLOBALTT['proposition_asserted_in'], _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
             write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'])
