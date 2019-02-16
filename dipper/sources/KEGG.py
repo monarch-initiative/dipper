@@ -820,7 +820,7 @@ class KEGG(Source):
 
                 graph.addTriple(
                     pathway_id,
-                    self.globaltt['causally_upstream_of_or_within'],
+                    self.globaltt['causally upstream of or within'],
                     disease_id)
 
                 if not self.test_mode and limit is not None and line_counter > limit:

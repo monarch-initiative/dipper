@@ -6,8 +6,6 @@ from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
 
-
-
 __author__ = 'timputman'
 
 LOG = logging.getLogger(__name__)
@@ -32,8 +30,8 @@ class RGD(Source):
             'rgd',
             ingest_title='Rat Genome Database',
             ingest_url='http://rgd.mcw.edu/',
-            license_url='https://rgd.mcw.edu/wg/disclaimer/'
-            # data_rights=None
+            license_url=None,
+            data_rights='https://rgd.mcw.edu/wg/disclaimer/',
             # file_handle=None
         )
         self.dataset.set_citation('https://rgd.mcw.edu/wg/citing-rgd/')
@@ -115,7 +113,7 @@ class RGD(Source):
 
         # add the date created on
         g2p_assoc.add_date(date=record['date'])
-        g2p_assoc.add_evidence(self.resolve(record['evidence']['type']))
+        g2p_assoc.add_evidence(self.resolve(record['evidence']['type']))  # ?set where?
         g2p_assoc.add_association_to_graph()
 
         return

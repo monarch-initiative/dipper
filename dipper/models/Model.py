@@ -198,7 +198,7 @@ class Model():
         """
 
         if synonym_type is None:
-            synonym_type = self.globaltt['hasExactSynonym']
+            synonym_type = self.globaltt['has_exact_synonym']
 
         if synonym is not None:
             self.graph.addTriple(

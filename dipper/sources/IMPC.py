@@ -540,7 +540,7 @@ class IMPC(Source):
             'International Mouse Phenotyping Consortium')
 
         self.graph.addTriple(
-            assoc_id, self.globaltt['is_asserted_in'], assertion_bnode)
+            assoc_id, self.globaltt['proposition_asserted_in'], assertion_bnode)
 
         self.graph.addTriple(
             assertion_bnode,
@@ -703,7 +703,7 @@ class IMPC(Source):
         # Link evidence to provenance by connecting to study node
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         self.graph.addTriple(
-            evidence_line_bnode, self.globaltt['has_supporting_activity'], study_bnode)
+            evidence_line_bnode, self.globaltt['has_evidence_item_output_from'], study_bnode)
 
         return evidence_line_bnode
 

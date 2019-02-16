@@ -255,16 +255,16 @@ def scv_link(scv_sig, rcv_trip):
     '''
     Creates links between SCV based on their pathonicty/significance calls
 
-    # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
-    # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
-    # GENO:0000843 - GENO:0000843 --> equivalent_to SEPIO:0000098
-    # GENO:0000844 - GENO:0000844 --> equivalent_to SEPIO:0000098
-    # GENO:0000840 - GENO:0000844 --> inconsistent_with SEPIO:0000101
-    # GENO:0000841 - GENO:0000844 --> inconsistent_with SEPIO:0000101
-    # GENO:0000841 - GENO:0000843 --> inconsistent_with SEPIO:0000101
-    # GENO:0000840 - GENO:0000841 --> consistent_with SEPIO:0000099
-    # GENO:0000843 - GENO:0000844 --> consistent_with SEPIO:0000099
-    # GENO:0000840 - GENO:0000843 --> contradicts SEPIO:0000100
+    # GENO:0000840 - GENO:0000840 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000841 - GENO:0000841 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000843 - GENO:0000843 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000844 - GENO:0000844 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000840 - GENO:0000844 --> contradicts SEPIO:0000101
+    # GENO:0000841 - GENO:0000844 --> contradicts SEPIO:0000101
+    # GENO:0000841 - GENO:0000843 --> contradicts SEPIO:0000101
+    # GENO:0000840 - GENO:0000841 --> is_consistent_with SEPIO:0000099
+    # GENO:0000843 - GENO:0000844 --> is_consistent_with SEPIO:0000099
+    # GENO:0000840 - GENO:0000843 --> strongly_contradicts SEPIO:0000100
     '''
 
     sig = {  # 'arbitrary scoring scheme increments as powers of two'
@@ -276,14 +276,14 @@ def scv_link(scv_sig, rcv_trip):
     }
 
     lnk = {  # specific result from diff in 'arbitrary scoring scheme'
-        0: 'SEPIO:0000098',
-        1: 'SEPIO:0000099',
-        2: 'SEPIO:0000101',
-        3: 'SEPIO:0000101',
-        4: 'SEPIO:0000099',
-        6: 'SEPIO:0000101',
-        7: 'SEPIO:0000100',
-        8: 'SEPIO:0000126',
+        0: 'SEPIO:0000098',  # is_equilavent_to
+        1: 'SEPIO:0000099',  # is_consistent_with
+        2: 'SEPIO:0000101',  # contradicts
+        3: 'SEPIO:0000101',  # contradicts
+        4: 'SEPIO:0000099',  # is_consistent_with
+        6: 'SEPIO:0000101',  # contradicts
+        7: 'SEPIO:0000100',  # strongly_contradicts
+        8: 'SEPIO:0000126',   # is_inconsistent_with
         12: 'SEPIO:0000126',
         14: 'SEPIO:0000126',
         15: 'SEPIO:0000126',
@@ -773,7 +773,7 @@ with gzip.open(FILENAME, 'rt') as fh:
 
             # /RCV/MeasureSet/Measure/AttributeSet/Attribute[@Type="HGVS.*"]
             for syn in rcv_synonyms:
-                write_spo(rcv_variant_id, 'oboInOwl:hasExactSynonym', syn)
+                write_spo(rcv_variant_id, GLOBALTT['has_exact_synonym'], syn)
             rcv_synonyms = []
             # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
             write_spo(
@@ -784,7 +784,7 @@ with gzip.open(FILENAME, 'rt') as fh:
             write_spo(
                 monarch_assoc, GLOBALTT['has_supporting_evidence_line'], _evidence_id)
             # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
-            write_spo(monarch_assoc, GLOBALTT['is_asserted_in'], _assertion_id)
+            write_spo(monarch_assoc, GLOBALTT['proposition_asserted_in'], _assertion_id)
 
             # <:_evidence_id><rdf:type><ECO:0000000> .
             write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'])
@@ -880,11 +880,11 @@ with gzip.open(FILENAME, 'rt') as fh:
                     './Citation/ID[@Source="PubMed"]'):
                 scv_citation_id = SCV_Citation.text
                 #           TRIPLES
-                # has_part -> has_supporting_reference
+                # has_part -> evidence_has_supporting_reference
                 # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                 write_spo(
                     _evidence_id,
-                    GLOBALTT['has_supporting_reference'], 'PMID:' + scv_citation_id)
+                    GLOBALTT['evidence_has_supporting_reference'], 'PMID:' + scv_citation_id)
                 # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                 write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id)
 
@@ -901,7 +901,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_significance = SCV_Description.text.strip()
                 scv_geno = resolve(scv_significance)
                 if scv_geno is not None and \
-                        scv_significance != 'uncertain significance' and\
+                        LOCALTT[scv_significance] != 'has_uncertain_significance_for_condition' and\
                         scv_significance != 'protective':
                     # we have the association's (SCV) pathnogicty call
                     # and its significance is explicit
@@ -940,12 +940,12 @@ with gzip.open(FILENAME, 'rt') as fh:
 
                         for scv_citation_id in SCV_Citation.findall(
                                 './ID[@Source="PubMed"]'):
-                            # has_supporting_reference
+                            # evidence_has_supporting_reference
                             # see also: SCV/ClinicalSignificance/Citation/ID
                             # <_evidence_id><SEPIO:0000124><PMID:scv_citation_id>
                             write_spo(
                                 _evidence_id,
-                                GLOBALTT['has_supporting_reference'],
+                                GLOBALTT['evidence_has_supporting_reference'],
                                 'PMID:' + scv_citation_id.text)
                             # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                             write_spo(
@@ -1008,7 +1008,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                         # <_evidence_id><SEPIO:0000011><_provenence_id>
                         write_spo(
                             _evidence_id,
-                            GLOBALTT['has_supporting_activity'], _provenance_id)
+                            GLOBALTT['has_evidence_item_output_from'], _provenance_id)
 
                         # <_:provenance_id><rdf:type><scv_evidence_type>
                         write_spo(

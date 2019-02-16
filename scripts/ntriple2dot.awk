@@ -1,4 +1,4 @@
-#! /usr/bin/gawk -f
+ #! /usr/bin/gawk -f
 
 #  Reduce the subject and object of RDF triples (ntriples format)
 #  down to their @prefix (or literal object class)
@@ -93,7 +93,7 @@ BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
-	prefid["https_archive_monarchinitiative_org_"]="MonarchArchive"
+	prefix["https_archive_monarchinitiative_org_"]="MonarchArchive"
 	############################################################
 	# Often re-visit whether these exceptions are still necessary
 	# they may have been moved into the curie prefix mapping file
@@ -114,7 +114,7 @@ BEGIN{
 
 	# in GWAScatalog
 	prefix["http://www.ncbi.nlm.nih.gov/SNP/"]="dbSNP"
-	# note in curie_map WormBase is
+	# note in curie_map dbSNP is
 	# 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
 
 	# Ensembl  transient
