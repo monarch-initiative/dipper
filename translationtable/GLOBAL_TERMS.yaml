@@ -562,6 +562,7 @@
 # "is_assertion_supported_by": "SEPIO:0000111",
 "measures_parameter": "SEPIO:0000114",
 "evidence_has_supporting_reference": "SEPIO:0000124",
+"is_inconsistent_with": "SEPIO:0000126",
 "asserted_by": "SEPIO:0000130",
 "phenotyping only": "SEPIO:0000186",
 # "has_evidence_with_item": "SEPIO:0000189",

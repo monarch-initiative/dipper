@@ -255,16 +255,16 @@ def scv_link(scv_sig, rcv_trip):
     '''
     Creates links between SCV based on their pathonicty/significance calls
 
-    # GENO:0000840 - GENO:0000840 --> equivalent_to SEPIO:0000098
-    # GENO:0000841 - GENO:0000841 --> equivalent_to SEPIO:0000098
-    # GENO:0000843 - GENO:0000843 --> equivalent_to SEPIO:0000098
-    # GENO:0000844 - GENO:0000844 --> equivalent_to SEPIO:0000098
-    # GENO:0000840 - GENO:0000844 --> inconsistent_with SEPIO:0000101
-    # GENO:0000841 - GENO:0000844 --> inconsistent_with SEPIO:0000101
-    # GENO:0000841 - GENO:0000843 --> inconsistent_with SEPIO:0000101
-    # GENO:0000840 - GENO:0000841 --> consistent_with SEPIO:0000099
-    # GENO:0000843 - GENO:0000844 --> consistent_with SEPIO:0000099
-    # GENO:0000840 - GENO:0000843 --> contradicts SEPIO:0000100
+    # GENO:0000840 - GENO:0000840 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000841 - GENO:0000841 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000843 - GENO:0000843 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000844 - GENO:0000844 --> is_equilavent_to SEPIO:0000098
+    # GENO:0000840 - GENO:0000844 --> contradicts SEPIO:0000101
+    # GENO:0000841 - GENO:0000844 --> contradicts SEPIO:0000101
+    # GENO:0000841 - GENO:0000843 --> contradicts SEPIO:0000101
+    # GENO:0000840 - GENO:0000841 --> is_consistent_with SEPIO:0000099
+    # GENO:0000843 - GENO:0000844 --> is_consistent_with SEPIO:0000099
+    # GENO:0000840 - GENO:0000843 --> strongly_contradicts SEPIO:0000100
     '''
 
     sig = {  # 'arbitrary scoring scheme increments as powers of two'
@@ -276,14 +276,14 @@ def scv_link(scv_sig, rcv_trip):
     }
 
     lnk = {  # specific result from diff in 'arbitrary scoring scheme'
-        0: 'SEPIO:0000098',
-        1: 'SEPIO:0000099',
-        2: 'SEPIO:0000101',
-        3: 'SEPIO:0000101',
-        4: 'SEPIO:0000099',
-        6: 'SEPIO:0000101',
-        7: 'SEPIO:0000100',
-        8: 'SEPIO:0000126',
+        0: 'SEPIO:0000098',  # is_equilavent_to
+        1: 'SEPIO:0000099',  # is_consistent_with
+        2: 'SEPIO:0000101',  # contradicts
+        3: 'SEPIO:0000101',  # contradicts
+        4: 'SEPIO:0000099',  # is_consistent_with
+        6: 'SEPIO:0000101',  # contradicts
+        7: 'SEPIO:0000100',  # strongly_contradicts
+        8: 'SEPIO:0000126',   # is_inconsistent_with
         12: 'SEPIO:0000126',
         14: 'SEPIO:0000126',
         15: 'SEPIO:0000126',
