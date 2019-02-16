@@ -901,7 +901,7 @@ with gzip.open(FILENAME, 'rt') as fh:
                 scv_significance = SCV_Description.text.strip()
                 scv_geno = resolve(scv_significance)
                 if scv_geno is not None and \
-                        scv_significance != 'uncertain significance' and\
+                        LOCALTT[scv_significance] != 'has_uncertain_significance_for_condition' and\
                         scv_significance != 'protective':
                     # we have the association's (SCV) pathnogicty call
                     # and its significance is explicit

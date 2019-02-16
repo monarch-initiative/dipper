@@ -7,8 +7,6 @@
 # items in the the internal_label column should be unique
 # in the first column of the global_terms.yaml file
 
-# "protective_for_condition": ":protective_for_condition"   # needs a real term
-
 ### RCV variant to gene relationship types type
 #########################################################
 "within single gene": "has_affected_feature"
@@ -23,14 +21,14 @@
 ###########################################################
 "Benign": "benign_for_condition"
 "benign": "benign_for_condition"
-"conflicting data from submitters": "uncertain significance"
+"conflicting data from submitters": "has_uncertain_significance_for_condition"
 "Likely benign": "likely_benign_for_condition"
 "likely benign": "likely_benign_for_condition"
 "Likely Benign": "likely_benign_for_condition"
 "likely pathogenic": "likely_pathogenic_for_condition"
 "Likely pathogenic": "likely_pathogenic_for_condition"
-"no known pathogenicity": "uncertain significance"
-"non-pathogenic": "uncertain significance"
+"no known pathogenicity": "has_uncertain_significance_for_condition"
+"non-pathogenic": "has_uncertain_significance_for_condition"
 "pathogenic": "pathogenic_for_condition"
 "Pathogenic": "pathogenic_for_condition"
 "Pathogenic/Likely pathogenic": "pathogenic_for_condition"
@@ -42,35 +40,35 @@
 "probably not pathogenic": "likely_benign_for_condition"
 "Suspected Benign": "likely_benign_for_condition"
 "Suspected Pathogenic": "likely_pathogenic_for_condition"
-"uncertain": "uncertain significance"
-"Uncertain": "uncertain significance"
-"Uncertain significance": "uncertain significance"
-"Uncertain Significance": "uncertain significance"
-"unknown": "uncertain significance"
-"Unknown": "uncertain significance"
-"variant of unknown significance": "uncertain significance"
-"MUT": "uncertain significance"
-"Unknown significance": "uncertain significance"
+"uncertain": "has_uncertain_significance_for_condition"
+"Uncertain": "has_uncertain_significance_for_condition"
+"Uncertain significance": "has_uncertain_significance_for_condition"
+"Uncertain Significance": "has_uncertain_significance_for_condition"
+"unknown": "has_uncertain_significance_for_condition"
+"Unknown": "has_uncertain_significance_for_condition"
+"variant of unknown significance": "has_uncertain_significance_for_condition"
+"MUT": "has_uncertain_significance_for_condition"
+"Unknown significance": "has_uncertain_significance_for_condition"
 "likely pathogenic - adrenal pheochromocytoma": "likely_pathogenic_for_condition"
 "pathogenic variant for Bardet-Biedl Syndrome": "pathogenic_for_condition"
-"untested": "uncertain significance"
-"other": "uncertain significance"
-"not provided": "uncertain significance"
+"untested": "has_uncertain_significance_for_condition"
+"other": "has_uncertain_significance_for_condition"
+"not provided": "has_uncertain_significance_for_condition"
 "cancer": "pathogenic_for_condition"
 "risk factor": "likely_pathogenic_for_condition"
 "drug response": "has_drug_response"
 "drug-response": "has_drug_response"
-"association": "uncertain significance"   # tricksy with globaltt.association
-"Affects": "uncertain significance"
-"Moderate": "uncertain significance"
+"association": "has_uncertain_significance_for_condition"   # tricksy with globaltt.association
+"Affects": "has_uncertain_significance_for_condition"
+"Moderate": "has_uncertain_significance_for_condition"
 "protective": "protective_for_condition"
-"unknown significance": "uncertain significance"
+"unknown significance": "has_uncertain_significance_for_condition"
 "likely pathogenic - adrenal bilateral pheochromocy": "likely_pathogenic_for_condition"
 "Associated with leiomyomas": "likely_benign_for_condition"
 "VSB": "likely_benign_for_condition"  # "variant(s) suspected benign"
-"VOUS": "uncertain significance"  # "variant of unknown significance"
+"VOUS": "has_uncertain_significance_for_condition"  # "variant of unknown significance"
 # this next one is ambigous think it implies
-"POLY": "uncertain significance"  # diff disorder with diff calls?
+"POLY": "has_uncertain_significance_for_condition"  # diff disorder with diff calls?
 ###  Variant (Subject) Sequence Types
 #############################################################
 "single nucleotide variant": "SNV"
