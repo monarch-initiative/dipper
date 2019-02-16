@@ -475,7 +475,7 @@
 "has disposition": "RO:0000091",
 "derives_from": "RO:0001000",
 "starts during": "RO:0002091",
-"ends_during": "RO:0002093",
+"ends during": "RO:0002093",
 "in taxon": "RO:0002162",
 "has phenotype": "RO:0002200",
 "gene product of": "RO:0002204",
