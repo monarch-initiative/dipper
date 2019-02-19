@@ -11,7 +11,7 @@
 # the first set was generated via cypher queries against our scigraph
 # (neo4j) instance loaded with the ontologies we use.
 # Reads the second Graphviz digraph dot format file:
-# looks for <term> as edge-text 
+# looks for <term> as edge-text
 # and appends "! <label> (Iff <term> is found in map)
 # note: This "<term> ! <label>" structure is a convention used by Ontologists.
 
