@@ -212,7 +212,7 @@ class Model():
 
     def addXref(self, class_id, xref_id, xref_as_literal=False):
         self.graph.addTriple(
-            class_id, self.globaltt['has_dbxref'], xref_id,
+            class_id, self.globaltt['database_cross_reference'], xref_id,
             object_is_literal=xref_as_literal)
         return
 
