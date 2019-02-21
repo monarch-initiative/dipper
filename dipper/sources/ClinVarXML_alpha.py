@@ -650,7 +650,7 @@ with gzip.open(FILENAME, 'rt') as fh:
         # Hack to determine what relationship to make between
         # a gene and variant.  We first look at the rcv
         # variant gene relationship type to get the correct
-        # curie, but override has_affected_locus in cases
+        # curie, but override has_affected_feature in cases
         # where a gene to disease association has not been
         # curated, and instead use has_reference_part
         if len(gene_list) > 0:
@@ -668,11 +668,14 @@ with gzip.open(FILENAME, 'rt') as fh:
                     # Here we override our type mapping
                     # and use has_reference_part
                     elif medgen_id is not None \
-                            and LOCALTT[variant_relationship] == 'has_affected_locus':
-                        write_spo(
-                            rcv_variant_id,
-                            GLOBALTT['has_reference_part'],
-                            rcv_ncbigene_curi)
+                            and LOCALTT[variant_relationship] == 'has_affected_feature':
+                        # Need a property that is not a sub property
+                        # of has_affected_feature
+                        #write_spo(
+                        #    rcv_variant_id,
+                        #    GLOBALTT['has_reference_part'],
+                        #    rcv_ncbigene_curi)
+                        pass
                     else:
                         write_spo(
                             rcv_variant_id,
