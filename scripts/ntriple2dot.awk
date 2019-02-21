@@ -1,7 +1,7 @@
- #! /usr/bin/gawk -f
+#! /usr/bin/gawk -f
 
 #  Reduce the subject and object of RDF triples (ntriples format)
-#  down to their @prefix (or literal object class)
+#  down to their curie prefix (or literal object)
 #  Reduce predicates to the specific term identifier
 #  and the ontology they are from. (curi form)
 #  Express the subject and object as nodes with a directed edge
