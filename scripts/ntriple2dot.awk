@@ -94,7 +94,7 @@ function final(uri,  b, p, anchor){
 
 function deoboify(curie,  a){
 	split(curie, a , ":")
-	if(match(a[2], a[1]) > 0){
+	if(match(a[2], a[1]"_") > 0){
 		sub("_", ":", a[2]);
 		curie=a[2]
 	}
