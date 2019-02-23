@@ -185,8 +185,9 @@ class Ensembl(Source):
                 continue
 
             protein_dict[
-                row[col.index('ensembl_peptide_id')]] = \
-                row[col.index('ensembl_gene_id')]
+                row[col.index('ensembl_peptide_id')]] = [
+                    row[col.index('ensembl_gene_id')]
+                ]
 
         conn.close()
         LOG.info(

@@ -43,10 +43,14 @@ class StringDB(Source):
             self.tax_ids = DEFAULT_TAXA
         else:
             LOG.info("Filtering on taxa %s", tax_ids)
-            self.tax_ids = tax_ids
+            self.tax_ids = [str(tax_id) for tax_id in tax_ids]
 
         if version is None:
             self.version = 'v10.5'
+        elif not version.startswith('v'):
+            self.version = 'v' + version
+        else:
+            self.version = version
 
         self.files = {
             'protein_links': {
@@ -58,29 +62,34 @@ class StringDB(Source):
 
         self.id_map_files = {
             '9606': {
-                'url': 'https://string-db.org/mapping_files/entrez_mappings/'
-                       'entrez_gene_id.vs.string.v10.28042015.tsv',
-                'file': 'entrez_gene_id.vs.string.v10.28042015.tsv'
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'human.entrez_2_string.2018.tsv.gz',
+                'file': 'human.entrez_2_string.2018.tsv.gz'
             },
             '10090': {
-                'url': 'https://data.monarchinitiative.org/dipper/'
-                       'cache/10090.string2mgi.tsv',
-                'file': '10090.string2mgi.tsv'
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'mouse.entrez_2_string.2018.tsv.gz',
+                'file': 'mouse.entrez_2_string.2018.tsv.gz'
             },
             '6239': {
-                'url': 'https://data.monarchinitiative.org/dipper/'
-                       'cache/6239.string2ensembl_gene.tsv',
-                'file': '6239.string2ensembl_gene.tsv'
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'celegans.entrez_2_string.2018.tsv.gz',
+                'file': 'celegans.entrez_2_string.2018.tsv.gz'
             },
             '7227': {
-                'url': 'https://data.monarchinitiative.org/dipper/'
-                       'cache/7227.string2ensembl_gene.tsv',
-                'file': '7227.string2ensembl_gene.tsv'
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'fly.entrez_2_string.2018.tsv.gz',
+                'file': 'fly.entrez_2_string.2018.tsv.gz'
             },
             '7955': {
-                'url': 'https://data.monarchinitiative.org/dipper/'
-                       'cache/7955.string2zfin.tsv',
-                'file': '7955.string2zfin.tsv'
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'zebrafish.entrez_2_string.2018.tsv.gz',
+                'file': 'zebrafish.entrez_2_string.2018.tsv.gz'
+            },
+            '4932': {
+                'url': 'https://string-db.org/mapping_files/entrez/'
+                       'yeast.entrez_2_string.2018.tsv.gz',
+                'file': 'yeast.entrez_2_string.2018.tsv.gz'
             }
         }
 
@@ -126,30 +135,22 @@ class StringDB(Source):
             p2gene_map = dict()
 
             if taxon in self.id_map_files:
+                LOG.info("Using string provided id_map files")
                 map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
-                with open(map_file, 'r') as reader:
-                    if taxon == '9606':
-                        for line in reader.readlines():
-                            gene, prot = line.rstrip("\n").split("\t")
-                            p2gene_map[
-                                prot.replace('9606.', '')]  = "NCBIGene:"+str(gene)
-                    else:
-                        for line in reader.readlines():
-                            prot, gene = line.rstrip("\n").split("\t")
-                            p2gene_map[prot] = gene
-
+                with gzip.open(map_file, 'rt') as reader:
+                    for line in reader.readlines():
+                        if line.startswith('#'): continue
+                        tax, gene, prot = line.rstrip("\n").split("\t")
+                        genes = gene.split('|')
+                        p2gene_map[prot.replace(taxon + '.', '')] = ["NCBIGene:"+ entrez_id
+                                                                     for entrez_id in genes]
             else:
                 LOG.info("Fetching ensembl proteins for taxon %s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in p2gene_map.keys():
-                    p2gene_map[key] = "ENSEMBL:{}".format(p2gene_map[key])
-
-            if taxon == '9606':
-                temp_map = ensembl.fetch_protein_gene_map(taxon)
-                for key in temp_map:
-                    if key not in p2gene_map:
-                        p2gene_map[key] = "ENSEMBL:{}".format(temp_map[key])
+                    for i, gene in enumerate(p2gene_map[key]):
+                        p2gene_map[key][i] = "ENSEMBL:{}".format(gene)
 
             LOG.info(
                 "Finished fetching ENSP ID mappings, fetched %i proteins",
@@ -169,23 +170,25 @@ class StringDB(Source):
             protein1 = row['protein1'].replace('{}.'.format(taxon), '')
             protein2 = row['protein2'].replace('{}.'.format(taxon), '')
 
-            gene1_curie = None
-            gene2_curie = None
+            gene1_curies = None
+            gene2_curies = None
 
             try:
                 # Keep orientation the same since RO!"interacts with" is symmetric
                 if protein1 > protein1:
-                    gene1_curie = p2gene_map[protein1]
-                    gene2_curie = p2gene_map[protein2]
+                    gene1_curies = p2gene_map[protein1]
+                    gene2_curies = p2gene_map[protein2]
                 else:
-                    gene1_curie = p2gene_map[protein2]
-                    gene2_curie = p2gene_map[protein1]
+                    gene1_curies = p2gene_map[protein2]
+                    gene2_curies = p2gene_map[protein1]
             except KeyError:
                 filtered_out_count += 1
 
-            if gene1_curie is not None and gene2_curie is not None:
-                self.graph.addTriple(
-                    gene1_curie, self.globaltt['interacts with'], gene2_curie)
+            if gene1_curies is not None and gene2_curies is not None:
+                for gene1 in gene1_curies:
+                    for gene2 in gene2_curies:
+                        self.graph.addTriple(
+                            gene1, self.globaltt['interacts with'], gene2)
                 if limit is not None and index >= limit:
                     break
 
