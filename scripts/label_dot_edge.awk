@@ -1,34 +1,37 @@
 #! /usr/bin/gawk -f
 
 # label_dot_edge.awk
-# Attempts to augment opaque ontological terms with their current label
+# Augment ontological terms with their label
 # example usage:
-# label_dot_edge.awk predicate_curie_term_label.tab  in.dot > out.dot
+# ${DIPPER}/scripts/label_dot_edge.awk
+#	${DIPPER}/translationtable/GLOBAL_TERMS.yaml  in.dot > out.dot
 #
 # Arguments: two files
-# Loads the first file as a map from terms to labels:
-# (expects: [namespace:]<tab><term><tab><label>[<tab><whatever>])
-# the first set was generated via cypher queries against our scigraph
-# (neo4j) instance loaded with the ontologies we use.
+# Loads the first file as a map from  to curie to label :
+ # (expects: "label": "curie",)
 # Reads the second Graphviz digraph dot format file:
 # looks for <term> as edge-text
 # and appends "! <label> (Iff <term> is found in map)
 # note: This "<term> ! <label>" structure is a convention used by Ontologists.
 
 
-BEGIN{FS="\t"; OFS="\t"}
+BEGIN{FS="\""; OFS="\t"}
 # load labels
-FNR == NR && $3 != "null"{label[$1 $2]=$3}
+FNR == NR && /^"/{label[$4]=$2}
 
 # output lines that do not get labels
 FNR != NR && !/.* -> .*label=.*/ {print}
 
 # output lines w/labels if they are available
+
 FNR != NR && /.* -> .*label=.*/ {
 	line="";
 	split($0, row, / /)
+
 	split(row[4], term, /"/)
-	if (term[2] in label){
+	split(term[2], lclid, ":")
+
+	if (term[2] in label && lclid[2] != label[term[2]]){
 		term[2] = term[2] " ! " label[term[2]];
 		row[4] = term[1];
 		for(i=2;i<=length(term);i++)
