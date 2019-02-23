@@ -2,7 +2,7 @@ import logging
 import gzip
 
 import pandas as pd
-from dipper.sources.Source import Source
+from dipper.sources.Source import Source, USER_AGENT
 from dipper.sources.Ensembl import Ensembl
 
 LOG = logging.getLogger(__name__)
@@ -64,32 +64,38 @@ class StringDB(Source):
             '9606': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'human.entrez_2_string.2018.tsv.gz',
-                'file': 'human.entrez_2_string.2018.tsv.gz'
+                'file': 'human.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             },
             '10090': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'mouse.entrez_2_string.2018.tsv.gz',
-                'file': 'mouse.entrez_2_string.2018.tsv.gz'
+                'file': 'mouse.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             },
             '6239': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'celegans.entrez_2_string.2018.tsv.gz',
-                'file': 'celegans.entrez_2_string.2018.tsv.gz'
+                'file': 'celegans.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             },
             '7227': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'fly.entrez_2_string.2018.tsv.gz',
-                'file': 'fly.entrez_2_string.2018.tsv.gz'
+                'file': 'fly.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             },
             '7955': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'zebrafish.entrez_2_string.2018.tsv.gz',
-                'file': 'zebrafish.entrez_2_string.2018.tsv.gz'
+                'file': 'zebrafish.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             },
             '4932': {
                 'url': 'https://string-db.org/mapping_files/entrez/'
                        'yeast.entrez_2_string.2018.tsv.gz',
-                'file': 'yeast.entrez_2_string.2018.tsv.gz'
+                'file': 'yeast.entrez_2_string.2018.tsv.gz',
+                'headers': {'User-Agent': USER_AGENT}
             }
         }
 
@@ -214,6 +220,7 @@ class StringDB(Source):
                 'file': "{}.{}".format(taxon, self.files[file_type]['pattern']),
                 'url': "{}{}.{}".format(
                     self.files[file_type]['path'], taxon,
-                    self.files[file_type]['pattern'])
+                    self.files[file_type]['pattern']),
+                'headers': {'User-Agent': USER_AGENT}
             }
         return file_paths
