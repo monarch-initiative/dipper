@@ -42,7 +42,8 @@ class StringTestFakeData(unittest.TestCase):
         ensembl = Ensembl('rdf_graph', True)
         prot_map = ensembl.fetch_protein_gene_map('9606')
         for key in prot_map.keys():
-            prot_map[key] = "ENSEMBL:{}".format(prot_map[key])
+            for i, gene in enumerate(prot_map[key]):
+                prot_map[key][i] = "ENSEMBL:{}".format(gene)
 
         print(
             "Finished fetching ENSP IDs, fetched {} proteins"
