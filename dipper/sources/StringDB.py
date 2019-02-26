@@ -145,11 +145,12 @@ class StringDB(Source):
                 map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
                 with gzip.open(map_file, 'rt') as reader:
-                    line = next(reader)
-                    if line.rstrip('\n') != '# NCBI taxid / entrez / STRING':
+                    line = next(reader).strip()
+                    if line != '# NCBI taxid / entrez / STRING':
                         LOG.error(
-                            'Expected Headers:\t%s\nRecived Headers:\t%s\n',
-                            col, line)
+                            'Expected Headers:\t%s\nRecived Headers:\t%s\n', col, line)
+                        exit(-1)
+
                     for line in reader.readlines():
                         row = line.rstrip('\n').split('\t')
                         # tax = row[col.index(''NCBI taxid')].strip()
