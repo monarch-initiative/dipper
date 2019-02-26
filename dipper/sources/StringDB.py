@@ -7,8 +7,15 @@ from dipper.sources.Ensembl import Ensembl
 
 LOG = logging.getLogger(__name__)
 
-STRING_BASE = "http://string-db.org/download/"
-DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239']
+STRING_DWN = "http://string-db.org/download"
+STRING_MAP = 'https://string-db.org/mapping_files/entrez'
+DEFAULT_TAXA = ['9606', '10090', '7955', '7227', '6239', '4932']
+# https://string-db.org/cgi/access.pl?footer_active_subpage=archive
+# TODO automate it with:
+# curl https://string-db.org/api/tsv-no-header/version
+#   11.0        https://version-11-0.string-db.org
+VERSION = '11.0'
+YEAR = '2018'
 
 
 class StringDB(Source):
@@ -46,55 +53,48 @@ class StringDB(Source):
             self.tax_ids = [str(tax_id) for tax_id in tax_ids]
 
         if version is None:
-            self.version = 'v10.5'
-        elif not version.startswith('v'):
-            self.version = 'v' + version
-        else:
-            self.version = version
+            version = VERSION
+        self.version = version
 
         self.files = {
             'protein_links': {
-                'path': '{}protein.links.detailed.{}/'.format(
-                    STRING_BASE, self.version),
-                'pattern': 'protein.links.detailed.{}.txt.gz'.format(self.version)
+                # https://stringdb-static.org/download/protein.links.detailed.v11.0/
+                'path': '{}/protein.links.detailed.v{}/'.format(
+                    STRING_DWN, self.version),
+                # 9606.protein.links.detailed.v11.0.txt.gz
+                'pattern': 'protein.links.detailed.v{}.txt.gz'.format(self.version)
             }
         }
 
         self.id_map_files = {
             '9606': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'human.entrez_2_string.2018.tsv.gz',
-                'file': 'human.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/human.entrez_2_string.2018.tsv.gz',
+                'file': 'human.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             },
             '10090': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'mouse.entrez_2_string.2018.tsv.gz',
-                'file': 'mouse.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/mouse.entrez_2_string.2018.tsv.gz',
+                'file': 'mouse.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             },
             '6239': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'celegans.entrez_2_string.2018.tsv.gz',
-                'file': 'celegans.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/celegans.entrez_2_string.2018.tsv.gz',
+                'file': 'celegans.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             },
             '7227': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'fly.entrez_2_string.2018.tsv.gz',
-                'file': 'fly.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/fly.entrez_2_string.2018.tsv.gz',
+                'file': 'fly.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             },
             '7955': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'zebrafish.entrez_2_string.2018.tsv.gz',
-                'file': 'zebrafish.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/zebrafish.entrez_2_string.2018.tsv.gz',
+                'file': 'zebrafish.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             },
             '4932': {
-                'url': 'https://string-db.org/mapping_files/entrez/'
-                       'yeast.entrez_2_string.2018.tsv.gz',
-                'file': 'yeast.entrez_2_string.2018.tsv.gz',
+                'url': STRING_MAP + '/yeast.entrez_2_string.2018.tsv.gz',
+                'file': 'yeast.entrez_2_string.'+YEAR+'.tsv.gz',
                 'headers': {'User-Agent': USER_AGENT}
             }
         }
@@ -111,6 +111,7 @@ class StringDB(Source):
         Returns:
             :return None
         """
+
         file_paths = self._get_file_paths(self.tax_ids, 'protein_links')
         self.get_files(is_dl_forced, file_paths)
         self.get_files(is_dl_forced, self.id_map_files)
@@ -129,15 +130,14 @@ class StringDB(Source):
             LOG.info("Only parsing first %d rows", limit)
 
         protein_paths = self._get_file_paths(self.tax_ids, 'protein_links')
-
+        col = ['NCBI taxid', 'entrez', 'STRING']
         for taxon in protein_paths:
             ensembl = Ensembl(self.graph_type, self.are_bnodes_skized)
             string_file_path = '/'.join((
                 self.rawdir, protein_paths[taxon]['file']))
 
-            fh = gzip.open(string_file_path, 'rb')
-            dataframe = pd.read_csv(fh, sep='\s+')
-            fh.close()
+            with gzip.open(string_file_path, 'rb') as reader:
+                dataframe = pd.read_csv(reader, sep=r'\s+')
             p2gene_map = dict()
 
             if taxon in self.id_map_files:
@@ -145,18 +145,27 @@ class StringDB(Source):
                 map_file = '/'.join((self.rawdir, self.id_map_files[taxon]['file']))
 
                 with gzip.open(map_file, 'rt') as reader:
+                    line = next(reader).strip()
+                    if line != '# NCBI taxid / entrez / STRING':
+                        LOG.error(
+                            'Expected Headers:\t%s\nRecived Headers:\t%s\n', col, line)
+                        exit(-1)
+
                     for line in reader.readlines():
-                        if line.startswith('#'): continue
-                        tax, gene, prot = line.rstrip("\n").split("\t")
+                        row = line.rstrip('\n').split('\t')
+                        # tax = row[col.index(''NCBI taxid')].strip()
+                        gene = row[col.index('entrez')].strip()
+                        prot = row[col.index('STRING')].strip()
+
                         genes = gene.split('|')
-                        p2gene_map[prot.replace(taxon + '.', '')] = ["NCBIGene:"+ entrez_id
-                                                                     for entrez_id in genes]
+                        p2gene_map[prot.replace(taxon + '.', '')] = [
+                            "NCBIGene:" + entrez_id for entrez_id in genes]
             else:
                 LOG.info("Fetching ensembl proteins for taxon %s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
                 for key in p2gene_map.keys():
-                    for i, gene in enumerate(p2gene_map[key]):
-                        p2gene_map[key][i] = "ENSEMBL:{}".format(gene)
+                    for phen, gene in enumerate(p2gene_map[key]):
+                        p2gene_map[key][phen] = "ENSEMBL:{}".format(gene)
 
             LOG.info(
                 "Finished fetching ENSP ID mappings, fetched %i proteins",
@@ -181,6 +190,7 @@ class StringDB(Source):
 
             try:
                 # Keep orientation the same since RO!"interacts with" is symmetric
+                # TEC: symeteric expansion is the job of post processing not ingest
                 if protein1 > protein1:
                     gene1_curies = p2gene_map[protein1]
                     gene2_curies = p2gene_map[protein2]

@@ -1,7 +1,7 @@
- #! /usr/bin/gawk -f
+#! /usr/bin/gawk -f
 
 #  Reduce the subject and object of RDF triples (ntriples format)
-#  down to their @prefix (or literal object class)
+#  down to their curie prefix (or literal object)
 #  Reduce predicates to the specific term identifier
 #  and the ontology they are from. (curi form)
 #  Express the subject and object as nodes with a directed edge
@@ -33,7 +33,7 @@ function trim(str){
 
 # this may need to be called more than once since
 # some identifiers may have embedded delimiters other uri use differently
-function stripid(uri){
+function stripid(uri,  delim, char, max, c, l){
 	# <_:blanknode> are not allowed in ntriples (but may happen anyway)
 	if(0 < match(uri, /^_:|^https:\/\/monarchinitiative.org\/.well-known\/genid\//))
 		return "BNODE"
@@ -66,9 +66,10 @@ function simplify(str){
 }
 
 # if possible, find a shorter form for the input
-function contract(uri){
+function contract(uri,  u){
 	u = uri
 	# shorten till longest uri in curi map is found (or not)
+
 	while(!(u in prefix) &&  length(u))
 		u = stripid(substr(u,1,length(u)-1))
 	if(u in prefix)
@@ -80,13 +81,24 @@ function contract(uri){
 }
 
 # get the final (incl fragment identifier) portion of a slashed path
-function final(uri){
+function final(uri,  b, p, anchor){
 	split(uri, b, "/")
 	p = b[length(b)]
 	anchor = match(p, "#")
 	if(anchor > 0)
 		p = substr(p, anchor+1)
 	return p
+}
+
+# fix curie namespace when redundant due to OBO  i.e RO:RO_123
+
+function deoboify(curie,  a){
+	split(curie, a , ":")
+	if(match(a[2], a[1]"_") > 0){
+		sub("_", ":", a[2]);
+		curie=a[2]
+	}
+	return curie
 }
 
 BEGIN{
@@ -226,7 +238,7 @@ END{
 		edge=sortlist[i]
 		split(edge ,spo, SUBSEP);
 		print simplify(spo[1]) " -> " simplify(spo[3]) \
-		" [label=\"" spo[2] " (" edgelist[edge] ")\"];"
+		" [label=\"" deoboify(spo[2]) " (" edgelist[edge] ")\"];"
 	}
 	print "LITERAL [shape=record];"
 	print "labelloc=\"t\";"
