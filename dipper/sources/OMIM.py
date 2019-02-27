@@ -455,9 +455,8 @@ class OMIM(Source):
                 # make it a disease by not declaring it as a gene/marker
                 # ??? with none?
 
-                model.addClassToGraph(
-                    omim_curie, nodelabel, self.globaltt['disease or disorder'],
-                    newlabel)
+                model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
+                # class_type=self.globaltt['disease or disorder'],
             elif omimtype == self.globaltt['gene']:
                 if abbrev is not None:
                     nodelabel = abbrev

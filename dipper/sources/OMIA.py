@@ -597,7 +597,8 @@ class OMIA(Source):
         if group_name == '':
             group_name = None
 
-        model.addClassToGraph(omia_id, group_name, disease_id, group_summary)
+        model.addClassToGraph(omia_id, group_name, description=group_summary)
+        # class_type=disease_id,
 
         self.label_hash[omia_id] = group_name
 
