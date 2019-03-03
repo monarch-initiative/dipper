@@ -211,12 +211,14 @@ class OMIM(Source):
 
                 (omim_num, mimtype, ncbigene, hgnc, ensembl) = line.split('\t')
                 omim_nums.update({omim_num})
+
+                self.omim_type[omim_num] = None
                 if mimtype == 'gene':
                     self.omim_type[omim_num] = self.globaltt['gene']
 
                 # Phenotype, molecular basis known
-                elif mimtype == 'phenotype':
-                    self.omim_type[omim_num] = self.globaltt['Phenotype']
+                # elif mimtype == 'phenotype':
+                #    self.omim_type[omim_num] = self.globaltt['Phenotype']
 
                 # Phenotype or locus, molecular basis unknown
                 elif mimtype == 'predominantly phenotypes':
@@ -408,7 +410,7 @@ class OMIM(Source):
         tax_num = '9606'
         tax_label = 'Human'
         build_num = "GRCh38"
-        build_id = "NCBIGenome:"+build_num
+        build_id = "NCBIGenome:" + build_num
 
         # get the numbers, labels, and descriptions
         omim_num = str(e['entry']['mimNumber'])
@@ -444,7 +446,7 @@ class OMIM(Source):
             if omim_num in self.omim_type:
                 omimtype = self.omim_type[omim_num]
             else:
-                LOG.error('No type found for %s', omim_num)
+                LOG.warning('No type found for %s', omim_num)
                 omimtype = None
             nodelabel = newlabel
             # this uses our cleaned-up label
@@ -469,7 +471,8 @@ class OMIM(Source):
 
             # add the alternate labels and includes as synonyms
             for label in other_labels:
-                model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
+                model.addSynonym(
+                    omim_curie, label, model.globaltt['has_related_synonym'])
 
             # KS: commenting out, we will get disease descriptions
             # from MONDO, and gene descriptions from the mygene API
