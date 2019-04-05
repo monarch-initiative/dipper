@@ -6,7 +6,7 @@ __author__ = 'Mahmoud Adel <mahmoud.adel2@gmail.com>'
 __version__ = 0.4
 
 # from https://raw.githubusercontent.com/mahmoudadel2/pysed/master/pysed.py
-# with a few edits from us
+# ... with a few edits from us
 
 
 def replace(oldstr, newstr, infile, dryrun=False):
@@ -54,7 +54,8 @@ def rmlinematch(oldstr, infile, dryrun=False):
     with open(infile) as reader:
         for item in reader:
             rmitem = re.match(r'.*{}'.format(oldstr), item)
-            if isinstance(rmitem) == isinstance(None):
+            # if isinstance(rmitem) == isinstance(None):  Not quite sure the intent here
+            if rmitem is None:
                 linelist.append(item)
     if dryrun is False:
         with open(infile, "w") as writer:
@@ -81,7 +82,7 @@ def rmlinenumber(linenumber, infile, dryrun=False):
 
     linelist = []
     linecounter = 0
-    if isinstance(linenumber) != isinstance(linecounter):
+    if isinstance(linenumber, int):
         exit("""'linenumber' argument must be an integer.""")
     with open(infile) as reader:
         for item in reader:
