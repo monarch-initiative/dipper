@@ -5,6 +5,11 @@ Pipfile.lock
 
 junk/*
 
+.pylintrc
+.pytype/*
+pytype.cfg
+
+
 # Created by https://www.gitignore.io
 
 ### Project specific:
