@@ -60,8 +60,8 @@ class Source:
         self.localtt = self.load_local_translationtable(name)
 
         if name is not None:
-            self.name = name
-        else:
+            self.name = name.lower()
+        elif self.whoami() is not None:
             self.name = self.whoami().lower()
 
         LOG.info("Processing Source \"%s\"", self.name)
@@ -139,8 +139,6 @@ class Source:
 
         for graph in [self.graph, self.testgraph]:
             self.declareAsOntology(graph)
-
-        return
 
     def fetch(self, is_dl_forced=False):
         """
@@ -223,16 +221,13 @@ class Source:
         else:
             LOG.error("I don't understand our stream.")
             return
-
         gu.write(self.graph, fmt, filename=outfile)
-        return
 
     def whoami(self):
         '''
             pointless convieniance
         '''
         LOG.info("Ingest is %s", self.name)
-        return
 
     @staticmethod
     def make_id(long_string, prefix='MONARCH'):
@@ -295,7 +290,7 @@ class Source:
             headers = self._get_default_request_headers()
 
         req = urllib.request.Request(remote, headers=headers)
-        LOG.debug("Request header: %s", str(req.header_items()))
+        LOG.info("Request header: %s", str(req.header_items()))
 
         response = urllib.request.urlopen(req)
 
@@ -334,8 +329,8 @@ class Source:
                 if fstat[ST_SIZE] > size:
                     LOG.warning("New Remote File exists but it is SMALLER")
                     return True
-                else:  # filesize is a fairly imperfect metric here
-                    LOG.info("New Remote fFle has same filesize--will not download")
+                # filesize is a fairly imperfect metric here
+                LOG.info("New Remote fFle has same filesize--will not download")
         elif fstat[ST_SIZE] != size:
             LOG.info(
                 "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
@@ -359,9 +354,10 @@ class Source:
         for fname in files.keys():
             LOG.info("Getting %s", fname)
             filesource = files.get(fname)
+
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
-                is_dl_forced, filesource.get('headers'))
+                is_dl_forced, filesource['headers'])
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
@@ -377,8 +373,6 @@ class Source:
         # FIXME
         # change this so the date is attached only to each file, not the entire dataset
         self.dataset.set_date_issued(filedate)
-
-        return
 
     def fetch_from_url(
             self, remotefile, localfile=None, is_dl_forced=False, headers=None):
@@ -468,8 +462,6 @@ class Source:
 
             elem.clear()  # discard the element
 
-        return
-
     @staticmethod
     def _check_list_len(row, length):
         """
@@ -482,8 +474,6 @@ class Source:
             raise Exception(
                 "row length does not match expected length of " +
                 str(length) + "\nrow: " + str(row))
-
-        return
 
     @staticmethod
     def get_file_md5(directory, filename, blocksize=2**20):
@@ -597,8 +587,6 @@ class Source:
 
         self.test_only = testonly
 
-        return
-
     def settestmode(self, mode):
         """
         Set testMode to (mode).
@@ -610,8 +598,6 @@ class Source:
         """
 
         self.test_mode = mode
-
-        return
 
     def getTestSuite(self):
         """
@@ -671,10 +657,7 @@ class Source:
         archive_url = 'MonarchArchive:' + 'ttl/' + self.name + '.ttl'
         model.addOWLVersionIRI(ontology_file_id, archive_url)
         model.addOWLVersionInfo(ontology_file_id, ontology_version)
-
         # TODO make sure this is synced with the Dataset class
-
-        return
 
     @staticmethod
     def remove_backslash_r(filename, encoding):
@@ -697,8 +680,6 @@ class Source:
         with open(filename, "w") as filewriter:
             filewriter.truncate()
             filewriter.write(contents)
-
-        return
 
     @staticmethod
     def open_and_parse_yaml(yamlfile):
@@ -824,7 +805,7 @@ class Source:
         else:
             if mandatory:
                 raise KeyError("Mapping required for: ", word)
-            else:
-                logging.warning("We have no translation for: '%s'", word)
-                term_id = word
+
+            logging.warning("We have no translation for: '%s'", word)
+            term_id = word
         return term_id
