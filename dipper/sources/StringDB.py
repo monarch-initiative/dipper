@@ -116,8 +116,6 @@ class StringDB(Source):
         self.get_files(is_dl_forced, file_paths)
         self.get_files(is_dl_forced, self.id_map_files)
 
-        return
-
     def parse(self, limit=None):
         """
         Override Source.parse()
@@ -163,7 +161,7 @@ class StringDB(Source):
             else:
                 LOG.info("Fetching ensembl proteins for taxon %s", taxon)
                 p2gene_map = ensembl.fetch_protein_gene_map(taxon)
-                for key in p2gene_map.keys():
+                for key in p2gene_map:
                     for phen, gene in enumerate(p2gene_map[key]):
                         p2gene_map[key][phen] = "ENSEMBL:{}".format(gene)
 
@@ -176,22 +174,20 @@ class StringDB(Source):
 
             self._process_protein_links(dataframe, p2gene_map, taxon, limit)
 
-    def _process_protein_links(self, dataframe, p2gene_map, taxon,
-                               limit=None, rank_min=700):
+    def _process_protein_links(
+            self, dataframe, p2gene_map, taxon, limit=None, rank_min=700):
         filtered_df = dataframe[dataframe['combined_score'] > rank_min]
         filtered_out_count = 0
         for index, row in filtered_df.iterrows():
             # Check if proteins are in same species
             protein1 = row['protein1'].replace('{}.'.format(taxon), '')
             protein2 = row['protein2'].replace('{}.'.format(taxon), '')
-
             gene1_curies = None
             gene2_curies = None
-
             try:
                 # Keep orientation the same since RO!"interacts with" is symmetric
                 # TEC: symeteric expansion is the job of post processing not ingest
-                if protein1 > protein1:
+                if protein1 >= protein2:
                     gene1_curies = p2gene_map[protein1]
                     gene2_curies = p2gene_map[protein2]
                 else:
@@ -209,10 +205,9 @@ class StringDB(Source):
                     break
 
         LOG.info(
-            "Finished parsing p-p interactions for %s, " +
+            "Finished parsing p-p interactions for %s, "
             "%i rows filtered out based on checking ensembl proteins",
             taxon, filtered_out_count)
-        return
 
     def _get_file_paths(self, tax_ids, file_type):
         """
