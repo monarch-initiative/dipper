@@ -59,47 +59,47 @@ class OMIM(Source):
             'file': 'mim2gene.txt',
             'url': 'https://omim.org/static/omim/data/mim2gene.txt',
             'clean': OMIMURL,
-            'columns': (  # expected  -- not used yet
+            'columns': [  # expected  -- not used yet
                 'MIM Number',
                 'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)',
                 'Entrez Gene ID (NCBI)',
                 'Approved Gene Symbol (HGNC)',
                 'Ensembl Gene ID (Ensembl)',
-            )
+            ]
         },
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url': OMIMFTP + '/morbidmap.txt',
             'clean': OMIMURL,
-            'columns': (  # expected  -- not used yet
+            'columns': [  # expected
                 '# Phenotype',
                 'Gene Symbols',
                 'MIM Number',
                 'Cyto Location',
-            )
+            ],
         },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
             'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
             'headers': {'User-Agent': USER_AGENT},
             'clean': OMIMURL,
-            'columns': (  # expected  -- not used yet
+            'columns': [  # expected
                 "Phenotypic Series Title",
                 "Phenotypic Series number",
-            ),
+            ],
         },
         'mimTitles': {
             'file': 'mimTitles.txt',
             'url':  OMIMFTP + '/mimTitles.txt',
             'headers': {'User-Agent': USER_AGENT},
             'clean': OMIMURL,
-            'columns': (  # expected
+            'columns': [  # expected
                 'Prefix',
                 'Mim Number',
                 'Preferred Title; symbol',
                 'Alternative Title(s); symbol(s)',
                 'Included Title(s); symbols',
-            ),
+            ],
         },
     }
 
@@ -463,6 +463,8 @@ class OMIM(Source):
                 if abbrev is not None:
                     nodelabel = abbrev
                 model.addClassToGraph(omim_curie, nodelabel, omimtype, newlabel)
+            elif omimtype in ('phenotype', self.globaltt['Phenotype']):
+                model.addClassToGraph(omim_curie, newlabel)  # avoid subclassing
             else:
                 model.addClassToGraph(omim_curie, newlabel, omimtype)
 
@@ -589,7 +591,7 @@ class OMIM(Source):
             # make it deprecated and
             # replaced consider class to the other thing(s)
             # some entries have been moved to multiple other entries and
-            # use the joining raw word "and"
+            # use the joining literal word "and"
             # 612479 is movedto:  "603075 and 603029"  OR
             # others use a comma-delimited list, like:
             # 610402 is movedto: "609122,300870"
@@ -643,26 +645,37 @@ class OMIM(Source):
             graph = self.graph
         line_counter = 0
         assoc_count = 0
-        with open('/'.join((self.rawdir, self.files['morbidmap']['file']))) as fh:
-            # Copyright
-            # Generated: 2016-04-11
-            # See end of file for additional documentation on specific fields
-            # Phenotype	Gene Symbols	MIM Number	Cyto Location
-            # since there are comments at the end of the file as well,
-            # filter both header & footer as lines beginning with octothorp
+        src_key = 'morbidmap'
+        col = self.rawdir, self.files[src_key]['columns']
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(raw) as reader:
+            line = reader.readline()  # Copyright
+            line = reader.readline()  # Generated: 2016-04-11
+            line = reader.readline()  # EOF for field spec
+            line = reader.readline().strip()  # columns header
+            line_counter = 4
+            row = line.split('\t')  # includes funky leading octothorpe
+            if row != col:  # assert
+                LOG.error('Expected  %s to have columns: %s', raw, col)
+                LOG.error('But Found %s to have columns: %s', raw, row)
+                raise AssertionError('Incomming data headers have changed.')
 
-            for line in fh:
+            for line in reader:
+                line_counter += 1
                 line = line.strip()
-                if line.startswith(r'#') or line.startswith(r'\t'):
-                    continue  # header/footer/ empty phenotype
+                # since there are comments at the end of the file as well,
+                if line[0] == '#':
+                    continue
                 row = line.split('\t')
-                if len(row) != 4:
-                    LOG.warning("Expected 4 columns got %i columns.", len(row))
-                    LOG.warning(row)
+                if len(row) != len(col):
+                    LOG.warning(
+                        'Unexpected input on line: %i  got: %s', line_counter, row)
                     continue
 
-                (disorder, gene_symbols, gene_num, loc) = row
-                line_counter += 1
+                disorder = row[col.index('# Phenotype')]
+                gene_symbols = row[col.index('Gene Symbols')]
+                gene_num = row[col.index('MIM Number')]
+                # loc = row[col.index('Cyto Location')]
 
                 # LOG.info("morbidmap disorder:  %s", disorder)  # too verbose
 
@@ -726,12 +739,12 @@ class OMIM(Source):
                             "We don't have an NCBIGene feature id to link %s with %s",
                             disorder_id, disorder_label)
 
-                    if self.test_mode and int(gene_num) not in self.test_ids:
+                    if self.test_mode and gene_num not in self.test_ids:
                         continue
 
                 else:
                     LOG.warning(
-                        "There are misformatted rows %d:%s", line_counter, str(line))
+                        "There are misformatted rows %i:%s", line_counter, line)
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
             LOG.info("Added %d G2P associations", assoc_count)
@@ -886,8 +899,8 @@ class OMIM(Source):
                             # each >1 like RCV000020059;;;
                             rcv_ids = \
                                 al['allelicVariant']['clinvarAccessions'].split(';;;')
-                            rcv_ids = [
-                                (re.match(r'(RCV\d+);*', r)).group(1) for r in rcv_ids]
+                            rcv_ids = [rcv[:12] for rcv in rcv_ids]  # incase more cruft
+
                             for rnum in rcv_ids:
                                 rid = 'ClinVar:' + rnum
                                 model.addXref(al_id, rid)
@@ -899,7 +912,7 @@ class OMIM(Source):
                         # for both 'moved' and 'removed'
                         moved_ids = None
                         if 'movedTo' in al['allelicVariant']:
-                            moved_id = 'OMIM:'+al['allelicVariant']['movedTo']
+                            moved_id = 'OMIM:' + al['allelicVariant']['movedTo']
                             moved_ids = [moved_id]
                         model.addDeprecatedIndividual(al_id, moved_ids)
                     else:
@@ -979,27 +992,32 @@ class OMIM(Source):
         LOG.info("getting phenotypic series titles")
         model = Model(graph)
         line_counter = 0
-        with open(
-                '/'.join((self.rawdir, self.files['phenotypicSeries']['file']))) as fh:
+        src_key = 'phenotypicSeries'
+        col = self.files[src_key]['columns']
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        with open(raw) as reader:
+            line = reader.readline()  # title
+            line = reader.readline()  # date downloaded
+            line = reader.readline()  # copyright
+            line = reader.readline()  # <blank>
 
-            for i in range(5):  # yep, header blurb is not commented
-                fh.readline()
-                line_counter += 1
+            line = reader.readline().strip()  # column headers
+            line_counter = 5
+            row = line.split('\t')
+            if row != col:  # assert
+                LOG.error('Expected  %s to have columns: %s', raw, col)
+                LOG.error('But Found %s to have columns: %s', raw, row)
+                raise AssertionError('Incomming data headers have changed.')
 
-            for line in fh:
-                line = line.strip()
+            for line in reader:
                 line_counter += 1
-                if re.match(r'^\w*$', line) or line[0] == '#':
-                    # skip blank lines and comments,
-                    continue
                 row = line.split('\t')
-                if len(row) < 2:
+                if len(row) != len(col):
                     LOG.warning(
-                        'Unexpected input on line: %i  got: %s', line_counter, line)
+                        'Unexpected input on line: %i  got: %s', line_counter, row)
                     continue
-                ps_label = row[0]
-                ps_num = row[1]
-
+                ps_label = row[col.index('Phenotypic Series Title')].strip()
+                ps_num = row[col.index('Phenotypic Series number')].strip()
                 omimps_curie = 'OMIMPS:' + ps_num
                 model.addClassToGraph(omimps_curie, ps_label)
 
@@ -1025,14 +1043,15 @@ class OMIM(Source):
                 if 'phenotypeMapList' in entry:
                     phenolist = entry['phenotypeMapList']
                     for p in phenolist:
-                        serieslist.append(
-                            p['phenotypeMap']['phenotypicSeriesNumber'])
+                        for q in p['phenotypeMap']['phenotypicSeriesNumber'].split(','):
+                            serieslist.append(q)
                 if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
                     phenolist = entry['geneMap']['phenotypeMapList']
                     for p in phenolist:
                         if 'phenotypicSeriesNumber' in p['phenotypeMap']:
-                            serieslist.append(
-                                p['phenotypeMap']['phenotypicSeriesNumber'])
+                            for q in p['phenotypeMap']['phenotypicSeriesNumber'].split(
+                                    ','):
+                                serieslist.append(q)
         # add this entry as a subclass of the series entry
         for ser in serieslist:
             series_id = 'OMIMPS:' + ser
