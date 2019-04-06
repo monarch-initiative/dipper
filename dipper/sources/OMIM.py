@@ -211,8 +211,8 @@ class OMIM(Source):
                     self.omim_type[omim_num] = self.globaltt['gene']
 
                 # Phenotype, molecular basis known
-                # elif mimtype == 'phenotype':
-                #    self.omim_type[omim_num] = self.globaltt['Phenotype']
+                elif mimtype == 'phenotype':
+                    self.omim_type[omim_num] = self.globaltt['Phenotype']
 
                 # Phenotype or locus, molecular basis unknown
                 elif mimtype == 'predominantly phenotypes':
