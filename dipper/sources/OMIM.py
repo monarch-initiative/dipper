@@ -136,8 +136,6 @@ class OMIM(Source):
         self.disorder_regex = re.compile(r'(.*), (\d{6})\s*(?:\((\d+)\))?')
         self.nogene_regex = re.compile(r'(.*)\s+\((\d+)\)')
 
-        return
-
     def fetch(self, is_dl_forced=True):
         """
         Get the preconfigured static files.
@@ -149,8 +147,6 @@ class OMIM(Source):
 
         """
         self.get_files(is_dl_forced)
-
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -166,8 +162,6 @@ class OMIM(Source):
         self._process_phenotypicseries(limit)
 
         LOG.info("Done parsing.")
-
-        return
 
     def _get_omim_ids(self):
         '''
@@ -266,7 +260,7 @@ class OMIM(Source):
         omimparams = {}
 
         # add the included_fields as parameters
-        if included_fields is not None and len(included_fields) > 0:
+        if included_fields is not None and included_fields:
             omimparams['include'] = ','.join(included_fields)
 
         processed_entries = list()
@@ -281,13 +275,13 @@ class OMIM(Source):
 
         cleanomimids = [o.split(':')[-1] for o in omimids]
         diff = set(omimids) - set(cleanomimids)
-        if len(diff) > 0:
+        if diff:
             LOG.warning('OMIM has %i dirty bits see"\n %s', len(diff), str(diff))
             omimids = cleanomimids
         else:
             cleanomimids = list()
 
-        it = 0  # for counting
+        acc = 0  # for counting
 
         # note that you can only do request batches of 20
         # see info about "Limits" at http://omim.org/help/api
@@ -303,23 +297,23 @@ class OMIM(Source):
         else:
             maxit = len(omimids)
 
-        while it < maxit:
-            end = min((maxit, it + groupsize))
+        while acc < maxit:
+            end = min((maxit, acc + groupsize))
             # iterate through the omim ids list,
             # and fetch from the OMIM api in batches of 20
 
             if self.test_mode:
                 intersect = list(
-                    set([str(i) for i in self.test_ids]) & set(omimids[it:end]))
+                    set([str(i) for i in self.test_ids]) & set(omimids[acc:end]))
                 # some of the test ids are in the omimids
-                if len(intersect) > 0:
+                if intersect:
                     LOG.info("found test ids: %s", intersect)
                     omimparams.update({'mimNumber': ','.join(intersect)})
                 else:
-                    it += groupsize
+                    acc += groupsize
                     continue
             else:
-                omimparams.update({'mimNumber': ','.join(omimids[it:end])})
+                omimparams.update({'mimNumber': ','.join(omimids[acc:end])})
 
             url = OMIMAPI + urllib.parse.urlencode(omimparams)
 
@@ -336,12 +330,12 @@ class OMIM(Source):
                     break
 
             resp = req.read().decode()
-            it += groupsize
+            acc += groupsize
 
             myjson = json.loads(resp)
             # snag a copy, hopefully we will get the ftp dl soon
             # don't hold your breath
-            with open('./raw/omim/_' + str(it) + '.json', 'w') as fp:
+            with open('./raw/omim/_' + str(acc) + '.json', 'w') as fp:
                 json.dump(myjson, fp)
 
             entries = myjson['omim']['entryList']
@@ -399,8 +393,6 @@ class OMIM(Source):
 
         self.process_entries(
             omimids, self._transform_entry, includes, graph, limit, self.globaltt)
-
-        return
 
     def _transform_entry(self, e, graph, globaltt):
         self.graph = graph
@@ -599,7 +591,7 @@ class OMIM(Source):
                 if re.search(r'and', str(e['entry']['movedTo'])):
                     # split the movedTo entry on 'and'
                     newids = re.split(r'and', str(e['entry']['movedTo']))
-                elif len(str(e['entry']['movedTo']).split(',')) > 0:
+                elif len(str(e['entry']['movedTo']).split(',')) > 1:
                     # split on the comma
                     newids = str(e['entry']['movedTo']).split(',')
                 else:
@@ -619,8 +611,6 @@ class OMIM(Source):
             self._get_pubs(e['entry'], graph)
 
             self._get_process_allelic_variants(e['entry'], graph)  # temp gag
-
-        return
 
     def _process_morbidmap(self, limit):
         """
@@ -749,8 +739,6 @@ class OMIM(Source):
                     break
             LOG.info("Added %d G2P associations", assoc_count)
 
-        return
-
     @staticmethod
     def _make_anonymous_feature(omim_num):
         ''' more blank nodes '''
@@ -816,8 +804,6 @@ class OMIM(Source):
                 assoc.add_evidence(evidence)  # evidence is Found
 
         assoc.add_association_to_graph()
-
-        return
 
     @staticmethod
     def _get_description(entry):
@@ -920,7 +906,6 @@ class OMIM(Source):
                             'Uncaught alleleic variant status %s',
                             al['allelicVariant']['status'])
                 # end loop allelicVariantList
-        return
 
     @staticmethod
     def _cleanup_label(label):
@@ -1024,8 +1009,6 @@ class OMIM(Source):
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
 
-        return
-
     @staticmethod
     def _get_phenotypicseries_parents(entry, graph):
         """
@@ -1058,8 +1041,6 @@ class OMIM(Source):
             model.addClassToGraph(series_id, None)
             model.addSubClass(omim_curie, series_id)
 
-        return
-
     @staticmethod
     def _get_mappedids(entry, graph):
         """
@@ -1091,7 +1072,6 @@ class OMIM(Source):
                     umls_curie = 'UMLS:' + umls
                     model.addClassToGraph(umls_curie, None)
                     model.addXref(omim_curie, umls_curie)
-        return
 
     def _get_mapped_gene_ids(self, entry, graph):
 
