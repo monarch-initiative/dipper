@@ -197,8 +197,7 @@ class Source:
 
             if self.dataset is not None and self.dataset.version is None:
                 self.dataset.set_version_by_date()
-                LOG.info(
-                    "No version for " + self.name + " setting to date issued.")
+                LOG.info("No version for %s setting to date issued.", self.name)
         else:
             LOG.warning("No output file set. Using stdout")
             stream = 'stdout'
@@ -351,13 +350,15 @@ class Source:
         fstat = None
         if files is None:
             files = self.files
-        for fname in files.keys():
+        for fname in files:
             LOG.info("Getting %s", fname)
-            filesource = files.get(fname)
-
+            headers = None
+            filesource = files[fname]
+            if 'headers' in filesource:
+                headers = filesource['headers']
             self.fetch_from_url(
                 filesource['url'], '/'.join((self.rawdir, filesource['file'])),
-                is_dl_forced, filesource['headers'])
+                is_dl_forced, headers)
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
