@@ -44,7 +44,7 @@ class TranslationTestCase(unittest.TestCase):
         if os.path.exists(os.path.join(os.path.dirname(__file__), file_path)):
             tt_file = open(os.path.join(os.path.dirname(__file__), file_path), 'r')
             try:
-                translation_table = yaml.load(tt_file)
+                translation_table = yaml.safe_load(tt_file)
             except yaml.constructor.ConstructorError as e:
                 tt_file.close()
                 self.assertTrue(False)
