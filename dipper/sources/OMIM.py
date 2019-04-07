@@ -55,11 +55,11 @@ class OMIM(Source):
     """
 
     files = {
-        'all': {
+        'mim2gene': {
             'file': 'mim2gene.txt',
             'url': 'https://omim.org/static/omim/data/mim2gene.txt',
             'clean': OMIMURL,
-            'columns': [  # expected  -- not used yet
+            'columns': [  # expected
                 'MIM Number',
                 'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)',
                 'Entrez Gene ID (NCBI)',
@@ -186,24 +186,40 @@ class OMIM(Source):
 
             :return a unique list of omim numbers
         '''
-
+        src_key = 'mim2gene'
         omim_nums = set()        # all types
         line_counter = 0
-        omimfile = '/'.join((self.rawdir, self.files['all']['file']))
-        LOG.info("Obtaining OMIM record identifiers from: %s", omimfile)
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Obtaining OMIM record identifiers from: %s", raw)
         # TODO check to see if the file is there
-        with open(omimfile, "r") as fh:
-            # f.readline()            # copyright
-            # line = f.readline()     # Generated: YYYY-MM-DD
-            # f.readline()            # discription
-            # f.readline()            # disclaimer
-            # f.readline()            # column headers
-            for line in fh:
-                line_counter += 1
-                if line[0] == '#':  # skip omments
-                    continue
+        col = self.files[src_key]['columns']
+        with open(raw, "r") as reader:
+            reader.readline()            # copyright
+            reader.readline()            # Generated: YYYY-MM-DD
+            reader.readline()            # discription
+            reader.readline()            # disclaimer
+            line = reader.readline()     # column headers
+            row = line.strip().split('\t')
+            if row != col:  # assert
+                LOG.error('Expected  %s to have columns: %s', raw, col)
+                LOG.error('But Found %s to have columns: %s', raw, row)
+                raise AssertionError('Incomming data headers have changed.')
 
-                (omim_num, mimtype, ncbigene, hgnc, ensembl) = line.split('\t')
+            line_counter = 5
+            for line in reader:
+                line_counter += 1
+                row = line.strip().split('\t')
+                if len(row) != len(col):
+                    LOG.warning(
+                        'Unexpected input on line: %i  got: %s', line_counter, row)
+                    continue
+                omim_num = row[col.index('MIM Number')]
+                mimtype = row[col.index(
+                    'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)')]
+                # ncbigene = row[col.index('Entrez Gene ID (NCBI)')]
+                # hgnc = row[col.index('Approved Gene Symbol (HGNC)')]
+                # ensembl = row[col.index('Ensembl Gene ID (Ensembl)')]
+
                 omim_nums.update({omim_num})
 
                 self.omim_type[omim_num] = None
@@ -226,6 +242,9 @@ class OMIM(Source):
                 # "Gene and phenotype, combined"  works as both/either.
                 elif mimtype == 'gene/phenotype':
                     self.omim_type[omim_num] = self.globaltt['has_affected_feature']
+                else:
+                    LOG.warning(
+                        'Unknown OMIM TYPE of %s on line %i', mimtype, line_counter)
 
         LOG.info("Done. found %d omim ids", len(omim_nums))
 
@@ -325,16 +344,14 @@ class OMIM(Source):
                 if re.search(r'The API key: .* is invalid', str(error_msg)):
                     msg = "API Key not valid"
                     raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
-                else:
-                    LOG.error("Failed with: %s", str(error_msg))
-                    break
+                LOG.error("Failed with: %s", str(error_msg))
+                break
 
             resp = req.read().decode()
             acc += groupsize
 
             myjson = json.loads(resp)
-            # snag a copy, hopefully we will get the ftp dl soon
-            # don't hold your breath
+            # snag a copy
             with open('./raw/omim/_' + str(acc) + '.json', 'w') as fp:
                 json.dump(myjson, fp)
 
@@ -454,11 +471,13 @@ class OMIM(Source):
             elif omimtype == self.globaltt['gene']:
                 if abbrev is not None:
                     nodelabel = abbrev
-                model.addClassToGraph(omim_curie, nodelabel, omimtype, newlabel)
-            elif omimtype in ('phenotype', self.globaltt['Phenotype']):
-                model.addClassToGraph(omim_curie, newlabel)  # avoid subclassing
+                model.addClassToGraph(
+                    omim_curie, nodelabel, omimtype, newlabel)  # Do subclass G
+            elif omimtype == self.globaltt['Phenotype']:
+                model.addClassToGraph(
+                    omim_curie, newlabel, description='Phenotype')  # Don't subclass P
             else:
-                model.addClassToGraph(omim_curie, newlabel, omimtype)
+                model.addClassToGraph(omim_curie, newlabel, omimtype)  # Do subclass X?
 
             # add the original screaming-caps OMIM label as a synonym
             model.addSynonym(omim_curie, label)
@@ -636,7 +655,7 @@ class OMIM(Source):
         line_counter = 0
         assoc_count = 0
         src_key = 'morbidmap'
-        col = self.rawdir, self.files[src_key]['columns']
+        col = self.files[src_key]['columns']
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         with open(raw) as reader:
             line = reader.readline()  # Copyright
@@ -692,8 +711,7 @@ class OMIM(Source):
                     gene_symbols = gene_symbols.split(', ')
                     gene_id = 'OMIM:' + str(gene_num)
                     self._make_pheno_assoc(
-                        graph, gene_id, gene_symbols[0], disorder_num, disorder_label,
-                        phene_key)
+                        graph, gene_id, disorder_num, disorder_label, phene_key)
                 elif nogene_match is not None:
                     # this is a case where the disorder
                     # a blended gene/phenotype
@@ -714,16 +732,14 @@ class OMIM(Source):
                             gene_id = 'NCBIGene:' + str(gene_num).strip()
                             assoc_count += 1
                             self._make_pheno_assoc(
-                                graph, gene_id, gene_symbols[0],
-                                disorder_num, disorder_label, phene_key)
+                                graph, gene_id, disorder_num, disorder_label, phene_key)
                     else:
                         # we can create an anonymous feature
                         # to house this thing for example, 158900
                         feature_id = self._make_anonymous_feature(gene_num)
                         assoc_count += 1
                         self._make_pheno_assoc(
-                            graph, feature_id, gene_symbols[0], disorder_num,
-                            disorder_label, phene_key)
+                            graph, feature_id, disorder_num, disorder_label, phene_key)
 
                         LOG.info(
                             "We don't have an NCBIGene feature id to link %s with %s",
@@ -745,7 +761,7 @@ class OMIM(Source):
         return '_:feature' + omim_num
 
     def _make_pheno_assoc(
-            self, graph, gene_id, gene_symbol, disorder_num, disorder_label, phene_key
+            self, graph, gene_id, disorder_num, disorder_label, phene_key
     ):
 
         """
@@ -996,8 +1012,8 @@ class OMIM(Source):
 
             for line in reader:
                 line_counter += 1
-                row = line.split('\t')
-                if len(row) != len(col):
+                row = line.strip().split('\t')
+                if row and len(row) != len(col):
                     LOG.warning(
                         'Unexpected input on line: %i  got: %s', line_counter, row)
                     continue
@@ -1058,12 +1074,14 @@ class OMIM(Source):
                 # triple semi-colon delimited list of
                 # double semi-colon delimited orphanet ID/disease pairs
                 # 2970;;566;;Prune belly syndrome
-                items = links['orphanetDiseases'].split(';;;')
+                items = links['orphanetDiseases'].strip().split(';;;')
                 for item in items:
-                    (orpha_num, internal_num, orpha_label) = item.split(';;')
-                    orpha_curie = 'ORPHA:' + orpha_num.strip()
+                    orphdis = item.strip().split(';;')
+                    orpha_num = orphdis[0].strip()
+                    orpha_label = orphdis[2].strip()
+                    orpha_curie = 'ORPHA:' + orpha_num
                     orpha_mappings.append(orpha_curie)
-                    model.addClassToGraph(orpha_curie, orpha_label.strip())
+                    model.addClassToGraph(orpha_curie, orpha_label)
                     model.addXref(omim_curie, orpha_curie)
 
             if 'umlsIDs' in links:
