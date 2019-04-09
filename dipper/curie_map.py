@@ -19,7 +19,7 @@ curie_map = None
 if os.path.exists(os.path.join(os.path.dirname(__file__), 'curie_map.yaml')):
     with open(os.path.join(os.path.dirname(__file__), 'curie_map.yaml')) \
             as yaml_file:
-        curie_map = yaml.load(yaml_file)
+        curie_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
         logger.debug("Finished loading curie maps: %s", curie_map)
 else:
     logger.debug(
