@@ -1,13 +1,18 @@
 ---
-# (RO:0002200)
-"Disease-causing germline mutation(s) in": "has phenotype"
-"Disease-causing somatic mutation(s) in": "has phenotype"
-# ("RO:0002326")
-"Major susceptibility factor in": "contributes_to"
-"Modifying germline mutation in": "contributes_to"
-"Modifying somatic mutation in": "contributes_to"  # none included fall 2018
-"Part of a fusion gene in": "contributes_to"
-"Role in the phenotype of": "contributes_to"
+# (RO:0004013)
+"Disease-causing germline mutation(s) in": "is causal germline mutation in"
+# (RO:0004014)
+"Disease-causing somatic mutation(s) in": "is causal somatic mutation in"
+# (RO:0004015)
+"Major susceptibility factor in": "is causal susceptibility factor for"
+# (RO:0004016)
+"Modifying germline mutation in": "is causal germline mutation partially giving rise to"
+
+# EBI seems to have removed "Modifying somatic mutation in" - strange, because "modifying germline mutation in" (above) still exists.
+# https://www.ebi.ac.uk/ols/search?q=Modifying+germline+mutation+in&groupField=iri&exact=on&start=0&ontology=ordo&type=property
+
+"Part of a fusion gene in": "contributes_to" # I don't see any appriopriate RO term for this that is more granular
+"Role in the phenotype of": "contributes_to" # this seems like the right granularity here
 
 # SO:0000703
 "Candidate gene tested in": "experimental_result_region"

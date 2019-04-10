@@ -96,7 +96,7 @@ class Orphanet(Source):
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
                 LOG.info(
-                    'Expecting %s genes assdciated with disorder %s.',
+                    'Expecting %s genes associated with disorder %s.',
                     expected_genes, disorder_id)
                 processed_genes = 0
                 for assoc in assoc_list.findall('DisorderGeneAssociation'):
