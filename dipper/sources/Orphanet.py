@@ -152,12 +152,11 @@ class Orphanet(Source):
                     eco_id = self.resolve(
                         assoc.find('DisorderGeneAssociationStatus/Name').text)
 
-                    rel_id = self.resolve(dg_label) # no global term_id?
+                    rel_id = self.resolve(dg_label)
                     
-                    assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
-                        
-                    assoc.add_evidence(eco_id)
-                    assoc.add_association_to_graph()
+                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
+                    g2p_assoc.add_evidence(eco_id)
+                    g2p_assoc.add_association_to_graph()
 
                 elem.clear()  # empty the element
                 if int(expected_genes) != processed_genes:

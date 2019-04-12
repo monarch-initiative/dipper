@@ -1,3 +1,4 @@
+# contents in this file are sorted by the value (i.e. the thing after the colon) in key/value pair
 ---
 !!map {
 # these need to be moved to localtts till the terms exist: :!!!
@@ -485,7 +486,7 @@
 "ends_with": "RO:0002230",
 "has_input": "RO:0002233",
 "colocalizes with": "RO:0002325",
-"contributes to": "RO:0002326",
+"contributes_to": "RO:0002326",
 "enables": "RO:0002327",
 "involved in": "RO:0002331",
 "member of": "RO:0002350",
@@ -520,6 +521,9 @@
 "causes condition": "RO:0003303",
 "contributes to condition": "RO:0003304",
 "is causal germline mutation in": "RO:0004013",
+"is causal somatic mutation in": "RO:0004014",
+"is causal susceptibility factor for": "RO:0004015",
+"is causal germline mutation partially giving rise to": "RO:0004016",
 "in paralogy relationship with": "RO:HOM0000011",
 "in orthology relationship with": "RO:HOM0000017",
 "in xenology relationship with": "RO:HOM0000018",
