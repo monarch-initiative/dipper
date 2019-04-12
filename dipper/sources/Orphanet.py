@@ -15,6 +15,11 @@ class Orphanet(Source):
     For Orphanet, we are currently only parsing the disease-gene associations.
     """
 
+    """ 
+    Some useful code:
+    xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
+    """
+    
     files = {
         'disease-gene': {
             'file': 'en_product6.xml',
