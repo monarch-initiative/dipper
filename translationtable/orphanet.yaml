@@ -11,8 +11,8 @@
 # EBI seems to have removed "Modifying somatic mutation in" - strange, because "modifying germline mutation in" (above) still exists.
 # https://www.ebi.ac.uk/ols/search?q=Modifying+germline+mutation+in&groupField=iri&exact=on&start=0&ontology=ordo&type=property
 
-"Part of a fusion gene in": "contributes_to" # I don't see any appriopriate RO term for this that is more granular
-"Role in the phenotype of": "contributes_to" # this seems like the right granularity here
+"Part of a fusion gene in": "contributes to" # I don't see any appriopriate RO term for this that is more granular
+"Role in the phenotype of": "contributes to" # this seems like the right granularity here
 
 # SO:0000703
 "Candidate gene tested in": "experimental_result_region"
