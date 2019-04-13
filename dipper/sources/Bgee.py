@@ -187,8 +187,7 @@ class Bgee(Source):
         col = self.files['anat_entity']['columns']
         if list(dataframe) != col:
             LOG.warning(
-                '\nExpected headers:  %s\nRecived headers:  %s',
-                col, list(dataframe))
+                '\nExpected headers:  %s\nRecived headers:  %s', col, list(dataframe))
 
         gene_groups = dataframe.sort_values(
             'rank score', ascending=False).groupby('Ensembl gene ID')
