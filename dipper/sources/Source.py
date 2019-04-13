@@ -691,11 +691,10 @@ class Source:
         """
 
         # ??? what if the yaml file does not contain a dict datastructure?
-        #  the yaml lib has a "safe load"  method for wonky input protection
         mapping = dict()
         if os.path.exists(os.path.join(os.path.dirname(__file__), yamlfile)):
             map_file = open(os.path.join(os.path.dirname(__file__), yamlfile), 'r')
-            mapping = yaml.load(map_file)
+            mapping = yaml.safe_load(map_file)
             map_file.close()
         else:
             LOG.warning("file: %s not found", yamlfile)
