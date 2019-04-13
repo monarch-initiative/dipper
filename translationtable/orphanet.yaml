@@ -15,8 +15,8 @@
 "Role in the phenotype of": "contributes to condition" # this seems like the right granularity here
 
 # SO:0000703
-"Candidate gene tested in": "experimental_result_region"
-"Biomarker tested in": "experimental_result_region"
+"Candidate gene tested in": "is marker for"
+"Biomarker tested in": "is marker for"
 
 # SO:0002053
 "Disease-causing germline mutation(s) (gain of function) in": "gain_of_function_variant"
