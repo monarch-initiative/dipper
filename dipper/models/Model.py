@@ -32,12 +32,10 @@ class Model():
     def addType(self, subject_id, subject_type):
         self.graph.addTriple(
             subject_id, self.globaltt['type'], subject_type)
-        return
 
     def addLabel(self, subject_id, label):
         self.graph.addTriple(
             subject_id, self.globaltt['label'], label, object_is_literal=True)
-        return
 
     def addClassToGraph(
             self, class_id, label=None, class_type=None, description=None
@@ -71,7 +69,6 @@ class Model():
             self.graph.addTriple(
                 class_id, self.globaltt['description'], description,
                 object_is_literal=True)
-        return
 
     def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None):
         if label is not None:
@@ -87,17 +84,13 @@ class Model():
             self.graph.addTriple(
                 ind_id, self.globaltt['description'], description,
                 object_is_literal=True)
-        return
 
     def addEquivalentClass(self, sub, obj):
         self.graph.addTriple(
             sub, self.globaltt['equivalent_class'], obj)
-        return
 
     def addSameIndividual(self, sub, obj):
         self.graph.addTriple(sub, self.globaltt['same_as'], obj)
-
-        return
 
     def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
 
@@ -123,7 +116,6 @@ class Model():
         if person_label is not None:
             self.graph.addTriple(
                 person_id, self.globaltt['label'], person_label, object_is_literal=True)
-        return
 
     def addDeprecatedClass(self, old_id, new_ids=None):
         """
@@ -141,8 +133,6 @@ class Model():
 
         self._addReplacementIds(old_id, new_ids)
 
-        return
-
     def _addReplacementIds(self, old_id, new_ids):
 
         self.graph.addTriple(
@@ -155,10 +145,9 @@ class Model():
             elif len(new_ids) == 1:
                 self.graph.addTriple(
                     old_id, self.globaltt['term replaced by'], new_ids[0])
-            elif len(new_ids) > 0:
+            elif new_ids:
                 for new_id in new_ids:
                     self.graph.addTriple(old_id, self.globaltt['consider'], new_id)
-        return
 
     def addDeprecatedIndividual(self, old_id, new_ids=None):
         """
@@ -177,12 +166,8 @@ class Model():
 
         self._addReplacementIds(old_id, new_ids)
 
-        return
-
     def addSubClass(self, child_id, parent_id):
-        self.graph.addTriple(
-            child_id, self.globaltt['subclass_of'], parent_id)
-        return
+        self.graph.addTriple(child_id, self.globaltt['subclass_of'], parent_id)
 
     def addSynonym(
             self, class_id, synonym, synonym_type=None):
@@ -203,51 +188,41 @@ class Model():
         if synonym is not None:
             self.graph.addTriple(
                 class_id, synonym_type, synonym, object_is_literal=True)
-        return
 
     def addDefinition(self, class_id, definition):
         self.graph.addTriple(
             class_id, self.globaltt['definition'], definition, object_is_literal=True)
-        return
 
     def addXref(self, class_id, xref_id, xref_as_literal=False):
         self.graph.addTriple(
             class_id, self.globaltt['database_cross_reference'], xref_id,
             object_is_literal=xref_as_literal)
-        return
 
     def addDepiction(self, subject_id, image_url):
         self.graph.addTriple(
             subject_id, self.globaltt['depiction'], image_url, object_is_literal=True)
-        return
 
     def addComment(self, subject_id, comment):
         self.graph.addTriple(
             subject_id, self.globaltt['comment'], comment.strip(),
             object_is_literal=True)
-        return
 
     def addDescription(self, subject_id, description):
         self.graph.addTriple(
             subject_id, self.globaltt['description'], description.strip(),
             object_is_literal=True)
-        return
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
             ontology_id, self.globaltt['type'], self.globaltt['ontology'])
-        return
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
         self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri)
-
-        return
 
     def addOWLVersionInfo(self, ontology_id, version_info):
         self.graph.addTriple(
             ontology_id, self.globaltt['version_info'],
             version_info, object_is_literal=True)
-        return
 
     def makeLeader(self, node_id):
         """
@@ -260,7 +235,6 @@ class Model():
         self.graph.addTriple(
             node_id, self.globaltt['clique_leader'], True, object_is_literal=True,
             literal_type='xsd:boolean')
-        return
 
     def addBlankNodeAnnotation(self, node_id):
         """
@@ -273,7 +247,6 @@ class Model():
         self.graph.addTriple(
             node_id, self.globaltt['is_anonymous'], True, object_is_literal=True,
             literal_type='xsd:boolean')
-        return
 
     def _addSexSpecificity(self, subject_id, sex):
         """
@@ -293,4 +266,3 @@ class Model():
         :return:
         """
         self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex)
-        return

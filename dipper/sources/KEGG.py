@@ -261,7 +261,8 @@ class KEGG(Source):
                 # not typing the diseases as DOID:4 yet because
                 # I don't want to bulk up the graph unnecessarily
 
-                if (not self.test_mode) and (limit is not None and line_counter > limit):
+                if not self.test_mode and (
+                        limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with diseases")
@@ -527,8 +528,8 @@ class KEGG(Source):
                             disease_label)
                         continue
                     # type this disease_id as a disease
-                    model.addClassToGraph(
-                        disease_id, disease_label, self.globaltt['disease'])
+                    model.addClassToGraph(disease_id, disease_label)
+                    # , class_type=self.globaltt['disease'])
                     noomimset.add(disease_id)
                     alt_locus_id = self._make_variant_locus_id(gene_id, disease_id)
                     alt_label = self.label_hash[alt_locus_id]
@@ -540,7 +541,8 @@ class KEGG(Source):
                     assoc = G2PAssoc(graph, self.name, alt_locus_id, disease_id, rel)
                     assoc.add_association_to_graph()
 
-                if (not self.test_mode) and (limit is not None and line_counter > limit):
+                if not self.test_mode and (
+                        limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with KEGG disease to gene")
@@ -744,7 +746,8 @@ class KEGG(Source):
                 model.addClassToGraph(ncbi_gene_id, None)
                 model.addEquivalentClass(kegg_gene_id, ncbi_gene_id)
 
-                if (not self.test_mode) and (limit is not None and line_counter > limit):
+                if not self.test_mode and (
+                        limit is not None and line_counter > limit):
                     break
 
         LOG.info("Done with KEGG gene IDs to NCBI gene IDs")

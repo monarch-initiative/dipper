@@ -56,7 +56,7 @@ cut -f4 causal_mutations.tab  | sort | uniq -c | sort -rn | head -24
       2 46218
       2 32536
 # and the other ~70 have a single gene per species
-# for the pedantic, yes it is possinble the approximation is off because
+# for the pedantic, yes it is possible the approximation is off because
 # there are double mutants, but I would not hold my breath
 
 # How many genes

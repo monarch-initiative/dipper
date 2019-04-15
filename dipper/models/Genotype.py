@@ -536,11 +536,11 @@ class Genotype():
         # add the build-specific chromosome
         # as a member of the build  (both ways)
         family.addMember(reference_id, chr_id)
-        family.addMemberOf(chr_id, reference_id)
+        family.addMemberOf(chr_id, reference_id)   # usage dependent, todo: ommit
 
         return
 
-    @staticmethod 
+    @staticmethod
     def make_variant_locus_label(gene_label, allele_label):
         if gene_label is None:
             gene_label = ''

@@ -60,7 +60,7 @@ fgrep  '<SourceOfValidation' en_product6.xml | fgrep "[PMID" | wc -l
 ```
 
  all source of validations have at least the first as a PMID
- 
+
 -------------------------------------------------------------------
 
 
@@ -91,7 +91,7 @@ ahh nope. default to the gene's orphanet local identifier
 some may not have any external id's
 
  use something like this to (re) generate files for the tests
- 
+
 ```
 xmlstarlet sel -t -c ./JDBOR/DisorderList/Disorder[@id="17604"]  en_product6.xml
 <Disorder id="17604">
@@ -125,6 +125,9 @@ xmlstarlet sel -t -c ./JDBOR/DisorderList/Disorder[@id="17604"]  en_product6.xml
 
 ```
 
-My plan at the moment is to drop the blank node  
-and instead make the subject of assocciations be a gene (hgnc when possible)  
+My plan at the moment is to drop the blank node
+and instead make the subject of assocciations be a gene (hgnc when possible)
 and make any other dbxrefs equivilent
+
+a WIP model of intent (incomplete)
+
