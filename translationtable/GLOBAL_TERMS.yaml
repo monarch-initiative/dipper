@@ -519,6 +519,7 @@
 "causes_or_contributes": "RO:0003302",
 "causes condition": "RO:0003303",
 "contributes to condition": "RO:0003304",
+"is causal germline mutation in": "RO:0004013",
 "in paralogy relationship with": "RO:HOM0000011",
 "in orthology relationship with": "RO:HOM0000017",
 "in xenology relationship with": "RO:HOM0000018",

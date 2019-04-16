@@ -216,9 +216,10 @@ def main():
 
         mysource = source_class(**source_args)
         if args.parse_only is False:
-            start_fetch = time.clock()
+            start_fetch = time.perf_counter()
             mysource.fetch(args.force)
-            end_fetch = time.clock()
+
+            end_fetch = time.perf_counter()
             LOG.info("Fetching time: %d sec", end_fetch-start_fetch)
 
         mysource.settestonly(args.test_only)
@@ -235,15 +236,18 @@ def main():
             LOG.info("Skipping Tests for source: %s", source)
 
         if args.test_only is False and args.fetch_only is False:
-            start_parse = time.clock()
+            start_parse = time.perf_counter()
             mysource.parse(args.limit)
-            end_parse = time.clock()
+
+            end_parse = time.perf_counter()
             LOG.info("Parsing time: %d sec", end_parse-start_parse)
+
             if args.graph == 'rdf_graph':
                 LOG.info("Found %d nodes", len(mysource.graph))
 
                 # Add property axioms
-                start_axiom_exp = time.clock()
+
+                start_axiom_exp = time.perf_counter()
                 LOG.info("Adding property axioms")
 
                 properties = GraphUtils.get_properties_from_graph(mysource.graph)
@@ -251,10 +255,12 @@ def main():
                 end_axiom_exp = time.clock()
                 LOG.info("Property axioms added: %d sec", end_axiom_exp-start_axiom_exp)
 
-                start_write = time.clock()
+                start_write = time.perf_counter()
                 mysource.write(fmt=args.dest_fmt)
-                end_write = time.clock()
+
+                end_write = time.perf_counter()
                 LOG.info("Writing time: %d sec", end_write-start_write)
+
         # if args.no_verify is not True:
         #    status = mysource.verify()
         #    if status is not True:
