@@ -200,6 +200,7 @@ class OMIM(Source):
             reader.readline()            # disclaimer
             line = reader.readline()     # column headers
             row = line.strip().split('\t')
+            row[0] = row[0][2:]          # remove octothorpe & space
             if row != col:  # assert
                 LOG.error('Expected  %s to have columns: %s', raw, col)
                 LOG.error('But Found %s to have columns: %s', raw, row)
@@ -208,14 +209,15 @@ class OMIM(Source):
             line_counter = 5
             for line in reader:
                 line_counter += 1
-                row = line.strip().split('\t')
+                row = line.split('\t')
                 if len(row) != len(col):
                     LOG.warning(
                         'Unexpected input on line: %i  got: %s', line_counter, row)
                     continue
-                omim_num = row[col.index('MIM Number')]
+                omim_num = row[col.index('MIM Number')].strip()
                 mimtype = row[col.index(
-                    'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)')]
+                    'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)'
+                    )].strip()
                 # ncbigene = row[col.index('Entrez Gene ID (NCBI)')]
                 # hgnc = row[col.index('Approved Gene Symbol (HGNC)')]
                 # ensembl = row[col.index('Ensembl Gene ID (Ensembl)')]
@@ -338,12 +340,12 @@ class OMIM(Source):
 
             try:
                 req = urllib.request.urlopen(url)
-            except HTTPError as e:  # URLError?
+            except HTTPError as err:  # URLError?
                 LOG.warning('fetching: %s', url)
-                error_msg = e.read()
+                error_msg = err.read()
                 if re.search(r'The API key: .* is invalid', str(error_msg)):
                     msg = "API Key not valid"
-                    raise HTTPError(url, e.code, msg, e.hdrs, e.fp)
+                    raise HTTPError(url, err.code, msg, err.hdrs, err.fp)
                 LOG.error("Failed with: %s", str(error_msg))
                 break
 
@@ -352,14 +354,14 @@ class OMIM(Source):
 
             myjson = json.loads(resp)
             # snag a copy
-            with open('./raw/omim/_' + str(acc) + '.json', 'w') as fp:
-                json.dump(myjson, fp)
+            with open('./raw/omim/_' + str(acc) + '.json', 'w') as writer:
+                json.dump(myjson, writer)
 
             entries = myjson['omim']['entryList']
 
-            for e in entries:
+            for ent in entries:
                 # apply the data transformation, and save it to the graph
-                processed_entry = transform(e, graph, globaltt)
+                processed_entry = transform(ent, graph, globaltt)
                 if processed_entry is not None:
                     processed_entries.append(processed_entry)
 
@@ -402,8 +404,8 @@ class OMIM(Source):
         tax_id = self.globaltt[tax_label]
 
         # add genome and taxon
-        geno.addGenome(tax_id, tax_label)   # tax label can get added elsewhere
-        model.addClassToGraph(tax_id, None)   # label added elsewhere
+        geno.addGenome(tax_id, tax_label)
+        model.addClassToGraph(tax_id, tax_label)
 
         includes = set()
         includes.add('all')
@@ -411,19 +413,19 @@ class OMIM(Source):
         self.process_entries(
             omimids, self._transform_entry, includes, graph, limit, self.globaltt)
 
-    def _transform_entry(self, e, graph, globaltt):
+    def _transform_entry(self, ent, graph, globaltt):
         self.graph = graph
         model = Model(graph)
         geno = Genotype(graph)
         self.globaltt = globaltt
-        tax_num = '9606'
-        tax_label = 'Human'
+        tax_label = 'Homo sapiens'
+        tax_id = self.globaltt[tax_label]
         build_num = "GRCh38"
-        build_id = "NCBIGenome:" + build_num
+        asm_curie = ':'.join(('NCBIAssembly', build_num))
 
         # get the numbers, labels, and descriptions
-        omim_num = str(e['entry']['mimNumber'])
-        titles = e['entry']['titles']
+        omim_num = str(ent['entry']['mimNumber'])
+        titles = ent['entry']['titles']
         label = titles['preferredTitle']
 
         other_labels = []
@@ -449,14 +451,15 @@ class OMIM(Source):
 
         omim_curie = 'OMIM:' + omim_num
 
-        if e['entry']['status'] == 'removed':
+        if ent['entry']['status'] == 'removed':
             model.addDeprecatedClass(omim_curie)
         else:
             if omim_num in self.omim_type:
                 omimtype = self.omim_type[omim_num]
-            else:
+            else:  # should this be an error  then full stop?
                 LOG.warning('No type found for %s', omim_num)
                 omimtype = None
+
             nodelabel = newlabel
             # this uses our cleaned-up label
             if omimtype == self.globaltt['heritable_phenotypic_marker']:
@@ -471,42 +474,51 @@ class OMIM(Source):
             elif omimtype == self.globaltt['gene']:
                 if abbrev is not None:
                     nodelabel = abbrev
+                #  G_omim subclass_of  gene
                 model.addClassToGraph(
-                    omim_curie, nodelabel, omimtype, newlabel)  # Do subclass G
-            elif omimtype == self.globaltt['Phenotype']:
-                model.addClassToGraph(
-                    omim_curie, newlabel, description='Phenotype')  # Don't subclass P
+                    omim_curie, nodelabel, omimtype, newlabel)
+            elif omimtype == self.globaltt['obsolete']:
+                # X_omim subclass_of RIP
+                model.addClassToGraph(omim_curie, newlabel, omimtype)
             else:
-                model.addClassToGraph(omim_curie, newlabel, omimtype)  # Do subclass X?
+                # omim NOT subclass_of D|P|or ?...
+                model.addClassToGraph(omim_curie, newlabel)
 
             # add the original screaming-caps OMIM label as a synonym
-            model.addSynonym(omim_curie, label)
+            # P.R. says these are not an exact synonym in #714
+            model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
 
-            # add the alternate labels and includes as synonyms
+            # add the alternate labels and includes as synonym-ish
             for label in other_labels:
                 model.addSynonym(
                     omim_curie, label, model.globaltt['has_related_synonym'])
 
+            if abbrev is not None:
+                model.addSynonym(omim_curie, abbrev)  # as an exact synonym
+
             # KS: commenting out, we will get disease descriptions
             # from MONDO, and gene descriptions from the mygene API
 
-            if abbrev is not None:
-                model.addSynonym(
-                    omim_curie, abbrev, model.globaltt['has_related_synonym'])
-
-            # if this is a genetic locus (but not sequenced)
-            #   then add the chrom loc info
-            # but add it to the ncbi gene identifier,
+            # if this is a genetic locus (not sequenced) then
+            #  add the chrom loc info to the ncbi gene identifier,
             # not to the omim id (we reserve the omim id to be the phenotype)
+            #################################################################
+            # the above makes no sense to me. (TEC)
+            # For Monarch, OMIM is authoritative for disease / phenotype
+            #   if they say a phenotype is associated with a locus
+            #   that is what dipper should report.
+            # OMIM is not authoritative for NCBI gene locations, locus or otherwise.
+            # and dipper should not be reporting gene locations via OMIM.
+
             feature_id = None
             feature_label = None
-            if 'geneMapExists' in e['entry'] and e['entry']['geneMapExists']:
-                genemap = e['entry']['geneMap']
+            if 'geneMapExists' in ent['entry'] and ent['entry']['geneMapExists']:
+                genemap = ent['entry']['geneMap']
                 is_gene = False
 
                 if omimtype == self.globaltt['heritable_phenotypic_marker']:
                     # get the ncbigene ids
-                    ncbifeature = self._get_mapped_gene_ids(e['entry'], graph)
+                    ncbifeature = self._get_mapped_gene_ids(ent['entry'], graph)
                     if len(ncbifeature) == 1:
                         feature_id = 'NCBIGene:' + str(ncbifeature[0])
                         # add this feature as a cause for the omim disease
@@ -514,15 +526,18 @@ class OMIM(Source):
                         assoc = G2PAssoc(graph, self.name, feature_id, omim_curie)
                         assoc.add_association_to_graph()
 
-                    elif len(ncbifeature) > 1:
+                    # elif len(ncbifeature) > 1:
+                    else:
                         LOG.info(
-                            "Its ambiguous when %s maps to >1 gene id: %s",
+                            "Its ambiguous when %s maps to not one gene id: %s",
                             omim_curie, str(ncbifeature))
-                    else:  # no ncbi feature, make an anonymous one
-                        feature_id = self._make_anonymous_feature(omim_num)
-                        feature_label = abbrev
+                    # else:  # no ncbi feature, make an anonymous one
+                    #    #
+                    #    feature_id = self._make_anonymous_feature(omim_num)
+                    #    feature_label = abbrev
+                    # not mapping to anything is ambigous as mapping to too many things
 
-                elif omimtype in {
+                elif omimtype in {  # TODO reconsider lumping feature with gene
                         self.globaltt['gene'], self.globaltt['has_affected_feature']}:
                     feature_id = omim_curie
                     is_gene = True
@@ -551,10 +566,10 @@ class OMIM(Source):
                         # not sure if saying subsequence of feature
                         # is the right relationship
 
-                        f = Feature(graph, feature_id, feature_label, omimtype)
+                        feat = Feature(graph, feature_id, feature_label, omimtype)
                         if 'chromosomeSymbol' in genemap:
                             chrom_num = str(genemap['chromosomeSymbol'])
-                            chrom = makeChromID(chrom_num, tax_num, 'CHR')
+                            chrom = makeChromID(chrom_num, tax_id, 'CHR')
                             geno.addChromosomeClass(
                                 chrom_num, self.globaltt['Homo sapiens'], tax_label)
 
@@ -571,7 +586,7 @@ class OMIM(Source):
                                 # then, add the chromosome instance
                                 # (from the given build)
                                 geno.addChromosomeInstance(
-                                    chrom_num, build_id, build_num, chrom)
+                                    chrom_num, asm_curie, build_num, chrom)
                                 if omimtype == self.globaltt[
                                         'heritable_phenotypic_marker']:
                                     postypes = [self.globaltt['FuzzyPosition']]
@@ -579,10 +594,10 @@ class OMIM(Source):
                                     postypes = None
                                 # NOTE that no strand information
                                 # is available in the API
-                                f.addFeatureStartLocation(
+                                feat.addFeatureStartLocation(
                                     fstart, chrom_in_build, None, postypes)
                                 if fend >= 0:
-                                    f.addFeatureEndLocation(
+                                    feat.addFeatureEndLocation(
                                         fend, chrom_in_build, None, postypes)
                                 if fstart > fend:
                                     LOG.info(
@@ -591,10 +606,10 @@ class OMIM(Source):
                             # add the cytogenic location too
                             # for now, just take the first one
                             cytoloc = cytoloc.split('-')[0]
-                            loc = makeChromID(cytoloc, tax_num, 'CHR')
+                            loc = makeChromID(cytoloc, tax_id, 'CHR')
                             model.addClassToGraph(loc, None)
-                            f.addSubsequenceOfFeature(loc)
-                            f.addFeatureToGraph(True, None, is_gene)
+                            feat.addSubsequenceOfFeature(loc)
+                            feat.addFeatureToGraph(True, None, is_gene)
 
                 # end adding causative genes/features
 
@@ -606,16 +621,16 @@ class OMIM(Source):
             # 612479 is movedto:  "603075 and 603029"  OR
             # others use a comma-delimited list, like:
             # 610402 is movedto: "609122,300870"
-            if e['entry']['status'] == 'moved':
-                if re.search(r'and', str(e['entry']['movedTo'])):
+            if ent['entry']['status'] == 'moved':
+                if re.search(r'and', str(ent['entry']['movedTo'])):
                     # split the movedTo entry on 'and'
-                    newids = re.split(r'and', str(e['entry']['movedTo']))
-                elif len(str(e['entry']['movedTo']).split(',')) > 1:
+                    newids = re.split(r'and', str(ent['entry']['movedTo']))
+                elif len(str(ent['entry']['movedTo']).split(',')) > 1:
                     # split on the comma
-                    newids = str(e['entry']['movedTo']).split(',')
+                    newids = str(ent['entry']['movedTo']).split(',')
                 else:
                     # make a list of one
-                    newids = [str(e['entry']['movedTo'])]
+                    newids = [str(ent['entry']['movedTo'])]
                 # cleanup whitespace and add OMIM prefix to numeric portion
                 fixedids = []
                 for i in newids:
@@ -623,13 +638,13 @@ class OMIM(Source):
 
                 model.addDeprecatedClass(omim_curie, fixedids)
 
-            self._get_phenotypicseries_parents(e['entry'], graph)
-            self._get_mappedids(e['entry'], graph)
-            self._get_mapped_gene_ids(e['entry'], graph)
+            self._get_phenotypicseries_parents(ent['entry'], graph)
+            self._get_mappedids(ent['entry'], graph)
+            self._get_mapped_gene_ids(ent['entry'], graph)
 
-            self._get_pubs(e['entry'], graph)
+            self._get_pubs(ent['entry'], graph)
 
-            self._get_process_allelic_variants(e['entry'], graph)  # temp gag
+            self._get_process_allelic_variants(ent['entry'], graph)  # temp gag
 
     def _process_morbidmap(self, limit):
         """
@@ -835,9 +850,9 @@ class OMIM(Source):
         description = None
         if entry is not None and 'textSectionList' in entry:
             textsectionlist = entry['textSectionList']
-            for ts in textsectionlist:
-                if ts['textSection']['textSectionName'] == 'description':
-                    description = ts['textSection']['textSectionContent']
+            for txts in textsectionlist:
+                if txts['textSection']['textSectionName'] == 'description':
+                    description = txts['textSection']['textSectionContent']
                     # there are internal references to OMIM identifiers in
                     # the description, I am formatting them in our style.
                     description = re.sub(r'{(\d+)}', r'OMIM:\1', description)
@@ -862,32 +877,31 @@ class OMIM(Source):
             ref_to_pmid = self._get_pubs(entry, graph)
 
             if 'allelicVariantList' in entry:
-                allelicVariantList = entry['allelicVariantList']
-                for al in allelicVariantList:
-                    al_num = al['allelicVariant']['number']
+                for alv in entry['allelicVariantList']:
+                    al_num = alv['allelicVariant']['number']
                     al_id = 'OMIM:'+str(entry_num)+'.'+str(al_num).zfill(4)
                     al_label = None
                     al_description = None
-                    if al['allelicVariant']['status'] == 'live':
+                    if alv['allelicVariant']['status'] == 'live':
                         publist[al_id] = set()
-                        if 'mutations' in al['allelicVariant']:
-                            al_label = al['allelicVariant']['mutations']
-                        if 'text' in al['allelicVariant']:
-                            al_description = al['allelicVariant']['text']
-                            m = re.findall(r'\{(\d+)\:', al_description)
-                            publist[al_id] = set(m)
+                        if 'mutations' in alv['allelicVariant']:
+                            al_label = alv['allelicVariant']['mutations']
+                        if 'text' in alv['allelicVariant']:
+                            al_description = alv['allelicVariant']['text']
+                            mch = re.findall(r'\{(\d+)\:', al_description)
+                            publist[al_id] = set(mch)
                         geno.addAllele(
                             al_id, al_label, self.globaltt['variant_locus'],
                             al_description)
                         geno.addAlleleOfGene(
                             al_id, 'OMIM:' + str(entry_num),
                             self.globaltt['is_allele_of'])
-                        for r in publist[al_id]:
-                            pmid = ref_to_pmid[int(r)]
+                        for ref in publist[al_id]:
+                            pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id)
                         # look up the pubmed id in the list of references
-                        if 'dbSnps' in al['allelicVariant']:
-                            dbsnp_ids = re.split(r',', al['allelicVariant']['dbSnps'])
+                        if 'dbSnps' in alv['allelicVariant']:
+                            dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
                             for dnum in dbsnp_ids:
                                 did = 'dbSNP:'+dnum.strip()
                                 model.addIndividualToGraph(did, None)
@@ -896,11 +910,11 @@ class OMIM(Source):
                         # Note that RCVs are variant to disease associations
                         # in ClinVar, rather than variant entries
                         # so we make these xrefs instead of equivalents
-                        if 'clinvarAccessions' in al['allelicVariant']:
+                        if 'clinvarAccessions' in alv['allelicVariant']:
                             # clinvarAccessions triple semicolon delimited
                             # each >1 like RCV000020059;;;
                             rcv_ids = \
-                                al['allelicVariant']['clinvarAccessions'].split(';;;')
+                                alv['allelicVariant']['clinvarAccessions'].split(';;;')
                             rcv_ids = [rcv[:12] for rcv in rcv_ids]  # incase more cruft
 
                             for rnum in rcv_ids:
@@ -910,17 +924,17 @@ class OMIM(Source):
                             al_id, "http://omim.org/entry/" +
                             str(entry_num) + "#" + str(al_num).zfill(4))
                     elif re.search(
-                            r'moved', al['allelicVariant']['status']):
+                            r'moved', alv['allelicVariant']['status']):
                         # for both 'moved' and 'removed'
                         moved_ids = None
-                        if 'movedTo' in al['allelicVariant']:
-                            moved_id = 'OMIM:' + al['allelicVariant']['movedTo']
+                        if 'movedTo' in alv['allelicVariant']:
+                            moved_id = 'OMIM:' + alv['allelicVariant']['movedTo']
                             moved_ids = [moved_id]
                         model.addDeprecatedIndividual(al_id, moved_ids)
                     else:
                         LOG.error(
                             'Uncaught alleleic variant status %s',
-                            al['allelicVariant']['status'])
+                            alv['allelicVariant']['status'])
                 # end loop allelicVariantList
 
     @staticmethod
@@ -951,15 +965,15 @@ class OMIM(Source):
             # but assume that the first word is not
             # a roman numeral (this permits things like "X inactivation"
             if i > 1 and re.match(romanNumeralPattern, wrd):
-                n = fromRoman(wrd)
+                num = fromRoman(wrd)
                 # make the assumption that the number of syndromes are <100
                 # this allows me to retain "SYNDROME C"
                 # and not convert it to "SYNDROME 100"
-                if 0 < n < 100:
+                if 0 < num < 100:
                     # get the non-roman suffix, if present.
                     # for example, IIIB or IVA
-                    suffix = wrd.replace(toRoman(n), '', 1)
-                    fixed = ''.join((str(n), suffix))
+                    suffix = wrd.replace(toRoman(num), '', 1)
+                    fixed = ''.join((str(num), suffix))
                     wrd = fixed
 
             # capitalize first letter
@@ -1037,20 +1051,22 @@ class OMIM(Source):
         omim_curie = 'OMIM:' + omim_num
         # the phenotypic series mappings
         serieslist = []
-        if 'phenotypicSeriesExists' in entry:
-            if entry['phenotypicSeriesExists'] is True:
-                if 'phenotypeMapList' in entry:
-                    phenolist = entry['phenotypeMapList']
-                    for p in phenolist:
-                        for q in p['phenotypeMap']['phenotypicSeriesNumber'].split(','):
-                            serieslist.append(q)
-                if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
-                    phenolist = entry['geneMap']['phenotypeMapList']
-                    for p in phenolist:
-                        if 'phenotypicSeriesNumber' in p['phenotypeMap']:
-                            for q in p['phenotypeMap']['phenotypicSeriesNumber'].split(
-                                    ','):
-                                serieslist.append(q)
+        if 'phenotypicSeriesExists' in entry and entry['phenotypicSeriesExists']:
+            if 'phenotypeMapList' in entry:
+                phenolist = entry['phenotypeMapList']
+                for phl in phenolist:
+                    if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
+                        pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
+                        for pns in pns_lst.split(','):
+                            serieslist.append(pns)
+            if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
+                phenolist = entry['geneMap']['phenotypeMapList']
+                for phl in phenolist:
+                    if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
+                        pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
+                        for pns in pns_lst.split(','):
+                            serieslist.append(pns)
+
         # add this entry as a subclass of the series entry
         for ser in serieslist:
             series_id = 'OMIMPS:' + ser
