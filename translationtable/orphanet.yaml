@@ -19,9 +19,9 @@
 "Biomarker tested in": "is marker for"
 
 # SO:0002053
-"Disease-causing germline mutation(s) (gain of function) in": "gain_of_function_variant"
+"Disease-causing germline mutation(s) (gain of function) in": "is causal gain of function germline mutation of in"
 # SO:0002054
-"Disease-causing germline mutation(s) (loss of function) in": "loss_of_function_variant"
+"Disease-causing germline mutation(s) (loss of function) in": "is causal loss of function germline mutation of in"
 
 # these next three are no longer available fall 2018
 # locus

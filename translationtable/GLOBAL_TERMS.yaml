@@ -520,6 +520,8 @@
 "causes_or_contributes": "RO:0003302",
 "causes condition": "RO:0003303",
 "contributes to condition": "RO:0003304",
+"is causal gain of function germline mutation of in": "RO:0004011",
+"is causal loss of function germline mutation of in": "RO:0004012",
 "is causal germline mutation in": "RO:0004013",
 "is causal somatic mutation in": "RO:0004014",
 "is causal susceptibility factor for": "RO:0004015",
