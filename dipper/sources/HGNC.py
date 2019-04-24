@@ -99,7 +99,12 @@ class HGNC(Source):
         self.gene_ids = gene_ids
 
         self.gene_ids = []
-        self.mimtype = DipperUtil.fetch_mimtype()
+
+        # fetch_omim_type populates two datastructures in the superclass.
+        #   omim_replaced:   obsolete_omim -> replacement_list
+        #   omim_type:       omim_id -> type  (as inffered by us)
+
+        self.fetch_omim_type()
 
         if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
@@ -175,12 +180,12 @@ class HGNC(Source):
                 # refseq_accession = row[col.index('refseq_accession')]
                 # ccds_id = row[col.index('ccds_id')]
                 # uniprot_ids = row[col.index('uniprot_ids')]
-                pubmed_id = row[col.index('pubmed_id')].strip()
+                pubmed_ids = row[col.index('pubmed_id')].strip()  # pipe seperated!
                 # mgd_id = row[col.index('mgd_id')]
                 # rgd_id = row[col.index('rgd_id')]
                 # lsdb = row[col.index('lsdb')]
                 # cosmic = row[col.index('cosmic')]
-                omim_id = row[col.index('omim_id')].strip()
+                omim_ids = row[col.index('omim_id')].strip()  # pipe seperated!
                 # mirbase = row[col.index('mirbase')]
                 # homeodb = row[col.index('homeodb')]
                 # snornabase = row[col.index('snornabase')]
@@ -217,25 +222,21 @@ class HGNC(Source):
                     model.makeLeader(hgnc_id)
 
                 if entrez_id != '':
-                    model.addEquivalentClass(
-                        hgnc_id, 'NCBIGene:' + entrez_id)
+                    model.addEquivalentClass(hgnc_id, 'NCBIGene:' + entrez_id)
+
                 if ensembl_gene_id != '':
-                    model.addEquivalentClass(
-                        hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
-                if omim_id != '' and "|" not in omim_id:
-                    omim_curie = 'OMIM:' + omim_id
-                    if not DipperUtil.is_omim_disease(omim_curie):
-                        model.addEquivalentClass(hgnc_id, omim_curie)
+                    model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
+
+                for omim_id in omim_ids.split('|'):
+                    if not DipperUtil.is_omim_disease(omim_id):
+                        model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id)
 
                 geno.addTaxon(self.hs_txid, hgnc_id)
 
                 # add pubs as "is about"
-                if pubmed_id != '':
-                    for pmid in re.split(r'\|', pubmed_id):
-                        if str(pmid) != '':
-                            graph.addTriple(
-                                'PMID:' + str(pmid.strip()),
-                                self.globaltt['is_about'], hgnc_id)
+                for pubmed_id in pubmed_ids.split('|'):
+                    graph.addTriple(
+                        'PMID:' + pubmed_id, self.globaltt['is_about'], hgnc_id)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
