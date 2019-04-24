@@ -25,7 +25,61 @@ class HGNC(Source):
     files = {
         'genes': {
             'file': 'hgnc_complete_set.txt',
-            'url': EBIFTP + 'new/tsv/hgnc_complete_set.txt'},
+            'url': EBIFTP + 'new/tsv/hgnc_complete_set.txt',
+            'columns': [
+                'hgnc_id',
+                'symbol',
+                'name',
+                'locus_group',
+                'locus_type',
+                'status',
+                'location',
+                'location_sortable',
+                'alias_symbol',
+                'alias_name',
+                'prev_symbol',
+                'prev_name',
+                'gene_family',
+                'gene_family_id',
+                'date_approved_reserved',
+                'date_symbol_changed',
+                'date_name_changed',
+                'date_modified',
+                'entrez_id',
+                'ensembl_gene_id',
+                'vega_id',
+                'ucsc_id',
+                'ena',
+                'refseq_accession',
+                'ccds_id',
+                'uniprot_ids',
+                'pubmed_id',
+                'mgd_id',
+                'rgd_id',
+                'lsdb',
+                'cosmic',
+                'omim_id',
+                'mirbase',
+                'homeodb',
+                'snornabase',
+                'bioparadigms_slc',
+                'orphanet',
+                'pseudogene.org',
+                'horde_id',
+                'merops',
+                'imgt',
+                'iuphar',
+                'kznf_gene_catalog',
+                'mamit-trnadb',
+                'cd',
+                'lncrnadb',
+                'enzyme_id',
+                'intermediate_filament_db',
+                'rna_central_ids',
+                'lncipedia',
+                'gtrnadb'
+            ],
+        },
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized,
@@ -45,35 +99,25 @@ class HGNC(Source):
         self.gene_ids = gene_ids
 
         self.gene_ids = []
+        self.mimtype = DipperUtil.fetch_mimtype()
+
         if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
             self.gene_ids = self.all_test_ids['gene']
-
         self.hs_txid = self.globaltt['Homo sapiens']
 
-        return
-
     def fetch(self, is_dl_forced=False):
-
         self.get_files(is_dl_forced)
-
-        return
 
     def parse(self, limit=None):
         if limit is not None:
             LOG.info("Only parsing first %d rows", limit)
-
         if self.test_only:
             self.test_mode = True
-
         LOG.info("Parsing files...")
-
         self._process_genes(limit)
-
         LOG.info("Done parsing files.")
-
-        return
 
     def _process_genes(self, limit=None):
 
@@ -84,72 +128,81 @@ class HGNC(Source):
 
         geno = Genotype(graph)
         model = Model(graph)
+
         raw = '/'.join((self.rawdir, self.files['genes']['file']))
-        line_counter = 0
+        col = self.files['genes']['columns']
         LOG.info("Processing HGNC genes")
+
+        chr_pattern = re.compile(r'(\d+|X|Y|Z|W|MT)[pq$]')
+        band_pattern = re.compile(r'([pq][A-H\d]?\d?(?:\.\d+)?)')
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            # curl -s ftp://ftp.ebi.ac.uk/pub/databases/genenames/new/tsv/hgnc_complete_set.txt | head -1 | tr '\t' '\n' | grep -n  .
+
+            row = next(filereader)
+            if row != col:
+                LOG.error('\nExpected header: %s\nRecieved header: %s', col, row)
+                exit(-1)
+
             for row in filereader:
-                (hgnc_id,
-                 symbol,
-                 name,
-                 locus_group,
-                 locus_type,
-                 status,
-                 location,
-                 location_sortable,
-                 alias_symbol,
-                 alias_name,
-                 prev_symbol,
-                 prev_name,
-                 gene_family,
-                 gene_family_id,
-                 date_approved_reserved,
-                 date_symbol_changed,
-                 date_name_changed,
-                 date_modified,
-                 entrez_id,
-                 ensembl_gene_id,
-                 vega_id,
-                 ucsc_id,
-                 ena,
-                 refseq_accession,
-                 ccds_id,
-                 uniprot_ids,
-                 pubmed_id,
-                 mgd_id,
-                 rgd_id,
-                 lsdb,
-                 cosmic,
-                 omim_id,
-                 mirbase,
-                 homeodb,
-                 snornabase,
-                 bioparadigms_slc,
-                 orphanet,
-                 pseudogene_org,
-                 horde_id,
-                 merops,
-                 imgt,
-                 iuphar,
-                 kznf_gene_catalog,
-                 mamit_trnadb,
-                 cd,
-                 lncrnadb,
-                 enzyme_id,
-                 intermediate_filament_db,
-                 rna_central_ids) = row
+                # To generate:
+                # head -1 hgnc_complete_set.txt.1 | tr '\t' '\n' |
+                # sed "s/\(.*\)/\1 = row[col.index(\'\1\')]/g"
 
-                line_counter += 1
-
-                # skip header
-                if line_counter <= 1:
-                    continue
+                hgnc_id = row[col.index('hgnc_id')].strip()
+                symbol = row[col.index('symbol')].strip()
+                name = row[col.index('name')].strip()
+                # locus_group = row[col.index('locus_group')]
+                locus_type = row[col.index('locus_type')].strip()
+                # status = row[col.index('status')]
+                location = row[col.index('location')].strip()
+                # location_sortable = row[col.index('location_sortable')]
+                # alias_symbol = row[col.index('alias_symbol')]
+                # alias_name = row[col.index('alias_name')]
+                # prev_symbol = row[col.index('prev_symbol')]
+                # prev_name = row[col.index('prev_name')]
+                # gene_family = row[col.index('gene_family')]
+                # gene_family_id = row[col.index('gene_family_id')]
+                # date_approved_reserved = row[col.index('date_approved_reserved')]
+                # date_symbol_changed = row[col.index('date_symbol_changed')]
+                # date_name_changed = row[col.index('date_name_changed')]
+                # date_modified = row[col.index('date_modified')]
+                entrez_id = row[col.index('entrez_id')].strip()
+                ensembl_gene_id = row[col.index('ensembl_gene_id')].strip()
+                # vega_id = row[col.index('vega_id')]
+                # ucsc_id = row[col.index('ucsc_id')]
+                # ena = row[col.index('ena')]
+                # refseq_accession = row[col.index('refseq_accession')]
+                # ccds_id = row[col.index('ccds_id')]
+                # uniprot_ids = row[col.index('uniprot_ids')]
+                pubmed_id = row[col.index('pubmed_id')].strip()
+                # mgd_id = row[col.index('mgd_id')]
+                # rgd_id = row[col.index('rgd_id')]
+                # lsdb = row[col.index('lsdb')]
+                # cosmic = row[col.index('cosmic')]
+                omim_id = row[col.index('omim_id')].strip()
+                # mirbase = row[col.index('mirbase')]
+                # homeodb = row[col.index('homeodb')]
+                # snornabase = row[col.index('snornabase')]
+                # bioparadigms_slc = row[col.index('bioparadigms_slc')]
+                # orphanet = row[col.index('orphanet')]
+                # pseudogene.org = row[col.index('pseudogene.org')]
+                # horde_id = row[col.index('horde_id')]
+                # merops = row[col.index('merops')]
+                # imgt = row[col.index('imgt')]
+                # iuphar = row[col.index('iuphar')]
+                # kznf_gene_catalog = row[col.index('kznf_gene_catalog')]
+                # mamit_trnadb = row[col.index('mamit-trnadb')]
+                # cd = row[col.index('cd')]
+                # lncrnadb = row[col.index('lncrnadb')]
+                # enzyme_id = row[col.index('enzyme_id')]
+                # intermediate_filament_db = row[col.index('intermediate_filament_db')]
+                # rna_central_ids = row[col.index('rna_central_ids')]
+                # lncipedia = row[col.index('lncipedia')]
+                # gtrnadb = row[col.index('gtrnadb')]
 
                 if self.test_mode and entrez_id != '' and \
-                        int(entrez_id) not in self.gene_ids:
+                        entrez_id not in self.gene_ids:
                     continue
 
                 if name == '':
@@ -178,10 +231,10 @@ class HGNC(Source):
 
                 # add pubs as "is about"
                 if pubmed_id != '':
-                    for p in re.split(r'\|', pubmed_id.strip()):
-                        if str(p) != '':
+                    for pmid in re.split(r'\|', pubmed_id):
+                        if str(pmid) != '':
                             graph.addTriple(
-                                'PMID:' + str(p.strip()),
+                                'PMID:' + str(pmid.strip()),
                                 self.globaltt['is_about'], hgnc_id)
 
                 # add chr location
@@ -191,13 +244,11 @@ class HGNC(Source):
                 # sometimes listed like 10q24.1-q24.3
                 # sometimes like 11q11 alternate reference locus
                 band = chrom = None
-                chr_pattern = r'(\d+|X|Y|Z|W|MT)[pq$]'
-                chr_match = re.match(chr_pattern, location)
+                chr_match = chr_pattern.match(location)
                 if chr_match is not None and len(chr_match.groups()) > 0:
                     chrom = chr_match.group(1)
                     chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
-                    band_pattern = r'([pq][A-H\d]?\d?(?:\.\d+)?)'
-                    band_match = re.search(band_pattern, location)
+                    band_match = band_pattern.search(location)
                     feat = Feature(graph, hgnc_id, None, None)
                     if band_match is not None and len(band_match.groups()) > 0:
                         band = band_match.group(1)
@@ -212,46 +263,12 @@ class HGNC(Source):
                         model.addClassToGraph(chrom_id, None)
                         feat.addSubsequenceOfFeature(chrom_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and \
+                        filereader.line_num > limit:
                     break
-
-            # end loop through file
-
-        return
-
-    def get_symbol_id_map(self):
-        """
-        A convenience method to create a mapping between the HGNC
-        symbols and their identifiers.
-        :return:
-
-        """
-
-        symbol_id_map = {}
-        f = '/'.join((self.rawdir, self.files['genes']['file']))
-        with open(f, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                (hgnc_id, symbol, name, locus_group, locus_type, status,
-                 location, location_sortable, alias_symbol, alias_name,
-                 prev_symbol, prev_name, gene_family, gene_family_id,
-                 date_approved_reserved, date_symbol_changed,
-                 date_name_changed, date_modified, entrez_id, ensembl_gene_id,
-                 vega_id, ucsc_id, ena, refseq_accession, ccds_id, uniprot_ids,
-                 pubmed_id, mgd_id, rgd_id, lsdb, cosmic, omim_id, mirbase,
-                 homeodb, snornabase, bioparadigms_slc, orphanet,
-                 pseudogene_org, horde_id, merops, imgt, iuphar,
-                 kznf_gene_catalog, mamit_trnadb, cd, lncrnadb, enzyme_id,
-                 intermediate_filament_db) = row
-
-                symbol_id_map[symbol.strip()] = hgnc_id
-
-        return symbol_id_map
 
     def getTestSuite(self):
         import unittest
         from tests.test_hgnc import HGNCTestCase
-
         test_suite = unittest.TestLoader().loadTestsFromTestCase(HGNCTestCase)
-
         return test_suite
