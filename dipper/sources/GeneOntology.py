@@ -20,7 +20,7 @@ from dipper.utils.GraphUtils import GraphUtils
 
 
 LOG = logging.getLogger(__name__)
-GOGA = 'http://current.geneontology.org/annotations/' # get gene annotation from current.geneontology.com, which is the last official release (but not the bleeding edge)
+GOGA = 'http://current.geneontology.org/annotations' # get gene annotation from current.geneontology.com, which is the last official release (but not the bleeding edge)
 FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
 UPCRKB = 'uniprot/current_release/knowledgebase/'
 
@@ -46,8 +46,8 @@ class GeneOntology(Source):
 
     files = {
         '9615': {
-            'file': 'gene_association.goa_dog.gz',
-            'url': GOGA + '/gene_association.goa_dog.gz'},
+            'file': 'goa_dog.gaf.gz',
+            'url': GOGA + '/goa_dog.gaf.gz'},
         '7227': {
             'file': 'fb.gaf.gz',
             'url': GOGA + '/fb.gaf.gz'},
@@ -80,7 +80,7 @@ class GeneOntology(Source):
             'url': GOGA + '/sgd.gaf.gz'},
         '4896': {
             'file': 'pombase.gaf.gz',
-            'url': GOGA + '/gene_association.pombase.gz'},
+            'url': GOGA + '/pombase.gaf.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
