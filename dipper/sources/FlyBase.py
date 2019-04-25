@@ -636,7 +636,7 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                     # for example: FB||||FBrf0133242|Hugh-u1
                     feature_id = self._makeInternalIdentifier('feature', feature_key)
                 else:
-                    feature_id = 'FlyBase:'+uniquename
+                    feature_id = 'FlyBase:' + uniquename
                 self.idhash['feature'][feature_key] = feature_id
                 self.feature_types[feature_key] = type_id
                 self.label_hash[feature_id] = name
@@ -656,8 +656,10 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
                 elif re.search(r'FBt[ip]', feature_id):
                     self.idhash['feature'][feature_key] = feature_id
 
-                if self.test_mode and int(feature_key) not in self.test_keys['gene']+\
-                        self.test_keys['allele'] + self.test_keys['feature']:
+                if self.test_mode and \
+                        feature_key not in self.test_keys['gene'] and \
+                        feature_key not in self.test_keys['allele'] and \
+                        feature_key not in self.test_keys['feature']:
                     continue
 
                 # now do something with it!
@@ -826,14 +828,18 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
             filereader = csv.reader(f, delimiter='\t', quotechar='\"')
             f.readline()  # read the header row; skip
             for line in filereader:
-                (phendesc_id, genotype_id, environment_id, description,
-                 type_id, pub_id) = line
+                (
+                    phendesc_id,
+                    genotype_id,
+                    environment_id,
+                    description,
+                    type_id,
+                    pub_id) = line
                 # 1	2	1	Hemizygous males are wild type, homozygous males are sterile.	60466	209729
 
                 line_counter += 1
                 phendesc_key = phendesc_id
-                phendesc_id = self._makeInternalIdentifier(
-                    'phendesc', phendesc_key)
+                phendesc_id = self._makeInternalIdentifier('phendesc', phendesc_key)
 
                 # for now, just attach the description to the genotype
                 genotype_key = genotype_id
@@ -1884,7 +1890,8 @@ FROM feature WHERE is_analysis = false and is_obsolete = 'f'
 
                 (organism_dbxref_id, organism_id, dbxref_id, is_current) = line
 
-                if self.test_mode and int(organism_id) not in self.test_keys['organism']:
+                if self.test_mode \
+                        and int(organism_id) not in self.test_keys['organism']:
                     continue
 
                 organism_key = organism_id

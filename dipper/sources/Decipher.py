@@ -36,7 +36,8 @@ class Decipher(Source):
     files = {
         'annot': {
             'file': 'ddg2p.zip',
-            'url': 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip'}
+            'url': 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip',
+            'headers'}
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -60,6 +61,8 @@ class Decipher(Source):
         self.graph = self.graph
         self.geno = Genotype(self.graph)
         self.model = Model(self.graph)
+        self.graph_type = graph_type
+        self.are_bnodes_skolemized = are_bnodes_skolemized
 
         return
 
@@ -69,7 +72,7 @@ class Decipher(Source):
 
         # since there's a dependency on HGNC files; fetch those too
 
-        hgnc = HGNC()
+        hgnc = HGNC(self.graph_type, self.are_bnodes_skolemized)
         hgnc.fetch(is_dl_forced)
 
         return
@@ -126,7 +129,7 @@ class Decipher(Source):
             graph = self.graph
 
         # in order for this to work, we need to map the HGNC id-symbol;
-        hgnc = HGNC()
+        hgnc = HGNC(self.graph_type, self.are_bnodes_skolemized)
         hgnc_symbol_id_map = hgnc.get_symbol_id_map()
 
         myzip = ZipFile(

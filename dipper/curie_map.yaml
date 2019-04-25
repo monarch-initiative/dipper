@@ -136,9 +136,9 @@
 
 # organisms and genome builds
                                                                         # National Center for Biotechnology Information
-'NCBIAssembly': 'http://www.ncbi.nlm.nih.gov/assembly/'                 #   Assembly
-'NCBIGenome': 'http://www.ncbi.nlm.nih.gov/genome/'                     #   Genome
-'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon
+'NCBIAssembly': 'https://www.ncbi.nlm.nih.gov/assembly?term='           #   Assembly  e.g. GRCh38
+'NCBIGenome': 'https://www.ncbi.nlm.nih.gov/genome/'                    #   Genome	  e.g. 51  (for human)
+'NCBITaxon': 'http://purl.obolibrary.org/obo/NCBITaxon_'                #   Taxon     e.g. 9606
 'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'         # Local IRI for Online Inheritance In Animal breeds
 'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz golden path
 'UCSCBuild': 'http://genome.ucsc.edu/cgi-bin/hgGateway?db='             # University of California, Santa Cruz genome build

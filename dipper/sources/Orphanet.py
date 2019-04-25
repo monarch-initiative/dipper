@@ -15,6 +15,11 @@ class Orphanet(Source):
     For Orphanet, we are currently only parsing the disease-gene associations.
     """
 
+    """ 
+    Some useful code:
+    xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
+    """
+    
     files = {
         'disease-gene': {
             'file': 'en_product6.xml',
@@ -96,7 +101,7 @@ class Orphanet(Source):
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
                 LOG.info(
-                    'Expecting %s genes assdciated with disorder %s.',
+                    'Expecting %s genes associated with disorder %s.',
                     expected_genes, disorder_id)
                 processed_genes = 0
                 for assoc in assoc_list.findall('DisorderGeneAssociation'):
@@ -115,7 +120,6 @@ class Orphanet(Source):
 
                     # set priority (clique leader if available) but default to OPRHA
                     for pfx in ('HGNC', 'Ensembl', 'SwissProt'):
-                        #       'OMIM', 'Genatlas','Reactome', 'IUPHAR'):
                         if pfx in gene_set:
                             if pfx in self.localtt:
                                 pfx = self.localtt[pfx]
@@ -139,13 +143,7 @@ class Orphanet(Source):
                     # TEC. would prefer this not happen here. let HGNC handle it
                     # except there are some w/o explicit external links ...
 
-                    # gene_name = gene.find('Name').text
                     gene_symbol = gene.find('Symbol').text
-                    # gene_iid = assoc.find('DisorderGeneAssociationType').get('id')
-                    # gene_type_id = self.resolve(gene_iid)
-                    # don't  know the 'type' of the gene for this class anymore
-                    # model.addClassToGraph(
-                    #    gene_curie, gene_symbol, gene_type_id, gene_name)
 
                     syn_list = gene.find('./SynonymList')
                     if int(syn_list.get('count')) > 0:
@@ -153,31 +151,17 @@ class Orphanet(Source):
                             model.addSynonym(gene_curie, syn.text)
 
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
-                    # rel_id = self.resolve(dg_label)
-
-                    # alt_locus_id = '_:' + gene_num + '-' + disorder_num + 'VL'
-                    # alt_label = ' '.join((
-                    #    'some variant of', gene_symbol.strip(), disorder_label))
-                    # model.addIndividualToGraph(
-                    #    alt_locus_id, alt_label, self.globaltt['variant_locus'])
-                    # geno.addAffectedLocus(alt_locus_id, gene_id)
-                    # model.addBlankNodeAnnotation(alt_locus_id)
-                    # consider typing the gain/loss-of-function variants like:
-                    # http://sequenceontology.org/browser/current_svn/term/SO:0002054
-                    # http://sequenceontology.org/browser/current_svn/term/SO:0002053
 
                     # use dg association status to issue an evidence code
                     # FIXME I think that these codes are sub-optimal
                     eco_id = self.resolve(
                         assoc.find('DisorderGeneAssociationStatus/Name').text)
 
-                    # assoc = G2PAssoc(
-                    #    graph, self.name, alt_locus_id, disorder_id, rel_id)
-                    # assoc.add_evidence(eco_id)
-                    # assoc.add_association_to_graph()
-
-                    self.add_gene_to_disease(
-                        dg_label, gene_curie, gene_symbol, disorder_id, eco_id)
+                    rel_id = self.resolve(dg_label)
+                    
+                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
+                    g2p_assoc.add_evidence(eco_id)
+                    g2p_assoc.add_association_to_graph()
 
                 elem.clear()  # empty the element
                 if int(expected_genes) != processed_genes:
@@ -190,160 +174,3 @@ class Orphanet(Source):
 
         return
 
-    def add_gene_to_disease(
-            self,
-            association_type,
-            gene_id,
-            gene_symbol,
-            disease_id,
-            eco_id):
-        """
-        Composes triples based on the DisorderGeneAssociationType element:
-        AND the suffixes:
-
-            - "gene phenotype"
-            - "function consequence"
-            - "cell origin"
-
-        xmlstarlet sel -t  -v "/JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/
-            DisorderGeneAssociation/DisorderGeneAssociationType/Name" en_product6.xml  \
-            | sort -u
-
-        Biomarker tested in
-        Candidate gene tested in
-        Disease-causing germline mutation(s) (gain of function) in
-        Disease-causing germline mutation(s) in
-        Disease-causing germline mutation(s) (loss of function) in
-        Disease-causing somatic mutation(s) in
-        Major susceptibility factor in
-        Modifying germline mutation in
-        Part of a fusion gene in
-        Role in the phenotype of
-
-        These labels are a composition of terms, we map:
-        gene-disease predicate (has phenotype, contributes_to)
-        variant-origin (germline, somatic)
-        variant-functional consequence (loss, gain)
-
-        To check on  the "DisorderGeneAssociationType" to id-label map
-        xmlstarlet sel -t -m \
-        './JDBOR/DisorderList/Disorder/DisorderGeneAssociationList/\
-        DisorderGeneAssociation/DisorderGeneAssociationType'\
-        -v './@id' -o '    ' -v './Name' -n en_product6.xml |\
-        sort | uniq -c | sort -nr
-
-        Although the id-label pairs appear to be stable after
-        a few years, we map to the label instead of the id in
-        case Orphanet changes their IDs
-
-        :param association_type: {str} DisorderGeneAssociationType/Name,
-                                       eg Role in the phenotype of
-
-        :param gene_id: {str} gene id as curie
-        :param gene_symbol: {str} HGVS gene symbol
-        :param disease_id: {str} disease id as curie
-        :param eco_id: {str} eco code as curie
-
-        :return: None
-        """
-
-        model = Model(self.graph)
-        geno = Genotype(self.graph)
-        gene_or_variant = ""
-
-        # If we know something about the variant such as functional consequence or
-        # cellular origin make a blank node and attach the attributes
-        is_variant = False
-        variant_id_string = "{}{}".format(gene_id, disease_id)
-        functional_consequence = None
-        cell_origin = None
-
-        # hard fail for no mappings/new terms, otherwise they go unnoticed
-        if "{}|gene phenotype".format(association_type) not in self.localtt:
-            raise ValueError(
-                'Disease-gene association type {} not mapped'.format(association_type)
-            )
-
-        g2p_relation = self.resolve("|".join([association_type, "gene phenotype"]))
-
-        # Variant attributes
-        if "|".join([association_type, "function consequence"]) in self.localtt:
-            is_variant = True
-            local_key = "|".join([association_type, "function consequence"])
-            functional_consequence = self.resolve(local_key)
-            functional_consequence_lbl = self.localtt[local_key]
-        if "|".join([association_type, "cell origin"]) in self.localtt:
-            is_variant = True
-            local_key = "|".join([association_type, "cell origin"])
-            cell_origin = self.resolve(local_key)
-            cell_origin_lbl = self.localtt[local_key]
-
-        if is_variant:
-            variant_label = "of {}".format(gene_symbol)
-            if functional_consequence:
-                variant_label = "{} {}".format(
-                    functional_consequence_lbl.replace('_', ' '), variant_label
-                )
-                variant_id_string += functional_consequence_lbl
-            else:
-                variant_label = "variant {}".format(variant_label)
-
-            if cell_origin:
-                variant_label = "{} {}".format(cell_origin_lbl, variant_label)
-                variant_id_string += cell_origin_lbl
-
-            variant_bnode = self.make_id(variant_id_string, "_")
-            model.addIndividualToGraph(
-                variant_bnode, variant_label, self.globaltt['variant_locus'])
-            geno.addAffectedLocus(variant_bnode, gene_id)
-            model.addBlankNodeAnnotation(variant_bnode)
-
-            self._add_variant_attributes(
-                variant_bnode, functional_consequence, cell_origin)
-
-            gene_or_variant = variant_bnode
-
-        else:
-            gene_or_variant = gene_id
-
-        assoc = G2PAssoc(
-            self.graph, self.name, gene_or_variant, disease_id, g2p_relation)
-        assoc.add_evidence(eco_id)
-        assoc.add_association_to_graph()
-
-        return
-
-    def _add_variant_attributes(
-            self,
-            variant_id,
-            functional_consequence=None,
-            cell_origin=None):
-        """
-        Add attributes to variant
-
-        :param variant_id:
-        :param functional_consequence_gt: {str} global term for
-                                          functional consequence
-        :param cell_origin_gt: global term for cell origin
-        :return: None
-        """
-        model = Model(self.graph)
-
-        if functional_consequence is not None:
-            predicate = self.globaltt['has_functional_consequence']
-            model.addTriple(variant_id, predicate, functional_consequence)
-
-        if cell_origin is not None:
-            predicate = self.globaltt['has_cell_origin']
-            model.addTriple(variant_id, predicate, cell_origin)
-
-        return
-
-    # def getTestSuite(self):
-    #    import unittest
-    #    # TODO PYLINT Unable to import 'tests.test_orphanet  (there is none)
-    #    from tests.test_orphanet import OrphanetTestCase
-    #
-    #     test_suite = unittest.TestLoader().loadTestsFromTestCase(OrphanetTestCase)
-    #
-    #    return test_suite

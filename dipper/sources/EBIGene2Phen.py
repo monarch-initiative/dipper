@@ -2,7 +2,7 @@ import logging
 import csv
 import gzip
 from contextlib import closing
-from typing import Optional
+from typing import Optional    #  playing make belive
 
 import requests
 from dipper.sources.Source import Source
@@ -91,8 +91,6 @@ class EBIGene2Phen(Source):
                 row = line.decode('utf-8').split('\t')
                 self.mondo_map[row[0]] = row[1]
 
-        return
-
     def fetch(self, is_dl_forced: bool=False):
         """
         Fetch DDG2P.csv.gz and check headers to see
@@ -102,8 +100,6 @@ class EBIGene2Phen(Source):
         :return: None
         """
         self.get_files(is_dl_forced)
-
-        return
 
     def parse(self, limit: Optional[int]=None):
         """
@@ -150,8 +146,6 @@ class EBIGene2Phen(Source):
 
         LOG.info("Done parsing.")
 
-        return
-
     def _add_gene_disease(self, row):  # ::List  getting syntax error here
         """
         Parse and add gene variant disease model
@@ -180,7 +174,7 @@ class EBIGene2Phen(Source):
 
         relation_curie = self.resolve(row[col.index('g2p_relation_label')])
         mutation_consequence = row[col.index('mutation_consequence')]
-        if mutation_consequence != 'uncertain' and mutation_consequence != '':
+        if mutation_consequence not in ('uncertain', ''):
             consequence_relation = self.resolve(
                 self._get_consequence_predicate(mutation_consequence))
             consequence_curie = self.resolve(mutation_consequence)
@@ -215,7 +209,6 @@ class EBIGene2Phen(Source):
             requirement_curie,
             pmid_list
         )
-        return
 
     def _build_gene_disease_model(
             self,
@@ -279,8 +272,6 @@ class EBIGene2Phen(Source):
                 model.addLabel(
                     allelic_requirement,
                     allelic_requirement.strip(':').replace('_', ' '))
-
-        return
 
     @staticmethod
     def _get_consequence_predicate(consequence):
