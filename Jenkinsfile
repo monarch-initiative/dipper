@@ -127,7 +127,7 @@ pipeline {
                         dir('./build-flybase-rdf') {
                             git(
                                 url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
+                                branch: '41a5e2d'
                             )
                             sh '''
                                 virtualenv -p /usr/bin/python3 venv

@@ -1,0 +1,108 @@
+BNODE:b29b6ce9b15a8d7587a1 a OBO:SEPIO_0000067 ;
+    rdfs:label "_:bad61ae6d3fd1072019fSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:b2c8ab52a240978b5d07 a OBO:SEPIO_0000067 ;
+    rdfs:label "_:bd4ef2b55470e2ff6b1cSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:b8178a5acf773ae10c47 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_1750397",
+        "b04d83bd71a9e5ed689f_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
+    OBO:SEPIO_0000021 "2018-10-31" ;
+    OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
+    OBO:SEPIO_0000111 BNODE:bad61ae6d3fd1072019f ;
+    dc:identifier "SCV000893958.1" .
+
+BNODE:bb3add3eed5a29ba44e6 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_1750397",
+        "bb8218e5dd5e028601ba_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
+    OBO:SEPIO_0000021 "2018-10-31" ;
+    OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
+    OBO:SEPIO_0000111 BNODE:b1e75870cf421cc5377c ;
+    dc:identifier "SCV000893958.1" .
+
+BNODE:bd0a37bd31ff97afa3ee a OBO:SEPIO_0000067 ;
+    rdfs:label "_:b1e75870cf421cc5377cSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:beff008b0bd23fd8ba1f a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_1750397",
+        "b3135a4d36760903bbc8_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> ;
+    OBO:SEPIO_0000021 "2018-10-31" ;
+    OBO:SEPIO_0000041 BNODE:b23790c2cc493199c951 ;
+    OBO:SEPIO_0000111 BNODE:bd4ef2b55470e2ff6b1c ;
+    dc:identifier "SCV000893958.1" .
+
+<http://omim.org/entry/146110> rdfs:label "Hypogonadotropic hypogonadism 7 with or without anosmia" .
+
+<http://omim.org/entry/607694> rdfs:label "Hypomyelinating leukodystrophy 7" .
+
+<http://omim.org/entry/614381> rdfs:label "Hypomyelinating leukodystrophy 8, with or without oligodontia and/or hypogonadotropic hypogonadism" .
+
+BNODE:b1e75870cf421cc5377c a OBO:ECO_0000000 ;
+    rdfs:label "bb8218e5dd5e028601ba_evidence" ;
+    OBO:SEPIO_0000085 BNODE:bd0a37bd31ff97afa3ee .
+
+BNODE:bad61ae6d3fd1072019f a OBO:ECO_0000000 ;
+    rdfs:label "b04d83bd71a9e5ed689f_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b29b6ce9b15a8d7587a1 .
+
+BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
+    rdfs:label "b3135a4d36760903bbc8_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b2c8ab52a240978b5d07 .
+
+:MONARCH_b04d83bd71a9e5ed689f a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:bad61ae6d3fd1072019f ;
+    OBO:SEPIO_0000015 BNODE:b8178a5acf773ae10c47 ;
+    OBO:SEPIO_0000098 :MONARCH_b3135a4d36760903bbc8,
+        :MONARCH_bb8218e5dd5e028601ba ;
+    OBAN:association_has_object <http://omim.org/entry/146110> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/40123> ;
+    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+
+:MONARCH_b3135a4d36760903bbc8 a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:bd4ef2b55470e2ff6b1c ;
+    OBO:SEPIO_0000015 BNODE:beff008b0bd23fd8ba1f ;
+    OBO:SEPIO_0000098 :MONARCH_b04d83bd71a9e5ed689f,
+        :MONARCH_bb8218e5dd5e028601ba ;
+    OBAN:association_has_object <http://omim.org/entry/614381> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/40123> ;
+    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+
+:MONARCH_bb8218e5dd5e028601ba a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:b1e75870cf421cc5377c ;
+    OBO:SEPIO_0000015 BNODE:bb3add3eed5a29ba44e6 ;
+    OBO:SEPIO_0000098 :MONARCH_b04d83bd71a9e5ed689f,
+        :MONARCH_b3135a4d36760903bbc8 ;
+    OBAN:association_has_object <http://omim.org/entry/607694> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/40123> ;
+    oboInOwl:hasdbxref ClinVar:RCV000763295 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> a foaf:organization ;
+    rdfs:label "Fulgent Genetics,Fulgent Genetics" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/40123> a OBO:SO_0001483 ;
+    rdfs:label "NM_018082.5(POLR3B):c.1568T>A (p.Val523Glu)" ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/55703> ;
+    OBO:GENO_0000840 <http://omim.org/entry/146110>,
+        <http://omim.org/entry/607694>,
+        <http://omim.org/entry/614381> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000012.11:g.106826199T>A",
+        "NC_000012.12:g.106432421T>A",
+        "NG_031837.1:g.79764T>A",
+        "NM_018082.5:c.1568T>A",
+        "NP_060552.4:p.Val523Glu",
+        "Q9NW08:p.Val523Glu" ;
+    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161> .
+
+BNODE:b23790c2cc493199c951 a OBO:SEPIO_0000037 ;
+    rdfs:label "ACMG Guidelines, 2015",
+        "ACMG Guidelines, 2015_assertionmethod" .

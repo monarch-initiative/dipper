@@ -1,4 +1,5 @@
 ---
+# Relating a variant to a gene
 'upstream_gene_variant': 'is upstream of sequence of'
 'downstream_gene_variant': 'is downstream of sequence of'
 
@@ -8,6 +9,9 @@
 # switch from SO!region to falfo!Region
 'region':  'Region'
 
-# vaguely implied by a unit test;
-# would switch from more specific SO to a less specific GENO term
-#'intron_variant':  'has_affected_feature'
+# Variant type
+'intron_variant': 'intron_variant'
+
+# Relating a variant to a gene,
+# not sure if correct as an intron may not affect a gene
+# 'intron_variant': 'has_affected_feature'

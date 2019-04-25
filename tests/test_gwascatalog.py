@@ -7,7 +7,7 @@ from dipper.graph.RDFGraph import RDFGraph
 from dipper.utils.TestUtils import TestUtils
 
 logging.basicConfig()
-logging.getLogger().setLevel(logging.WARNING)
+logging.getLogger().setLevel(logging.WARN)
 LOG = logging.getLogger(__name__)
 
 
@@ -28,7 +28,7 @@ class TestGwasSNPModel(unittest.TestCase):
             'chrom_pos': '21259029',
             'context': 'intergenic_variant',
             'allele_freq': '0.013',
-            'trait': 'Diisocyanate-induced asthma',
+            'trait': 'response to diisocyanate, asthma',
             'trait_uri': 'http://www.ebi.ac.uk/efo/EFO_0006995, http://www.ebi.ac.uk/efo/EFO_0003949',
             'pvalue': '0.0000007',
             'merged': '0',
@@ -87,14 +87,10 @@ class TestGwasSNPModel(unittest.TestCase):
         faldo:position 21259029 ;
         faldo:reference OBO:CHR_GRCh38chr5 .
 """
-        # To debug
-        # print(self.source.graph.serialize(format="turtle").decode("utf-8"))
-        # self.assertTrue(False)
-
         # dbg
-        # LOG.debug(
-        #    "Reference graph: %s",
-        #   self.source.graph.serialize(format="turtle").decode("utf-8"))
+        LOG.debug(
+            "Reference graph: %s",
+            self.source.graph.serialize(format="turtle").decode("utf-8"))
 
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
@@ -113,8 +109,8 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['downstream_gene_num'])
 
         triples = """
-        dbSNP:rs1491921 OBO:RO_0002528 NCBIGene:107986180 ;
-            OBO:RO_0002529 NCBIGene:107986179 .
+        dbSNP:rs1491921 OBO:RO_0002528 ENSEMBL:107986180 ;
+            OBO:RO_0002529 ENSEMBL:107986179 .
         """
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
@@ -150,11 +146,7 @@ class TestGwasSNPModel(unittest.TestCase):
         :return:
         """
         self.assertTrue(len(list(self.source.graph)) == 0)
-        efo_ontology = RDFGraph()
-        LOG.info("Loading EFO ontology in separate rdf graph")
-        efo_ontology.parse(self.source.files['efo']['url'], format='xml')
-        efo_ontology.bind_all_namespaces()
-        LOG.info("Finished loading EFO ontology")
+        mondo_data = {"graphs" : [ {"nodes" : [ {"meta": {"xrefs": [{"val": "EFO:0003949"}]}}]}]}
 
         variant_curie, variant_type = self.source._get_curie_and_type_from_id(
             self.test_data['snp_label'])
@@ -165,11 +157,11 @@ class TestGwasSNPModel(unittest.TestCase):
             self.test_data['platform'], self.test_data['pvalue'])
 
         self.source._add_variant_trait_association(
-            variant_curie, self.test_data['trait_uri'], efo_ontology,
+            variant_curie, self.test_data['trait_uri'],
+            self.test_data['trait'], mondo_data,
             self.test_data['pubmed'], description)
 
         triples = """
-
 
     MONARCH:bffc7a930c08cc8fe931 a OBAN:association ;
         dc:description "{0}" ;
@@ -187,8 +179,8 @@ class TestGwasSNPModel(unittest.TestCase):
         OBAN:association_has_predicate RO:0003304 ;
         OBAN:association_has_subject dbSNP:rs1491921 .
 
-    EFO:0003949 a owl:Class ;
-        rdfs:label "eye color"^^xsd:string ;
+    EFO:0006995 a owl:Class ;
+        rdfs:label "response to diisocyanate" ;
         rdfs:subClassOf UPHENO:0001001 .
 
     dbSNP:rs1491921 RO:0003304 EFO:0003949,
@@ -198,9 +190,9 @@ class TestGwasSNPModel(unittest.TestCase):
         """.format(description)
 
         # dbg
-        # LOG.debug(
-        #    "Reference graph: %s",
-        #    self.source.graph.serialize(format="turtle").decode("utf-8"))
+        LOG.debug(
+           "Reference graph: %s",
+           self.source.graph.serialize(format="turtle").decode("utf-8"))
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
 
@@ -262,42 +254,42 @@ class TestGwasHaplotypeModel(unittest.TestCase):
             self.test_data['allele_freq'], self.test_data['mapped_gene'], so_ontology)
 
         triples = """
-:haplotype_bb627b1f64039b0f751a a OBO:GENO_0000871 ;
+:haplotype_bb627b1f64039b0f751a a SO:0001024 ;
     rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
-    OBO:GENO_0000382 dbSNP:rs1329573,
+    GENO:0000382 dbSNP:rs1329573,
         dbSNP:rs3758171,
         dbSNP:rs3824344,
         dbSNP:rs7020413 ;
-    OBO:SO_0001627 HGNC:8619 ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    GENO:0000418 HGNC:8619 ;
+    RO:0002162 NCBITaxon:9606 .
 
-dbSNP:rs1329573 a OBO:SO_0000694,
+dbSNP:rs1329573 a SO:0000694,
         SO:0001627 ;
     rdfs:label "rs1329573-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> ;
-    OBO:SO_0001627 HGNC:8619 ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    GENO:0000418 HGNC:8619 ;
+    RO:0002162 NCBITaxon:9606 .
 
-dbSNP:rs3758171 a OBO:SO_0000694,
-        OBO:SO_0001627 ;
+dbSNP:rs3758171 a SO:0000694,
+        SO:0001627 ;
     rdfs:label "rs3758171-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> ;
-    OBO:SO_0001627 HGNC:8619 ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    GENO:0000418 HGNC:8619 ;
+    RO:0002162 NCBITaxon:9606 .
 
-dbSNP:rs3824344 a OBO:SO_0000694,
+dbSNP:rs3824344 a SO:0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs3824344-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> ;
-    OBO:SO_0001627 HGNC:8619 ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    GENO:0000418 HGNC:8619 ;
+    RO:0002162 NCBITaxon:9606 .
 
-dbSNP:rs7020413 a OBO:SO_0000694,
-        OBO:SO_0001627 ;
+dbSNP:rs7020413 a SO:0000694,
+        SO:0001627 ;
     rdfs:label "rs7020413-?" ;
     faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> ;
-    OBO:SO_0001627 HGNC:8619 ;
-    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+    GENO:0000418 HGNC:8619 ;
+    RO:0002162 NCBITaxon:9606 .
 
 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> a faldo:Region ;
     faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> ;
@@ -321,23 +313,22 @@ dbSNP:rs7020413 a OBO:SO_0000694,
 
 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> a faldo:Position ;
     faldo:position 36998996 ;
-    faldo:reference OBO:CHR_GRCh38chr9 .
+    faldo:reference CHR:GRCh38chr9 .
 
 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> a faldo:Position ;
     faldo:position 37000690 ;
-    faldo:reference OBO:CHR_GRCh38chr9 .
+    faldo:reference CHR:GRCh38chr9 .
 
 <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> a faldo:Position ;
     faldo:position 37002118 ;
-    faldo:reference OBO:CHR_GRCh38chr9 .
+    faldo:reference CHR:GRCh38chr9 .
         """
 
         # dbg
-        # LOG.debug(
-        #    "Reference graph: %s",
-        #   self.source.graph.serialize(format="turtle").decode("utf-8"))
+        LOG.debug(
+            "Reference graph: %s",
+            self.source.graph.serialize(format="turtle").decode("utf-8"))
 
-        #  Does not seem to acknowlage these constant triples 
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
 

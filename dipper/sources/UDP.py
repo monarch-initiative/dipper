@@ -352,7 +352,7 @@ class UDP(Source):
                 if len(genes_of_interest) == 1:
                     # Assume variant is variant allele of gene
                     gene = genes_of_interest[0]
-                    gene_id = dipper_util.get_ncbi_id_from_symbol(gene)
+                    gene_id = dipper_util.get_hgnc_id_from_symbol(gene)
                     self._add_gene_to_graph(
                         gene, variant_bnode, gene_id,
                         self.globaltt['has_affected_feature'])

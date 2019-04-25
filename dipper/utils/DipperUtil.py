@@ -118,7 +118,7 @@ class DipperUtil:
         :param graph: rdfLib graph object
         :param gene_id: ncbi gene id as curie
         :param omim_id: omim id as curie
-        :return: None
+        :return: boolean, true if omim ID is a disease and false otherwise
         """
         SCIGRAPH_BASE = 'https://scigraph-ontology-dev.monarchinitiative.org/scigraph/graph/'
 
@@ -143,9 +143,26 @@ class DipperUtil:
         return isOmimDisease
 
     @staticmethod
-    def get_ncbi_id_from_symbol(gene_symbol):
+    def is_id_in_mondo(curie, mondo_min):
         """
-        Get ncbi gene id from symbol using monarch and mygene services
+        :param curie: curie formatted ID
+        :param mondo_min: a json decoded mondo-minimal.json file, eg
+                https://github.com/monarch-initiative/mondo/releases/
+                download/2019-04-06/mondo-minimal.json
+        :return: boolean, true if ID is in mondo and false otherwise
+        """
+        xref_curies = []
+        for node in mondo_min['graphs'][0]['nodes']:
+            if 'meta' in node and 'xrefs' in node['meta']:
+                for xref in node['meta']['xrefs']:
+                    xref_curies.append(xref["val"])
+
+        return curie in xref_curies
+
+    @staticmethod
+    def get_hgnc_id_from_symbol(gene_symbol):
+        """
+        Get HGNC curie from symbol using monarch and mygene services
         :param gene_symbol:
         :return:
         """

@@ -10,13 +10,13 @@
 ### RCV variant to gene relationship types type
 #########################################################
 "within single gene": "has_affected_feature"
-"genes overlapped by variant": "has_affected_feature"
+"genes overlapped by variant": "has_part"
 "within multiple genes by overlap": "has_affected_feature"
 "variant in gene": "has_affected_feature"
 "near gene, upstream": "is upstream of sequence of"
 "near gene, downstream": "is downstream of sequence of"
-# asserted, but not computed  (MB no idea what this means) punting
-"asserted, but not computed": "has_affected_feature"
+# asserted, but not computed, example RCV000087646
+"asserted, but not computed": "part_of"
 ### Pathos Association types
 ###########################################################
 "Benign": "benign_for_condition"
@@ -89,7 +89,10 @@
 "Inversion": "inversion"
 "Microsatellite": "microsatellite"
 "protein only": "coding sequence alteration"
-"CompoundHeterozygote": "variant single locus complement"
+"CompoundHeterozygote": "compound heterozygous"
+"Haplotype": "haplotype"
+"Phase unknown": "haplotype"
+"Distinct chromosomes": "mosaic"
 #############################################################
 "patient phenotyping study": "phenotyping only"
 "provider interpretation": "imported information"   # "ECO:0000311"  checkme

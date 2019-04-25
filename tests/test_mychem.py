@@ -10,7 +10,7 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-TESTDATA = os.path.join(os.path.dirname(__file__), 'resources/mychem.json')
+TESTDATA = os.path.join(os.path.dirname(__file__), 'resources/mychem/mychem.json')
 
 
 class TestMyChemParser(unittest.TestCase):

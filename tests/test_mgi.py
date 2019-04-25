@@ -9,22 +9,8 @@ from dipper.utils.TestUtils import TestUtils
 from dipper.graph.RDFGraph import RDFGraph
 
 
-
-logging.getLogger().setLevel(logging.WARNING)
+logging.getLogger().setLevel(logging.WARN)
 logger = logging.getLogger(__name__)
-
-
-class MGITestCase(SourceTestCase):
-
-    def setUp(self):
-        self.source = MGI('rdf_graph', True)
-        self.source.settestonly(True)
-        self._setDirToSource()
-        return
-
-    def tearDown(self):
-        self.source = None
-        return
 
 
 class EvidenceTestCase(unittest.TestCase):

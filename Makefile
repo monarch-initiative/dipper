@@ -5,17 +5,20 @@
 DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python3 -m unittest
 
-all: test prefix_equivalents
+all: test prefix_equivalents dot_to_png
 
 ###
 ### Tests
 ###
 
-test: trans-test IMPC-fetch IMPC-test  reactome-test RGD-test CTD-test mychem-test \
-      string-test  UDP-test  # Orphanet-test MGI-test GWAS-test
+test: ClinVar-test trans-test IMPC-test reactome-test RGD-test CTD-test mychem-test \
+      string-test  UDP-test Orphanet-test MGI-test GWAS-test # IMPC-fetch
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
+
+ClinVar-test:
+	$(TEST) tests/test_clinvar.py
 
 Orphanet-test:
 	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
@@ -98,3 +101,10 @@ translationtable/generated/prefix_equivalents.yaml: \
 	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt \
 		/tmp/local_inverse.tab | awk '{v=$$1;$$1="";print $$0 ": " v}'|\
 		sort -u  > translationtable/generated/prefix_equivalents.yaml
+
+dot_to_png: docs/img/[a-z_-0-9]*.png
+	@ for dotfile in `find . -type f -name "*.dot"`; \
+	    do \
+	    fname=`basename $$dotfile .dot`;\
+	    dot -Tpng $$dotfile > docs/img/$${fname}.png; \
+	    done;

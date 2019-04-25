@@ -1,0 +1,50 @@
+:MONARCH_bcd52bafc1e2e04193a9 a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:be870b3d47783bbdcf05 ;
+    OBO:SEPIO_0000015 BNODE:bd8e0f2fc4633580d875 ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/27486776> ;
+    OBAN:association_has_object OMIM:PS209900 ;
+    OBAN:association_has_predicate OBO:GENO_0000841 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/431733> ;
+    oboInOwl:hasdbxref ClinVar:RCV000498447 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505664> a foaf:organization ;
+    rdfs:label "Center for Human Disease Modeling,Duke University Medical Center" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/425238> a OBO:SO_0001742 ;
+    rdfs:label "GRCh37/hg19 1p36.31(chr1:5910699-6038368)" ;
+    OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/261734> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000001.10:g.5910699_6038368dup" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/425239> a OBO:SO_0001742 ;
+    rdfs:label "GRCh37/hg19 1p36.31(chr1:6051187-6158763)" ;
+    OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/261734>,
+        <https://www.ncbi.nlm.nih.gov/gene/8514> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000001.10:g.6051187_6158763dup" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/431733> a OBO:SO_0001024 ;
+    OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/425238>,
+        <http://www.ncbi.nlm.nih.gov/clinvar/variation/425239> ;
+    OBO:GENO_0000841 OMIM:PS209900 ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+BNODE:b664828053687f26b867 a OBO:SEPIO_0000066 ;
+    rdfs:label "_:be870b3d47783bbdcf05SEPIO:0000066",
+        "research" .
+
+BNODE:bd8e0f2fc4633580d875 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_1142533",
+        "bcd52bafc1e2e04193a9_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505664> ;
+    OBO:SEPIO_0000111 BNODE:be870b3d47783bbdcf05 ;
+    dc:identifier "SCV000296057.1" .
+
+OMIM:PS209900 rdfs:label "Bardet-Biedl syndrome" .
+
+<http://www.ncbi.nlm.nih.gov/pubmed/27486776> a OBO:IAO_0000013 .
+
+BNODE:be870b3d47783bbdcf05 a OBO:ECO_0000000 ;
+    rdfs:label "bcd52bafc1e2e04193a9_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b664828053687f26b867 ;
+    OBO:SEPIO_0000124 <http://www.ncbi.nlm.nih.gov/pubmed/27486776> .

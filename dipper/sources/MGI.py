@@ -1120,7 +1120,7 @@ SELECT  r._relationship_key as rel_key,
                 row = line.split('\t')
 
                 annot_evidence_key = row[col.index('annot_evidence_key')]
-                annot_key = int(row[col.index('annot_key')])
+                annot_key = row[col.index('annot_key')]
                 evidence_code = row[col.index('evidence_code')]
                 jnumid = row[col.index('jnumid')]
                 qualifier = row[col.index('qualifier')]
@@ -2105,12 +2105,3 @@ SELECT  r._relationship_key as rel_key,
     #         print("%s knows %s" % row)
     #
     #     return
-
-    def getTestSuite(self):
-        import unittest
-        from tests.test_mgi import MGITestCase
-        # TODO test genotypes
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(MGITestCase)
-
-        return test_suite
