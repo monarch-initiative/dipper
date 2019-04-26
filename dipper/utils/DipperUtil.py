@@ -110,6 +110,10 @@ class DipperUtil:
     @staticmethod
     def is_omim_disease(gene_id):
         """
+        This function suffers from a causality violation
+        whereby the future is overwritten by the past.
+        It will be nuked from orbit.
+
         Process omim equivalencies by examining the monarch ontology scigraph
         As an alternative we could examine mondo.owl, since the ontology
         scigraph imports the output of this script which creates an odd circular
