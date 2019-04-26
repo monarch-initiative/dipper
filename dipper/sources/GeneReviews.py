@@ -65,13 +65,13 @@ class GeneReviews(Source):
             'url':  OMIMFTP + '/mimTitles.txt',
             'headers': {'User-Agent': USER_AGENT},
             'clean': OMIMURL,
-            'columns': (  # expected
+            'columns': [  # expected
                 'Prefix',
                 'Mim Number',
                 'Preferred Title; symbol',
                 'Alternative Title(s); symbol(s)',
                 'Included Title(s); symbols',
-            ),
+            ],
         },
     }
 
