@@ -218,17 +218,22 @@ class NCBIGene(OMIMSource):
                 #         continue
                 # #### end filter
 
-                gene_num = row[col.index('GeneID')]
                 tax_num = row[col.index('tax_id')]
-                gtype = row[col.index('type_of_gene')].strip()
+                gene_num = row[col.index('GeneID')]
                 symbol = row[col.index('Symbol')]
-                desc = row[col.index('description')]
-                name = row[col.index('Full_name_from_nomenclature_authority')]
+                # = row[col.index('LocusTag')]
                 synonyms = row[col.index('Synonyms')].strip()
-                other_designations = row[col.index('Other_designations')].strip()
+                dbxrefs = row[col.index('dbXrefs')].strip()
                 chrom = row[col.index('chromosome')].strip()
                 map_loc = row[col.index('map_location')].strip()
-                dbxrefs = row[col.index('dbXrefs')].strip()
+                desc = row[col.index('description')]
+                gtype = row[col.index('type_of_gene')].strip()
+                # = row[col.index('Symbol_from_nomenclature_authority')]
+                name = row[col.index('Full_name_from_nomenclature_authority')]
+                # = row[col.index('Nomenclature_status')]
+                other_designations = row[col.index('Other_designations')].strip()
+                # = row[col.index('Modification_date')}
+                # = row[col.index('Feature_type')]
 
                 if self.test_mode and int(gene_num) not in self.gene_ids:
                     continue
