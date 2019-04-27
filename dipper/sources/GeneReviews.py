@@ -4,9 +4,8 @@ import csv
 import logging
 
 from bs4 import BeautifulSoup
-from dipper.sources.Source import Source, USER_AGENT
+from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.Model import Model
-from dipper import config
 from dipper.models.Reference import Reference
 
 __author__ = 'nicole'
@@ -15,7 +14,7 @@ LOG = logging.getLogger(__name__)
 GRDL = 'http://ftp.ncbi.nih.gov/pub/GeneReviews'
 
 
-class GeneReviews(Source):
+class GeneReviews(OMIMSource):
     """
     Here we process the GeneReviews mappings to OMIM,
     plus inspect the GeneReviews (html) books to pull the clinical descriptions
@@ -48,9 +47,6 @@ class GeneReviews(Source):
 
     """
 
-    OMIMURL = 'https://data.omim.org/downloads/'
-    OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
-
     files = {
         'idmap': {
             'file': 'NBKid_shortname_OMIM.txt',
@@ -59,19 +55,6 @@ class GeneReviews(Source):
         'titles': {
             'file': 'GRtitle_shortname_NBKid.txt',
             'url': GRDL + '/GRtitle_shortname_NBKid.txt'
-        },
-        'mimtitles': {
-            'file': 'mimTitles.txt',
-            'url':  OMIMFTP + '/mimTitles.txt',
-            'headers': {'User-Agent': USER_AGENT},
-            'clean': OMIMURL,
-            'columns': [  # expected
-                'Prefix',
-                'Mim Number',
-                'Preferred Title; symbol',
-                'Alternative Title(s); symbol(s)',
-                'Included Title(s); symbols',
-            ],
         },
     }
 
@@ -99,11 +82,6 @@ class GeneReviews(Source):
             # select ony those test ids that are omim's.
             self.test_ids = self.all_test_ids['disease']
 
-        self.omim_replaced = {}  # id_num to SET of id nums
-        self.omim_type = {}      # id_num to onto_term
-
-        return
-
     def fetch(self, is_dl_forced=False):
         """
         We fetch GeneReviews id-label map and id-omim mapping files from NCBI.
@@ -111,16 +89,10 @@ class GeneReviews(Source):
         """
         self.get_files(is_dl_forced)
 
-        # load and tag a list of OMIM IDs with types
-        self.omim_type = self.find_omim_type()
-
-        return
-
     def parse(self, limit=None):
         """
         :return: None
         """
-
         if self.test_only:
             self.test_mode = True
 
@@ -132,7 +104,6 @@ class GeneReviews(Source):
 
         # no test subset for now; test == full graph
         self.testgraph = self.graph
-        return
 
     def _get_equivids(self, limit):
         """
@@ -153,7 +124,6 @@ class GeneReviews(Source):
         we will just have to deal with that for now.)    -- fixed
 
         :param limit:
-        :return:
 
         """
         raw = '/'.join((self.rawdir, self.files['idmap']['file']))
@@ -272,8 +242,6 @@ class GeneReviews(Source):
             # add this as a generic subclass  -- TEC: this is the job of inference
             model.addSubClass(gr_id, self.globaltt['disease'])
 
-        return
-
     def _get_titles(self, limit):
         """
         The file processed here is of the format:
@@ -319,8 +287,6 @@ class GeneReviews(Source):
                     model.addSynonym(gr_id, row[col.index('GR_shortname')])
                 # TODO include the new PMID?
 
-        return
-
     def create_books(self):
 
         # note that although we put in the url to the book,
@@ -335,8 +301,6 @@ class GeneReviews(Source):
             nbki['file'] = '/'.join(('books', nbk + '.html'))
             nbki['url'] = 'http://www.ncbi.nlm.nih.gov/books/' + nbk
             self.all_books[nbk] = nbki
-
-        return
 
     def process_nbk_html(self, limit):
         """
@@ -356,7 +320,7 @@ class GeneReviews(Source):
         books_not_found = set()
         clin_des_regx = re.compile(r".*Summary.sec0")
         lit_cite_regex = re.compile(r".*Literature_Cited")
-        pubmed_regex =  re.compile(r"pubmed")  # ??? for a static string?
+        pubmed_regex = re.compile(r"pubmed")  # ??? for a static string?
         for nbk in self.book_ids:
             cnt += 1
             nbk_id = 'GeneReviews:'+nbk
@@ -444,95 +408,6 @@ class GeneReviews(Source):
                     str(books_not_found))
         LOG.info(
             "Finished processing %d books for clinical descriptions", cnt - bknfd)
-
-        return
-
-    def find_omim_type(self):
-        '''
-        This f(x) needs to be rehomed and shared.
-        Use OMIM's discription of their identifiers
-        to heuristically partition them into genes | phenotypes-diseases
-        type could be
-            - `obsolete`  Check `omim_replaced`  populated as side effect
-            - 'Suspected' (phenotype)  Ignoring thus far
-            - 'gene'
-            - 'Phenotype'
-            - 'heritable_phenotypic_marker'   Probable phenotype
-            - 'has_affected_feature'  Use as both a gene and a phenotype
-
-        :return hash of omim_number to ontology_curie
-        '''
-        myfile = '/'.join((self.rawdir, self.files['mimtitles']['file']))
-        LOG.info("Looping over: %s", myfile)
-        omim_type = {}
-
-        col = [
-            'Prefix',                           # prefix
-            'Mim Number',                       # omim_id
-            'Preferred Title; symbol',          # pref_label
-            'Alternative Title(s); symbol(s)',  # alt_label
-            'Included Title(s); symbols'        # inc_label
-        ]
-
-        with open(myfile, 'r') as fh:
-            reader = csv.reader(fh, delimiter='\t')
-            # Copyright (c) ...
-            header = next(reader)
-            # Generated: 2018-11-29
-            header = next(reader)
-            # date_generated = header[0].split(':')[1].strip()
-            header = next(reader)
-            header[0] = header[0][2:]
-            if header != col:
-                LOG.error(
-                    'Header is not as expected: %s',
-                    set(header).symmetric_difference(set(col)))
-                exit(-1)
-
-            for row in reader:
-                if row[0][0] == '#':
-                    continue
-                prefix = row[col.index('Prefix')]
-                pref_label = row[col.index('Preferred Title; symbol')]
-                omim_id = row[col.index('Mim Number')]
-
-                if prefix == 'Caret':  # moved|removed|split -> moved twice
-                    # populating a dict from an omim to a set of omims
-                    # here as a side effect which is less than ideal
-
-                    destination = pref_label  # they overload the column semantics
-                    if destination[:9] == 'MOVED TO ':
-                        token = destination.split(' ')
-                        rep = token[2]
-                        if not re.match(r'^[0-9]{6}$', rep):
-                            LOG.error(
-                                'Malformed omim replacement %s in %s  line %i',
-                                rep, myfile, reader.line_num)
-                            # clean up oddities I know about
-                            if rep[0] == '{' and rep[7] == '}':
-                                rep = rep[1:6]
-                            if len(rep) == 7 and rep[6] == ',':
-                                rep = rep[:5]
-                        # asuming splits are typically to both gene & phenotype
-                        if len(token) > 3:
-                            self.omim_replaced[omim_id] = {rep, token[4]}
-                        else:
-                            self.omim_replaced[omim_id] = {rep}
-                elif prefix == 'Asterisk':  # declared as gene
-                    omim_type[omim_id] = self.globaltt['gene']
-                elif prefix == 'NULL':
-                    #  potential model of disease?
-                    omim_type[omim_id] = self.globaltt['Suspected']   # NCIT:C71458
-                elif prefix == 'Number Sign':
-                    omim_type[omim_id] = self.globaltt['Phenotype']
-                elif prefix == 'Percent':
-                    omim_type[omim_id] = self.globaltt['heritable_phenotypic_marker']
-                elif prefix == 'Plus':
-                    # to be interperted as  a gene and/or a phenotype
-                    omim_type[omim_id] = self.globaltt['has_affected_feature']
-                else:
-                    LOG.error('Unknown OMIM type line %i', reader.line_num)
-        return omim_type
 
     def getTestSuite(self):
         import unittest
