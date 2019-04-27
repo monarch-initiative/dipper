@@ -44,7 +44,7 @@ class OMIMSource(Source):
             ]
         }
     }
-    
+
     def __init__(
             self,
             graph_type,
@@ -90,7 +90,7 @@ class OMIMSource(Source):
         """
         raise NotImplementedError
 
-    def populate_omim_type(self):    
+    def populate_omim_type(self):
         '''
         This utility may still need to be rehomed. have considered:
             - make it its own ingest, output rdf
@@ -108,14 +108,14 @@ class OMIMSource(Source):
 
         -  'gene'
             Asterisk (*)  Gene
-    
+
         -   'has_affected_feature'
             Plus (+)  Gene and phenotype, combined
 
         -   'Phenotype'
             Number Sign (#)  Phenotype, molecular basis known
-            
-        -   'heritable_phenotypic_marker'        
+
+        -   'heritable_phenotypic_marker'
             Percent (%)  Phenotype or locus, molecular basis unknown
 
         -   'obsolete'
@@ -124,7 +124,7 @@ class OMIMSource(Source):
                 further processed into Removed or Moved & Split
                 (`omim_replaced`  populated where Moved or Split )
 
-        -   'Suspected'    
+        -   'Suspected'
             NULL (<null>)  Other, mainly phenotypes with suspected mendelian basis
 
         Populates dict of omim_number to ontology_curie
@@ -137,7 +137,7 @@ class OMIMSource(Source):
         '''
 
         src_key = 'mimtitles'
-        
+
         self.get_files(is_dl_forced=True, files=self.mimfiles)
 
         myfile = '/'.join((self.rawdir, self.mimfiles[src_key]['file']))
@@ -148,16 +148,14 @@ class OMIMSource(Source):
             row = next(reader)  # copyright
             row = next(reader)  # date  generated
             row = next(reader)  # column header
-            row[0] = row[0][2:]
+            row[0] = row[0][2:]  # remove octothorp '# '
             if not self.check_fileheader(col, row):
                 exit(-1)
 
             for row in reader:
-                if row[0][0] == '#':
-                    # they have comments at the end
-                    continue 
+                if row[0][0] == '#':  # they have comments at the end
+                    continue
 
-                
                 declared = row[col.index('Prefix')].strip()
                 omim_id = row[col.index('Mim Number')].strip()
                 pref_label = row[col.index('Preferred Title; symbol')].strip()
@@ -175,8 +173,10 @@ class OMIMSource(Source):
                             # clean up ones I know about
                             if rep[0] == '{' and rep[7] == '}':
                                 rep = rep[1:6]
+                                LOG.info('Repaired malformed omim replacement %s', rep)
                             if len(rep) == 7 and rep[6] == ',':
                                 rep = rep[:5]
+                                LOG.info('Repaired malformed omim replacement %s', rep)
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = [rep, token[4]]
                         else:
