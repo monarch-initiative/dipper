@@ -15,6 +15,12 @@ LOG = logging.getLogger(__name__)
 
 
 class KEGG(OMIMSource):
+    '''
+        For APIs see: https://www.kegg.jp/kegg/rest/keggapi.html
+
+        For News see: https://www.kegg.jp/kegg/docs/relnote.html
+
+    '''
     files = {
         'disease': {
             'file': 'disease',
@@ -67,9 +73,6 @@ class KEGG(OMIMSource):
         'pathway_disease': {
             'file': 'pathway_disease',
             'url': 'http://rest.kegg.jp/link/pathway/ds'},
-        # 'pathway_pathway': { # TEC 2016Mar03 does not exist here.
-        #    'file': 'pathway_eq',
-        #    'url': 'http://rest.kegg.jp/link/pathway/pathway'},
         'pathway_ko': {
             'file': 'pathway_ko',
             'url': 'http://rest.kegg.jp/link/pathway/ko'},
@@ -148,10 +151,8 @@ class KEGG(OMIMSource):
         self._process_omim2gene(limit)
         self._process_omim2disease(limit)
         self._process_kegg_disease2gene(limit)
-
         self._process_pathways(limit)
         self._process_pathway_pubmed(limit)
-        # self._process_pathway_pathway(limit)
         self._process_pathway_disease(limit)
         self._process_pathway_ko(limit)
 
@@ -494,8 +495,7 @@ class KEGG(OMIMSource):
                     if re.search(r'includ', str(disease_label)):
                         # they use 'including' when it's a grouping class
                         LOG.info(
-                            "Skipping this association because " +
-                            "it's a grouping class: %s",
+                            "Skipping association because it's a grouping class: %s",
                             disease_label)
                         continue
                     # type this disease_id as a disease
@@ -562,8 +562,18 @@ class KEGG(OMIMSource):
                     # so add them as a class then make equivalence
                     model.addClassToGraph(omim_id, None)
                     geno.addGene(kegg_gene_id, None)
-                    if not DipperUtil.is_omim_disease(omim_id):
 
+                    # previous: if omim type is not disease-ish then use
+                    # now is:   if omim type is gene then use
+
+                    if omim_id in self.omim_replaced:
+                        repl = self.omim_replaced[omim_id]
+                        for omim in repl:
+                            if omim in self.omim_type and \
+                                    self.omim_type[omim] == self.globaltt['gene']:
+                                omim_id = omim
+                    if omim_id in self.omim_type and \
+                            self.omim_type[omim_id] == self.globaltt['gene']:
                         model.addEquivalentClass(kegg_gene_id, omim_id)
                 elif link_type == 'reverse':
                     # make an association between an OMIM ID & the KEGG gene ID
@@ -777,40 +787,6 @@ class KEGG(OMIMSource):
                     pathway_id,
                     self.globaltt['causally upstream of or within'],
                     disease_id)
-
-                if not self.test_mode and limit is not None and reader.line_num > limit:
-                    break
-
-    def _process_pathway_pathway(self, limit):
-        """
-        There are "map" and "ko" identifiers for pathways.
-        This makes equivalence mapping between them, where they exist.
-        :param limit:
-        :return:
-
-        """
-        LOG.info("Processing KEGG pathways to other ids")
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
-
-        model = Model(graph)
-        raw = '/'.join((self.rawdir, self.files['pathway_pathway']['file']))
-        with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in reader:
-                (pathway_id_1, pathway_id_2) = row
-
-                if self.test_mode and pathway_id_1 not in self.test_ids['pathway']:
-                    continue
-
-                pathway_id_1 = 'KEGG-' + pathway_id_1
-                # will look like KEGG-path:map04130 or KEGG-path:ko04130
-                pathway_id_2 = 'KEGG-' + pathway_id_2
-
-                if pathway_id_1 != pathway_id_2:
-                    model.addEquivalentClass(pathway_id_1, pathway_id_2)
 
                 if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
