@@ -2,17 +2,16 @@ import logging
 import csv
 import re
 
-from dipper.sources.Source import Source
+from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.GenomicFeature import Feature, makeChromID
-from dipper.utils.DipperUtil import DipperUtil
 
 
 LOG = logging.getLogger(__name__)
 
 
-class HGNC(Source):
+class HGNC(OMIMSource):
     """
     This is the processing module for HGNC.
 
@@ -100,12 +99,6 @@ class HGNC(Source):
 
         self.gene_ids = []
 
-        # fetch_omim_type populates two datastructures in the superclass.
-        #   omim_replaced:   obsolete_omim -> replacement_list
-        #   omim_type:       omim_id -> type  (as inffered by us)
-
-        self.fetch_omim_type()
-
         if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
@@ -145,8 +138,7 @@ class HGNC(Source):
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
 
             row = next(filereader)
-            if row != col:
-                LOG.error('\nExpected header: %s\nRecieved header: %s', col, row)
+            if not self.check_fileheader(col, row):
                 exit(-1)
 
             for row in filereader:
@@ -228,7 +220,15 @@ class HGNC(Source):
                     model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
 
                 for omim_id in omim_ids.split('|'):
-                    if not DipperUtil.is_omim_disease(omim_id):
+                    if omim_id in self.omim_replaced:
+                        repl = self.omim_replaced[omim_id]
+                        LOG.warning('%s is replaced with %s', omim_id, repl)
+                        for omim in repl:
+                            if self.omim_type[omim] == self.globaltt['gene']:
+                                omim_id = omim
+
+                    if omim_id in self.omim_type and \
+                            self.omim_type[omim_id] == self.globaltt['gene']:
                         model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id)
 
                 geno.addTaxon(self.hs_txid, hgnc_id)
