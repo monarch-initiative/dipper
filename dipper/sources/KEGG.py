@@ -2,7 +2,7 @@ import csv
 import logging
 import re
 
-from dipper.sources.Source import Source
+from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Genotype import Genotype
@@ -10,12 +10,11 @@ from dipper.models.Family import Family
 from dipper.models.Reference import Reference
 from dipper.models.Pathway import Pathway
 from dipper.models.Model import Model
-from dipper.utils.DipperUtil import DipperUtil
 
 LOG = logging.getLogger(__name__)
 
 
-class KEGG(Source):
+class KEGG(OMIMSource):
     files = {
         'disease': {
             'file': 'disease',
@@ -124,15 +123,10 @@ class KEGG(Source):
         self.omim_disease_hash = {}  # to hold the mappings of omim:kegg ids
         self.kegg_disease_hash = {}  # to hold the mappings of kegg:omim ids
 
-        return
-
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-
         # TODO add versioning information from info rest call,
         # like http://rest.kegg.jp/info/pathway
-
-        return
 
     def parse(self, limit=None):
         """
@@ -170,8 +164,6 @@ class KEGG(Source):
 
         LOG.info("Finished parsing")
 
-        return
-
     def _process_pathways(self, limit=None):
         """
         This method adds the KEGG pathway IDs.
@@ -194,13 +186,11 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         path = Pathway(graph)
         raw = '/'.join((self.rawdir, self.files['pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (pathway_id, pathway_name) = row
 
                 if self.test_mode and pathway_id not in self.test_ids['pathway']:
@@ -215,11 +205,9 @@ class KEGG(Source):
                 image_url = 'http://www.genome.jp/kegg/pathway/map/'+image_filename
                 model.addDepiction(pathway_id, image_url)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
         LOG.info("Done with pathways")
-        return
 
     def _process_diseases(self, limit=None):
         """
@@ -238,13 +226,11 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (disease_id, disease_name) = row
 
                 disease_id = 'KEGG-'+disease_id.strip()
@@ -262,11 +248,9 @@ class KEGG(Source):
                 # I don't want to bulk up the graph unnecessarily
 
                 if not self.test_mode and (
-                        limit is not None and line_counter > limit):
+                        limit is not None and reader.line_num > limit):
                     break
-
         LOG.info("Done with diseases")
-        return
 
     def _process_genes(self, limit=None):
         """
@@ -292,14 +276,12 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         family = Family(graph)
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['hsa_genes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (gene_id, gene_name) = row
 
                 gene_id = 'KEGG-'+gene_id.strip()
@@ -345,11 +327,10 @@ class KEGG(Source):
                         ko = 'KEGG-ko:'+ko_match.group(1)
                         family.addMemberOf(gene_id, ko)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
         LOG.info("Done with genes")
-        return
 
     def _process_ortholog_classes(self, limit=None):
         """
@@ -373,12 +354,10 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['ortholog_classes']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (orthology_class_id, orthology_class_name) = row
 
                 if self.test_mode and orthology_class_id \
@@ -416,11 +395,9 @@ class KEGG(Source):
                         for ecm in ec_matches:
                             model.addXref(orthology_class_id, 'EC:' + ecm)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
         LOG.info("Done with ortholog classes")
-        return
 
     def _process_orthologs(self, raw, limit=None):
         """
@@ -443,11 +420,9 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (gene_id, orthology_class_id) = row
 
                 orthology_class_id = 'KEGG:'+orthology_class_id.strip()
@@ -466,11 +441,9 @@ class KEGG(Source):
                 model.addClassToGraph(gene_id, None)
                 model.addClassToGraph(orthology_class_id, None)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
         LOG.info("Done with orthologs")
-        return
 
     def _process_kegg_disease2gene(self, limit=None):
         """
@@ -496,15 +469,13 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         geno = Genotype(graph)
         rel = self.globaltt['is marker for']
         noomimset = set()
         raw = '/'.join((self.rawdir, self.files['disease_gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (gene_id, disease_id) = row
 
                 if self.test_mode and gene_id not in self.test_ids['genes']:
@@ -542,13 +513,11 @@ class KEGG(Source):
                     assoc.add_association_to_graph()
 
                 if not self.test_mode and (
-                        limit is not None and line_counter > limit):
+                        limit is not None and reader.line_num > limit):
                     break
 
         LOG.info("Done with KEGG disease to gene")
         LOG.info("Found %d diseases with no omim id", len(noomimset))
-
-        return
 
     def _process_omim2gene(self, limit=None):
         """
@@ -576,13 +545,11 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
         geno = Genotype(graph)
         raw = '/'.join((self.rawdir, self.files['omim2gene']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (kegg_gene_id, omim_id, link_type) = row
 
                 if self.test_mode and kegg_gene_id not in self.test_ids['genes']:
@@ -596,6 +563,7 @@ class KEGG(Source):
                     model.addClassToGraph(omim_id, None)
                     geno.addGene(kegg_gene_id, None)
                     if not DipperUtil.is_omim_disease(omim_id):
+
                         model.addEquivalentClass(kegg_gene_id, omim_id)
                 elif link_type == 'reverse':
                     # make an association between an OMIM ID & the KEGG gene ID
@@ -626,12 +594,9 @@ class KEGG(Source):
                         kegg_gene_id, omim_id, link_type)
 
                 if (not self.test_mode) and (
-                        limit is not None and line_counter > limit):
+                        limit is not None and reader.line_num > limit):
                     break
-
         LOG.info("Done with OMIM to KEGG gene")
-
-        return
 
     def _process_omim2disease(self, limit=None):
         """
@@ -654,12 +619,11 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['omim2disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (omim_disease_id, kegg_disease_id, link_type) = row
 
                 kegg_disease_id = 'KEGG-' + kegg_disease_id.strip()
@@ -683,9 +647,8 @@ class KEGG(Source):
             if self.test_mode and omim_disease_id not in self.test_ids['disease']:
                 continue
 
-            if (not self.test_mode) and (limit is not None and line_counter > limit):
+            if (not self.test_mode) and (limit is not None and reader.line_num > limit):
                 break
-            line_counter += 1
 
             if len(self.omim_disease_hash[omim_disease_id]) == 1:
                 kegg_disease_id = ''.join(self.omim_disease_hash.get(omim_disease_id))
@@ -701,7 +664,6 @@ class KEGG(Source):
                 # TODO add xrefs if >1:1 mapping?
 
         LOG.info("Done with KEGG disease to OMIM disease mappings.")
-        return
 
     def _process_genes_kegg2ncbi(self, limit=None):
         """
@@ -723,13 +685,11 @@ class KEGG(Source):
         else:
             graph = self.graph
         model = Model(graph)
-        line_counter = 0
 
         raw = '/'.join((self.rawdir, self.files['ncbi']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (kegg_gene_id, ncbi_gene_id, link_type) = row
 
                 if self.test_mode and kegg_gene_id not in self.test_ids['genes']:
@@ -747,11 +707,9 @@ class KEGG(Source):
                 model.addEquivalentClass(kegg_gene_id, ncbi_gene_id)
 
                 if not self.test_mode and (
-                        limit is not None and line_counter > limit):
+                        limit is not None and reader.line_num > limit):
                     break
-
         LOG.info("Done with KEGG gene IDs to NCBI gene IDs")
-        return
 
     def _process_pathway_pubmed(self, limit):
         """
@@ -765,12 +723,10 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
         raw = '/'.join((self.rawdir, self.files['pathway_pubmed']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (pubmed_id, kegg_pathway_num) = row
 
                 if self.test_mode and kegg_pathway_num not in self.test_ids['pathway']:
@@ -784,10 +740,8 @@ class KEGG(Source):
                 r.addRefToGraph()
                 graph.addTriple(pubmed_id, self.globaltt['is_about'], kegg_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def _process_pathway_disease(self, limit):
         """
@@ -805,13 +759,11 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
 
         raw = '/'.join((self.rawdir, self.files['pathway_disease']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (disease_id, kegg_pathway_num) = row
 
                 if self.test_mode and kegg_pathway_num not in self.test_ids['pathway']:
@@ -826,10 +778,8 @@ class KEGG(Source):
                     self.globaltt['causally upstream of or within'],
                     disease_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def _process_pathway_pathway(self, limit):
         """
@@ -844,14 +794,12 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
 
         model = Model(graph)
         raw = '/'.join((self.rawdir, self.files['pathway_pathway']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (pathway_id_1, pathway_id_2) = row
 
                 if self.test_mode and pathway_id_1 not in self.test_ids['pathway']:
@@ -864,9 +812,8 @@ class KEGG(Source):
                 if pathway_id_1 != pathway_id_2:
                     model.addEquivalentClass(pathway_id_1, pathway_id_2)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-        return
 
     def _process_pathway_ko(self, limit):
         """
@@ -880,13 +827,11 @@ class KEGG(Source):
             graph = self.testgraph
         else:
             graph = self.graph
-        line_counter = 0
 
         raw = '/'.join((self.rawdir, self.files['pathway_ko']['file']))
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            for row in reader:
                 (ko_id, pathway_id) = row
 
                 if self.test_mode and pathway_id not in self.test_ids['pathway']:
@@ -898,10 +843,8 @@ class KEGG(Source):
                 p = Pathway(graph)
                 p.addGeneToPathway(ko_id, pathway_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def _make_variant_locus_id(self, gene_id, disease_id):
         """
