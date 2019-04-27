@@ -119,10 +119,6 @@ class GeneReviews(OMIMSource):
         We make the assumption that these NBKs are generally higher-level
         grouping classes; therefore the OMIM ids are treated as subclasses.
 
-        (This assumption is poor for those omims that are actually genes,
-        but we have no way of knowing what those are here...
-        we will just have to deal with that for now.)    -- fixed
-
         :param limit:
 
         """
@@ -137,11 +133,9 @@ class GeneReviews(OMIMSource):
 
         with open(raw, 'r', encoding="utf8") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = next(filereader)
-            header[0] = header[0][1:]
-            if header != col:
-                LOG.error(
-                    '\nExpected header: %s\nRecieved header: %s', col, header)
+            row = next(filereader)
+            row[0] = row[0][1:]
+            if not self.check_fileheader(col, row):
                 exit(-1)
 
             for row in filereader:
@@ -267,12 +261,10 @@ class GeneReviews(OMIMSource):
         col = ['GR_shortname', 'GR_Title', 'NBK_id', 'PMID']
         with open(raw, 'r', encoding='latin-1') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            header = next(filereader)
-            header[0] = header[0][1:]
+            row = next(filereader)
+            row[0] = row[0][1:]
             colcount = len(col)
-            if header != col:
-                LOG.error(
-                    '\nExpected header: %s\nRecieved header: %s', col, header)
+            if not self.check_fileheader(col, row):
                 exit(-1)
             for row in filereader:
                 if len(row) != colcount:
@@ -406,8 +398,7 @@ class GeneReviews(OMIMSource):
                 LOG.warning(
                     "The following %d books were not found locally: %s", bknfd,
                     str(books_not_found))
-        LOG.info(
-            "Finished processing %d books for clinical descriptions", cnt - bknfd)
+        LOG.info("Finished processing %d books for clinical descriptions", cnt - bknfd)
 
     def getTestSuite(self):
         import unittest
