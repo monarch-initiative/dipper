@@ -178,7 +178,7 @@ class OMIA(OMIMSource):
         we scrub out the control characters
         from the file for processing.
 
-        i.e.?i
+        i.e.?
         omia.xml:1555328.28: PCDATA invalid Char value 2
         <field name="journal">Bulletin et Memoires de la Societe Centrale de Medic
 
@@ -269,26 +269,24 @@ class OMIA(OMIMSource):
         """
 
         myfile = '/'.join((self.rawdir, self.files['data']['file']))
-        f = gzip.open(myfile, 'rb')
-        filereader = io.TextIOWrapper(f, newline="")
-        filereader.readline()  # remove the xml declaration line
-        for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
-            self.process_xml_table(
-                elem, 'Article_Breed', self._process_article_breed_row, limit)
-            self.process_xml_table(
-                elem, 'Article_Phene', self._process_article_phene_row, limit)
-            self.process_xml_table(
-                elem, 'Breed_Phene', self._process_breed_phene_row, limit)
-            self.process_xml_table(
-                elem, 'Lida_Links', self._process_lida_links_row, limit)
-            self.process_xml_table(
-                elem, 'Phene_Gene', self._process_phene_gene_row, limit)
-            self.process_xml_table(
-                elem, 'Group_MPO', self._process_group_mpo_row, limit)
-        f.close()
+        with gzip.open(myfile, 'rb') as readbin:
+            filereader = io.TextIOWrapper(readbin, newline="")
+            filereader.readline()  # remove the xml declaration line
+            for event, elem in ET.iterparse(filereader):  # iterparse is not deprecated
+                self.process_xml_table(
+                    elem, 'Article_Breed', self._process_article_breed_row, limit)
+                self.process_xml_table(
+                    elem, 'Article_Phene', self._process_article_phene_row, limit)
+                self.process_xml_table(
+                    elem, 'Breed_Phene', self._process_breed_phene_row, limit)
+                self.process_xml_table(
+                    elem, 'Lida_Links', self._process_lida_links_row, limit)
+                self.process_xml_table(
+                    elem, 'Phene_Gene', self._process_phene_gene_row, limit)
+                self.process_xml_table(
+                    elem, 'Group_MPO', self._process_group_mpo_row, limit)
 
     # ############ INDIVIDUAL TABLE-LEVEL PROCESSING FUNCTIONS ################
-    # hmmm 'row' seems to be passed in as  a dict not a list
 
     def _process_species_table_row(self, row):  # row is expected as a dict
         # gb_species_id, sci_name, com_name, added_by, date_modified
@@ -363,14 +361,13 @@ class OMIA(OMIMSource):
                 "No species supplied in species-specific phene table for %s", omia_id)
             return
 
-        species_id = 'NCBITaxon:'+str(gb_species_id)
+        species_id = 'NCBITaxon:' + str(gb_species_id)
         # use this instead
         species_label = self.label_hash.get('NCBITaxon:'+gb_species_id)
         if sp_phene_label is None and omia_label is not None \
                 and species_label is not None:
             sp_phene_label = ' '.join((omia_label, 'in', species_label))
-        model.addClassToGraph(
-            sp_phene_id, sp_phene_label, omia_id, descr)
+        model.addClassToGraph(sp_phene_id, sp_phene_label, omia_id, descr)
         # add to internal hash store for later lookup
         self.id_hash['phene'][row['phene_id']] = sp_phene_id
         self.label_hash[sp_phene_id] = sp_phene_label
@@ -378,8 +375,7 @@ class OMIA(OMIMSource):
         # if they are populated, with a tag at the end.
         for item in ['clin_feat', 'history', 'pathology', 'mol_gen', 'control']:
             if row[item] is not None and row[item] != '':
-                model.addDescription(
-                    sp_phene_id, row[item] + ' ['+item+']')
+                model.addDescription(sp_phene_id, row[item] + ' ['+item+']')
         # if row['symbol'] is not None:  # species-specific
         # CHECK ME - sometimes spaces or gene labels
         #     gu.addSynonym(g, sp_phene, row['symbol'])
@@ -496,7 +492,7 @@ class OMIA(OMIMSource):
         geno = Genotype(self.graph)
         if self.test_mode and row['gene_id'] not in self.test_ids['gene']:
             return
-        gene_id = 'NCBIGene:'+str(row['gene_id'])
+        gene_id = 'NCBIGene:' + str(row['gene_id'])
         self.id_hash['gene'][row['gene_id']] = gene_id
         gene_label = row['symbol']
         self.label_hash[gene_id] = gene_label
@@ -520,8 +516,7 @@ class OMIA(OMIMSource):
 
         # there's some missing data (article=6038).  in that case skip
         if article_id is not None:
-            self.graph.addTriple(
-                article_id, self.globaltt['is_about'], breed_id)
+            self.graph.addTriple(article_id, self.globaltt['is_about'], breed_id)
         else:
             LOG.warning("Missing article key %s", str(row['article_id']))
 
@@ -543,9 +538,7 @@ class OMIA(OMIMSource):
             return
 
         # make a triple, where the article is about the phenotype
-        self.graph.addTriple(
-            article_id,
-            self.globaltt['is_about'], phenotype_id)
+        self.graph.addTriple(article_id, self.globaltt['is_about'], phenotype_id)
 
     def _process_breed_phene_row(self, row):
         model = Model(self.graph)
@@ -635,8 +628,8 @@ class OMIA(OMIMSource):
 
         if self.test_mode and not (
                 omia_id in self.test_ids['disease'] and
-                row['gene_id'] in self.test_ids['gene']) or\
-                gene_id is None or phene_id is None:
+                row['gene_id'] in self.test_ids['gene']
+                ) or gene_id is None or phene_id is None:
             return
 
         # occasionally some phenes are missing!  (ex: 406)
@@ -646,12 +639,12 @@ class OMIA(OMIMSource):
 
         gene_label = self.label_hash[gene_id]
         # some variant of gene_id has phenotype d
-        vl = '_:'+re.sub(r'NCBIGene:', '', str(gene_id)) + 'VL'
-        geno.addAllele(vl, 'some variant of ' + gene_label)
-        geno.addAlleleOfGene(vl, gene_id)
-        geno.addAffectedLocus(vl, gene_id)
-        model.addBlankNodeAnnotation(vl)
-        assoc = G2PAssoc(self.graph, self.name, vl, phene_id)
+        var = '_:' + gene_id.split(':')[-1] + 'VL'
+        geno.addAllele(var, 'some variant of ' + gene_label)
+        geno.addAlleleOfGene(var, gene_id)
+        geno.addAffectedLocus(var, gene_id)
+        model.addBlankNodeAnnotation(var)
+        assoc = G2PAssoc(self.graph, self.name, var, phene_id)
         assoc.add_association_to_graph()
 
         # add the gene id to the set of annotated genes
@@ -692,25 +685,6 @@ class OMIA(OMIMSource):
 
         assoc = D2PAssoc(self.graph, self.name, omia_id, mpo_id)
         assoc.add_association_to_graph()
-
-    #  used in OMIA  GeneReviews
-    def filter_keep_phenotype_entry_ids(self, entry):
-        '''
-            doubt this should be kept
-        '''
-        omim_id = str(entry['mimNumber'])
-        otype = self.globaltt['obsolete']
-        if omim_id in self.omim_type:
-            otype = self.omim_type[omim_id]
-            if otype == self.globaltt['obsolete'] and omim_id in self.omim_replaced:
-                omim_id = self.omim_replaced[omim_id]
-                otype = self.omim_type[omim_id]
-            # else:  # removed or multiple
-
-        if otype not in (
-                self.globaltt['Phenotype'], self.globaltt['has_affected_feature']):
-            omim_id = None
-        return omim_id
 
     def clean_up_omim_genes(self):
         '''
@@ -786,7 +760,7 @@ class OMIA(OMIMSource):
     @staticmethod
     def _make_internal_id(prefix, key):
         ''' more blank nodes '''
-        return '_:'+''.join(('omia', prefix, 'key', str(key)))
+        return '_:' + ''.join(('omia', prefix, 'key', str(key)))
 
     @staticmethod
     def _get_omia_id_from_phene_id(phene_id):
@@ -800,7 +774,5 @@ class OMIA(OMIMSource):
     def getTestSuite(self):
         import unittest
         from tests.test_omia import OMIATestCase
-
         test_suite = unittest.TestLoader().loadTestsFromTestCase(OMIATestCase)
-
         return test_suite
