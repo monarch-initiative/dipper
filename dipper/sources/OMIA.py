@@ -6,7 +6,7 @@ import io
 import shutil
 import csv
 
-from dipper.sources.Source import Source, USER_AGENT
+from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Genotype import Genotype
@@ -14,12 +14,11 @@ from dipper.models.Reference import Reference
 from dipper.sources.NCBIGene import NCBIGene
 from dipper.utils.DipperUtil import DipperUtil
 from dipper.models.Model import Model
-from dipper import config
 
 LOG = logging.getLogger(__name__)
 
 
-class OMIA(Source):
+class OMIA(OMIMSource):
     """
     This is the parser for the
     [Online Mendelian Inheritance in Animals
@@ -49,8 +48,6 @@ class OMIA(Source):
     relationships from the gene_group files from NCBI.
 
     """
-    OMIMURL = 'https://data.omim.org/downloads/'
-    OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
 
     files = {
         'data': {
@@ -70,19 +67,6 @@ class OMIA(Source):
                 'OMIA_url',
                 'phene_name'],
             'url': 'http://omia.org/curate/causal_mutations/?format=gene_table',
-        },
-        'mimtitles': {
-            'file': 'mimTitles.txt',
-            'url':  OMIMFTP + '/mimTitles.txt',
-            'headers': {'User-Agent': USER_AGENT},
-            'clean': OMIMURL,
-            'columns': [  # expected
-                'Prefix',
-                'Mim Number',
-                'Preferred Title; symbol',
-                'Alternative Title(s); symbol(s)',
-                'Included Title(s); symbols',
-            ],
         },
     }
 
@@ -131,8 +115,6 @@ class OMIA(Source):
         # to store a map of omia ids and any molecular info
         # to write a report for curation
         self.stored_omia_mol_gen = {}
-        self.omim_replaced = {}
-        self.omim_type = {}
         self.graph = self.graph
 
     def fetch(self, is_dl_forced=False):
@@ -147,10 +129,6 @@ class OMIA(Source):
         gene_group = ncbi.files['gene_group']
         self.fetch_from_url(
             gene_group['url'], '/'.join((ncbi.rawdir, gene_group['file'])), False)
-
-        # load and tag a list of OMIM IDs with types
-        # side effect of populating omim replaced
-        self.omim_type = self.find_omim_type()
 
     def parse(self, limit=None):
         # names of tables to iterate - probably don't need all these:
@@ -226,76 +204,6 @@ class OMIA(Source):
         # move the temp file
         LOG.info("Replacing the original data with the scrubbed file.")
         shutil.move(tmpfile, myfile)
-
-    def find_omim_type(self):
-        '''
-        This f(x) needs to be rehomed and shared.
-        Use OMIM's discription of their identifiers
-        to heuristically partition them into genes | phenotypes-diseases
-        type could be
-            - `obsolete`  Check `omim_replaced`  populated as side effect
-            - 'Suspected' (phenotype)  Ignoring thus far
-            - 'gene'
-            - 'Phenotype'
-            - 'heritable_phenotypic_marker'   Probable phenotype
-            - 'has_affected_feature'  Use as both a gene and a phenotype
-
-        :return hash of omim_number to ontology_curie
-        '''
-        src_key = 'mimtitles'
-        myfile = '/'.join((self.rawdir, self.files[src_key]['file']))
-        # col = self.files[src_key]['columns']
-        omim_type = {}
-        with open(myfile, 'r') as filereader:
-            reader = csv.reader(filereader, delimiter='\t')
-            # todo header check
-            for row in reader:
-                if row[0][0] == '#':     # skip comments
-                    continue
-                elif row[0] == 'Caret':  # moved|removed|split -> moved twice
-                    # populating a dict from an omim to a set of omims
-                    # here as a side effect which is less than ideal
-                    (prefix, omim_id, destination, empty, empty) = row
-                    omim_type[omim_id] = self.globaltt['obsolete']
-                    if row[2][:9] == 'MOVED TO ':
-                        token = row[2].split(' ')
-                        rep = token[2]
-                        if not re.match(r'^[0-9]{6}$', rep):
-                            LOG.error('Report malformed omim replacement %s', rep)
-                            # clean up one I know about
-                            if rep[0] == '{' and rep[7] == '}':
-                                rep = rep[1:6]
-                                LOG.info('cleaned up %s', rep)
-                            if len(rep) == 7 and rep[6] == ',':
-                                rep = rep[:5]
-                                LOG.info('cleaned up %s', rep)
-                        # asuming splits are typically to both gene & phenotype
-                        if len(token) > 3:
-                            self.omim_replaced[omim_id] = {rep, token[4]}
-                        else:
-                            self.omim_replaced[omim_id] = {rep}
-
-                elif row[0] == 'Asterisk':  # declared as gene
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    omim_type[omim_id] = self.globaltt['gene']
-                elif row[0] == 'NULL':
-                    #  potential model of disease?
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    #
-                    omim_type[omim_id] = self.globaltt['Suspected']   # NCIT:C71458
-                elif row[0] == 'Number Sign':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    omim_type[omim_id] = self.globaltt['Phenotype']
-                elif row[0] == 'Percent':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    omim_type[omim_id] = self.globaltt['heritable_phenotypic_marker']
-                elif row[0] == 'Plus':
-                    (prefix, omim_id, pref_label, alt_label, inc_label) = row
-                    # to be interperted as  a gene and/or a phenotype
-                    omim_type[omim_id] = self.globaltt['has_affected_feature']
-                else:
-                    LOG.error('Unlnown OMIM type line %s', reader.line_num)
-        return omim_type
 
     # ###################### XML LOOPING FUNCTIONS ##################
 
@@ -482,10 +390,10 @@ class OMIA(Source):
 
         # add inheritance as an association
         inheritance_id = None
-        if row['inherit'] in self.localtt:
+        if row['inherit'] is not None and row['inherit'] in self.localtt:
             inheritance_id = self.resolve(row['inherit'])
-        else:
-            LOG.info('Unhandled inheritance type:\t', row['inherit'])
+        elif row['inherit'] is not None and row['inherit'] != '':
+            LOG.info('Unhandled inheritance type:\t%s', row['inherit'])
 
         if inheritance_id is not None:  # observable related to genetic disposition
             assoc = D2PAssoc(
