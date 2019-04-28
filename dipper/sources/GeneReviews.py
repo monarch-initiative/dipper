@@ -132,8 +132,8 @@ class GeneReviews(OMIMSource):
         col = ['NBK_id', 'GR_shortname', 'OMIM']
 
         with open(raw, 'r', encoding="utf8") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            row = next(filereader)
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            row = next(reader)
             row[0] = row[0][1:]
             if not self.check_fileheader(col, row):
                 exit(-1)
@@ -154,9 +154,9 @@ class GeneReviews(OMIMSource):
 
                 # sometimes there's bad omim nums
                 omim_num = omim_num.strip()
-                if len(omim_num) > 6:
+                if len(omim_num) != 6:
                     LOG.warning(
-                        "OMIM number incorrectly formatted in row %d; skipping:\n%s",
+                        "OMIM number incorrectly formatted in row %i; skipping:\n%s",
                         filereader.line_num, '\t'.join(row))
                     continue
 
@@ -171,21 +171,10 @@ class GeneReviews(OMIMSource):
 
                 allomimids.add(omim_num)
 
-                if not self.test_mode and limit is not None \
-                        and filereader.line_num > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
 
             # end looping through file
-
-        # get the omim ids that are not genes
-        # entries_that_are_phenotypes = omim.process_entries(
-        #    list(allomimids), filter_keep_phenotype_entry_ids, None, None,
-        #    limit=limit, globaltt=self.globaltt)
-        #
-        # LOG.info(
-        #    "Filtered out %d/%d entries that are genes or features",
-        #    len(allomimids)-len(entries_that_are_phenotypes), len(allomimids))
-        ##########################################################################
 
         # given all_omim_ids from GR,
         # we want to update any which are changed or removed
