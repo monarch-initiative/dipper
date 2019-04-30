@@ -4,7 +4,7 @@ import json
 import urllib
 from urllib.error import HTTPError
 
-from dipper.sources.Source import Source, USER_AGENT
+from dipper.sources.OMIMSource import OMIMSource, USER_AGENT
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
@@ -20,18 +20,16 @@ LOG = logging.getLogger(__name__)
 # get a new one here: https://omim.org/help/api
 
 OMIMURL = 'https://data.omim.org/downloads/'
-
 OMIMFTP = OMIMURL + config.get_config()['keys']['omim']
-
 OMIMAPI = 'https://api.omim.org/api/entry?format=json&apiKey=' + \
     config.get_config()['keys']['omim'] + '&'
 
 
-class OMIM(Source):
+class OMIM(OMIMSource):
     """
     The only anonymously obtainable data from the ftp site is mim2gene.
-    However, more detailed information is available via their API.
-    So, we pull the omim identifiers from their ftp site,
+    However, more detailed information is available behind API key.
+    We pull the omim identifiers from their protected http mimTitles file
     then query their API in batchs of 20.
     Their prescribed rate limits have been mecurial
      one per two seconds or  four per second,
@@ -55,18 +53,6 @@ class OMIM(Source):
     """
 
     files = {
-        'mim2gene': {
-            'file': 'mim2gene.txt',
-            'url': 'https://omim.org/static/omim/data/mim2gene.txt',
-            'clean': OMIMURL,
-            'columns': [  # expected
-                'MIM Number',
-                'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)',
-                'Entrez Gene ID (NCBI)',
-                'Approved Gene Symbol (HGNC)',
-                'Ensembl Gene ID (Ensembl)',
-            ]
-        },
         'morbidmap': {
             'file': 'morbidmap.txt',
             'url': OMIMFTP + '/morbidmap.txt',
@@ -86,19 +72,6 @@ class OMIM(Source):
             'columns': [  # expected
                 "Phenotypic Series Title",
                 "Phenotypic Series number",
-            ],
-        },
-        'mimTitles': {
-            'file': 'mimTitles.txt',
-            'url':  OMIMFTP + '/mimTitles.txt',
-            'headers': {'User-Agent': USER_AGENT},
-            'clean': OMIMURL,
-            'columns': [  # expected
-                'Prefix',
-                'Mim Number',
-                'Preferred Title; symbol',
-                'Alternative Title(s); symbol(s)',
-                'Included Title(s); symbols',
             ],
         },
     }
@@ -131,8 +104,6 @@ class OMIM(Source):
             LOG.warning("not configured with gene test ids.")
             self.test_ids = []
 
-        self.omim_type = {}
-
         self.disorder_regex = re.compile(r'(.*), (\d{6})\s*(?:\((\d+)\))?')
         self.nogene_regex = re.compile(r'(.*)\s+\((\d+)\)')
 
@@ -143,7 +114,6 @@ class OMIM(Source):
         in the parsing function.  (To be refactored.)
         over riding Source.fetch()  calling Source.get_files()
         :param is_dl_forced:
-        :return:
 
         """
         self.get_files(is_dl_forced)
@@ -163,95 +133,6 @@ class OMIM(Source):
 
         LOG.info("Done parsing.")
 
-    def _get_omim_ids(self):
-        '''
-            side effect:
-                populate omim_type map from a omim number to an ontology term
-                the ontology terms's labels as
-                 -  'gene'
-                    when they declare it as a gene
-
-                -   'Phenotype'
-                    Phenotype, molecular basis known
-
-                -   'heritable_phenotypic_marker'
-                    Phenotype or locus, molecular basis unknown
-
-                -   'obsolete'
-                    when Removed or moved to another entry
-
-                -   'has_affected_feature'
-                    "when declared as  "Gene and phenotype, combined"
-                    hope being it could be detected and used as either
-
-            :return a unique list of omim numbers
-        '''
-        src_key = 'mim2gene'
-        omim_nums = set()        # all types
-        line_counter = 0
-        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
-        LOG.info("Obtaining OMIM record identifiers from: %s", raw)
-        # TODO check to see if the file is there
-        col = self.files[src_key]['columns']
-        with open(raw, "r") as reader:
-            reader.readline()            # copyright
-            reader.readline()            # Generated: YYYY-MM-DD
-            reader.readline()            # discription
-            reader.readline()            # disclaimer
-            line = reader.readline()     # column headers
-            row = line.strip().split('\t')
-            row[0] = row[0][2:]          # remove octothorpe & space
-            if row != col:  # assert
-                LOG.error('Expected  %s to have columns: %s', raw, col)
-                LOG.error('But Found %s to have columns: %s', raw, row)
-                raise AssertionError('Incomming data headers have changed.')
-
-            line_counter = 5
-            for line in reader:
-                line_counter += 1
-                row = line.split('\t')
-                if len(row) != len(col):
-                    LOG.warning(
-                        'Unexpected input on line: %i  got: %s', line_counter, row)
-                    continue
-                omim_num = row[col.index('MIM Number')].strip()
-                mimtype = row[col.index(
-                    'MIM Entry Type (see FAQ 1.3 at https://omim.org/help/faq)'
-                    )].strip()
-                # ncbigene = row[col.index('Entrez Gene ID (NCBI)')]
-                # hgnc = row[col.index('Approved Gene Symbol (HGNC)')]
-                # ensembl = row[col.index('Ensembl Gene ID (Ensembl)')]
-
-                omim_nums.update({omim_num})
-
-                self.omim_type[omim_num] = None
-                if mimtype == 'gene':
-                    self.omim_type[omim_num] = self.globaltt['gene']
-
-                # Phenotype, molecular basis known
-                elif mimtype == 'phenotype':
-                    self.omim_type[omim_num] = self.globaltt['Phenotype']
-
-                # Phenotype or locus, molecular basis unknown
-                elif mimtype == 'predominantly phenotypes':
-                    self.omim_type[omim_num] = self.globaltt[
-                        'heritable_phenotypic_marker']  # ?
-
-                # Removed or moved to another entry
-                elif mimtype == 'moved/removed':
-                    self.omim_type[omim_num] = self.globaltt['obsolete']
-
-                # "Gene and phenotype, combined"  works as both/either.
-                elif mimtype == 'gene/phenotype':
-                    self.omim_type[omim_num] = self.globaltt['has_affected_feature']
-                else:
-                    LOG.warning(
-                        'Unknown OMIM TYPE of %s on line %i', mimtype, line_counter)
-
-        LOG.info("Done. found %d omim ids", len(omim_nums))
-
-        return list(omim_nums)
-
     def process_entries(
             self, omimids, transform, included_fields=None, graph=None, limit=None,
             globaltt=None
@@ -267,7 +148,7 @@ class OMIM(Source):
         can further iterate.
 
         If no ```included_fields``` are provided, this will simply fetch
-        the basic entry from omim,
+        the basic entry from omim, that is ALL fields,
         which includes an entry's:  prefix, mimNumber, status, and titles.
 
         :param omimids: the set of omim entry ids to fetch using their API
@@ -370,10 +251,11 @@ class OMIM(Source):
 
     def _process_all(self, limit):
         """
-        This takes the list of omim identifiers from the omim.txt.Z file,
-        and iteratively queries the omim api for the json-formatted data.
-        This will create OMIM classes, with the label,
-        definition, and some synonyms.
+        This takes the list of omim identifiers from the omimTitles file,
+        excludes those designated as obsolete and iteratively queries the omim api
+        in batches of 20 for the json-formatted data.
+
+        This will create OMIM classes, with the label & definition.
         If an entry is "removed",
             it is added as a deprecated class.
         If an entry is "moved",
@@ -387,10 +269,9 @@ class OMIM(Source):
             it will write only those items in the test_ids to the testgraph.
 
         :param limit:
-        :return:
         """
+        omimids = list(self.omim_type.keys() - self.omim_replaced.keys())
 
-        omimids = self._get_omim_ids()
         LOG.info('Have %i omim numbers to fetch records from their API', len(omimids))
         LOG.info('Have %i omim types ', len(self.omim_type))
 
@@ -434,15 +315,7 @@ class OMIM(Source):
         if 'includedTitles' in titles:
             other_labels += self._get_alt_labels(titles['includedTitles'])
 
-        # add synonyms of alternate labels
-        # preferredTitle": "PFEIFFER SYNDROME",
-        # "alternativeTitles":
-        #   "ACROCEPHALOSYNDACTYLY, TYPE V; ACS5;;\nACS V;;\nNOACK SYNDROME",
-        # "includedTitles":
-        #   "CRANIOFACIAL-SKELETAL-DERMATOLOGIC DYSPLASIA, INCLUDED"
-
         # remove the abbreviation (comes after the ;) from the preferredTitle,
-        # and add it as a synonym
         abbrev = None
         lab_lst = label.split(';')
         if len(lab_lst) > 1:
@@ -451,199 +324,158 @@ class OMIM(Source):
 
         omim_curie = 'OMIM:' + omim_num
 
-        if ent['entry']['status'] == 'removed':
-            model.addDeprecatedClass(omim_curie)
-        else:
-            if omim_num in self.omim_type:
-                omimtype = self.omim_type[omim_num]
-            else:  # should this be an error  then full stop?
-                LOG.warning('No type found for %s', omim_num)
-                omimtype = None
+        if omim_num in self.omim_type:
+            omimtype = self.omim_type[omim_num]
+        else:  # should this be an error  then full stop?
+            LOG.warning('No type found for %s', omim_num)
+            omimtype = None
 
-            nodelabel = newlabel
-            # this uses our cleaned-up label
-            if omimtype == self.globaltt['heritable_phenotypic_marker']:
-                if abbrev is not None:
-                    nodelabel = abbrev
-                # in this special case,
-                # make it a disease by not declaring it as a gene/marker
-                # ??? with none?
-
-                model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
-                # class_type=self.globaltt['disease or disorder'],
-            elif omimtype == self.globaltt['gene']:
-                if abbrev is not None:
-                    nodelabel = abbrev
-                #  G_omim subclass_of  gene
-                model.addClassToGraph(
-                    omim_curie, nodelabel, omimtype, newlabel)
-            elif omimtype == self.globaltt['obsolete']:
-                # X_omim subclass_of RIP
-                model.addClassToGraph(omim_curie, newlabel, omimtype)
-            else:
-                # omim NOT subclass_of D|P|or ?...
-                model.addClassToGraph(omim_curie, newlabel)
-
-            # add the original screaming-caps OMIM label as a synonym
-            # P.R. says these are not an exact synonym in #714
-            model.addSynonym(omim_curie, label, model.globaltt['has_related_synonym'])
-
-            # add the alternate labels and includes as synonym-ish
-            for label in other_labels:
-                model.addSynonym(
-                    omim_curie, label, model.globaltt['has_related_synonym'])
-
+        nodelabel = newlabel
+        # this uses our cleaned-up label
+        if omimtype == self.globaltt['heritable_phenotypic_marker']:
             if abbrev is not None:
-                model.addSynonym(omim_curie, abbrev)  # as an exact synonym
+                nodelabel = abbrev
+            # in this special case,
+            # make it a disease by not declaring it as a gene/marker
+            # ??? and if abbrev is None?
 
-            # KS: commenting out, we will get disease descriptions
-            # from MONDO, and gene descriptions from the mygene API
+            model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
+            # class_type=self.globaltt['disease or disorder'],
+        elif omimtype == self.globaltt['gene']:
+            if abbrev is not None:
+                nodelabel = abbrev
+            #  G_omim subclass_of  gene
+            model.addClassToGraph(
+                omim_curie, nodelabel, omimtype, newlabel)
+        elif omimtype == self.globaltt['obsolete']:
+            # X_omim subclass_of RIP
+            model.addClassToGraph(omim_curie, newlabel, omimtype)
+        else:
+            # omim NOT subclass_of D|P|or ?...
+            model.addClassToGraph(omim_curie, newlabel)
 
-            # if this is a genetic locus (not sequenced) then
-            #  add the chrom loc info to the ncbi gene identifier,
-            # not to the omim id (we reserve the omim id to be the phenotype)
-            #################################################################
-            # the above makes no sense to me. (TEC)
-            # For Monarch, OMIM is authoritative for disease / phenotype
-            #   if they say a phenotype is associated with a locus
-            #   that is what dipper should report.
-            # OMIM is not authoritative for NCBI gene locations, locus or otherwise.
-            # and dipper should not be reporting gene locations via OMIM.
+        # KS: commenting out, we will get disease descriptions
+        # from MONDO, and gene descriptions from the mygene API
 
-            feature_id = None
-            feature_label = None
-            if 'geneMapExists' in ent['entry'] and ent['entry']['geneMapExists']:
-                genemap = ent['entry']['geneMap']
-                is_gene = False
+        # if this is a genetic locus (not sequenced) then
+        #  add the chrom loc info to the ncbi gene identifier,
+        # not to the omim id (we reserve the omim id to be the phenotype)
+        #################################################################
+        # the above makes no sense to me. (TEC)
+        # For Monarch, OMIM is authoritative for disease / phenotype
+        #   if they say a phenotype is associated with a locus
+        #   that is what dipper should report.
+        # OMIM is not authoritative for NCBI gene locations, locus or otherwise.
+        # and dipper should not be reporting gene locations via OMIM.
 
-                if omimtype == self.globaltt['heritable_phenotypic_marker']:
-                    # get the ncbigene ids
-                    ncbifeature = self._get_mapped_gene_ids(ent['entry'], graph)
-                    if len(ncbifeature) == 1:
-                        feature_id = 'NCBIGene:' + str(ncbifeature[0])
-                        # add this feature as a cause for the omim disease
-                        # TODO SHOULD I EVEN DO THIS HERE?
-                        assoc = G2PAssoc(graph, self.name, feature_id, omim_curie)
-                        assoc.add_association_to_graph()
+        feature_id = None
+        feature_label = None
+        if 'geneMapExists' in ent['entry'] and ent['entry']['geneMapExists']:
+            genemap = ent['entry']['geneMap']
+            is_gene = False
 
-                    # elif len(ncbifeature) > 1:
-                    else:
-                        LOG.info(
-                            "Its ambiguous when %s maps to not one gene id: %s",
-                            omim_curie, str(ncbifeature))
-                    # else:  # no ncbi feature, make an anonymous one
-                    #    #
-                    #    feature_id = self._make_anonymous_feature(omim_num)
-                    #    feature_label = abbrev
-                    # not mapping to anything is ambigous as mapping to too many things
-
-                elif omimtype in {  # TODO reconsider lumping feature with gene
-                        self.globaltt['gene'], self.globaltt['has_affected_feature']}:
-                    feature_id = omim_curie
-                    is_gene = True
+            if omimtype == self.globaltt['heritable_phenotypic_marker']:
+                # get the ncbigene ids
+                ncbifeature = self._get_mapped_gene_ids(ent['entry'], graph)
+                if len(ncbifeature) == 1:
+                    feature_id = 'NCBIGene:' + str(ncbifeature[0])
+                    # add this feature as a cause for the omim disease
+                    # TODO SHOULD I EVEN DO THIS HERE?
+                    assoc = G2PAssoc(graph, self.name, feature_id, omim_curie)
+                    assoc.add_association_to_graph()
                 else:
-                    # 158900 falls into this category
-                    feature_id = self._make_anonymous_feature(omim_num)
-                    if abbrev is not None:
-                        feature_label = abbrev
-                    omimtype = self.globaltt['heritable_phenotypic_marker']
+                    LOG.info(
+                        "Its ambiguous when %s maps to not one gene id: %s",
+                        omim_curie, str(ncbifeature), )
+            # TODO reconsider lumping feature with gene
+            elif omimtype in \
+                    [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
+                feature_id = omim_curie
+                is_gene = True
+            else:
+                # 158900 falls into this category
+                feature_id = self._make_anonymous_feature(omim_num)
+                if abbrev is not None:
+                    feature_label = abbrev
+                omimtype = self.globaltt['heritable_phenotypic_marker']
 
-                if feature_id is not None:
-                    if 'comments' in genemap:
-                        # add a comment to this feature
-                        comment = genemap['comments']
-                        if comment.strip() != '':
-                            model.addDescription(feature_id, comment)
-                    if 'cytoLocation' in genemap:
-                        cytoloc = genemap['cytoLocation']
-                        # parse the cytoloc.
-                        # add this omim thing as
-                        # a subsequence of the cytofeature
-                        # 18p11.3-p11.2
-                        # FIXME
-                        # add the other end of the range,
-                        # but not sure how to do that
-                        # not sure if saying subsequence of feature
-                        # is the right relationship
+            if feature_id is not None:
+                if 'comments' in genemap:
+                    # add a comment to this feature
+                    comment = genemap['comments']
+                    if comment.strip() != '':
+                        model.addDescription(feature_id, comment)
+                if 'cytoLocation' in genemap:
+                    cytoloc = genemap['cytoLocation']
+                    # parse the cytoloc.
+                    # add this omim thing as
+                    # a subsequence of the cytofeature
+                    # 18p11.3-p11.2
+                    # FIXME
+                    # add the other end of the range,
+                    # but not sure how to do that
+                    # not sure if saying subsequence of feature
+                    # is the right relationship
 
-                        feat = Feature(graph, feature_id, feature_label, omimtype)
-                        if 'chromosomeSymbol' in genemap:
-                            chrom_num = str(genemap['chromosomeSymbol'])
-                            chrom = makeChromID(chrom_num, tax_id, 'CHR')
-                            geno.addChromosomeClass(
-                                chrom_num, self.globaltt['Homo sapiens'], tax_label)
+                    feat = Feature(graph, feature_id, feature_label, omimtype)
+                    if 'chromosomeSymbol' in genemap:
+                        chrom_num = str(genemap['chromosomeSymbol'])
+                        chrom = makeChromID(chrom_num, tax_id, 'CHR')
+                        geno.addChromosomeClass(
+                            chrom_num, self.globaltt['Homo sapiens'], tax_label)
 
-                            # add the positional information, if available
-                            fstart = fend = -1
-                            if 'chromosomeLocationStart' in genemap:
-                                fstart = genemap['chromosomeLocationStart']
-                            if 'chromosomeLocationEnd' in genemap:
-                                fend = genemap['chromosomeLocationEnd']
-                            if fstart >= 0:
-                                # make the build-specific chromosome
-                                chrom_in_build = makeChromID(
-                                    chrom_num, build_num, 'MONARCH')
-                                # then, add the chromosome instance
-                                # (from the given build)
-                                geno.addChromosomeInstance(
-                                    chrom_num, asm_curie, build_num, chrom)
-                                if omimtype == self.globaltt[
-                                        'heritable_phenotypic_marker']:
-                                    postypes = [self.globaltt['FuzzyPosition']]
-                                else:
-                                    postypes = None
-                                # NOTE that no strand information
-                                # is available in the API
-                                feat.addFeatureStartLocation(
-                                    fstart, chrom_in_build, None, postypes)
-                                if fend >= 0:
-                                    feat.addFeatureEndLocation(
-                                        fend, chrom_in_build, None, postypes)
-                                if fstart > fend:
-                                    LOG.info(
-                                        "start>end (%d>%d) for %s",
-                                        fstart, fend, omim_curie)
-                            # add the cytogenic location too
-                            # for now, just take the first one
-                            cytoloc = cytoloc.split('-')[0]
-                            loc = makeChromID(cytoloc, tax_id, 'CHR')
-                            model.addClassToGraph(loc, None)
-                            feat.addSubsequenceOfFeature(loc)
-                            feat.addFeatureToGraph(True, None, is_gene)
+                        # add the positional information, if available
+                        fstart = fend = -1
+                        if 'chromosomeLocationStart' in genemap:
+                            fstart = genemap['chromosomeLocationStart']
+                        if 'chromosomeLocationEnd' in genemap:
+                            fend = genemap['chromosomeLocationEnd']
+                        if fstart >= 0:
+                            # make the build-specific chromosome
+                            chrom_in_build = makeChromID(
+                                chrom_num, build_num, 'MONARCH')
+                            # then, add the chromosome instance
+                            # (from the given build)
+                            geno.addChromosomeInstance(
+                                chrom_num, asm_curie, build_num, chrom)
+                            if omimtype == self.globaltt[
+                                    'heritable_phenotypic_marker']:
+                                postypes = [self.globaltt['FuzzyPosition']]
+                            else:
+                                postypes = None
+                            # NOTE that no strand information
+                            # is available in the API
+                            feat.addFeatureStartLocation(
+                                fstart, chrom_in_build, None, postypes)
+                            if fend >= 0:
+                                feat.addFeatureEndLocation(
+                                    fend, chrom_in_build, None, postypes)
+                            if fstart > fend:
+                                LOG.info(
+                                    "start>end (%d>%d) for %s",
+                                    fstart, fend, omim_curie)
+                        # add the cytogenic location too
+                        # for now, just take the first one
+                        cytoloc = cytoloc.split('-')[0]
+                        loc = makeChromID(cytoloc, tax_id, 'CHR')
+                        model.addClassToGraph(loc, None)
+                        feat.addSubsequenceOfFeature(loc)
+                        feat.addFeatureToGraph(True, None, is_gene)
 
-                # end adding causative genes/features
+            # end adding causative genes/features
 
-            # check if moved, if so,
-            # make it deprecated and
-            # replaced consider class to the other thing(s)
-            # some entries have been moved to multiple other entries and
-            # use the joining literal word "and"
-            # 612479 is movedto:  "603075 and 603029"  OR
-            # others use a comma-delimited list, like:
-            # 610402 is movedto: "609122,300870"
-            if ent['entry']['status'] == 'moved':
-                if re.search(r'and', str(ent['entry']['movedTo'])):
-                    # split the movedTo entry on 'and'
-                    newids = re.split(r'and', str(ent['entry']['movedTo']))
-                elif len(str(ent['entry']['movedTo']).split(',')) > 1:
-                    # split on the comma
-                    newids = str(ent['entry']['movedTo']).split(',')
-                else:
-                    # make a list of one
-                    newids = [str(ent['entry']['movedTo'])]
-                # cleanup whitespace and add OMIM prefix to numeric portion
-                fixedids = []
-                for i in newids:
-                    fixedids.append('OMIM:'+i.strip())
-
-                model.addDeprecatedClass(omim_curie, fixedids)
+            if ent['entry']['status'] in ['moved', 'removed']:
+                LOG.warning('UNEXPECTED! not expecting obsolete record', omim_curie)
+            # since we are not fetching obsolete records any more add them all in here
+            for omim_id in self.omim_replaced:
+                model.addDeprecatedClass(
+                    'OMIM:' + omim_id,
+                    ['OMIM:' + o for o in self.omim_replaced[omim_id]])
 
             self._get_phenotypicseries_parents(ent['entry'], graph)
             self._get_mappedids(ent['entry'], graph)
             self._get_mapped_gene_ids(ent['entry'], graph)
-
             self._get_pubs(ent['entry'], graph)
-
             self._get_process_allelic_variants(ent['entry'], graph)  # temp gag
 
     def _process_morbidmap(self, limit):
@@ -679,9 +511,7 @@ class OMIM(Source):
             line = reader.readline().strip()  # columns header
             line_counter = 4
             row = line.split('\t')  # includes funky leading octothorpe
-            if row != col:  # assert
-                LOG.error('Expected  %s to have columns: %s', raw, col)
-                LOG.error('But Found %s to have columns: %s', raw, row)
+            if not self.check_fileheader(col, row):
                 raise AssertionError('Incomming data headers have changed.')
 
             for line in reader:
@@ -1019,9 +849,7 @@ class OMIM(Source):
             line = reader.readline().strip()  # column headers
             line_counter = 5
             row = line.split('\t')
-            if row != col:  # assert
-                LOG.error('Expected  %s to have columns: %s', raw, col)
-                LOG.error('But Found %s to have columns: %s', raw, row)
+            if not self.check_fileheader(col, row):
                 raise AssertionError('Incomming data headers have changed.')
 
             for line in reader:
@@ -1193,77 +1021,6 @@ class OMIM(Source):
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id)
 
         return ref_to_pmid
-
-    @staticmethod
-    def _get_omimtype(entry, globaltt):
-        """
-        (note: there is anlaternative using mimTitle in omia)
-
-
-        Here, we look at the omim 'prefix' to help to type the entry.
-        For now, we only classify omim entries as genes;
-        the rest we leave alone.
-        :param entry:
-        :return:
-        """
-
-        # An asterisk (*) before an entry number indicates a gene.
-        # A number symbol (#) before an entry number indicates
-        # that it is a descriptive entry, usually of a phenotype,
-        # and does not represent a unique locus.
-        # The reason for the use of the number symbol
-        # is given in the first paragraph of the entry.
-        # Discussion of any gene(s) related to the phenotype resides in
-        # another entry(ies) as described in the first paragraph.
-        #
-        # A plus sign (+) before an entry number indicates that the
-        # entry contains the description of a gene of
-        # known sequence and a phenotype.
-        #
-        # A percent sign (%) before an entry number indicates that the
-        # entry describes a confirmed mendelian phenotype or phenotypic locus
-        # for which the underlying molecular basis is not known.
-        #
-        # No symbol before an entry number generally indicates a
-        # description of a phenotype for which the mendelian basis,
-        # although suspected, has not been clearly established
-        # or that the separateness of this phenotype
-        # from that in another entry is unclear.
-        #
-        # A caret (^) before an entry number means the
-        # entry no longer exists because it was removed from the database
-        # or moved to another entry as indicated.
-        prefix = None
-        type_id = None
-        if 'prefix' in entry:
-            prefix = entry['prefix']
-
-        if prefix == '*':
-            # gene, may not have a known sequence or a phenotype
-            # note that some genes are also phenotypes,
-            # even in this class, like 102480
-            # examples: 102560,102480,100678,102750
-            type_id = globaltt['gene']
-        elif prefix == '#':
-            # phenotype/disease -- indicate that here?
-            # examples: 104200,105400,114480,115300,121900
-            # type_id = globaltt['Phenotype']  # 'UPHENO_0001001' # species agnostic
-            # type_id = globaltt['human phenotypic abnormality']
-            pass
-
-        elif prefix == '+':
-            # gene of known sequence and has a phenotype
-            # examples: 107670,110600,126453
-            type_id = globaltt['gene']  # doublecheck this
-        elif prefix == '%':
-            # this is a disease (with a known locus).
-            # examples include:  102150,104000,107200,100070
-            type_id = globaltt['heritable_phenotypic_marker']
-        elif prefix == '':
-            # this is probably just a phenotype
-            pass
-
-        return type_id
 
     # def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
