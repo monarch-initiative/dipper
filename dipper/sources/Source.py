@@ -272,9 +272,7 @@ class Source:
         :return: True if the remote file is newer and should be downloaded
 
         """
-        LOG.info(
-            "Checking if remote file \n(%s)\n is newer than local \n(%s)",
-            remote, local)
+        LOG.info("Checking if remote file is newer than local \n(%s)", local)
 
         # check if local file exists
         # if no local file, then remote is newer
@@ -351,20 +349,22 @@ class Source:
         if files is None:
             files = self.files
         for fname in files:
-            LOG.info("Getting %s", fname)
             headers = None
             filesource = files[fname]
             if 'headers' in filesource:
                 headers = filesource['headers']
-            self.fetch_from_url(
-                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
-                is_dl_forced, headers)
+            LOG.info("Getting %s", fname)
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
                 self.dataset.setFileAccessUrl(filesource['clean'])
             else:
                 self.dataset.setFileAccessUrl(filesource['url'])
+                LOG.info('Fetching %s', filesource['url'])
+
+            self.fetch_from_url(
+                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
+                is_dl_forced, headers)
 
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
 
@@ -387,13 +387,10 @@ class Source:
         :return: None
 
         """
-        # The 'file' dict in the ingest script is where 'headers' may be found
-        # e.g.  OMIM.py has:  'headers': {'User-Agent': 'Mozilla/5.0'}
 
         response = None
         if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
-            LOG.info("Fetching from %s", remotefile)
             # TODO url verification, etc
             if headers is None:
                 headers = self._get_default_request_headers()
@@ -826,7 +823,18 @@ class Source:
         if expected != received:
             LOG.error('\nExpected header: %s\nRecieved header: %s', expected, received)
 
-        # pass reordering and adding new columns (after previous protesting)
-        exps = set(expected)
+            # pass reordering and adding new columns (after protesting)
+            exp = set(expected)
+            got = set(received)
 
-        return (exps ^ set(received)) & exps == set()
+            # hard fail on missing expected columns (temper with mandatory cols?)
+            if exp - got != set():
+                LOG.error('Missing: %s', exp - got)
+                raise AssertionError('Incomming headers are missing expected column.')
+
+            if got - exp != set():
+                LOG.warrning('Addtional new columns: %s', got - exp)
+            else:
+                LOG.warrning('Check columns order')
+
+        return (exp ^ got) & exp == set()
