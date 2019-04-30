@@ -30,8 +30,8 @@ class OMIMSource(Source):
     note: If an omim is not a key in either table it is presumed removed.
     '''
 
-    mimfiles = {
-        'mimtitles': {  # do not conflict with subclasses 'files' dict???
+    mimfiles = {  # do not conflict with subclasses 'files' dict
+        'mimtitles': {
             'file': 'mimTitles.txt',
             'url':  OMIMFTP + '/mimTitles.txt',
             'headers': {'User-Agent': USER_AGENT},
@@ -42,7 +42,7 @@ class OMIMSource(Source):
                 'Alternative Title(s); symbol(s)',
                 'Included Title(s); symbols',
             ]
-        }
+        },
     }
 
     def __init__(
@@ -95,8 +95,8 @@ class OMIMSource(Source):
         This utility may still need to be rehomed. have considered:
             - make it its own ingest, output rdf
             - make it a dipper utility
-            - make a intermediate subclass between Source & ingest
             - inherited method from the super class
+            - make a intermediate subclass between Source & ingest
         trying the last out as path of least [resistance, kludgy, questions]
 
         Use OMIM's discription of their identifiers
@@ -165,6 +165,7 @@ class OMIMSource(Source):
                 if declared == 'Caret':  # moved|removed|split -> moved twice
                     # populating a dict from an omim to a set of omims
                     self.omim_type[omim_id] = self.globaltt['obsolete']
+                    self.omim_replaced[omim_id] = []
                     if pref_label[:9] == 'MOVED TO ':
                         token = pref_label.split(' ')
                         rep = token[2]
@@ -195,3 +196,28 @@ class OMIMSource(Source):
                     self.omim_type[omim_id] = self.globaltt['has_affected_feature']
                 else:
                     LOG.error('Unknown OMIM type line %s', reader.line_num)
+
+'''
+cut -f2 raw/omim/mim2gene.txt | grep -v '^#' | dist
+  16068 gene
+   7095 phenotype                   ->      Number Sign AND   Percent
+   1754 predominantly phenotypes
+   1268 moved/removed
+     45 gene/phenotype
+
+cut -f1 raw/omim/mimTitles.txt | grep -v  '^#' | dist
+  16068 Asterisk        ->  mim2gene.gene
+   5531 Number Sign     ->  mim2gene.phenotype*
+   1754 NULL            ->  mim2gene.predominantly phenotypes
+   1564 Percent         ->  mim2gene.phenotype*
+   1268 Caret           ->  mim2gene.moved/removed
+     45 Plus            ->  mim2gene.gene/phenotype
+
+
+    gene-ish        (Asterisk, Plus)
+    phenotype-ish   ( Number Sign, NULL, Percent, Plus )
+
+26230 prod calls
+24962 dev calls   (no obs)
+
+'''
