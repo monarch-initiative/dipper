@@ -173,10 +173,10 @@ class OMIMSource(Source):
                             LOG.error('Report malformed omim replacement %s', rep)
                             # clean up ones I know about
                             if rep[0] == '{' and rep[7] == '}':
-                                rep = rep[1:6]
+                                rep = rep[1:7]
                                 LOG.info('Repaired malformed omim replacement %s', rep)
                             if len(rep) == 7 and rep[6] == ',':
-                                rep = rep[:5]
+                                rep = rep[:6]
                                 LOG.info('Repaired malformed omim replacement %s', rep)
                         if len(token) > 3:
                             self.omim_replaced[omim_id] = [rep, token[4]]
