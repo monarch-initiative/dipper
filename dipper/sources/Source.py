@@ -819,13 +819,13 @@ class Source:
 
             return: truthyness
         '''
-
+        exp = set(expected)
+        got = set(received)
         if expected != received:
             LOG.error('\nExpected header: %s\nRecieved header: %s', expected, received)
 
             # pass reordering and adding new columns (after protesting)
-            exp = set(expected)
-            got = set(received)
+
 
             # hard fail on missing expected columns (temper with mandatory cols?)
             if exp - got != set():
