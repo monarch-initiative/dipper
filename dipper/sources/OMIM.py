@@ -3,6 +3,7 @@ import re
 import json
 import urllib
 from urllib.error import HTTPError
+from datetime import date
 
 from dipper.sources.OMIMSource import OMIMSource, USER_AGENT
 from dipper.models.Model import Model
@@ -134,9 +135,7 @@ class OMIM(OMIMSource):
         LOG.info("Done parsing.")
 
     def process_entries(
-            self, omimids, transform, included_fields=None, graph=None, limit=None,
-            globaltt=None
-    ):
+            self, omimids, transform, included_fields=None, graph=None, limit=None):
         """
         Given a list of omim ids,
         this will use the omim API to fetch the entries, according to the
@@ -156,98 +155,94 @@ class OMIM(OMIMSource):
         :param included_fields: A set of what fields are required to retrieve
          from the API
         :param graph: the graph to add the transformed data into
-        :return:
         """
 
         omimparams = {}
+        reponse_batches = []
 
         # add the included_fields as parameters
         if included_fields is not None and included_fields:
             omimparams['include'] = ','.join(included_fields)
 
-        processed_entries = list()
-
-        # scrub any omim prefixes from the omimids before processing
-        # cleanomimids = set()
-        # for omimid in omimids:
-        #    scrubbed = str(omimid).split(':')[-1]
-        #    if re.match(r'^\d+$', str(scrubbed)):
-        #        cleanomimids.update(scrubbed)
-        # omimids = list(cleanomimids)
-
+        # not expecting any, but keeping just in case
         cleanomimids = [o.split(':')[-1] for o in omimids]
         diff = set(omimids) - set(cleanomimids)
         if diff:
             LOG.warning('OMIM has %i dirty bits see"\n %s', len(diff), str(diff))
             omimids = cleanomimids
-        else:
-            cleanomimids = list()
+        cleanomimids = []
 
-        acc = 0  # for counting
+        # TODO: check if we can use a cached copy of the json records
+        # maybe if exists raw/omim/_<iso-date>.json use that
 
-        # note that you can only do request batches of 20
-        # see info about "Limits" at http://omim.org/help/api
-        # TODO 2017 May seems a majority of many groups of 20
-        # are producing python None for RDF triple Objects
+        # in the meanwhile, to bypass (in case of emergencies)
+        # with open('raw/omim/_2019-05-01.json', 'r') as cachefile:
+        #     reponse_batches = json.load(cachefile)
+        if True:  # False:
 
-        groupsize = 20
-        if not self.test_mode and limit is not None:
-            # just in case the limit is larger than the number of records,
-            maxit = limit
-            if limit > len(omimids):
-                maxit = len(omimids)
-        else:
-            maxit = len(omimids)
+            acc = 0  # for counting
 
-        while acc < maxit:
-            end = min((maxit, acc + groupsize))
-            # iterate through the omim ids list,
-            # and fetch from the OMIM api in batches of 20
+            # note that you can only do request batches of 20
+            # see info about "Limits" at http://omim.org/help/api
+            # TODO 2017 May seems a majority of many groups of 20
+            # are producing python None for RDF triple Objects
 
-            if self.test_mode:
-                intersect = list(
-                    set([str(i) for i in self.test_ids]) & set(omimids[acc:end]))
-                # some of the test ids are in the omimids
-                if intersect:
-                    LOG.info("found test ids: %s", intersect)
-                    omimparams.update({'mimNumber': ','.join(intersect)})
-                else:
-                    acc += groupsize
-                    continue
+            groupsize = 20
+            if not self.test_mode and limit is not None:
+                # just in case the limit is larger than the number of records,
+                maxit = limit
+                if limit > len(omimids):
+                    maxit = len(omimids)
             else:
-                omimparams.update({'mimNumber': ','.join(omimids[acc:end])})
+                maxit = len(omimids)
 
-            url = OMIMAPI + urllib.parse.urlencode(omimparams)
+            while acc < maxit:
+                end = min((maxit, acc + groupsize))
+                # iterate through the omim ids list,
+                # and fetch from the OMIM api in batches of 20
 
-            try:
-                req = urllib.request.urlopen(url)
-            except HTTPError as err:  # URLError?
-                LOG.warning('fetching: %s', url)
-                error_msg = err.read()
-                if re.search(r'The API key: .* is invalid', str(error_msg)):
-                    msg = "API Key not valid"
-                    raise HTTPError(url, err.code, msg, err.hdrs, err.fp)
-                LOG.error("Failed with: %s", str(error_msg))
-                break
+                if self.test_mode:
+                    intersect = list(
+                        set([str(i) for i in self.test_ids]) & set(omimids[acc:end]))
+                    # some of the test ids are in the omimids
+                    if intersect:
+                        LOG.info("found test ids: %s", intersect)
+                        omimparams.update({'mimNumber': ','.join(intersect)})
+                    else:
+                        acc += groupsize
+                        continue
+                else:
+                    omimparams.update({'mimNumber': ','.join(omimids[acc:end])})
 
-            resp = req.read().decode()
-            acc += groupsize
+                url = OMIMAPI + urllib.parse.urlencode(omimparams)
 
-            myjson = json.loads(resp)
-            # snag a copy
-            with open('./raw/omim/_' + str(acc) + '.json', 'w') as writer:
-                json.dump(myjson, writer)
+                try:
+                    req = urllib.request.urlopen(url)
+                except HTTPError as err:  # URLError?
+                    LOG.warning('fetching: %s', url)
+                    error_msg = err.read()
+                    if re.search(r'The API key: .* is invalid', str(error_msg)):
+                        msg = "API Key not valid"
+                        raise HTTPError(url, err.code, msg, err.hdrs, err.fp)
+                    LOG.error("Failed with: %s", str(error_msg))
+                    break
 
-            entries = myjson['omim']['entryList']
+                resp = req.read().decode()
+                acc += groupsize
+                # gather all batches
+                reponse_batches.append(json.loads(resp))
 
-            for ent in entries:
+            # snag a copy of all the batches
+
+            with open('./raw/omim/_'+date.today().isoformat()+'.json', 'w') as writer:
+                json.dump(reponse_batches, writer)
+
+        LOG.info(
+            "begin transforming the %i blocks of (20) records", len(reponse_batches))
+        for myjson in reponse_batches:
+            for entery in myjson['omim']['entryList']:
                 # apply the data transformation, and save it to the graph
-                processed_entry = transform(ent, graph, globaltt)
-                if processed_entry is not None:
-                    processed_entries.append(processed_entry)
-
-                # ### end iterating over batch of entries
-        return processed_entries
+                transform(entery, graph)
 
     def _process_all(self, limit):
         """
@@ -286,19 +281,22 @@ class OMIM(OMIMSource):
 
         # add genome and taxon
         geno.addGenome(tax_id, tax_label)
-        model.addClassToGraph(tax_id, tax_label)
+        model.addClassToGraph(tax_id, None)  # tax_label)
 
         includes = set()
         includes.add('all')
 
-        self.process_entries(
-            omimids, self._transform_entry, includes, graph, limit, self.globaltt)
+        self.process_entries(omimids, self._transform_entry, includes, graph, limit)
 
-    def _transform_entry(self, ent, graph, globaltt):
+        # since we are not fetching obsolete records any more add them all in here
+        for omim_id in self.omim_replaced:
+            model.addDeprecatedClass(
+                'OMIM:' + omim_id, ['OMIM:' + o for o in self.omim_replaced[omim_id]])
+
+    def _transform_entry(self, ent, graph):
         self.graph = graph
         model = Model(graph)
         geno = Genotype(graph)
-        self.globaltt = globaltt
         tax_label = 'Homo sapiens'
         tax_id = self.globaltt[tax_label]
         build_num = "GRCh38"
@@ -323,13 +321,7 @@ class OMIM(OMIMSource):
         newlabel = self._cleanup_label(label)
 
         omim_curie = 'OMIM:' + omim_num
-
-        if omim_num in self.omim_type:
-            omimtype = self.omim_type[omim_num]
-        else:  # should this be an error  then full stop?
-            LOG.warning('No type found for %s', omim_num)
-            omimtype = None
-
+        omimtype = self.omim_type[omim_num]
         nodelabel = newlabel
         # this uses our cleaned-up label
         if omimtype == self.globaltt['heritable_phenotypic_marker']:
@@ -338,18 +330,14 @@ class OMIM(OMIMSource):
             # in this special case,
             # make it a disease by not declaring it as a gene/marker
             # ??? and if abbrev is None?
-
             model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
             # class_type=self.globaltt['disease or disorder'],
+
         elif omimtype == self.globaltt['gene']:
             if abbrev is not None:
                 nodelabel = abbrev
             #  G_omim subclass_of  gene
-            model.addClassToGraph(
-                omim_curie, nodelabel, omimtype, newlabel)
-        elif omimtype == self.globaltt['obsolete']:
-            # X_omim subclass_of RIP
-            model.addClassToGraph(omim_curie, newlabel, omimtype)
+            model.addClassToGraph(omim_curie, nodelabel, omimtype, newlabel)
         else:
             # omim NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -386,7 +374,7 @@ class OMIM(OMIMSource):
                 else:
                     LOG.info(
                         "Its ambiguous when %s maps to not one gene id: %s",
-                        omim_curie, str(ncbifeature), )
+                        omim_curie, str(ncbifeature))
             # TODO reconsider lumping feature with gene
             elif omimtype in \
                     [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
@@ -466,17 +454,11 @@ class OMIM(OMIMSource):
 
             if ent['entry']['status'] in ['moved', 'removed']:
                 LOG.warning('UNEXPECTED! not expecting obsolete record', omim_curie)
-            # since we are not fetching obsolete records any more add them all in here
-            for omim_id in self.omim_replaced:
-                model.addDeprecatedClass(
-                    'OMIM:' + omim_id,
-                    ['OMIM:' + o for o in self.omim_replaced[omim_id]])
-
             self._get_phenotypicseries_parents(ent['entry'], graph)
             self._get_mappedids(ent['entry'], graph)
             self._get_mapped_gene_ids(ent['entry'], graph)
             self._get_pubs(ent['entry'], graph)
-            self._get_process_allelic_variants(ent['entry'], graph)  # temp gag
+            self._get_process_allelic_variants(ent['entry'], graph)
 
     def _process_morbidmap(self, limit):
         """
@@ -512,7 +494,7 @@ class OMIM(OMIMSource):
             line_counter = 4
             row = line.split('\t')  # includes funky leading octothorpe
             if not self.check_fileheader(col, row):
-                raise AssertionError('Incomming data headers have changed.')
+                pass
 
             for line in reader:
                 line_counter += 1
@@ -850,7 +832,7 @@ class OMIM(OMIMSource):
             line_counter = 5
             row = line.split('\t')
             if not self.check_fileheader(col, row):
-                raise AssertionError('Incomming data headers have changed.')
+                pass
 
             for line in reader:
                 line_counter += 1
