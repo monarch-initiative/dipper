@@ -34,6 +34,7 @@ class OMIMSource(Source):
         'mimtitles': {
             'file': 'mimTitles.txt',
             'url':  OMIMFTP + '/mimTitles.txt',
+            'clean': OMIMURL,
             'headers': {'User-Agent': USER_AGENT},
             'columns': [  # expected
                 'Prefix',
