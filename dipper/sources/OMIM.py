@@ -281,7 +281,7 @@ class OMIM(OMIMSource):
 
         # add genome and taxon
         geno.addGenome(tax_id, tax_label)
-        model.addClassToGraph(tax_id, None)  # tax_label)
+        model.addClassToGraph(tax_id, tax_label)
 
         includes = set()
         includes.add('all')
