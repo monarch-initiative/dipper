@@ -136,7 +136,7 @@ class GeneReviews(OMIMSource):
             row = next(reader)
             row[0] = row[0][1:]
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for row in filereader:
 
@@ -254,7 +254,7 @@ class GeneReviews(OMIMSource):
             row[0] = row[0][1:]
             colcount = len(col)
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
             for row in filereader:
                 if len(row) != colcount:
                     LOG.error("Unexpected row. got: %s", row)

@@ -200,7 +200,7 @@ class NCBIGene(OMIMSource):
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip comment
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for line in tsv:
                 line = line.strip()
@@ -454,7 +454,7 @@ class NCBIGene(OMIMSource):
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip comment
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for line in tsv:
                 # skip comments
@@ -536,7 +536,7 @@ class NCBIGene(OMIMSource):
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip comment
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for line in tsv:
                 line_counter += 1
@@ -637,7 +637,7 @@ class NCBIGene(OMIMSource):
             row = tsv.readline().decode().strip().split('\t')
             row[0] = row[0][1:]  # strip octothorp
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
             for row in tsv:
                 row = row.decode().strip().split('\t')
                 tax_a = row[col.index('tax_id')]

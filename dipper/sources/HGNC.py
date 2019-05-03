@@ -139,7 +139,7 @@ class HGNC(OMIMSource):
 
             row = next(filereader)
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for row in filereader:
                 # To generate:

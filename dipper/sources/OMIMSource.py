@@ -151,7 +151,7 @@ class OMIMSource(Source):
             row = next(reader)  # column header
             row[0] = row[0][2:]  # remove octothorp '# '
             if not self.check_fileheader(col, row):
-                exit(-1)
+                pass
 
             for row in reader:
                 if row[0][0] == '#':  # they have comments at the end
