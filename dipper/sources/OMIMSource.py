@@ -197,7 +197,8 @@ class OMIMSource(Source):
                     self.omim_type[omim_id] = self.globaltt['has_affected_feature']
                 else:
                     LOG.error('Unknown OMIM type line %s', reader.line_num)
-
+        LOG.info('Have %i obsoleted OMIMS ids', len(self.omim_replaced))
+        LOG.info('Have %i OMIM typed', len(self.omim_type))
 '''
 cut -f2 raw/omim/mim2gene.txt | grep -v '^#' | dist
   16068 gene
