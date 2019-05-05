@@ -763,7 +763,7 @@ class Source:
 
         return localtt
 
-    def resolve(self, word, mandatory=True):
+    def resolve(self, word, mandatory=True, default=None):
         '''
         composite mapping
         given f(x) and g(x)
@@ -802,9 +802,12 @@ class Source:
         else:
             if mandatory:
                 raise KeyError("Mapping required for: ", word)
-
             logging.warning("We have no translation for: '%s'", word)
-            term_id = word
+
+            if default is not None
+                term_id = default
+            else:
+                term_id = word
         return term_id
 
     @staticmethod
