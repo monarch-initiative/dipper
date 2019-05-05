@@ -33,7 +33,7 @@ pipeline {
                 parallel(
                     "Generate monarch merged owl file": {
                         dir('./create-monarch-owl') {
-                            sh """                                
+                            sh """
                                 wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
 
                                 chmod +x owltools
@@ -109,7 +109,7 @@ pipeline {
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
-                                
+
                                 # Test run
                                 venv/bin/python dipper-etl.py --sources bgee --limit 1 --taxon 9606 --version bgee_v13_2
                                 mv ./out/bgee.ttl ./out/bgee_test.ttl
@@ -118,7 +118,7 @@ pipeline {
 
                                 echo "check statement count and if well-formed?"
                                 rapper -i turtle -c ./out/bgee.ttl
-                                
+
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
@@ -163,7 +163,7 @@ pipeline {
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
-                                
+
                                 mkdir -p out
                                 mkdir -p raw && cd raw
                                 mkdir -p clinvarxml_alpha && cd clinvarxml_alpha
@@ -193,13 +193,13 @@ pipeline {
                             )
                             sh '''
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources coriell
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -214,7 +214,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources ctd
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -248,13 +248,13 @@ pipeline {
                             )
                             sh '''
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources eom
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -272,7 +272,7 @@ pipeline {
                                 branch: 'master'
                             )
                             sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml                          
+                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
                             '''
                         }
                         dir('./build-genereviews-rdf/data-boutique') {
@@ -284,13 +284,13 @@ pipeline {
                             sh '''
                                 cd .. && mkdir -p raw/genereviews/books
                                 cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources genereviews
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -305,7 +305,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources go --taxon 7955,9606,10090,6239,7227,10116,559292,4896,4932
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -320,7 +320,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources gwascatalog --skip_tests
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -330,12 +330,19 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
+                         dir('./build-hgnc-rdf/config') {
+                            git(
+                                url: 'https://github.com/monarch-initiative/configs.git',
+                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
+                                branch: 'master'
+                            )
                             sh '''
+                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources hgnc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -354,13 +361,13 @@ pipeline {
                             )
                             sh '''
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources hpoa
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -375,7 +382,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources impc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -385,12 +392,19 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
+                        dir('./build-krgg-rdf/config') {
+                            git(
+                                url: 'https://github.com/monarch-initiative/configs.git',
+                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
+                                branch: 'master'
+                            )
                             sh '''
+                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources kegg
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -405,7 +419,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources mgi-slim
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -424,13 +438,13 @@ pipeline {
                             )
                             sh '''
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources mgi --skip_tests
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -445,7 +459,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources mmrrc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -465,12 +479,12 @@ pipeline {
                             sh '''
                                 cd .. && mkdir -p raw/monarch
                                 cp -r data-boutique/OMIA-disease-phenotype ./raw/monarch/
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources monarch --skip_tests
-                                
+
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
@@ -486,7 +500,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources monochrom
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -501,7 +515,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources mpd --skip_tests
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -511,12 +525,19 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
+                        dir('./build-ncbigene-rdf/config') {
+                            git(
+                                url: 'https://github.com/monarch-initiative/configs.git',
+                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
+                                branch: 'master'
+                            )
                             sh '''
+                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources ncbigene --taxon 28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,4932,9685,559292
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -535,14 +556,14 @@ pipeline {
                             )
                             sh '''
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                
+
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources omim -q
-                                
+
                                 scp ./out/omim.ttl monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                                scp ./out/omim_dataset.ttl monarch@$MONARCH_DATA_FS:/var/www/data/ttl/  
+                                scp ./out/omim_dataset.ttl monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -552,13 +573,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources orphanet
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -568,13 +589,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources reactome
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -584,13 +605,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources wormbase --dest_fmt nt
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -600,13 +621,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources zfinslim
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -616,13 +637,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources zfin
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -632,13 +653,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources rgd
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -653,7 +674,7 @@ pipeline {
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources sgd
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                              
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
@@ -663,13 +684,13 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                            sh '''                                
+                            sh '''
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
                                 venv/bin/python dipper-etl.py --sources mychem
-                                
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/                            
+
+                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
                     },
