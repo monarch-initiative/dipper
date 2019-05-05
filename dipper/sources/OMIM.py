@@ -172,7 +172,7 @@ class OMIM(OMIMSource):
             omimids = cleanomimids
         cleanomimids = []
 
-        # TODO: check if we can use a cached copy of the json records
+        # WIP: check if we can use a cached copy of the json records
         # maybe if exists raw/omim/_<iso-date>.json use that
 
         # in the meanwhile, to bypass (in case of emergencies)
@@ -333,13 +333,15 @@ class OMIM(OMIMSource):
             model.addClassToGraph(omim_curie, nodelabel, description=newlabel)
             # class_type=self.globaltt['disease or disorder'],
 
-        elif omimtype == self.globaltt['gene']:
+        elif omimtype in [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
+            omimtype = self.globaltt['gene']
             if abbrev is not None:
                 nodelabel = abbrev
-            #  G_omim subclass_of  gene
-            model.addClassToGraph(omim_curie, nodelabel, omimtype, newlabel)
+            #  G_omim is subclass_of  gene
+            model.addClassToGraph(
+                omim_curie, nodelabel, self.globaltt['gene'], newlabel)
         else:
-            # omim NOT subclass_of D|P|or ?...
+            # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
 
         # KS: commenting out, we will get disease descriptions
@@ -375,11 +377,11 @@ class OMIM(OMIMSource):
                     LOG.info(
                         "Its ambiguous when %s maps to not one gene id: %s",
                         omim_curie, str(ncbifeature))
-            # TODO reconsider lumping feature with gene
-            elif omimtype in \
-                    [self.globaltt['gene'], self.globaltt['has_affected_feature']]:
+            elif omimtype in [
+                    self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                 feature_id = omim_curie
                 is_gene = True
+                omimtype = self.globaltt['gene']
             else:
                 # 158900 falls into this category
                 feature_id = self._make_anonymous_feature(omim_num)
@@ -454,6 +456,7 @@ class OMIM(OMIMSource):
 
             if ent['entry']['status'] in ['moved', 'removed']:
                 LOG.warning('UNEXPECTED! not expecting obsolete record', omim_curie)
+
             self._get_phenotypicseries_parents(ent['entry'], graph)
             self._get_mappedids(ent['entry'], graph)
             self._get_mapped_gene_ids(ent['entry'], graph)
@@ -734,7 +737,7 @@ class OMIM(OMIMSource):
                                 model.addXref(al_id, rid)
                         reference.addPage(
                             al_id, "http://omim.org/entry/" +
-                            str(entry_num) + "#" + str(al_num).zfill(4))
+                            '#'.join((str(entry_num), str(al_num).zfill(4))))
                     elif re.search(
                             r'moved', alv['allelicVariant']['status']):
                         # for both 'moved' and 'removed'
@@ -918,7 +921,6 @@ class OMIM(OMIMSource):
                     model.addXref(omim_curie, umls_curie)
 
     def _get_mapped_gene_ids(self, entry, graph):
-
         gene_ids = []
         model = Model(graph)
         omim_num = str(entry['mimNumber'])
@@ -930,7 +932,8 @@ class OMIM(OMIMSource):
                 entrez_mappings = links['geneIDs']
                 gene_ids = entrez_mappings.split(',')
                 self.omim_ncbigene_idmap[omim_curie] = gene_ids
-                if omimtype == self.globaltt['gene']:
+                if omimtype in [
+                        self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                     for ncbi in gene_ids:
                         model.addEquivalentClass(omim_curie, 'NCBIGene:' + str(ncbi))
 
