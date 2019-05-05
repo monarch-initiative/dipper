@@ -1,5 +1,5 @@
 ---
-                
+
 "Loss of function": "loss_of_function_variant"
 "All missense/in frame": "missense_variant"
 "Dominant negative": "dominant_negative_variant"
@@ -9,4 +9,3 @@
 "Cis-regulatory or promotor mutation": "regulatory_region_variant"
 "Uncertain": "sequence_variant"
 "5 or 3UTR mutation": "UTR_variant"
- 

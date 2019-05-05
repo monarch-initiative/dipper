@@ -1,4 +1,5 @@
 ---
+# clinvarxml_alpha.yaml
 # YAML format for a Python dict
 # external_string to internal_label translation table
 # quoted external_string, a colon, quoted internal_label.
@@ -7,8 +8,8 @@
 # items in the the internal_label column should be unique
 # in the first column of the global_terms.yaml file
 
-### RCV variant to gene relationship types type
-#########################################################
+# ## RCV variant to gene relationship types type
+# ########################################################
 "within single gene": "has_affected_feature"
 "genes overlapped by variant": "has_affected_feature"
 "within multiple genes by overlap": "has_affected_feature"
@@ -17,8 +18,8 @@
 "near gene, downstream": "is downstream of sequence of"
 # asserted, but not computed  (MB no idea what this means) punting
 "asserted, but not computed": "has_affected_feature"
-### Pathos Association types
-###########################################################
+# ## Pathos Association types
+# ##########################################################
 "Benign": "benign_for_condition"
 "benign": "benign_for_condition"
 "conflicting data from submitters": "has_uncertain_significance_for_condition"
@@ -70,8 +71,8 @@
 "VOUS": "has_uncertain_significance_for_condition"  # "variant of unknown significance"
 # this next one is ambigous think it implies
 "POLY": "has_uncertain_significance_for_condition"  # diff disorder with diff calls?
-###  Variant (Subject) Sequence Types
-#############################################################
+# ##  Variant (Subject) Sequence Types
+# ############################################################
 "single nucleotide variant": "SNV"
 "Deletion": "deletion"
 "copy number gain": "copy_number_gain"
@@ -91,6 +92,6 @@
 "Microsatellite": "microsatellite"
 "protein only": "coding sequence alteration"
 "CompoundHeterozygote": "variant single locus complement"
-#############################################################
+# ############################################################
 "patient phenotyping study": "phenotyping only"
 "provider interpretation": "imported information"   # "ECO:0000311"  checkme

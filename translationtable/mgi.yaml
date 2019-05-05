@@ -1,4 +1,5 @@
 ---
+# mgi.yaml
 # evidence code
 "EXP": "experimental evidence"                                          # ECO:0000006
 "IBA": "biological aspect of ancestor evidence used in manual assertion"  # ECO:0000318
@@ -21,7 +22,8 @@
 "M": "male"
 "F": "female"
 
-"Not Applicable": "reference_locus"
+# can not have duplicate key  move to resolve(key, default='reference_locus')
+# "Not Applicable": "reference_locus"
 
 # marker types
 "Complex/Cluster/Region": "sequence_feature"
@@ -79,23 +81,23 @@
 "7196773": "chromosomal_translocation"
 "7196774": "chromosomal_duplication"
 "7196775": "chromosomal_transposition"
-"7222413": "chromosome_part" # unclassified cytogenetic marker
-#"7288448": "SO:0000341",  "chromosome_band"  CHECK what 7288448 is
+"7222413": "chromosome_part"  # unclassified cytogenetic marker
+# "7288448": "SO:0000341",  "chromosome_band"  CHECK what 7288448 is
 "7288448": "pseudogenic_region"
 "7288449": "polymorphic_pseudogene"
 "7648966": "retrotransposon"
 "7648967": "telomere"
 "7648968": "minisatellite"
-"7648969": "sequence_feature"               # unclassified other genome feature
-"9272146": "endogenous_retroviral_sequence" # endogenous retroviral region
-"11928467": "sequence_variant"              # mutation defined region
-# intronic lncRNA gene  --> ncRNA gene   #FIXME (maybe done if "sense_" is okay)
+"7648969": "sequence_feature"                # unclassified other genome feature
+"9272146": "endogenous_retroviral_sequence"  # endogenous retroviral region
+"11928467": "sequence_variant"               # mutation defined region
+# intronic lncRNA gene  --> ncRNA gene       #FIXME (maybe done if "sense_" is okay)
 # "15406204": "SO:0001263",
-"15406204": "sense_intronic_lncRNA_gene"    # "SO:0002184"
+"15406204": "sense_intronic_lncRNA_gene"     # "SO:0002184"
 "15406205": "CpG_island"
 "15406206": "ribozyme_gene"
 "15406207": "promoter"
-#"36700088": ""          # this should be found -> (joins done on remote host)
+# "36700088": ""          # this should be found -> (joins done on remote host)
 
 # seq_alt_type
 # TODO: Finish identifying SO/GENO terms for mappings found in MGI
@@ -108,8 +110,8 @@
 "Intergenic deletion": "deletion"   # TODO  SO:0001628 intergenic_variant
 "Intragenic deletion": "deletion"   # TODO  SO:0001564 gene_variant
 "Inversion": "inversion"
-"Not Applicable": "sequence_alteration"
-"Not Specified": "sequence_alteration"
+"Not Applicable": "sequence_alteration"   # WARN could conflict with taxon usage
+"Not Specified": "sequence_alteration"    # WARN could conflict with taxon usage
 "Nucleotide repeat expansion": "direct_tandem_duplication"
 "Nucleotide substitutions": "MNV"  # multiple nucleotide variant
 "Other": "sequence_alteration"
@@ -121,7 +123,7 @@
 "wild type": "wild_type"
 
 # taxon
-"Sus scrofa domestica L.":  "Sus scrofa"  # "NCBITaxon:9823"  ?? why here ??
+"Sus scrofa domestica L.": "Sus scrofa"  # "NCBITaxon:9823"  ?? why here ??
 "Rat": "Rattus"   # Genus
 
 "laboratory mouse and M. m. domesticus (brevirostris)": "Mus musculus brevirostris"
@@ -130,7 +132,7 @@
 "laboratory mouse and M. m. castaneus and M. m. musculus": "Mus musculus musculus x M. m. castaneus"
 "M. m. domesticus and M. m. molossinus and M. m. castaneus": "Mus musculus domesticus x M. m. molossinu"
 "M. setulosus": "Mus setulosus"
-"laboratory mouse and wild-derived": "Mus" # genus
+"laboratory mouse and wild-derived": "Mus"  # genus
 "laboratory mouse and M. m. musculus (Prague)": "Mus musculus musculus"
 "M. m. castaneus and M. m. musculus": "Mus musculus musculus x M. m. castaneus"
 "M. m. domesticus (Canada)": "Mus musculus domesticus"
@@ -210,7 +212,6 @@
 "laboratory mouse and M. m. castaneus": "Mus musculus"
 "M. hortulanus (Austria)": "Mus spicilegus"  # synonymous with Mus spicilegus
 "M. m. musculus and M. hortulanus": "Mus"   # '862507' -> SubGenus not Genus
-# "Not Applicable": None
 "M. mattheyi": "Mus mattheyi"
 "M. m. macedonicus or M. m. musculus": "Mus musculus"
 "M. m. musculus (Georgia)": "Mus musculus musculus"
@@ -227,13 +228,13 @@
 "Mus musculus/domesticus": "Mus musculus domesticus"
 "laboratory mouse and M. spretus and M. m. musculus": "Mus musculus"
 "M. m. molossinus": "Mus musculus molossinus"
-"M. hortulanus": "Mus spicilegus" # synonymous with Mus spicilegus
-"M. dunni": "Mus terricolor" # synonymous with Mus terricolor
+"M. hortulanus": "Mus spicilegus"  # synonymous with Mus spicilegus
+"M. dunni": "Mus terricolor"  # synonymous with Mus terricolor
 "M. m. castaneus (Pathumthani, Thailand)": "Mus musculus castaneus"
 "M. terricolor": "Mus terricolor"
 "M. m. domesticus (China)": "Mus musculus domesticus"
 "M. fragilicauda": "Mus fragilicauda"
-"Not Resolved": "Mus setulosus" # assume Mus
+"Not Resolved": "Mus setulosus"  # assume Mus
 "M. m. musculus or M. spretus and laboratory mouse": "Mus setulosus"
 "M. macedonicus macedonicus": "Mus macedonicus macedonicus"
 "laboratory mouse": "Mus musculus"
@@ -263,7 +264,6 @@
 "laboratory mouse and M. m. castaneus and M. m. domesticus": "Mus musculus"
 "M. m. musculus (Bulgaria)": "Mus musculus musculus"
 "M. booduga": "Mus booduga"
-"Not Specified": "Mus musculus" # OK?
 "Not Specified and M. m. molossinus": "Mus musculus"
 "M. m. musculus and M. spretus": "Mus"   # '862507' -> SubGenus not Genus
 "M. minutoides": "Mus minutoides"
