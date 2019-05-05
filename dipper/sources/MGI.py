@@ -1415,15 +1415,18 @@ SELECT  r._relationship_key as rel_key,
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
-                    # add the taxon
-                    taxon_id = self.resolve(latin_name)  # not always proper binomial
+                    # add the taxon  (default to Mus)
+                    # latin_name is not always proper binomial
+                    taxon_id = self.resolve(
+                        latin_name, default=self.globaltt['Mus musculus'])
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
                     if taxon_id == self.globaltt['Mus musculus']:
                         model.makeLeader(marker_id)
 
-                    if not self.test_mode and limit is not None and line_counter > limit:
+                    if not self.test_mode and limit is not None \
+                            and line_counter > limit:
                         break
 
         return
