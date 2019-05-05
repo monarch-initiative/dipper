@@ -16,7 +16,7 @@ from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
 
 LOG = logging.getLogger(__name__)
-CHUNK = 16 * 1024  # read remote urls of unkown size in 16k chunks
+CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
 USER_AGENT = "The Monarch Initiative (https://monarchinitiative.org/; " \
              "info@monarchinitiative.org)"
 
@@ -28,9 +28,9 @@ class Source:
     then parse() it into a graph.  The graph will then be written out to
     a single self.name().<dest_fmt>  file.
 
-    Also provides a means to marshal metadata in a consistant fashion
+    Also provides a means to marshal metadata in a consistent fashion
 
-    Houses the global translstion table (from ontology label to ontology term)
+    Houses the global translation table (from ontology label to ontology term)
     so it may as well be used everywhere.
 
     """
@@ -130,9 +130,9 @@ class Source:
             self.archive_url,
             self.ingest_title,
             self.ingest_url,
-            None,    # description
-            license_url,
-            data_rights,
+            None,           # description
+            license_url,    # only _OUR_ lic
+            data_rights,    # tries to point to others lics
             graph_type,
             file_handle
         )
@@ -272,9 +272,7 @@ class Source:
         :return: True if the remote file is newer and should be downloaded
 
         """
-        LOG.info(
-            "Checking if remote file \n(%s)\n is newer than local \n(%s)",
-            remote, local)
+        LOG.info("Checking if remote file is newer than local \n(%s)", local)
 
         # check if local file exists
         # if no local file, then remote is newer
@@ -351,20 +349,22 @@ class Source:
         if files is None:
             files = self.files
         for fname in files:
-            LOG.info("Getting %s", fname)
             headers = None
             filesource = files[fname]
             if 'headers' in filesource:
                 headers = filesource['headers']
-            self.fetch_from_url(
-                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
-                is_dl_forced, headers)
+            LOG.info("Getting %s", fname)
             # if the key 'clean' exists in the sources `files` dict
             # expose that instead of the longer url
             if 'clean' in filesource and filesource['clean'] is not None:
                 self.dataset.setFileAccessUrl(filesource['clean'])
             else:
                 self.dataset.setFileAccessUrl(filesource['url'])
+                LOG.info('Fetching %s', filesource['url'])
+
+            self.fetch_from_url(
+                filesource['url'], '/'.join((self.rawdir, filesource['file'])),
+                is_dl_forced, headers)
 
             fstat = os.stat('/'.join((self.rawdir, filesource['file'])))
 
@@ -387,13 +387,10 @@ class Source:
         :return: None
 
         """
-        # The 'file' dict in the ingest script is where 'headers' may be found
-        # e.g.  OMIM.py has:  'headers': {'User-Agent': 'Mozilla/5.0'}
 
         response = None
         if ((is_dl_forced is True) or localfile is None or
                 (self.checkIfRemoteIsNewer(remotefile, localfile, headers))):
-            LOG.info("Fetching from %s", remotefile)
             # TODO url verification, etc
             if headers is None:
                 headers = self._get_default_request_headers()
@@ -547,7 +544,7 @@ class Source:
     @staticmethod
     def get_eco_map(url):
         """
-        To conver the three column file to
+        To convert the three column file to
         a hashmap we join primary and secondary keys,
         for example
         IEA	GO_REF:0000002	ECO:0000256
@@ -561,7 +558,7 @@ class Source:
 
         :return: dict
         """
-        # this would go in a translation table but it is generated dynamicly
+        # this would go in a translation table but it is generated dynamically
         # maybe when we move to a make driven system
         eco_map = {}
         request = urllib.request.Request(url)
@@ -616,11 +613,11 @@ class Source:
         The file we output needs to be declared as an ontology,
         including it's version information.
 
-        TEC: I am not convinced dipper reformating external data as RDF triples
+        TEC: I am not convinced dipper reformatting external data as RDF triples
         makes an OWL ontology (nor that it should be considered a goal).
 
         Proper ontologies are built by ontologists. Dipper reformats data
-        and anotates/decorates it with a minimal set of carefully arranged
+        and annotates/decorates it with a minimal set of carefully arranged
         terms drawn from from multiple proper ontologies.
         Which allows the whole (dipper's RDF triples and parent ontologies)
         to function as a single ontology we can reason over when combined
@@ -740,8 +737,8 @@ class Source:
         '''
         Load "ingest specific" translation from whatever they called something
         to the ontology label we need to map it to.
-        To facilitate seeing more ontology lables in dipper ingests
-        a reverse mapping from ontology lables to external strings is also generated
+        To facilitate seeing more ontology labels in dipper ingests
+        a reverse mapping from ontology labels to external strings is also generated
         and available as a dict localtcid
 
         '''
@@ -790,8 +787,8 @@ class Source:
 
         assert word is not None
 
-        # we may not agree with a remote sources use of our global term we have
-        # this provides oppertunity for us to overide
+        # we may not agree with a remote sources use of a global term we have
+        # this provides opportunity for us to override
         if word in self.localtt:
             label = self.localtt[word]
             if label in self.globaltt:
@@ -809,3 +806,35 @@ class Source:
             logging.warning("We have no translation for: '%s'", word)
             term_id = word
         return term_id
+
+    @staticmethod
+    def check_fileheader(expected, received):
+        '''
+        Compare file headers received versus file headers expected
+        if the expected headers are a subset (proper or not)
+        of received headers report suscess (warn if proper subset)
+
+            param:  expected  list
+            param:  received  list
+
+            return: truthyness
+        '''
+        exp = set(expected)
+        got = set(received)
+        if expected != received:
+            LOG.error('\nExpected header: %s\nRecieved header: %s', expected, received)
+
+            # pass reordering and adding new columns (after protesting)
+
+
+            # hard fail on missing expected columns (temper with mandatory cols?)
+            if exp - got != set():
+                LOG.error('Missing: %s', exp - got)
+                raise AssertionError('Incomming headers are missing expected column.')
+
+            if got - exp != set():
+                LOG.warrning('Addtional new columns: %s', got - exp)
+            else:
+                LOG.warrning('Check columns order')
+
+        return (exp ^ got) & exp == set()

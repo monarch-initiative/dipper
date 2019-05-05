@@ -90,8 +90,8 @@ class Reference:
 
     def addPage(self, subject_id, page_url):
         self.graph.addTriple(
-            subject_id, self.globaltt['page'],  # foaf:page  not  <sio:web page>
-            page_url, object_is_literal=True)
+            subject_id, self.globaltt['page'],   # foaf:page  not  <sio:web page>
+            page_url, object_is_literal=False)   # URL is not a literal
         return
 
     def addTitle(self, subject_id, title):

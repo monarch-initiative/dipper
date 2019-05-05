@@ -1,18 +1,20 @@
 #! /usr/bin/awk -f
-#deltadot.awk
-# Use to illuminate the commonality and differences between dot files created 
-# by 'ntriples2dot.awk' but might work for other dot files 
-
-# expects two graphviz dot digraph files 
-# with simple node names ('C' variable naming conventions)
-# edge's unadorned predicate label 
-# concludes with a space then count in parens  
+#deltadot.awk <encumbant.gv> <candidate.gv>
+# Use to illuminate the commonality and differences between dot files created
+# by 'ntriples2dot.awk' but might work for other dot files
 #
-# For example:   
+#
+# expects two graphviz dot digraph files by convention "old"  then "new"
+# for color to mean;  orange lost in "new" and blue gained in "new"
+# with simple node names ('C' variable naming conventions)
+# edge's unadorned predicate label
+# concludes with a space then count in parens
+#
+# For example:
 # NODE1 -> NODE2 [label="curie:term (42)"];
 #
 # filter for edges in each file associate the count with the edge
-# if an edge is common between the files 
+# if an edge is common between the files
 # then change its "count" to the difference. (second minus first)
 # otherwise leave count as is
 
@@ -22,7 +24,7 @@ function parse(str, arr){
 	arr[a[1]] = substr(a[2], 1, index(a[2], ")")-1)
 }
 
-# strip metadata from filename 
+# strip metadata from filename
 function de_path_ext(pth){
 	split(pth, a, "/")
 	return substr(a[length(a)], 1, index(a[length(a)], ".")-1)
