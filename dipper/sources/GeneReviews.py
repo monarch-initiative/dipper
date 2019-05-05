@@ -138,7 +138,7 @@ class GeneReviews(OMIMSource):
             if not self.check_fileheader(col, row):
                 pass
 
-            for row in filereader:
+            for row in reader:
 
                 nbk_num = row[col.index('NBK_id')]
                 shortname = row[col.index('GR_shortname')]
@@ -157,7 +157,7 @@ class GeneReviews(OMIMSource):
                 if len(omim_num) != 6:
                     LOG.warning(
                         "OMIM number incorrectly formatted in row %i; skipping:\n%s",
-                        filereader.line_num, '\t'.join(row))
+                        reader.line_num, '\t'.join(row))
                     continue
 
                 # build up a hashmap of the mappings; then process later
@@ -249,13 +249,13 @@ class GeneReviews(OMIMSource):
         model = Model(self.graph)
         col = ['GR_shortname', 'GR_Title', 'NBK_id', 'PMID']
         with open(raw, 'r', encoding='latin-1') as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
-            row = next(filereader)
+            reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
+            row = next(reader)
             row[0] = row[0][1:]
             colcount = len(col)
             if not self.check_fileheader(col, row):
                 pass
-            for row in filereader:
+            for row in reader:
                 if len(row) != colcount:
                     LOG.error("Unexpected row. got: %s", row)
                     LOG.error("Expected data for: %s", col)
@@ -263,7 +263,7 @@ class GeneReviews(OMIMSource):
                 nbk_num = row[col.index('NBK_id')]
                 gr_id = 'GeneReviews:' + nbk_num
                 self.book_ids.add(nbk_num)  # a global set of the book nums
-                if limit is None or filereader.line_num < limit:
+                if limit is None or reader.line_num < limit:
                     model.addClassToGraph(gr_id, row[col.index('GR_Title')])
                     model.addSynonym(gr_id, row[col.index('GR_shortname')])
                 # TODO include the new PMID?
