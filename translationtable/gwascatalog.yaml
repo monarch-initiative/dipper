@@ -7,11 +7,7 @@
 'reference assembly': 'GRCh38'
 
 # switch from SO!region to falfo!Region
-'region':  'Region'
+'region': 'Region'
 
 # Variant type
 'intron_variant': 'intron_variant'
-
-# Relating a variant to a gene,
-# not sure if correct as an intron may not affect a gene
-# 'intron_variant': 'has_affected_feature'

@@ -275,6 +275,7 @@ pipeline {
                                 cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
                             '''
                         }
+
                         dir('./build-genereviews-rdf/data-boutique') {
                             git(
                                 url: 'https://github.com/monarch-initiative/data-boutique.git',
@@ -330,7 +331,8 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
-                         dir('./build-hgnc-rdf/config') {
+                        }
+                        dir('./build-hgnc-rdf/config') {
                             git(
                                 url: 'https://github.com/monarch-initiative/configs.git',
                                 credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
@@ -392,6 +394,7 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
+                        }
                         dir('./build-krgg-rdf/config') {
                             git(
                                 url: 'https://github.com/monarch-initiative/configs.git',
@@ -525,6 +528,7 @@ pipeline {
                                 url: 'https://github.com/monarch-initiative/dipper.git',
                                 branch: 'master'
                             )
+                        }
                         dir('./build-ncbigene-rdf/config') {
                             git(
                                 url: 'https://github.com/monarch-initiative/configs.git',

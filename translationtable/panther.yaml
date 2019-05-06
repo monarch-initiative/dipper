@@ -3,7 +3,7 @@
 
 # taxon_abbr to txid_num (ptax):
 # change the txid_num to the formal scientific binomial latin name
-# then extract the txid_num from the NCBITaxon
+# then extract the txid_num from the NCBITaxon ( in globaltt)
 
 "ANOCA": "Anolis carolinensis"          # green lizard
 "ARATH": "Arabidopsis thaliana"         # arabadopsis
@@ -28,7 +28,7 @@
 "TAKRU": Takifugu rubripe               # pufferfish
 "XENTR": "Xenopus (Silurana) tropicalis"    # xenopus (frog)
 "YEAST": "Saccharomyces cerevisiae S288C"   # yeast
-"FELCA": "Felis catus"					# cat
+"FELCA": "Felis catus"                  # cat
 
 # orthology_code_to_RO
 # default to   ->  "in orthology relationship with"

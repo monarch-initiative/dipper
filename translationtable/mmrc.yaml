@@ -15,5 +15,5 @@
 "INV": "inversion"                  # inversion
 "INS": "insertion"                  # insertion
 "DEL": "deletion"                   # deletion
-"DP": "duplication",                # duplication
+"DP": "duplication"                 # duplication
 "OTH": "sequence_alteration"        # other

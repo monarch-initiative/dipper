@@ -1,4 +1,5 @@
 ---
+# animalqtldb.yaml
 # note ncbi requests the curie_prefix:local_id of NCBI:txid1234
 # we could move closer the that  i.e.  NCBItxid:1234
 "chicken": "Gallus gallus"  # NCBITaxon:9031
@@ -19,7 +20,7 @@
 #    "horse": "Swinburne-Penedo"        # PMID:16314071 PMID:16093715
 #    "rainbow_trout": "USDA-NCCCWA"     # PMID:19019240 PMID:22101344
 
-"Btau_4.6": "UCSCBuild:bosTau7" # UCSC prefered
+"Btau_4.6": "UCSCBuild:bosTau7"  # UCSC prefered
 # not prefered
 #   "NCBIGenome:82"
 # Not Used

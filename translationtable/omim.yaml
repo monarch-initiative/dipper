@@ -15,6 +15,5 @@
 "Number Sign": "Phenotype, molecular basis known"                   # count 5312
 "NULL": "Other, mainly phenotypes with suspected mendelian basis"   # count 1764
 "Percent": "Phenotype or locus, molecular basis unknown"            # count 1579
-"Caret": "Entry has been removed from the database or moved to another entry" # count  1254
+"Caret": "Entry has been removed from the database or moved to another entry"  # count  1254
 "Plus": "Gene and phenotype, combined"                              # count 49
-

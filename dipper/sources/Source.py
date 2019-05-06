@@ -741,6 +741,7 @@ class Source:
         a reverse mapping from ontology labels to external strings is also generated
         and available as a dict localtcid
 
+        '---\n# %s.yaml\n"": ""  # example'
         '''
 
         localtt_file = '../../translationtable/' + name + '.yaml'
@@ -752,7 +753,7 @@ class Source:
             # write a stub file as a place holder if none exists
             with open(os.path.join(os.path.dirname(__file__),
                                    localtt_file), 'w') as write_yaml:
-                yaml.dump({name: name}, write_yaml)
+                print('---\n# %s.yaml\n"": ""  # example' % name, file=write_yaml)
         finally:
             with open(os.path.join(os.path.dirname(__file__),
                                    localtt_file), 'r') as read_yaml:
@@ -765,7 +766,7 @@ class Source:
 
         return localtt
 
-    def resolve(self, word, mandatory=True):
+    def resolve(self, word, mandatory=True, default=None):
         '''
         composite mapping
         given f(x) and g(x)
@@ -804,9 +805,12 @@ class Source:
         else:
             if mandatory:
                 raise KeyError("Mapping required for: ", word)
-
             logging.warning("We have no translation for: '%s'", word)
-            term_id = word
+
+            if default is not None:
+                term_id = default
+            else:
+                term_id = word
         return term_id
 
     @staticmethod
@@ -827,8 +831,6 @@ class Source:
             LOG.error('\nExpected header: %s\nRecieved header: %s', expected, received)
 
             # pass reordering and adding new columns (after protesting)
-
-
             # hard fail on missing expected columns (temper with mandatory cols?)
             if exp - got != set():
                 LOG.error('Missing: %s', exp - got)

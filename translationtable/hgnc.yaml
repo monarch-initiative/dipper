@@ -33,5 +33,5 @@
 "readthrough": "stop codon readthrough"
 "transposable element": "transposable_element"
 "unknown": "sequence_feature"
-"virus integration site": "integration_excision_site" # FIXME better? still not specific
+"virus integration site": "integration_excision_site"  # FIXME better? still not specific
 # "withdrawn": None                          # TODO  NCIT:C38061 ?
