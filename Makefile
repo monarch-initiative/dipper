@@ -63,7 +63,7 @@ biogrid-test:
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 trans-test:
 	@ echo  "Is yamllint installed?"
-	@ yamllint
+	@ yamllint --version
 	@ echo  "Are TT files valid?"
 	@ # note:  sudo apt-get install yamllint
 	@ yamllint -c translationtable/.yamllint translationtable/ && echo "TT files Lint OKAY."
