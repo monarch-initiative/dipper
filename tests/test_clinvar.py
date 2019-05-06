@@ -9,7 +9,7 @@ from dipper.utils.TestUtils import TestUtils
 from dipper.sources.ClinVarXML_alpha import parse as clinvar_parse
 
 logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.WARNING)
 LOG = logging.getLogger(__name__)
 
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/clinvar')
