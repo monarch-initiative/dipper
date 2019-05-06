@@ -4,4 +4,3 @@ roman
 pyyaml
 requests
 ontobio
-git+https://github.com/adrienverge/yamllint
