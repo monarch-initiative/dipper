@@ -62,11 +62,16 @@ biogrid-test:
 
 GTT = "translationtable/GLOBAL_TERMS.yaml"
 trans-test:
-	# python unit test for duplicate keys and invertablility
-	$(TEST) tests/test_trtable.py
-	# is $(GTT) table ordered by ontology curie
-	@ if sort -k 2,3n -t ':' -s -c $(GTT) ; then echo "Order is okay" ; fi
-	# Are there terms found in the source, but not found in $(GTT)
+	@ echo  "Is yamllint installed?"
+	@ yamllint --version
+	@ echo  "Are TT files valid?"
+	@ # note:  sudo apt-get install yamllint
+	@ yamllint -c translationtable/.yamllint translationtable/ && echo "TT files Lint OKAY."
+	@ echo "python unit test for duplicate keys and invertablility"
+	@ $(TEST) tests/test_trtable.py
+	@ echo "Is $(GTT) table ordered by ontology curie?"
+	@ sort -k 2,3n -t ':' -s -c $(GTT) && echo "GLOBALTT order is OKAY"
+	@ echo "Are terms found in dipper/source/Ingest.py, \nbut not in $(GTT)?"
 	@ scripts/check_labels_v_gtt.sh
 
 omia-int-test:
@@ -83,18 +88,16 @@ clean_prefix_equivalents:
 
 translationtable/generated/curiemap_prefix.txt: dipper/curie_map.yaml
 	@ cut -f1 -d ':' dipper/curie_map.yaml  | tr -d "'" | egrep -v "^$|^ *#" |\
-		grep .|sed 's|\(.*\)|"\1"|g'|\
-		LC_ALL=C sort -u > translationtable/generated/curiemap_prefix.txt
+		grep .|sed 's|\(.*\)|"\1"|g' | LC_ALL=C sort -u > $@
 
 /tmp/local_inverse.tab: translationtable/[a-z_-]*.yaml
 	@ awk -F '"' '/^"[^"]+": "[^":]+".*/\
 		{if($$2 != $$4 && ! match($$2, /[0-9]+/))\
 			print "\"" $$4 "\"\t\"" $$2 "\""}' \
-				translationtable/[a-z_-]*.yaml |\
-		LC_ALL=C sort -u > /tmp/local_inverse.tab
+				translationtable/[a-z_-]*.yaml | LC_ALL=C sort -u > $@
 
 translationtable/generated/prefix_equivalents.yaml: \
 		translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab
-	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt \
-		/tmp/local_inverse.tab | awk '{v=$$1;$$1="";print $$0 ": " v}'|\
-		sort -u  > translationtable/generated/prefix_equivalents.yaml
+	@ echo "---\n# prefix_equivalents.yaml" > $@;
+	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab|\
+	awk '{v=$$1;$$1="";print substr($$0,2) ": " v}' | sort -u >> $@

@@ -1043,6 +1043,7 @@ SELECT  r._relationship_key as rel_key,
                     # marker category == type
                     marker_id = self.idhash['marker'].get(object_key)
                     if str(term_key).strip() in self.localtt:
+                        # check "Not Applicable": "reference_locus"
                         term_id = self.resolve(str(term_key).strip())
                     else:
                         term_id = None
@@ -1391,7 +1392,7 @@ SELECT  r._relationship_key as rel_key,
                     if marker_id is None:
                         LOG.error(
                             "can't find %s %s in the id hash", marker_key, symbol)
-
+                    # check "Not Applicable" -> "reference_locus"
                     mapped_marker_type = self.resolve(marker_type.strip())
 
                     # if it's unlocated, or is not a gene,
@@ -1415,15 +1416,20 @@ SELECT  r._relationship_key as rel_key,
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
-                    # add the taxon
-                    taxon_id = self.resolve(latin_name)  # not always proper binomial
+                    # add the taxon  (default to Mus m.)
+                    # latin_name is not always a proper binomial
+                    if latin_name == '"Not Applicable':  # localtt conflict
+                        latin_name = 'Mus musculus'
+                    taxon_id = self.resolve(
+                        latin_name, default=self.globaltt['Mus musculus'])
                     geno.addTaxon(taxon_id, marker_id)
 
                     # make MGI the leader for mouse genes.
                     if taxon_id == self.globaltt['Mus musculus']:
                         model.makeLeader(marker_id)
 
-                    if not self.test_mode and limit is not None and line_counter > limit:
+                    if not self.test_mode and limit is not None \
+                            and line_counter > limit:
                         break
 
         return

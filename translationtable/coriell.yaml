@@ -24,7 +24,7 @@
 # FIXME: No Match. "Cells isolated from a mass of neoplastic cells,
 # i.e., a growth formed by abnormal cellular proliferation."
 
-######################################
+# #####################################
 # race
 
 "American Indian": "Native American"
@@ -41,7 +41,7 @@
 "Polynesian": "Asian/Pacific Islander"
 "Vietnamese": "Asian, Vietnamese"
 
-#######################
+# ######################
 # taxa
 "Peromyscus peromyscus californicus": "Peromyscus californicus"
 "Peromyscus peromyscus maniculatus": "Peromyscus maniculatus"
@@ -51,7 +51,7 @@
 "Geochelone elephantopus": "Chelonoidis niger"
 
 
-#######################
+# ######################
 # collections
 
 "NINDS Repository": "CoriellCollection:NINDS"
@@ -59,11 +59,8 @@
 "NIA Aging Cell Culture Repository": "CoriellCollection:NIA"
 "NHGRI Sample Repository for Human Genetic Research": "CoriellCollection:NHGRI"
 
-########################
+# #######################
 # affected
 "Yes": "affected"
 "No": "unaffected"
-#"":  "unspecified"   # defaulting to
-
-
-
+# "":  "unspecified"   # defaulting to

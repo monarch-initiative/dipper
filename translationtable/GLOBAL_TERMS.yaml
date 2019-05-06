@@ -1,5 +1,7 @@
-# contents in this file are sorted by the value (i.e. the thing after the colon) in key/value pair
 ---
+# GLOBAL_TERMS.yaml
+# contents in this file are sorted by the value
+# (i.e. the ontology term after the colon) in {key: value} pair
 !!map {
 # these need to be moved to localtts till the terms exist: :!!!
 "activating_mutation": ":activating",
@@ -301,7 +303,7 @@
 # "Mammalian Phenotype": "MP:!!!",
 "embryonic lethality": "MP:0008762",
 # "NCBI Taxon": "NCBITaxon:!!!",
-#"": "NCBITaxon:",
+# "": "NCBITaxon:",
 "Cricetulus griseus": "NCBITaxon:10029",
 "Mesocricetus auratus": "NCBITaxon:10036",
 "Peromyscus leucopus": "NCBITaxon:10041",
@@ -364,7 +366,7 @@
 "Mus musculus gentilulus": "NCBITaxon:80274",
 "Xenopus (Silurana) tropicalis": "NCBITaxon:8364",
 "Mus famulus": "NCBITaxon:83773",
-#"Mus": "NCBITaxon:862507",  # SubGenus -- name conflicts with Genus name
+# "Mus": "NCBITaxon:862507",  # SubGenus -- name conflicts with Genus name
 "Nannomys": "NCBITaxon:862510",
 "Mus emesi": "NCBITaxon:887131",
 "Gallus gallus": "NCBITaxon:9031",
@@ -406,11 +408,11 @@
 "Saccharomyces cerevisiae S288C": "NCBITaxon:559292",
 # "": "NCBITaxon:",
 # "National Cancer Institute Thesaurus": "NCIT:!!!",
-#"monoallelic_mutation": "NCIT:C129829",
-#"biallelic_mutation": "NCIT:C129830",
+# "monoallelic_mutation": "NCIT:C129829",
+# "biallelic_mutation": "NCIT:C129830",
 "Statistical Significance": "NCIT:C61040",
 "Manual": "NCIT:C63513",
-#"mosaic_indiviual": "NCIT:C88144",
+# "mosaic_indiviual": "NCIT:C88144",
 "Suspected": "NCIT:C71458",
 "Percent Change From Baseline": "NCIT:C96621",
 # "Ontology of Adverse Events": "OAE:!!!",
@@ -770,4 +772,4 @@
 # "ontology for representing scholarship": "VIVO:!!!",
 "project": "VIVO:Project",
 # "Experimental Conditions Ontology": "XCO:!!!",
-"environmental_condition": "XCO:0000000", }  # keep terminal closing brace on last line
+"environmental_condition": "XCO:0000000"}  # keep terminal closing brace on last line

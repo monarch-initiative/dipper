@@ -6,8 +6,8 @@
 'reference assembly': 'GRCh38'
 
 # switch from SO!region to falfo!Region
-'region':  'Region'
+'region': 'Region'
 
 # vaguely implied by a unit test;
 # would switch from more specific SO to a less specific GENO term
-#'intron_variant':  'has_affected_feature'
+# 'intron_variant':  'has_affected_feature'

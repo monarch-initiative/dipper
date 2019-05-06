@@ -1,8 +1,9 @@
 ---
+# ebi_g2p.yaml
 # See https://www.clinicalgenome.org/site/assets/files/2757/fitzpatrick_ddg2p.pdf
 
 # DDD category
-##############
+# #############
 
 # both DD and IF - plausible disease-causing mutations within,
 # affecting or encompassing the coding region of a single gene
@@ -61,7 +62,7 @@
 
 
 # allelic requirement
-#####################
+# ####################
 
 # plausible disease-causing mutations identified on one allele in all
 # or the vast majority of with specific developmental disorder
@@ -86,7 +87,7 @@
 
 
 # functional consequence
-########################
+# #######################
 
 # mutation, usually missense that results in a constitutive
 # functional activation of the gene product
@@ -105,7 +106,7 @@
 
 
 # molecular consequence
-#######################
+# ######################
 "5_prime or 3_prime UTR mutation": "UTR_variant"
 
 # where all the mutations described in the data source are either missense
