@@ -5,7 +5,7 @@
 DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python3 -m unittest
 
-all: test prefix_equivalents dot_to_png
+all: test prefix_equivalents dot_to_svg
 
 ###
 ### Tests
@@ -102,9 +102,9 @@ translationtable/generated/prefix_equivalents.yaml: \
 		/tmp/local_inverse.tab | awk '{v=$$1;$$1="";print $$0 ": " v}'|\
 		sort -u  > translationtable/generated/prefix_equivalents.yaml
 
-dot_to_png: docs/img/[a-z_-0-9]*.png
+dot_to_svg: $(docs/img/*.svg)
 	@ for dotfile in `find . -type f -name "*.dot"`; \
 	    do \
 	    fname=`basename $$dotfile .dot`;\
-	    dot -Tpng $$dotfile > docs/img/$${fname}.png; \
+	    dot -Tsvg $$dotfile > docs/img/$${fname}.svg; \
 	    done;
