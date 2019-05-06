@@ -59,6 +59,7 @@
 "drug response": "has_drug_response"
 "drug-response": "has_drug_response"
 "association": "has_uncertain_significance_for_condition"   # tricksy with globaltt.association
+"association not found": "has_uncertain_significance_for_condition"
 "Affects": "has_uncertain_significance_for_condition"
 "Moderate": "has_uncertain_significance_for_condition"
 "protective": "protective_for_condition"
