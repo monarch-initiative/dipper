@@ -47,8 +47,8 @@ import hashlib
 import logging
 import argparse
 import xml.etree.ElementTree as ET
-import yaml
 from typing import List, Dict
+import yaml
 from dipper.models.ClinVarRecord import ClinVarRecord, Gene,\
     Variant, Allele, Condition, Genotype
 from dipper import curie_map
@@ -60,21 +60,21 @@ IPATH = re.split(r'/', os.path.realpath(__file__))
 (INAME, DOTPY) = re.split(r'\.', IPATH[-1].lower())
 RPATH = '/' + '/'.join(IPATH[1:-3])
 
-global_tt_path = RPATH + '/translationtable/GLOBAL_TERMS.yaml'
-local_tt_path = RPATH + '/translationtable/' + INAME + '.yaml'
+GLOBAL_TT_PATH = RPATH + '/translationtable/GLOBAL_TERMS.yaml'
+LOCAL_TT_PATH = RPATH + '/translationtable/' + INAME + '.yaml'
 
 # Global translation table
 # Translate labels found in ontologies
 # to the terms they are for
 GLOBALTT = {}
-with open(global_tt_path) as fh:
+with open(GLOBAL_TT_PATH) as fh:
     GLOBALTT = yaml.safe_load(fh)
 
 # Local translation table
 # Translate external strings found in datasets
 # to specific labels found in ontologies
 LOCALTT = {}
-with open(local_tt_path) as fh:
+with open(LOCAL_TT_PATH) as fh:
     LOCALTT = yaml.safe_load(fh)
 
 
@@ -114,6 +114,7 @@ def make_spo(sub, prd, obj):
         LOG.error("not a Predicate Curie  '%s'", prd)
         raise ValueError
     objt = ''
+    subjt = ''
 
     # object is a curie or bnode or literal [string|number]
 
@@ -144,13 +145,12 @@ def make_spo(sub, prd, obj):
         subjt = CURIEMAP[subcuri] + subid.strip()
         if subcuri != '_' or CURIEMAP[subcuri] != '_:b':
             subjt = '<' + subjt + '>'
-
-        return subjt + ' <' + CURIEMAP[prdcuri] + prdid.strip() + '> ' + objt + ' .'
     else:
-        LOG.error(
-            'Cant work with: <%s> %s , <%s> %s, %s',
-            subcuri, subid, prdcuri, prdid, objt)
-        return None
+        raise ValueError(
+            "Cant work with: <{}> {} , <{}> {}, {}".format(
+                subcuri, subid, prdcuri, prdid, objt))
+
+    return subjt + ' <' + CURIEMAP[prdcuri] + prdid.strip() + '> ' + objt + ' .'
 
 
 def write_spo(sub, prd, obj, triples):
@@ -204,7 +204,6 @@ def scv_link(scv_sig, rcv_trip):
             link = lnk[abs(sig[scv_av] - sig[scv_sig[scv_b]])]
             rcv_trip.append(make_spo(scv_a, link, scv_b))
             rcv_trip.append(make_spo(scv_b, link, scv_a))
-    return
 
 
 def digest_id(wordage):
@@ -348,7 +347,7 @@ def resolve(label):
     elif label is not None and label in GLOBALTT:
         term_id = GLOBALTT[label]
     else:
-        LOG.error('Do not have any mapping for label: ' + label)
+        LOG.error('Do not have any mapping for label: %s', label)
     return term_id
 
 
@@ -383,8 +382,9 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
     """
     Given a ClinVarRecord, adds triples to the triples list
 
-    :param rcv_record: ClinVarRecord
+    :param rcv: ClinVarRecord
     :param triples: List, Buffer to store the triples
+    :param g2p_map: Gene to phenotype dict
     :return: None
     """
     # For all genotypes variants we add a type, label, and has_taxon human
@@ -470,7 +470,7 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
         if len([val[1] for val in gene_allele
                 if val[1] in ['within single gene', 'variant in gene']
                 ]) == len(gene_allele) \
-                and len(set([val[0] for val in gene_allele])) == 1:
+                and len({val[0] for val in gene_allele}) == 1:
             write_spo(
                 rcv.genovar.id,
                 GLOBALTT['has_affected_feature'],
@@ -481,6 +481,9 @@ def record_to_triples(rcv: ClinVarRecord, triples: List, g2p_map: Dict) -> None:
 
 
 def parse():
+    """
+    Main function for parsing a clinvar XML release and outputting triples
+    """
 
     files = {
         'f1': {
@@ -494,95 +497,85 @@ def parse():
     }
 
     # handle arguments for IO
-    ARGPARSER = argparse.ArgumentParser()
+    argparser = argparse.ArgumentParser()
 
     # INPUT
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-f', '--filename', default=files['f1']['file'],
         help="input filename. default: '" + files['f1']['file'] + "'")
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-m', '--mapfile', default=files['f2']['file'],
         help="input g2d mapping file. default: '" + files['f2']['file'] + "'")
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-i', '--inputdir', default=RPATH + '/raw/' + INAME,
         help="path to input file. default: '" + RPATH + '/raw/' + INAME + "'")
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-l', "--localtt",
         help="'spud'\t'potato'   default: " +
-             RPATH + '/translationtable/' + INAME + '.yaml')
+        RPATH + '/translationtable/' + INAME + '.yaml')
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-g', "--globaltt",
         help="'potato'\t'PREFIX:p123'   default: " +
-             RPATH + '/translationtable/GLOBAL_TERM.yaml')
+        RPATH + '/translationtable/GLOBAL_TERM.yaml')
 
-    # OUTPUT '/dev/stdout' would be my first choice
-    ARGPARSER.add_argument(
+    # output '/dev/stdout' would be my first choice
+    argparser.add_argument(
         '-d', "--destination", default=RPATH + '/out',
         help='directory to write into. default: "' + RPATH + '/out"')
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-o', "--output", default=INAME + '.nt',
         help='file name to write to. default: ' + INAME + '.nt')
 
-    ARGPARSER.add_argument(
+    argparser.add_argument(
         '-s', '--skolemize', default=True,
         help='default: True. False keeps plain blank nodes  "_:xxx"')
 
-    # TODO validate IO arguments
-    ARGS = ARGPARSER.parse_args()
+    args = argparser.parse_args()
 
-    BASENAME = re.sub(r'\.xml.gz$', '', ARGS.filename)
-    FILENAME = ARGS.inputdir + '/' + ARGS.filename
-    MAPFILE = ARGS.inputdir + '/' + ARGS.mapfile
+    basename = re.sub(r'\.xml.gz$', '', args.filename)
+    filename = args.inputdir + '/' + args.filename
+    mapfile = args.inputdir + '/' + args.mapfile
 
     # be sure I/O paths exist
     try:
-        os.makedirs(ARGS.inputdir)
+        os.makedirs(args.inputdir)
     except FileExistsError:
         pass  # no problem
 
     try:
-        os.makedirs(ARGS.destination)
+        os.makedirs(args.destination)
     except FileExistsError:
         pass  # no problem
 
     # check input exists
 
     # avoid clobbering existing output until we are finished
-    OUTFILE = ARGS.destination + '/TMP_' + ARGS.output + '_PART'
+    outfile = args.destination + '/TMP_' + args.output + '_PART'
     try:
-        os.remove(OUTFILE)
+        os.remove(outfile)
     except FileNotFoundError:
         # no problem
-        LOG.info("fresh start for %s", OUTFILE)
+        LOG.info("fresh start for %s", outfile)
 
-    OUTTMP = open(OUTFILE, 'a')
-    OUTPUT = ARGS.destination + '/' + ARGS.output
+    outtmp = open(outfile, 'a')
+    output = args.destination + '/' + args.output
 
     # catch and release input for future study
-    REJECT = ARGS.inputdir + '/' + BASENAME + '_REJECT.xml'
-    IGNORE = ARGS.inputdir + '/' + BASENAME + '_IGNORE.txt'
+    reject = args.inputdir + '/' + basename + '_reject.xml'
+    # ignore = args.inputdir + '/' + basename + '_ignore.txt'  # unused
     try:
-        os.remove(REJECT)
+        os.remove(reject)
     except FileNotFoundError:
         # no problem
-        LOG.info("fresh start for %s", REJECT)
-    REJECT = open(REJECT, 'w')
+        LOG.info("fresh start for %s", reject)
+    reject = open(reject, 'w')
 
     # default to /dev/stdout if anything amiss
-
-    # class ClinVarXML_alpha(Source):
-    #    def fetch():
-    #        # wget --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
-    #
-    #   def parse():
-    #        pass
-    #
-    #    CURIEMAP = curie_map.get()
 
     # Buffer to store the triples below a MONARCH_association
     # before we decide to whether to keep or not"
@@ -591,48 +584,48 @@ def parse():
     # Buffer to store non redundant triples between RCV sets
     releasetriple = set()
 
-    G2PMAP = {}
+    g2pmap = {}
     # this needs to be read first
-    with open(MAPFILE, 'rt') as tsvfile:
+    with open(mapfile, 'rt') as tsvfile:
         reader = csv.reader(tsvfile, delimiter="\t")
 
         next(reader)  # header
         for row in reader:
-            if row[0] in G2PMAP:
-                G2PMAP[row[0]].append(row[3])
+            if row[0] in g2pmap:
+                g2pmap[row[0]].append(row[3])
             else:
-                G2PMAP[row[0]] = [row[3]]
+                g2pmap[row[0]] = [row[3]]
 
 
     # Override default global translation table
-    if ARGS.globaltt:
-        with open(ARGS.globaltt) as fh:
+    if args.globaltt:
+        with open(args.globaltt) as globaltt_fh:
             global GLOBALTT
-            GLOBALTT = yaml.safe_load(fh)
+            GLOBALTT = yaml.safe_load(globaltt_fh)
 
     # Overide default local translation table
-    if ARGS.localtt:
-        with open(ARGS.localtt) as fh:
+    if args.localtt:
+        with open(args.localtt) as localtt_fh:
             global LOCALTT
-            LOCALTT = yaml.safe_load(fh)
+            LOCALTT = yaml.safe_load(localtt_fh)
 
     # Overide the given Skolem IRI for our blank nodes
     # with an unresovable alternative.
-    if ARGS.skolemize is False:
+    if args.skolemize is False:
         global CURIEMAP
         CURIEMAP['_'] = '_:'
 
 
     # Seed releasetriple to avoid union with the empty set
-    # <MonarchData: + ARGS.output> <a> <owl:Ontology>
-    releasetriple.add(make_spo('MonarchData:' + ARGS.output, 'a', 'owl:Ontology'))
+    # <MonarchData: + args.output> <a> <owl:Ontology>
+    releasetriple.add(make_spo('MonarchData:' + args.output, 'a', 'owl:Ontology'))
 
     rjct_cnt = tot_cnt = 0
     #######################################################
     # main loop over xml
     # taken in chunks composed of ClinVarSet stanzas
-    with gzip.open(FILENAME, 'rt') as fh:
-        TREE = ET.iterparse(fh)  # w/o specifing events it defaults to 'end'
+    with gzip.open(filename, 'rt') as clinvar_fh:
+        TREE = ET.iterparse(clinvar_fh)  # w/o specifing events it defaults to 'end'
         for event, element in TREE:
             if element.tag != 'ClinVarSet':
                 ReleaseSet = element
@@ -643,10 +636,7 @@ def parse():
 
             if ClinVarSet.find('RecordStatus').text != 'current':
                 LOG.warning(
-                    ClinVarSet.get('ID') + " is not current")
-
-            # collect svc significance calls within a rcv
-            pathocalls = {}
+                    "%s is not current", ClinVarSet.get('ID'))
 
             RCVAssertion = ClinVarSet.find('./ReferenceClinVarAssertion')
             # /ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/ClinVarAccession/@Acc
@@ -656,15 +646,7 @@ def parse():
             # I do not expect we care as we shouldn't keep the RCV.
             if RCVAssertion.find('./RecordStatus').text != 'current':
                 LOG.warning(
-                    rcv_acc + " <is not current on>")  # + rs_dated)
-
-            # Create ClinVarRecord object
-            rcv = ClinVarRecord(
-                id=RCVAssertion.get('ID'),
-                accession=rcv_acc,
-                created=RCVAssertion.get('DateCreated'),
-                updated=RCVAssertion.get('DateLastUpdated'),
-            )
+                    "%s <is not current on>", rcv_acc)  # + rs_dated)
 
             # # # Child elements
             #
@@ -723,7 +705,14 @@ def parse():
             else:
                 genovar = process_measure_set(RCV_MeasureSet, rcv_acc)
 
-            rcv.genovar = genovar
+            # Create ClinVarRecord object
+            rcv = ClinVarRecord(
+                id=RCVAssertion.get('ID'),
+                accession=rcv_acc,
+                created=RCVAssertion.get('DateCreated'),
+                updated=RCVAssertion.get('DateLastUpdated'),
+                genovar=genovar
+            )
 
             #######################################################################
             # the Object is the Disease, here is called a "trait"
@@ -774,7 +763,6 @@ def parse():
 
                     # Always get medgen for g2p mapping file
                     for RCV_TraitXRef in RCV_Trait.findall('./XRef[@DB="MedGen"]'):
-                        # TODO change this to boolean
                         has_medgen_id = True
                         medgen_id = RCV_TraitXRef.get('ID')
                         break
@@ -810,7 +798,7 @@ def parse():
             if [1 for member in vars(rcv.genovar) if member is None] \
                     or not [1 for condition in rcv.conditions
                             if condition.id is not None
-                               and condition.database is not None]:
+                            and condition.database is not None]:
                 LOG.info('%s is under specified. SKIPPING', rcv_acc)
                 rjct_cnt += 1
                 # Write this Clinvar set out so we can know what we are missing
@@ -818,9 +806,9 @@ def parse():
                     # minidom.parseString(
                     #    ET.tostring(
                     #        ClinVarSet)).toprettyxml(
-                    #           indent="   "), file=REJECT)
+                    #           indent="   "), file=reject)
                     #  too slow. doubles time
-                    ET.tostring(ClinVarSet).decode('utf-8'), file=REJECT)
+                    ET.tostring(ClinVarSet).decode('utf-8'), file=reject)
                 ClinVarSet.clear()
                 continue
 
@@ -829,7 +817,7 @@ def parse():
 
             # At this point we should have a ClinVarRecord object with all
             # necessary data.  Next convert it to triples
-            record_to_triples(rcv, rcvtriples, G2PMAP)
+            record_to_triples(rcv, rcvtriples, g2pmap)
 
             #######################################################################
             # Descend into each SCV grouped with the current RCV
@@ -878,7 +866,7 @@ def parse():
                     scv_acc = ClinVarAccession.get('Acc')
                     scv_accver = ClinVarAccession.get('Version')
                     scv_orgid = ClinVarAccession.get('OrgID')
-                    scv_updated = ClinVarAccession.get('DateUpdated')
+                    #scv_updated = ClinVarAccession.get('DateUpdated')  # not used
                     SCV_SubmissionID = SCV_Assertion.find('./ClinVarSubmissionID')
                     if SCV_SubmissionID is not None:
                         scv_submitter = SCV_SubmissionID.get('submitter')
@@ -896,10 +884,10 @@ def parse():
                     # <monarch_assoc>
                     #   <OBAN:association_has_subject>
                     #       <ClinVarVariant:rcv_variant_id>
-                    write_spo(monarch_assoc, 'OBAN:association_has_subject', rcv.genovar.id, rcvtriples)
+                    write_spo(
+                        monarch_assoc, 'OBAN:association_has_subject', rcv.genovar.id, rcvtriples)
                     # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv.variant.label>  .
 
-                    rcv_synonyms = []
                     # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
                     write_spo(
                         monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie, rcvtriples)
@@ -908,9 +896,16 @@ def parse():
 
                     # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
                     write_spo(
-                        monarch_assoc, GLOBALTT['has_supporting_evidence_line'], _evidence_id, rcvtriples)
+                        monarch_assoc,
+                        GLOBALTT['has_supporting_evidence_line'],
+                        _evidence_id,
+                        rcvtriples)
                     # <monarch_assoc><SEPIO:0000015><:_assertion_id>  .
-                    write_spo(monarch_assoc, GLOBALTT['proposition_asserted_in'], _assertion_id, rcvtriples)
+                    write_spo(
+                        monarch_assoc,
+                        GLOBALTT['proposition_asserted_in'],
+                        _assertion_id,
+                        rcvtriples)
 
                     # <:_evidence_id><rdf:type><ECO:0000000> .
                     write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'], rcvtriples)
@@ -930,10 +925,16 @@ def parse():
                         _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver, rcvtriples)
                     # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
                     write_spo(
-                        _assertion_id, GLOBALTT['created_by'], 'ClinVarSubmitters:' + scv_orgid, rcvtriples)
+                        _assertion_id,
+                        GLOBALTT['created_by'],
+                        'ClinVarSubmitters:' + scv_orgid,
+                        rcvtriples)
                     # <ClinVarSubmitters:scv_orgid><rdf:type><foaf:organization>  .
                     write_spo(
-                        'ClinVarSubmitters:' + scv_orgid, 'rdf:type', 'foaf:organization', rcvtriples)
+                        'ClinVarSubmitters:' + scv_orgid,
+                        'rdf:type',
+                        'foaf:organization',
+                        rcvtriples)
                     # <ClinVarSubmitters:scv_orgid><rdfs:label><scv_submitter>  .
                     write_spo(
                         'ClinVarSubmitters:' + scv_orgid, 'rdfs:label', scv_submitter, rcvtriples)
@@ -953,7 +954,10 @@ def parse():
                             # <:_assertion_id><SEPIO:0000021><scv_eval_date>  .
                             if scv_eval_date != "None":
                                 write_spo(
-                                    _assertion_id, GLOBALTT['date_created'], scv_eval_date, rcvtriples)
+                                    _assertion_id,
+                                    GLOBALTT['date_created'],
+                                    scv_eval_date,
+                                    rcvtriples)
 
                             scv_assert_method = SCV_Attribute.text
                             #  need to be mapped to a <sepio:100...n> curie ????
@@ -981,10 +985,14 @@ def parse():
 
                             # <_assertion_method_id><rdf:type><SEPIO:0000037>
                             write_spo(
-                                _assertion_method_id, 'rdf:type', GLOBALTT['assertion method'], rcvtriples)
+                                _assertion_method_id,
+                                'rdf:type',
+                                GLOBALTT['assertion method'],
+                                rcvtriples)
 
                             # <_assertion_method_id><rdfs:label><scv_assert_method>
-                            write_spo(_assertion_method_id, 'rdfs:label', scv_assert_method, rcvtriples)
+                            write_spo(
+                                _assertion_method_id, 'rdfs:label', scv_assert_method, rcvtriples)
 
                             # <_assertion_method_id><ERO:0000480><scv_citation_url>
                             if SCV_Citation is not None:
@@ -1012,7 +1020,9 @@ def parse():
                         # <:_evidence_id><SEPIO:0000124><PMID:scv_citation_id>  .
                         write_spo(
                             _evidence_id,
-                            GLOBALTT['evidence_has_supporting_reference'], 'PMID:' + scv_citation_id, rcvtriples)
+                            GLOBALTT['evidence_has_supporting_reference'],
+                            'PMID:' + scv_citation_id,
+                            rcvtriples)
                         # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                         write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id, rcvtriples)
 
@@ -1042,11 +1052,18 @@ def parse():
                             #   <OBAN:association_has_predicate>
                             #       <scv_geno>
                             write_spo(
-                                monarch_assoc, 'OBAN:association_has_predicate', scv_geno, rcvtriples)
+                                monarch_assoc,
+                                'OBAN:association_has_predicate',
+                                scv_geno,
+                                rcvtriples)
                             # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
                             write_spo(genovar.id, scv_geno, rcv_disease_curie, rcvtriples)
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
-                            write_spo(monarch_assoc, 'oboInOwl:hasdbxref', 'ClinVar:' + rcv_acc, rcvtriples)
+                            write_spo(
+                                monarch_assoc,
+                                'oboInOwl:hasdbxref',
+                                'ClinVar:' + rcv_acc,
+                                rcvtriples)
 
                             # store association's significance to compare w/sibs
                             pathocalls[monarch_assoc] = scv_geno
@@ -1055,7 +1072,7 @@ def parse():
                             continue
                     # if we have deleted the triples buffer then
                     # there is no point in continueing  (I don't think)
-                    if len(rcvtriples) == 0:
+                    if not rcvtriples:
                         continue
                     # scv_assert_type = SCV_Assertion.find('./Assertion').get('Type')
                     # check scv_assert_type == 'variation to disease'?
@@ -1097,7 +1114,10 @@ def parse():
                                 # <_evidence_id> <dc:description> "description"
                                 if SCV_Description.text != 'not provided':
                                     write_spo(
-                                        _evidence_id, 'dc:description', SCV_Description.text, rcvtriples)
+                                        _evidence_id,
+                                        'dc:description',
+                                        SCV_Description.text,
+                                        rcvtriples)
 
                         # /SCV/ObservedIn/TraitSet
                         # /SCV/ObservedIn/Citation
@@ -1136,7 +1156,9 @@ def parse():
                                 # <_evidence_id><SEPIO:0000011><_provenence_id>
                                 write_spo(
                                     _evidence_id,
-                                    GLOBALTT['has_evidence_item_output_from'], _provenance_id, rcvtriples)
+                                    GLOBALTT['has_evidence_item_output_from'],
+                                    _provenance_id,
+                                    rcvtriples)
 
                                 # <_:provenance_id><rdf:type><scv_evidence_type>
                                 write_spo(
@@ -1147,7 +1169,7 @@ def parse():
                                     _provenance_id, 'rdfs:label', SCV_OIMT.text, rcvtriples)
                     # End of a SCV (a.k.a. MONARCH association)
             # End of the ClinVarSet.
-            # Output triples that only are known after processing sibbling records
+            # output triples that only are known after processing sibbling records
             scv_link(pathocalls, rcvtriples)
             # put this RCV's triples in the SET of all triples in this data release
             releasetriple.update(set(rcvtriples))
@@ -1160,22 +1182,22 @@ def parse():
             LOG.warning('Not a full release')
         rs_dated = ReleaseSet.get('Dated')  # "2016-03-01 (date_last_seen)
         releasetriple.add(
-            make_spo('MonarchData:' + ARGS.output, 'owl:versionInfo', rs_dated))
+            make_spo('MonarchData:' + args.output, 'owl:versionInfo', rs_dated))
         # not finalized
         # releasetriple.add(
         #     make_spo(
-        #        'MonarchData:' + ARGS.output, owl:versionIRI,
-        #        'MonarchArchive:' RELEASEDATE + '/ttl/' + ARGS.output'))
+        #        'MonarchData:' + args.output, owl:versionIRI,
+        #        'MonarchArchive:' RELEASEDATE + '/ttl/' + args.output'))
 
         # write all remaining triples out
-        print('\n'.join(list(releasetriple)), file=OUTTMP)
+        print('\n'.join(list(releasetriple)), file=outtmp)
     if rjct_cnt > 0:
         LOG.warning(
             'The %i out of %i records not included are written back to \n%s',
-            rjct_cnt, tot_cnt, str(REJECT))
-    OUTTMP.close()
-    REJECT.close()
-    os.replace(OUTFILE, OUTPUT)
+            rjct_cnt, tot_cnt, str(reject))
+    outtmp.close()
+    reject.close()
+    os.replace(outfile, output)
 
 
 if __name__ == "__main__":

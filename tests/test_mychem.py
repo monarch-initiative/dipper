@@ -7,7 +7,7 @@ from dipper.utils.TestUtils import TestUtils
 import os
 
 logging.basicConfig()
-logging.getLogger().setLevel(logging.WARNING)
+logging.getLogger().setLevel(logging.WARN)
 logger = logging.getLogger(__name__)
 
 TESTDATA = os.path.join(os.path.dirname(__file__), 'resources/mychem/mychem.json')

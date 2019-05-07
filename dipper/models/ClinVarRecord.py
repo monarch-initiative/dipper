@@ -49,7 +49,22 @@ class Allele:
         self.dbsnps = dbsnps if dbsnps is not None else []
 
 
-class Variant:
+class Genovar:
+    """
+    Sequence feature entity that is linked to a disease
+    in an Reference ClinVar Record, it is either a
+    Variant or Genotype
+    """
+    def __init__(self,
+                 id: str,
+                 label: Optional[str] = None,
+                 variant_type: Optional[str] = None):
+        self.id = id
+        self.label = label
+        self.variant_type = variant_type
+
+
+class Variant(Genovar):
     """
     ClinVar variant, variants can have one or more alleles
 
@@ -61,13 +76,11 @@ class Variant:
                  label: Optional[str] = None,
                  alleles: Optional[List[Allele]] = None,
                  variant_type: Optional[str] = None):
-        self.id = id
-        self.label = label
+        super().__init__(id, label, variant_type)
         self.alleles = alleles if alleles is not None else []
-        self.variant_type = variant_type
 
 
-class Genotype:
+class Genotype(Genovar):
     """
     ClinVar genotype
     Example: Compound Heterozygote, Diplotype
@@ -80,10 +93,8 @@ class Genotype:
                  label: Optional[str] = None,
                  variants: Optional[List[Variant]] = None,
                  variant_type: Optional[str] = None):
-        self.id = id
-        self.label = label
+        super().__init__(id, label, variant_type)
         self.variants = variants if variants is not None else []
-        self.variant_type = variant_type
 
 
 class Condition:
@@ -92,9 +103,9 @@ class Condition:
     """
     def __init__(self,
                  id: str,
-                 label: str,
-                 database: str,
-                 medgen_id: str):
+                 label: Optional[str] = None,
+                 database: Optional[str] = None,
+                 medgen_id: Optional[str] = None):
         self.id = id
         self.label = label
         self.database = database
@@ -117,7 +128,7 @@ class ClinVarRecord:
                  accession: str,
                  created: str,
                  updated: str,
-                 genovar: Union[Genotype, Variant, None] = None,
+                 genovar: Genovar,
                  conditions: Optional[List[Condition]] = None):
         self.id = id
         self.accession = accession
