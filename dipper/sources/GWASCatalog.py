@@ -1,6 +1,7 @@
 import logging
 import csv
 import re
+import json
 
 from dipper.sources.Source import Source
 from dipper.utils.DipperUtil import DipperUtil
@@ -11,6 +12,7 @@ from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.graph.RDFGraph import RDFGraph
 
+logging.getLogger().setLevel(logging.WARN)
 LOG = logging.getLogger(__name__)
 
 
@@ -40,12 +42,13 @@ class GWASCatalog(Source):
         'catalog': {
             'file': GWASFILE,
             'url': GWASFTP + GWASFILE},
-        'efo': {
-            'file': 'efo.owl',
-            'url': 'http://www.ebi.ac.uk/efo/efo.owl'},
         'so': {
             'file': 'so.owl',
-            'url': 'http://purl.obolibrary.org/obo/so.owl'}
+            'url': 'http://purl.obolibrary.org/obo/so.owl'},
+        'mondo': {
+            'file': 'mondo.json',
+            'url': 'https://github.com/monarch-initiative/mondo/releases/'
+                   'download/2019-04-06/mondo-minimal.json'}
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -105,17 +108,16 @@ class GWASCatalog(Source):
         """
         raw = '/'.join((self.rawdir, self.files['catalog']['file']))
         LOG.info("Processing Data from %s", raw)
-        efo_ontology = RDFGraph(False, "EFO")
-        LOG.info("Loading EFO ontology in separate rdf graph")
-        efo_ontology.parse(self.files['efo']['url'], format='xml')
-        efo_ontology.bind_all_namespaces()
-        LOG.info("Finished loading EFO ontology")
 
         so_ontology = RDFGraph(False, "SO")
         LOG.info("Loading SO ontology in separate rdf graph")
         so_ontology.parse(self.files['so']['url'], format='xml')
         so_ontology.bind_all_namespaces()
         LOG.info("Finished loading SO ontology")
+
+        mondo_file = '/'.join((self.rawdir, self.files['mondo']['file']))
+        with open(mondo_file, 'r') as mondo_fh:
+            mondo_data = json.load(mondo_fh)
 
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t')
@@ -220,7 +222,7 @@ class GWASCatalog(Source):
                         platform_with_snps_passing_qc, pvalue)
 
                     self._add_variant_trait_association(
-                        variant_curie, mapped_trait_uri, efo_ontology,
+                        variant_curie, mapped_trait_uri, mapped_trait, mondo_data,
                         pubmed_num, description)
 
                     if not self.test_mode and (
@@ -287,12 +289,10 @@ class GWASCatalog(Source):
 
             if len(mapped_genes) == len(snp_labels):
                 so_class = self.resolve(context_list[index])
-                # removed the '+' for recursive  one-or-more rdfs:subClassOf  paths
-                # just so it did not return an empty graph
                 so_query = """
 SELECT ?variant_label
     WHERE {{
-        {0} rdfs:subClassOf {1} ;
+        {0} rdfs:subClassOf+ {1} ;
         rdfs:label ?variant_label .
     }}
                 """.format(so_class, self.globaltt['gene_variant'])
@@ -300,15 +300,17 @@ SELECT ?variant_label
                 query_result = so_ontology.query(so_query)
 
                 if len(list(query_result)) == 1:
-                    gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
+                    gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
 
                     if gene_id is not None:
                         geno.addAffectedLocus(snp_curie, gene_id)
                         geno.addAffectedLocus(hap_id, gene_id)
                         variant_in_gene_count += 1
 
-                gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[index])
-                if gene_id is not None:
+                gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
+                if gene_id is not None \
+                        and context_list[index] in ['upstream_gene_variant',
+                                                    'downstream_gene_variant']:
                     graph.addTriple(
                         snp_curie, self.resolve(context_list[index]), gene_id)
 
@@ -320,7 +322,7 @@ SELECT ?variant_label
         # Seperate in case we want to apply a different relation
         # If not this is redundant with triples added above
         if len(mapped_genes) == variant_in_gene_count and len(set(mapped_genes)) == 1:
-            gene_id = DipperUtil.get_ncbi_id_from_symbol(mapped_genes[0])
+            gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[0])
             geno.addAffectedLocus(hap_id, gene_id)
 
         return
@@ -425,47 +427,42 @@ SELECT ?variant_label
                 # still have to test for this,
                 # because sometimes there's a leading comma
                 if geneid != '':
-                    geno.addAffectedLocus(snp_id, 'NCBIGene:' + geneid)
+                    geno.addAffectedLocus(snp_id, 'ENSEMBL:' + geneid)
 
         # add the up and downstream genes if they are available
         if upstream_gene_num != '':
-            downstream_gene_id = 'NCBIGene:' + downstream_gene_num
+            downstream_gene_id = 'ENSEMBL:' + downstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is upstream of sequence of'], downstream_gene_id)
         if downstream_gene_num != '':
-            upstream_gene_id = 'NCBIGene:' + upstream_gene_num
+            upstream_gene_id = 'ENSEMBL:' + upstream_gene_num
             graph.addTriple(
                 snp_id, self.globaltt['is downstream of sequence of'], upstream_gene_id)
 
     def _add_variant_trait_association(
-            self, variant_id, mapped_trait_uri, efo_ontology, pubmed_id,
+            self, variant_id, mapped_trait_uri, mapped_trait, mondo_data, pubmed_id,
             description=None):
         if self.test_mode:
             graph = self.testgraph
         else:
             graph = self.graph
         model = Model(graph)
-        # make associations to the EFO terms; there can be >1
-        if mapped_trait_uri.strip() != '':
-            for trait in re.split(r',', mapped_trait_uri):
-                trait = trait.strip()
 
+        # Use mapped traits for labels, hope that labels do not contain commas
+        mapped_traits = [trait.strip() for trait in mapped_trait.split(',')]
+        mapped_trait_uris = [iri.strip() for iri in mapped_trait_uri.split(',')]
+        if mapped_trait_uris:
+            for index, trait in enumerate(mapped_trait_uris):
                 trait_curie = trait.replace("http://www.ebi.ac.uk/efo/EFO_", "EFO:")
 
-                phenotype_query = """
-                    SELECT ?trait
-                    WHERE {{
-                        <{0}> rdfs:subClassOf+ <http://www.ebi.ac.uk/efo/EFO_0000651> .
-                        <{0}> rdfs:label ?trait .
-                    }}
-                """.format(trait)
-
-                query_result = efo_ontology.query(phenotype_query)
-                if len(list(query_result)) > 0:
+                if not DipperUtil.is_id_in_mondo(trait_curie, mondo_data):
                     if re.match(r'^EFO', trait_curie):
                         model.addClassToGraph(
-                            trait_curie, list(query_result)[0][0],
+                            trait_curie, mapped_traits[index],
                             self.globaltt['Phenotype'])
+                    LOG.debug("{} not in mondo".format(trait_curie))
+                else:
+                    LOG.debug("{} in mondo".format(trait_curie))
 
                 pubmed_curie = 'PMID:' + pubmed_id
 

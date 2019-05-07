@@ -6,12 +6,6 @@ import yaml
 
 
 class TranslationTestCase(unittest.TestCase):
-
-    def setUp(self):
-        return
-
-    def tearDown(self):
-        return
     
     def testIfTableIsAMap(self):
 
@@ -50,9 +44,6 @@ class TranslationTestCase(unittest.TestCase):
                 self.assertTrue(False)
                 print(e)
             tt_file.close()
-
-        
-        
  
     def testIfTableIsBiMap(self):
         file_path = '../translationtable/GLOBAL_TERMS.yaml'

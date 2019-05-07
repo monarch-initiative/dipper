@@ -6,3 +6,4 @@ intermine
 numpy
 pandas
 ontobio
+git+https://github.com/adrienverge/yamllint

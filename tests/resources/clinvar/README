@@ -1,1 +1,33 @@
-RCV000175394 downloaded Jul 6 2018
+# Files derived from 2019-04 XML file
+# ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_2019-04.xml.gz
+
+# CompoundHet, same gene
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000162061/
+
+# Co-occurring diseases, co-occurring variants
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000416376/
+
+# Multiple similar conditions
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000763295/
+
+# Variant overlaps two genes, and only affects one (exon of one, intron of other)
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000175394/
+
+# "Typical" RCV, multiple SCVs, BRCA1
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000112698/
+
+# Haplotype, >1 genes, two copy number gain variants, Bardet-Biedl syndrome (BBS)
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000498447/
+
+# NM_000090.3(COL3A1):c.[=/3426_3452del27];[=/3440_3466del27] AND Ehlers-Danlos syndrome, type 4
+# GenotypeSet@Type=Distinct Chromosomes
+# Mosaic for two separate 27bp deletions in exon 48 in two cell strains of equal proportion
+https://www.ncbi.nlm.nih.gov/clinvar/RCV000087646/
+
+# TODO
+/ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/MeasureSet/@Type
+- Phase unknown
+
+# TODO
+/ReleaseSet/ClinVarSet/ReferenceClinVarAssertion/GenotypeSet/@Type
+- Diplotype

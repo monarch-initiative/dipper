@@ -1,0 +1,63 @@
+:MONARCH_b25e1dcae8dd05dc4d16 a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:b8e43a4f4ce6a8409c4a ;
+    OBO:SEPIO_0000015 BNODE:bd539326250b4352d101 ;
+    dc:source <http://www.ncbi.nlm.nih.gov/pubmed/25786579> ;
+    OBAN:association_has_object <http://omim.org/entry/608716> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> ;
+    oboInOwl:hasdbxref ClinVar:RCV000162061 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505721> a foaf:organization ;
+    rdfs:label "Medical Research Institute,Tokyo Medical and Dental University" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/165917> a OBO:SO_0001483 ;
+    rdfs:label "NM_018136.4(ASPM):c.8098C>T (p.Arg2700Ter)" ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000001.10:g.197070283G>A",
+        "NC_000001.11:g.197101153G>A",
+        "NG_015867.1:g.50542C>T",
+        "NM_001206846.1:c.4066-4989C>T",
+        "NM_018136.4:c.8098C>T",
+        "NP_060606.3:p.Arg2700Ter" ;
+    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=730882076> .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/165918> a OBO:SO_0001483 ;
+    rdfs:label "NM_018136.4(ASPM):c.10168C>T (p.Arg3390Ter)" ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "NC_000001.10:g.197056096G>A",
+        "NC_000001.11:g.197086966G>A",
+        "NG_015867.1:g.64729C>T",
+        "NM_018136.4:c.10168C>T",
+        "NP_060606.3:p.Arg3390Ter" ;
+    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=587783211> .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/424707> a OBO:GENO_0000402 ;
+    rdfs:label "NM_018136.4(ASPM):c.[10168C>T];[8098C>T]" ;
+    OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/165917>,
+        <http://www.ncbi.nlm.nih.gov/clinvar/variation/165918> ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/259266> ;
+    OBO:GENO_0000608 OBO:GENO_0000402 ;
+    OBO:GENO_0000840 <http://omim.org/entry/608716> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+BNODE:bcff6acb169553f68e9b a OBO:SEPIO_0000066 ;
+    rdfs:label "_:b8e43a4f4ce6a8409c4aSEPIO:0000066",
+        "research" .
+
+BNODE:bd539326250b4352d101 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_336174",
+        "b25e1dcae8dd05dc4d16_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505721> ;
+    OBO:SEPIO_0000111 BNODE:b8e43a4f4ce6a8409c4a ;
+    dc:identifier "SCV000189126.2" .
+
+<http://omim.org/entry/608716> rdfs:label "Primary autosomal recessive microcephaly 5" .
+
+<http://www.ncbi.nlm.nih.gov/pubmed/25786579> a OBO:IAO_0000013 .
+
+BNODE:b8e43a4f4ce6a8409c4a a OBO:ECO_0000000 ;
+    rdfs:label "b25e1dcae8dd05dc4d16_evidence" ;
+    OBO:SEPIO_0000085 BNODE:bcff6acb169553f68e9b ;
+    OBO:SEPIO_0000124 <http://www.ncbi.nlm.nih.gov/pubmed/25786579> .

@@ -1,6 +1,7 @@
 import re
 import logging
 import sys
+import os
 
 import yaml
 from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
@@ -24,7 +25,9 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
     curie_util = CurieUtil(curie_map)
 
     # make global translation table available outside the ingest
-    with open('translationtable/GLOBAL_TERMS.yaml') as fhandle:
+    with open(
+            os.path.join(os.path.dirname(__file__),
+                         '../../translationtable/GLOBAL_TERMS.yaml')) as fhandle:
         globaltt = yaml.safe_load(fhandle)
         globaltcid = {v: k for k, v in globaltt.items()}
 
@@ -126,11 +129,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         return node
 
     def bind_all_namespaces(self):
-        '''
+        """
             Results in the RDF @prefix directives for every ingest
             being added to this ingest.
-
-        '''
+        """
         for prefix in self.curie_map.keys():
             iri = self.curie_map[prefix]
             self.bind(prefix, Namespace(iri))

@@ -127,7 +127,7 @@ pipeline {
                         dir('./build-flybase-rdf') {
                             git(
                                 url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
+                                branch: '41a5e2d'
                             )
                             sh '''
                                 virtualenv -p /usr/bin/python3 venv
@@ -171,8 +171,8 @@ pipeline {
                                 wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
                                 cd ../..
 
+                                export PYTHONPATH=.:$PYTHONPATH
                                 venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
-                                venv/bin/python ./scripts/add-properties2turtle.py --input ./out/clinvarxml_alpha.nt --output ./out/clinvar.ttl --input_format nt --output_format turtle
 
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''

@@ -1,4 +1,5 @@
 *dot/
+!*tests/resources/clinvar/dot/
 *ClinVar.py
 *~
 Pipfile.lock
