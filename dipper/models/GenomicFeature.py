@@ -364,7 +364,7 @@ def makeChromID(chrom, reference=None, prefix=None):
         LOG.warning('No reference for this chr. You may have conflicting ids')
 
     # replace any chr-like prefixes with blank to standardize
-    chrid = re.sub(r'ch(r?)[omse]*9', '', str(chrom))
+    chrid = re.sub(r'ch(r?)[omse]*', '', str(chrom))
 
     # remove the build/taxon prefixes to look cleaner
     ref = reference
