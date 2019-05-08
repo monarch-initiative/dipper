@@ -395,7 +395,7 @@ pipeline {
                                 branch: 'master'
                             )
                         }
-                        dir('./build-krgg-rdf/config') {
+                        dir('./build-kegg-rdf/config') {
                             git(
                                 url: 'https://github.com/monarch-initiative/configs.git',
                                 credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
