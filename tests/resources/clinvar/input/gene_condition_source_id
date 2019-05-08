@@ -1,0 +1,48 @@
+672	BRCA1		C0006142	Familial cancer of breast	SNOMED CT	254843006	114480	16 Feb 2016
+672	BRCA1		C0677776	Hereditary breast and ovarian cancer syndrome	Department of Medical Genetics,National Institute of Health			16 Feb 2016
+672	BRCA1		C0677776	Hereditary breast and ovarian cancer syndrome	Genetic Testing Registry (GTR)	GTR000500362		16 Feb 2016
+672	BRCA1		C0677776	Hereditary breast and ovarian cancer syndrome	MeSH	D061325		16 Feb 2016
+672	BRCA1		C0677776	Hereditary breast and ovarian cancer syndrome	Orphanet	145		16 Feb 2016
+672		BRCA1	C1458155	Neoplasm of the breast	Human Phenotype Ontology	HP:0100013		18 Jul 2017
+672	BRCA1		C2676676	Breast-ovarian cancer, familial 1	NCBI curation		604370	16 Feb 2016
+672	BRCA1		C3280442	Pancreatic cancer 4	NCBI curation		614320	16 Feb 2016
+672	BRCA1		C4554406	FANCONI ANEMIA, COMPLEMENTATION GROUP S	OMIM	617883	617883	09 Mar 2018
+2200		FBN1	C0013581	Ectopia lentis	Human Phenotype Ontology	HP:0001083		06 Sep 2016
+2200		FBN1	C0013581	Ectopia lentis	SNOMED CT	74969002		06 Sep 2016
+2200	FBN1		C0024796	Marfan syndrome	Centre for Genomic and Experimental Medicine,University of Edinburgh		154700	16 Feb 2016
+2200	FBN1		C0024796	Marfan syndrome	Genetics Home Reference	marfan-syndrome	154700	16 Feb 2016
+2200	FBN1		C0024796	Marfan syndrome	Office of Rare Diseases	6975	154700	16 Feb 2016
+2200	FBN1		C0024796	Marfan syndrome	SNOMED CT	19346006	154700	16 Feb 2016
+2200	FBN1		C0265287	Acromicric dysplasia	Office of Rare Diseases	7	102370	16 Feb 2016
+2200	FBN1		C0265287	Acromicric dysplasia	SNOMED CT	254090007	102370	16 Feb 2016
+2200		FBN1	C0265313	Weill-Marchesani syndrome	Genetics Home Reference	weill-marchesani-syndrome		16 Feb 2016
+2200		FBN1	C0265313	Weill-Marchesani syndrome	Office of Rare Diseases	4936		16 Feb 2016
+2200	FBN1		C1858556	MASS syndrome	Office of Rare Diseases	8489	604308	16 Feb 2016
+2200	FBN1		C1861456	Stiff skin syndrome	Office of Rare Diseases	5025	184900	16 Feb 2016
+2200	FBN1		C1869115	Weill-Marchesani syndrome 2	NCBI curation		608328	16 Feb 2016
+2200	FBN1		C3280054	Geleophysic dysplasia 2	NCBI curation		614185	16 Feb 2016
+2200	FBN1		C3541518	Ectopia lentis, isolated, autosomal dominant	NCBI curation		129600	16 Feb 2016
+2200	FBN1		C4310796	Marfan lipodystrophy syndrome	NCBI curation		616914	07 Jan 2018
+2200	FBN1		C4707243	Thoracic aortic aneurysm and aortic dissection	GeneTests	3358		16 Feb 2016
+2200		FBN1	CN078214	Familial aortopathy	Correlagen			16 Feb 2016
+2201	FBN2		C0220668	Congenital contractural arachnodactyly	Office of Rare Diseases	5899	121050	16 Feb 2016
+2201	FBN2		C0220668	Congenital contractural arachnodactyly	SNOMED CT	205821003	121050	16 Feb 2016
+2201	FBN2		C4015286	Macular degeneration, early-onset	NCBI curation		616118	16 Feb 2016
+3030		HADHA	C0268634	Disorder of fatty acid metabolism	SNOMED CT	39929009		16 Feb 2016
+3030	HADHA		C1969443	Mitochondrial trifunctional protein deficiency	Office of Rare Diseases	3684	609015	02 Nov 2018
+3030	HADHA		C1969443	Mitochondrial trifunctional protein deficiency	SNOMED CT	237999008	609015	02 Nov 2018
+3030	HADHA		C3711645	Long-chain 3-hydroxyacyl-CoA dehydrogenase deficiency	NCBI curation		609016	16 Feb 2016
+55703	POLR3B		C0342384	Hypogonadotropic hypogonadism 7 with or without anosmia	NCBI curation		146110	06 Mar 2016
+55703	POLR3B		C2676243	Hypomyelinating leukodystrophy 7	UCLA Clinical Genomics Center, UCLA		607694	16 Feb 2016
+55703	POLR3B		C3280644	Hypomyelinating leukodystrophy 8, with or without oligodontia and/or hypogonadotropic hypogonadism	UCLA Clinical Genomics Center, UCLA		614381	16 Feb 2016
+55703		POLR3B	CN168056	Pol III-related leukodystrophy	Genetics Home Reference	pol-iii-related-leukodystrophy		16 Feb 2016
+55703		POLR3B	CN168056	Pol III-related leukodystrophy	NCBI curation			16 Feb 2016
+259266	ASPM		C1837501	Primary autosomal recessive microcephaly 5	Medical Research Institute,Tokyo Medical and Dental University		608716	16 Feb 2016
+259266		ASPM	C3711387	Primary autosomal recessive microcephaly	NCBI curation			16 Feb 2016
+261734		NPHP4	C0687120	Nephronophthisis	Broad Institute Rare Disease Group,Broad Institute			16 Feb 2016
+261734		NPHP4	C0687120	Nephronophthisis	GeneTests	72016		16 Feb 2016
+261734		NPHP4	C0687120	Nephronophthisis	Human Phenotype Ontology	HP:0000090		16 Feb 2016
+261734		NPHP4	C0687120	Nephronophthisis	SNOMED CT	204958008		16 Feb 2016
+261734	NPHP4		C1846979	Senior-Loken syndrome 4	NCBI curation		606996	16 Feb 2016
+261734	NPHP4		C1847013	Nephronophthisis 4	GeneTests	203272	606966	16 Feb 2016
+261734		NPHP4	CN117960	Renal dysplasia and retinal aplasia	SNOMED CT	236531005		16 Feb 2016

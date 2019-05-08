@@ -1,6 +1,7 @@
 import logging
 import re
 import yaml
+import os
 
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
@@ -21,7 +22,9 @@ class StreamedGraph(DipperGraph):
     curie_map = curimap.get()
     curie_util = CurieUtil(curie_map)
 
-    with open('translationtable/GLOBAL_TERMS.yaml') as fhandle:
+    with open(
+            os.path.join(os.path.dirname(__file__),
+                         '../../translationtable/GLOBAL_TERMS.yaml')) as fhandle:
         globaltt = yaml.safe_load(fhandle).copy()
         globaltcid = {v: k for k, v in globaltt.items()}
 

@@ -1,0 +1,117 @@
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/504196> a foaf:organization ;
+    rdfs:label "Breast Cancer Information Core (BIC) (BRCA1)" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/504863> a foaf:organization ;
+    rdfs:label "Evidence-based Network for the Interpretation of Germline Mutant Alleles (ENIGMA)" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505954> a foaf:organization ;
+    rdfs:label "Consortium of Investigators of Modifiers of BRCA1/2 (CIMBA), c/o University of Cambridge" .
+
+BNODE:b1d69744e34b3b2497fe a OBO:SEPIO_0000081 ;
+    rdfs:label "_:b0d65d10d0cc3ce2e885SEPIO:0000081",
+        "curation" .
+
+BNODE:b26b049ffa3f09ecff76 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_262469",
+        "b688d9615bbfa9e0f7df_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/504196> ;
+    OBO:SEPIO_0000111 BNODE:b5ac7f4700a842b45cea ;
+    dc:identifier "SCV000145571.1" .
+
+BNODE:b4c2e0322314fefb6631 a OBO:SEPIO_0000067 ;
+    rdfs:label "_:b5ac7f4700a842b45ceaSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:b56afa35b1b567770fbb a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_625460",
+        "b9abe7978a362ddcafa3_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505954> ;
+    OBO:SEPIO_0000021 "2015-10-02" ;
+    OBO:SEPIO_0000041 BNODE:b6766a2d182e85633617 ;
+    OBO:SEPIO_0000111 BNODE:b4605648dac1f7f6892e ;
+    dc:identifier "SCV000326352.3" .
+
+BNODE:b6766a2d182e85633617 a OBO:SEPIO_0000037 ;
+    rdfs:label "CIMBA Mutation Classification guidelines May 2016",
+        "CIMBA Mutation Classification guidelines May 2016_assertionmethod" ;
+    OBO:ERO_0000480 "https://submit.ncbi.nlm.nih.gov/ft/byid/MIHuUwlX/CIMBA_Mutation_Classification_guidelines_May16.pdf" .
+
+BNODE:b983c5b3dfc4bf86a358 a OBO:SEPIO_0000067 ;
+    rdfs:label "_:b4605648dac1f7f6892eSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:bc54e378723b163bff09 a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_581335",
+        "b0c37985b4c9880212d8_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/504863> ;
+    OBO:SEPIO_0000021 "2016-09-08" ;
+    OBO:SEPIO_0000041 BNODE:bda6f5589149a72a98c4 ;
+    OBO:SEPIO_0000111 BNODE:b0d65d10d0cc3ce2e885 ;
+    dc:identifier "SCV000300278.2" .
+
+BNODE:bda6f5589149a72a98c4 a OBO:SEPIO_0000037 ;
+    rdfs:label "ENIGMA BRCA1/2 Classification Criteria (2015)",
+        "ENIGMA BRCA1/2 Classification Criteria (2015)_assertionmethod" ;
+    OBO:ERO_0000480 "https://submit.ncbi.nlm.nih.gov/ft/byid/hxnfuuxx/enigma_rules_2015-03-26.pdf" .
+
+BNODE:b0d65d10d0cc3ce2e885 a OBO:ECO_0000000 ;
+    rdfs:label "b0c37985b4c9880212d8_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b1d69744e34b3b2497fe .
+
+BNODE:b4605648dac1f7f6892e a OBO:ECO_0000000 ;
+    rdfs:label "b9abe7978a362ddcafa3_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b983c5b3dfc4bf86a358 .
+
+BNODE:b5ac7f4700a842b45cea a OBO:ECO_0000000 ;
+    rdfs:label "b688d9615bbfa9e0f7df_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b4c2e0322314fefb6631 .
+
+:MONARCH_b0c37985b4c9880212d8 a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:b0d65d10d0cc3ce2e885 ;
+    OBO:SEPIO_0000015 BNODE:bc54e378723b163bff09 ;
+    OBO:SEPIO_0000098 :MONARCH_b688d9615bbfa9e0f7df,
+        :MONARCH_b9abe7978a362ddcafa3 ;
+    OBAN:association_has_object <http://omim.org/entry/604370> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+
+:MONARCH_b688d9615bbfa9e0f7df a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:b5ac7f4700a842b45cea ;
+    OBO:SEPIO_0000015 BNODE:b26b049ffa3f09ecff76 ;
+    OBO:SEPIO_0000098 :MONARCH_b0c37985b4c9880212d8,
+        :MONARCH_b9abe7978a362ddcafa3 ;
+    OBAN:association_has_object <http://omim.org/entry/604370> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+
+:MONARCH_b9abe7978a362ddcafa3 a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:b4605648dac1f7f6892e ;
+    OBO:SEPIO_0000015 BNODE:b56afa35b1b567770fbb ;
+    OBO:SEPIO_0000098 :MONARCH_b0c37985b4c9880212d8,
+        :MONARCH_b688d9615bbfa9e0f7df ;
+    OBAN:association_has_object <http://omim.org/entry/604370> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> ;
+    oboInOwl:hasdbxref ClinVar:RCV000112698 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/70286> a OBO:SO_0001483 ;
+    rdfs:label "NM_007294.3(BRCA1):c.5535C>A (p.Tyr1845Ter)" ;
+    OBO:GENO_0000418 <https://www.ncbi.nlm.nih.gov/gene/672> ;
+    OBO:GENO_0000840 <http://omim.org/entry/604370> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "LRG_292:g.172249C>A",
+        "LRG_292p1:p.Tyr1845Ter",
+        "LRG_292t1:c.5535C>A",
+        "NC_000017.10:g.41197752G>T",
+        "NC_000017.11:g.43045735G>T",
+        "NG_005905.2:g.172249C>A",
+        "NM_007294.3:c.5535C>A",
+        "NM_007299.3:c.*49C>A",
+        "NP_009225.1:p.Tyr1845Ter",
+        "NR_027676.1:n.5671C>A",
+        "U14680.1:n.5654C>A" ;
+    owl:sameAs <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=80356977> .
+
+<http://omim.org/entry/604370> rdfs:label "Breast-ovarian cancer, familial 1" .

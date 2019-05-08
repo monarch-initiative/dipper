@@ -5,7 +5,7 @@
 !!map {
 # these need to be moved to localtts till the terms exist: :!!!
 "activating_mutation": ":activating",
-"all_missense_or_inframe: ":all_missense_or_inframe",
+"all_missense_or_inframe": ":all_missense_or_inframe",
 "biallelic": ":biallelic",
 "does_not_have_phenotype": ":does_not_have_phenotype",
 "frequency": ":frequencyOfPhenotype",
@@ -17,7 +17,7 @@
 "has_sex_specificty": ":has_sex_specificity",
 "increased_gene_dosage": ":increased_gene_dosage",
 "monoallelic": ":monoallelic",
-"mosaic": ":mosaic",
+"mosaic": ":mosaic_genotype",
 "onset": ":onset",
 "part_of_contiguous_gene_duplication": ":part_of_contiguous_gene_duplication",
 # found in sepio_developer.owl:  SEPIO:0000019

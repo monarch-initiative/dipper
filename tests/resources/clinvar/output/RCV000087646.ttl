@@ -1,0 +1,53 @@
+:MONARCH_b409eb231ce1985a1a4d a OBAN:association ;
+    OBO:SEPIO_0000007 BNODE:bcffea4366ef7f890f2a ;
+    OBO:SEPIO_0000015 BNODE:bb77ce61eda1e1160cfd ;
+    OBAN:association_has_object <http://omim.org/entry/130050> ;
+    OBAN:association_has_predicate OBO:GENO_0000840 ;
+    OBAN:association_has_subject <http://www.ncbi.nlm.nih.gov/clinvar/variation/101408> ;
+    oboInOwl:hasdbxref ClinVar:RCV000087646 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/1058> a foaf:organization ;
+    rdfs:label "Collagen Diagnostic Laboratory,University of Washington" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/101408> a :mosaic_genotype ;
+    OBO:GENO_0000382 <http://www.ncbi.nlm.nih.gov/clinvar/variation/107154>,
+        <http://www.ncbi.nlm.nih.gov/clinvar/variation/107155> ;
+    OBO:GENO_0000840 <http://omim.org/entry/130050> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/107154> a OBO:SO_0000159 ;
+    rdfs:label "NM_000090.3(COL3A1):c.[=/3426_3452del27] (p.Gly1143_Asp1151del)" ;
+    OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/1281> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "LRG_3p1:p.Gly1143_Asp1151del",
+        "LRG_3t1:c.[=/3426_3452del27]",
+        "NM_000090.3:c.3426-3452del",
+        "NM_000090.3:c.[=/3426_3452del27]",
+        "NP_000081.1:p.Gly1143_Asp1151del" .
+
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/107155> a OBO:SO_0000159 ;
+    rdfs:label "NM_000090.3(COL3A1):c.[=/3440_3466del27] (p.Pro1147_Gly1155del)" ;
+    OBO:BFO_0000050 <https://www.ncbi.nlm.nih.gov/gene/1281> ;
+    OBO:RO_0002162 OBO:NCBITaxon_9606 ;
+    oboInOwl:hasExactSynonym "LRG_3p1:p.Pro1147_Gly1155del",
+        "LRG_3t1:c.[=/3440_3466del27]",
+        "NM_000090.3:c.3440-3466del",
+        "NM_000090.3:c.[=/3440_3466del27]",
+        "NP_000081.1:p.Pro1147_Gly1155del" .
+
+BNODE:b344a747065c549662e8 a OBO:SEPIO_0000067 ;
+    rdfs:label "_:bcffea4366ef7f890f2aSEPIO:0000067",
+        "clinical testing" .
+
+BNODE:bb77ce61eda1e1160cfd a OBO:SEPIO_0000001 ;
+    rdfs:label "ClinVarAssertion_212295",
+        "b409eb231ce1985a1a4d_assertion" ;
+    OBO:SEPIO_0000018 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/1058> ;
+    OBO:SEPIO_0000111 BNODE:bcffea4366ef7f890f2a ;
+    dc:identifier "SCV000120538.1" .
+
+<http://omim.org/entry/130050> rdfs:label "Ehlers-Danlos syndrome, type 4" .
+
+BNODE:bcffea4366ef7f890f2a a OBO:ECO_0000000 ;
+    rdfs:label "b409eb231ce1985a1a4d_evidence" ;
+    OBO:SEPIO_0000085 BNODE:b344a747065c549662e8 .

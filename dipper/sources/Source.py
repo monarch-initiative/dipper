@@ -744,17 +744,19 @@ class Source:
         '---\n# %s.yaml\n"": ""  # example'
         '''
 
-        localtt_file = 'translationtable/' + name + '.yaml'
+        localtt_file = '../../translationtable/' + name + '.yaml'
 
         try:
-            with open(localtt_file):
+            with open(os.path.join(os.path.dirname(__file__), localtt_file)):
                 pass
         except IOError:
             # write a stub file as a place holder if none exists
-            with open(localtt_file, 'w') as write_yaml:
+            with open(os.path.join(os.path.dirname(__file__),
+                                   localtt_file), 'w') as write_yaml:
                 print('---\n# %s.yaml\n"": ""  # example' % name, file=write_yaml)
         finally:
-            with open(localtt_file, 'r') as read_yaml:
+            with open(os.path.join(os.path.dirname(__file__),
+                                   localtt_file), 'r') as read_yaml:
                 localtt = yaml.safe_load(read_yaml)
 
         # inverse local translation.

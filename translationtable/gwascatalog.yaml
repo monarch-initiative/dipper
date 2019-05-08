@@ -1,4 +1,6 @@
 ---
+# gwascatalog.yaml
+# Relating a variant to a gene
 'upstream_gene_variant': 'is upstream of sequence of'
 'downstream_gene_variant': 'is downstream of sequence of'
 
@@ -7,6 +9,9 @@
 
 # switch from SO!region to falfo!Region
 'region': 'Region'
+
+# Variant type  (this makes no sense)
+'intron_variant': 'intron_variant'
 
 # seeking input on these
 # '3_prime_UTR_variant x intergenic_variant': ''
