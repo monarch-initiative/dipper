@@ -83,10 +83,10 @@ class ZFINSlim(Source):
                  figure_id
                 ) = row
 
-                zp_id = zfin_parser._map_octuple_to_phenotype(
-                    subterm1_id, pc_rel_id, superterm1_id, quality_id, subterm2_id, pc_rel2_id, superterm2_id,
-                    modifier)                    
-
+                zp_id = zfin_parser._map_sextuple_to_phenotype(
+                    superterm1_id, subterm1_id, quality_id, superterm2_id,
+                    subterm2_id, modifier)
+                
                 gene_curie = "ZFIN:{0}".format(gene_id)
                 model.makeLeader(gene_curie)
                 pub_curie = "ZFIN:{0}".format(pub_id)
