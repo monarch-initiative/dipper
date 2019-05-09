@@ -75,15 +75,17 @@ class TestGwasSNPModel(unittest.TestCase):
         triples = """
     dbSNP:rs1491921 a OBO:SO_0000694, OBO:SO_0001628 ;
         rdfs:label "rs1491921-C" ;
-        faldo:location  <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029-21259029-Region> ;
+        faldo:location  <https://monarchinitiative.org/.well-known/genid/bee62aebc378782c23ad> ;
         OBO:RO_0002162 OBO:NCBITaxon_9606 ;
         dc:description "0.013 [risk allele frequency]" .
 
-    <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029-21259029-Region> a faldo:Region ;
-        faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> ;
-        faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> .
+    <https://monarchinitiative.org/.well-known/genid/bee62aebc378782c23ad> a faldo:Region ;
+        rdfs:label 'GRCh38chr5-21259029-21259029-Region' ;
+        faldo:begin <https://monarchinitiative.org/.well-known/genid/bed3341497b6bee94927> ;
+        faldo:end <https://monarchinitiative.org/.well-known/genid/bed3341497b6bee94927> .
 
-    <https://monarchinitiative.org/.well-known/genid/GRCh38chr5-21259029> a faldo:Position ;
+    <https://monarchinitiative.org/.well-known/genid/bed3341497b6bee94927> a faldo:Position ;
+        rdfs:label 'GRCh38chr5-21259029' ;
         faldo:position 21259029 ;
         faldo:reference OBO:CHR_GRCh38chr5 .
 """
@@ -266,60 +268,68 @@ class TestGwasHaplotypeModel(unittest.TestCase):
 dbSNP:rs1329573 a SO:0000694,
         SO:0001627 ;
     rdfs:label "rs1329573-?" ;
-    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> ;
     GENO:0000418 HGNC:8619 ;
     RO:0002162 NCBITaxon:9606 .
 
 dbSNP:rs3758171 a SO:0000694,
         SO:0001627 ;
     rdfs:label "rs3758171-?" ;
-    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> ;
     GENO:0000418 HGNC:8619 ;
     RO:0002162 NCBITaxon:9606 .
 
 dbSNP:rs3824344 a SO:0000694,
         OBO:SO_0001627 ;
     rdfs:label "rs3824344-?" ;
-    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> ;
     GENO:0000418 HGNC:8619 ;
     RO:0002162 NCBITaxon:9606 .
 
 dbSNP:rs7020413 a SO:0000694,
         SO:0001627 ;
     rdfs:label "rs7020413-?" ;
-    faldo:location <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> ;
+    faldo:location <https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> ;
     GENO:0000418 HGNC:8619 ;
     RO:0002162 NCBITaxon:9606 .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420-36997420-Region> a faldo:Region ;
-    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> ;
-    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> .
+<https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3> a faldo:Region ;
+    rdfs:label "GRCh38chr9-36997420-36997420-Region";
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996-36998996-Region> a faldo:Region ;
-    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> ;
-    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> .
+<https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329> a faldo:Region ;
+    rdfs:label "GRCh38chr9-36998996-36998996-Region";
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690-37000690-Region> a faldo:Region ;
-    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> ;
-    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> .
+<https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a> a faldo:Region ;
+    rdfs:label "GRCh38chr9-37000690-37000690-Region";
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118-37002118-Region> a faldo:Region ;
-    faldo:begin <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> ;
-    faldo:end <https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> .
+<https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a> a faldo:Region ;
+    rdfs:label "GRCh38chr9-37002118-37002118-Region";
+    faldo:begin <https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> ;
+    faldo:end <https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36997420> a faldo:Position ;
+<https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb> a faldo:Position ;
+    rdfs:label "GRCh38chr9-36997420";
     faldo:position 36997420 ;
     faldo:reference OBO:CHR_GRCh38chr9 .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-36998996> a faldo:Position ;
+<https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5> a faldo:Position ;
+    rdfs:label "GRCh38chr9-36998996";
     faldo:position 36998996 ;
     faldo:reference CHR:GRCh38chr9 .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37000690> a faldo:Position ;
+<https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046> a faldo:Position ;
+    rdfs:label "GRCh38chr9-37000690";
     faldo:position 37000690 ;
     faldo:reference CHR:GRCh38chr9 .
 
-<https://monarchinitiative.org/.well-known/genid/GRCh38chr9-37002118> a faldo:Position ;
+<https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c> a faldo:Position ;
+    rdfs:label "GRCh38chr9-37002118";
     faldo:position 37002118 ;
     faldo:reference CHR:GRCh38chr9 .
         """
