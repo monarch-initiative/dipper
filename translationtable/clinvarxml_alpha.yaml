@@ -19,8 +19,8 @@
 
 # asserted, but not computed, example RCV000087646
 "asserted, but not computed": "part_of"
-### Pathos Association types
-###########################################################
+# ## Pathos Association types
+# ##########################################################
 "Benign": "benign_for_condition"
 "benign": "benign_for_condition"
 "conflicting data from submitters": "has_uncertain_significance_for_condition"
@@ -96,6 +96,6 @@
 "Haplotype": "haplotype"
 "Phase unknown": "haplotype"
 "Distinct chromosomes": "mosaic"
-#############################################################
+# ############################################################
 "patient phenotyping study": "phenotyping only"
 "provider interpretation": "imported information"   # "ECO:0000311"  checkme
