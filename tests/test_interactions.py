@@ -36,7 +36,6 @@ class InteractionsTestCase(unittest.TestCase):
 
     def test_therapeutic_relationship(self):
         from dipper.utils.TestUtils import TestUtils
-        from dipper.utils.GraphUtils import GraphUtils
 
         # Make testutils object and load bindings
         test_query = TestUtils(self.ctd.graph)

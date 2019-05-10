@@ -2,7 +2,7 @@ import logging
 import re
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
-
+from dipper.utils.GraphUtils import GraphUtils
 
 LOG = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ class Feature():
     """
 
     def __init__(
-            self, graph, feature_id=None, label=None,
-            feature_type=None, description=None):
+            self, graph, feature_id=None, label=None, feature_type=None,
+            description=None):
 
         if isinstance(graph, Graph):
             self.graph = graph
@@ -35,6 +35,7 @@ class Feature():
         self.globaltt = self.graph.globaltt
         self.globaltcid = self.graph.globaltcid
         self.curie_map = self.graph.curie_map
+        self.gfxutl = GraphUtils(self.curie_map)
         self.fid = feature_id
         self.label = label
         self.ftype = feature_type
@@ -42,7 +43,6 @@ class Feature():
         self.start = None
         self.stop = None
         self.taxon = None
-        return
 
     def addFeatureStartLocation(
             self, coordinate, reference_id, strand=None, position_types=None):
@@ -53,15 +53,11 @@ class Feature():
         :param strand:
         :param position_types:
 
-        :return:
-
         """
 
         # make an object for the start, which has:
         # {coordinate : integer, reference : reference_id, types = []}
         self.start = self._getLocation(coordinate, reference_id, strand, position_types)
-
-        return
 
     def addFeatureEndLocation(
             self, coordinate, reference_id, strand=None, position_types=None):
@@ -71,13 +67,9 @@ class Feature():
         :param reference_id:
         :param strand:
 
-        :return:
-
         """
 
         self.stop = self._getLocation(coordinate, reference_id, strand, position_types)
-
-        return
 
     def _getLocation(self, coordinate, reference_id, strand, position_types):
         """
@@ -88,8 +80,6 @@ class Feature():
         :param reference_id:
         :param strand:
         :param position_types:
-
-        :return:
 
         """
 
@@ -110,10 +100,7 @@ class Feature():
     def _getStrandType(self, strand):
         """
         :param strand:
-        :return:
         """
-
-        # TODO make this a dictionary/enum:  PLUS, MINUS, BOTH, UNKNOWN
         strand_id = None
         if strand == '+':
             strand_id = self.globaltt['plus_strand']
@@ -153,8 +140,6 @@ class Feature():
 
         :param graph:
 
-        :return:
-
         """
 
         if feature_as_class:
@@ -192,8 +177,11 @@ class Feature():
                 region_id = '-'.join(region_items)
                 rid = region_id
                 rid = re.sub(r'\w+\:', '', rid, 1)  # replace the id prefix
-                rid = '_:'+rid+"-Region"
-                region_id = rid
+                # blank node, bnode
+                rid = rid + "-Region"
+                curie = '_:' + self.gfxutl.digest_id(rid)
+                self.model.addLabel(curie, rid)
+                region_id = curie
 
             self.graph.addTriple(self.fid, self.globaltt['location'], region_id)
             self.model.addIndividualToGraph(region_id, None, self.globaltt['Region'])
@@ -219,8 +207,6 @@ class Feature():
 
         # {coordinate : integer, reference : reference_id, types = []}
 
-        return
-
     def _getStrandStringFromPositionTypes(self, tylist):
         strand = None
         if self.globaltt['plus_strand'] in tylist:
@@ -241,27 +227,33 @@ class Feature():
         :param reference:
         :param coordinate:
         :param types:
-        :return:
+        :return: bnode_curie
         """
-
+        # blank node, bnode
         if reference is None:
             LOG.error("Trying to make position with no reference.")
             return None
 
-        curie = '_:'
         reference = re.sub(r'\w+\:', '', reference, 1)
-        if re.match(r'^_', reference):
-            # this is in the case if the reference is a bnode
-            reference = re.sub(r'^_', '', reference)
-        curie += reference
+        if reference[0] == '_':
+            # in this case the reference is a bnode curie as well
+            # ... this is a bad smell of over modleing
+            reference = reference[1:]
+        unique_words = reference
         if coordinate is not None:
             # just in case it isn't a string already
-            curie = '-'.join((curie, str(coordinate)))
+            unique_words = '-'.join((unique_words, str(coordinate)))
         if types is not None:
             tstring = self._getStrandStringFromPositionTypes(types)
             if tstring is not None:
-                curie = '-'.join((curie, tstring))
+                unique_words = '-'.join((unique_words, tstring))
 
+        curie = '_:' + self.gfxutl.digest_id(unique_words)
+
+        # attach the wordage via a label
+        # I want to see more of this (TEC 201905)
+        # including a type should be mandatory as well
+        self.model.addLabel(curie, unique_words)
         return curie
 
     def addRegionPositionToGraph(self, region_id, begin_position_id, end_position_id):
@@ -277,8 +269,6 @@ class Feature():
             # LOG.warn("No end position specified for region %s", region_id)
         else:
             self.graph.addTriple(region_id, self.globaltt['end'], end_position_id)
-
-        return
 
     def addPositionToGraph(
             self, reference_id, position, position_types=None, strand=None):
@@ -340,8 +330,6 @@ class Feature():
         # this should be expected to be done in reasoning not ETL
         self.graph.addTriple(parentid, self.globaltt['has subsequence'], self.fid)
 
-        return
-
     def addTaxonToFeature(self, taxonid):
         """
         Given the taxon id, this will add the following triple:
@@ -353,11 +341,8 @@ class Feature():
         self.taxon = taxonid
         self.graph.addTriple(self.fid, self.globaltt['in taxon'], self.taxon)
 
-        return
-
     def addFeatureProperty(self, property_type, feature_property):
         self.graph.addTriple(self.fid, property_type, feature_property)
-        return
 
 
 def makeChromID(chrom, reference=None, prefix=None):
@@ -384,13 +369,14 @@ def makeChromID(chrom, reference=None, prefix=None):
     # remove the build/taxon prefixes to look cleaner
     ref = reference
     if re.match(r'.+:.+', reference):
-        ref = re.match(r'.*:(.*)', reference).group(1)
+        ref = re.match(r'.*:(.*)', reference)
+        if ref is not None:
+            ref = ref.group(1)
     chrid = ''.join((ref, 'chr', chrid))
     if prefix is None:
         chrid = ''.join(('_', chrid))
     else:
         chrid = ':'.join((prefix, chrid))
-
     return chrid
 
 
@@ -401,5 +387,4 @@ def makeChromLabel(chrom, reference=None):
         label = chrm
     else:
         label = chrm + ' (' + reference + ')'
-
     return label
