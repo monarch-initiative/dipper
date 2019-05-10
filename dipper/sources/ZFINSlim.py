@@ -19,7 +19,7 @@ class ZFINSlim(Source):
     """
     files = {
         'g2p_clean': {
-            'file': 'phenoGeneCleanData_fish.txt.txt',
+            'file': 'phenoGeneCleanData_fish.txt',
             'url': 'https://zfin.org/downloads/phenoGeneCleanData_fish.txt',
             # https://zfin.org/downloads#  header Documentation is burried in UI crap
         },
