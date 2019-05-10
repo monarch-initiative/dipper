@@ -2503,16 +2503,6 @@ class ZFIN(Source):
                     continue
                 line_counter += 1
 
-                # structure of phenotyppe_fish.txt according to zfin.org/downloads/ (header is buried in the UI of that page instead of being at the top of the actual file)
-                # 1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23
-                # ['Fish ID', 'Fish Name', 'Start Stage ID', 'Start Stage Name', 'End Stage ID', 'End Stage Name', 'Affected Structure or Process 1 subterm ID', 'Affected Structure or Process 1 subterm Name', 'Post-composed Relationship ID', 'Post-composed Relationship Name', 'Affected Structure or Process 1 superterm ID', 'Affected Structure or Process 1 superterm Name', 'Phenotype Keyword ID', 'Phenotype Keyword Name', 'Phenotype Tag', 'Affected Structure or Process 2 subterm ID', 'Affected Structure or Process 2 subterm name', 'Post-composed Relationship (rel) ID', 'Post-composed Relationship (rel) Name', 'Affected Structure or Process 2 superterm ID', 'Affected Structure or Process 2 superterm name', 'Publication ID', 'Environment ID']
-
-                ## according to Nico, columns of id_map_zfin.tsv correspond to these columns in phenotype_fish.tsv
-                # ([7,9,11,13,16,18,20])
-                
-                # okay, I'm refactoring this code so that the zp keys are made from the fields in id_map_zfin.txt (instead of the 6 from zp.annnot.sourceinfo)
-                # change _map_sextuple_to_phenotype() and all calls to it so that it works too (_process_g2p() at least, possibly others)
-
                 zp_id = row[0]
                 modifier = self.resolve("abnormal", False) # Nico assures us that id_map_zfin.tsv only contains data for abnormal phenotypes                
                 (subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id) = row[1].split("-")
