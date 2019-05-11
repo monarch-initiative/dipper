@@ -1,0 +1,26 @@
+# rs1491921-C-term_type.sparql
+
+# local usage:
+# roqet -D out/gwascatalog.ttl -r csv \
+#   file://`pwd`/tests/resources/gwascatalog/rs1491921-C-term_type.sparql
+
+# gwascatalog snp test sparql query
+# given label: rs1491921-C
+# return IRI for:
+#   dbSNP:rs1491921 ;
+#       'snp'
+#       'intergenic variant'
+################################################################
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbSNP: <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=>
+PREFIX SO: <http://purl.obolibrary.org/obo/SO_>
+
+select ?snp ?snptype
+where{
+    ?snp rdfs:label 'rs1491921-C' ;
+         rdf:type ?snptype .
+    # ?snptype rdfs:label ?snptypelabel .
+}
+

@@ -41,7 +41,50 @@ class GWASCatalog(Source):
     files = {
         'catalog': {
             'file': GWASFILE,
-            'url': GWASFTP + GWASFILE},
+            'url': GWASFTP + GWASFILE,
+            'columns': [  # expected
+                # head -1 gwas-catalog-associations_ontology-annotated.tsv |
+                # tr '\t' '\n'  | sed "s|\(.*\)|'\1',|g"
+                'DATE ADDED TO CATALOG',
+                'PUBMEDID',
+                'FIRST AUTHOR',
+                'DATE',
+                'JOURNAL',
+                'LINK',
+                'STUDY',
+                'DISEASE/TRAIT',
+                'INITIAL SAMPLE SIZE',
+                'REPLICATION SAMPLE SIZE',
+                'REGION',
+                'CHR_ID',
+                'CHR_POS',
+                'REPORTED GENE(S)',
+                'MAPPED_GENE',
+                'UPSTREAM_GENE_ID',
+                'DOWNSTREAM_GENE_ID',
+                'SNP_GENE_IDS',
+                'UPSTREAM_GENE_DISTANCE',
+                'DOWNSTREAM_GENE_DISTANCE',
+                'STRONGEST SNP-RISK ALLELE',
+                'SNPS',
+                'MERGED',
+                'SNP_ID_CURRENT',
+                'CONTEXT',
+                'INTERGENIC',
+                'RISK ALLELE FREQUENCY',
+                'P-VALUE',
+                'PVALUE_MLOG',
+                'P-VALUE (TEXT)',
+                'OR or BETA',
+                '95% CI (TEXT)',
+                'PLATFORM [SNPS PASSING QC]',
+                'CNV',
+                'MAPPED_TRAIT',
+                'MAPPED_TRAIT_URI',
+                'STUDY ACCESSION',
+                'GENOTYPING TECHNOLOGY',
+            ],
+        },
         'so': {
             'file': 'so.owl',
             'url': 'http://purl.obolibrary.org/obo/so.owl'},
@@ -56,7 +99,8 @@ class GWASCatalog(Source):
             graph_type,
             are_bnodes_skolemized,
             'gwascatalog',
-            ingest_title='NHGRI-EBI Catalog of published genome-wide association studies',
+            ingest_title='NHGRI-EBI Catalog of ' +
+            'published genome-wide association studies',
             ingest_url='http://www.ebi.ac.uk/gwas/',
             license_url=None,
             data_rights='http://www.ebi.ac.uk/gwas/docs/about'
@@ -75,16 +119,12 @@ class GWASCatalog(Source):
         # to try to get the equivalences
         self.id_location_map = dict()
 
-        return
-
     def fetch(self, is_dl_forced=False):
         """
-
         :param is_dl_forced:
         :return:
         """
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -98,7 +138,6 @@ class GWASCatalog(Source):
         self.process_catalog(limit)
 
         LOG.info("Finished parsing.")
-        return
 
     def process_catalog(self, limit=None):
         """
@@ -106,7 +145,8 @@ class GWASCatalog(Source):
         :return:
 
         """
-        raw = '/'.join((self.rawdir, self.files['catalog']['file']))
+        src_key = 'catalog'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("Processing Data from %s", raw)
 
         so_ontology = RDFGraph(False, "SO")
@@ -119,61 +159,65 @@ class GWASCatalog(Source):
         with open(mondo_file, 'r') as mondo_fh:
             mondo_data = json.load(mondo_fh)
 
+        col = self.files[src_key]['columns']
+
         with open(raw, 'r', encoding="iso-8859-1") as csvfile:
-            filereader = csv.reader(csvfile, delimiter='\t')
-            header = next(filereader, None)  # the header row
-            header_len = len(header)
-            LOG.info('header length:\t %i', header_len)
+            reader = csv.reader(csvfile, delimiter='\t')
+            row = next(reader)
+            if self.check_fileheader(col, row):
+                pass
+            for row in reader:
+                if len(col) != len(row):
+                    LOG.error('BadRow: %i has %i columns', reader.line_num, row)
+                    continue
+                # head -1 gwas-catalog-associations_ontology-annotated.tsv |
+                # tr '\t' '\n'  | sed "s|\(.*\)|# = row[col.index('\1')]|g"
 
-            for row in filereader:
-                if not row:
-                    pass
-                else:
-                    if header_len != len(row):
-                        LOG.error('BadRow: %i has %i columns', filereader.line_num, row)
+                # = row[col.index('DATE ADDED TO CATALOG')]
+                pubmed_num = row[col.index('PUBMEDID')].strip()
+                # = row[col.index('FIRST AUTHOR')]
+                # = row[col.index('DATE')]
+                # = row[col.index('JOURNAL')]
+                # = row[col.index('LINK')]
+                # = row[col.index('STUDY')]
+                disease_or_trait = row[col.index('DISEASE/TRAIT')].strip()
+                initial_sample_description = row[
+                    col.index('INITIAL SAMPLE SIZE')].strip()
+                replicate_sample_description = row[
+                    col.index('REPLICATION SAMPLE SIZE')].strip()
+                # = row[col.index('REGION')]
+                chrom_num = row[col.index('CHR_ID')].strip()
+                chrom_pos = row[col.index('CHR_POS')].strip()
+                # = row[col.index('REPORTED GENE(S)')]
+                mapped_gene = row[col.index('MAPPED_GENE')].strip()
+                upstream_gene_num = row[col.index('UPSTREAM_GENE_ID')].strip()
+                downstream_gene_num = row[col.index('DOWNSTREAM_GENE_ID')].strip()
+                snp_gene_nums = row[col.index('SNP_GENE_IDS')].strip()
+                # = row[col.index('UPSTREAM_GENE_DISTANCE')]
+                # = row[col.index('DOWNSTREAM_GENE_DISTANCE')]
+                strongest_snp_risk_allele = row[
+                    col.index('STRONGEST SNP-RISK ALLELE')].strip()
+                # = row[col.index('SNPS')]
+                merged = row[col.index('MERGED')].strip()
+                snp_id_current = row[col.index('SNP_ID_CURRENT')].strip()
+                context = row[col.index('CONTEXT')].strip()
+                # = row[col.index('INTERGENIC')]
+                risk_allele_frequency = row[col.index('RISK ALLELE FREQUENCY')].strip()
+                pvalue = row[col.index('P-VALUE')].strip()
+                # = row[col.index('PVALUE_MLOG')]
+                # = row[col.index('P-VALUE (TEXT)')]
+                # = row[col.index('OR or BETA')]
+                # = row[col.index('95% CI (TEXT)')]
+                platform_with_snps_passing_qc = row[
+                    col.index('PLATFORM [SNPS PASSING QC]')].strip()
+                # = row[col.index('CNV')]
+                mapped_trait = row[col.index('MAPPED_TRAIT')].strip()
+                mapped_trait_uri = row[col.index('MAPPED_TRAIT_URI')].strip()
+                # = row[col.index('STUDY ACCESSION')]
+                # = row[col.index('GENOTYPING TECHNOLOGY')]
 
-                    (date_added_to_catalog,
-                     pubmed_num,
-                     first_author,
-                     pub_date,
-                     journal,
-                     link,
-                     study_name,
-                     disease_or_trait,
-                     initial_sample_description,
-                     replicate_sample_description,
-                     region,
-                     chrom_num,
-                     chrom_pos,
-                     reported_gene_nums,
-                     mapped_gene,
-                     upstream_gene_num,
-                     downstream_gene_num,
-                     snp_gene_nums,
-                     upstream_gene_distance,
-                     downstream_gene_distance,
-                     strongest_snp_risk_allele,
-                     snps,
-                     merged,
-                     snp_id_current,
-                     context,
-                     intergenic_flag,
-                     risk_allele_frequency,
-                     pvalue,
-                     pvalue_mlog,
-                     pvalue_text,
-                     or_or_beta,
-                     confidence_interval_95,
-                     platform_with_snps_passing_qc,
-                     cnv_flag,
-                     mapped_trait,
-                     mapped_trait_uri,
-                     study_accession,
-                     GENOTYPING_TECHNOLOGY
-                    ) = row
-
-                    if self.test_mode:
-                        continue
+                if self.test_mode:
+                    continue
 
 # 06-May-2015	25917933
 #   Zai CC	20-Nov-2014	J Psychiatr Res	http://europepmc.org/abstract/MED/25917933
@@ -183,59 +227,70 @@ class GWASCatalog(Source):
 # 10p11.22	10	32704340	C10orf68, CCDC7, ITGB1	CCDC7
 # rs7079041-A	rs7079041	0	7079041	intron	0		2E-6	5.698970
 
-                    variant_curie, variant_type = self._get_curie_and_type_from_id(
+                # 2019-May three snp-id have  ' e' or ' a'  appended. note space.
+                # examples: 'rs2440154 e-A'  and 'rs2440154 e'
+                # including the suffix in the url is a web noop but breaks rdflib
+                strongest_snp_risk_allele = strongest_snp_risk_allele.split(' ')[0]
+                snp_id_current = snp_id_current.split(' ')[0]
+
+                # note: that these will no longer pattenn match other instances
+
+                variant_curie, variant_type = self._get_curie_and_type_from_id(
+                    strongest_snp_risk_allele)
+
+                if strongest_snp_risk_allele == '':
+                    LOG.debug(
+                        "No strongest SNP risk allele for %s:\n%s",
+                        pubmed_num, str(row))
+                    # still consider adding in the EFO terms
+                    # for what the study measured?
+                    continue
+                if variant_curie is not None and variant_curie[0] == '_' and \
+                        strongest_snp_risk_allele is not None:
+                    self.graph.addTriple(
+                        variant_curie, self.globaltt['label'],
+                        strongest_snp_risk_allele, object_is_literal=True)
+
+                if variant_type == 'snp':
+                    self._add_snp_to_graph(
+                        variant_curie, strongest_snp_risk_allele, chrom_num,
+                        chrom_pos, context, risk_allele_frequency)
+                    self._add_deprecated_snp(
+                        variant_curie, snp_id_current, merged, chrom_num, chrom_pos)
+
+                    self._add_snp_gene_relation(
+                        variant_curie, snp_gene_nums, upstream_gene_num,
+                        downstream_gene_num)
+                elif variant_type == 'haplotype':
+                    self._process_haplotype(
+                        variant_curie, strongest_snp_risk_allele, chrom_num,
+                        chrom_pos, context, risk_allele_frequency, mapped_gene,
+                        so_ontology)
+                elif variant_type is None and snp_id_current != '':
+                    LOG.warning(
+                        "There's a snp id we can't manage: %s",
                         strongest_snp_risk_allele)
+                    continue
 
-                    if strongest_snp_risk_allele.strip() == '':
-                        LOG.debug(
-                            "No strongest SNP risk allele for %s:\n%s",
-                            pubmed_num, str(row))
-                        # still consider adding in the EFO terms
-                        # for what the study measured?
-                        continue
+                description = self._make_description(
+                    disease_or_trait, initial_sample_description,
+                    replicate_sample_description,
+                    platform_with_snps_passing_qc, pvalue)
 
-                    if variant_type == 'snp':
-                        self._add_snp_to_graph(
-                            variant_curie, strongest_snp_risk_allele, chrom_num,
-                            chrom_pos, context, risk_allele_frequency)
+                self._add_variant_trait_association(
+                    variant_curie, mapped_trait_uri, mapped_trait, mondo_data,
+                    pubmed_num, description)
 
-                        self._add_deprecated_snp(
-                            variant_curie, snp_id_current, merged, chrom_num, chrom_pos)
-
-                        self._add_snp_gene_relation(
-                            variant_curie, snp_gene_nums, upstream_gene_num,
-                            downstream_gene_num)
-                    elif variant_type == 'haplotype':
-                        self._process_haplotype(
-                            variant_curie, strongest_snp_risk_allele, chrom_num,
-                            chrom_pos, context, risk_allele_frequency, mapped_gene,
-                            so_ontology)
-                    elif variant_type is None:
-                        LOG.warning(
-                            "There's a snp id i can't manage: %s",
-                            strongest_snp_risk_allele)
-                        continue
-
-                    description = self._make_description(
-                        disease_or_trait, initial_sample_description,
-                        replicate_sample_description,
-                        platform_with_snps_passing_qc, pvalue)
-
-                    self._add_variant_trait_association(
-                        variant_curie, mapped_trait_uri, mapped_trait, mondo_data,
-                        pubmed_num, description)
-
-                    if not self.test_mode and (
-                            limit is not None and filereader.line_num > limit):
-                        break
+                if not self.test_mode and (
+                        limit is not None and reader.line_num > limit):
+                    break
 
         # TODO loop through the location hash,
         # and make all snps at that location equivalent
-        for l in self.id_location_map:
-            snp_ids = self.id_location_map[l]
+        for loc in self.id_location_map:
+            snp_ids = self.id_location_map[loc]
             if len(snp_ids) > 1:
-                LOG.info("%s has >1 snp id: %s", l, str(snp_ids))
-        return
+                LOG.info("%s has >1 snp id: %s", loc, str(snp_ids))
 
     def _process_haplotype(
             self, hap_id, hap_label, chrom_num, chrom_pos, context,
@@ -249,7 +304,7 @@ class GWASCatalog(Source):
         model = Model(graph)
         # add the feature to the graph
         hap_description = None
-        if risk_allele_frequency != '' and risk_allele_frequency != 'NR':
+        if risk_allele_frequency not in ['', 'NR']:
             hap_description = str(risk_allele_frequency) + ' [risk allele frequency]'
 
         model.addIndividualToGraph(
@@ -263,69 +318,73 @@ class GWASCatalog(Source):
         mapped_genes = re.split(r';\s?', mapped_gene)
         snp_curies = list()
 
-        for index, snp in enumerate(snp_labels):
+        for snp in snp_labels:
             snp_curie, snp_type = self._get_curie_and_type_from_id(snp)
             if snp_type is None:
+                LOG.info('cant find type for SNP in %s', snp)
                 # make blank node
                 snp_curie = self.make_id(snp, "_")
+                model.addLabel(snp_curie, snp)
+            elif snp_curie[0] == '_':   # arrived an unlabeled blanknode
+                model.addLabel(snp_curie, snp)
 
             graph.addTriple(hap_id, self.globaltt['has_variant_part'], snp_curie)
             snp_curies.append(snp_curie)
 
         # courtesy http://stackoverflow.com/a/16720915
-        length = len(snp_labels)
+        # check lengths of mutiple lists
+        length = len(snp_curies)
         if not all(len(lst) == length
-                   for lst in [chrom_nums, chrom_positions, context_list]):
+                   for lst in [snp_labels, chrom_nums, chrom_positions, context_list]):
             LOG.warning(
-                "Unexpected data field for haplotype %s \n "
+                "Incongruous data field(s) for haplotype %s \n "
                 "will not add snp details", hap_label)
-            return
+        else:
 
-        variant_in_gene_count = 0
-        for index, snp_curie in enumerate(snp_curies):
-            self._add_snp_to_graph(
-                snp_curie, snp_labels[index], chrom_nums[index],
-                chrom_positions[index], context_list[index])
+            variant_in_gene_count = 0
+            for index, snp_curie in enumerate(snp_curies):
+                self._add_snp_to_graph(
+                    snp_curie, snp_labels[index], chrom_nums[index],
+                    chrom_positions[index], context_list[index])
 
-            if len(mapped_genes) == len(snp_labels):
-                so_class = self.resolve(context_list[index])
-                so_query = """
-SELECT ?variant_label
-    WHERE {{
-        {0} rdfs:subClassOf+ {1} ;
-        rdfs:label ?variant_label .
-    }}
-                """.format(so_class, self.globaltt['gene_variant'])
+                if mapped_genes and len(mapped_genes) == len(snp_labels):
+                    so_class = self.resolve(context_list[index])
+                    so_query = """
+        SELECT ?variant_label
+        WHERE {{
+            {0} rdfs:subClassOf+ {1} ;
+            rdfs:label ?variant_label .
+        }}
+                    """.format(so_class, self.globaltt['gene_variant'])
 
-                query_result = so_ontology.query(so_query)
+                    query_result = so_ontology.query(so_query)
 
-                if len(list(query_result)) == 1:
+                    if len(list(query_result)) == 1:
+                        gene_id = DipperUtil.get_hgnc_id_from_symbol(
+                            mapped_genes[index])
+
+                        if gene_id is not None:
+                            geno.addAffectedLocus(snp_curie, gene_id)
+                            geno.addAffectedLocus(hap_id, gene_id)
+                            variant_in_gene_count += 1
+
                     gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
+                    if gene_id is not None \
+                            and context_list[index] in ['upstream_gene_variant',
+                                                        'downstream_gene_variant']:
+                            graph.addTriple(
+                                snp_curie, self.resolve(context_list[index]), gene_id)
+                    else:
+                        LOG.warning(
+                            "More mapped genes than snps, cannot disambiguate for\n%s\n%s",
+                            mapped_genes, snp_labels)  # hap_label)
 
-                    if gene_id is not None:
-                        geno.addAffectedLocus(snp_curie, gene_id)
-                        geno.addAffectedLocus(hap_id, gene_id)
-                        variant_in_gene_count += 1
-
-                gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[index])
-                if gene_id is not None \
-                        and context_list[index] in ['upstream_gene_variant',
-                                                    'downstream_gene_variant']:
-                    graph.addTriple(
-                        snp_curie, self.resolve(context_list[index]), gene_id)
-
-            else:
-                LOG.warning(
-                    "More mapped genes than snps, cannot disambiguate for %s",
-                    hap_label)
-
-        # Seperate in case we want to apply a different relation
-        # If not this is redundant with triples added above
-        if len(mapped_genes) == variant_in_gene_count and len(set(mapped_genes)) == 1:
-            gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[0])
-            geno.addAffectedLocus(hap_id, gene_id)
-
-        return
+            # Seperate in case we want to apply a different relation
+            # If not this is redundant with triples added above
+            if len(mapped_genes) == variant_in_gene_count and \
+                    len(set(mapped_genes)) == 1:
+                gene_id = DipperUtil.get_hgnc_id_from_symbol(mapped_genes[0])
+                geno.addAffectedLocus(hap_id, gene_id)
 
     def _add_snp_to_graph(
             self, snp_id, snp_label, chrom_num, chrom_pos, context,
@@ -374,13 +433,12 @@ SELECT ?variant_label
 
         # also want to add other descriptive info about
         # the variant from the context
-        for ctx in re.split(r';', context):
+        for ctx in context.split(';'):
             ctx = ctx.strip()
-            cid = self.resolve(ctx, False)
-            if cid != ctx:
-                model.addType(snp_id, cid)
-
-        return
+            if ctx:
+                cid = self.resolve(ctx, False)
+                if cid != ctx:
+                    model.addType(snp_id, cid)
 
     def _add_deprecated_snp(
             self, snp_id, snp_id_current, merged, chrom_num, chrom_pos):
@@ -391,12 +449,8 @@ SELECT ?variant_label
         model = Model(graph)
         location = self._make_location_curie(chrom_num, chrom_pos)
         # add deprecation information
-        if merged == '1' and str(snp_id_current.strip()) != '':
-            # get the current rs_id
-            current_rs_id = 'dbSNP:'
-            if not re.match(r'rs', snp_id_current):
-                current_rs_id += 'rs'
-            current_rs_id += str(snp_id_current)
+        if merged == '1' and snp_id_current != '':
+            current_rs_id = 'dbSNP:rs' + snp_id_current
             if location is not None:
                 if location not in self.id_location_map:
                     self.id_location_map[location] = set(current_rs_id)
@@ -449,6 +503,7 @@ SELECT ?variant_label
         model = Model(graph)
 
         # Use mapped traits for labels, hope that labels do not contain commas
+
         mapped_traits = [trait.strip() for trait in mapped_trait.split(',')]
         mapped_trait_uris = [iri.strip() for iri in mapped_trait_uri.split(',')]
         if mapped_trait_uris:
@@ -483,7 +538,7 @@ SELECT ?variant_label
 
                 # FIXME score should get added to provenance/study
                 # assoc.set_score(pvalue)
-                if trait_curie is not None:
+                if trait_curie is not None and variant_id is not None:
                     assoc.add_association_to_graph()
 
     @staticmethod
@@ -534,10 +589,13 @@ SELECT ?variant_label
             variant_type = "snp"
         elif variant_id[:3] == 'chr':
             # like: chr10:106180121-G
-            #
             variant_id = re.sub(r'-?', '-N', variant_id)
             variant_id = re.sub(r' ', '', variant_id)
-            curie = ':gwas-' + re.sub(r':', '-', variant_id)   # deliberate 404
+            # going to hate myself but ...
+            # moving this from a broken base node to yet another blank node
+            # It had produced this monstrocity with the embedded quote
+            # :gwas--Nc-Nh-Nr-N1-N1-N--N1-N0-N2-N7-N5-N1-N1-N0-N2-N"-N?-N
+            curie = Source.make_id('gwas-' + re.sub(r':', '-', variant_id), '_')
             variant_type = "snp"
         elif variant_id.strip() == '':
             pass
