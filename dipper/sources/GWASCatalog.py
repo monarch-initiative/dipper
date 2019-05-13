@@ -376,7 +376,8 @@ class GWASCatalog(Source):
                                 snp_curie, self.resolve(context_list[index]), gene_id)
                     else:
                         LOG.warning(
-                            "More mapped genes than snps, cannot disambiguate for\n%s\n%s",
+                            "More mapped genes than snps,"
+                            " cannot disambiguate for\n%s\n%s",
                             mapped_genes, snp_labels)  # hap_label)
 
             # Seperate in case we want to apply a different relation
