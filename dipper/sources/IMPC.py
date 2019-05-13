@@ -77,7 +77,38 @@ class IMPC(Source):
         #   'url': IMPCDL + '/3I_genotype_phenotype.csv.gz'},
         'all': {
             'file': 'ALL_genotype_phenotype.csv.gz',
-            'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz'},
+            'url': IMPCDL + '/ALL_genotype_phenotype.csv.gz',
+            'columns': [  # head -1 | tr ',' '\n' | sed "s|\(.*\)|'\1',|g"
+                'marker_accession_id',
+                'marker_symbol',
+                'phenotyping_center',
+                'colony_id',
+                'sex',
+                'zygosity',
+                'allele_accession_id',
+                'allele_symbol',
+                'allele_name',
+                'strain_accession_id',
+                'strain_name',
+                'project_name',
+                'project_fullname',
+                'pipeline_name',
+                'pipeline_stable_id',
+                'procedure_stable_id',
+                'procedure_name',
+                'parameter_stable_id',
+                'parameter_name',
+                'top_level_mp_term_id',
+                'top_level_mp_term_name',
+                'mp_term_id',
+                'mp_term_name',
+                'p_value',
+                'percentage_change',
+                'effect_size',
+                'statistical_method',
+                'resource_name'
+            ]
+        },
         'checksum': {
             'file': 'checksum.md5',
             'url': IMPCDL + '/checksum.md5'},
@@ -105,8 +136,6 @@ class IMPC(Source):
             LOG.warning("not configured with gene test ids.")
             self.gene_ids = []
 
-        return
-
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
         LOG.info("Verifying checksums...")
@@ -114,7 +143,6 @@ class IMPC(Source):
             LOG.debug('Files have same checksum as reference')
         else:
             raise Exception('Reference checksums do not match disk')
-        return
 
     def parse(self, limit=None):
         """
@@ -134,13 +162,10 @@ class IMPC(Source):
             self.test_mode = True
 
         # for f in ['impc', 'euro', 'mgd', '3i']:
-        for f in ['all']:
-            file = '/'.join((self.rawdir, self.files[f]['file']))
+        for src_key in ['all']:
+            file = '/'.join((self.rawdir, self.files[src_key]['file']))
             self._process_data(file, limit)
-
         LOG.info("Finished parsing")
-
-        return
 
     def _process_data(self, raw, limit=None):
         LOG.info("Processing Data from %s", raw)
@@ -151,49 +176,49 @@ class IMPC(Source):
             graph = self.graph
         model = Model(graph)
         geno = Genotype(graph)
-        line_counter = 0
 
         # Add the taxon as a class
         taxon_id = self.globaltt['Mus musculus']
         model.addClassToGraph(taxon_id, None)
 
         # with open(raw, 'r', encoding="utf8") as csvfile:
+        col = self.files['all']['columns']
         with gzip.open(raw, 'rt') as csvfile:
-            filereader = csv.reader(csvfile, delimiter=',', quotechar='\"')
-            next(filereader, None)  # skip the header row
-            for row in filereader:
-                line_counter += 1
+            reader = csv.reader(csvfile, delimiter=',', quotechar='\"')
+            row = next(reader)  # presumed header
+            if not self.check_fileheader(col, row):
+                pass
 
-                (
-                    marker_accession_id,
-                    marker_symbol,
-                    phenotyping_center,
-                    colony_raw,
-                    sex,
-                    zygosity,
-                    allele_accession_id,
-                    allele_symbol,
-                    allele_name,
-                    strain_accession_id,
-                    strain_name,
-                    project_name,
-                    project_fullname,
-                    pipeline_name,
-                    pipeline_stable_id,
-                    procedure_stable_id,
-                    procedure_name,
-                    parameter_stable_id,
-                    parameter_name,
-                    top_level_mp_term_id,
-                    top_level_mp_term_name,
-                    mp_term_id,
-                    mp_term_name,
-                    p_value,
-                    percentage_change,
-                    effect_size,
-                    statistical_method,
-                    resource_name
-                    ) = row
+            for row in reader:
+                # | head -1 | tr ',' '\n' | sed "s|\(.*\)|# \1 = row[col.index('\1')]|g"
+                marker_accession_id = row[col.index('marker_accession_id')].strip()
+                marker_symbol = row[col.index('marker_symbol')].strip()
+                phenotyping_center = row[col.index('phenotyping_center')].strip()
+                colony_raw = row[col.index('colony_id')].strip()
+                sex = row[col.index('sex')].strip()
+                zygosity = row[col.index('zygosity')].strip()
+                allele_accession_id = row[col.index('allele_accession_id')].strip()
+                allele_symbol = row[col.index('allele_symbol')].strip()
+                # allele_name = row[col.index('allele_name')]
+                strain_accession_id = row[col.index('strain_accession_id')].strip()
+                strain_name = row[col.index('strain_name')].strip()
+                # project_name = row[col.index('project_name')]
+                project_fullname = row[col.index('project_fullname')].strip()
+                pipeline_name = row[col.index('pipeline_name')].strip()
+                pipeline_stable_id = row[col.index('pipeline_stable_id')].strip()
+                procedure_stable_id = row[col.index('procedure_stable_id')].strip()
+                procedure_name = row[col.index('procedure_name')].strip()
+                parameter_stable_id = row[col.index('parameter_stable_id')].strip()
+                parameter_name = row[col.index('parameter_name')].strip()
+                # top_level_mp_term_id = row[col.index('top_level_mp_term_id')]
+                # top_level_mp_term_name = row[col.index('top_level_mp_term_name')]
+                mp_term_id = row[col.index('mp_term_id')].strip()
+                mp_term_name = row[col.index('mp_term_name')].strip()
+                p_value = row[col.index('p_value')].strip()
+                percentage_change = row[col.index('percentage_change')].strip()
+                effect_size = row[col.index('effect_size')].strip()
+                statistical_method = row[col.index('statistical_method')].strip()
+                resource_name = row[col.index('resource_name')].strip()
 
                 if self.test_mode and marker_accession_id not in self.gene_ids:
                     continue
@@ -236,12 +261,14 @@ class IMPC(Source):
                 # extract out what's within the <> to get the symbol
                 if re.match(r'.*<.*>', allele_symbol):
                     sequence_alteration_name = re.match(
-                        r'.*<(.*)>', allele_symbol).group(1)
+                        r'.*<(.*)>', allele_symbol)
+                    if sequence_alteration_name is not None:
+                        sequence_alteration_name = sequence_alteration_name.group(1)
                 else:
                     sequence_alteration_name = allele_symbol
 
                 if marker_accession_id is not None and marker_accession_id == '':
-                    LOG.warning("Marker unspecified on row %d", line_counter)
+                    LOG.warning("Marker unspecified on row %d", reader.line_num)
                     marker_accession_id = None
 
                 if marker_accession_id is not None:
@@ -291,7 +318,7 @@ class IMPC(Source):
                 stem_cell_class = self.globaltt['embryonic stem cell line']
 
                 if colony_id is None:
-                    print(colony_raw, stem_cell_class, "\nline:\t", line_counter)
+                    print(colony_raw, stem_cell_class, "\nline:\t", reader.line_num)
                 model.addIndividualToGraph(colony_id, colony_raw, stem_cell_class)
 
                 # vslc of the colony has unknown zygosity
@@ -457,7 +484,7 @@ class IMPC(Source):
                 if phenotype_id is None or phenotype_id == '':
                     LOG.warning(
                         "No phenotype id specified for row %d: %s",
-                        line_counter, str(row))
+                        reader.line_num, str(row))
                     continue
                 # hard coded ECO code
                 eco_id = self.globaltt['mutant phenotype evidence']
@@ -499,7 +526,7 @@ class IMPC(Source):
                     phenotyping_center, colony_raw, project_fullname, pipeline_name,
                     pipeline_stable_id, procedure_stable_id, procedure_name,
                     parameter_stable_id, parameter_name, statistical_method,
-                    resource_name, line_counter)
+                    resource_name)
 
                 evidence_line_bnode = self._add_evidence(
                     assoc_id, eco_id, p_value, percentage_change, effect_size,
@@ -512,10 +539,8 @@ class IMPC(Source):
                 # resource_id = resource_name
                 # assoc.addSource(graph, assoc_id, resource_id)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and reader.line_num > limit:
                     break
-
-        return
 
     def _add_assertion_provenance(
             self,
@@ -547,8 +572,6 @@ class IMPC(Source):
             self.resolve('is_assertion_supported_by_evidence'),  # "SEPIO:0000111"
             evidence_line_bnode)
 
-        return
-
     def _add_study_provenance(
             self,
             phenotyping_center,
@@ -561,8 +584,7 @@ class IMPC(Source):
             parameter_stable_id,
             parameter_name,
             statistical_method,
-            resource_name,
-            row_num
+            resource_name
     ):
         """
         :param phenotyping_center: str, from self.files['all']
@@ -703,7 +725,8 @@ class IMPC(Source):
         # Link evidence to provenance by connecting to study node
         provenance_model.add_study_to_measurements(study_bnode, measurements.keys())
         self.graph.addTriple(
-            evidence_line_bnode, self.globaltt['has_evidence_item_output_from'], study_bnode)
+            evidence_line_bnode, self.globaltt['has_evidence_item_output_from'],
+            study_bnode)
 
         return evidence_line_bnode
 
@@ -715,12 +738,11 @@ class IMPC(Source):
         """
         checksums = dict()
         file_path = '/'.join((self.rawdir, file))
+        col = ['checksum', 'whitespace', 'file_name']
         with open(file_path, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter=' ')
             for row in reader:
-                (checksum, whitespace, file_name) = row
-                checksums[checksum] = file_name
-
+                checksums[row[col.index('checksum')]] = row[col.index('file_name')]
         return checksums
 
     def compare_checksums(self):
@@ -743,9 +765,10 @@ class IMPC(Source):
 
     def getTestSuite(self):
         import unittest
-        from tests.test_impc import IMPCTestCase
+        from tests.test_impc import EvidenceProvenanceTestCase
         # TODO test genotypes
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(IMPCTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(
+            EvidenceProvenanceTestCase)
 
         return test_suite

@@ -31,37 +31,37 @@ class Bgee(Source):
     between developmental stages, are designed.
     """
 
-    default_taxa = {
-        "Cavia porcellus": '10141',                 # guinea pig
-        "Mus musculus": '10090',                    # mouse
-        "Rattus norvegicus": '10116',               # rat
-        "Monodelphis domestica": '13616',           # gray short-tailed opossum
-        "Anolis carolinensis": '28377',             # lizard
-        "Caenorhabditis elegans": '6239',           # worm
-        "Drosophila melanogaster": '7227',          # fly
-        "Danio rerio": '7955',                      # zebrafish
-        "Xenopus (Silurana) tropicalis": '8364',    # frog
-        "Gallus gallus": '9031',                    # chicken
-        "Ornithorhynchus anatinus": '9258',         # platypus
-        "Erinaceus europaeus": '9365',              # hedgehog
-        "Macaca mulatta": '9544',                   # monkey (rhesus macaque)
-        "Gorilla gorilla": '9593',                  # gorilla
-        "Pan paniscus": '9597',                     # bonobo
-        "Pan troglodytes": '9598',                  # chimp
-        "Homo sapiens": '9606',                     # corporal people
-        "Canis familiaris": '9615',                 # dog
-        "Felis catus": '9685',                      # cat
-        "Equus caballus": '9796',                   # horse
-        "Sus scrofa": '9823',                       # pig
-        "Bos taurus": '9913',                       # cow
-        "Oryctolagus cuniculus": '9986',            # rabbit
+    default_species = [
+        "Cavia porcellus",                  # guinea pig
+        "Mus musculus",                     # mouse
+        "Rattus norvegicus",                # rat
+        "Monodelphis domestica",            # gray short-tailed opossum
+        "Anolis carolinensis",              # lizard
+        "Caenorhabditis elegans",           # worm
+        "Drosophila melanogaster",          # fly
+        "Danio rerio",                      # zebrafish
+        "Xenopus (Silurana) tropicalis",    # frog
+        "Gallus gallus",                    # chicken
+        "Ornithorhynchus anatinus",         # platypus
+        "Erinaceus europaeus",              # hedgehog
+        "Macaca mulatta",                   # monkey (rhesus macaque)
+        "Gorilla gorilla",                  # gorilla
+        "Pan paniscus",                     # bonobo
+        "Pan troglodytes",                  # chimp
+        "Homo sapiens",                     # corporal people
+        "Canis lupus familiaris",           # dog  "Canis familiaris"
+        "Felis catus",                      # cat
+        "Equus caballus",                   # horse
+        "Sus scrofa",                       # pig
+        "Bos taurus",                       # cow
+        "Oryctolagus cuniculus",            # rabbit
         # 7217	Drosophila_ananassae
         # 7230	Drosophila_mojavensis
         # 7237	Drosophila_pseudoobscura
         # 7240	Drosophila_simulans
         # 7244	Drosophila_virilis
         # 7245	Drosophila_yakuba
-    }
+    ]
     files = {
         'anat_entity': {
             'path': '/download/ranks/anat_entity/',
@@ -92,6 +92,8 @@ class Bgee(Source):
             data_rights='https://bgee.org/?page=about'
             # file_handle=None
         )
+        self.default_taxa = {
+            x: self.globaltt[x].split(':')[-1] for x in self.default_species}
         # names for logging
         self.txid_name = {v: k for k, v in self.default_taxa.items()}
 
@@ -139,7 +141,7 @@ class Bgee(Source):
 
             if not os.path.exists(localfile) or is_dl_forced or \
                     self.checkIfRemoteIsNewer(
-                        localfile, int(info['size']), info['modify']):
+                            localfile, int(info['size']), info['modify']):
 
                 LOG.info("Fetching %s", dlname)
                 LOG.info("Writing to %s", localfile)
@@ -152,8 +154,6 @@ class Bgee(Source):
                      time.mktime(remote_dt.timetuple())))
         ftp.quit()
 
-        return
-
     def parse(self, limit=None):
         """
         Given the input taxa, expects files in the raw directory
@@ -165,13 +165,12 @@ class Bgee(Source):
 
         files_to_download, ftp = self._get_file_list(
             self.files['anat_entity']['path'],
-            self.files['anat_entity']['pattern'])
+            self.files['anat_entity']['pattern'], None)
         for dlname in files_to_download:
             localfile = '/'.join((self.rawdir, dlname))
             with gzip.open(localfile, 'rt', encoding='ISO-8859-1') as fh:
                 LOG.info("Processing %s", localfile)
                 self._parse_gene_anatomy(fh, limit)
-        return
 
     def _parse_gene_anatomy(self, fh, limit):
         """
@@ -185,9 +184,8 @@ class Bgee(Source):
         """
         dataframe = pd.read_csv(fh, sep='\t')
         col = self.files['anat_entity']['columns']
-        if list(dataframe) != col:
-            LOG.warning(
-                '\nExpected headers:  %s\nRecived headers:  %s', col, list(dataframe))
+        if not self.check_fileheader(col, list(dataframe)):
+            pass
 
         gene_groups = dataframe.sort_values(
             'rank score', ascending=False).groupby('Ensembl gene ID')
@@ -204,7 +202,6 @@ class Bgee(Source):
                     row['rank score']
                 )
                 # uberon <==> bto equivelance?
-        return
 
     def _add_gene_anatomy_association(self, gene_id, anatomy_curie, rank):
         """
@@ -226,7 +223,6 @@ class Bgee(Source):
         g2a_association.add_association_to_graph()
         g2a_association.add_predicate_object(
             self.globaltt['has_quantifier'], float(rank), 'Literal', 'xsd:float')
-        return
 
     # Override
     def checkIfRemoteIsNewer(self, localfile, remote_size, remote_modify):
