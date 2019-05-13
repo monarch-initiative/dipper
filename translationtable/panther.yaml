@@ -32,11 +32,11 @@
 
 # orthology_code_to_RO
 # default to   ->  "in orthology relationship with"
-"O": "in orthology relationship with"
-"P": "in paralogy relationship with"
-"LDO": "in 1 to 1 orthology relationship with"
-"X": "in xenology relationship with"
-"LDX": "in xenology relationship with"
+"LDO": "in 1 to 1 orthology relationship with"  # least diverged ortholog;
+"O": "in orthology relationship with"           # other more diverged orthologs
+"P": "in paralogy relationship with"            # paralogs
+"X": "in xenology relationship with"            # horizontal gene transfer
+"LDX": "in xenology relationship with"          # least diverged horizontal gene transfer
 
 "orthologGroup": "orthologous"
 "paralogGroup": "paralogous"
