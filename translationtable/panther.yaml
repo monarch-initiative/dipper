@@ -30,9 +30,6 @@
 "XENTR": "Xenopus (Silurana) tropicalis"    # xenopus (frog)
 "YEAST": "Saccharomyces cerevisiae S288C"   # yeast
 
-
-
-
 # orthology_code_to_RO
 # default to   ->  "in orthology relationship with"
 "O": "in orthology relationship with"
