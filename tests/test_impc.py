@@ -4,7 +4,6 @@ import unittest
 import logging
 import csv
 import gzip
-from tests.test_source import SourceTestCase
 from dipper.sources.IMPC import IMPC
 from dipper.utils.CurieUtil import CurieUtil
 from dipper.utils.TestUtils import TestUtils
@@ -14,7 +13,7 @@ from dipper.graph.RDFGraph import RDFGraph, URIRef
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.WARN)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class EvidenceProvenanceTestCase(unittest.TestCase):
@@ -153,10 +152,10 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
             pipeline_name, pipeline_stable_id,
             procedure_stable_id, procedure_name,
             parameter_stable_id, parameter_name,
-            statistical_method, resource_name, 0)
+            statistical_method, resource_name)
 
         # dbg
-        logger.info(
+        LOG.info(
             "Provenance graph as turtle:\n%s\n",
             impc.graph.serialize(format="turtle").decode("utf-8")
         )
@@ -190,8 +189,9 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
 """
 
         # dbg
-        logger.debug(
-            "Reference graph: %s", impc.graph.serialize(format="turtle").decode("utf-8")
+        LOG.debug(
+            "Reference graph: %s",
+            impc.graph.serialize(format="turtle").decode("utf-8")
         )
         self.assertTrue(
             self.test_util.test_graph_equality(triples, impc.graph))
@@ -218,7 +218,7 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
 
         """
         # dbg
-        logger.info(
+        LOG.info(
             "Assertion graph:\n %s\n", impc.graph.serialize(
                 format="turtle").decode("utf-8")
         )
@@ -249,7 +249,7 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
                 elif count == line_to_test:
                     self.test_set_N = row
                 elif count > line_to_test:
-                    logger.info("stopped at line:\t%s\n", count)
+                    LOG.info("stopped at line:\t%s\n", count)
                     break
 
         # Some DRY violation with the above tests
@@ -280,9 +280,9 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
         # which results in ambiguity = hard to test
 
         # dbg
-        logger.info(
-            "Row %i graph as ntriples:\n%s\n", line_to_test, impc.graph.serialize(
-                format="ntriples").decode("utf-8")
+        LOG.info(
+            "Row %i graph as ntriples:\n%s\n",
+            line_to_test, impc.graph.serialize(format="ntriples").decode("utf-8")
         )
 
         sparql_query = """
@@ -299,7 +299,8 @@ WHERE {
 """
 
         sparql_output = impc.graph.query(sparql_query)
-        logger.info("Test that query for row %i passes and returns one row", int(line_to_test))
+        LOG.info(
+            "Test that query for row %i passes and returns one row", int(line_to_test))
 
         # print("Sparql Output: %s\n", list(sparql_output) )
         # it is an array with one list with five vars in it
