@@ -39,13 +39,30 @@ class Panther(Source):
 
     """
     PNTHDL = 'ftp://ftp.pantherdb.org/ortholog/current_release'
+    # see: ftp://ftp.pantherdb.org/ortholog/current_release/README
     files = {
         'refgenome': {
             'file': 'RefGenomeOrthologs.tar.gz',
-            'url': PNTHDL+'/RefGenomeOrthologs.tar.gz'},
-        'hcop': {
+            'url': PNTHDL+'/RefGenomeOrthologs.tar.gz',
+            'columns': [  # expected
+                'thing1',           # pipe-list species|DB=id|protdb=pdbid
+                'thing2',           # pipe-list species|DB=id|protdb=pdbid
+                'orthology_class',  # [LDO, O, P, X ,LDX]  see: localtt
+                'ancestor_taxon',   # ancestor sometimes piped-pair  or 'ND'
+                'panther_id'        # ortholog cluster id I assume
+            ]
+        },
+        'hcop': {  # HUGO Comparison of Orthology Prediction
             'file': 'Orthologs_HCOP.tar.gz',
-            'url': PNTHDL+'/Orthologs_HCOP.tar.gz'}
+            'url': PNTHDL + '/Orthologs_HCOP.tar.gz',
+            'columns': [  # expected
+                'thing1',           # pipe-list species|DB=id|protdb=pdbid
+                'thing2',           # pipe-list species|DB=id|protdb=pdbid
+                'orthology_class',  # [LDO, O, P, X ,LDX]  see: localtt
+                'ancestor_taxon',   # ancestor sometimes piped-pair  or 'ND'
+                'panther_id'        # ortholog cluster id I assume
+            ]
+        }
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized, tax_ids=None):
@@ -62,9 +79,10 @@ class Panther(Source):
         self.dataset.set_citation(
             'http://pantherdb.org/publications.jsp#HowToCitePANTHER')
 
-        # Defaults
+        default_species = ['Homo sapiens', 'Mus musculus', 'Danio rerio']
         if tax_ids is None:
-            self.tax_ids = ['9606', '10090', '7955']
+            # self.tax_ids = ['9606', '10090', '7955']
+            self.tax_ids = [self.globaltt[x].split(':')[-1] for x in default_species]
         else:
             self.tax_ids = [str(x) for x in tax_ids]
 
@@ -74,20 +92,15 @@ class Panther(Source):
             LOG.warning("not configured with protein test ids.")
             self.test_ids = []
 
-        return
-
     def fetch(self, is_dl_forced=False):
         """
         :return: None
 
         """
-
         self.get_files(is_dl_forced)
         # TODO the version number is tricky to get
         # we can't get it from redirects of the url
         # TODO use the remote timestamp of the file?
-
-        return
 
     def parse(self, limit=None):
         """
@@ -103,8 +116,6 @@ class Panther(Source):
             LOG.info("Only the following taxa will be dumped: %s", self.tax_ids)
 
         self._get_orthologs(limit)
-
-        return
 
     def _get_orthologs(self, limit):
         """
@@ -155,16 +166,17 @@ class Panther(Source):
         model = Model(graph)
         unprocessed_gene_ids = set()  # may be faster to make a set after
 
-        for k in self.files.keys():
-            f = '/'.join((self.rawdir, self.files[k]['file']))
-            matchcounter = 0
-            mytar = tarfile.open(f, 'r:gz')
+        for src_key in self.files:
+            src_file = '/'.join((self.rawdir, self.files[src_key]['file']))
+            matchcounter = line_counter = 0
+            col = self.files[src_key]['columns']
+            reader = tarfile.open(src_file, 'r:gz')
 
             # assume that the first entry is the item
-            fname = mytar.getmembers()[0]
+            fname = reader.getmembers()[0]
             LOG.info("Parsing %s", fname.name)
-            line_counter = 0
-            with mytar.extractfile(fname) as csvfile:
+
+            with reader.extractfile(fname) as csvfile:
                 for line in csvfile:
                     # skip comment lines
                     if re.match(r'^#', line.decode()):
@@ -179,15 +191,19 @@ class Panther(Source):
                             line_counter, fname.name)
 
                     line = line.decode().strip()
-
-                    # parse each row. ancestor_taxon is unused
+                    row = line.split('\t')
+                    # parse each row. ancestor_taxons is unused
                     # HUMAN|Ensembl=ENSG00000184730|UniProtKB=Q0VD83
                     #   	MOUSE|MGI=MGI=2176230|UniProtKB=Q8VBT6
                     #       	LDO	Euarchontoglires	PTHR15964
-                    (a, b, orthology_class, ancestor_taxon,
-                     panther_id) = line.split('\t')
-                    (species_a, gene_a, protein_a) = a.split('|')
-                    (species_b, gene_b, protein_b) = b.split('|')
+                    thing1 = row[col.index('thing1')].strip()
+                    thing2 = row[col.index('thing2')].strip()
+                    orthology_class = row[col.index('orthology_class')].strip()
+                    # ancestor_taxons  = row[col.index('')].strip()
+                    panther_id = row[col.index('panther_id')].strip()
+
+                    (species_a, gene_a, protein_a) = thing1.split('|')
+                    (species_b, gene_b, protein_b) = thing2.split('|')
 
                     # skip the entries that don't have homolog relationships
                     # with the test ids
@@ -275,20 +291,18 @@ class Panther(Source):
                         break
                 # make report on unprocessed_gene_ids
 
-            LOG.info("finished processing %s", f)
+            LOG.info("finished processing %s", src_file)
             LOG.warning(
                 "The following gene ids were unable to be processed: %s",
                 str(unprocessed_gene_ids))
 
-        return
-
     @staticmethod
-    def _clean_up_gene_id(geneid, sp, curie_map):
+    def _clean_up_gene_id(geneid, species, curie_map):
         """
         A series of identifier rewriting to conform with
         standard gene identifiers.
         :param geneid:
-        :param sp:
+        :param species:
         :return:
         """
         # special case for MGI
@@ -300,13 +314,13 @@ class Panther(Source):
         # rewrite Gene:CELE --> WormBase
         # these are old-school cosmid identifier
         geneid = re.sub(r'Gene:CELE', 'WormBase:', geneid)
-        if sp == 'CAEEL':
+        if species == 'CAEEL':
             if re.match(r'(Gene|ENSEMBLGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
                     r'(?:Gene|ENSEMBLGenome):(\w+\.\d+)',
                     r'WormBase:\1', geneid)
 
-        if sp == 'DROME':
+        if species == 'DROME':
             if re.match(r'(ENSEMBLGenome):\w+\.\d+', geneid):
                 geneid = re.sub(
                     r'(?:ENSEMBLGenome):(\w+\.\d+)', r'FlyBase:\1', geneid)
@@ -335,12 +349,12 @@ class Panther(Source):
         #        re.match(r'Gene_Name', geneid):
         #    # LOG.warning(
         #    #"Found an identifier I don't know how to fix (species %s): %s",
-        #    #   sp, geneid)
+        #    #   species, geneid)
 
         pfxlcl = re.split(r':', geneid)
         pfx = pfxlcl[0]
         if pfx is None or pfx not in curie_map:
-            # LOG.warning( "No curie prefix for (species %s): %s", sp, geneid)
+            # LOG.warning( "No curie prefix for (species %s): %s", species, geneid)
             geneid = None
         return geneid
 
