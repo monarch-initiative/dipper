@@ -9,12 +9,13 @@
 "ARATH": "Arabidopsis thaliana"         # arabadopsis
 "BOVIN": "Bos taurus"                   # cow
 "CAEEL": "Caenorhabditis elegans"       # worm
-"CANFA": "Canis familiaris"             # dog
+"CANLF": "Canis lupus familiaris"       # dog
 "CHICK": "Gallus gallus"                # chicken
 "DANRE": "Danio rerio"                  # zebrafish
 "DICDI": "Dictyostelium discoideum"     # discodium
 "DROME": "Drosophila melanogaster"      # drosophila melanogaster
 "ECOLI": "Escherichia coli"             # E.coli
+"FELCA": "Felis catus"                  # cat
 "HORSE": "Equus caballus"               # horses
 "HUMAN": "Homo sapiens"                 # humans
 "MACMU": "Macaca mulatta"               # macaque
@@ -28,7 +29,9 @@
 "TAKRU": Takifugu rubripe               # pufferfish
 "XENTR": "Xenopus (Silurana) tropicalis"    # xenopus (frog)
 "YEAST": "Saccharomyces cerevisiae S288C"   # yeast
-"FELCA": "Felis catus"                  # cat
+
+
+
 
 # orthology_code_to_RO
 # default to   ->  "in orthology relationship with"
