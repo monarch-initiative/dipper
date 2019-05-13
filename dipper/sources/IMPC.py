@@ -743,9 +743,9 @@ class IMPC(Source):
 
     def getTestSuite(self):
         import unittest
-        from tests.test_impc import IMPCTestCase
+        from tests.test_impc import EvidenceProvenanceTestCase
         # TODO test genotypes
 
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(IMPCTestCase)
+        test_suite = unittest.TestLoader().loadTestsFromTestCase(EvidenceProvenanceTestCase)
 
         return test_suite
