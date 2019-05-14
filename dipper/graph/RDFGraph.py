@@ -46,7 +46,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=None,
-            literal_type=None, subject_category=subject_category, object_category=object_category):
+            literal_type=None, subject_category=None, object_category=None):
         # trying making infrence on type of object if none is supplied
         if object_is_literal is None:
             if self.curie_regexp.match(obj) is not None or\

@@ -24,18 +24,18 @@ class Model():
 
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=False,
-            literal_type=None
+            literal_type=None, **args
     ):
         self.graph.addTriple(
-            subject_id, predicate_id, obj, object_is_literal, literal_type)
+            subject_id, predicate_id, obj, object_is_literal, literal_type, **args)
 
-    def addType(self, subject_id, subject_type):
+    def addType(self, subject_id, subject_type, **args):
         self.graph.addTriple(
-            subject_id, self.globaltt['type'], subject_type)
+            subject_id, self.globaltt['type'], subject_type, **args)
 
-    def addLabel(self, subject_id, label):
+    def addLabel(self, subject_id, label, **args):
         self.graph.addTriple(
-            subject_id, self.globaltt['label'], label, object_is_literal=True)
+            subject_id, self.globaltt['label'], label, object_is_literal=True, **args)
 
     def addClassToGraph(
             self, class_id, label=None, class_type=None, description=None
@@ -85,12 +85,12 @@ class Model():
                 ind_id, self.globaltt['description'], description,
                 object_is_literal=True)
 
-    def addEquivalentClass(self, sub, obj):
+    def addEquivalentClass(self, sub, obj, **args):
         self.graph.addTriple(
-            sub, self.globaltt['equivalent_class'], obj)
+            sub, self.globaltt['equivalent_class'], obj, **args)
 
     def addSameIndividual(self, sub, obj):
-        self.graph.addTriple(sub, self.globaltt['same_as'], obj)
+        self.graph.addTriple(sub, self.globaltt['same_as'], obj, **args)
 
     def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
 

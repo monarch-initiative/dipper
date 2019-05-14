@@ -13,6 +13,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
 from dipper import config
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
+from dipper.utils.BioLinkVocabulary import blv
 
 LOG = logging.getLogger(__name__)
 
@@ -713,7 +714,7 @@ class OMIM(OMIMSource):
                             self.globaltt['is_allele_of'])
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
-                            graph.addTriple(pmid, self.globaltt['is_about'], al_id)
+                            graph.addTriple(pmid, self.globaltt['is_about'], al_id, source_category=blv.publication)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
                             dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
@@ -1003,7 +1004,7 @@ class OMIM(OMIMSource):
 
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
-                graph.addTriple(omim_id, self.globaltt['mentions'], pub_id)
+                graph.addTriple(omim_id, self.globaltt['mentions'], pub_id, subject_category=blv.disease, object_category=blv.publication)
 
         return ref_to_pmid
 
