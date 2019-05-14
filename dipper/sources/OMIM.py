@@ -340,7 +340,7 @@ class OMIM(OMIMSource):
                 nodelabel = abbrev
             #  G_omim is subclass_of  gene
             model.addClassToGraph(
-                omim_curie, nodelabel, self.globaltt['gene'], newlabel)
+                omim_curie, nodelabel, self.globaltt['gene'], newlabel, subject_category=blv.gene)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -643,6 +643,8 @@ class OMIM(OMIMSource):
             # this is a questionable mapping!  skip?
             rel_id = self.globaltt['contributes to']
 
+        # Note: this is actually a G2D association;
+        # see https://github.com/monarch-initiative/dipper/issues/748
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id)
 
         if phene_key is not None:
@@ -650,7 +652,7 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph()
+        assoc.add_association_to_graph(subject_category=blv.gene, object_category=blv.disease)
 
     @staticmethod
     def _get_description(entry):
@@ -885,7 +887,7 @@ class OMIM(OMIMSource):
         for ser in serieslist:
             series_id = 'OMIMPS:' + ser
             model.addClassToGraph(series_id, None)
-            model.addSubClass(omim_curie, series_id)
+            model.addSubClass(omim_curie, series_id, subject_category=blv.disease, object_category=blv.disease)
 
     @staticmethod
     def _get_mappedids(entry, graph):

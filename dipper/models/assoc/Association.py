@@ -81,12 +81,13 @@ class Assoc:
             )
         return True
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, subject_category=None, object_category=None):
 
         if not self._is_valid():
             return
 
-        self.graph.addTriple(self.sub, self.rel, self.obj)
+        self.graph.addTriple(self.sub, self.rel, self.obj,
+                             subject_category=subject_category, object_category=object_category)
 
         if self.assoc_id is None:
             self.set_association_id()

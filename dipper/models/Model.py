@@ -38,7 +38,8 @@ class Model():
             subject_id, self.globaltt['label'], label, object_is_literal=True, **args)
 
     def addClassToGraph(
-            self, class_id, label=None, class_type=None, description=None
+            self, class_id, label=None, class_type=None, description=None,
+            subject_category=None, object_category=None
     ):
         """
         Any node added to the graph will get at least 3 triples:
@@ -64,7 +65,8 @@ class Model():
                 class_id, self.globaltt['label'], label, object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type)
+            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type,
+                                 subject_category=subject_category, object_category=object_category)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.globaltt['description'], description,
