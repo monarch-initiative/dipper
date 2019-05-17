@@ -1153,17 +1153,14 @@ class ZFIN(Source):
                 env_id = 'ZFIN:' + env_id.strip()
 
                 # ########### PHENOTYPES ##########
-                phenotype_id = self._map_sextuple_to_phenotype(superterm1_id,
-                                                               subterm1_id,
-                                                               quality_id,
-                                                               superterm2_id,
-                                                               subterm2_id,
-                                                               modifier)                
-
+                phenotype_id = self._map_octuple_to_phenotype(
+                    subterm1_id, postcomp1_rel_id, superterm1_id, quality_id, subterm2_id, postcomp2_rel_id, superterm2_id,
+                    modifier)
+                
                 if phenotype_id is not None:
                     mapped_zpids.append([
-                        superterm1_id, subterm1_id, quality_id,
-                        superterm2_id, subterm2_id, modifier])
+                        subterm1_id, postcomp1_rel_id, superterm1_id, quality_id, subterm2_id, postcomp2_rel_id, superterm2_id,
+                        modifier])
 
                 if pub_id != '':
                     pub_id = 'ZFIN:' + pub_id.strip()
@@ -2327,22 +2324,30 @@ class ZFIN(Source):
 
         return
 
-    def _map_sextuple_to_phenotype(
-            self,
-            superterm1_id, subterm1_id, quality_id,
-            superterm2_id, subterm2_id, modifier):
+    def _map_octuple_to_phenotype(
+             self,
+             subterm1_id,
+             post_composed_relationship_id_1,
+             superterm1_id,
+             quality_id,
+             subterm2_id,
+             post_composed_relationship_id_2,
+             superterm2_id,
+             modifier):
         """
-        This will take the 6-part EQ-style annotation
-        used by ZFIN and return the ZP id.
-        :param superterm1_id:
-        :param subterm1_id:
-        :param quality_id:
-        :param superterm2_id:
-        :param subterm2_id:
-        :param modifier:
+        This will take the 8-part EQ-style annotation
+        used in zp-mapping.txt and return the ZP id.
+        
+        :param subterm1_id,
+        :param post_composed_relationship_id_1,
+        :param superterm1_id,
+        :param quality_id,
+        :param subterm2_id,
+        :param post_composed_relationship_id_2,
+        :param superterm2_id,
+        :param modifier
+        """
 
-        :return: ZP id
-        """
         zp_id = None
 
         # zfin uses free-text modifiers,
@@ -2353,9 +2358,15 @@ class ZFIN(Source):
             LOG.warning("no mapping for pato modifier " + modifier)
 
         key = self._make_zpkey(
-            superterm1_id, subterm1_id, quality_id,
-            superterm2_id, subterm2_id, mod_id)            
-
+            subterm1_id,
+            post_composed_relationship_id_1,
+            superterm1_id,
+            quality_id,
+            subterm2_id,
+            post_composed_relationship_id_2,
+            superterm2_id,
+            mod_id)
+            
         mapping = self.zp_map.get(key)
 
         if mapping is None:
@@ -2365,8 +2376,14 @@ class ZFIN(Source):
                 LOG.warning(
                     "Couldn't map ZP id to %s with modifier %s", "_"
                     .join((
-                        superterm1_id, subterm1_id, quality_id,
-                        superterm2_id, subterm2_id, mod_id)), modifier)                        
+                        subterm1_id,
+                        post_composed_relationship_id_1,
+                        superterm1_id,
+                        quality_id,
+                        subterm2_id,
+                        post_composed_relationship_id_2,
+                        superterm2_id,
+                        mod_id)), modifier)
         else:
             zp_id = mapping['zp_id']
 
@@ -2377,8 +2394,8 @@ class ZFIN(Source):
         Given a file that defines the mapping between
         ZFIN-specific EQ definitions and the automatically derived ZP ids,
         create a mapping here.
-        This may be deprecated in the future
         :return:
+        dict zp_map with 
 
         """
         zp_map = {}
@@ -2397,8 +2414,8 @@ class ZFIN(Source):
                 (subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id) = row[1].split("-")
 
                 key = self._make_zpkey(
-                    superterm1_id, subterm1_id, quality_id,
-                    superterm2_id, subterm2_id, modifier)                    
+                    subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
+                    modifier)                                       
 
                 zp_map[key] = {
                     'zp_id': zp_id,
@@ -2416,11 +2433,11 @@ class ZFIN(Source):
 
     def _make_zpkey(
             self,
-            superterm1_id, subterm1_id, quality_id,
-            superterm2_id, subterm2_id, modifier):
+            subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
+            modifier):            
         key = self.make_id('_'.join((
-            superterm1_id, subterm1_id, quality_id,
-            superterm2_id, subterm2_id, modifier)))
+            subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
+            modifier)))            
         return key
 
     @staticmethod
