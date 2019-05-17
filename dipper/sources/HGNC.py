@@ -207,6 +207,8 @@ class HGNC(OMIMSource):
 
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
+                elif locus_type == 'region':  # results in '@' appended to gene symbol
+                    continue
                 else:
                     gene_type_id = self.resolve(locus_type, False)  # withdrawn -> None?
                     if gene_type_id != locus_type:
@@ -246,12 +248,12 @@ class HGNC(OMIMSource):
                 # sometimes like 11q11 alternate reference locus
                 band = chrom = None
                 chr_match = chr_pattern.match(location)
-                if chr_match is not None and len(chr_match.groups()) > 0:
+                if chr_match is not None and chr_match.groups():
                     chrom = chr_match.group(1)
                     chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
                     band_match = band_pattern.search(location)
                     feat = Feature(graph, hgnc_id, None, None)
-                    if band_match is not None and len(band_match.groups()) > 0:
+                    if band_match is not None and band_match.groups():
                         band = band_match.group(1)
                         band = chrom + band
                         # add the chr band as the parent to this gene
