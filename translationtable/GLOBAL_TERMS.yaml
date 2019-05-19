@@ -773,7 +773,7 @@
 # "existence_ends_at ": "UBERON:existence_ends_at ",
 # "existence_starts_at ": "UBERON:existence_starts_at ",
 # "Integrated phenotype ontology, and normal traits": "UPHENO:!!!",
-"Phenotype": "UPHENO:0001001",   # conflicts with FBcv:0001347 save case
+"phenotype": "UPHENO:0001001",   # conflicts with FBcv:0001347
 # "ontology for representing scholarship": "VIVO:!!!",
 "project": "VIVO:Project",
 # "Experimental Conditions Ontology": "XCO:!!!",

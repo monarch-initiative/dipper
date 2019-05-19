@@ -189,7 +189,7 @@ class OMIMSource(Source):
                 elif declared == 'NULL':
                     self.omim_type[omim_id] = self.globaltt['Suspected']   # NCIT:C71458
                 elif declared == 'Number Sign':
-                    self.omim_type[omim_id] = self.globaltt['Phenotype']
+                    self.omim_type[omim_id] = self.globaltt['phenotype']
                 elif declared == 'Percent':
                     self.omim_type[omim_id] = self.globaltt[
                         'heritable_phenotypic_marker']

@@ -162,7 +162,7 @@ class SGD(Source):
         model.addTriple(
             subject_id=pheno_id,
             predicate_id=self.globaltt['subclass_of'],
-            obj=self.globaltt['Phenotype'])
+            obj=self.globaltt['phenotype'])
 
         # label nodes
         # pheno label

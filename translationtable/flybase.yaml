@@ -64,4 +64,5 @@
 "302:": "MESH"    # MSH
 "347:": "PMID"    # Pubmed
 
-"phenotype": "FBcv:0001347"   # see "Phenotype": "UPHENO:0001001"
+# example of using the local translation table handle local - global term collision.
+"phenotype": "FBcv:0001347"   # see "phenotype": "UPHENO:0001001" in globaltt

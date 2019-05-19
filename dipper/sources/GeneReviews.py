@@ -199,7 +199,7 @@ class GeneReviews(OMIMSource):
         # filter for disease /phenotype types (we can argue about what is included)
         omim_phenotypes = set([
             omim for omim in self.omim_type if self.omim_type[omim] in (
-                self.globaltt['Phenotype'],
+                self.globaltt['phenotype'],
                 self.globaltt['has_affected_feature'],  # both a gene and a phenotype
                 self.globaltt['heritable_phenotypic_marker'])])  # probable phenotype
         LOG.info(
