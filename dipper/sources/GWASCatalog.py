@@ -515,7 +515,7 @@ class GWASCatalog(Source):
                     if re.match(r'^EFO', trait_curie):
                         model.addClassToGraph(
                             trait_curie, mapped_traits[index],
-                            self.globaltt['Phenotype'])
+                            self.globaltt['phenotype'])
                     LOG.debug("{} not in mondo".format(trait_curie))
                 else:
                     LOG.debug("{} in mondo".format(trait_curie))

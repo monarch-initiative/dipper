@@ -482,8 +482,8 @@ class OMIA(OMIMSource):
         if group_name == '':
             group_name = None
 
-        model.addClassToGraph(omia_id, group_name, description=group_summary)
-        # class_type=disease_id,
+        model.addClassToGraph(
+            omia_id, group_name, description=group_summary, class_type=disease_id)
 
         self.label_hash[omia_id] = group_name
 
@@ -729,7 +729,7 @@ class OMIA(OMIMSource):
         # get a list of omim ids which we consider to be for disease / phenotype
         omim_phenotypes = set([
             omim for omim in self.omim_type if self.omim_type[omim] in (
-                self.globaltt['Phenotype'],
+                self.globaltt['phenotype'],
                 self.globaltt['has_affected_feature'],
                 self.globaltt['heritable_phenotypic_marker'])])
         LOG.info(
