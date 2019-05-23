@@ -1209,12 +1209,12 @@ class ZFIN(Source):
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
-                
+
         self.mapped_zpids = mapped_zpids
         myset = set([','.join(x) for x in mapped_zpids])
         LOG.info(
-            "Phenotype-sextuples: %d mapped", len(myset))
-
+            "Phenotype-octuples: %d mapped", len(myset))
+                
         return
 
     def _process_genes(self, limit=None):
@@ -2353,19 +2353,11 @@ class ZFIN(Source):
         # zfin uses free-text modifiers,
         # but we need to convert them to proper PATO classes for the mapping
         mod_id = self.resolve(modifier, False)
-
+        
         if modifier == mod_id:
             LOG.warning("no mapping for pato modifier " + modifier)
 
-        key = self._make_zpkey(
-            subterm1_id,
-            post_composed_relationship_id_1,
-            superterm1_id,
-            quality_id,
-            subterm2_id,
-            post_composed_relationship_id_2,
-            superterm2_id,
-            mod_id)
+        key = self._make_zpkey(subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id, mod_id)
             
         mapping = self.zp_map.get(key)
 
@@ -2425,7 +2417,8 @@ class ZFIN(Source):
                     'quality_id': quality_id,
                     'subterm2_id': subterm2_id,
                     'post_composed_relationship_id_2': post_composed_relationship_id_2,
-                    'superterm2_id': superterm2_id
+                    'superterm2_id': superterm2_id,
+                    'modifier': modifier
                 }
         LOG.info("Loaded %s zp terms", zp_map.__len__())
 
@@ -2434,10 +2427,13 @@ class ZFIN(Source):
     def _make_zpkey(
             self,
             subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
-            modifier):            
-        key = self.make_id('_'.join((
-            subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
-            modifier)))            
+            modifier,
+            replace_empty_args_with_zeros = True): # this is the convention in Nico's file and elsewhere
+        args_for_key = [subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id, modifier]
+        if replace_empty_args_with_zeros:
+            args_for_key = [element or '0' for element in args_for_key]
+
+        key = self.make_id('_'.join((args_for_key)))
         return key
 
     @staticmethod
