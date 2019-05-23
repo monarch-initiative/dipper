@@ -53,6 +53,8 @@ class Model():
         :param label:
         :param class_type:
         :param description:
+        :param subject_category:
+        :param object_category:
         :return:
 
         """
@@ -91,7 +93,7 @@ class Model():
         self.graph.addTriple(
             sub, self.globaltt['equivalent_class'], obj, **args)
 
-    def addSameIndividual(self, sub, obj):
+    def addSameIndividual(self, sub, obj, **args):
         self.graph.addTriple(sub, self.globaltt['same_as'], obj, **args)
 
     def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
