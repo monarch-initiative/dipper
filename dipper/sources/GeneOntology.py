@@ -20,7 +20,7 @@ from dipper.utils.GraphUtils import GraphUtils
 
 
 LOG = logging.getLogger(__name__)
-GOGA = 'http://current.geneontology.org/annotations' # get gene annotation from current.geneontology.com, which is the last official release (but not the bleeding edge)
+GOGA = 'http://geneontology.org/gene-associations'
 FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
 UPCRKB = 'uniprot/current_release/knowledgebase/'
 
@@ -46,48 +46,48 @@ class GeneOntology(Source):
 
     files = {
         '9615': {
-            'file': 'goa_dog.gaf.gz',
+            'file': 'gene_association.goa_dog.gz',
             'url': GOGA + '/goa_dog.gaf.gz'},
         '7227': {
-            'file': 'fb.gaf.gz',
-            'url': GOGA + '/fb.gaf.gz'},
+            'file': 'gene_association.fb.gz',
+            'url': GOGA + '/gene_association.fb.gz'},
         '7955': {
-            'file': 'zfin.gaf.gz',
-            'url': GOGA + '/zfin.gaf.gz'},
+            'file': 'gene_association.zfin.gz',
+            'url': GOGA + '/gene_association.zfin.gz'},
         '10090': {
-            'file': 'mgi.gaf.gz',
-            'url': GOGA + '/mgi.gaf.gz'},
+            'file': 'gene_association.mgi.gz',
+            'url': GOGA + '/gene_association.mgi.gz'},
         '10116': {
-            'file': 'rgd.gaf.gz',
-            'url': GOGA + '/rgd.gaf.gz'},
+            'file': 'gene_association.rgd.gz',
+            'url': GOGA + '/gene_association.rgd.gz'},
         '6239': {
-            'file': 'wb.gaf.gz',
-            'url': GOGA + '/wb.gaf.gz'},
+            'file': 'gene_association.wb.gz',
+            'url': GOGA + '/gene_association.wb.gz'},
         '9823': {
-            'file': 'goa_pig.gaf.gz',
+            'file': 'gene_association.goa_ref_pig.gz',
             'url': GOGA + '/goa_pig.gaf.gz'},
         '9031': {
-            'file': 'goa_chicken.gaf.gz',
+            'file': 'gene_association.goa_ref_chicken.gz',
             'url': GOGA + '/goa_chicken.gaf.gz'},
         '9606': {
-            'file': 'goa_human.gaf.gz',
+            'file': 'gene_association.goa_ref_human.gz',
             'url': GOGA + '/goa_human.gaf.gz'},
         '9913': {
             'file': 'goa_cow.gaf.gz',
             'url': GOGA + '/goa_cow.gaf.gz'},
         '559292': {
-            'file': 'sgd.gaf.gz',
-            'url': GOGA + '/sgd.gaf.gz'},
+            'file': 'gene_association.sgd.gz',
+            'url': GOGA + '/gene_association.sgd.gz'},
         '4896': {
-            'file': 'pombase.gaf.gz',
-            'url': GOGA + '/pombase.gaf.gz'},
+            'file': 'gene_association.pombase.gz',
+            'url': GOGA + '/gene_association.pombase.gz'},
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
         #   'url': FTPEBI + 'GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
         'go-references': {
             'file': 'GO.references',
-            'url': 'http://www.geneontology.org/doc/GO.references'}, # Quoth the header of this file: "This file is DEPRECATED. Please see go-refs.json relative to this location" (http://current.geneontology.org/metadata/go-refs.json)
+            'url': 'http://www.geneontology.org/doc/GO.references'},
         'id-map': {  # 5GB mapping file takes 6 hours to DL ... maps UniProt to Ensembl
             'file': 'idmapping_selected.tab.gz',
             'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz'
