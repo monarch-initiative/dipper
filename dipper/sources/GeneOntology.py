@@ -111,10 +111,12 @@ class GeneOntology(Source):
         )
 
         # Defaults
-        self.tax_ids = tax_ids
+        # explicitly convert these to strings
+        self.tax_ids = list(map(str,tax_ids))
         self.test_ids = list()
+        
         if self.tax_ids is None:
-            self.tax_ids = [9606, 10090, 7955]
+            self.tax_ids = ['9606', '10090', '7955']
             LOG.info("No taxa set.  Defaulting to %s", str(tax_ids))
         else:
             LOG.info("Filtering on the following taxa: %s", str(tax_ids))
@@ -146,7 +148,7 @@ class GeneOntology(Source):
             if txid_num in ['go-references', 'id-map']:
                 continue
 
-            if not self.test_mode and int(txid_num) not in self.tax_ids:
+            if not self.test_mode and str(txid_num) not in self.tax_ids: 
                 continue
 
             gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
@@ -169,9 +171,9 @@ class GeneOntology(Source):
         line_counter = 0
         uniprot_hit = 0
         uniprot_miss = 0
-        if 7955 in self.tax_ids:
+        if '7955' in self.tax_ids:
             zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
-        if 6239 in self.tax_ids:
+        if '6239' in self.tax_ids:
             wbase = WormBase(self.graph_type, self.are_bnodes_skized)
 
         with gzip.open(file, 'rb') as csvfile:
@@ -373,7 +375,7 @@ class GeneOntology(Source):
             if uniprot_tot != 0:
                 uniprot_per = 100.0 * uniprot_hit / uniprot_tot
             LOG.info(
-                "Uniprot: %f.2%% of %i benifited from the 1/4 day id mapping download",
+                "Uniprot: %.2f%% of %i benefited from the 1/4 day id mapping download",
                 uniprot_per, uniprot_tot)
         return
 
@@ -404,7 +406,7 @@ class GeneOntology(Source):
                      uniref100, unifref90, uniref50, uniparc, pir, ncbitaxon, mim,
                      unigene, pubmed, embl, embl_cds, ensembl, ensembl_trs,
                      ensembl_pro, other_pubmed) = row
-                    if int(ncbitaxon) not in self.tax_ids:
+                    if str(ncbitaxon) not in self.tax_ids:
                         continue
                     genid = geneid.strip()
                     if geneid != '' and ';' not in genid:
