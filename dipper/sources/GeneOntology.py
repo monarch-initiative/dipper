@@ -110,9 +110,12 @@ class GeneOntology(Source):
             # file_handle=None
         )
 
-        # Defaults
-        # explicitly convert these to strings
-        self.tax_ids = list(map(str,tax_ids))
+        # explicitly convert tax_ids to strings
+        if tax_ids is None:
+            self.tax_ids = tax_ids
+        else:
+            self.tax_ids = list(map(str,tax_ids))        
+
         self.test_ids = list()
         
         if self.tax_ids is None:
