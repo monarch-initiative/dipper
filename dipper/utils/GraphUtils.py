@@ -155,7 +155,7 @@ class GraphUtils:
         From rdf graphs, count predicates in each and return a list of
         : param graph1 graph, hopefully RDFlib-like
         : param graph2 graph, ditto
-        : return data with count of predicates in each graph:
+        : return dict with count of predicates in each graph:
         : e.g.:
         :         {
         :         "has_a_property": {
@@ -172,4 +172,24 @@ class GraphUtils:
         for this_g in [graph1, graph2]:
             for this_p in this_g.predicates():
                 counts[this_p][str(this_g.identifier)] = counts[this_p][str(this_g.identifier)] + 1
+        return counts
+
+
+    @staticmethod
+    def count_predicates(graph):
+        '''
+        From rdf graphs, count predicates in each and return a list of
+        : param graph
+        : return dict with count of predicates in each graph:
+        : e.g.:
+        :         {
+        :         "has_a_property": 1234,
+        :         "has_another_property": 482
+        :         }
+        '''
+        # dict of dicts that acts sensibly when a key that doesn't
+        # exist is accessed
+        counts = defaultdict(int)
+        for this_p in graph.predicates():
+                counts[this_p] = counts[this_p] + 1
         return counts
