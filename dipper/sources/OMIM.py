@@ -13,7 +13,7 @@ from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
 from dipper import config
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
-from dipper.utils.BioLinkVocabulary import blv
+from dipper.utils.BioLinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
