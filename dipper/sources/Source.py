@@ -204,6 +204,9 @@ class Source:
 
         gu = GraphUtils(None)
 
+        # add count data to dataset graph
+        self.dataset.add_subj_obj_count_data(self.graph)
+        
         # the  _dataset description is always turtle
         gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
 
