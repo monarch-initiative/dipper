@@ -9,6 +9,7 @@ from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map as curie_map_class
+from collections import defaultdict
 
 LOG = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
     curie_map = curie_map_class.get()
     curie_util = CurieUtil(curie_map)
+
+    sub_counts = defaultdict(int)
+    obj_counts = defaultdict(int)
+    sub_obj_cat_count = defaultdict(lambda: defaultdict(int))
 
     # make global translation table available outside the ingest
     with open(
@@ -44,9 +49,18 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
+    def add_subject_object_category_counts(self, subject_category, object_category):
+        self.sub_counts[subject_category] += 1
+        self.obj_counts[object_category] += 1
+        self.sub_obj_cat_count[subject_category][object_category] += 1
+
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=None,
             literal_type=None, subject_category=None, object_category=None):
+
+        # add info about subject/object categories
+        self.add_subject_object_category_counts(subject_category, object_category)
+        
         # trying making infrence on type of object if none is supplied
         if object_is_literal is None:
             if self.curie_regexp.match(obj) is not None or\

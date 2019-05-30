@@ -63,7 +63,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self,  o_category=None, s_category=None):
         """
         Overrides  Association by including bnode support
 

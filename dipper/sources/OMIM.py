@@ -652,7 +652,7 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph(subject_category=blv.gene, object_category=blv.disease)
+        assoc.add_association_to_graph(s_category=blv.gene, o_category=blv.disease)
 
     @staticmethod
     def _get_description(entry):
@@ -716,7 +716,7 @@ class OMIM(OMIMSource):
                             self.globaltt['is_allele_of'])
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
-                            graph.addTriple(pmid, self.globaltt['is_about'], al_id, source_category=blv.publication)
+                            graph.addTriple(pmid, self.globaltt['is_about'], al_id, subject_category=blv.publication)
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
                             dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
