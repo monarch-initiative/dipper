@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-class BioLinkVocabulary(AutoName):
+class BioLinkVocabulary(Enum):    
     publication = auto()
     disease = auto()    
     gene = auto()    
