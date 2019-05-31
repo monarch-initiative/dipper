@@ -25,7 +25,8 @@ class ZFINSlim(Source):
         },
         'zpmap': {
             'file': 'zp-mapping-2019.txt',
-            'url': 'http://purl.obolibrary.org/obo/zp/src/curation/id_map_zfin.tsv' # Nico's updated mapping, May 2019
+            'url': 'http://purl.obolibrary.org/obo/zp/src/curation/id_map_zfin.tsv'
+                   # ^^ Nico's updated mapping, May 2019
         }
     }
 
@@ -83,11 +84,18 @@ class ZFINSlim(Source):
                  figure_id
                 ) = row
 
-                if ( modifier != "abnormal"):
+                if modifier != "abnormal":
                     LOG.warning("skipping phenotype with modifier != abnormal: " + modifier)
                     continue
 
-                zp_id = zfin_parser._map_octuple_to_phenotype(subterm1_id, pc_rel_id, superterm1_id, quality_id, subterm2_id, pc_rel2_id, superterm2_id, modifier)
+                zp_id = zfin_parser._map_octuple_to_phenotype(subterm1_id,
+                                                              pc_rel_id,
+                                                              superterm1_id,
+                                                              quality_id,
+                                                              subterm2_id,
+                                                              pc_rel2_id,
+                                                              superterm2_id,
+                                                              modifier)
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
                 model.makeLeader(gene_curie)

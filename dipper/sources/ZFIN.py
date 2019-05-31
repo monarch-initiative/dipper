@@ -1154,12 +1154,15 @@ class ZFIN(Source):
 
                 # ########### PHENOTYPES ##########
                 phenotype_id = self._map_octuple_to_phenotype(
-                    subterm1_id, postcomp1_rel_id, superterm1_id, quality_id, subterm2_id, postcomp2_rel_id, superterm2_id,
+                    subterm1_id, postcomp1_rel_id, superterm1_id, quality_id,
+                    subterm2_id, postcomp2_rel_id, superterm2_id,
                     modifier)
 
                 if phenotype_id is not None:
                     mapped_zpids.append([
-                        subterm1_id, postcomp1_rel_id, superterm1_id, quality_id, subterm2_id, postcomp2_rel_id, superterm2_id,
+                        subterm1_id, postcomp1_rel_id, superterm1_id,
+                        quality_id, subterm2_id, postcomp2_rel_id,
+                        superterm2_id,
                         modifier])
 
                 if pub_id != '':
@@ -2325,15 +2328,15 @@ class ZFIN(Source):
         return
 
     def _map_octuple_to_phenotype(
-             self,
-             subterm1_id,
-             post_composed_relationship_id_1,
-             superterm1_id,
-             quality_id,
-             subterm2_id,
-             post_composed_relationship_id_2,
-             superterm2_id,
-             modifier):
+            self,
+            subterm1_id,
+            post_composed_relationship_id_1,
+            superterm1_id,
+            quality_id,
+            subterm2_id,
+            post_composed_relationship_id_2,
+            superterm2_id,
+            modifier):
         """
         This will take the 8-part EQ-style annotation
         used in zp-mapping.txt and return the ZP id.
@@ -2357,7 +2360,12 @@ class ZFIN(Source):
         if modifier == mod_id:
             LOG.warning("no mapping for pato modifier " + modifier)
 
-        key = self._make_zpkey(subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id, mod_id)
+        key = self._make_zpkey(subterm1_id,
+                                   post_composed_relationship_id_1,
+                                   superterm1_id, quality_id,
+                                   subterm2_id,
+                                   post_composed_relationship_id_2,
+                                   superterm2_id, mod_id)
 
         mapping = self.zp_map.get(key)
 
@@ -2401,11 +2409,16 @@ class ZFIN(Source):
                 line_counter += 1
 
                 zp_id = row[0]
-                modifier = self.resolve("abnormal", False) # id_map_zfin.tsv only contains data for abnormal phenotypes
-                (subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id) = row[1].split("-")
+                # id_map_zfin.tsv only contains data for abnormal phenotypes                
+                modifier = self.resolve("abnormal", False)
+                (subterm1_id, post_composed_relationship_id_1, superterm1_id,
+                 quality_id, subterm2_id, post_composed_relationship_id_2,
+                 superterm2_id) = row[1].split("-")
 
                 key = self._make_zpkey(
-                    subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
+                    subterm1_id, post_composed_relationship_id_1, superterm1_id,
+                    quality_id, subterm2_id, post_composed_relationship_id_2,
+                    superterm2_id,
                     modifier)
 
                 zp_map[key] = {
@@ -2425,10 +2438,16 @@ class ZFIN(Source):
 
     def _make_zpkey(
             self,
-            subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id,
+            subterm1_id, post_composed_relationship_id_1, superterm1_id,
+            quality_id, subterm2_id, post_composed_relationship_id_2,
+            superterm2_id,
             modifier,
-            replace_empty_args_with_zeros = True): # this is the convention in Nico's file and elsewhere
-        args_for_key = [subterm1_id, post_composed_relationship_id_1, superterm1_id, quality_id, subterm2_id, post_composed_relationship_id_2, superterm2_id, modifier]
+            replace_empty_args_with_zeros=True):
+    # empty args -> zero is the convention in Nico's file and elsewhere
+        args_for_key = [subterm1_id, post_composed_relationship_id_1,
+                        superterm1_id, quality_id, subterm2_id,
+                        post_composed_relationship_id_2, superterm2_id,
+                        modifier]
         if replace_empty_args_with_zeros:
             args_for_key = [element or '0' for element in args_for_key]
 
