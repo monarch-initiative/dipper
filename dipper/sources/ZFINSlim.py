@@ -86,7 +86,7 @@ class ZFINSlim(Source):
                 if ( modifier != "abnormal"):
                     LOG.warning("skipping phenotype with modifier != abnormal: " + modifier)
                     continue
-                
+
                 zp_id = zfin_parser._map_octuple_to_phenotype(subterm1_id, pc_rel_id, superterm1_id, quality_id, subterm2_id, pc_rel2_id, superterm2_id, modifier)
 
                 gene_curie = "ZFIN:{0}".format(gene_id)
