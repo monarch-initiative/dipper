@@ -2361,11 +2361,11 @@ class ZFIN(Source):
             LOG.warning("no mapping for pato modifier " + modifier)
 
         key = self._make_zpkey(subterm1_id,
-                                   post_composed_relationship_id_1,
-                                   superterm1_id, quality_id,
-                                   subterm2_id,
-                                   post_composed_relationship_id_2,
-                                   superterm2_id, mod_id)
+                               post_composed_relationship_id_1,
+                               superterm1_id, quality_id,
+                               subterm2_id,
+                               post_composed_relationship_id_2,
+                               superterm2_id, mod_id)
 
         mapping = self.zp_map.get(key)
 
@@ -2409,7 +2409,7 @@ class ZFIN(Source):
                 line_counter += 1
 
                 zp_id = row[0]
-                # id_map_zfin.tsv only contains data for abnormal phenotypes                
+                # id_map_zfin.tsv only contains data for abnormal phenotypes
                 modifier = self.resolve("abnormal", False)
                 (subterm1_id, post_composed_relationship_id_1, superterm1_id,
                  quality_id, subterm2_id, post_composed_relationship_id_2,
