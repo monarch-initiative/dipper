@@ -6,7 +6,7 @@ import rdflib
 from dipper.utils import GraphUtils
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 class GraphUtilsTestCase(unittest.TestCase):
 
@@ -20,7 +20,6 @@ class GraphUtilsTestCase(unittest.TestCase):
         self.test_graph2_id = self.test_graph2.identifier
         self.enemyOf = rdflib.term.URIRef('http://www.perceive.net/schemas/relationship/enemyOf')
         self.name = rdflib.term.URIRef('http://xmlns.com/foaf/0.1/name')
-        return
 
     def tearDown(self):
         return
