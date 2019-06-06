@@ -1,0 +1,1 @@
+ZDB-FISH-151201-4	AB/TU + MO2-rnf207b + MO4-tp53	ZDB-STAGE-010723-8	Larval:Protruding-mouth	ZDB-STAGE-010723-8	Larval:Protruding-mouth	GO:0061337	cardiac conduction	BFO:0000066	occurs_in	ZFA:0000471	atrium	PATO:0002472	decreased velocity	abnormal							ZDB-PUB-141005-1	ZDB-EXP-041102-1
