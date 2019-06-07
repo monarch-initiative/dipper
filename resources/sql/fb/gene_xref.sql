@@ -1,4 +1,8 @@
-SELECT feature.uniquename, dbxref.accession, db.name
+SELECT
+    feature.uniquename as gene_id,
+    dbxref.accession as xref_id,
+    db.name as xref_source
+
 FROM feature
 
 JOIN cvterm cvt

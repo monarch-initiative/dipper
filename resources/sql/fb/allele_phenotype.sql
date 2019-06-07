@@ -9,8 +9,15 @@
 
    Note that the above file is larger because it also includes
    cvterm.name = 'derived_pheno_manifest'
+   which contain anatomy terms
  */
-SELECT feature.uniquename, featureprop.value, pub.uniquename, pub.title, pmid.accession, pmid.name
+SELECT
+    feature.uniquename as allele_id,
+    featureprop.value as pheno_desc,
+    pub.uniquename as pub_id,
+    pub.title as pub_title,
+    pmid.accession as pmid_id
+
 FROM feature
 
 JOIN featureprop

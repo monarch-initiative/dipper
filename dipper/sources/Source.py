@@ -837,8 +837,8 @@ class Source:
                 raise AssertionError('Incomming headers are missing expected column.')
 
             if got - exp != set():
-                LOG.warrning('Addtional new columns: %s', got - exp)
+                LOG.warning('Addtional new columns: %s', got - exp)
             else:
-                LOG.warrning('Check columns order')
+                LOG.warning('Check columns order')
 
         return (exp ^ got) & exp == set()
