@@ -2,9 +2,9 @@ import logging
 import hashlib
 
 from xml.sax import SAXParseException
+from collections import defaultdict
 from rdflib import URIRef, ConjunctiveGraph, util as rdflib_util
 from rdflib.namespace import DC, RDF, OWL
-from collections import defaultdict
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -168,12 +168,12 @@ class GraphUtils:
         '''
         # dict of dicts that acts sensibly when a key that doesn't
         # exist is accessed
-        counts = defaultdict(lambda: defaultdict(int)) 
+        counts = defaultdict(lambda: defaultdict(int))
         for this_g in [graph1, graph2]:
             for this_p in this_g.predicates():
-                counts[this_p][str(this_g.identifier)] = counts[this_p][str(this_g.identifier)] + 1
+                counts[this_p][str(this_g.identifier)] = \
+                    counts[this_p][str(this_g.identifier)] + 1
         return counts
-
 
     @staticmethod
     def count_predicates(graph):
@@ -191,5 +191,5 @@ class GraphUtils:
         # exist is accessed
         counts = defaultdict(int)
         for this_p in graph.predicates():
-                counts[this_p] = counts[this_p] + 1
+            counts[this_p] = counts[this_p] + 1
         return counts
