@@ -77,7 +77,7 @@ class Genotype():
         return
 
     def addGene(
-            self, gene_id, gene_label, gene_type=None, gene_description=None
+            self, gene_id, gene_label=None, gene_type=None, gene_description=None
     ):
         ''' genes are classes '''
         if gene_type is None:
