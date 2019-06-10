@@ -2,9 +2,9 @@ import logging
 import hashlib
 
 from xml.sax import SAXParseException
+from collections import defaultdict
 from rdflib import URIRef, ConjunctiveGraph, util as rdflib_util
 from rdflib.namespace import DC, RDF, OWL
-
 
 from dipper.utils.CurieUtil import CurieUtil
 
@@ -148,3 +148,48 @@ class GraphUtils:
         : return str
         '''
         return 'b' + hashlib.sha1(wordage.encode('utf-8')).hexdigest()[1:20]
+
+    @staticmethod
+    def compare_graph_predicates(graph1, graph2):
+        '''
+        From rdf graphs, count predicates in each and return a list of
+        : param graph1 graph, hopefully RDFlib-like
+        : param graph2 graph, ditto
+        : return dict with count of predicates in each graph:
+        : e.g.:
+        :         {
+        :         "has_a_property": {
+        :                 "graph1": 1234,
+        :                 "graph2": 1023},
+        :         "has_another_property": {
+        :                 "graph1": 94,
+        :                 "graph2": 51}
+        :         }
+        '''
+        # dict of dicts that acts sensibly when a key that doesn't
+        # exist is accessed
+        counts = defaultdict(lambda: defaultdict(int))
+        for this_g in [graph1, graph2]:
+            for this_p in this_g.predicates():
+                counts[this_p][str(this_g.identifier)] = \
+                    counts[this_p][str(this_g.identifier)] + 1
+        return counts
+
+    @staticmethod
+    def count_predicates(graph):
+        '''
+        From rdf graphs, count predicates in each and return a list of
+        : param graph
+        : return dict with count of predicates in each graph:
+        : e.g.:
+        :         {
+        :         "has_a_property": 1234,
+        :         "has_another_property": 482
+        :         }
+        '''
+        # dict of dicts that acts sensibly when a key that doesn't
+        # exist is accessed
+        counts = defaultdict(int)
+        for this_p in graph.predicates():
+            counts[this_p] = counts[this_p] + 1
+        return counts
