@@ -91,7 +91,7 @@
 "undetermined variant": "sequence_alteration"
 "Inversion": "inversion"
 "Microsatellite": "microsatellite"
-"protein only": "coding sequence alteration"
+"protein only": "protein_altering_variant"
 "CompoundHeterozygote": "compound heterozygous"
 "Haplotype": "haplotype"
 "Phase unknown": "haplotype"

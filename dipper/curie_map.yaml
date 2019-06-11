@@ -40,7 +40,6 @@
 'ECO': 'http://purl.obolibrary.org/obo/ECO_'                        # Evidence Code Ontology
 'EFO': 'http://www.ebi.ac.uk/efo/EFO_'                              # Experimental Factor Ontology (all kinds of stuff)
 'ENVO': 'http://purl.obolibrary.org/obo/ENVO_'                      # Environment Ontology
-'EOM': 'http://purl.obolibrary.org/obo/EOM_'                        # Elements of Morphology phentoypes
 'ERO': 'http://purl.obolibrary.org/obo/ERO_'                        # Eeagle-i Resource Ontology
 'faldo': 'http://biohackathon.org/resource/faldo#'                  # Feature Annotation Location Description Ontology
 'FBcv': 'http://purl.obolibrary.org/obo/FBcv_'                      # FlyBase Controled Vocabulary (includes phenotypes)
@@ -95,6 +94,9 @@
 'NCIT': 'http://purl.obolibrary.org/obo/NCIT_'                      # National Cancer Institute Thesaurus
 'SEPIO': 'http://purl.obolibrary.org/obo/SEPIO_'                    # Scientific Evidence and Provenance Information Ontology
 'VIVO': 'http://vivoweb.org/ontology/core#'                         # ontology for representing scholarship
+
+# phenotype
+'EOM': 'http://elementsofmorphology.nih.gov/index.cgi?tid='         # Elements of Morphology phentoypes
 
 # publication/reference sources
 'DOI': 'http://dx.doi.org/'                                         # Digital Object identifier
@@ -218,7 +220,7 @@
                                                                                    # may become "GtoPdb"
 'IUPHAR': 'http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=' # Omnibus pharmacological information portal
 
-#Drugs, chemicals, compounds
+# Drugs, chemicals, compounds
 'CID': 'http://pubchem.ncbi.nlm.nih.gov/compound/'          # NCBI PubChem Compound
 'DrugBank': 'http://www.drugbank.ca/drugs/'                 # DrugBank database (drugs and drug targets)
 'SIO': 'http://semanticscience.org/resource/SIO_'           # Semanticscience Integrated Ontology

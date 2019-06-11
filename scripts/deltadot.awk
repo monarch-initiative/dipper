@@ -1,12 +1,15 @@
 #! /usr/bin/awk -f
-#deltadot.awk <encumbant.gv> <candidate.gv>
+# deltadot.awk <encumbant.gv> <candidate.gv>
 # Use to illuminate the commonality and differences between dot files created
 # by 'ntriples2dot.awk' but might work for other dot files
 #
+# To ignore counts
+# deltadot.awk -v"NOCOUNTS=1" <encumbant.gv> <candidate.gv>
 #
-# expects two graphviz dot digraph files by convention "old"  then "new"
+# expects two graphviz dot digraph files;
+# by convention "old"  then "new"
 # for color to mean;  orange lost in "new" and blue gained in "new"
-# with simple node names ('C' variable naming conventions)
+# with simple node names ('C-lang' variable naming conventions)
 # edge's unadorned predicate label
 # concludes with a space then count in parens
 #
@@ -17,6 +20,11 @@
 # if an edge is common between the files
 # then change its "count" to the difference. (second minus first)
 # otherwise leave count as is
+# UNLESS there is a parameter NOCOUNTS not equal to 0
+# in which case set all counts the same
+# this is for use when the counts have no meaning
+# such as with random samples
+
 
 # associate the count with an edge
 function parse(str, arr){
@@ -29,6 +37,7 @@ function de_path_ext(pth){
 	split(pth, a, "/")
 	return substr(a[length(a)], 1, index(a[length(a)], ".")-1)
 }
+BEGIN { NOCOUNTS=0}
 
 # collect the edges
 NR==FNR && / -> / {
@@ -45,7 +54,10 @@ END{
 		if(!(e in edge2)) edges[e "(" edge1[e] ")\", color=\"orange\"];"];
 		else {
 			# TODO flag losses?
-			diff =  edge2[e] - edge1[e];
+			if(NOCOUNTS)
+			    diff = ""
+			else
+			    diff = edge2[e] - edge1[e];
 			#if(diff < 0) diff = "<b>" diff "</b>";
 			edges[e "(" diff ")\", color=\"black\"];"]
 			delete edge2[e]

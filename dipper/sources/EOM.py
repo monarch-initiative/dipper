@@ -38,12 +38,49 @@ class EOM(PostgreSQLSource):
     tables = [
         'dvp.pr_nlx_157874_1'
     ]
+
     GHRAW = 'https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology'
     files = {
-        'map': {
+        'map': {  # in 2019 this repo has beem untouched in four years
             'file': 'hp-to-eom-mapping.tsv',
-            'url': GHRAW + '/master/src/mappings/hp-to-eom-mapping.tsv'
+            'url': GHRAW + '/master/src/mappings/hp-to-eom-mapping.tsv',
+            'columns': [
+                'morphology_term_id',
+                'morphology_term_label',
+                'HP ID',
+                'HP Label',
+                'Notes'
+            ]
         }
+    }
+    resources = {
+        'tables': {
+            'url': 'nif-db.crbs.ucsd.edu:5432',
+            'file': 'dvp.pr_nlx_157874_1',
+            'columns': [
+                # head -1 dvp.pr_nlx_157874_1 | tr '\t' '\n' |sed "s|\(.*\)|'\1',|g"
+                'morphology_term_id',
+                'morphology_term_num',
+                'morphology_term_label',
+                'morphology_term_url',
+                'terminology_category_label',
+                'terminology_category_url',
+                'subcategory',
+                'objective_definition',
+                'subjective_definition',
+                'comments',
+                'synonyms',
+                'replaces',
+                'small_figure_url',
+                'large_figure_url',
+                'e_uid',
+                'v_uid',
+                'v_uuid',
+                'v_lastmodified',
+                'v_status',
+                'v_lastmodified_epoch'
+            ],
+        },
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):
@@ -57,8 +94,6 @@ class EOM(PostgreSQLSource):
             license_url='https://creativecommons.org/publicdomain/mark/1.0/'
             # file_handle=None
         )
-
-        return
 
     def fetch(self, is_dl_forced=False):
         '''connection details for DISCO'''
@@ -84,8 +119,6 @@ class EOM(PostgreSQLSource):
         filedate = datetime.utcfromtimestamp(fstat[ST_CTIME]).strftime("%Y-%m-%d")
         self.dataset.setVersion(filedate)
 
-        return
-
     def parse(self, limit=None):
         '''
             Over ride Source.parse inherited via PostgreSQLSource
@@ -110,12 +143,9 @@ class EOM(PostgreSQLSource):
         # we default to copying the entire graph to the test set
         self.testgraph = self.graph
 
-        return
-
     def _process_nlx_157874_1_view(self, raw, limit=None):
         """
-        This table contains the Elements of Morphology data that has been
-        screen-scraped into DISCO.
+        This table contains the Elements of Morphology data .
         Note that foaf:depiction is inverse of foaf:depicts relationship.
 
         Since it is bad form to have two definitions,
@@ -131,30 +161,48 @@ class EOM(PostgreSQLSource):
                 foaf:page Literal(page_url)
                 rdfs:comment Literal(long commented text)
 
+        TEC_note: URL are not literals.
+
 
         :param raw:
         :param limit:
         :return:
         """
 
+        src_key = 'tables'
         model = Model(self.graph)
-        with open(raw, 'r') as f1:
-            f1.readline()  # read the header row; skip
-            reader = csv.reader(f1, delimiter='\t', quotechar='\"')
-            for line in reader:
-                (morphology_term_id, morphology_term_num,
-                 morphology_term_label, morphology_term_url,
-                 terminology_category_label, terminology_category_url,
-                 subcategory, objective_definition, subjective_definition,
-                 comments, synonyms, replaces, small_figure_url,
-                 large_figure_url, e_uid, v_uid, v_uuid,
-                 v_last_modified, v_status, v_lastmodified_epoch) = line
+        col = self.resources[src_key]['columns']
+        with open(raw, 'r') as rawread:
+            reader = csv.reader(rawread, delimiter='\t', quotechar='\"')
+            row = next(reader)
+            if not self.check_fileheader(col, row):
+                pass
 
-                # note:
-                # e_uid v_uuid v_last_modified terminology_category_url
-                # subcategory v_uid morphology_term_num
-                # terminology_category_label hp_label notes
-                # are currently unused.
+            for row in reader:
+                # head -1 dvp.pr_nlx_157874_1|tr '\t' '\n'|
+                # sed "s|\(.*\)|# \1 = row[col.index('\1')]|g"
+
+                morphology_term_id = row[col.index('morphology_term_id')].strip()
+                # morphology_term_num = row[col.index('morphology_term_num')]
+                morphology_term_label = row[col.index('morphology_term_label')].strip()
+                morphology_term_url = row[col.index('morphology_term_url')].strip()
+                # terminology_category_label = row[
+                #   col.index('terminology_category_label')]
+                # terminology_category_url = row[col.index('terminology_category_url')]
+                # subcategory = row[col.index('subcategory')]
+                objective_definition = row[col.index('objective_definition')].strip()
+                subjective_definition = row[col.index('subjective_definition')].strip()
+                comments = row[col.index('comments')].strip()
+                synonyms = row[col.index('synonyms')].strip()
+                replaces = row[col.index('replaces')].strip()
+                small_figure_url = row[col.index('small_figure_url')].strip()
+                large_figure_url = row[col.index('large_figure_url')].strip()
+                # e_uid = row[col.index('e_uid')]
+                # v_uid = row[col.index('v_uid')]
+                # v_uuid = row[col.index('v_uuid')]
+                # v_lastmodified = row[col.index('v_lastmodified')]
+                # v_status = row[col.index('v_status')]
+                # v_lastmodified_epoch = row[col.index('v_lastmodified_epoch')]
 
                 # Add morphology term to graph as a class
                 # with label, type, and description.
@@ -165,14 +213,14 @@ class EOM(PostgreSQLSource):
                 if subjective_definition != '' and not (
                         re.match(r'.+\.$', subjective_definition)):
                     # add a trailing period.
-                    subjective_definition = subjective_definition.strip() + '.'
+                    subjective_definition = subjective_definition + '.'
                 if objective_definition != '' and not (
                         re.match(r'.+\.$', objective_definition)):
                     # add a trailing period.
-                    objective_definition = objective_definition.strip() + '.'
+                    objective_definition = objective_definition + '.'
 
                 definition = '  '.join(
-                    (objective_definition, subjective_definition)).strip()
+                    (objective_definition, subjective_definition))
 
                 model.addDefinition(morphology_term_id, definition)
 
@@ -182,17 +230,15 @@ class EOM(PostgreSQLSource):
                 # do we want both images?
                 # morphology_term_id has depiction small_figure_url
                 if small_figure_url != '':
-                    model.addDepiction(morphology_term_id,
-                                       small_figure_url)
+                    model.addDepiction(morphology_term_id, small_figure_url)
 
                 # morphology_term_id has depiction large_figure_url
                 if large_figure_url != '':
-                    model.addDepiction(morphology_term_id,
-                                       large_figure_url)
+                    model.addDepiction(morphology_term_id, large_figure_url)
 
                 # morphology_term_id has comment comments
                 if comments != '':
-                    model.addComment(morphology_term_id, comments.strip())
+                    model.addComment(morphology_term_id, comments)
 
                 for syn in synonyms.split(';'):
                     model.addSynonym(
@@ -200,21 +246,25 @@ class EOM(PostgreSQLSource):
                         self.globaltt['has_exact_synonym'])
 
                 # morphology_term_id has_related_synonym replaces (; delimited)
-                if replaces != '' and replaces != synonyms:
+                if replaces not in ['', synonyms]:
                     for syn in replaces.split(';'):
                         model.addSynonym(
                             morphology_term_id, syn.strip(),
                             self.globaltt['has_related_synonym'])
 
                 # <morphology_term_id> <foaf:page> morphology_term_url
-                if morphology_term_id is not None and morphology_term_url is not None:
+                if morphology_term_id is not None:
                     reference = Reference(
-                        self.graph, morphology_term_url, self.globaltt['web page'])
+                        self.graph, morphology_term_id, self.globaltt['web page'])
+
+                    # TEC 201905:
+                    # Not so sure we need explicit   <eom_uri> <webpage> <eom_url>.
+                    # since <eom_uri> IS the <eom_url>.
+
                     reference.addPage(morphology_term_id, morphology_term_url)
 
                 if limit is not None and reader.line_num > limit:
                     break
-        return
 
     def _map_eom_terms(self, raw, limit=None):
         """
@@ -228,29 +278,34 @@ class EOM(PostgreSQLSource):
 
         model = Model(self.graph)
         line_counter = 0
-        with open(raw, 'r') as f1:
-            f1.readline()  # read the header row; skip
-            for line in f1:
+        col = self.files['map']['columns']
+        with open(raw, 'r') as reader:
+            line = reader.readline().strip()
+            line = line.strip('/n')
+            if self.check_fileheader(col, line.split('\t')):
+                pass
+            for line in reader:
                 line_counter += 1
-                row = line.split('\t')
-                (
-                    morphology_term_id, morphology_term_label, hp_id, hp_label,
-                    notes) = row
+                row = line.strip('\n').split('\t')
+
+                morphology_term_id = row[col.index('morphology_term_id')].strip()
+                # morphology_term_label = row[col.index('morphology_term_label')]
+                hp_id = row[col.index('HP ID')].strip()
+                # hp_label = row[col.index('HP_Label')]
+                # notes = row[col.index('Notes')]
 
                 # Sub out the underscores for colons.
                 hp_id = re.sub('_', ':', hp_id)
                 if re.match(".*HP:.*", hp_id):
                     # add the HP term as a class
-                    model.addClassToGraph(hp_id, None)
+                    model.addClassToGraph(hp_id, None)  # TEC subclass of phenotype??
                     # Add the HP ID as an equivalent class
                     model.addEquivalentClass(morphology_term_id, hp_id)
                 else:
-                    LOG.warning('No matching HP term for %s', morphology_term_label)
+                    LOG.warning('No matching HP term for %s', morphology_term_id)
 
                 if limit is not None and line_counter > limit:
                     break
-
-        return
 
     def getTestSuite(self):
         import unittest

@@ -200,7 +200,7 @@ class Model():
 
     def addDepiction(self, subject_id, image_url):
         self.graph.addTriple(
-            subject_id, self.globaltt['depiction'], image_url, object_is_literal=True)
+            subject_id, self.globaltt['depiction'], image_url, object_is_literal=False)
 
     def addComment(self, subject_id, comment):
         self.graph.addTriple(
