@@ -1,6 +1,5 @@
 
 import logging
-import os
 import psycopg2
 from dipper.sources.Source import Source
 
@@ -41,7 +40,7 @@ class PostgreSQLSource(Source):
         # globaltcid = self.globaltcid
         # all_test_ids = self.all_test_ids
 
-    def fetch_from_pgdb(self, tables, cxn, limit=None, force=False):
+    def fetch_from_pgdb(self, tables, cxn, limit=None):
         """
         Will fetch all Postgres tables from the specified database
             in the cxn connection parameters.
@@ -75,33 +74,30 @@ class PostgreSQLSource(Source):
 
                 # download the file
                 LOG.info("COMMAND:%s", query)
-                outputquery = """
-                   COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER""".format(query)
-                with open(outfile, 'w') as f:
-                    cur.copy_expert(outputquery, f)
+                outputquery = "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER"\
+                              .format(query)
+                with open(outfile, 'w') as tsvfile:
+                    cur.copy_expert(outputquery, tsvfile)
 
                 filerowcount = self.file_len(outfile)
 
                 if (filerowcount - 1) < tablerowcount:
                     raise Exception(
-                        "Download from %s failed, %s != %s",
-                        cxn['host'] + ':' + cxn['database'],
-                        (filerowcount - 1),
-                        tablerowcount
-                    )
-                elif (filerowcount - 1) > tablerowcount:
+                        "Download from {} failed, {} != {}"
+                        .format(cxn['host'] + ':' + cxn['database'],
+                                (filerowcount - 1), tablerowcount))
+                if (filerowcount - 1) > tablerowcount:
                     LOG.warning(
-                        "Fetched from %s more rows in file (%s) than reported in count(%s)",
+                        "Fetched from %s more rows in file (%s) than reported "
+                        "in count(%s)",
                         cxn['host'] + ':' + cxn['database'],
-                        (filerowcount - 1),
-                        tablerowcount
-                    )
+                        (filerowcount - 1), tablerowcount)
 
         finally:
             if con:
                 con.close()
 
-    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None, force=False):
+    def fetch_query_from_pgdb(self, qname, query, con, cxn, limit=None):
         """
         Supply either an already established connection, or connection parameters.
         The supplied connection will override any separate cxn parameter
@@ -135,20 +131,20 @@ class PostgreSQLSource(Source):
         outputquery = \
             "COPY ({0}) TO STDOUT WITH DELIMITER AS '\t' CSV HEADER".format(query)
 
-        with open(outfile, 'w') as f:
-            cur.copy_expert(outputquery, f)
+        with open(outfile, 'w') as tsvfile:
+            cur.copy_expert(outputquery, tsvfile)
         # Regenerate row count to check integrity
         filerowcount = self.file_len(outfile)
         if (filerowcount-1) < tablerowcount:
             raise Exception(
-                    "Download from %s failed, %s != %s", cxn['host'] + ':' +
-                    cxn['database'], (filerowcount-1), tablerowcount)
-        elif (filerowcount-1) > tablerowcount:
-                LOG.warning(
-                    "Fetched from %s more rows in file (%s) than reported in count(%s)",
-                    cxn['host'] + ':'+cxn['database'], (filerowcount-1), tablerowcount)
+                "Download from {} failed, {} != {}"
+                .format(cxn['host'] + ':' + cxn['database'],
+                        (filerowcount-1), tablerowcount))
+        if (filerowcount-1) > tablerowcount:
+            LOG.warning(
+                "Fetched from %s more rows in file (%s) than reported in count(%s)",
+                cxn['host'] + ':'+cxn['database'], (filerowcount-1), tablerowcount)
 
-    # TODO generalize this to a set of utils
     @staticmethod
     def _getcols(cur, table):
         """
@@ -162,7 +158,6 @@ class PostgreSQLSource(Source):
         cur.execute(query)
         colnames = [desc[0] for desc in cur.description]
         LOG.info("COLS (%s): %s", table, colnames)
-
 
     # abstract
     def fetch(self, is_dl_forced=False):
