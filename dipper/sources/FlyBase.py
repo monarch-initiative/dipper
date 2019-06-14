@@ -72,16 +72,21 @@ class FlyBase(PostgreSQLSource):
 
     files = {
         'disease_model': {
-            'file': 'allele_human_disease_model_data.tsv.gz',
-            'url':  r'human_disease/allele_human_disease_model_data_fb_.*\.tsv\.gz',
+            'file': 'disease_model_annotations.tsv.gz',
+            'url':  r'human_disease/disease_model_annotations_.*\.tsv\.gz',
             'columns': [
-                'FBal_ID',
-                'AlleleSymbol',
-                'DOID_qualifier',
-                'DOID_term',
-                'DOID_ID',
-                'Evidence/interacting_alleles',
-                'Reference_FBid',
+                'FBgn ID',
+                'Gene symbol',
+                'HGNC ID',
+                'DO qualifier',
+                'DO ID',
+                'DO term',
+                'Allele used in model (FBal ID)',
+                'Allele used in model (symbol)',
+                'Based on orthology with (HGNC ID)',
+                'Based on orthology with (symbol)',
+                'Evidence/interacting alleles',
+                'Reference (FBrf ID)'
             ]
         },
         'species_map': {
@@ -186,8 +191,8 @@ class FlyBase(PostgreSQLSource):
             LOG.info("Only parsing first %d rows of each file", limit)
         LOG.info("Parsing files...")
 
-        self._process_allele_phenotype(limit)
         self._process_disease_model(limit)
+        self._process_allele_phenotype(limit)
         self._process_allele_gene(limit)
         self._process_gene_xref(limit)
 
@@ -232,7 +237,6 @@ class FlyBase(PostgreSQLSource):
             row = next(reader)  # headers
             self.check_fileheader(col, row)
             next(reader)  # Go to next line
-            prefix_set = set()  # for debugging
 
             for row in reader:
                 allele_id = row[col.index('allele_id')]
@@ -255,10 +259,11 @@ class FlyBase(PostgreSQLSource):
                 else:
                     raise ValueError("Could not parse id {}".format(terms[0]))
 
-                prefix_set.add(prefix)
-
-                # FBcv, FBdv
+                # FBcv
                 phenotype_curie = prefix + ':' + reference
+                if prefix != 'FBcv':
+                    LOG.warn('Pheno desc does not start with FBcv: %s', pheno_desc)
+                    continue
 
                 if pmid_id:
                     ref_curie = 'PMID:' + pmid_id
@@ -309,8 +314,6 @@ class FlyBase(PostgreSQLSource):
 
                 if limit is not None and reader.line_num > limit:
                     break
-
-            LOG.info("Phenotype prefixes\n%s\n######", '\n'.join(prefix_set))
 
     def _species_to_ncbi_tax(self) -> Dict[str, Tuple[str, str]]:
         """
@@ -596,7 +599,7 @@ class FlyBase(PostgreSQLSource):
                 next(reader)
 
             row = next(reader)  # headers
-            row[0] = row[0][2:]  # uncomment
+            row[0] = row[0][3:]  # uncomment
 
             self.check_fileheader(col, row)
 
@@ -607,11 +610,17 @@ class FlyBase(PostgreSQLSource):
                 if ''.join(row).startswith('#') or not ''.join(row).strip():
                     continue
 
-                allele_id = row[col.index('FBal_ID')]
-                flybase_ref = row[col.index('Reference_FBid')]
-                evidence_or_allele = row[col.index('Evidence/interacting_alleles')]
-                doid_id = row[col.index('DOID_ID')]
-                doid_qualifier = row[col.index('DOID_qualifier')]
+                allele_id = row[col.index('Allele used in model (FBal ID)')]
+                flybase_ref = row[col.index('Reference (FBrf ID)')]
+                evidence_or_allele = row[col.index('Evidence/interacting alleles')]
+                doid_id = row[col.index('DO ID')]
+                doid_qualifier = row[col.index('DO qualifier')]
+
+                # Rows without an allele id may be "potential models through orthology"
+                # We skip these because we can already make that inference
+                # http://flybase.org/reports/FBgn0000022
+                if not allele_id:
+                    continue
 
                 allele_curie = 'FlyBase:' + allele_id
                 if doid_qualifier == 'model of':
