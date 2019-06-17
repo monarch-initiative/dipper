@@ -121,11 +121,22 @@ class GeneOntology(Source):
             'url': GOGA + '/sgd.gaf.gz',
             'columnns': gaf_columns
         },
-        '4896': {
+        '4896': {  # Schizosaccharomyces pombe  (yeast)
             'file': 'pombase.gaf.gz',
             'url': GOGA + '/pombase.gaf.gz',
             'columnns': gaf_columns
         },
+        '5782': {  # Dictyostelium (slime mold)
+            'file': 'dictibase.gaf.gz',
+            'url': GOGA + '/dictybase.gaf.gz',
+            'columnns': gaf_columns
+        },
+        '5052':  {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
+            'file': 'aspgd.gaf.gz',
+            'url': GOGA + '/aspgd.gaf.gz',
+            'columnns': gaf_columns
+        },
+
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
@@ -187,10 +198,13 @@ class GeneOntology(Source):
         )
         self.test_ids = []
         # note: dipper-etl defaults tax_ids to '9606'
-
         if tax_ids is not None and [] != set(tax_ids).difference(['9606']):
-            LOG.info('See %s given as taxon to process', str(tax_ids))
+            LOG.info('Have %s given as taxon to ingest', str(tax_ids))
             self.tax_ids = [str(x) for x in tax_ids]
+            nottax = set(tax_ids) - set(self.files.keys())
+            if nottax:
+                LOG.error('Cant process taxon number(s):\t%s', str(nottax))
+                self.tax_ids = list(set(self.tax_ids) - nottax)
         else:
             self.tax_ids = ['9606', '10090', '7955']
 
