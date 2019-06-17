@@ -330,7 +330,7 @@ class GeneOntology(Source):
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
                         syn = syn.strip()
-                        if graph.curie_regexp.fullmatch(syn):
+                        if re.fullmatch(graph.curie_regexp, syn) is not None:
                             model.addSameIndividual(gene_id, syn)
                         else:
                             model.addSynonym(gene_id, syn)
