@@ -320,9 +320,8 @@ class GeneOntology(Source):
                     gene_num = gene_num.split(':')[-1]  # last
                     gene_id = ':'.join((dbase, gene_num))
 
-                if self.test_mode and not(
-                        re.match(r'NCBIGene', gene_id) and
-                        int(gene_num) in self.test_ids):
+                if self.test_mode and gene_id[:9] != 'NCBIGene:' and\
+                        gene_num not in self.test_ids:
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
@@ -330,7 +329,11 @@ class GeneOntology(Source):
                     model.addDescription(gene_id, gene_name)
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
-                        model.addSynonym(gene_id, syn.strip())
+                        syn = syn.strip()
+                        if graph.curie_regexp.fullmatch(syn):
+                            model.addSameIndividual(gene_id, syn)
+                        else:
+                            model.addSynonym(gene_id, syn)
 
                 for txid in taxon.split('|'):
                     tax_curie = re.sub(r'taxon:', 'NCBITaxon:', txid)
