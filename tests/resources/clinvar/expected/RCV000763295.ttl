@@ -86,7 +86,7 @@ BNODE:bd4ef2b55470e2ff6b1c a OBO:ECO_0000000 ;
     oboInOwl:hasdbxref ClinVar:RCV000763295 .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105> a foaf:organization ;
-    rdfs:label "Fulgent Genetics,Fulgent Genetics" .
+    rdfs:label "Fulgent Genetics" .
 
 <http://www.ncbi.nlm.nih.gov/clinvar/variation/40123> a OBO:SO_0001483 ;
     rdfs:label "NM_018082.5(POLR3B):c.1568T>A (p.Val523Glu)" ;

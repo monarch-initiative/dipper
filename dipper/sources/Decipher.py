@@ -37,7 +37,7 @@ class Decipher(Source):
         'annot': {
             'file': 'ddg2p.zip',
             'url': 'https://decipher.sanger.ac.uk/files/ddd/ddg2p.zip',
-            'headers'}
+            'headers': []}
     }
 
     def __init__(self, graph_type, are_bnodes_skolemized):

@@ -328,7 +328,7 @@ class Source:
                     LOG.warning("New Remote File exists but it is SMALLER")
                     is_remote_newer = True
                 # filesize is a fairly imperfect metric here
-                LOG.info("New Remote fFle has same filesize--will not download")
+                LOG.info("New Remote File has same filesize--will not download")
         elif fstat[ST_SIZE] != size:
             LOG.info(
                 "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])

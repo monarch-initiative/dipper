@@ -232,6 +232,11 @@ class FlyBase(PostgreSQLSource):
         # flybase terms - terms we prefix with FlyBase:
         fly_prefixes = ['FBal', 'FBti', 'FBab', 'FBba', 'FBtp']
 
+        # a alphanumeric id followed by a colon then
+        # any character but a colon bordered by @s
+        term_regex = re.compile(r'@([\w]*):[^:@]*@')
+        id_regex = re.compile(r'([a-zA-Z]+)(\d+)')
+
         with open(raw, 'r') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             row = next(reader)  # headers
@@ -246,11 +251,6 @@ class FlyBase(PostgreSQLSource):
                 pmid_id = row[col.index('pmid_id')]
 
                 allele_curie = 'FlyBase:' + allele_id
-
-                # a alphanumeric id followed by a colon then
-                # any character but a colon bordered by @s
-                term_regex = re.compile(r'@([\w]*):[^:@]*@')
-                id_regex = re.compile(r'([a-zA-Z]+)(\d+)')
 
                 terms = re.findall(term_regex, pheno_desc)
                 id_match = re.match(id_regex, terms[0])

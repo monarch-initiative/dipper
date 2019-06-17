@@ -16,7 +16,7 @@ TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/clinvar')
 NT_PATH  = TEST_PATH + "/nt/"
 DOT_PATH = TEST_PATH + "/dot/"
 XML_PATH = TEST_PATH + "/input/"
-TTL_PATH = TEST_PATH + "/output/"
+TTL_PATH = TEST_PATH + "/expected/"
 
 # IDs for the files in resources/clinvar/{RCV}.xml.gz, reused for output {RCV}.nt
 RCVS = [
@@ -29,7 +29,7 @@ RCVS = [
     'RCV000087646'
 ]
 
-MAP_FILE = 'gene_condition_source_id'
+MAP_FILE = 'gene_condition_test_set.tsv'
 
 
 class ClinVarTestCase(unittest.TestCase):
@@ -70,5 +70,3 @@ class ClinVarTestCase(unittest.TestCase):
                     rdf2dot(query_graph, dot_file)
 
                 self.assertTrue(TestUtils.test_graph_equality(ref_graph, query_graph))
-
-                #self.assertTrue(True)
