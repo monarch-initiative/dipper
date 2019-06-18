@@ -51,8 +51,10 @@ class ZFIN(Source):
     genomic variation complements, variant loci, extrinsic genotypes,
     and extrinsic genotype parts).
 
-    Furthermore, we process the genotype components to build labels
-    in a monarch-style.  This leads to genotype labels that include:
+    Genotype labels are output as ZFIN genotype name + "[background]".
+    We also process the genotype components to build labels
+    in a monarch-style, and these are added as synonyms. The monarch-style
+    genotype label includes:
     *  all genes targeted by reagents (morphants, crisprs, etc),
     in addition to the ones that the reagent was designed against.
     *  all affected genes within deficiencies
@@ -485,7 +487,7 @@ class ZFIN(Source):
 
             fish_type = self.globaltt['effective_genotype']
 
-            geno.addGenotype(fish_id, fish_label, fish_type)
+            geno.addGenotype(fish_id, intrinsic_genotype_label, fish_type)
             geno.addTaxon(taxon_id, fish_id)
 
             # since we re-create a label,
@@ -543,14 +545,14 @@ class ZFIN(Source):
 
         By the end of this method, we have built up the intrinsic genotype,
         with Monarch-style labels.
-        All ZFIN labels are added as synonyms (including the "sup" html tags).
+        Original ZFIN labels are added (including the "sup" html tags), and
+        Monarch-style labels are added as synonyms.
 
         We make assumptions here that any variants that affect the same locus
         are in trans.
         All of the genotype parts are created as BNodes at the moment,
         to avoid minting new Monarch ids, which means for anyone consuming this
         data they are inherently unstable.  This may change in the future.
-
 
         :param limit:
         :return:
@@ -594,7 +596,7 @@ class ZFIN(Source):
                 genotype_id = 'ZFIN:' + genotype_num.strip()
                 geno.addGenotype(genotype_id, None)
 
-                # add the given name and uniquename as synonyms
+                # add the given name from ZFIN and uniquename as synonyms
                 model.addSynonym(genotype_id, genotype_name)
                 model.addSynonym(genotype_id, genotype_unique_name)
 
@@ -900,24 +902,29 @@ class ZFIN(Source):
             else:
                 background_num = re.sub(r'ZFIN:', '', gt)
                 background_id = '_:bkgd-'+background_num
-                background_label = 'n.s. (' + background_num + ')'
+                background_label = 'unspecified background'
+                background_label_and_num = \
+                    'unspecified background (' + background_num + ')'
                 background_desc = 'This genomic background is unknown. ' +\
                     'This is a placeholder background for ' + gt + '.'
                 # there is no background for this genotype;
                 # need to add the taxon to this one!
                 # make an anonymous background for this genotype
                 geno.addGenomicBackground(
-                    background_id, background_label, None, background_desc)
+                    background_id, background_label_and_num, None, background_desc)
                 geno.addGenomicBackgroundToGenotype(background_id, gt)
-                background_label = 'n.s.'
 
             geno.addTaxon(taxon_id, background_id)
 
-            genotype_name = gvc_label + ' [' + background_label + ']'
+            # add genotype_name + background as label for this gt
+            genotype_name_background = genotype_name + ' [' + background_label + ']'
+            geno.addGenotype(gt, genotype_name_background)
 
-            geno.addGenotype(gt, genotype_name)
+            # add monarch_genotype_name as synonym
+            monarch_genotype_name = gvc_label + ' [' + background_label + ']'
+            model.addSynonym(gt, monarch_genotype_name)
 
-            self.id_label_map[gt] = genotype_name
+            self.id_label_map[gt] = monarch_genotype_name
 
             # Add the GVC to the genotype
             geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
@@ -2515,11 +2522,11 @@ class ZFIN(Source):
                 'dose': '3000 rads',
                 'type': 'Radiation Hybrid'},
         }
-        p = None
+        p_ret = None
         if panel in panel_hash:
-            p = panel_hash[panel]
+            p_ret = panel_hash[panel]
 
-        return p
+        return p_ret
 
     @staticmethod
     def _make_variant_locus_id(gene_id, allele_id):
