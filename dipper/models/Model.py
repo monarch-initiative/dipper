@@ -55,7 +55,8 @@ class Model():
         :return:
 
         """
-        assert class_id is not None
+        if class_id is None:
+            raise ValueError("class_id is None")
 
         self.graph.addTriple(
             class_id, self.globaltt['type'], self.globaltt['class'])

@@ -70,3 +70,7 @@ class ClinVarTestCase(unittest.TestCase):
                     rdf2dot(query_graph, dot_file)
 
                 self.assertTrue(TestUtils.test_graph_equality(ref_graph, query_graph))
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -241,7 +241,6 @@ class FlyBase(PostgreSQLSource):
             reader = csv.reader(tsvfile, delimiter='\t')
             row = next(reader)  # headers
             self.check_fileheader(col, row)
-            next(reader)  # Go to next line
 
             for row in reader:
                 allele_id = row[col.index('allele_id')]
@@ -351,7 +350,7 @@ class FlyBase(PostgreSQLSource):
 
             self.check_fileheader(col, row)
 
-            next(reader)  # Go to next line
+            next(reader)  # blank line
 
             for row in reader:
                 row = [field.strip() for field in row]
@@ -395,8 +394,6 @@ class FlyBase(PostgreSQLSource):
 
             self.check_fileheader(col, row)
 
-            next(reader)  # Go to next line
-
             for row in reader:
                 # File ends with a final comment
                 if ''.join(row).startswith('#'):
@@ -434,7 +431,6 @@ class FlyBase(PostgreSQLSource):
             reader = csv.reader(tsvfile, delimiter='\t')
             row = next(reader)  # headers
             self.check_fileheader(col, row)
-            next(reader)  # Go to next line
 
             for row in reader:
                 gene_id = row[col.index('gene_id')]
@@ -485,8 +481,6 @@ class FlyBase(PostgreSQLSource):
             row = row[1:]
 
             self.check_fileheader(col, row)
-
-            next(reader)  # Go to next line
 
             for row in reader:
                 allele_id = row[col.index('AlleleID')]
@@ -602,8 +596,6 @@ class FlyBase(PostgreSQLSource):
             row[0] = row[0][3:]  # uncomment
 
             self.check_fileheader(col, row)
-
-            next(reader)  # Go to next line
 
             for row in reader:
                 # File ends with a blank line and a final comment
