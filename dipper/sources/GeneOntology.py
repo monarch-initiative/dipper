@@ -20,7 +20,9 @@ from dipper.utils.GraphUtils import GraphUtils
 
 
 LOG = logging.getLogger(__name__)
-GOGA = 'http://current.geneontology.org/annotations' # get gene annotation from current.geneontology.com, which is the last official release (but not the bleeding edge)
+# get gene annotation from current.geneontology.com,
+# which is the last official release (but not the bleeding edge)
+GOGA = 'http://current.geneontology.org/annotations'
 FTPEBI = 'ftp://ftp.uniprot.org/pub/databases/'     # best for North America
 UPCRKB = 'uniprot/current_release/knowledgebase/'
 
@@ -43,54 +45,139 @@ class GeneOntology(Source):
     Status: IN PROGRESS / INCOMPLETE
 
     """
+    gaf_columns = [  # GAF2.1 files contain the following columns:
+        'DB',
+        'DB_Object_ID',
+        'DB_Object_Symbol',
+        'Qualifier',
+        'GO_ID',
+        'DB:Reference',
+        'Evidence Code',
+        'With (or) From',
+        'Aspect',
+        'DB_Object_Name',
+        'DB_Object_Synonym',
+        'DB_Object_Type',
+        'Taxon and Interacting taxon',
+        'Date',
+        'Assigned_By',
+        'Annotation_Extension',
+        'Gene_Product_Form_ID'
+    ]
 
     files = {
         '9615': {
             'file': 'goa_dog.gaf.gz',
-            'url': GOGA + '/goa_dog.gaf.gz'},
+            'url': GOGA + '/goa_dog.gaf.gz',
+            'columnns': gaf_columns
+        },
         '7227': {
             'file': 'fb.gaf.gz',
-            'url': GOGA + '/fb.gaf.gz'},
+            'url': GOGA + '/fb.gaf.gz',
+            'columnns': gaf_columns
+        },
         '7955': {
             'file': 'zfin.gaf.gz',
-            'url': GOGA + '/zfin.gaf.gz'},
+            'url': GOGA + '/zfin.gaf.gz',
+            'columnns': gaf_columns
+        },
         '10090': {
             'file': 'mgi.gaf.gz',
-            'url': GOGA + '/mgi.gaf.gz'},
+            'url': GOGA + '/mgi.gaf.gz',
+            'columnns': gaf_columns
+        },
         '10116': {
             'file': 'rgd.gaf.gz',
-            'url': GOGA + '/rgd.gaf.gz'},
+            'url': GOGA + '/rgd.gaf.gz',
+            'columnns': gaf_columns
+        },
         '6239': {
             'file': 'wb.gaf.gz',
-            'url': GOGA + '/wb.gaf.gz'},
+            'url': GOGA + '/wb.gaf.gz',
+            'columnns': gaf_columns
+        },
         '9823': {
             'file': 'goa_pig.gaf.gz',
-            'url': GOGA + '/goa_pig.gaf.gz'},
+            'url': GOGA + '/goa_pig.gaf.gz',
+            'columnns': gaf_columns
+        },
         '9031': {
             'file': 'goa_chicken.gaf.gz',
-            'url': GOGA + '/goa_chicken.gaf.gz'},
+            'url': GOGA + '/goa_chicken.gaf.gz',
+            'columnns': gaf_columns
+        },
         '9606': {
             'file': 'goa_human.gaf.gz',
-            'url': GOGA + '/goa_human.gaf.gz'},
+            'url': GOGA + '/goa_human.gaf.gz',
+            'columnns': gaf_columns
+        },
         '9913': {
             'file': 'goa_cow.gaf.gz',
-            'url': GOGA + '/goa_cow.gaf.gz'},
+            'url': GOGA + '/goa_cow.gaf.gz',
+            'columnns': gaf_columns
+        },
         '559292': {
             'file': 'sgd.gaf.gz',
-            'url': GOGA + '/sgd.gaf.gz'},
-        '4896': {
+            'url': GOGA + '/sgd.gaf.gz',
+            'columnns': gaf_columns
+        },
+        '4896': {  # Schizosaccharomyces pombe  (yeast)
             'file': 'pombase.gaf.gz',
-            'url': GOGA + '/pombase.gaf.gz'},
+            'url': GOGA + '/pombase.gaf.gz',
+            'columnns': gaf_columns
+        },
+        '5782': {  # Dictyostelium (slime mold)
+            'file': 'dictibase.gaf.gz',
+            'url': GOGA + '/dictybase.gaf.gz',
+            'columnns': gaf_columns
+        },
+        '5052':  {  # Aspergillus  (fungi)  http://www.aspergillusgenome.org/
+            'file': 'aspgd.gaf.gz',
+            'url': GOGA + '/aspgd.gaf.gz',
+            'columnns': gaf_columns
+        },
+
         # consider this after most others - should this be part of GO?
         # 'multispecies': {
         #   'file': 'gene_association.goa_uniprot.gz',
         #   'url': FTPEBI + 'GO/goa/UNIPROT/gene_association.goa_uniprot.gz'},
+
         'go-references': {
             'file': 'GO.references',
-            'url': 'http://www.geneontology.org/doc/GO.references'}, # Quoth the header of this file: "This file is DEPRECATED. Please see go-refs.json relative to this location" (http://current.geneontology.org/metadata/go-refs.json)
+            # Quoth the header of this file: "This file is DEPRECATED.
+            # Please see go-refs.json relative to this location"
+            # (http://current.geneontology.org/metadata/go-refs.json)
+            'url': 'http://www.geneontology.org/doc/GO.references'
+        },
         'id-map': {  # 5GB mapping file takes 6 hours to DL ... maps UniProt to Ensembl
             'file': 'idmapping_selected.tab.gz',
-            'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz'
+            'url':  FTPEBI + UPCRKB + 'idmapping/idmapping_selected.tab.gz',
+            # ftp://ftp.uniprot.org
+            # /pub/databases/uniprot/current_release/knowledgebase/idmapping/README
+            'columns': [
+                'UniProtKB-AC',
+                'UniProtKB-ID',
+                'GeneID (EntrezGene)',
+                'RefSeq',
+                'GI',
+                'PDB',
+                'GO',
+                'UniRef100',
+                'UniRef90',
+                'UniRef50',
+                'UniParc',
+                ' PIR',
+                'NCBI-taxon',
+                'MIM',
+                'UniGene',
+                'PubMed',
+                'EMBL',
+                'EMBL-CDS',
+                'Ensembl',
+                'Ensembl_TRS',
+                'Ensembl_PRO',
+                'Additional PubMed'
+            ]
         }
     }
     # consider moving the go-ref and id-map above to here in map_files
@@ -109,19 +196,19 @@ class GeneOntology(Source):
             data_rights='http://geneontology.org/page/use-and-license'
             # file_handle=None
         )
-
-        if tax_ids is None:
-            self.tax_ids = tax_ids
-        else: # explicitly convert tax_ids to strings
-            self.tax_ids = list(map(str,tax_ids))        
-
-        self.test_ids = list()
-        
-        if self.tax_ids is None:
-            self.tax_ids = ['9606', '10090', '7955']
-            LOG.info("No taxa set.  Defaulting to %s", str(tax_ids))
+        self.test_ids = []
+        # note: dipper-etl defaults tax_ids to '9606'
+        if tax_ids is not None and [] != set(tax_ids).difference(['9606']):
+            LOG.info('Have %s given as taxon to ingest', str(tax_ids))
+            self.tax_ids = [str(x) for x in tax_ids]
+            nottax = set(tax_ids) - set(self.files.keys())
+            if nottax:
+                LOG.error('Cant process taxon number(s):\t%s', str(nottax))
+                self.tax_ids = list(set(self.tax_ids) - nottax)
         else:
-            LOG.info("Filtering on the following taxa: %s", str(tax_ids))
+            self.tax_ids = ['9606', '10090', '7955']
+
+        LOG.info("Filtering to the following taxa: %s", str(self.tax_ids))
 
         # moving this from process_gaf() to avoid repeating this for each
         # file to be processed.
@@ -129,7 +216,7 @@ class GeneOntology(Source):
             self.zfin = ZFIN(self.graph_type, self.are_bnodes_skized)
         if '6239' in self.tax_ids:
             self.wbase = WormBase(self.graph_type, self.are_bnodes_skized)
-            
+
         if 'gene' not in self.all_test_ids:
             LOG.warning("not configured with gene test ids.")
         else:
@@ -138,11 +225,9 @@ class GeneOntology(Source):
         # build the id map for mapping uniprot ids to genes ... ONCE
         self.uniprot_entrez_id_map = self.get_uniprot_entrez_id_map()
         self.eco_map = self.get_eco_map(self.map_files['eco_map'])
-        return
 
     def fetch(self, is_dl_forced=False):
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
         if limit is not None:
@@ -152,22 +237,13 @@ class GeneOntology(Source):
         if self.test_only:
             self.test_mode = True
 
-        for txid_num in self.files:
-
-            if txid_num in ['go-references', 'id-map']:
-                continue
-
-            if not self.test_mode and str(txid_num) not in self.tax_ids: 
-                continue
-
-            gaffile = '/'.join((self.rawdir, self.files.get(txid_num)['file']))
+        for txid_num in list(set(self.files).intersection(self.tax_ids)):
+            gaffile = '/'.join((self.rawdir, self.files[txid_num]['file']))
             self.process_gaf(gaffile, limit, self.uniprot_entrez_id_map, self.eco_map)
 
         LOG.info("Finished parsing.")
 
-        return
-
-    def process_gaf(self, file, limit, id_map=None, eco_map=None):
+    def process_gaf(self, gaffile, limit, id_map=None, eco_map=None):
 
         if self.test_mode:
             graph = self.testgraph
@@ -176,58 +252,51 @@ class GeneOntology(Source):
 
         model = Model(graph)
         geno = Genotype(graph)
-        LOG.info("Processing Gene Associations from %s", file)
-        line_counter = 0
+        LOG.info("Processing Gene Associations from %s", gaffile)
         uniprot_hit = 0
         uniprot_miss = 0
+        col = self.gaf_columns
 
-        with gzip.open(file, 'rb') as csvfile:
-            filereader = csv.reader(
+        with gzip.open(gaffile, 'rb') as csvfile:
+            reader = csv.reader(
                 io.TextIOWrapper(csvfile, newline=""), delimiter='\t', quotechar='\"')
-            for row in filereader:
-                line_counter += 1
+            for row in reader:
                 # comments start with exclamation
-                if re.match(r'!', ''.join(row)):
+                if row[0][0] == '!':
                     continue
 
-                if len(row) > 17 or len(row) < 15:
-                    LOG.warning(
-                        "Wrong number of columns %i, expected 15 or 17\n%s",
-                        len(row), row)
-                    continue
+                if len(row) != len(col):
+                    LOG.error(
+                        "Wrong number of columns %i, expected ... got:\n\t%s",
+                        len(col), row)
+                    exit(1)
 
-                if 17 > len(row) >= 15:
-                    row += [""] * (17 - len(row))
-
-                (dbase,
-                 gene_num,
-                 gene_symbol,
-                 qualifier,
-                 go_id,
-                 ref,
-                 eco_symbol,
-                 with_or_from,
-                 aspect,
-                 gene_name,
-                 gene_synonym,
-                 object_type,
-                 taxon,
-                 date,
-                 assigned_by,
-                 annotation_extension,
-                 gene_product_form_id) = row
+                dbase = row[col.index('DB')].strip()
+                gene_num = row[col.index('DB_Object_ID')].strip()
+                gene_symbol = row[col.index('DB_Object_Symbol')].strip()
+                qualifier = row[col.index('Qualifier')]
+                go_id = row[col.index('GO_ID')].strip()
+                ref = row[col.index('DB:Reference')].strip()
+                eco_symbol = row[col.index('Evidence Code')].strip()
+                with_or_from = row[col.index('With (or) From')]
+                aspect = row[col.index('Aspect')].strip()
+                gene_name = row[col.index('DB_Object_Name')]
+                gene_synonym = row[col.index('DB_Object_Synonym')]
+                # object_type = row[col.index('DB_Object_Type')].strip()
+                taxon = row[col.index('Taxon and Interacting taxon')].strip()
+                # date = row[col.index('Date')].strip()
+                # assigned_by = row[col.index('Assigned_By')].strip()
+                # annotation_extension = row[col.index('Annotation_Extension')]
+                # gene_product_form_id = row[col.index('Gene_Product_Form_ID')]
 
                 # test for required fields
-                if (dbase == '' or gene_num == '' or gene_symbol == '' or
-                        go_id == '' or ref == '' or eco_symbol == '' or
-                        aspect == '' or object_type == '' or taxon == '' or
-                        date == '' or assigned_by == ''):
+                if '' in [row[:10], row[12]]:
                     LOG.error(
-                        "Missing required part of annotation on row %d:\n"+'\t'
-                        .join(row), line_counter)
+                        "Missing required part of annotation on row %i:\n%s",
+                        reader.line_num, str(row[:-4]))
                     continue
 
-                # deal with qualifier NOT, contributes_to, colocalizes_with
+                # (Don't) deal with qualifier NOT, contributes_to, colocalizes_with
                 if re.search(r'NOT', qualifier):
                     continue
 
@@ -243,7 +312,7 @@ class GeneOntology(Source):
                         uniprot_hit += 1
                     else:
                         # LOG.warning(
-                        #   "UniProt id %s  is without a 1:1 mapping to entrez/ensembl",
+                        #   "UniProt id %s is without a 1:1 mapping to entrez/ensembl",
                         #    gene_num)
                         uniprot_miss += 1
                         continue
@@ -251,9 +320,8 @@ class GeneOntology(Source):
                     gene_num = gene_num.split(':')[-1]  # last
                     gene_id = ':'.join((dbase, gene_num))
 
-                if self.test_mode and not(
-                        re.match(r'NCBIGene', gene_id) and
-                        int(gene_num) in self.test_ids):
+                if self.test_mode and gene_id[:9] != 'NCBIGene:' and\
+                        gene_num not in self.test_ids:
                     continue
 
                 model.addClassToGraph(gene_id, gene_symbol)
@@ -261,14 +329,15 @@ class GeneOntology(Source):
                     model.addDescription(gene_id, gene_name)
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
-                        model.addSynonym(gene_id, syn.strip())
-                if re.search(r'\|', taxon):
-                    # TODO add annotations with >1 taxon
-                    LOG.info(
-                        ">1 taxon (%s) on line %d.  skipping", taxon, line_counter)
-                else:
-                    tax_id = re.sub(r'taxon:', 'NCBITaxon:', taxon)
-                    geno.addTaxon(tax_id, gene_id)
+                        syn = syn.strip()
+                        if re.fullmatch(graph.curie_regexp, syn) is not None:
+                            model.addSameIndividual(gene_id, syn)
+                        else:
+                            model.addSynonym(gene_id, syn)
+
+                for txid in taxon.split('|'):
+                    tax_curie = re.sub(r'taxon:', 'NCBITaxon:', txid)
+                    geno.addTaxon(tax_curie, gene_id)
 
                 assoc = Assoc(graph, self.name)
                 assoc.set_subject(gene_id)
@@ -318,7 +387,7 @@ class GeneOntology(Source):
                 # snRNA; snoRNA; any subtype of ncRNA in the Sequence Ontology.
                 # If the precise product type is unknown,
                 # gene_product should be used
-                #######################################################################
+                ########################################################################
 
                 # Derive G2P Associations from IMP annotations
                 # in version 2.1 Pipe will indicate 'OR'
@@ -326,38 +395,38 @@ class GeneOntology(Source):
                 # in version 2.0, multiple values are separated by pipes
                 # where the pipe has been used to mean 'AND'
                 if eco_symbol == 'IMP' and with_or_from != '':
-                    withitems = re.split(r'\|', with_or_from)
-                    phenotypeid = go_id+'PHENOTYPE'
+                    withitems = with_or_from.split('|')
+                    phenotypeid = go_id + 'PHENOTYPE'
                     # create phenotype associations
-                    for i in withitems:
-                        if i == '' or re.match(
-                                r'(UniProtKB|WBPhenotype|InterPro|HGNC)', i):
+                    for itm in withitems:
+                        if itm == '' or re.match(
+                                r'(UniProtKB|WBPhenotype|InterPro|HGNC)', itm):
                             LOG.warning(
-                                "Don't know what having a uniprot id " +
-                                "in the 'with' column means of %s", uniprotid)
+                                "Skipping  %s from or with %s", uniprotid, itm)
                             continue
-                        i = re.sub(r'MGI\:MGI\:', 'MGI:', i)
-                        i = re.sub(r'WB:', 'WormBase:', i)
+                        itm = re.sub(r'MGI\:MGI\:', 'MGI:', itm)
+                        itm = re.sub(r'WB:', 'WormBase:', itm)
 
                         # for worms and fish, they might give a RNAi or MORPH
                         # in these cases make a reagent-targeted gene
-                        if re.search('MRPHLNO|CRISPR|TALEN', i):
-                            targeted_gene_id = self.zfin.make_targeted_gene_id(gene_id, i)
-                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
+                        if re.search('MRPHLNO|CRISPR|TALEN', itm):
+                            targeted_gene_id = self.zfin.make_targeted_gene_id(
+                                gene_id, itm)
+                            geno.addReagentTargetedGene(itm, gene_id, targeted_gene_id)
                             # TODO PYLINT why is this needed?
                             # Redefinition of assoc type from
                             # dipper.models.assoc.Association.Assoc to
                             # dipper.models.assoc.G2PAssoc.G2PAssoc
                             assoc = G2PAssoc(
                                 graph, self.name, targeted_gene_id, phenotypeid)
-                        elif re.search(r'WBRNAi', i):
+                        elif re.search(r'WBRNAi', itm):
                             targeted_gene_id = self.wbase.make_reagent_targeted_gene_id(
-                                gene_id, i)
-                            geno.addReagentTargetedGene(i, gene_id, targeted_gene_id)
+                                gene_id, itm)
+                            geno.addReagentTargetedGene(itm, gene_id, targeted_gene_id)
                             assoc = G2PAssoc(
                                 graph, self.name, targeted_gene_id, phenotypeid)
                         else:
-                            assoc = G2PAssoc(graph, self.name, i, phenotypeid)
+                            assoc = G2PAssoc(graph, self.name, itm, phenotypeid)
                         for ref in refs:
                             ref = ref.strip()
                             if ref != '':
@@ -370,10 +439,10 @@ class GeneOntology(Source):
                                 assoc.add_evidence(
                                     self.globaltt['experimental phenotypic evidence'])
                         assoc.add_association_to_graph()
-                        # TODO should the G2PAssoc be
-                        # the evidence for the GO assoc?
+                        # TODO should the G2PAssoc be the evidence for the GO assoc?
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if not self.test_mode and limit is not None and \
+                        reader.line_num > limit:
                     break
             uniprot_tot = (uniprot_hit + uniprot_miss)
             uniprot_per = 0.0
@@ -382,46 +451,67 @@ class GeneOntology(Source):
             LOG.info(
                 "Uniprot: %.2f%% of %i benefited from the 1/4 day id mapping download",
                 uniprot_per, uniprot_tot)
-        return
 
     def get_uniprot_entrez_id_map(self):
+        src_key = 'id-map'
         taxon_digest = GraphUtils.digest_id(str(self.tax_ids))
         id_map = {}
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
-        bigfile = '/'.join((self.rawdir, self.files['id-map']['file']))
+        bigfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
         # if processed smallfile exists and is newer use it instesd
         if os.path.isfile(smallfile) and \
                 os.path.getctime(smallfile) > os.path.getctime(bigfile):
             LOG.info("Using the cheap mapping file %s", smallfile)
-            with open(smallfile, 'r') as fh:
-                id_map = yaml.safe_load(fh)
+            with open(smallfile, 'r') as yamlreader:
+                id_map = yaml.safe_load(yamlreader)
         else:
             LOG.info(
                 "Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids for %s",
                 str(self.tax_ids))
-            self.fetch_from_url(self.files['id-map']['url'], bigfile)
+            self.fetch_from_url(self.files[src_key]['url'], bigfile)
+            col = self.files[src_key]['columns']
             with gzip.open(bigfile, 'rb') as csvfile:
                 csv.field_size_limit(sys.maxsize)
-                filereader = csv.reader(  # warning this file is over 10GB unzipped
+                reader = csv.reader(  # warning this file is over 10GB unzipped
                     io.TextIOWrapper(
                         csvfile, newline=""), delimiter='\t', quotechar='\"')
-                for row in filereader:
-                    (uniprotkb_ac, uniprotkb_id, geneid, refseq, gi, pdb, go,
-                     uniref100, unifref90, uniref50, uniparc, pir, ncbitaxon, mim,
-                     unigene, pubmed, embl, embl_cds, ensembl, ensembl_trs,
-                     ensembl_pro, other_pubmed) = row
-                    if str(ncbitaxon) not in self.tax_ids:
+                for row in reader:
+                    uniprotkb_ac = row[col.index('UniProtKB-AC')].strip()
+                    # uniprotkb_id = row[col.index('UniProtKB-ID')]
+                    geneid = row[col.index('GeneID (EntrezGene)')].strip()
+                    # refseq = row[col.index('RefSeq')]
+                    # gi = row[col.index('GI')]
+                    # pdb = row[col.index('PDB')]
+                    # go = row[col.index('GO')]
+                    # uniref100 = row[col.index('UniRef100')]
+                    # unifref90 = row[col.index('UniRef90')]
+                    # uniref50 = row[col.index('UniRef50')]
+                    # uniparc = row[col.index('UniParc')]
+                    # pir = row[col.index('PIR')]
+                    ncbitaxon = row[col.index('NCBI-taxon')].strip()
+                    # mim = row[col.index('MIM')]
+                    # unigene = row[col.index('UniGene')]
+                    # pubmed = row[col.index('PubMed')]
+                    # embl = row[col.index('EMBL')]
+                    # embl_cds = row[col.index('EMBL-CDS')]
+                    ensembl = row[col.index('Ensembl')].strip()
+                    # ensembl_trs = row[col.index('Ensembl_TRS')]
+                    # ensembl_pro = row[col.index('Ensembl_PRO')]
+                    # other_pubmed = row[col.index('Additional PubMed')]
+
+                    if ncbitaxon not in self.tax_ids:
                         continue
-                    genid = geneid.strip()
-                    if geneid != '' and ';' not in genid:
-                        id_map[uniprotkb_ac.strip()] = 'NCBIGene:' + genid
-                    elif ensembl.strip() != '' and ';' not in ensembl:
-                        id_map[uniprotkb_ac.strip()] = 'ENSEMBL:' + ensembl.strip()
+
+                    # neither empty nor a list
+                    if geneid != '' and ';' not in geneid:
+                        id_map[uniprotkb_ac] = 'NCBIGene:' + geneid
+                    elif ensembl != '' and ';' not in ensembl:
+                        id_map[uniprotkb_ac] = 'ENSEMBL:' + ensembl
 
             LOG.info("Writing id_map out as %s", smallfile)
-            with open(smallfile, 'w') as fh:
-                yaml.dump(id_map, fh)
+            with open(smallfile, 'w') as yamlwriter:
+                yaml.dump(id_map, yamlwriter)
 
         LOG.info(
             "Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map.keys()))
