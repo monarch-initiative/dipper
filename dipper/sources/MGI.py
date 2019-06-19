@@ -252,7 +252,7 @@ class MGI(PostgreSQLSource):
         (unique keys by type to MGI id).  These include allele, marker (gene),
         publication, strain, genotype, annotation (association),
         and descriptive notes.
-        :param limit: Only parse this many lines of each table
+        :param limit: Only parse this many rows in each table
         :return:
 
         """
@@ -876,7 +876,7 @@ SELECT  r._relationship_key as rel_key,
                 if bkgd_label is None:
                     bkgd_label = bkgd_id  # just in case
             else:
-                bkgd_label = 'n.s.'
+                bkgd_label = 'unspecified background'
             if gvc_label is not None:
                 genotype_label = gvc_label + ' ['+bkgd_label+']'
             else:
