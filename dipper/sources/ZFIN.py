@@ -217,11 +217,6 @@ class ZFIN(Source):
         pysed.replace(
             "\\\\", '', '/'.join((self.rawdir, self.files['geno']['file'])))
 
-        # pubs has control characters!
-        # not detecting any onntrol chars in pubs 2017 May
-        # self.remove_backslash_r(
-        #    '/'.join((self.rawdir, self.files['pubs']['file'])), 'latin-1')
-
         return
 
     def parse(self, limit=None):
