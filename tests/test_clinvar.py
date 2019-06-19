@@ -56,9 +56,6 @@ class ClinVarTestCase(unittest.TestCase):
                 query_graph.bind_all_namespaces()
                 query_graph.parse(NT_PATH + output_nt, format='nt')
 
-                with open(reference_ttl, 'r') as ref_fh:
-                    ref_graph = "\n".join(ref_fh.readlines())
-
                 # debug
                 LOG.debug(
                     "Reference graph: %s",
@@ -69,7 +66,7 @@ class ClinVarTestCase(unittest.TestCase):
                 with open(dot_file_path, 'w') as dot_file:
                     rdf2dot(query_graph, dot_file)
 
-                self.assertTrue(TestUtils.test_graph_equality(ref_graph, query_graph))
+                self.assertTrue(TestUtils.test_graph_equality(reference_ttl, query_graph))
 
 
 if __name__ == '__main__':
