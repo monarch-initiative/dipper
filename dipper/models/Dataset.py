@@ -215,17 +215,21 @@ class Dataset:
         :return: 
         """
         for key in self.graph.sub_counts.keys():
-            self.add_count_triples(key, self.globaltt['count'], self.graph.sub_counts[key])
+            self.add_count_triples(key, self.globaltt['count'],
+                                   self.graph.sub_counts[key])
 
         for key in self.graph.obj_counts.keys():
-            self.add_count_triples(key, self.globaltt['count'], self.graph.sub_counts[key])
-
-        # TODO: add triples for each subj/obj pair. need to change subj/obj's into labels: make_id("subj-obj") and model.addLabel(association_iri, "some label")
+            self.add_count_triples(key, self.globaltt['count'],
+                                   self.graph.sub_counts[key])
+        # TODO: add triples for each subj/obj pair. need to change subj/obj's
+        #  into labels: make_id("subj-obj") and
+        #  model.addLabel(association_iri, "some label")
             
             
     def add_count_triples(self, subj, pred, obj):
         if subj is None:
-            self.graph.addTriple('http://purl.obolibrary.org/obo/BFO_0000030', pred, obj, object_is_literal=True)
+            self.graph.addTriple('http://purl.obolibrary.org/obo/BFO_0000030',
+                                 pred, obj, object_is_literal=True)
         else:
             self.graph.addTriple(subj.value, pred, obj, object_is_literal=True)
         
