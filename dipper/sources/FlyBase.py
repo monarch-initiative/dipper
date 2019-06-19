@@ -191,9 +191,9 @@ class FlyBase(PostgreSQLSource):
             LOG.info("Only parsing first %d rows of each file", limit)
         LOG.info("Parsing files...")
 
+        self._process_allele_gene(limit)
         self._process_disease_model(limit)
         self._process_allele_phenotype(limit)
-        self._process_allele_gene(limit)
         self._process_gene_xref(limit)
 
         LOG.info("Finished parsing.")
@@ -261,7 +261,7 @@ class FlyBase(PostgreSQLSource):
                 # FBcv
                 phenotype_curie = prefix + ':' + reference
                 if prefix != 'FBcv':
-                    LOG.warn('Pheno desc does not start with FBcv: %s', pheno_desc)
+                    LOG.warning('Pheno desc does not start with FBcv: %s', pheno_desc)
                     continue
 
                 if pmid_id:
@@ -500,10 +500,12 @@ class FlyBase(PostgreSQLSource):
                             geno.addAllele(allele_curie, allele_label)
                             geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie)
                         else:
-                            # If it's not a drosophila allele don't ingest it
-                            continue
+                            # If it's a transgenic allele, assume it is studied
+                            # in D. melanogaster (need to check on this)
+                            geno.addAllele(allele_curie, allele_label)
+                            geno.addTaxon(self.globaltt['Drosophila melanogaster'],
+                                          allele_curie)
                     except KeyError:
-                        # It's not a drosophila allele so continue
                         LOG.info("%s not in species prefix file", allele_prefix[0])
                         continue
 
@@ -542,12 +544,25 @@ class FlyBase(PostgreSQLSource):
                 # Determine relationship between allele and gene
                 # Different taxa = transgene = sequence derives from
                 if allele_prefix and gene_prefix:
-                    if allele_prefix[0] == gene_prefix[0]:
+                    if allele_prefix[0] == gene_prefix[0] \
+                            and species_map[allele_prefix[0]][0] == 'drosophilid':
                         geno.addAffectedLocus(allele_curie, gene_curie)
-                    else:
+                    elif allele_prefix[0] == gene_prefix[0]:
+                        # Use sequence derives from for non drosophila or
+                        # IDs with different prefixes, even if they are from same
+                        # organism
                         geno.addSequenceDerivesFrom(allele_curie, gene_curie)
-
+                    else:
+                        # Use sequence derives for IDs with different prefixes
+                        # This condition should not be satisfied
+                        geno.addSequenceDerivesFrom(allele_curie, gene_curie)
+                        LOG.warning("Found allele and gene with different "
+                                 "prefixes: %s, %s", allele_id, gene_id)
                 elif not allele_prefix and gene_prefix:
+                    # Use sequence derives for IDs with different prefixes
+                    # This condition should not be satisfied
+                    LOG.warning("Found allele and gene with different "
+                                "prefixes: %s, %s", allele_id, gene_id)
                     geno.addSequenceDerivesFrom(allele_curie, gene_curie)
                 else:
                     # Both are melanogaster

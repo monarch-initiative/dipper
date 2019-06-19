@@ -146,7 +146,7 @@ class Genotype():
         """
         We make the assumption here that if the relationship is not provided,
         it is a
-        GENO:is_allele_of.
+        GENO:has_affected_feature.
 
         Here, the allele should be a variant_locus, not a sequence alteration.
         :param allele_id:
