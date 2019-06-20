@@ -1,0 +1,17 @@
+MONARCH:b0139d064383561d3a8d a OBAN:association ;
+    RO:0002558 ECO:0000015 ;
+    dc:source PMID:23666178 ;
+    OBAN:association_has_object DOID:14261 ;
+    OBAN:association_has_predicate RO:0003301 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
+MONARCH:b12b95e1e393a76f1196 a OBAN:association ;
+    RO:0002558 ECO:0000015 ;
+    dc:source PMID:23666178,
+        PMID:29196216 ;
+    OBAN:association_has_object DOID:14250 ;
+    OBAN:association_has_predicate RO:0003301 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
+FlyBase:FBal0195705 RO:0003301 DOID:14250,
+        DOID:14261 .
