@@ -488,17 +488,16 @@ SELECT  r._relationship_key as rel_key,
                     break
 
         # now, loop through the hash and add the genotypes as individuals
-        # we add the mgi genotype as a synonym
-        # (we generate our own label later)
+        # we add the mgi genotype as a label
+        # (we generate our own label later and add as a synonym)
         geno = Genotype(graph)
         for gt in geno_hash:
             genotype = geno_hash.get(gt)
             gvc = sorted(genotype.get('vslcs'))
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
-            geno.addGenotype(gt, None)
             model.addComment(gt, self._makeInternalIdentifier(
                 'genotype', genotype.get('key')))
-            model.addSynonym(gt, label.strip())
+            geno.addGenotype(gt, label.strip())
 
         return
 
@@ -882,7 +881,7 @@ SELECT  r._relationship_key as rel_key,
             else:
                 genotype_label = '['+bkgd_label+']'
 
-            model.addIndividualToGraph(gt, genotype_label)
+            model.addSynonym(gt, genotype_label)
             self.label_hash[gt] = genotype_label
 
         return
