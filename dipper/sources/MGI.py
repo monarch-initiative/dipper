@@ -216,7 +216,7 @@ class MGI(PostgreSQLSource):
             if 'Force' in query_map:
                 force = query_map['Force']
             self.fetch_query_from_pgdb(
-                query_map['outfile'], query, None, cxn, force=force)
+                query_map['outfile'], query, None, cxn)
         # always get this - it has the verion info
         self.fetch_transgene_genes_from_db(cxn)
 

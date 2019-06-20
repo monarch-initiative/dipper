@@ -1,7 +1,8 @@
 import logging
 import io
-from dipper.graph.RDFGraph import RDFGraph
+from pathlib import Path
 from rdflib import URIRef, RDF
+from dipper.graph.RDFGraph import RDFGraph
 
 LOG = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class TestUtils:
     def test_graph_equality(turtlish, graph):
         """
 
-        :param turtlish: String of triples in turtle
+        :param turtlish: file path or string of triples in turtle
                          format without prefix header
         :param graph: Graph object to test against
         :return: Boolean, True if graphs contain same
@@ -24,8 +25,19 @@ class TestUtils:
             ["@prefix {}: <{}> .".format(
                 n[0], n[1]) for n in turtle_graph.namespace_manager.namespaces()]
         )
+        headless_ttl = ''
+        try:
+            if Path(turtlish).exists():
+                headless_ttl = Path(turtlish).read_text()
+            else:
+                raise OSError
+        except OSError:
+            if isinstance(turtlish, str):
+                headless_ttl = turtlish
+            else:
+                raise ValueError("turtlish must be filepath or string")
 
-        turtle_string = prefixes + turtlish
+        turtle_string = prefixes + headless_ttl
         mock_file = io.StringIO(turtle_string)
         turtle_graph.parse(mock_file, format="turtle")
 
@@ -59,4 +71,3 @@ class TestUtils:
             for predicate, obj in graph.predicate_objects(subject):
                 graph.remove((subject, predicate, obj))
             graph.remove((subject, RDF.type, ontology_iri))
-

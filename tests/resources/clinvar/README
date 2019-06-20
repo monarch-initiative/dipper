@@ -1,5 +1,4 @@
-# Files derived from 2019-04 XML file
-# ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_2019-04.xml.gz
+# Files derived from on 17 June 2019 with scripts/test-sets/clinvar.sh
 
 # CompoundHet, same gene
 https://www.ncbi.nlm.nih.gov/clinvar/RCV000162061/

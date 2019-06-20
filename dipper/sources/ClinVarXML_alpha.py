@@ -24,8 +24,6 @@
         write the test set back to the raw directory
     ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
 
-
-
     parsing a test set  (producing plain blank nodes)
     ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -s False
 

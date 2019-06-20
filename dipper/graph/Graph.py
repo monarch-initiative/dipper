@@ -20,7 +20,12 @@ class Graph(metaclass=ABCMeta):
 
     @abstractmethod
     def addTriple(
-            self, subject_id, predicate_id, object_id, object_is_literal, literal_type):
+            self,
+            subject_id,
+            predicate_id,
+            object_id,
+            object_is_literal=False,
+            literal_type=None):
         pass
 
     @abstractmethod
