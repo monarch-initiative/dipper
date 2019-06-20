@@ -4,7 +4,7 @@ import csv
 import gzip
 import os
 from ftplib import FTP
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.G2PAssoc import G2PAssoc
@@ -54,6 +54,7 @@ class FlyBase(PostgreSQLSource):
             'columns': [
                 'allele_id',
                 'pheno_desc',
+                'pheno_type',
                 'pub_id',
                 'pub_title',
                 'pmid_id',
@@ -191,9 +192,9 @@ class FlyBase(PostgreSQLSource):
             LOG.info("Only parsing first %d rows of each file", limit)
         LOG.info("Parsing files...")
 
+        self._process_allele_phenotype(limit)
         self._process_allele_gene(limit)
         self._process_disease_model(limit)
-        self._process_allele_phenotype(limit)
         self._process_gene_xref(limit)
 
         LOG.info("Finished parsing.")
@@ -201,8 +202,8 @@ class FlyBase(PostgreSQLSource):
 
     def _process_allele_phenotype(self, limit):
         """
-        Make allele to phenotype associations using derived_pheno_class cvterm
-        in the flybase db, an example entry is:
+        Make allele to phenotype associations using derived_pheno_class
+        and derived_pheno_manifest cvterm in the flybase db, an example entry is:
 
         FBal0257663    @FBcv0000351:lethal@ | @FBcv0000308:female limited@,
                        with @FBal0130657:Scer\GAL4<up>dome-PG14</up>@
@@ -217,24 +218,31 @@ class FlyBase(PostgreSQLSource):
         Note that sometimes identifiers do not exist for a term, eg
         @:heat sensitive | tetracycline conditional@
 
+        derived_pheno_class - FBcv terms, these are phenotypes
+        derived_pheno_manifest -  Anatomy terms FBbt, we currently
+        make phenotype IRI equivalents that end up in UPheno, but
+        this is being developed and updated, see
+
         Adds triples to self.graph
 
         :param limit: number of rows to process
         :return: None
 
         """
+        model = Model(self.graph)
         src_key = 'allele_phenotype'
         raw = '/'.join((self.rawdir, self.queries[src_key]['file']))
         LOG.info("processing allele phenotype associations")
-
         col = self.queries[src_key]['columns']
+
+        transgenic_alleles = self._get_foreign_transgenic_alleles()
 
         # flybase terms - terms we prefix with FlyBase:
         fly_prefixes = ['FBal', 'FBti', 'FBab', 'FBba', 'FBtp']
 
         # a alphanumeric id followed by a colon then
         # any character but a colon bordered by @s
-        term_regex = re.compile(r'@([\w]*):[^:@]*@')
+        term_regex = re.compile(r'@([\w]*):([^:@]*)@')
         id_regex = re.compile(r'([a-zA-Z]+)(\d+)')
 
         with open(raw, 'r') as tsvfile:
@@ -245,24 +253,51 @@ class FlyBase(PostgreSQLSource):
             for row in reader:
                 allele_id = row[col.index('allele_id')]
                 pheno_desc = row[col.index('pheno_desc')]
+                pheno_type = row[col.index('pheno_type')]
                 pub_id = row[col.index('pub_id')]
                 pub_title = row[col.index('pub_title')]
                 pmid_id = row[col.index('pmid_id')]
 
+                # Don't get phenotypes for transgenic alleles
+                if allele_id in transgenic_alleles:
+                    continue
+
                 allele_curie = 'FlyBase:' + allele_id
 
                 terms = re.findall(term_regex, pheno_desc)
-                id_match = re.match(id_regex, terms[0])
+
+                if not terms:
+                    LOG.warning('Could not parse pheno description: %s',
+                                pheno_desc)
+                    continue
+
+                term_ids, term_labels = zip(*terms)
+                id_match = re.match(id_regex, term_ids[0])
+
                 if id_match is not None:
                     prefix, reference = id_match.group(1, 2)
                 else:
-                    raise ValueError("Could not parse id {}".format(terms[0]))
+                    raise ValueError("Could not parse id {}".format(term_ids[0]))
 
-                # FBcv
-                phenotype_curie = prefix + ':' + reference
-                if prefix != 'FBcv':
-                    LOG.warning('Pheno desc does not start with FBcv: %s', pheno_desc)
+                # derived_pheno_class should all start with a FBcv term
+                if pheno_type == 'derived_pheno_class' and prefix != 'FBcv':
+                    LOG.warning('derived_pheno_class does not '
+                                'start with FBcv: %s', pheno_desc)
                     continue
+
+                # Create phenotype curie
+                if pheno_type == 'derived_pheno_class':
+                    phenotype_curie = prefix + ':' + reference
+                elif pheno_type == 'derived_pheno_manifest':
+                    if prefix == 'GO':
+                        phenotype_curie = prefix + ':' + reference + 'PHENOTYPE'
+                        phenotype_label = term_labels[0] + ' phenotype'
+                        model.addClassToGraph(phenotype_curie, phenotype_label)
+                    else:
+                        phenotype_curie = 'OBO:' + prefix + reference + 'PHENOTYPE'
+                else:
+                    raise ValueError("Unexpected phenotype type: {}".
+                                     format(pheno_type))
 
                 if pmid_id:
                     ref_curie = 'PMID:' + pmid_id
@@ -282,16 +317,14 @@ class FlyBase(PostgreSQLSource):
                     allele_curie,
                     self.globaltt['has phenotype'],
                     phenotype_curie,
-                    terms[1:]
+                    term_ids[1:]
                 ))
                 assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
 
                 # add the rest as qualifiers
-                for term in terms[1:]:
-                    if term.startswith('FBcv'):
-                        term_curie = 'FBcv:' + term
-                    elif term:
+                for term in term_ids[1:]:
+                    if term:
                         # FBal, GO, FBti, FBab ...
                         id_match = re.match(id_regex, term)
                         if id_match is not None:
@@ -406,6 +439,47 @@ class FlyBase(PostgreSQLSource):
 
             return pub_map
 
+    def _get_foreign_transgenic_alleles(self) -> List[str]:
+        """
+        Generates a list of transgenic alleles
+
+        :return: List of FBal ids
+        """
+        transgenic_alleles = []
+        species_map = self._species_to_ncbi_tax()
+        src_key = 'allele_gene'
+        raw = '/'.join((self.rawdir, self.files[src_key]['file']))
+        LOG.info("Getting list of transgenic alleles")
+
+        col = self.files[src_key]['columns']
+
+        with gzip.open(raw, 'rt') as tsvfile:
+            reader = csv.reader(tsvfile, delimiter='\t')
+            # skip first line, version info
+            next(reader)
+            row = next(reader)  # headers
+            # header line starts with a hash and tab ??
+            row = row[1:]
+
+            self.check_fileheader(col, row)
+
+            for row in reader:
+                allele_id = row[col.index('AlleleID')]
+                allele_label = row[col.index('AlleleSymbol')]
+
+                # Add Allele and taxon, get anything that's not drosophila
+                allele_prefix = re.findall(r'^(\w*)\\', allele_label)
+
+                if len(allele_prefix) == 1:
+                    try:
+                        if species_map[allele_prefix[0]][0] != 'drosophilid':
+                            transgenic_alleles.append(allele_id)
+                    except KeyError:
+                        # prefix is not in species prefix file
+                        transgenic_alleles.append(allele_id)
+
+        return transgenic_alleles
+
     def _process_gene_xref(self, limit):
         """
         Make eq axioms between flybase gene ids and ncbi gene and hgnc
@@ -456,9 +530,7 @@ class FlyBase(PostgreSQLSource):
         Adds triples to self.graph
 
         Approach is to use the label nomenclature and species
-        map to determine taxon.  Transgenes get connected
-        with globaltt['sequence_derives_from'], and the rest with
-        globaltt['has_affected_feature']
+        map to determine taxon.  Foreign Transgenes are filtered out.
 
         :param limit: number of rows to process
         :return: None
@@ -500,11 +572,8 @@ class FlyBase(PostgreSQLSource):
                             geno.addAllele(allele_curie, allele_label)
                             geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie)
                         else:
-                            # If it's a transgenic allele, assume it is studied
-                            # in D. melanogaster (need to check on this)
-                            geno.addAllele(allele_curie, allele_label)
-                            geno.addTaxon(self.globaltt['Drosophila melanogaster'],
-                                          allele_curie)
+                            # If it's a foreign transgenic allele, skip
+                            continue
                     except KeyError:
                         LOG.info("%s not in species prefix file", allele_prefix[0])
                         continue
@@ -541,29 +610,18 @@ class FlyBase(PostgreSQLSource):
                     raise ValueError("Did not correct parse gene label {}"
                                      .format(gene_label))
 
-                # Determine relationship between allele and gene
-                # Different taxa = transgene = sequence derives from
+                # Connect allele and gene with geno.addAffectedLocus()
                 if allele_prefix and gene_prefix:
-                    if allele_prefix[0] == gene_prefix[0] \
-                            and species_map[allele_prefix[0]][0] == 'drosophilid':
+                    if allele_prefix[0] == gene_prefix[0]:
                         geno.addAffectedLocus(allele_curie, gene_curie)
-                    elif allele_prefix[0] == gene_prefix[0]:
-                        # Use sequence derives from for non drosophila or
-                        # IDs with different prefixes, even if they are from same
-                        # organism
-                        geno.addSequenceDerivesFrom(allele_curie, gene_curie)
                     else:
-                        # Use sequence derives for IDs with different prefixes
-                        # This condition should not be satisfied
-                        geno.addSequenceDerivesFrom(allele_curie, gene_curie)
-                        LOG.warning("Found allele and gene with different "
-                                 "prefixes: %s, %s", allele_id, gene_id)
+                        raise ValueError(
+                            "Found allele and gene with different "
+                            "prefixes: {}, {}".format(allele_id, gene_id))
                 elif not allele_prefix and gene_prefix:
-                    # Use sequence derives for IDs with different prefixes
-                    # This condition should not be satisfied
-                    LOG.warning("Found allele and gene with different "
-                                "prefixes: %s, %s", allele_id, gene_id)
-                    geno.addSequenceDerivesFrom(allele_curie, gene_curie)
+                    raise ValueError(
+                        "Found allele and gene with different "
+                        "prefixes: {}, {}".format(allele_id, gene_id))
                 else:
                     # Both are melanogaster
                     geno.addAffectedLocus(allele_curie, gene_curie)
@@ -597,8 +655,9 @@ class FlyBase(PostgreSQLSource):
         src_key = 'disease_model'
         raw = '/'.join((self.rawdir, self.files[src_key]['file']))
         LOG.info("processing disease models")
-
         col = self.files[src_key]['columns']
+
+        transgenic_alleles = self._get_foreign_transgenic_alleles()
 
         with gzip.open(raw, 'rt') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
@@ -622,6 +681,10 @@ class FlyBase(PostgreSQLSource):
                 evidence_or_allele = row[col.index('Evidence/interacting alleles')]
                 doid_id = row[col.index('DO ID')]
                 doid_qualifier = row[col.index('DO qualifier')]
+
+                # Skip any foreign transgenic alleles
+                if allele_id in transgenic_alleles:
+                    continue
 
                 # Rows without an allele id may be "potential models through orthology"
                 # We skip these because we can already make that inference
