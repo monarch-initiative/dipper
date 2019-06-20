@@ -14,6 +14,7 @@ from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
+import bmt
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
@@ -140,6 +141,8 @@ class Source:
         for graph in [self.graph, self.testgraph]:
             self.declareAsOntology(graph)
 
+        self.biolink_tk=bmt.Toolkit()
+
     def fetch(self, is_dl_forced=False):
         """
         abstract method to fetch all data from an external resource.
@@ -204,9 +207,6 @@ class Source:
 
         gu = GraphUtils(None)
 
-        # add count data to dataset graph
-        self.dataset.add_subj_obj_count_data(self.graph)
-        
         # the  _dataset description is always turtle
         gu.write(self.dataset.getGraph(), 'turtle', filename=self.datasetfile)
 

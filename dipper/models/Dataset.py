@@ -204,32 +204,3 @@ class Dataset:
 
         return
 
-    def add_subj_obj_count_data(self, graph):
-        """
-        This takes a graph from a source (OMIM, MGI, whatever) and 
-        added the count data for subject, object, and subject/object
-        pairs to the dataset graph itself. The intention is to add
-        easily ingestible info in the dataset TTL to be consumed by
-        monarch UI, or other downstream sources
-        :param graph: graph from source, after ingestion
-        :return: 
-        """
-        for key in self.graph.sub_counts.keys():
-            self.add_count_triples(key, self.globaltt['count'],
-                                   self.graph.sub_counts[key])
-
-        for key in self.graph.obj_counts.keys():
-            self.add_count_triples(key, self.globaltt['count'],
-                                   self.graph.sub_counts[key])
-        # TODO: add triples for each subj/obj pair. need to change subj/obj's
-        #  into labels: make_id("subj-obj") and
-        #  model.addLabel(association_iri, "some label")
-            
-            
-    def add_count_triples(self, subj, pred, obj):
-        if subj is None:
-            self.graph.addTriple('http://purl.obolibrary.org/obo/BFO_0000030',
-                                 pred, obj, object_is_literal=True)
-        else:
-            self.graph.addTriple(subj.value, pred, obj, object_is_literal=True)
-        

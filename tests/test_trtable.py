@@ -49,7 +49,7 @@ class TranslationTestCase(unittest.TestCase):
         file_path = '../translationtable/GLOBAL_TERMS.yaml'
         if os.path.exists(os.path.join(os.path.dirname(__file__), file_path)):
             tt_file = open(os.path.join(os.path.dirname(__file__), file_path), 'r')
-            translation_table = yaml.load(tt_file)
+            translation_table = yaml.safe_load(tt_file)
             tt_file.close()
 
         temp_dict = {}
