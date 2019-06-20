@@ -222,6 +222,7 @@ class FlyBase(PostgreSQLSource):
         derived_pheno_manifest -  Anatomy terms FBbt, we currently
         make phenotype IRI equivalents that end up in UPheno, but
         this is being developed and updated, see
+        https://github.com/monarch-initiative/dipper/issues/770
 
         Adds triples to self.graph
 
