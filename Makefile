@@ -11,14 +11,18 @@ all: test prefix_equivalents dot_to_svg
 ### Tests
 ###
 
-test: ClinVar-test trans-test IMPC-test reactome-test RGD-test CTD-test mychem-test \
-      string-test  UDP-test Orphanet-test MGI-test GWAS-test # IMPC-fetch
+test: ClinVar-test FlyBase-test trans-test IMPC-test reactome-test RGD-test \
+      CTD-test mychem-test string-test UDP-test Orphanet-test MGI-test \
+      GWAS-test # IMPC-fetch
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
 
 ClinVar-test:
 	$(TEST) tests/test_clinvar.py
+
+FlyBase-test:
+	$(TEST) tests/test_flybase.py
 
 Orphanet-test:
 	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
@@ -104,10 +108,3 @@ translationtable/generated/prefix_equivalents.yaml: \
 	@ echo "---\n# prefix_equivalents.yaml" > $@;
 	@ LC_ALL=C join translationtable/generated/curiemap_prefix.txt /tmp/local_inverse.tab|\
 	awk '{v=$$1;$$1="";print substr($$0,2) ": " v}' | sort -u >> $@
-
-dot_to_svg: $(docs/img/*.svg)
-	@ for dotfile in `find . -type f -name "*.dot"`; \
-	    do \
-	    fname=`basename $$dotfile .dot`;\
-	    dot -Tsvg $$dotfile > docs/img/$${fname}.svg; \
-	    done;

@@ -1,4 +1,3 @@
 recursive-include dipper curie_map.yaml
 recursive-include resources *
 recursive-include translationtable *
-recursive-include scripts *

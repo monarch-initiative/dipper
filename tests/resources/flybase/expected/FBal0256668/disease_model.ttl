@@ -1,0 +1,18 @@
+MONARCH:b618c5e3940e56edb188 a OBAN:association ;
+    dc:description "in combination with FLYBASE:Hsap\\APP[695.UAS.Exel]; FB:FBal0256652" ;
+    dc:source PMID:24597901,
+        PMID:26530776,
+        PMID:29245900 ;
+    OBAN:association_has_object DOID:10652 ;
+    OBAN:association_has_predicate RO:0003301 ;
+    OBAN:association_has_subject FlyBase:FBal0256668 .
+
+MONARCH:bb1c7078e53bed9c0956 a OBAN:association ;
+    dc:description "in combination with FLYBASE:Hsap\\APP[695.UAS.Exel]; FB:FBal0256652" ;
+    dc:source PMID:26753104 ;
+    OBAN:association_has_object DOID:1094 ;
+    OBAN:association_has_predicate RO:0003301 ;
+    OBAN:association_has_subject FlyBase:FBal0256668 .
+
+FlyBase:FBal0256668 RO:0003301 DOID:10652,
+        DOID:1094 .

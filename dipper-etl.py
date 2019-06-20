@@ -101,7 +101,7 @@ def main():
         'Panther: 9606,10090,10116,7227,7955,6239,8355\n'
         'BioGrid: 9606,10090,10116,7227,7955,6239,8355\n'
         'UCSCBands: 9606\n'
-        'GO: 9606,10090,10116,7227,7955,6239,9615,9823,9031,9913')
+        'GO: 9606,10090,10116,7227,7955,6239,9615,9823,9031,9913,4896,5782,5052')
     parser.add_argument(
         '-o', '--test_only',
         help='only process and output the pre-configured test subset',
@@ -116,7 +116,7 @@ def main():
     args = parser.parse_args()
     tax_ids = None
     if args.taxon is not None:
-        tax_ids = [str(int(t)) for t in args.taxon.split(',')]
+        tax_ids = [t for t in args.taxon.split(',') if t.isdigit()]
 
     taxa_supported = [  # these are not taxa, janky approach
         'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee',
