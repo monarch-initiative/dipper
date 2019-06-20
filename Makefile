@@ -11,14 +11,18 @@ all: test prefix_equivalents dot_to_svg
 ### Tests
 ###
 
-test: ClinVar-test trans-test IMPC-test reactome-test RGD-test CTD-test mychem-test \
-      string-test  UDP-test Orphanet-test MGI-test GWAS-test # IMPC-fetch
+test: ClinVar-test FlyBase-test trans-test IMPC-test reactome-test RGD-test \
+      CTD-test mychem-test string-test UDP-test Orphanet-test MGI-test \
+      GWAS-test # IMPC-fetch
 
 MGI-test:
 	$(TEST) tests.test_mgi.EvidenceTestCase
 
 ClinVar-test:
 	$(TEST) tests/test_clinvar.py
+
+FlyBase-test:
+	$(TEST) tests/test_flybase.py
 
 Orphanet-test:
 	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest

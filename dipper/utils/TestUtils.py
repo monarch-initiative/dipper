@@ -26,12 +26,16 @@ class TestUtils:
                 n[0], n[1]) for n in turtle_graph.namespace_manager.namespaces()]
         )
         headless_ttl = ''
-        if Path(turtlish).exists():
-            headless_ttl = "\n".join(open(turtlish, 'r').readlines())
-        elif isinstance(turtlish, str):
-            headless_ttl = turtlish
-        else:
-            raise ValueError("turtlish must be filepath or string")
+        try:
+            if Path(turtlish).exists():
+                headless_ttl = Path(turtlish).read_text()
+            else:
+                raise OSError
+        except OSError:
+            if isinstance(turtlish, str):
+                headless_ttl = turtlish
+            else:
+                raise ValueError("turtlish must be filepath or string")
 
         turtle_string = prefixes + headless_ttl
         mock_file = io.StringIO(turtle_string)
