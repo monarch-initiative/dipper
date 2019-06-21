@@ -98,17 +98,6 @@ class WormBase(Source):
             'url':  wbprod + '/CHECKSUMS'}
     }
 
-    test_ids = {
-        'gene': [
-            'WBGene00001414', 'WBGene00004967', 'WBGene00003916', 'WBGene00004397',
-            'WBGene00001531'],
-        'allele': [
-            'WBVar00087800', 'WBVar00087742', 'WBVar00144481', 'WBVar00248869',
-            'WBVar00250630'],
-        'strain': ['BA794', 'RK1', 'HE1006'],
-        'pub': []  # FIXME
-    }
-
     def __init__(self, graph_type, are_bnodes_skolemized):
         super().__init__(
             graph_type,
@@ -194,9 +183,6 @@ class WormBase(Source):
 
         LOG.info("Parsing files...")
 
-        if self.test_only:
-            self.test_mode = True
-
         # to hold any label for a given id
         self.id_label_map = {}
         # to hold the mappings between genotype and background
@@ -226,10 +212,7 @@ class WormBase(Source):
     def process_gene_ids(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_ids']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
 
         model = Model(graph)
         LOG.info("Processing: %s", self.files['gene_ids']['file'])
@@ -249,9 +232,6 @@ class WormBase(Source):
                  gene_type) = row
                 # 6239,WBGene00000001,aap-1,Y110A7A.10,Live,protein_coding_gene
 
-                if self.test_mode and gene_num not in self.test_ids['gene']:
-                    continue
-
                 taxon_id = 'NCBITaxon:'+taxon_num
                 gene_id = 'WormBase:'+gene_num
                 if gene_symbol == '':
@@ -266,8 +246,7 @@ class WormBase(Source):
                 if gene_synonym != '' and gene_synonym is not None:
                     model.addSynonym(gene_id, gene_synonym)
 
-                if not self.test_mode \
-                        and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -275,10 +254,7 @@ class WormBase(Source):
     def process_gene_desc(self, limit):
         raw = '/'.join((self.rawdir, self.files['gene_desc']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
         model = Model(graph)
         LOG.info("Processing: %s", self.files['gene_desc']['file'])
         line_counter = 0
@@ -296,9 +272,6 @@ class WormBase(Source):
                 (gene_num, public_name, molecular_name, concise_description,
                  provisional_description, detailed_description,
                  automated_description, gene_class_description) = row
-
-                if self.test_mode and gene_num not in self.test_ids['gene']:
-                    continue
 
                 gene_id = 'WormBase:'+gene_num
 
@@ -322,8 +295,7 @@ class WormBase(Source):
                         descs[d] = text
                         model.addDescription(gene_id, text)
 
-                if not self.test_mode \
-                        and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -340,13 +312,9 @@ class WormBase(Source):
         :return:
 
         """
-
         raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
 
         LOG.info("Processing Allele phenotype associations")
         line_counter = 0
@@ -360,9 +328,6 @@ class WormBase(Source):
                 (db, gene_num, gene_symbol, is_not, phenotype_id, ref,
                  eco_symbol, with_or_from, aspect, gene_name, gene_synonym,
                  gene_class, taxon, date, assigned_by, blank, blank2) = row
-
-                if self.test_mode and gene_num not in self.test_ids['gene']:
-                    continue
 
                 # TODO add NOT phenotypes
                 if is_not == 'NOT':
@@ -446,8 +411,7 @@ class WormBase(Source):
 
                         # finish looping through all alleles
 
-                if not self.test_mode \
-                        and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -456,10 +420,7 @@ class WormBase(Source):
 
         raw = '/'.join((self.rawdir, self.files['rnai_pheno']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
         LOG.info("Processing RNAi phenotype associations")
         line_counter = 0
         geno = Genotype(graph)
@@ -472,9 +433,6 @@ class WormBase(Source):
 # WBGene00001908	F17E9.9	locomotion variant	WBPhenotype:0000643	WBRNAi00025129|WBPaper00006395 WBRNAi00025631|WBPaper00006395
 # WBGene00001908	F17E9.9	avoids bacterial lawn	WBPhenotype:0000402	WBRNAi00095640|WBPaper00040984
 # WBGene00001908	F17E9.9	RAB-11 recycling endosome localization variant	WBPhenotype:0002107	WBRNAi00090830|WBPaper00041129
-
-                if self.test_mode and gene_num not in self.test_ids['gene']:
-                    continue
 
                 gene_id = 'WormBase:'+gene_num
                 # refs = list()  # TODO unused
@@ -516,8 +474,7 @@ class WormBase(Source):
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph()
 
-                if not self.test_mode \
-                        and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -526,10 +483,7 @@ class WormBase(Source):
 
         raw = '/'.join((self.rawdir, self.files['pub_xrefs']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
 
         model = Model(graph)
         LOG.info("Processing publication xrefs")
@@ -542,9 +496,6 @@ class WormBase(Source):
                 # WBPaper00000009 pmid8805<BR>
                 # WBPaper00000011 doi10.1139/z78-244<BR>
                 # WBPaper00000012 cgc12<BR>
-
-                if self.test_mode and wb_ref not in self.test_ids['pub']:
-                    continue
 
                 ref_id = 'WormBase:'+wb_ref
                 xref_id = None
@@ -570,8 +521,7 @@ class WormBase(Source):
                     reference.addRefToGraph()
                     model.addSameIndividual(ref_id, xref_id)
 
-                if not self.test_mode \
-                        and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -580,10 +530,7 @@ class WormBase(Source):
 
         raw = '/'.join((self.rawdir, self.files['feature_loc']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
         model = Model(graph)
         LOG.info("Processing Feature location and attributes")
         line_counter = 0
@@ -678,11 +625,6 @@ class WormBase(Source):
                     else:
                         continue
 
-                if self.test_mode \
-                        and re.sub(r'WormBase:', '', fid) \
-                        not in self.test_ids['gene']+self.test_ids['allele']:
-                    continue
-
                 # these really aren't that interesting
                 if polymorphism is not None:
                     continue
@@ -726,7 +668,7 @@ class WormBase(Source):
                 if note is not None:
                     model.addDescription(fid, note)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
                 # RNAi reagents:
@@ -744,16 +686,9 @@ class WormBase(Source):
 
         raw = '/'.join((self.rawdir, self.files['disease_assoc']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
-
-        model = Model(graph)
+        graph = self.graph
         LOG.info("Processing disease models")
-        geno = Genotype(graph)
         line_counter = 0
-        worm_taxon = self.globaltt['Caenorhabditis elegans']
         with open(raw, 'r') as csvfile:
             filereader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
             for row in filereader:
@@ -764,9 +699,6 @@ class WormBase(Source):
                  eco_symbol, with_or_from, aspect, gene_name, gene_synonym,
                  gene_class, taxon, date, assigned_by, blank, blank2) = row
 
-                if self.test_mode and gene_num not in self.test_ids['gene']:
-                    continue
-
                 # TODO add NOT phenotypes
                 if is_not == 'NOT':
                     continue
@@ -774,16 +706,8 @@ class WormBase(Source):
                 # WB	WBGene00000001	aap-1		DOID:2583	PMID:19029536	IEA	ENSEMBL:ENSG00000145675|OMIM:615214	D		Y110A7A.10	gene	taxon:6239	20150612	WB
                 gene_id = 'WormBase:'+gene_num
 
-                # make a variant of the gene
-                vl = '_:'+'-'.join((gene_num, 'unspecified'))
-                vl_label = 'some variant of '+gene_symbol
-                geno.addAffectedLocus(vl, gene_id)
-                model.addBlankNodeAnnotation(vl)
-                animal_id = geno.make_experimental_model_with_genotype(
-                    vl, vl_label, worm_taxon, 'worm')
-
                 assoc = G2PAssoc(
-                    graph, self.name, animal_id,
+                    graph, self.name, gene_id,
                     disease_id, self.globaltt['is model of'])
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
@@ -791,7 +715,6 @@ class WormBase(Source):
                 assoc.add_evidence(self.resolve(eco_symbol))
                 assoc.add_association_to_graph()
 
-        return
 
     def process_gene_interaction(self, limit):
         """
@@ -820,10 +743,7 @@ class WormBase(Source):
 
         raw = '/'.join((self.rawdir, self.files['gene_interaction']['file']))
 
-        if self.test_mode:
-            graph = self.testgraph
-        else:
-            graph = self.graph
+        graph = self.graph
         model = Model(graph)
         LOG.info("Processing gene interaction associations")
         line_counter = 0
@@ -865,11 +785,6 @@ class WormBase(Source):
                 gene_a_id = 'WormBase:'+row[5]
                 gene_b_id = 'WormBase:'+row[8]
 
-                if self.test_mode \
-                        and gene_a_id not in self.test_ids['gene'] \
-                        and gene_b_id not in self.test_ids['gene']:
-                    continue
-
                 assoc = InteractionAssoc(
                     graph, self.name, gene_a_id, gene_b_id, interaction_type_id)
                 assoc.set_association_id(interaction_id)
@@ -878,7 +793,7 @@ class WormBase(Source):
                 # citation is not a pmid or WBref - get this some other way
                 model.addDescription(assoc_id, summary)
 
-                if not self.test_mode and limit is not None and line_counter > limit:
+                if limit is not None and line_counter > limit:
                     break
 
         return
@@ -886,11 +801,3 @@ class WormBase(Source):
     @staticmethod
     def make_reagent_targeted_gene_id(gene_id, reagent_id):
         return '_:'+'-'.join((gene_id, reagent_id))
-
-    def getTestSuite(self):
-        import unittest
-        from tests.test_wormbase import WormBaseTestCase
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(WormBaseTestCase)
-
-        return test_suite
