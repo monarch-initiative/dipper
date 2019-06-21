@@ -1,6 +1,10 @@
-allele_id	pheno_desc	pub_id	pub_title	pmid_id
-FBal0195705	@FBcv0000435:neuroanatomy defective@	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
-FBal0195705	@FBcv0000421:touch response defective@	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
-FBal0195705	@FBcv0000682:touch perception defective@	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
-FBal0195705	@FBcv0000434:neurophysiology defective@ | @FBdv00005336:larval stage@	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216
-FBal0195705	@FBcv0000414:locomotor behavior defective@ | @FBdv00005339:third instar larval stage@	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216
+allele_id	pheno_desc	pheno_type	pub_id	pub_title	pmid_id
+FBal0195705	@FBbt00005919:mechanosensory neuron@	derived_pheno_manifest	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
+FBal0195705	@GO0030424:axon@ | @FBcv0000061:ectopic@	derived_pheno_manifest	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
+FBal0195705	@FBbt00005837:embryonic/larval neuromuscular junction@ | @FBdv00005336:larval stage@	derived_pheno_manifest	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216
+FBal0195705	@FBbt00005839:type I bouton@ | @FBdv00005336:larval stage@	derived_pheno_manifest	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216
+FBal0195705	@FBcv0000435:neuroanatomy defective@	derived_pheno_class	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
+FBal0195705	@FBcv0000421:touch response defective@	derived_pheno_class	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
+FBal0195705	@FBcv0000682:touch perception defective@	derived_pheno_class	FBrf0221678	Overexpression of Down syndrome cell adhesion molecule impairs precise synaptic targeting.	23666178
+FBal0195705	@FBcv0000434:neurophysiology defective@ | @FBdv00005336:larval stage@	derived_pheno_class	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216
+FBal0195705	@FBcv0000414:locomotor behavior defective@ | @FBdv00005339:third instar larval stage@	derived_pheno_class	FBrf0237617	A third copy of the Down syndrome cell adhesion molecule (Dscam) causes synaptic and locomotor dysfunction in Drosophila.	29196216

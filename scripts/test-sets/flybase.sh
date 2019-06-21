@@ -15,28 +15,29 @@
 #
 # Alleles:
 # http://flybase.org/reports/FBal0195705, standard allele, fly gene
+# http://flybase.org/reports/FBal0263199, autism model
 # http://flybase.org/reports/FBal0256668:
 #      humana allele, human transgene, 1 phenotype, 1 disease model
-#
-# Genes:
-# FBgn0033159
-# FBgn0250787
 
-# Potential alleles of interest:
-# http://flybase.org/reports/FBal0190789,FBgn0084473 transgene, only phenotype manifests in
 
 test_set_1=(
     'FBal0195705'
     'FBgn0033159'
 )
 
+# Transgene, should be filtered out of ingest
 test_set_2=(
     'FBal0256668'
     'FBgn0250787'
 )
 
+test_set_3=(
+    'FBal0263199'
+    'FBgn0028734'
+)
+
 counter=1
-max_test_sets=2
+max_test_sets=3
 
 PTH=`pwd`
 # Default looks back two directories for a venv
