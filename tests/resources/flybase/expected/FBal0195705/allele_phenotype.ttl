@@ -1,11 +1,38 @@
+MONARCH:b0ac0e667b65c8ef13d0 a OBAN:association ;
+    GENO:0000580 FBcv:0000061 ;
+    dc:source PMID:23666178 ;
+    OBAN:association_has_object GO:0030424PHENOTYPE ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
+MONARCH:b2e5e3c43998e3b6e9e8 a OBAN:association ;
+    GENO:0000580 FBdv:00005336 ;
+    dc:source PMID:29196216 ;
+    OBAN:association_has_object OBO:FBbt00005839PHENOTYPE ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
+MONARCH:b45ce44256c8a1807c99 a OBAN:association ;
+    dc:source PMID:23666178 ;
+    OBAN:association_has_object OBO:FBbt00005919PHENOTYPE ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
 MONARCH:b4ed07746b7007319213 a OBAN:association ;
     dc:source PMID:23666178 ;
     OBAN:association_has_object FBcv:0000421 ;
     OBAN:association_has_predicate RO:0002200 ;
     OBAN:association_has_subject FlyBase:FBal0195705 .
 
+MONARCH:b6146f17aa3153099bbe a OBAN:association ;
+    GENO:0000580 FBdv:00005336 ;
+    dc:source PMID:29196216 ;
+    OBAN:association_has_object OBO:FBbt00005837PHENOTYPE ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0195705 .
+
 MONARCH:ba25ff82dce0e8292ee6 a OBAN:association ;
-    OBO:GENO_0000580 FBdv:00005339 ;
+    GENO:0000580 FBdv:00005339 ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object FBcv:0000414 ;
     OBAN:association_has_predicate RO:0002200 ;
@@ -24,14 +51,21 @@ MONARCH:bc8f62666ba428b2fe69 a OBAN:association ;
     OBAN:association_has_subject FlyBase:FBal0195705 .
 
 MONARCH:bcd4c71a9891ba353df5 a OBAN:association ;
-    GENO:0000580 FBdv:00005336 ;
+    GENO:0000580 OBO:FBdv_00005336 ;
     dc:source PMID:29196216 ;
     OBAN:association_has_object FBcv:0000434 ;
     OBAN:association_has_predicate RO:0002200 ;
     OBAN:association_has_subject FlyBase:FBal0195705 .
 
-FlyBase:FBal0195705 RO:0002200 FBcv:0000414,
+GO:0030424PHENOTYPE a owl:Class ;
+    rdfs:label "axon phenotype" .
+
+FlyBase:FBal0195705 RO:0002200 OBO:FBbt00005837PHENOTYPE,
+        OBO:FBbt00005839PHENOTYPE,
+        OBO:FBbt00005919PHENOTYPE,
+        FBcv:0000414,
         FBcv:0000421,
         FBcv:0000434,
         FBcv:0000435,
-        FBcv:0000682 .
+        FBcv:0000682,
+        GO:0030424PHENOTYPE .
