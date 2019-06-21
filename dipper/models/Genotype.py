@@ -77,7 +77,7 @@ class Genotype():
         return
 
     def addGene(
-            self, gene_id, gene_label, gene_type=None, gene_description=None
+            self, gene_id, gene_label=None, gene_type=None, gene_description=None
     ):
         ''' genes are classes '''
         if gene_type is None:
@@ -146,7 +146,7 @@ class Genotype():
         """
         We make the assumption here that if the relationship is not provided,
         it is a
-        GENO:is_allele_of.
+        GENO:has_affected_feature.
 
         Here, the allele should be a variant_locus, not a sequence alteration.
         :param allele_id:
