@@ -14,6 +14,7 @@
 SELECT
     feature.uniquename as allele_id,
     featureprop.value as pheno_desc,
+    cvterm.name as pheno_type,
     pub.uniquename as pub_id,
     pub.title as pub_title,
     pmid.accession as pmid_id
@@ -24,7 +25,8 @@ JOIN featureprop
 ON feature.feature_id = featureprop.feature_id
 
 JOIN cvterm
-ON featureprop.type_id = cvterm.cvterm_id AND cvterm.name = 'derived_pheno_class'
+ON featureprop.type_id = cvterm.cvterm_id
+    AND (cvterm.name = 'derived_pheno_class' OR cvterm.name = 'derived_pheno_manifest')
 
 JOIN featureprop_pub
 ON featureprop.featureprop_id = featureprop_pub.featureprop_id

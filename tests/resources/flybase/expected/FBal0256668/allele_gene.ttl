@@ -1,8 +1,0 @@
-FlyBase:FBal0256668 a GENO:0000512 ;
-    rdfs:label "Hsap\\BACE1[UAS.Exel]" ;
-    GENO:0000639 FlyBase:FBgn0250787 ;
-    RO:0002162 NCBITaxon:7227 .
-
-FlyBase:FBgn0250787 a owl:Class ;
-    RO:0002162 NCBITaxon:9606 ;
-    rdfs:subClassOf SO:0000704 .

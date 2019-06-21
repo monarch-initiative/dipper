@@ -1,0 +1,69 @@
+MONARCH:b1840cd27e0dd00c4993 a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0058772,
+        FBdv:00005369 ;
+    dc:source PMID:27335463 ;
+    OBAN:association_has_object FBcv:0000397 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:b19fcdd8eeb6edfa176f a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0117644 ;
+    dc:source PMID:26324914 ;
+    OBAN:association_has_object FBcv:0000354 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:b214950b76b36bb88313 a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0155866,
+        FBcv:0000314,
+        FBdv:00005369 ;
+    dc:source PMID:27335463 ;
+    OBAN:association_has_object FBcv:0000397 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:b989dbd278d1ac76fe3d a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0117644 ;
+    dc:source PMID:26324914 ;
+    OBAN:association_has_object OBO:FBbt00004729PHENOTYPE ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:bb6e96bc910e4aea628d a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0155866,
+        FBcv:0000314,
+        FBdv:00005369 ;
+    dc:source PMID:27335463 ;
+    OBAN:association_has_object FBcv:0000398 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:bb913d60b7a64d6a158b a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0058772,
+        FBdv:00005369 ;
+    dc:source PMID:27335463 ;
+    OBAN:association_has_object FBcv:0000398 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:bbc5cf22bea68a89520c a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0095594 ;
+    dc:source PMID:26324914 ;
+    OBAN:association_has_object FBcv:0002041 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+MONARCH:bc3b6870af29fa21d46b a OBAN:association ;
+    GENO:0000580 FlyBase:FBal0130657,
+        FBcv:0000308 ;
+    dc:source PMID:26324914 ;
+    OBAN:association_has_object FBcv:0000385 ;
+    OBAN:association_has_predicate RO:0002200 ;
+    OBAN:association_has_subject FlyBase:FBal0263199 .
+
+FlyBase:FBal0263199 RO:0002200 OBO:FBbt00004729PHENOTYPE,
+        FBcv:0000354,
+        FBcv:0000385,
+        FBcv:0000397,
+        FBcv:0000398,
+        FBcv:0002041 .
