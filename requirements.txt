@@ -4,5 +4,5 @@ roman
 pyyaml
 requests
 ontobio
-bmt
+bmt==git+https://github.com/NCATS-Tangerine/biolink-model-toolkit.git
 dataclasses
