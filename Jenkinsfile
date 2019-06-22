@@ -305,7 +305,9 @@ pipeline {
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources go --taxon 7955,9606,10090,6239,7227,10116,559292,4896,4932
+                                venv/bin/python dipper-etl.py --sources go --taxon \
+                                    10090,10116,4896,4932,5052,559292,5782,6239,\
+                                    7227,7955,9031,9606,9615,9823,9913
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
