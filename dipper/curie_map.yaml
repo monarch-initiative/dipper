@@ -175,6 +175,7 @@
 'SMPDB': 'http://smpdb.ca/view/'                                        # Small Molecule Pathway Database
 
 # genes (and RNAs and transcripts)
+'AspGD': 'http://www.aspergillusgenome.org/cgi-bin/locus.pl?dbid='              # Aspergillus Genome Database
 'BIOGRID': 'http://thebiogrid.org/'                                             # Biological General Repository for Interaction Datasets
 'CCDS': 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='    # Consensus CDS (CoDing Sequence)
 'CGNC': 'http://birdgenenames.org/cgnc/GeneReport?id='                          # Chicken Gene Nomenclature Consortium
