@@ -12,7 +12,6 @@ logging.getLogger().setLevel(logging.WARN)
 LOG = logging.getLogger(__name__)
 
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/flybase')
-NT_PATH = TEST_PATH + "/nt/"
 DOT_PATH = TEST_PATH + "/dot/"
 RAW_PATH = TEST_PATH + "/input/"
 TTL_PATH = TEST_PATH + "/expected/"

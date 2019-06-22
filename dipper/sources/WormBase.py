@@ -365,28 +365,42 @@ class WormBase(Source):
                         gene_id = 'WormBase:' + gene_num
 
                         if re.search(r'WBRNAi', allele_id):
-                            # make the reagent-targeted gene,
+
+                            # @kshefchek - removing this blank node
+                            # in favor of simpler modeling
+                            # make the WormBase:WBRNAi* id
+                            # a self.globaltt['RNAi_reagent'], and attach
+                            # phenotype to this ID
+
+                            # Previous model - make a bnode reagent-targeted gene,
                             # & annotate that instead of the RNAi item directly
-                            rnai_num = re.sub(r'WormBase:', '', allele_id)
-                            rnai_id = allele_id
-                            rtg_id = self.make_reagent_targeted_gene_id(
-                                gene_num, rnai_num)
-                            geno.addReagentTargetedGene(
-                                rnai_id, 'WormBase:' + gene_num, rtg_id)
+                            #rnai_num = re.sub(r'WormBase:', '', allele_id)
+                            #rnai_id = allele_id
+                            #rtg_id = self.make_reagent_targeted_gene_id(
+                            #    gene_num, rnai_num)
+                            #geno.addReagentTargetedGene(
+                            #    rnai_id, 'WormBase:' + gene_num, rtg_id)
+                            # allele_id = rtg_id
+
                             geno.addGeneTargetingReagent(
-                                rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
-                            allele_id = rtg_id
+                                allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
+
                         elif re.search(r'WBVar', allele_id):
                             # this may become deprecated by using wormmine
                             # make the allele to gene relationship
                             # the WBVars are really sequence alterations
-
                             # the public name will come from elsewhere
+
+                            # @kshefchek - removing this blank node
+                            # in favor of simpler modeling, treat variant
+                            # like an allele
+                            #vl_id = '_:'+'-'.join((gene_num, allele_num))
+                            #geno.addSequenceAlterationToVariantLocus(
+                            #    allele_id, vl_id)
+                            #geno.addAlleleOfGene(vl_id, gene_id)
+
                             geno.addSequenceAlteration(allele_id, None)
-                            vl_id = '_:'+'-'.join((gene_num, allele_num))
-                            geno.addSequenceAlterationToVariantLocus(
-                                allele_id, vl_id)
-                            geno.addAlleleOfGene(vl_id, gene_id)
+                            geno.addAlleleOfGene(allele_id, gene_id)
                         else:
                             LOG.warning(
                                 "Some kind of allele I don't recognize: %s", allele_num)
