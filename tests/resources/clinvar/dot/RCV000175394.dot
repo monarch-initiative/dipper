@@ -1,0 +1,72 @@
+digraph { 
+ node [ fontname="DejaVu Sans" ] ; 
+	node0 -> node1 [ color=BLACK, label=< <font point-size='10' color='#336633'>owl:sameAs</font> > ] ;
+	node2 -> node3 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node4 -> node5 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node6 -> node7 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node8 -> node9 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBAN:association_has_predicate</font> > ] ;
+	node10 -> node2 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000085</font> > ] ;
+	node8 -> node10 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000007</font> > ] ;
+	node13 -> node14 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node4 -> node10 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000111</font> > ] ;
+	node10 -> node15 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node8 -> node4 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000015</font> > ] ;
+	node0 -> node16 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:BFO_0000050</font> > ] ;
+	node4 -> node13 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000041</font> > ] ;
+	node0 -> node17 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:RO_0002162</font> > ] ;
+	node8 -> node18 [ color=BLACK, label=< <font point-size='10' color='#336633'>oboInOwl:hasdbxref</font> > ] ;
+	node8 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBAN:association_has_object</font> > ] ;
+	node0 -> node19 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:GENO_0000418</font> > ] ;
+	node0 -> node12 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:GENO_0000841</font> > ] ;
+	node8 -> node0 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBAN:association_has_subject</font> > ] ;
+	node8 -> node20 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node4 -> node11 [ color=BLACK, label=< <font point-size='10' color='#336633'>OBO:SEPIO_0000018</font> > ] ;
+	node0 -> node21 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+	node11 -> node22 [ color=BLACK, label=< <font point-size='10' color='#336633'>rdf:type</font> > ] ;
+# http://xmlns.com/foaf/0.1/organization node22
+node22 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>organization</B></td></tr><tr><td href='http://xmlns.com/foaf/0.1/organization' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://xmlns.com/foaf/0.1/organization</font></td></tr></table> > ] 
+# https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f node10
+node10 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;b0c2b8f4b93e10f01eba_evidence&quot;</B></td></tr><tr><td href='https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f</font></td></tr></table> > ] 
+# https://www.ncbi.nlm.nih.gov/gene/3030 node19
+node19 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>https://www.ncbi.nlm.nih.gov/gene/3030</B></td></tr><tr><td href='https://www.ncbi.nlm.nih.gov/gene/3030' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://www.ncbi.nlm.nih.gov/gene/3030</font></td></tr></table> > ] 
+# https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba node8
+node8 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>MONARCH_b0c2b8f4b93e10f01eba</B></td></tr><tr><td href='https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba</font></td></tr></table> > ] 
+# https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1 node4
+node4 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;ClinVarAssertion_1540968&quot;</B></td></tr><tr><td href='https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1</font></td></tr><tr><td align='left'>OBO:SEPIO_0000021</td><td align='left'>&quot;2017-04-04&quot;</td></tr><tr><td align='left'>dc:identifier</td><td align='left'>&quot;SCV000790664.1&quot;</td></tr></table> > ] 
+# https://data.monarchinitiative.org/ttl/RCV000175394.nt node6
+node6 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>RCV000175394.nt</B></td></tr><tr><td href='https://data.monarchinitiative.org/ttl/RCV000175394.nt' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://data.monarchinitiative.org/ttl/RCV000175394.nt</font></td></tr><tr><td align='left'>owl:versionInfo</td><td align='left'>&quot;2019-04-03&quot;</td></tr></table> > ] 
+# http://www.ncbi.nlm.nih.gov/clinvar/variation/192079 node0
+node0 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;NM_000182.4(HADHA):c.2146+1G&gt;A&quot;</B></td></tr><tr><td href='http://www.ncbi.nlm.nih.gov/clinvar/variation/192079' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.ncbi.nlm.nih.gov/clinvar/variation/192079</font></td></tr><tr><td align='left'>oboInOwl:hasExactSynonym</td><td align='left'>&quot;NC_000002.11:g.26414351C&gt;T&quot;</td></tr><tr><td align='left'>oboInOwl:hasExactSynonym</td><td align='left'>&quot;NC_000002.12:g.26191482C&gt;T&quot;</td></tr><tr><td align='left'>oboInOwl:hasExactSynonym</td><td align='left'>&quot;NG_007121.1:g.58139G&gt;A&quot;</td></tr><tr><td align='left'>oboInOwl:hasExactSynonym</td><td align='left'>&quot;NM_000182.4:c.2146+1G&gt;A&quot;</td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/GENO_0000841 node9
+node9 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>GENO_0000841</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/GENO_0000841' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/GENO_0000841</font></td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/SO_0001483 node21
+node21 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>SO_0001483</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/SO_0001483' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/SO_0001483</font></td></tr></table> > ] 
+# http://www.w3.org/2002/07/owl#Ontology node7
+node7 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>Ontology</B></td></tr><tr><td href='http://www.w3.org/2002/07/owl#Ontology' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.w3.org/2002/07/owl#Ontology</font></td></tr></table> > ] 
+# https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025 node13
+node13 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;Counsyl Autosomal Recessive and X-Linked Classification Criteria (2018)&quot;</B></td></tr><tr><td href='https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025</font></td></tr><tr><td align='left'>OBO:ERO_0000480</td><td align='left'>&quot;https://submit.ncbi.nlm.nih.gov/ft/byid/3ys2zqtz/counsyl_autosomal_recessive_and_x-linked_classification_criteria_2018_.pdf&quot;</td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/NCBITaxon_9606 node17
+node17 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>NCBITaxon_9606</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/NCBITaxon_9606' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/NCBITaxon_9606</font></td></tr></table> > ] 
+# http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219 node1
+node1 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219</B></td></tr><tr><td href='http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219</font></td></tr></table> > ] 
+# http://www.ncbi.nlm.nih.gov/clinvar/RCV000175394 node18
+node18 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>RCV000175394</B></td></tr><tr><td href='http://www.ncbi.nlm.nih.gov/clinvar/RCV000175394' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.ncbi.nlm.nih.gov/clinvar/RCV000175394</font></td></tr></table> > ] 
+# http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494 node11
+node11 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;Counsyl&quot;</B></td></tr><tr><td href='http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494</font></td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/SEPIO_0000067 node3
+node3 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>SEPIO_0000067</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/SEPIO_0000067' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/SEPIO_0000067</font></td></tr></table> > ] 
+# https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036 node2
+node2 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;clinical testing&quot;</B></td></tr><tr><td href='https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036</font></td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/ECO_0000000 node15
+node15 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>ECO_0000000</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/ECO_0000000' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/ECO_0000000</font></td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/SEPIO_0000037 node14
+node14 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>SEPIO_0000037</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/SEPIO_0000037' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/SEPIO_0000037</font></td></tr></table> > ] 
+# http://purl.org/oban/association node20
+node20 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>association</B></td></tr><tr><td href='http://purl.org/oban/association' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.org/oban/association</font></td></tr></table> > ] 
+# http://purl.obolibrary.org/obo/SEPIO_0000001 node5
+node5 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>SEPIO_0000001</B></td></tr><tr><td href='http://purl.obolibrary.org/obo/SEPIO_0000001' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://purl.obolibrary.org/obo/SEPIO_0000001</font></td></tr></table> > ] 
+# http://omim.org/entry/609016 node12
+node12 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>&quot;Long-chain 3-hydroxyacyl-CoA dehydrogenase deficiency&quot;</B></td></tr><tr><td href='http://omim.org/entry/609016' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>http://omim.org/entry/609016</font></td></tr></table> > ] 
+# https://www.ncbi.nlm.nih.gov/gene/150946 node16
+node16 [ shape=none, color=black label=< <table color='#666666' cellborder='0' cellspacing='0' border='1'><tr><td colspan='2' bgcolor='grey'><B>https://www.ncbi.nlm.nih.gov/gene/150946</B></td></tr><tr><td href='https://www.ncbi.nlm.nih.gov/gene/150946' bgcolor='#eeeeee' colspan='2'><font point-size='10' color='#6666ff'>https://www.ncbi.nlm.nih.gov/gene/150946</font></td></tr></table> > ] 
+}

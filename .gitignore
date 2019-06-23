@@ -5,6 +5,7 @@
 Pipfile.lock
 
 junk/*
+docs/img/RCV.*
 
 .pylintrc
 .pytype/*
