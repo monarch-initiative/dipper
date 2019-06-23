@@ -43,7 +43,7 @@ NODECOLOR = "black"
 ISACOLOR = "black"
 
 
-def rdf2dot(g, stream):
+def rdf2dot(g, stream, graph_opts=None):
     """
     Convert the RDF graph to DOT
     writes the dot output to the stream
@@ -51,6 +51,8 @@ def rdf2dot(g, stream):
 
     fields = collections.defaultdict(set)
     nodes = {}
+
+    if graph_opts is None: graph_opts = {}
 
     def node(x):
 
@@ -89,6 +91,9 @@ def rdf2dot(g, stream):
         return "BLACK"
 
     stream.write("digraph { \n node [ fontname=\"DejaVu Sans\" ] ; \n")
+
+    for option, value in graph_opts.items():
+        stream.write(" {}={} \n".format(option, value))
 
     for s, p, o in g:
         sn = node(s)

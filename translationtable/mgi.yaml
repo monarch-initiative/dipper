@@ -123,6 +123,8 @@
 "wild type": "wild_type"
 
 # taxon
+# @kshefchek - it's easier from an integration perspective to round up
+# to Mus musculus when applicable
 "Sus scrofa domestica L.": "Sus scrofa"  # "NCBITaxon:9823"  ?? why here ??
 "Rat": "Rattus"   # Genus
 
@@ -135,18 +137,18 @@
 "laboratory mouse and wild-derived": "Mus"  # genus
 "laboratory mouse and M. m. musculus (Prague)": "Mus musculus musculus"
 "M. m. castaneus and M. m. musculus": "Mus musculus musculus x M. m. castaneus"
-"M. m. domesticus (Canada)": "Mus musculus domesticus"
+"M. m. domesticus (Canada)": "Mus musculus"
 # FIXME
-"M. m. domesticus and M. m. domesticus poschiavinus": "Mus musculus domesticus"
+"M. m. domesticus and M. m. domesticus poschiavinus": "Mus musculus"
 "M. m. musculus and M. spretus or M. m. domesticus": "Mus musculus x Mus spretus"
 "M. chypre": "Mus"   # '862507' -> SubGenus not Genus,  # unclassified mus
 "M. cookii (Southeast Asia)": "Mus cookii"
 "M. cervicolor": "Mus cervicolor"
 "M. m. gentilulus": "Mus musculus gentilulus"
-"M. m. domesticus poschiavinus (Tirano, Italy)": "Mus musculus domesticus"  # FIXME
+"M. m. domesticus poschiavinus (Tirano, Italy)": "Mus musculus"  # FIXME
 "M. m. castaneus (Phillipines)": "Mus musculus castaneus"
 "M. m. domesticus (brevirostris) (France)": "Mus musculus brevirostris"
-"M. m. domesticus (Lake Casitas, CA)": "Mus musculus domesticus"
+"M. m. domesticus (Lake Casitas, CA)": "Mus musculus"
 "laboratory mouse or wild": "Mus"   # '862507' -> SubGenus not Genus
 "M. spretus (Morocco)": "Mus spretus"
 "M. m. bactrianus (Russia)": "Mus musculus bactrianus"
@@ -155,16 +157,16 @@
 "M. baoulei": "Mus baoulei"
 "laboratory mouse and M. spretus or M. m. castaneus": "Mus"   # '862507' -> SubGenus not Genus
 "M. haussa": "Mus haussa"
-"M. m. domesticus (Montpellier, France)": "Mus musculus domesticus"
+"M. m. domesticus (Montpellier, France)": "Mus musculus"
 "M. m. musculus": "Mus musculus musculus"
 "M. m. domesticus and Not specified": "Mus musculus"
 "laboratory mouse and M. spretus or M. m. musculus": "Mus"   # '862507' -> SubGenus not Genus
-"M. m. musculus (Czech)": "Mus musculus musculus"
+"M. m. musculus (Czech)": "Mus musculus"
 "M. spretus or laboratory mouse and M. m. musculus": "Mus"   # '862507' -> SubGenus not Genus
-"M. m. domesticus (Skokholm, UK)": "Mus musculus domesticus"
+"M. m. domesticus (Skokholm, UK)": "Mus musculus"
 "M. shanghai": "Mus"   # '862507' -> SubGenus not Genus
-"M. m. musculus (Korea)": "Mus musculus musculus"
-"laboratory mouse and M. m. domesticus (Peru)": "Mus musculus musculus"
+"M. m. musculus (Korea)": "Mus musculus"
+"laboratory mouse and M. m. domesticus (Peru)": "Mus musculus"
 "M. m. molossinus and laboratory mouse": "Mus musculus molossinus"
 "laboratory mouse and M. m. praetextus x M. m. domesticus": "Mus setulosus"
 "M. cervicolor popaeus": "Mus cervicolor popaeus"
@@ -172,16 +174,16 @@
 "M. abbotti": "Mus abbotti"
 "M. nitidulus": "Mus nitidulus"
 "M. gradsko": "Mus setulosus"
-"M. m. domesticus poschiavinus (Zalende)": "Mus musculus domesticus"
-"M. m. domesticus (MD)": "Mus musculus domesticus"
+"M. m. domesticus poschiavinus (Zalende)": "Mus musculus"
+"M. m. domesticus (MD)": "Mus musculus"
 "M. triton": "Mus triton"
-"M. m. domesticus (Tunisia)": "Mus musculus domesticus"
+"M. m. domesticus (Tunisia)": "Mus musculus"
 "Wild and outbred Swiss and M. m. domesticus and M. m. molossinus": "Mus"   # '862507' -> SubGenus not Genus,
 "M. m. molossinus and M. spretus": "Mus musculus x Mus spretus"
 "M. spretus (France)": "Mus spretus"
 "M. m. praetextus x M. m. domesticus and M. m. domesticus": "Mus musculus"
 "M. m. bactrianus": "Mus musculus bactrianus"
-"M. m. domesticus (Bulgaria)": "Mus musculus domesticus"
+"M. m. domesticus (Bulgaria)": "Mus musculus"
 "Not Specified and M. m. domesticus": "Mus musculus"
 "laboratory mouse and M. m. molossinus": "Mus musculus"
 "M. spretus or M. m. domesticus": "Mus"   # '862507' -> SubGenus not Genus
@@ -192,7 +194,7 @@
 "M. m. molossinus (Japan)": "Mus musculus molossinus"
 "M. lepidoides": "Mus lepidoides"
 "M. m. macedonicus": "Mus musculus"
-"M. m. musculus (Pohnpei-Micronesia)": "Mus musculus musculus"
+"M. m. musculus (Pohnpei-Micronesia)": "Mus musculus"
 "M. m. domesticus (Morocco)": "Mus musculus domesticus"
 "laboratory mouse and M. m. domesticus poschiavinus": "Mus musculus"
 "M. (Nannomys) (Zakouma NP, Chad)": "Nannomys"
@@ -207,32 +209,32 @@
 "M. emesi": "Mus emesi"
 "M. gratus": "Mus gratus"
 "laboratory mouse or M. spretus": "Mus musculus"
-"M. m. domesticus (PA)": "Mus musculus domesticus"
-"M. m. domesticus (DE)": "Mus musculus domesticus"
+"M. m. domesticus (PA)": "Mus musculus"
+"M. m. domesticus (DE)": "Mus musculus"
 "laboratory mouse and M. m. castaneus": "Mus musculus"
 "M. hortulanus (Austria)": "Mus spicilegus"  # synonymous with Mus spicilegus
 "M. m. musculus and M. hortulanus": "Mus"   # '862507' -> SubGenus not Genus
 "M. mattheyi": "Mus mattheyi"
 "M. m. macedonicus or M. m. musculus": "Mus musculus"
-"M. m. musculus (Georgia)": "Mus musculus musculus"
+"M. m. musculus (Georgia)": "Mus musculus"
 "M. famulus": "Mus famulus"
 "M. m. bactrianus (Iran)": "Mus musculus bactrianus"
-"M. m. musculus (Toshevo, Bulgaria)": "Mus musculus musculus"
-"M. m. musculus (Prague)": "Mus musculus musculus"
+"M. m. musculus (Toshevo, Bulgaria)": "Mus musculus"
+"M. m. musculus (Prague)": "Mus musculus"
 "M. platythrix (India)": "Mus platythrix"
-"M. m. domesticus": "Mus musculus domesticus"
+"M. m. domesticus": "Mus musculus"
 "M. m. castaneus and laboratory mouse": "Mus musculus"
-"M. m. domesticus (Australia)": "Mus musculus domesticus"
+"M. m. domesticus (Australia)": "Mus musculus"
 "laboratory mouse and M. m. domesticus and M. m. molossinus": "Mus musculus"
-"M. m. domesticus (brevirostris) (Morocco)": "Mus musculus domesticus"
-"Mus musculus/domesticus": "Mus musculus domesticus"
+"M. m. domesticus (brevirostris) (Morocco)": "Mus musculus"
+"Mus musculus/domesticus": "Mus musculus"
 "laboratory mouse and M. spretus and M. m. musculus": "Mus musculus"
 "M. m. molossinus": "Mus musculus molossinus"
 "M. hortulanus": "Mus spicilegus"  # synonymous with Mus spicilegus
 "M. dunni": "Mus terricolor"  # synonymous with Mus terricolor
 "M. m. castaneus (Pathumthani, Thailand)": "Mus musculus castaneus"
 "M. terricolor": "Mus terricolor"
-"M. m. domesticus (China)": "Mus musculus domesticus"
+"M. m. domesticus (China)": "Mus musculus"
 "M. fragilicauda": "Mus fragilicauda"
 "Not Resolved": "Mus setulosus"  # assume Mus
 "M. m. musculus or M. spretus and laboratory mouse": "Mus setulosus"
@@ -241,18 +243,18 @@
 "laboratory mouse and M. abbotti": "Mus setulosus"
 "M. cervicolor cervicolor": "Mus cervicolor cervicolor"
 "laboratory mouse and M. spretus": "Mus setulosus"
-"M. m. domesticus (praetextus)": "Mus musculus domesticus"
+"M. m. domesticus (praetextus)": "Mus musculus"
 "M. spretus (London)": "Mus spretus"
 "M. m. musculus (Prague) and laboratory mouse": "Mus musculus"
 "laboratory mouse and M. m. musculus (Central Jutland, Denmark)": "Mus musculus"
-"M. m. musculus (Northern Jutland, Denmark)": "Mus musculus musculus"
+"M. m. musculus (Northern Jutland, Denmark)": "Mus musculus"
 "M. m. castaneus (Taiwan)": "Mus musculus castaneus"
 "M. brevirostris": "Mus musculus brevirostris"
 "M. spretus": "Mus spretus"
-"M. m. domesticus poschiavinus": "Mus musculus domesticus"
+"M. m. domesticus poschiavinus": "Mus musculus"
 "M. pahari": "Mus pahari"
 "M. m. molossinus (Hakozaki, Japan)": "Mus musculus molossinus"
-"M. m. musculus (Hokkaido)": "Mus musculus musculus"
+"M. m. musculus (Hokkaido)": "Mus musculus"
 "M. m. musculus or M. spretus": "Mus"   # '862507' -> SubGenus not Genus
 "laboratory mouse and M. m. musculus": "Mus musculus"
 "Not Specified and M. m. musculus": "Mus musculus"
@@ -262,7 +264,7 @@
 "M. m. praetextus x M. m. musculus": "Mus musculus"
 "M. spretus and laboratory mouse": "Mus"   # '862507' -> SubGenus not Genus
 "laboratory mouse and M. m. castaneus and M. m. domesticus": "Mus musculus"
-"M. m. musculus (Bulgaria)": "Mus musculus musculus"
+"M. m. musculus (Bulgaria)": "Mus musculus"
 "M. booduga": "Mus booduga"
 "Not Specified and M. m. molossinus": "Mus musculus"
 "M. m. musculus and M. spretus": "Mus"   # '862507' -> SubGenus not Genus
@@ -270,7 +272,7 @@
 "M. spretus (Tunisia)": "Mus spretus"
 "M. spicilegus": "Mus spicilegus"
 "Peru Coppock": "Mus setulosus"  # unclassified mus
-"M. m. domesticus (CA)": "Mus musculus domesticus"
+"M. m. domesticus (CA)": "Mus musculus"
 "M. macedonicus spretoides": "Mus macedonicus spretoides"
 "M. m. musculus and M. m. castaneus": "Mus musculus musculus x M. m. castaneus"
 "M. m. praetextus x M. m. domesticus": "Mus musculus"
@@ -278,8 +280,8 @@
 "M. m. molossinus (Mishima)": "Mus musculus molossinus"
 "M. hortulanus and M. m. macedonicus": "Mus setulosus"
 "Not Specified and M. spretus": "Mus setulosus"
-"M. m. domesticus (Peru)": "Mus musculus domesticus"
-"M. m. domesticus (OH)": "Mus musculus domesticus"
+"M. m. domesticus (Peru)": "Mus musculus"
+"M. m. domesticus (OH)": "Mus musculus"
 "M. m. bactrianus and laboratory mouse": "Mus musculus"
 "laboratory mouse and M. m. domesticus (OH)": "Mus musculus"
 "M. m. gansuensis": "Mus musculus gansuensis"

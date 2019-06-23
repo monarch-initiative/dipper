@@ -14,22 +14,22 @@
 <polygon fill="grey" stroke="none" points="4692.5,-210 4692.5,-229 4993.5,-229 4993.5,-210 4692.5,-210"/>
 <text text-anchor="start" x="4694.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;Fulgent Genetics,Fulgent Genetics&quot;</text>
 <g id="a_node1_0"><a xlink:href="http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4692.5,-195 4692.5,-210 4993.5,-210 4993.5,-195 4692.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="2456.5,-698.5 2456.5,-713.5 2770.5,-713.5 2770.5,-698.5 2456.5,-698.5"/>
 <text text-anchor="start" x="4714.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://www.ncbi.nlm.nih.gov/clinvar/submitters/500105</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4691,-194 4691,-230 4994,-230 4994,-194 4691,-194"/>
+<polygon fill="none" stroke="#666666" points="2455.5,-697.5 2455.5,-733.5 2771.5,-733.5 2771.5,-697.5 2455.5,-697.5"/>
 </g>
 <!-- node1 -->
 <g id="node2" class="node"><title>node1</title>
 <polygon fill="grey" stroke="none" points="4749.5,-115 4749.5,-134 4936.5,-134 4936.5,-115 4749.5,-115"/>
 <text text-anchor="start" x="4791.5" y="-121.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">organization</text>
 <g id="a_node2_1"><a xlink:href="http://xmlns.com/foaf/0.1/organization" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4749.5,-100 4749.5,-115 4936.5,-115 4936.5,-100 4749.5,-100"/>
+<polygon fill="#eeeeee" stroke="none" points="2330.5,-594 2330.5,-609 2647.5,-609 2647.5,-594 2330.5,-594"/>
 <text text-anchor="start" x="4751.5" y="-105" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://xmlns.com/foaf/0.1/organization</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4748,-99 4748,-135 4937,-135 4937,-99 4748,-99"/>
+<polygon fill="none" stroke="#666666" points="2329,-593 2329,-629 2648,-629 2648,-593 2329,-593"/>
 </g>
 <!-- node0&#45;&gt;node1 -->
 <g id="edge1" class="edge"><title>node0&#45;&gt;node1</title>
@@ -44,18 +44,18 @@
 <polygon fill="grey" stroke="none" points="3198.5,-609 3198.5,-628 3515.5,-628 3515.5,-609 3198.5,-609"/>
 <text text-anchor="start" x="3212" y="-615.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">MONARCH_bb8218e5dd5e028601ba</text>
 <g id="a_node3_2"><a xlink:href="https://monarchinitiative.org/MONARCH_bb8218e5dd5e028601ba" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3198.5,-594 3198.5,-609 3515.5,-609 3515.5,-594 3198.5,-594"/>
+<polygon fill="#eeeeee" stroke="none" points="2371.5,-499 2371.5,-514 2688.5,-514 2688.5,-499 2371.5,-499"/>
 <text text-anchor="start" x="3200.5" y="-599" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/MONARCH_bb8218e5dd5e028601ba</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3197,-593 3197,-629 3516,-629 3516,-593 3197,-593"/>
+<polygon fill="none" stroke="#666666" points="2370,-498 2370,-534 2689,-534 2689,-498 2370,-498"/>
 </g>
 <!-- node4 -->
 <g id="node4" class="node"><title>node4</title>
 <polygon fill="grey" stroke="none" points="1685.5,-419 1685.5,-438 2137.5,-438 2137.5,-419 1685.5,-419"/>
 <text text-anchor="start" x="1707.5" y="-425.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;NM_018082.5(POLR3B):c.1568T&gt;A (p.Val523Glu)&quot;</text>
 <g id="a_node4_3"><a xlink:href="http://www.ncbi.nlm.nih.gov/clinvar/variation/40123" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="1685.5,-404 1685.5,-419 2137.5,-419 2137.5,-404 1685.5,-404"/>
+<polygon fill="#eeeeee" stroke="none" points="1162.5,-347 1162.5,-362 1316.5,-362 1316.5,-347 1162.5,-347"/>
 <text text-anchor="start" x="1791" y="-409" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://www.ncbi.nlm.nih.gov/clinvar/variation/40123</text>
 </a>
 </g>
@@ -71,7 +71,7 @@
 <text text-anchor="start" x="1889.5" y="-314.8" font-family="DejaVu Sans" font-size="14.00">&quot;NP_060552.4:p.Val523Glu&quot;</text>
 <text text-anchor="start" x="1687.5" y="-295.8" font-family="DejaVu Sans" font-size="14.00">oboInOwl:hasExactSynonym</text>
 <text text-anchor="start" x="1889.5" y="-295.8" font-family="DejaVu Sans" font-size="14.00">&quot;Q9NW08:p.Val523Glu&quot;</text>
-<polygon fill="none" stroke="#666666" points="1684.5,-289 1684.5,-439 2138.5,-439 2138.5,-289 1684.5,-289"/>
+<polygon fill="none" stroke="#666666" points="1161.5,-346 1161.5,-382 1317.5,-382 1317.5,-346 1161.5,-346"/>
 </g>
 <!-- node3&#45;&gt;node4 -->
 <g id="edge2" class="edge"><title>node3&#45;&gt;node4</title>
@@ -86,11 +86,11 @@
 <polygon fill="grey" stroke="none" points="2663.5,-362 2663.5,-381 2906.5,-381 2906.5,-362 2663.5,-362"/>
 <text text-anchor="start" x="2724.5" y="-368.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">RCV000763295</text>
 <g id="a_node5_4"><a xlink:href="http://www.ncbi.nlm.nih.gov/clinvar/RCV000763295" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="2663.5,-347 2663.5,-362 2906.5,-362 2906.5,-347 2663.5,-347"/>
+<polygon fill="#eeeeee" stroke="none" points="9.5,-195 9.5,-210 352.5,-210 352.5,-195 9.5,-195"/>
 <text text-anchor="start" x="2665.5" y="-352" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://www.ncbi.nlm.nih.gov/clinvar/RCV000763295</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="2662,-346 2662,-382 2907,-382 2907,-346 2662,-346"/>
+<polygon fill="none" stroke="#666666" points="8,-194 8,-230 353,-230 353,-194 8,-194"/>
 </g>
 <!-- node3&#45;&gt;node5 -->
 <g id="edge3" class="edge"><title>node3&#45;&gt;node5</title>
@@ -105,11 +105,11 @@
 <polygon fill="grey" stroke="none" points="4031.5,-362 4031.5,-381 4249.5,-381 4249.5,-362 4031.5,-362"/>
 <text text-anchor="start" x="4079.5" y="-368.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">GENO_0000840</text>
 <g id="a_node6_5"><a xlink:href="http://purl.obolibrary.org/obo/GENO_0000840" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4031.5,-347 4031.5,-362 4249.5,-362 4249.5,-347 4031.5,-347"/>
+<polygon fill="#eeeeee" stroke="none" points="3209.5,-404 3209.5,-419 3661.5,-419 3661.5,-404 3209.5,-404"/>
 <text text-anchor="start" x="4033.5" y="-352" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/GENO_0000840</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4030.5,-346 4030.5,-382 4250.5,-382 4250.5,-346 4030.5,-346"/>
+<polygon fill="none" stroke="#666666" points="3208.5,-289 3208.5,-439 3662.5,-439 3662.5,-289 3208.5,-289"/>
 </g>
 <!-- node3&#45;&gt;node6 -->
 <g id="edge4" class="edge"><title>node3&#45;&gt;node6</title>
@@ -124,7 +124,7 @@
 <polygon fill="grey" stroke="none" points="4286.5,-381 4286.5,-400 4635.5,-400 4635.5,-381 4286.5,-381"/>
 <text text-anchor="start" x="4348" y="-387.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;ClinVarAssertion_1750397&quot;</text>
 <g id="a_node7_6"><a xlink:href="https://monarchinitiative.org/.well-known/genid/bb3add3eed5a29ba44e6" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4286.5,-366 4286.5,-381 4635.5,-381 4635.5,-366 4286.5,-366"/>
+<polygon fill="#eeeeee" stroke="none" points="1738.5,-347 1738.5,-362 1981.5,-362 1981.5,-347 1738.5,-347"/>
 <text text-anchor="start" x="4288.5" y="-371" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/bb3add3eed5a29ba44e6</text>
 </a>
 </g>
@@ -132,7 +132,7 @@
 <text text-anchor="start" x="4470.5" y="-352.8" font-family="DejaVu Sans" font-size="14.00">&quot;2018&#45;10&#45;31&quot;</text>
 <text text-anchor="start" x="4288.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">dc:identifier</text>
 <text text-anchor="start" x="4470.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">&quot;SCV000893958.1&quot;</text>
-<polygon fill="none" stroke="#666666" points="4285,-327 4285,-401 4636,-401 4636,-327 4285,-327"/>
+<polygon fill="none" stroke="#666666" points="1737,-346 1737,-382 1982,-382 1982,-346 1737,-346"/>
 </g>
 <!-- node3&#45;&gt;node8 -->
 <g id="edge58" class="edge"><title>node3&#45;&gt;node8</title>
@@ -147,11 +147,11 @@
 <polygon fill="grey" stroke="none" points="3667.5,-210 3667.5,-229 4010.5,-229 4010.5,-210 3667.5,-210"/>
 <text text-anchor="start" x="3691.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;bb8218e5dd5e028601ba_evidence&quot;</text>
 <g id="a_node9_7"><a xlink:href="https://monarchinitiative.org/.well-known/genid/b1e75870cf421cc5377c" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3667.5,-195 3667.5,-210 4010.5,-210 4010.5,-195 3667.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="2700.5,-347 2700.5,-362 2918.5,-362 2918.5,-347 2700.5,-347"/>
 <text text-anchor="start" x="3669.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/b1e75870cf421cc5377c</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3666,-194 3666,-230 4011,-230 4011,-194 3666,-194"/>
+<polygon fill="none" stroke="#666666" points="2699.5,-346 2699.5,-382 2919.5,-382 2919.5,-346 2699.5,-346"/>
 </g>
 <!-- node3&#45;&gt;node7 -->
 <g id="edge17" class="edge"><title>node3&#45;&gt;node7</title>
@@ -166,11 +166,11 @@
 <polygon fill="grey" stroke="none" points="2943.5,-514 2943.5,-533 3260.5,-533 3260.5,-514 2943.5,-514"/>
 <text text-anchor="start" x="2958" y="-520.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">MONARCH_b3135a4d36760903bbc8</text>
 <g id="a_node14_8"><a xlink:href="https://monarchinitiative.org/MONARCH_b3135a4d36760903bbc8" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="2943.5,-499 2943.5,-514 3260.5,-514 3260.5,-499 2943.5,-499"/>
+<polygon fill="#eeeeee" stroke="none" points="782.5,-366 782.5,-381 1126.5,-381 1126.5,-366 782.5,-366"/>
 <text text-anchor="start" x="2945.5" y="-504" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/MONARCH_b3135a4d36760903bbc8</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="2942,-498 2942,-534 3261,-534 3261,-498 2942,-498"/>
+<polygon fill="none" stroke="#666666" points="781.5,-327 781.5,-401 1127.5,-401 1127.5,-327 781.5,-327"/>
 </g>
 <!-- node3&#45;&gt;node14 -->
 <g id="edge57" class="edge"><title>node3&#45;&gt;node14</title>
@@ -185,11 +185,11 @@
 <polygon fill="grey" stroke="none" points="3074.5,-713.5 3074.5,-732.5 3388.5,-732.5 3388.5,-713.5 3074.5,-713.5"/>
 <text text-anchor="start" x="3088.5" y="-720.3" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">MONARCH_b04d83bd71a9e5ed689f</text>
 <g id="a_node15_9"><a xlink:href="https://monarchinitiative.org/MONARCH_b04d83bd71a9e5ed689f" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3074.5,-698.5 3074.5,-713.5 3388.5,-713.5 3388.5,-698.5 3074.5,-698.5"/>
+<polygon fill="#eeeeee" stroke="none" points="4848.5,-195 4848.5,-210 5363.5,-210 5363.5,-195 4848.5,-195"/>
 <text text-anchor="start" x="3076.5" y="-703.5" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/MONARCH_b04d83bd71a9e5ed689f</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3073.5,-697.5 3073.5,-733.5 3389.5,-733.5 3389.5,-697.5 3073.5,-697.5"/>
+<polygon fill="none" stroke="#666666" points="4847,-194 4847,-230 5364,-230 5364,-194 4847,-194"/>
 </g>
 <!-- node3&#45;&gt;node15 -->
 <g id="edge31" class="edge"><title>node3&#45;&gt;node15</title>
@@ -204,11 +204,11 @@
 <polygon fill="grey" stroke="none" points="3841.5,-362 3841.5,-381 3995.5,-381 3995.5,-362 3841.5,-362"/>
 <text text-anchor="start" x="3872.5" y="-368.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">association</text>
 <g id="a_node19_10"><a xlink:href="http://purl.org/oban/association" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3841.5,-347 3841.5,-362 3995.5,-362 3995.5,-347 3841.5,-347"/>
+<polygon fill="#eeeeee" stroke="none" points="388.5,-195 388.5,-210 731.5,-210 731.5,-195 388.5,-195"/>
 <text text-anchor="start" x="3843.5" y="-352" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.org/oban/association</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3840.5,-346 3840.5,-382 3996.5,-382 3996.5,-346 3840.5,-346"/>
+<polygon fill="none" stroke="#666666" points="387,-194 387,-230 732,-230 732,-194 387,-194"/>
 </g>
 <!-- node3&#45;&gt;node19 -->
 <g id="edge15" class="edge"><title>node3&#45;&gt;node19</title>
@@ -223,11 +223,11 @@
 <polygon fill="grey" stroke="none" points="2951.5,-210 2951.5,-229 3256.5,-229 3256.5,-210 2951.5,-210"/>
 <text text-anchor="start" x="2953.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;Hypomyelinating leukodystrophy 7&quot;</text>
 <g id="a_node27_11"><a xlink:href="http://omim.org/entry/607694" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="2951.5,-195 2951.5,-210 3256.5,-210 3256.5,-195 2951.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="1353.5,-366 1353.5,-381 1702.5,-381 1702.5,-366 1353.5,-366"/>
 <text text-anchor="start" x="3033" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://omim.org/entry/607694</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="2950,-194 2950,-230 3257,-230 3257,-194 2950,-194"/>
+<polygon fill="none" stroke="#666666" points="1352,-327 1352,-401 1703,-401 1703,-327 1352,-327"/>
 </g>
 <!-- node3&#45;&gt;node27 -->
 <g id="edge35" class="edge"><title>node3&#45;&gt;node27</title>
@@ -242,11 +242,11 @@
 <polygon fill="grey" stroke="none" points="560.5,-210 560.5,-229 764.5,-229 764.5,-210 560.5,-210"/>
 <text text-anchor="start" x="613" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">SO_0001483</text>
 <g id="a_node12_12"><a xlink:href="http://purl.obolibrary.org/obo/SO_0001483" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="560.5,-195 560.5,-210 764.5,-210 764.5,-195 560.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="4507.5,-195 4507.5,-210 4812.5,-210 4812.5,-195 4507.5,-195"/>
 <text text-anchor="start" x="562.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/SO_0001483</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="559.5,-194 559.5,-230 765.5,-230 765.5,-194 559.5,-194"/>
+<polygon fill="none" stroke="#666666" points="4506,-194 4506,-230 4813,-230 4813,-194 4506,-194"/>
 </g>
 <!-- node4&#45;&gt;node12 -->
 <g id="edge8" class="edge"><title>node4&#45;&gt;node12</title>
@@ -261,11 +261,11 @@
 <polygon fill="grey" stroke="none" points="2040.5,-210 2040.5,-229 2915.5,-229 2915.5,-210 2040.5,-210"/>
 <text text-anchor="start" x="2042.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;Hypomyelinating leukodystrophy 8, with or without oligodontia and/or hypogonadotropic hypogonadism&quot;</text>
 <g id="a_node13_13"><a xlink:href="http://omim.org/entry/614381" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="2040.5,-195 2040.5,-210 2915.5,-210 2915.5,-195 2040.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="2017.5,-366 2017.5,-381 2354.5,-381 2354.5,-366 2017.5,-366"/>
 <text text-anchor="start" x="2407" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://omim.org/entry/614381</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="2039,-194 2039,-230 2916,-230 2916,-194 2039,-194"/>
+<polygon fill="none" stroke="#666666" points="2016,-327 2016,-401 2355,-401 2355,-327 2016,-327"/>
 </g>
 <!-- node4&#45;&gt;node13 -->
 <g id="edge9" class="edge"><title>node4&#45;&gt;node13</title>
@@ -280,11 +280,11 @@
 <polygon fill="grey" stroke="none" points="800.5,-210 800.5,-229 1146.5,-229 1146.5,-210 800.5,-210"/>
 <text text-anchor="start" x="802.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">https://www.ncbi.nlm.nih.gov/gene/55703</text>
 <g id="a_node20_14"><a xlink:href="https://www.ncbi.nlm.nih.gov/gene/55703" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="800.5,-195 800.5,-210 1146.5,-210 1146.5,-195 800.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="1741.5,-195 1741.5,-210 2080.5,-210 2080.5,-195 1741.5,-195"/>
 <text text-anchor="start" x="876" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://www.ncbi.nlm.nih.gov/gene/55703</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="799.5,-194 799.5,-230 1147.5,-230 1147.5,-194 799.5,-194"/>
+<polygon fill="none" stroke="#666666" points="1740,-194 1740,-230 2081,-230 2081,-194 1740,-194"/>
 </g>
 <!-- node4&#45;&gt;node20 -->
 <g id="edge16" class="edge"><title>node4&#45;&gt;node20</title>
@@ -299,11 +299,11 @@
 <polygon fill="grey" stroke="none" points="1182.5,-210 1182.5,-229 1404.5,-229 1404.5,-210 1182.5,-210"/>
 <text text-anchor="start" x="1227" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">NCBITaxon_9606</text>
 <g id="a_node23_15"><a xlink:href="http://purl.obolibrary.org/obo/NCBITaxon_9606" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="1182.5,-195 1182.5,-210 1404.5,-210 1404.5,-195 1182.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="2116.5,-195 2116.5,-210 2991.5,-210 2991.5,-195 2116.5,-195"/>
 <text text-anchor="start" x="1184.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/NCBITaxon_9606</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="1181.5,-194 1181.5,-230 1405.5,-230 1405.5,-194 1181.5,-194"/>
+<polygon fill="none" stroke="#666666" points="2115,-194 2115,-230 2992,-230 2992,-194 2115,-194"/>
 </g>
 <!-- node4&#45;&gt;node24 -->
 <g id="edge25" class="edge"><title>node4&#45;&gt;node24</title>
@@ -326,11 +326,11 @@
 <polygon fill="grey" stroke="none" points="1441.5,-210 1441.5,-229 2004.5,-229 2004.5,-210 1441.5,-210"/>
 <text text-anchor="start" x="1443.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161</text>
 <g id="a_node29_16"><a xlink:href="http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="1441.5,-195 1441.5,-210 2004.5,-210 2004.5,-195 1441.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="4866.5,-707.5 4866.5,-722.5 5132.5,-722.5 5132.5,-707.5 4866.5,-707.5"/>
 <text text-anchor="start" x="1560.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=138249161</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="1440,-194 1440,-230 2005,-230 2005,-194 1440,-194"/>
+<polygon fill="none" stroke="#666666" points="4865.5,-688 4865.5,-743 5133.5,-743 5133.5,-688 4865.5,-688"/>
 </g>
 <!-- node4&#45;&gt;node29 -->
 <g id="edge45" class="edge"><title>node4&#45;&gt;node29</title>
@@ -345,11 +345,11 @@
 <polygon fill="grey" stroke="none" points="9.5,-210 9.5,-229 524.5,-229 524.5,-210 9.5,-210"/>
 <text text-anchor="start" x="11.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;Hypogonadotropic hypogonadism 7 with or without anosmia&quot;</text>
 <g id="a_node30_17"><a xlink:href="http://omim.org/entry/146110" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="9.5,-195 9.5,-210 524.5,-210 524.5,-195 9.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="4900.5,-594 4900.5,-609 5098.5,-609 5098.5,-594 4900.5,-594"/>
 <text text-anchor="start" x="196" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://omim.org/entry/146110</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="8,-194 8,-230 525,-230 525,-194 8,-194"/>
+<polygon fill="none" stroke="#666666" points="4899.5,-593 4899.5,-629 5099.5,-629 5099.5,-593 4899.5,-593"/>
 </g>
 <!-- node4&#45;&gt;node2 -->
 <g id="edge47" class="edge"><title>node4&#45;&gt;node2</title>
@@ -372,11 +372,11 @@
 <polygon fill="grey" stroke="none" points="4046.5,-210 4046.5,-229 4264.5,-229 4264.5,-210 4046.5,-210"/>
 <text text-anchor="start" x="4093.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">SEPIO_0000001</text>
 <g id="a_node8_18"><a xlink:href="http://purl.obolibrary.org/obo/SEPIO_0000001" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4046.5,-195 4046.5,-210 4264.5,-210 4264.5,-195 4046.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="1021.5,-195 1021.5,-210 1367.5,-210 1367.5,-195 1021.5,-195"/>
 <text text-anchor="start" x="4048.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/SEPIO_0000001</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4045.5,-194 4045.5,-230 4265.5,-230 4265.5,-194 4045.5,-194"/>
+<polygon fill="none" stroke="#666666" points="1020.5,-194 1020.5,-230 1368.5,-230 1368.5,-194 1020.5,-194"/>
 </g>
 <!-- node8&#45;&gt;node9 -->
 <g id="edge5" class="edge"><title>node8&#45;&gt;node9</title>
@@ -399,11 +399,11 @@
 <polygon fill="grey" stroke="none" points="4301.5,-210 4301.5,-229 4656.5,-229 4656.5,-210 4301.5,-210"/>
 <text text-anchor="start" x="4303.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;ACMG Guidelines, 2015_assertionmethod&quot;</text>
 <g id="a_node25_19"><a xlink:href="https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4301.5,-195 4301.5,-210 4656.5,-210 4656.5,-195 4301.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="1404.5,-195 1404.5,-210 1705.5,-210 1705.5,-195 1404.5,-195"/>
 <text text-anchor="start" x="4308" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/b23790c2cc493199c951</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4300,-194 4300,-230 4657,-230 4657,-194 4300,-194"/>
+<polygon fill="none" stroke="#666666" points="1403,-194 1403,-230 1706,-230 1706,-194 1403,-194"/>
 </g>
 <!-- node8&#45;&gt;node21 -->
 <g id="edge42" class="edge"><title>node8&#45;&gt;node21</title>
@@ -418,11 +418,11 @@
 <polygon fill="grey" stroke="none" points="3687.5,-115 3687.5,-134 3897.5,-134 3897.5,-115 3687.5,-115"/>
 <text text-anchor="start" x="3738" y="-121.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">ECO_0000000</text>
 <g id="a_node10_20"><a xlink:href="http://purl.obolibrary.org/obo/ECO_0000000" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3687.5,-100 3687.5,-115 3897.5,-115 3897.5,-100 3687.5,-100"/>
+<polygon fill="#eeeeee" stroke="none" points="767.5,-195 767.5,-210 985.5,-210 985.5,-195 767.5,-195"/>
 <text text-anchor="start" x="3689.5" y="-105" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/ECO_0000000</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3686.5,-99 3686.5,-135 3898.5,-135 3898.5,-99 3686.5,-99"/>
+<polygon fill="none" stroke="#666666" points="766.5,-194 766.5,-230 986.5,-230 986.5,-194 766.5,-194"/>
 </g>
 <!-- node7&#45;&gt;node10 -->
 <g id="edge6" class="edge"><title>node7&#45;&gt;node10</title>
@@ -437,11 +437,11 @@
 <polygon fill="grey" stroke="none" points="3933.5,-115 3933.5,-134 4273.5,-134 4273.5,-115 3933.5,-115"/>
 <text text-anchor="start" x="4035.5" y="-121.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;clinical testing&quot;</text>
 <g id="a_node28_21"><a xlink:href="https://monarchinitiative.org/.well-known/genid/bd0a37bd31ff97afa3ee" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3933.5,-100 3933.5,-115 4273.5,-115 4273.5,-100 3933.5,-100"/>
+<polygon fill="#eeeeee" stroke="none" points="1085.5,-100 1085.5,-115 1303.5,-115 1303.5,-100 1085.5,-100"/>
 <text text-anchor="start" x="3935.5" y="-105" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/bd0a37bd31ff97afa3ee</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3932.5,-99 3932.5,-135 4274.5,-135 4274.5,-99 3932.5,-99"/>
+<polygon fill="none" stroke="#666666" points="1084.5,-99 1084.5,-135 1304.5,-135 1304.5,-99 1084.5,-99"/>
 </g>
 <!-- node7&#45;&gt;node28 -->
 <g id="edge44" class="edge"><title>node7&#45;&gt;node28</title>
@@ -456,7 +456,7 @@
 <polygon fill="grey" stroke="none" points="3468.5,-381 3468.5,-400 3805.5,-400 3805.5,-381 3468.5,-381"/>
 <text text-anchor="start" x="3489.5" y="-387.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;b3135a4d36760903bbc8_assertion&quot;</text>
 <g id="a_node11_22"><a xlink:href="https://monarchinitiative.org/.well-known/genid/beff008b0bd23fd8ba1f" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3468.5,-366 3468.5,-381 3805.5,-381 3805.5,-366 3468.5,-366"/>
+<polygon fill="#eeeeee" stroke="none" points="406.5,-100 406.5,-115 616.5,-115 616.5,-100 406.5,-100"/>
 <text text-anchor="start" x="3470.5" y="-371" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/beff008b0bd23fd8ba1f</text>
 </a>
 </g>
@@ -464,7 +464,7 @@
 <text text-anchor="start" x="3646.5" y="-352.8" font-family="DejaVu Sans" font-size="14.00">&quot;2018&#45;10&#45;31&quot;</text>
 <text text-anchor="start" x="3470.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">dc:identifier</text>
 <text text-anchor="start" x="3646.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">&quot;SCV000893958.1&quot;</text>
-<polygon fill="none" stroke="#666666" points="3467,-327 3467,-401 3806,-401 3806,-327 3467,-327"/>
+<polygon fill="none" stroke="#666666" points="405.5,-99 405.5,-135 617.5,-135 617.5,-99 405.5,-99"/>
 </g>
 <!-- node11&#45;&gt;node0 -->
 <g id="edge54" class="edge"><title>node11&#45;&gt;node0</title>
@@ -487,11 +487,11 @@
 <polygon fill="grey" stroke="none" points="3292.5,-210 3292.5,-229 3631.5,-229 3631.5,-210 3292.5,-210"/>
 <text text-anchor="start" x="3316" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;b3135a4d36760903bbc8_evidence&quot;</text>
 <g id="a_node21_23"><a xlink:href="https://monarchinitiative.org/.well-known/genid/bd4ef2b55470e2ff6b1c" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3292.5,-195 3292.5,-210 3631.5,-210 3631.5,-195 3292.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="18.5,-100 18.5,-115 366.5,-115 366.5,-100 18.5,-100"/>
 <text text-anchor="start" x="3294.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/bd4ef2b55470e2ff6b1c</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3291,-194 3291,-230 3632,-230 3632,-194 3291,-194"/>
+<polygon fill="none" stroke="#666666" points="17.5,-99 17.5,-135 367.5,-135 367.5,-99 17.5,-99"/>
 </g>
 <!-- node11&#45;&gt;node22 -->
 <g id="edge19" class="edge"><title>node11&#45;&gt;node22</title>
@@ -581,7 +581,7 @@
 <text text-anchor="start" x="3318.5" y="-361.3" font-family="Times,serif" font-size="10.00" fill="#336633">OBO:SEPIO_0000007</text>
 <text text-anchor="start" x="3412.5" y="-361.3" font-family="Times,serif" font-size="14.00"> </text>
 </g>
-<!-- node15&#45;&gt;node3 -->
+<!-- node15&#45;&gt;node7 -->
 <g id="edge53" class="edge"><title>node15&#45;&gt;node3</title>
 <path fill="none" stroke="BLACK" d="M3295.45,-693.387C3309.66,-686.4 3323.69,-677.403 3334.5,-666 3340.66,-659.506 3345.19,-651.057 3348.48,-642.778"/>
 <polygon fill="BLACK" stroke="BLACK" points="3351.81,-643.86 3351.79,-633.265 3345.2,-641.555 3351.81,-643.86"/>
@@ -589,7 +589,7 @@
 <text text-anchor="start" x="3348.5" y="-655.8" font-family="Times,serif" font-size="10.00" fill="#336633">OBO:SEPIO_0000098</text>
 <text text-anchor="start" x="3442.5" y="-655.8" font-family="Times,serif" font-size="14.00"> </text>
 </g>
-<!-- node15&#45;&gt;node4 -->
+<!-- node15&#45;&gt;node12 -->
 <g id="edge51" class="edge"><title>node15&#45;&gt;node4</title>
 <path fill="none" stroke="BLACK" d="M3082.45,-693.498C3033.81,-685.843 2979.68,-676.466 2930.5,-666 2658.21,-608.058 2352.82,-513.825 2147.99,-446.225"/>
 <polygon fill="BLACK" stroke="BLACK" points="2148.91,-442.842 2138.31,-443.027 2146.71,-449.488 2148.91,-442.842"/>
@@ -597,7 +597,7 @@
 <text text-anchor="start" x="2553.5" y="-560.8" font-family="Times,serif" font-size="10.00" fill="#336633">OBAN:association_has_subject</text>
 <text text-anchor="start" x="2685.5" y="-560.8" font-family="Times,serif" font-size="14.00"> </text>
 </g>
-<!-- node15&#45;&gt;node5 -->
+<!-- node15&#45;&gt;node14 -->
 <g id="edge26" class="edge"><title>node15&#45;&gt;node5</title>
 <path fill="none" stroke="BLACK" d="M3065.37,-694.623C2968.03,-673.339 2853.02,-629.266 2794.5,-538 2767.01,-495.126 2771.5,-433.303 2777.7,-396.341"/>
 <polygon fill="BLACK" stroke="BLACK" points="2781.21,-396.63 2779.56,-386.165 2774.32,-395.374 2781.21,-396.63"/>
@@ -605,7 +605,7 @@
 <text text-anchor="start" x="2822.5" y="-560.8" font-family="Times,serif" font-size="10.00" fill="#336633">oboInOwl:hasdbxref</text>
 <text text-anchor="start" x="2907.5" y="-560.8" font-family="Times,serif" font-size="14.00"> </text>
 </g>
-<!-- node15&#45;&gt;node6 -->
+<!-- node15&#45;&gt;node24 -->
 <g id="edge37" class="edge"><title>node15&#45;&gt;node6</title>
 <path fill="none" stroke="BLACK" d="M3397.75,-711.732C3543.55,-705.479 3759.87,-686.85 3940.5,-633 4008.45,-612.742 4041.19,-624.692 4087.5,-571 4130.62,-521.013 4139.36,-440.39 4140.71,-396.291"/>
 <polygon fill="BLACK" stroke="BLACK" points="4144.21,-396.232 4140.91,-386.165 4137.22,-396.094 4144.21,-396.232"/>
@@ -626,11 +626,11 @@
 <polygon fill="grey" stroke="none" points="5029.5,-210 5029.5,-229 5372.5,-229 5372.5,-210 5029.5,-210"/>
 <text text-anchor="start" x="5055.5" y="-216.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;b04d83bd71a9e5ed689f_evidence&quot;</text>
 <g id="a_node16_24"><a xlink:href="https://monarchinitiative.org/.well-known/genid/bad61ae6d3fd1072019f" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="5029.5,-195 5029.5,-210 5372.5,-210 5372.5,-195 5029.5,-195"/>
+<polygon fill="#eeeeee" stroke="none" points="3626.5,-195 3626.5,-210 3848.5,-210 3848.5,-195 3626.5,-195"/>
 <text text-anchor="start" x="5031.5" y="-200" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/bad61ae6d3fd1072019f</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="5028,-194 5028,-230 5373,-230 5373,-194 5028,-194"/>
+<polygon fill="none" stroke="#666666" points="3625.5,-194 3625.5,-230 3849.5,-230 3849.5,-194 3625.5,-194"/>
 </g>
 <!-- node15&#45;&gt;node17 -->
 <g id="edge41" class="edge"><title>node15&#45;&gt;node17</title>
@@ -653,7 +653,7 @@
 <text text-anchor="start" x="4853.5" y="-352.8" font-family="DejaVu Sans" font-size="14.00">&quot;2018&#45;10&#45;31&quot;</text>
 <text text-anchor="start" x="4674.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">dc:identifier</text>
 <text text-anchor="start" x="4853.5" y="-333.8" font-family="DejaVu Sans" font-size="14.00">&quot;SCV000893958.1&quot;</text>
-<polygon fill="none" stroke="#666666" points="4671.5,-327 4671.5,-401 5017.5,-401 5017.5,-327 4671.5,-327"/>
+<polygon fill="none" stroke="#666666" points="3883.5,-194 3883.5,-230 4089.5,-230 4089.5,-194 3883.5,-194"/>
 </g>
 <!-- node15&#45;&gt;node16 -->
 <g id="edge46" class="edge"><title>node15&#45;&gt;node16</title>
@@ -770,11 +770,11 @@
 <polygon fill="grey" stroke="none" points="3299.5,-115 3299.5,-134 3647.5,-134 3647.5,-115 3299.5,-115"/>
 <text text-anchor="start" x="3405.5" y="-121.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">&quot;clinical testing&quot;</text>
 <g id="a_node22_28"><a xlink:href="https://monarchinitiative.org/.well-known/genid/b2c8ab52a240978b5d07" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="3299.5,-100 3299.5,-115 3647.5,-115 3647.5,-100 3299.5,-100"/>
+<polygon fill="#eeeeee" stroke="none" points="3027.5,-195 3027.5,-210 3590.5,-210 3590.5,-195 3027.5,-195"/>
 <text text-anchor="start" x="3301.5" y="-105" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">https://monarchinitiative.org/.well&#45;known/genid/b2c8ab52a240978b5d07</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="3298.5,-99 3298.5,-135 3648.5,-135 3648.5,-99 3298.5,-99"/>
+<polygon fill="none" stroke="#666666" points="3026,-194 3026,-230 3591,-230 3591,-194 3026,-194"/>
 </g>
 <!-- node22&#45;&gt;node23 -->
 <g id="edge18" class="edge"><title>node22&#45;&gt;node23</title>
@@ -797,11 +797,11 @@
 <polygon fill="grey" stroke="none" points="4369.5,-115 4369.5,-134 4587.5,-134 4587.5,-115 4369.5,-115"/>
 <text text-anchor="start" x="4416.5" y="-121.8" font-family="DejaVu Sans" font-weight="bold" font-size="14.00">SEPIO_0000037</text>
 <g id="a_node26_29"><a xlink:href="http://purl.obolibrary.org/obo/SEPIO_0000037" xlink:title="&lt;TABLE&gt;">
-<polygon fill="#eeeeee" stroke="none" points="4369.5,-100 4369.5,-115 4587.5,-115 4587.5,-100 4369.5,-100"/>
+<polygon fill="#eeeeee" stroke="none" points="1697.5,-100 1697.5,-115 2045.5,-115 2045.5,-100 1697.5,-100"/>
 <text text-anchor="start" x="4371.5" y="-105" font-family="DejaVu Sans" font-size="10.00" fill="#6666ff">http://purl.obolibrary.org/obo/SEPIO_0000037</text>
 </a>
 </g>
-<polygon fill="none" stroke="#666666" points="4368.5,-99 4368.5,-135 4588.5,-135 4588.5,-99 4368.5,-99"/>
+<polygon fill="none" stroke="#666666" points="1696.5,-99 1696.5,-135 2046.5,-135 2046.5,-99 1696.5,-99"/>
 </g>
 <!-- node21&#45;&gt;node26 -->
 <g id="edge28" class="edge"><title>node21&#45;&gt;node26</title>
