@@ -2,6 +2,8 @@
 "APO"
 "AQTLPub"
 "AQTLTrait"
+"AspGD"
+"AspGD_REF"
 "BFO"
 "BIOGRID"
 "BNODE"
