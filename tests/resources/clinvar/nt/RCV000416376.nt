@@ -1,65 +1,65 @@
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000005.9:g.127685083C>A" .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NM_001999.3:c.2945G>T" .
-<https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> <http://www.w3.org/2000/01/rdf-schema#label> "_:b1aa769f10db16b258deSEPIO:0000066" .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.org/dc/elements/1.1/identifier> "SCV000494030.1" .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/RO_0002162> <http://purl.obolibrary.org/obo/NCBITaxon_9606> .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000015> <https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/GENO_0000841> <http://omim.org/entry/154700> .
-<http://omim.org/entry/121050> <http://www.w3.org/2000/01/rdf-schema#label> "Congenital contractural arachnodactyly" .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://www.geneontology.org/formats/oboInOwl#hasdbxref> <http://www.ncbi.nlm.nih.gov/clinvar/RCV000416376> .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000007> <https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/2000/01/rdf-schema#label> "ClinVarAssertion_966327" .
-<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://www.w3.org/2000/01/rdf-schema#label> "b6b194b585b6811c6b2a_evidence" .
-<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/2000/01/rdf-schema#label> "ACMG Guidelines, 2015_assertionmethod" .
-<https://data.monarchinitiative.org/ttl/RCV000416376.nt> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.org/dc/elements/1.1/identifier> "SCV000494030.1" .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000018> <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NG_008750.1:g.193653G>T" .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000021> "2016-01-01" .
-<https://data.monarchinitiative.org/ttl/RCV000416376.nt> <http://www.w3.org/2002/07/owl#versionInfo> "2019-04-03" .
-<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000066> .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_object> <http://omim.org/entry/121050> .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.org/oban/association_has_subject> <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> .
-<http://omim.org/entry/154700> <http://www.w3.org/2000/01/rdf-schema#label> "Marfan syndrome" .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/2000/01/rdf-schema#label> "b49bb52f6925e2bf5458_assertion" .
-<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://purl.obolibrary.org/obo/SEPIO_0000085> <https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_predicate> <http://purl.obolibrary.org/obo/GENO_0000841> .
-<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/organization> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/2002/07/owl#sameAs> <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=1057519321> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000041> <https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000015> <https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000098> <https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> .
-<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/ECO_0000000> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/2000/01/rdf-schema#label> "NM_001999.3(FBN2):c.2945G>T (p.Cys982Phe)" .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/oban/association> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000021> "2016-01-01" .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://www.geneontology.org/formats/oboInOwl#hasdbxref> <http://www.ncbi.nlm.nih.gov/clinvar/RCV000416376> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000111> <https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/2000/01/rdf-schema#label> "ClinVarAssertion_966327" .
-<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> <http://www.w3.org/2000/01/rdf-schema#label> "Diagnostics Division,Centre for DNA Fingerprinting and Diagnostics" .
-<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/2000/01/rdf-schema#label> "research" .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SO_0001483> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000001> .
-<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/ECO_0000000> .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000001> .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000018> <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.org/oban/association_has_predicate> <http://purl.obolibrary.org/obo/GENO_0000841> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/GENO_0000841> <http://omim.org/entry/121050> .
-<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000007> <https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> .
-<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/2000/01/rdf-schema#label> "ACMG Guidelines, 2015" .
-<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000111> <https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> .
-<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://www.w3.org/2000/01/rdf-schema#label> "b49bb52f6925e2bf5458_evidence" .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000005.10:g.128349391C>A" .
-<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/2000/01/rdf-schema#label> "_:b4d40a7eefacbfe43164SEPIO:0000066" .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/BFO_0000050> <https://www.ncbi.nlm.nih.gov/gene/2201> .
 <https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000041> <https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.org/oban/association_has_subject> <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> .
 <https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.org/oban/association_has_object> <http://omim.org/entry/154700> .
-<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000037> .
-<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/2000/01/rdf-schema#label> "b6b194b585b6811c6b2a_assertion" .
-<https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> <http://www.w3.org/2000/01/rdf-schema#label> "research" .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000098> <https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> .
-<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_subject> <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> .
-<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://purl.obolibrary.org/obo/SEPIO_0000085> <https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> .
 <https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000066> .
-<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NP_001990.2:p.Cys982Phe" .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/2000/01/rdf-schema#label> "ClinVarAssertion_966327" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/2002/07/owl#sameAs> <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=1057519321> .
+<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000066> .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000007> <https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.org/oban/association_has_predicate> <http://purl.obolibrary.org/obo/GENO_0000841> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000005.9:g.127685083C>A" .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000111> <https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> .
+<http://omim.org/entry/154700> <http://www.w3.org/2000/01/rdf-schema#label> "Marfan syndrome" .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000001> .
+<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/2000/01/rdf-schema#label> "ACMG Guidelines, 2015" .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000098> <https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/BFO_0000050> <https://www.ncbi.nlm.nih.gov/gene/2201> .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000018> <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> .
 <https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/oban/association> .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_subject> <http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> .
+<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/2000/01/rdf-schema#label> "_:b4d40a7eefacbfe43164SEPIO:0000066" .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.org/dc/elements/1.1/identifier> "SCV000494030.1" .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_object> <http://omim.org/entry/121050> .
+<https://data.monarchinitiative.org/ttl/RCV000416376.nt> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/RO_0002162> <http://purl.obolibrary.org/obo/NCBITaxon_9606> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NM_001999.3:c.2945G>T" .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/oban/association> .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000015> <https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> .
+<https://data.monarchinitiative.org/ttl/RCV000416376.nt> <http://www.w3.org/2002/07/owl#versionInfo> "2019-06-03" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/GENO_0000841> <http://omim.org/entry/121050> .
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/organization> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000005.10:g.128349391C>A" .
+<https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> <http://www.w3.org/2000/01/rdf-schema#label> "research" .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000015> <https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000021> "2016-01-01" .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/2000/01/rdf-schema#label> "b6b194b585b6811c6b2a_assertion" .
+<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/ECO_0000000> .
+<https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> <http://www.w3.org/2000/01/rdf-schema#label> "_:b1aa769f10db16b258deSEPIO:0000066" .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.obolibrary.org/obo/SEPIO_0000007> <https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000111> <https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://www.geneontology.org/formats/oboInOwl#hasdbxref> <http://www.ncbi.nlm.nih.gov/clinvar/RCV000416376> .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://purl.obolibrary.org/obo/SEPIO_0000018> <http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/2000/01/rdf-schema#label> "NM_001999.3(FBN2):c.2945G>T (p.Cys982Phe)" .
+<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://www.w3.org/2000/01/rdf-schema#label> "b49bb52f6925e2bf5458_evidence" .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://purl.obolibrary.org/obo/SEPIO_0000098> <https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SO_0001483> .
+<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/ECO_0000000> .
+<https://monarchinitiative.org/MONARCH_b6b194b585b6811c6b2a> <http://www.geneontology.org/formats/oboInOwl#hasdbxref> <http://www.ncbi.nlm.nih.gov/clinvar/RCV000416376> .
+<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://www.w3.org/2000/01/rdf-schema#label> "b6b194b585b6811c6b2a_evidence" .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/2000/01/rdf-schema#label> "b49bb52f6925e2bf5458_assertion" .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://www.w3.org/2000/01/rdf-schema#label> "ClinVarAssertion_966327" .
+<http://omim.org/entry/121050> <http://www.w3.org/2000/01/rdf-schema#label> "Congenital contractural arachnodactyly" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NP_001990.2:p.Cys982Phe" .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.org/dc/elements/1.1/identifier> "SCV000494030.1" .
+<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000037> .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000021> "2016-01-01" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NG_008750.1:g.193653G>T" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/362067> <http://purl.obolibrary.org/obo/GENO_0000841> <http://omim.org/entry/154700> .
+<https://monarchinitiative.org/.well-known/genid/b4d40a7eefacbfe43164> <http://purl.obolibrary.org/obo/SEPIO_0000085> <https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> .
+<https://monarchinitiative.org/.well-known/genid/ba583ccbe8979e522d07> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000001> .
+<https://monarchinitiative.org/.well-known/genid/bf70802edf14e71809f4> <http://www.w3.org/2000/01/rdf-schema#label> "research" .
+<https://monarchinitiative.org/MONARCH_b49bb52f6925e2bf5458> <http://purl.org/oban/association_has_predicate> <http://purl.obolibrary.org/obo/GENO_0000841> .
+<https://monarchinitiative.org/.well-known/genid/b1aa769f10db16b258de> <http://purl.obolibrary.org/obo/SEPIO_0000085> <https://monarchinitiative.org/.well-known/genid/b622f2bdee81c3020a72> .
+<https://monarchinitiative.org/.well-known/genid/b7a901ca0f279b765a76> <http://purl.obolibrary.org/obo/SEPIO_0000041> <https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> .
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/505641> <http://www.w3.org/2000/01/rdf-schema#label> "Diagnostics Division,Centre for DNA Fingerprinting and Diagnostics" .
+<https://monarchinitiative.org/.well-known/genid/b23790c2cc493199c951> <http://www.w3.org/2000/01/rdf-schema#label> "ACMG Guidelines, 2015_assertionmethod" .

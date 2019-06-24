@@ -315,6 +315,7 @@ class WormBase(Source):
         raw = '/'.join((self.rawdir, self.files['allele_pheno']['file']))
 
         graph = self.graph
+        model = Model(self.graph)
 
         LOG.info("Processing Allele phenotype associations")
         line_counter = 0
@@ -369,7 +370,7 @@ class WormBase(Source):
                             # @kshefchek - removing this blank node
                             # in favor of simpler modeling
                             # make the WormBase:WBRNAi* id
-                            # a self.globaltt['RNAi_reagent'], and attach
+                            # a self.globaltt['reagent_targeted_gene'], and attach
                             # phenotype to this ID
 
                             # Previous model - make a bnode reagent-targeted gene,
@@ -382,8 +383,18 @@ class WormBase(Source):
                             #    rnai_id, 'WormBase:' + gene_num, rtg_id)
                             # allele_id = rtg_id
 
-                            geno.addGeneTargetingReagent(
-                                allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
+                            # Could type the IRI as both the reagant and reagant
+                            # targeted gene but not sure if this needed
+                            # geno.addGeneTargetingReagent(
+                            #    allele_id, None, self.globaltt['RNAi_reagent'], gene_id)
+
+                            model.addIndividualToGraph(
+                                allele_id, None,
+                                self.globaltt['reagent_targeted_gene'])
+
+                            self.graph.addTriple(
+                                allele_id, self.globaltt['is_expression_variant_of'],
+                                gene_id)
 
                         elif re.search(r'WBVar', allele_id):
                             # this may become deprecated by using wormmine
