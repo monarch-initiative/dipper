@@ -1,0 +1,1 @@
+ZDB-GENO-070228-3	shha<sup>tbx392/tbx392</sup>	tbx392[2,1,1]AB	ZDB-ALT-010427-8	tbx392	tbx392	point_mutation	Point Mutation	shha	ZDB-GENE-980526-166	homozygous		
