@@ -14,7 +14,6 @@ from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.utils.GraphUtils import GraphUtils
 from dipper.models.Model import Model
 from dipper.models.Dataset import Dataset
-import bmt
 
 LOG = logging.getLogger(__name__)
 CHUNK = 16 * 1024  # read remote urls of unknown size in 16k chunks
@@ -140,8 +139,6 @@ class Source:
 
         for graph in [self.graph, self.testgraph]:
             self.declareAsOntology(graph)
-
-        self.biolink_tk=bmt.Toolkit()
 
     def fetch(self, is_dl_forced=False):
         """

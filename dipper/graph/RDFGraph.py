@@ -44,18 +44,58 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
+    def _makeCategoryTriple(self, this_id, category, predicate="biolink:category"):
+        '''
+        add a triple to capture subject or object category that was passed to 
+        addTriple()
+        '''
+        try:
+            self.add((
+                self._getnode(this_id),
+                self._getnode(predicate),
+                self._getnode(category)))
+        except:
+            LOG.warning(
+                "Problem adding triple in _makeCategoryTriple for " + \
+                "subj: %s pred: %s obj(category): %s",
+                this_id, predicate, category)
+                
+    def _is_literal(self, thing):
+        '''
+        make inference on type (literal or CURIE)
+
+        return: logical
+        '''    
+        if self.curie_regexp.match(thing) is not None or\
+           thing.split(':')[0].lower() in ('http', 'https', 'ftp'):
+            object_is_literal = False
+        else:
+            object_is_literal = True
+
+        return object_is_literal
+
+            
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=None,
             literal_type=None, subject_category=None, object_category=None):
-        
-        # trying making infrence on type of object if none is supplied
-        if object_is_literal is None:
-            if self.curie_regexp.match(obj) is not None or\
-                    obj.split(':')[0].lower() in ('http', 'https', 'ftp'):
-                object_is_literal = False
-            else:
-                object_is_literal = True
 
+        if object_is_literal is None:
+            object_is_literal = self._is_literal(obj)
+
+        # add triples for subject category info
+        if subject_category is not None:
+            self._makeCategoryTriple(subject_id, subject_category)
+
+        # add triples for obj category info, if obj is not a literal
+        if not object_is_literal:
+            if subject_category is not None:
+                self._makeCategoryTriple(obj, object_category)
+        else: # emit warning if object category is given for a literal
+            if object_category is not None:
+                LOG.warning("I was given a category %s for obj: %s, " +
+                            "which seems to be a literal!",
+                    object_category, obj)            
+            
         if object_is_literal is True:
             if literal_type is not None and obj is not None:
                 literal_type_iri = self._getnode(literal_type)
