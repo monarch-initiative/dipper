@@ -1,0 +1,8 @@
+FlyBase:FBal0263199 a GENO:0000512 ;
+    rdfs:label "Fmr1[HMS00248]" ;
+    GENO:0000418 FlyBase:FBgn0028734 ;
+    RO:0002162 NCBITaxon:7227 .
+
+FlyBase:FBgn0028734 a owl:Class ;
+    rdfs:label "Fmr1" ;
+    rdfs:subClassOf SO:0000704 .

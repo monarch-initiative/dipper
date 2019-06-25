@@ -272,6 +272,7 @@ class Source:
         :return: True if the remote file is newer and should be downloaded
 
         """
+        is_remote_newer = False
         LOG.info("Checking if remote file is newer than local \n(%s)", local)
 
         # check if local file exists
@@ -322,18 +323,20 @@ class Source:
                 # check if file size is different
                 if fstat[ST_SIZE] < size:
                     LOG.info("New Remote File exists")
-                    return True
+                    is_remote_newer = True
                 if fstat[ST_SIZE] > size:
                     LOG.warning("New Remote File exists but it is SMALLER")
-                    return True
+                    is_remote_newer = True
                 # filesize is a fairly imperfect metric here
-                LOG.info("New Remote fFle has same filesize--will not download")
+                LOG.info("New Remote File has same filesize--will not download")
         elif fstat[ST_SIZE] != size:
             LOG.info(
                 "Remote File is %i  \t Local File is %i", size, fstat[ST_SIZE])
-            return True
+            is_remote_newer = True
 
-        return False
+        response.close()
+
+        return is_remote_newer
 
     def get_files(self, is_dl_forced, files=None):
         """
@@ -417,13 +420,12 @@ class Source:
                 LOG.info("file size: %s", fstat[ST_SIZE])
                 LOG.info(
                     "file created: %s", time.asctime(time.localtime(fstat[ST_CTIME])))
+                response.close()
             else:
                 LOG.error('Local filename is required')
                 exit(-1)
         else:
             LOG.info("Using existing file %s", localfile)
-
-        return response
 
     # TODO: rephrase as mysql-dump-xml specific format
     def process_xml_table(self, elem, table_name, processing_function, limit):
@@ -837,8 +839,8 @@ class Source:
                 raise AssertionError('Incomming headers are missing expected column.')
 
             if got - exp != set():
-                LOG.warrning('Addtional new columns: %s', got - exp)
+                LOG.warning('Addtional new columns: %s', got - exp)
             else:
-                LOG.warrning('Check columns order')
+                LOG.warning('Check columns order')
 
         return (exp ^ got) & exp == set()
