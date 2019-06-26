@@ -87,7 +87,7 @@ trans-test:
 omia-int-test:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
-# Generate specalized files from our various mapping files@
+# Generate specalized files from our various mapping files
 
 prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
 
