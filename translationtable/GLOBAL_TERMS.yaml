@@ -703,7 +703,7 @@
 "antisense_lncRNA": "SO:0001904",
 "MNV": "SO:0002007",
 "start_lost": "SO:0002012",
-"sense_intronic_lncRNA_gene": "SO:00021840",
+"sense_intronic_ncRNA_gene": "SO:0002184",
 "vaultRNA_primary_transcript": "SO:0002040",
 "dominant_negative_variant": "SO:0002052",
 "gain_of_function_variant": "SO:0002053",
