@@ -2,7 +2,6 @@
 
 import unittest
 import logging
-from rdflib import URIRef
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map
 
@@ -15,10 +14,6 @@ class GeneralGraphTestCase(unittest.TestCase):
     def setUp(self):
         self.graph = RDFGraph()
         self.curie_map = curie_map.get()
-
-        self.test_cat_subj = "http://www.google.com"
-        self.test_cat_default_pred = "http://w3id.org/biolink/vocab/category"
-        self.test_cat_default_obj = "http://w3id.org/biolink/vocab/NamedThing"
 
     def tearDown(self):
         self.graph = None
@@ -38,101 +33,6 @@ class GeneralGraphTestCase(unittest.TestCase):
             self.assertTrue(n is not None, m)
 
         return
-
-    def readGraphFromTurtleFile(self, f):
-        """
-        This will read the specified file into a graph.  A simple parsing test.
-        :param f:
-        :return:
-
-        """
-        import os
-        vg = RDFGraph()
-        p = os.path.abspath(f)
-        logger.info("Testing reading turtle file from %s", p)
-        vg.parse(f, format="turtle")
-        logger.info('Found %s graph nodes in %s', len(vg), p)
-        self.assertTrue(len(vg) > 0, "No nodes found in "+p)
-
-        return
-
-    def readGraphIntoOWL(self, f):
-        """
-        test if the ttl can be parsed by owlparser
-        this expects owltools to be accessible from commandline
-        :param f: file of ttl
-        :return:
-        """
-
-        import subprocess
-        from subprocess import check_call
-
-        status = check_call(["owltools", f], stderr=subprocess.STDOUT)
-        # returns zero is success!
-        if status != 0:
-            logger.error(
-                'finished verifying with owltools with status %s', status)
-        self.assertTrue(status == 0)
-
-        return
-
-    def test_make_category_triple_default(self):
-        """
-        test that method adds category triple to graph correctly (default pred and obj)
-        """
-        self.graph._make_category_triple(self.test_cat_subj)
-
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(self.test_cat_subj), this_subj)
-            self.assertEqual(URIRef(self.test_cat_default_pred), this_pred)
-            self.assertEqual(URIRef(self.test_cat_default_obj), this_obj)
-            break
-
-    def test_make_category_triple_nondefault_category(self):
-        """
-        test that method adds category triple to graph correctly
-        """
-        category = "http://w3id.org/biolink/vocab/gene"
-        self.graph._make_category_triple(self.test_cat_subj, category)
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(category), this_obj)
-            break
-
-    def test_make_category_triple_nondefault_pred(self):
-        """
-        test that method adds category triple to graph correctly (non default pred)
-        """
-        nondefault_pred = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        self.graph._make_category_triple(self.test_cat_subj, self.test_cat_default_obj,
-                                         predicate=nondefault_pred)
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(nondefault_pred), this_pred)
-            break
-
-    def test_make_category_triple_category_none_should_emit_named_thing(self):
-        """
-        test that method adds category triple to graph correctly (default pred and obj)
-        """
-        self.graph._make_category_triple(self.test_cat_subj, category=None)
-
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(self.test_cat_default_obj), this_obj)
-            break
-
-    def test_is_literal(self):
-        """
-        test that method infers type (either literal or CURIE) correctly
-        """
-        self.assertEqual(self.graph._is_literal("1"), True)
-        self.assertEqual(self.graph._is_literal("foo:bar"), False)
-        self.assertEqual(self.graph._is_literal("http://www.zombo.com/"), False)
-        self.assertEqual(self.graph._is_literal("https://www.zombo.com/"), False)
-        self.assertEqual(self.graph._is_literal("ftp://ftp.1000genomes.ebi.ac.uk/"),
-                                                False)
 
 
 if __name__ == '__main__':
