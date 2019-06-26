@@ -44,7 +44,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
-    def _makeCategoryTriple(self, this_id, category, predicate="biolink:category"):
+    def _make_category_triple(self, this_id, category, predicate="biolink:category"):
         '''
         add a triple to capture subject or object category that was passed to 
         addTriple()
@@ -84,17 +84,17 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         # add triples for subject category info
         if subject_category is not None:
-            self._makeCategoryTriple(subject_id, subject_category)
+            self._make_category_triple(subject_id, subject_category)
 
         # add triples for obj category info, if obj is not a literal
         if not object_is_literal:
             if subject_category is not None:
-                self._makeCategoryTriple(obj, object_category)
+                self._make_category_triple(obj, object_category)
         else: # emit warning if object category is given for a literal
             if object_category is not None:
                 LOG.warning("I was given a category %s for obj: %s, " +
                             "which seems to be a literal!",
-                    object_category, obj)            
+                            object_category, obj)
             
         if object_is_literal is True:
             if literal_type is not None and obj is not None:

@@ -2,6 +2,7 @@
 
 import unittest
 import logging
+from rdflib import URIRef
 from dipper.graph.RDFGraph import RDFGraph
 from dipper import curie_map
 
@@ -70,6 +71,42 @@ class GeneralGraphTestCase(unittest.TestCase):
         self.assertTrue(status == 0)
 
         return
+
+    def test_make_category_triple(self):
+        """
+        test that method adds category triple to graph correctly
+        """
+        subj = "http://www.google.com"
+        pred = "http://w3id.org/biolink/vocab/category"
+        obj = "http://w3id.org/biolink/vocab/namedThing"
+
+        self.graph._make_category_triple(subj, obj)
+        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
+
+        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
+            self.assertEqual(URIRef(subj), this_subj)
+            self.assertEqual(URIRef(pred), this_pred)
+            self.assertEqual(URIRef(this_obj), this_obj)
+            continue
+
+        self.graph._make_category_triple(subj, obj, predicate="rdf:type")
+        self.assertEqual(len(self.graph), 2, "method didn't make a triple")
+        for this_subj, this_pred, this_obj in self.graph.triples(
+                (None, URIRef("rdf:type"), None)):
+            self.assertEqual(URIRef(pred), this_pred)
+
+
+    def test_is_literal(self):
+        """
+        test that method infers type (either literal or CURIE) correctly
+        """
+        self.assertEqual(self.graph._is_literal("1"), True)
+        self.assertEqual(self.graph._is_literal("foo:bar"), False)
+        self.assertEqual(self.graph._is_literal("http://www.zombo.com/"), False)
+        self.assertEqual(self.graph._is_literal("https://www.zombo.com/"), False)
+        self.assertEqual(self.graph._is_literal("ftp://ftp.1000genomes.ebi.ac.uk/"),
+                                                False)
+
 
 if __name__ == '__main__':
     unittest.main()
