@@ -9,6 +9,7 @@ from rdflib import ConjunctiveGraph, Literal, URIRef, BNode, Namespace
 from dipper.graph.Graph import Graph as DipperGraph
 from dipper.utils.CurieUtil import CurieUtil
 from dipper import curie_map as curie_map_class
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -44,11 +45,15 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
         # try adding them all
         # self.bind_all_namespaces()  # too much
 
-    def _make_category_triple(self, this_id, category, predicate="biolink:category"):
-        '''
-        add a triple to capture subject or object category that was passed to 
-        addTriple()
-        '''
+    def _make_category_triple(self, this_id,
+                              category=blv.namedThing.value,
+                              predicate=blv.category.value):
+        """
+        add a triple to capture subject or object category (in CURIE form) that was
+        passed to addTriple()
+        """
+        if category is None:
+            category = blv.namedThing.value
         try:
             self.add((
                 self._getnode(this_id),
@@ -61,11 +66,11 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
                 this_id, predicate, category)
                 
     def _is_literal(self, thing):
-        '''
+        """
         make inference on type (literal or CURIE)
 
         return: logical
-        '''    
+        """
         if self.curie_regexp.match(thing) is not None or\
            thing.split(':')[0].lower() in ('http', 'https', 'ftp'):
             object_is_literal = False

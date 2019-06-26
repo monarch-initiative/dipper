@@ -16,6 +16,10 @@ class GeneralGraphTestCase(unittest.TestCase):
         self.graph = RDFGraph()
         self.curie_map = curie_map.get()
 
+        self.test_cat_subj = "http://www.google.com"
+        self.test_cat_default_pred = "http://w3id.org/biolink/vocab/category"
+        self.test_cat_default_obj = "http://w3id.org/biolink/vocab/NamedThing"
+
     def tearDown(self):
         self.graph = None
 
@@ -72,29 +76,52 @@ class GeneralGraphTestCase(unittest.TestCase):
 
         return
 
-    def test_make_category_triple(self):
+    def test_make_category_triple_default(self):
+        """
+        test that method adds category triple to graph correctly (default pred and obj)
+        """
+        self.graph._make_category_triple(self.test_cat_subj)
+
+        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
+        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
+            self.assertEqual(URIRef(self.test_cat_subj), this_subj)
+            self.assertEqual(URIRef(self.test_cat_default_pred), this_pred)
+            self.assertEqual(URIRef(self.test_cat_default_obj), this_obj)
+            break
+
+    def test_make_category_triple_nondefault_category(self):
         """
         test that method adds category triple to graph correctly
         """
-        subj = "http://www.google.com"
-        pred = "http://w3id.org/biolink/vocab/category"
-        obj = "http://w3id.org/biolink/vocab/namedThing"
-
-        self.graph._make_category_triple(subj, obj)
+        category = "http://w3id.org/biolink/vocab/gene"
+        self.graph._make_category_triple(self.test_cat_subj, category)
         self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-
         for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(subj), this_subj)
-            self.assertEqual(URIRef(pred), this_pred)
-            self.assertEqual(URIRef(this_obj), this_obj)
-            continue
+            self.assertEqual(URIRef(category), this_obj)
+            break
 
-        self.graph._make_category_triple(subj, obj, predicate="rdf:type")
-        self.assertEqual(len(self.graph), 2, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples(
-                (None, URIRef("rdf:type"), None)):
-            self.assertEqual(URIRef(pred), this_pred)
+    def test_make_category_triple_nondefault_pred(self):
+        """
+        test that method adds category triple to graph correctly (non default pred)
+        """
+        nondefault_pred = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+        self.graph._make_category_triple(self.test_cat_subj, self.test_cat_default_obj,
+                                         predicate=nondefault_pred)
+        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
+        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
+            self.assertEqual(URIRef(nondefault_pred), this_pred)
+            break
 
+    def test_make_category_triple_category_none_should_emit_named_thing(self):
+        """
+        test that method adds category triple to graph correctly (default pred and obj)
+        """
+        self.graph._make_category_triple(self.test_cat_subj, category=None)
+
+        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
+        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
+            self.assertEqual(URIRef(self.test_cat_default_obj), this_obj)
+            break
 
     def test_is_literal(self):
         """

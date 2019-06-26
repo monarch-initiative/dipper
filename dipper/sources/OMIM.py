@@ -8,6 +8,7 @@ from datetime import date
 from dipper.sources.OMIMSource import OMIMSource, USER_AGENT
 from dipper.models.Model import Model
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.models.Genotype import Genotype
 from dipper.models.GenomicFeature import Feature, makeChromID
 from dipper.models.Reference import Reference
@@ -15,7 +16,6 @@ from dipper import config
 from dipper.utils.romanplus import romanNumeralPattern, fromRoman, toRoman
 
 LOG = logging.getLogger(__name__)
-
 
 # omimftp key EXPIRES
 # get a new one here: https://omim.org/help/api
@@ -339,7 +339,7 @@ class OMIM(OMIMSource):
                 nodelabel = abbrev
             #  G_omim is subclass_of  gene
             model.addClassToGraph(
-                omim_curie, nodelabel, self.globaltt['gene'], newlabel, subject_category="biolink:gene")
+                omim_curie, nodelabel, self.globaltt['gene'], newlabel, subject_category=blv.gene.value)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -651,8 +651,8 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph(s_category="biolink:gene",
-                                       o_category="biolink:disease")
+        assoc.add_association_to_graph(s_category=blv.gene.value,
+                                       o_category=blv.disease.value)
 
     @staticmethod
     def _get_description(entry):
@@ -717,7 +717,7 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id,
-                                            subject_category="biolink:publication")
+                                            subject_category=blv.publication.value)
                                             
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
@@ -890,8 +890,8 @@ class OMIM(OMIMSource):
             series_id = 'OMIMPS:' + ser
             model.addClassToGraph(series_id, None)
             model.addSubClass(omim_curie, series_id,
-                              subject_category="biolink:disease",
-                              object_category="biolink:disease")
+                              subject_category=blv.disease.value,
+                              object_category=blv.disease.value)
 
     @staticmethod
     def _get_mappedids(entry, graph):
@@ -1011,8 +1011,8 @@ class OMIM(OMIMSource):
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id,
-                                subject_category="biolink:disease",
-                                object_category="biolink:publication")
+                                subject_category=blv.disease.value,
+                                object_category=blv.publication.value)
 
         return ref_to_pmid
 
