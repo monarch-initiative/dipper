@@ -80,14 +80,14 @@ trans-test:
 	@ echo "python unit test for duplicate keys and invertablility"
 	@ $(TEST) tests/test_trtable.py
 	@ echo "Is $(GTT) table ordered by ontology curie?"
-	@ sort -k 2,3n -t ':' -s -c $(GTT) && echo "GLOBALTT order is OKAY"
+	@ sort -k2,2 -k3,3n -t ':' --stable --check $(GTT) && echo "GLOBALTT order is OKAY"
 	@ echo "Are terms found in dipper/source/Ingest.py, \nbut not in $(GTT)?"
 	@ scripts/check_labels_v_gtt.sh
 
 omia-int-test:
 	python tests/omia-integration.py --input ./out/omia.ttl
 
-# Generate specalized files from our various mapping files
+# Generate specalized files from our various mapping files@
 
 prefix_equivalents:  translationtable/generated/prefix_equivalents.yaml
 
