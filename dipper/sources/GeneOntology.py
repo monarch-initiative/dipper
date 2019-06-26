@@ -116,7 +116,7 @@ class GeneOntology(Source):
             'url': GOGA + '/goa_cow.gaf.gz',
             'columnns': gaf_columns
         },
-        '559292': {  # Saccharomyces cerevisiae
+        '559292': {  # Saccharomyces cerevisiae   4932
             'file': 'sgd.gaf.gz',
             'url': GOGA + '/sgd.gaf.gz',
             'columnns': gaf_columns
