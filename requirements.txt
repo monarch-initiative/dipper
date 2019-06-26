@@ -3,5 +3,3 @@ isodate
 roman
 pyyaml
 requests
-ontobio
-dataclasses

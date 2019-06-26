@@ -339,7 +339,8 @@ class OMIM(OMIMSource):
                 nodelabel = abbrev
             #  G_omim is subclass_of  gene
             model.addClassToGraph(
-                omim_curie, nodelabel, self.globaltt['gene'], newlabel, subject_category=blv.gene.value)
+                omim_curie, nodelabel, self.globaltt['gene'], newlabel,
+                subject_category=blv.gene.value)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
