@@ -1,6 +1,7 @@
 import logging
 import re
 from dipper.graph.Graph import Graph
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 # note: currently no log issued
@@ -69,22 +70,27 @@ class Model():
 
         if class_type is not None:
             self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type,
-                                 subject_category=subject_category, object_category=object_category)
+                                 subject_category=subject_category,
+                                 object_category=object_category)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.globaltt['description'], description,
                 object_is_literal=True)
 
-    def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None):
+    def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None,
+                             ind_category=None # blv category for ind_id
+                             ):
         if label is not None:
             self.graph.addTriple(
                 ind_id, self.globaltt['label'], label, object_is_literal=True)
         if ind_type is not None:
             self.graph.addTriple(
-                ind_id, self.globaltt['type'], ind_type, object_is_literal=False)
+                ind_id, self.globaltt['type'], ind_type, object_is_literal=False,
+                subject_category=ind_category)
         else:
             self.graph.addTriple(
-                ind_id, self.globaltt['type'], self.globaltt['named_individual'])
+                ind_id, self.globaltt['type'], self.globaltt['named_individual'],
+                subject_category=ind_category)
         if description is not None:
             self.graph.addTriple(
                 ind_id, self.globaltt['description'], description,

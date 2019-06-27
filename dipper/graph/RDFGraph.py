@@ -93,7 +93,7 @@ class RDFGraph(DipperGraph, ConjunctiveGraph):
 
         # add triples for obj category info, if obj is not a literal
         if not object_is_literal:
-            if subject_category is not None:
+            if object_category is not None:
                 self._make_category_triple(obj, object_category)
         else: # emit warning if object category is given for a literal
             if object_category is not None:
