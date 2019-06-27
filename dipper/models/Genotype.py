@@ -4,6 +4,7 @@ from dipper.models.Model import Model
 from dipper.models.Family import Family
 from dipper.graph.Graph import Graph
 from dipper.models.GenomicFeature import makeChromID, makeChromLabel
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 LOG = logging.getLogger(__name__)
@@ -50,7 +51,9 @@ class Genotype():
             genotype_type = self.globaltt['intrinsic_genotype']
 
         self.model.addIndividualToGraph(
-            genotype_id, genotype_label, genotype_type, genotype_description)
+            genotype_id, genotype_label, genotype_type, genotype_description,
+            ind_category=blv.genotype.value
+        )
         return
 
     def addAllele(
