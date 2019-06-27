@@ -81,15 +81,15 @@ class SourceTestCase(unittest.TestCase):
             logging.info("Resetting the rawdir to %s", p)
         return
 
-    # no such 'test_ids.json' file exists
-    # def _get_conf(self):
-    #    if os.path.exists(
-    #            os.path.join(os.path.dirname(__file__), 'test_ids.json')):
-    #        with open(
-    #            os.path.join(
-    #                os.path.dirname(__file__), 'test_ids.json')) as json_file:
-    #             conf = json.load(json_file)
-    #    return conf
+    # no such 'test_ids.json' file exists  ->  became yaml
+    def _get_testid(self):
+        tst_id_pth = '/'.join((os.path.dirname(__file__), '../resources/test_ids.yaml'))
+
+        print(tst_id_pth)
+        if os.path.exists(tst_id_pth):
+            with open(tst_id_pth) as yaml_file:
+                conf = yaml.safe_load(yaml_file)
+        return conf
 
     """
     Commenting out as most of our sources do not have licenses
