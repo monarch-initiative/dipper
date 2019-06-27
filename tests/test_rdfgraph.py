@@ -15,11 +15,15 @@ class RDFGraphTestCase(unittest.TestCase):
     def setUp(self):
         self.graph = RDFGraph()
 
+        # stuff to make test triples
         self.test_cat_subj = "http://www.google.com"
         self.test_cat_default_pred = "http://w3id.org/biolink/vocab/category"
+        self.test_cat_nondefault_pred = \
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
         self.test_cat_default_category = "http://w3id.org/biolink/vocab/NamedThing"
-
         self.test_cat_nondefault_category = "http://w3id.org/biolink/vocab/Gene"
+        self.test_cat_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+        self.test_cat_class = "http://www.w3.org/1999/02/22-rdf-syntax-ns#class"
 
     def tearDown(self):
         self.graph = None
@@ -41,32 +45,29 @@ class RDFGraphTestCase(unittest.TestCase):
                              predicate_id="rdf:comment",
                              obj="website",
                              subject_category=self.test_cat_nondefault_category)
-        self.assertEqual(len(self.graph), 2,
-                         "addTriples() didn't make exactly two triples " +
-                         "(should be one for the triple itself" +
-                         "and one for the subject category)")
-        for this_subj, this_pred, this_obj in self.graph.triples(
-                (URIRef(self.test_cat_subj), URIRef(self.test_cat_default_pred), None)):
-            self.assertEqual(URIRef(self.test_cat_nondefault_category), this_obj)
-            break
+        triples = list(self.graph.triples((URIRef(self.test_cat_subj),
+                                          URIRef(self.test_cat_default_pred),
+                                          None)))
+        self.assertEqual(len(triples), 1,
+                         "addTriples() didn't make exactly one triple subject category")
+        self.assertEqual(triples[0][2], URIRef(self.test_cat_nondefault_category),
+                         "addTriples() didn't assign the right triple subject category")
 
     def test_add_triple_object_category_assignment(self):
         """
-        test that addTriple() correctly assigns obj category
+        test that addTriple() correctly assigns object category
         """
         self.graph.addTriple(subject_id=self.test_cat_subj,
-                             predicate_id="rdf:type",
-                             obj="rdf:class",
+                             predicate_id=self.test_cat_type,
+                             obj=self.test_cat_class,
                              object_category=self.test_cat_nondefault_category)
-        self.assertEqual(2, len(self.graph),
-                         "addTriples() didn't make exactly two triples " +
-                         "(should be one for the triple itself" +
-                         "and one for the object category)")
-
-        for this_subj, this_pred, this_obj in self.graph.triples(
-                (URIRef(self.test_cat_subj), URIRef(self.test_cat_default_pred), None)):
-            self.assertEqual(URIRef(self.test_cat_nondefault_category), this_obj)
-            break
+        triples = list(self.graph.triples((URIRef(self.test_cat_class),
+                                           URIRef(self.test_cat_default_pred),
+                                           None)))
+        self.assertEqual(len(triples), 1,
+                         "addTriples() didn't make exactly one triple object category")
+        self.assertEqual(triples[0][2], URIRef(self.test_cat_nondefault_category),
+                         "addTriples() didn't assign the right triple object category")
 
     def read_graph_from_turtle_file(self, f):
         """
@@ -104,53 +105,57 @@ class RDFGraphTestCase(unittest.TestCase):
 
         return
 
-
     def test_make_category_triple_default(self):
         """
         test that method adds category triple to graph correctly (default pred and obj)
         """
         self.graph._make_category_triple(self.test_cat_subj)
 
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(self.test_cat_subj), this_subj)
-            self.assertEqual(URIRef(self.test_cat_default_pred), this_pred)
-            self.assertEqual(URIRef(self.test_cat_default_category), this_obj)
-            break
+        triples = list(self.graph.triples((None, None, None)))
+        self.assertEqual(len(triples), 1, "method didn't make exactly one triple")
+        self.assertEqual(triples[0][0], URIRef(self.test_cat_subj),
+                         "didn't assign correct subject")
+        self.assertEqual(triples[0][1], URIRef(self.test_cat_default_pred),
+                         "didn't assign correct predicate")
+        self.assertEqual(triples[0][2], URIRef(self.test_cat_default_category),
+                         "didn't assign correct category")
 
-    def test_make_category_triple_nondefault_category(self):
+    def test_make_category_triple_non_default_category(self):
         """
         test that method adds category triple to graph correctly
         """
-        category = "http://w3id.org/biolink/vocab/gene"
-        self.graph._make_category_triple(self.test_cat_subj, category)
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(category), this_obj)
-            break
+        self.graph._make_category_triple(self.test_cat_subj,
+                                         self.test_cat_nondefault_category)
+        triples = list(self.graph.triples((None, None, None)))
 
-    def test_make_category_triple_nondefault_pred(self):
+        self.assertEqual(len(triples), 1, "method didn't make exactly one triple")
+        self.assertEqual(URIRef(self.test_cat_nondefault_category),
+                         triples[0][2],
+                         "didn't assign correct (non-default) category")
+
+    def test_make_category_triple_non_default_pred(self):
         """
         test that method adds category triple to graph correctly (non default pred)
         """
-        nondefault_pred = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        self.graph._make_category_triple(self.test_cat_subj, self.test_cat_default_category,
-                                         predicate=nondefault_pred)
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(nondefault_pred), this_pred)
-            break
+        self.graph._make_category_triple(self.test_cat_subj,
+                                         self.test_cat_default_category,
+                                         predicate=self.test_cat_nondefault_pred)
+        triples = list(self.graph.triples((None, None, None)))
+        self.assertEqual(len(triples), 1, "method didn't make exactly one triple")
+        self.assertEqual(URIRef(self.test_cat_nondefault_pred),
+                         triples[0][1],
+                         "didn't assign correct (non-default) category")
 
     def test_make_category_triple_category_none_should_emit_named_thing(self):
         """
         test that method adds category triple to graph correctly (default pred and obj)
         """
         self.graph._make_category_triple(self.test_cat_subj, category=None)
-
-        self.assertEqual(len(self.graph), 1, "method didn't make a triple")
-        for this_subj, this_pred, this_obj in self.graph.triples((None, None, None)):
-            self.assertEqual(URIRef(self.test_cat_default_category), this_obj)
-            break
+        triples = list(self.graph.triples((None, None, None)))
+        self.assertEqual(len(triples), 1, "method didn't make exactly one triple")
+        self.assertEqual(URIRef(self.test_cat_default_category),
+                         triples[0][2],
+                         "didn't assign correct default category")
 
     def test_is_literal(self):
         """
