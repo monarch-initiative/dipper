@@ -739,6 +739,7 @@
 "TR_V_gene": "SO:0002137",
 "TEC": "SO:0002139",
 "ribozyme_gene": "SO:0002181",
+"bidirectional_promoter_lncRNA": "SO:0002185",
 "sense_intronic_ncRNA_gene": "SO:0002184",
 "bidirectional_promoter_lncRNA": "SO:0002185",
 "substitution": "SO:1000002",

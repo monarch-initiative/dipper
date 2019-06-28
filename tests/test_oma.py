@@ -13,7 +13,7 @@ class OMATestCase(SourceTestCase):
 
     def setUp(self):
         self.source = OMA('rdf_graph', True)
-        self.source.test_ids = self._get_conf()['test_ids']['protein']
+        self.source.test_ids = self._get_testids['protein']
         self.source.settestonly(True)
         self._setDirToSource()
         return

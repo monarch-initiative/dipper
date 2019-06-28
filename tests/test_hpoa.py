@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class HPOATestCase(SourceTestCase):
     def setUp(self):
         self.source = HPOAnnotations('rdf_graph', True)
-        #self.source.test_ids = self._get_conf()['test_ids']['disease']
+        self.source.test_ids = self._get_testids['disease']
         self.source.settestonly(True)
         self._setDirToSource()
         return

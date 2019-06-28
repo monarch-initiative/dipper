@@ -781,8 +781,8 @@ class Source:
         to a global mapping only; if need be.
 
         :param word:  the srting to find as a key in translation tables
-        :param  mandatory: boolean to cauae failure when no key exists
-
+        :param mandatory: boolean to cauae failure when no key exists
+        :param default: string to return if nothing is found (& not manandatory)
         :return
             value from global translation table,
             or value from local translation table,
