@@ -2,7 +2,7 @@
 
 import unittest
 import logging
-from rdflib import URIRef
+from rdflib import URIRef, Literal
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.models.Model import Model
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
@@ -16,6 +16,7 @@ class ModelTestCase(unittest.TestCase):
         g = RDFGraph()
         self.model = Model(g)
 
+
         # stuff to make test triples
         self.test_cat_subj_curie = "MGI:1234"
         self.test_cat_subj = "http://www.informatics.jax.org/accession/MGI:1234"
@@ -23,6 +24,9 @@ class ModelTestCase(unittest.TestCase):
         self.test_named_indiv = "http://www.w3.org/2002/07/owl#NamedIndividual"
         self.test_label_pred = "http://www.w3.org/2000/01/rdf-schema#label"
         self.test_label = "some label"
+
+        self.test_comment_IRI = 'http://purl.org/dc/elements/1.1/comment'
+        self.test_comment = 'bonus eruptus'
 
     def tearDown(self):
         self.graph = None
@@ -32,7 +36,10 @@ class ModelTestCase(unittest.TestCase):
                                         "some label")
 
         label_triple = list(self.model.graph.triples(
-            (URIRef(self.test_cat_subj), URIRef(self.test_label_pred), None)))
+            (URIRef(self.test_cat_subj),
+             URIRef(self.test_label_pred),
+             None)))
+
         self.assertEqual(len(label_triple), 1, "method didn't assign label")
         self.assertEqual(str(label_triple[0][2]), self.test_label,
                          "method didn't assign correct label")
@@ -40,8 +47,12 @@ class ModelTestCase(unittest.TestCase):
     def test_addIndividualToGraph_assign_type_named_individual(self):
         self.model.addIndividualToGraph(self.test_cat_subj_curie,
                                         "some label")
+
         triples = list(self.model.graph.triples(
-            (URIRef(self.test_cat_subj), None, URIRef(self.test_named_indiv))))
+            (URIRef(self.test_cat_subj),
+             None,
+             URIRef(self.test_named_indiv))))
+
         self.assertEqual(len(triples), 1,
                          "method didn't assign type as named individual")
 
@@ -51,6 +62,28 @@ class ModelTestCase(unittest.TestCase):
                                         ind_category=blv.genotype.value)
 
         triples = list(self.model.graph.triples(
-            (URIRef(self.test_cat_subj), URIRef(self.test_cat_default_pred), None)))
+            (URIRef(self.test_cat_subj),
+             URIRef(self.test_cat_default_pred),
+             None)))
+
         self.assertEqual(len(triples), 1, "method didn't assign category")
 
+    def test_add_comment(self):
+        self.model.addComment(self.test_cat_subj, self.test_comment)
+
+        triples = list(self.model.graph.triples(
+            (URIRef(self.test_cat_subj),
+             URIRef(self.test_comment_IRI),
+             Literal(self.test_comment))))
+
+        self.assertEqual(len(triples), 1, "method didn't assign comment")
+
+    def test_add_comment_assign_subject_category(self):
+        self.model.addComment(self.test_cat_subj, self.test_comment,
+                              subject_category=blv.genotype.value)
+
+        triples = list(self.model.graph.triples(
+            (URIRef(self.test_cat_subj),
+             URIRef(self.test_cat_default_pred),
+             None)))
+        self.assertEqual(len(triples), 1, "method didn't assign category")

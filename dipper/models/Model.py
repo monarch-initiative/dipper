@@ -214,10 +214,12 @@ class Model():
         self.graph.addTriple(
             subject_id, self.globaltt['depiction'], image_url, object_is_literal=False)
 
-    def addComment(self, subject_id, comment):
+    def addComment(self, subject_id, comment,
+                   subject_category=None):
         self.graph.addTriple(
             subject_id, self.globaltt['comment'], comment.strip(),
-            object_is_literal=True)
+            object_is_literal=True, subject_category=subject_category
+        )
 
     def addDescription(self, subject_id, description):
         self.graph.addTriple(

@@ -6,12 +6,12 @@ import re
 from dipper.sources.PostgreSQLSource import PostgreSQLSource
 from dipper.models.assoc.Association import Assoc
 from dipper.models.assoc.G2PAssoc import G2PAssoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper import config
 from dipper.models.GenomicFeature import Feature, makeChromID
-
 
 LOG = logging.getLogger(__name__)
 
@@ -497,7 +497,7 @@ SELECT  r._relationship_key as rel_key,
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
             geno.addGenotype(gt, None)
             model.addComment(gt, self._makeInternalIdentifier(
-                'genotype', genotype.get('key')))
+                'genotype', genotype.get('key')), subject_category=blv.genotype.value)
             model.addSynonym(gt, label.strip())
 
         return
