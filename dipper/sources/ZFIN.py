@@ -912,7 +912,7 @@ class ZFIN(Source):
             geno.addTaxon(taxon_id, background_id)
 
             # add genotype_name + background as label for this gt
-            genotype_name_background = genotype_name + ' [' + background_label + ']'
+            genotype_name_background = genotype_name + ' (' + background_label + ')'
             geno.addGenotype(gt, genotype_name_background)
 
             # add monarch_genotype_name as synonym
