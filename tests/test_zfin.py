@@ -109,13 +109,13 @@ class ZFINTestCase(SourceTestCase):
                 "genotype-label-test-genotype_backgrounds.txt"
             self.source.files['geno']['file'] = test_resource_dir + \
                 "genotype-label-test-genotype_features.txt"
+
             self.source.parse()
-            try:
-                this_iri = URIRef("http://zfin.org/ZDB-GENO-070228-3")
-                expect_label: str = "shha<sup>tbx392/tbx392</sup> [AB]"
-                assert(str(self.source.testgraph.label(this_iri, None)) == expect_label)
-            except Exception as t_except:
-                LOGGER.error(t_except)
+
+            this_iri = URIRef("http://zfin.org/ZDB-GENO-070228-3")
+            expect_genotype_label = "shha<sup>tbx392/tbx392</sup> (AB)"
+            self.assertEqual(str(self.source.testgraph.label(this_iri, None)),
+                             expect_genotype_label)
 
 
 if __name__ == '__main__':
