@@ -93,7 +93,7 @@
 "11928467": "sequence_variant"               # mutation defined region
 # intronic lncRNA gene  --> ncRNA gene       #FIXME (maybe done if "sense_" is okay)
 # "15406204": "SO:0001263",
-"15406204": "sense_intronic_lncRNA_gene"     # "SO:0002184"
+"15406204": "sense_intronic_ncRNA_gene"     # "SO:0002184"
 "15406205": "CpG_island"
 "15406206": "ribozyme_gene"
 "15406207": "promoter"

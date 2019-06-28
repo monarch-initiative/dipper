@@ -66,57 +66,57 @@ class GeneOntology(Source):
     ]
 
     files = {
-        '9615': {
+        '9615': {  # Canis lupus familiaris
             'file': 'goa_dog.gaf.gz',
             'url': GOGA + '/goa_dog.gaf.gz',
             'columnns': gaf_columns
         },
-        '7227': {
+        '7227': {  # Drosophila melanogaster
             'file': 'fb.gaf.gz',
             'url': GOGA + '/fb.gaf.gz',
             'columnns': gaf_columns
         },
-        '7955': {
+        '7955': {  # Danio rerio
             'file': 'zfin.gaf.gz',
             'url': GOGA + '/zfin.gaf.gz',
             'columnns': gaf_columns
         },
-        '10090': {
+        '10090': {  # Mus musculus
             'file': 'mgi.gaf.gz',
             'url': GOGA + '/mgi.gaf.gz',
             'columnns': gaf_columns
         },
-        '10116': {
+        '10116': {  # Rattus norvegicus
             'file': 'rgd.gaf.gz',
             'url': GOGA + '/rgd.gaf.gz',
             'columnns': gaf_columns
         },
-        '6239': {
+        '6239': {  # Caenorhabditis elegans
             'file': 'wb.gaf.gz',
             'url': GOGA + '/wb.gaf.gz',
             'columnns': gaf_columns
         },
-        '9823': {
+        '9823': {  # Sus scrofa
             'file': 'goa_pig.gaf.gz',
             'url': GOGA + '/goa_pig.gaf.gz',
             'columnns': gaf_columns
         },
-        '9031': {
+        '9031': {  # Gallus gallus
             'file': 'goa_chicken.gaf.gz',
             'url': GOGA + '/goa_chicken.gaf.gz',
             'columnns': gaf_columns
         },
-        '9606': {
+        '9606': {  # Homo sapiens
             'file': 'goa_human.gaf.gz',
             'url': GOGA + '/goa_human.gaf.gz',
             'columnns': gaf_columns
         },
-        '9913': {
+        '9913': {  # Bos taurus
             'file': 'goa_cow.gaf.gz',
             'url': GOGA + '/goa_cow.gaf.gz',
             'columnns': gaf_columns
         },
-        '559292': {
+        '559292': {  # Saccharomyces cerevisiae   4932
             'file': 'sgd.gaf.gz',
             'url': GOGA + '/sgd.gaf.gz',
             'columnns': gaf_columns
@@ -126,7 +126,7 @@ class GeneOntology(Source):
             'url': GOGA + '/pombase.gaf.gz',
             'columnns': gaf_columns
         },
-        '5782': {  # Dictyostelium (slime mold)
+        '5782': {  # Dictyostelium (slime mold genus)
             'file': 'dictibase.gaf.gz',
             'url': GOGA + '/dictybase.gaf.gz',
             'columnns': gaf_columns
@@ -166,7 +166,7 @@ class GeneOntology(Source):
                 'UniRef90',
                 'UniRef50',
                 'UniParc',
-                ' PIR',
+                'PIR',
                 'NCBI-taxon',
                 'MIM',
                 'UniGene',
@@ -198,17 +198,18 @@ class GeneOntology(Source):
         )
         self.test_ids = []
         # note: dipper-etl defaults tax_ids to '9606'
+        # note: sorting tax_ids for stable digest
         if tax_ids is not None and [] != set(tax_ids).difference(['9606']):
             LOG.info('Have %s given as taxon to ingest', str(tax_ids))
-            self.tax_ids = [str(x) for x in tax_ids]
+            self.tax_ids = sorted([str(x) for x in tax_ids])
             nottax = set(tax_ids) - set(self.files.keys())
             if nottax:
                 LOG.error('Cant process taxon number(s):\t%s', str(nottax))
                 self.tax_ids = list(set(self.tax_ids) - nottax)
         else:
-            self.tax_ids = ['9606', '10090', '7955']
+            self.tax_ids = sorted(['9606', '10090', '7955'])
 
-        LOG.info("Filtering to the following taxa: %s", str(self.tax_ids))
+        LOG.info("Filtering to the following taxa: %s", self.tax_ids)
 
         # moving this from process_gaf() to avoid repeating this for each
         # file to be processed.
@@ -330,8 +331,14 @@ class GeneOntology(Source):
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
                         syn = syn.strip()
-                        if re.fullmatch(graph.curie_regexp, syn) is not None:
-                            model.addSameIndividual(gene_id, syn)
+                        if syn[:10] == 'UniProtKB:':
+                            model.addTriple(
+                                gene_id, self.globaltt['has gene product'], syn)
+                        elif re.fullmatch(graph.curie_regexp, syn) is not None:
+                            LOG.warning(
+                                'possible curie "%s" as a literal synomym for %s',
+                                syn, gene_id)
+                            model.addSynonym(gene_id, syn)
                         else:
                             model.addSynonym(gene_id, syn)
 
@@ -459,7 +466,7 @@ class GeneOntology(Source):
         smallfile = '/'.join((self.rawdir, 'id_map_' + taxon_digest + '.yaml'))
         bigfile = '/'.join((self.rawdir, self.files[src_key]['file']))
 
-        # if processed smallfile exists and is newer use it instesd
+        # if processed smallfile exists and is newer than bigfile then use it instesd
         if os.path.isfile(smallfile) and \
                 os.path.getctime(smallfile) > os.path.getctime(bigfile):
             LOG.info("Using the cheap mapping file %s", smallfile)
@@ -467,15 +474,16 @@ class GeneOntology(Source):
                 id_map = yaml.safe_load(yamlreader)
         else:
             LOG.info(
-                "Expensive Mapping from Uniprot ids to Entrez/ENSEMBL gene ids for %s",
-                str(self.tax_ids))
+                "Expensive Mapping from Uniprot IDs to Entrez/ENSEMBL gene ids for %s",
+                self.tax_ids)
             self.fetch_from_url(self.files[src_key]['url'], bigfile)
             col = self.files[src_key]['columns']
+            ummapped_uniprot = 0
             with gzip.open(bigfile, 'rb') as csvfile:
                 csv.field_size_limit(sys.maxsize)
                 reader = csv.reader(  # warning this file is over 10GB unzipped
-                    io.TextIOWrapper(
-                        csvfile, newline=""), delimiter='\t', quotechar='\"')
+                    io.TextIOWrapper(csvfile, newline=""),
+                    delimiter='\t', quotechar='\"')
                 for row in reader:
                     uniprotkb_ac = row[col.index('UniProtKB-AC')].strip()
                     # uniprotkb_id = row[col.index('UniProtKB-ID')]
@@ -508,11 +516,13 @@ class GeneOntology(Source):
                         id_map[uniprotkb_ac] = 'NCBIGene:' + geneid
                     elif ensembl != '' and ';' not in ensembl:
                         id_map[uniprotkb_ac] = 'ENSEMBL:' + ensembl
+                    else:
+                        ummapped_uniprot += 1
 
             LOG.info("Writing id_map out as %s", smallfile)
             with open(smallfile, 'w') as yamlwriter:
                 yaml.dump(id_map, yamlwriter)
-
+            LOG.warning('Did not find 1:1 gene IDs for %i uniprots', ummapped_uniprot)
         LOG.info(
             "Acquired %i 1:1 uniprot to [entrez|ensembl] mappings", len(id_map.keys()))
 

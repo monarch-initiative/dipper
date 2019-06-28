@@ -6,7 +6,7 @@ import yaml
 
 
 class TranslationTestCase(unittest.TestCase):
-    
+
     def testIfTableIsAMap(self):
 
         from yaml.constructor import ConstructorError
@@ -15,7 +15,7 @@ class TranslationTestCase(unittest.TestCase):
             from yaml import CLoader as Loader
         except ImportError:
             from yaml import Loader
-        
+
         # Credit https://gist.github.com/pypt/94d747fe5180851196eb
         def no_duplicates_constructor(loader, node, deep=False):
             """Check for duplicate keys."""
@@ -44,12 +44,12 @@ class TranslationTestCase(unittest.TestCase):
                 self.assertTrue(False)
                 print(e)
             tt_file.close()
- 
+
     def testIfTableIsBiMap(self):
         file_path = '../translationtable/GLOBAL_TERMS.yaml'
         if os.path.exists(os.path.join(os.path.dirname(__file__), file_path)):
             tt_file = open(os.path.join(os.path.dirname(__file__), file_path), 'r')
-            translation_table = yaml.load(tt_file)
+            translation_table = yaml.safe_load(tt_file)
             tt_file.close()
 
         temp_dict = {}
@@ -63,8 +63,8 @@ class TranslationTestCase(unittest.TestCase):
                 failed_list.append(v)
 
         if not passed:
-            print("Duplicate values in yaml: {}".format(failed_list))        
-                        
+            print("Duplicate values in yaml: {}".format(failed_list))
+
         self.assertTrue(passed)
 
 

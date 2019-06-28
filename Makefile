@@ -11,8 +11,8 @@ all: test prefix_equivalents dot_to_svg
 ### Tests
 ###
 
-test: ClinVar-test FlyBase-test trans-test IMPC-test reactome-test RGD-test \
-      CTD-test mychem-test string-test UDP-test Orphanet-test MGI-test \
+test: ClinVar-test FlyBase-test WormBase-test trans-test IMPC-test reactome-test \
+      RGD-test CTD-test mychem-test string-test UDP-test Orphanet-test MGI-test \
       GWAS-test # IMPC-fetch
 
 MGI-test:
@@ -23,6 +23,9 @@ ClinVar-test:
 
 FlyBase-test:
 	$(TEST) tests/test_flybase.py
+
+WormBase-test:
+	$(TEST) tests/test_wormbase.py
 
 Orphanet-test:
 	$(TEST) tests.test_orphanet.GeneVariantDiseaseTest
@@ -77,7 +80,7 @@ trans-test:
 	@ echo "python unit test for duplicate keys and invertablility"
 	@ $(TEST) tests/test_trtable.py
 	@ echo "Is $(GTT) table ordered by ontology curie?"
-	@ sort -k 2,3n -t ':' -s -c $(GTT) && echo "GLOBALTT order is OKAY"
+	@ sort -k2,2 -k3,3n -t ':' --stable --check $(GTT) && echo "GLOBALTT order is OKAY"
 	@ echo "Are terms found in dipper/source/Ingest.py, \nbut not in $(GTT)?"
 	@ scripts/check_labels_v_gtt.sh
 
