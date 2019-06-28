@@ -80,7 +80,7 @@ trans-test:
 	@ echo "python unit test for duplicate keys and invertablility"
 	@ $(TEST) tests/test_trtable.py
 	@ echo "Is $(GTT) table ordered by ontology curie?"
-	@ (sort -k2,2 -k3,3n -t ':' --stable --check $(GTT) && echo "GLOBALTT order is OKAY") || echo ""
+	@ (sort -k2,2 -k3,3n -t ':' --stable --check $(GTT) && echo "GLOBALTT order is OKAY") || echo "sort order of GLOBALTT seems to be wrong"
 	@ echo "Are terms found in dipper/source/Ingest.py, \nbut not in $(GTT)?"
 	@ scripts/check_labels_v_gtt.sh
 
