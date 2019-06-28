@@ -4,7 +4,9 @@ import os
 import unittest
 import logging
 from rdflib import URIRef
+from dipper import curie_map
 from dipper.graph.RDFGraph import RDFGraph
+from dipper.utils.CurieUtil import CurieUtil
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -15,15 +17,17 @@ class RDFGraphTestCase(unittest.TestCase):
     def setUp(self):
         self.graph = RDFGraph()
 
+        this_curie_map = curie_map.get()
+        self.cutil = CurieUtil(this_curie_map)
+
         # stuff to make test triples
         self.test_cat_subj = "http://www.google.com"
-        self.test_cat_default_pred = "http://w3id.org/biolink/vocab/category"
-        self.test_cat_nondefault_pred = \
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        self.test_cat_default_category = "http://w3id.org/biolink/vocab/NamedThing"
-        self.test_cat_nondefault_category = "http://w3id.org/biolink/vocab/Gene"
-        self.test_cat_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        self.test_cat_class = "http://www.w3.org/1999/02/22-rdf-syntax-ns#class"
+        self.test_cat_default_pred = self.cutil.get_uri("biolink:category")
+        self.test_cat_nondefault_pred = self.cutil.get_uri("rdf:type")
+        self.test_cat_default_category = self.cutil.get_uri("biolink:NamedThing")
+        self.test_cat_nondefault_category = self.cutil.get_uri("biolink:Gene")
+        self.test_cat_type = self.cutil.get_uri("rdf:type")
+        self.test_cat_class = self.cutil.get_uri("rdf:class")
 
     def tearDown(self):
         self.graph = None

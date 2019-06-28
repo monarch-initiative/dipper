@@ -3,9 +3,11 @@
 import unittest
 import logging
 from rdflib import URIRef, Literal
+from dipper import curie_map
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.models.Model import Model
 from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
+from dipper.utils.CurieUtil import CurieUtil
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +18,18 @@ class ModelTestCase(unittest.TestCase):
         g = RDFGraph()
         self.model = Model(g)
 
+        this_curie_map = curie_map.get()
+        self.cutil = CurieUtil(this_curie_map)
 
         # stuff to make test triples
         self.test_cat_subj_curie = "MGI:1234"
-        self.test_cat_subj = "http://www.informatics.jax.org/accession/MGI:1234"
-        self.test_cat_default_pred = "http://w3id.org/biolink/vocab/category"
-        self.test_named_indiv = "http://www.w3.org/2002/07/owl#NamedIndividual"
-        self.test_label_pred = "http://www.w3.org/2000/01/rdf-schema#label"
+        self.test_cat_subj = self.cutil.get_uri("MGI:1234")
+        self.test_cat_default_pred = self.cutil.get_uri("biolink:category")
+        self.test_named_indiv = self.cutil.get_uri("owl:NamedIndividual")
+        self.test_label_pred = self.cutil.get_uri("rdfs:label")
         self.test_label = "some label"
 
-        self.test_comment_IRI = 'http://purl.org/dc/elements/1.1/comment'
+        self.test_comment_IRI = self.cutil.get_uri("dc:comment")
         self.test_comment = 'bonus eruptus'
 
     def tearDown(self):
