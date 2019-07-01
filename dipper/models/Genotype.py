@@ -256,7 +256,8 @@ class Genotype():
 
         return
 
-    def addParts(self, part_id, parent_id, part_relationship=None):
+    def addParts(self, part_id, parent_id, part_relationship=None,
+                 subject_category=None, object_category=None):
         """
         This will add a has_part (or subproperty) relationship between
         a parent_id and the supplied part.
@@ -265,6 +266,8 @@ class Genotype():
         :param part_id:
         :param parent_id:
         :param part_relationship:
+        :param subject_category: a biolink vocab curie
+        :param object_category: a biolink vocab curie
         :return:
 
         """
@@ -278,7 +281,9 @@ class Genotype():
         elif part_relationship is None:
             part_relationship = self.globaltt['has_part']
 
-        self.graph.addTriple(parent_id, part_relationship, part_id)
+        self.graph.addTriple(parent_id, part_relationship, part_id,
+                             subject_category=subject_category,
+                             object_category=object_category)
 
         return
 
@@ -310,9 +315,14 @@ class Genotype():
             self, background_id, genotype_id, background_type=None):
         if background_type is None:
             background_type = self.globaltt['genomic_background']
-        self.model.addType(background_id, background_type)
+        self.model.addType(background_id, background_type,
+                           subject_category=
+                           blv.population_of_individual_organisms.value)
         self.addParts(
-            background_id, genotype_id, self.globaltt['has_reference_part'])
+            background_id, genotype_id, self.globaltt['has_reference_part'],
+            subject_category=blv.population_of_individual_organisms.value,
+            object_category=blv.genotype.value
+        )
 
         return
 

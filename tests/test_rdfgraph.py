@@ -165,12 +165,11 @@ class RDFGraphTestCase(unittest.TestCase):
         """
         test that method infers type (either literal or CURIE) correctly
         """
-        self.assertEqual(self.graph._is_literal("1"), True)
-        self.assertEqual(self.graph._is_literal("foo:bar"), False)
-        self.assertEqual(self.graph._is_literal("http://www.zombo.com/"), False)
-        self.assertEqual(self.graph._is_literal("https://www.zombo.com/"), False)
-        self.assertEqual(self.graph._is_literal("ftp://ftp.1000genomes.ebi.ac.uk/"),
-                         False)
+        self.assertTrue(self.graph._is_literal("1"))
+        self.assertTrue(not self.graph._is_literal("foo:bar"))
+        self.assertTrue(not self.graph._is_literal("http://www.zombo.com/"))
+        self.assertTrue(not self.graph._is_literal("https://www.zombo.com/"))
+        self.assertTrue(not self.graph._is_literal("ftp://ftp.1000genomes.ebi.ac.uk/"))
 
 
 if __name__ == '__main__':
