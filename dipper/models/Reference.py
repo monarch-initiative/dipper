@@ -1,6 +1,7 @@
 import logging
 from dipper.graph.Graph import Graph
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -113,7 +114,8 @@ class Reference:
             if cite is not None:
                 self.model.addLabel(self.ref_url, cite)
         elif self.ref_id is not None:
-            self.model.addIndividualToGraph(self.ref_id, cite, self.ref_type)
+            self.model.addIndividualToGraph(self.ref_id, cite, self.ref_type,
+                                            ind_category=blv.Publication.value)
             if self.title is not None:
                 self.addTitle(self.ref_id, self.title)
         else:

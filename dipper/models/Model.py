@@ -30,9 +30,15 @@ class Model():
         self.graph.addTriple(
             subject_id, predicate_id, obj, object_is_literal, literal_type, **args)
 
-    def addType(self, subject_id, subject_type, **args):
+    def addType(self, subject_id, subject_type,
+                subject_category=None,
+                object_category=None,
+                **args):
         self.graph.addTriple(
-            subject_id, self.globaltt['type'], subject_type, **args)
+            subject_id, self.globaltt['type'], subject_type,
+            subject_category=subject_category,
+            object_category=object_category,
+            **args)
 
     def addLabel(self, subject_id, label, **args):
         self.graph.addTriple(
@@ -92,12 +98,20 @@ class Model():
                 ind_id, self.globaltt['description'], description,
                 object_is_literal=True)
 
-    def addEquivalentClass(self, sub, obj, **args):
+    def addEquivalentClass(self, sub, obj, subject_category=None, object_category=None,
+                           **args):
         self.graph.addTriple(
-            sub, self.globaltt['equivalent_class'], obj, **args)
+            sub, self.globaltt['equivalent_class'], obj,
+            subject_category=subject_category,
+            object_category=object_category,
+            **args)
 
-    def addSameIndividual(self, sub, obj, **args):
-        self.graph.addTriple(sub, self.globaltt['same_as'], obj, **args)
+    def addSameIndividual(self, sub, obj, subject_category=None, object_category=None,
+                          **args):
+        self.graph.addTriple(sub, self.globaltt['same_as'], obj,
+                             subject_category=subject_category,
+                             object_category=object_category,
+                             **args)
 
     def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
 
@@ -173,9 +187,11 @@ class Model():
 
         self._addReplacementIds(old_id, new_ids)
 
-    def addSubClass(self, child_id, parent_id, subject_category=None, object_category=None):
-        self.graph.addTriple(child_id, self.globaltt['subclass_of'],
-                             parent_id, subject_category=subject_category, object_category=object_category)
+    def addSubClass(self, child_id, parent_id, subject_category=None,
+                    object_category=None):
+        self.graph.addTriple(child_id, self.globaltt['subclass_of'], parent_id,
+                             subject_category=subject_category,
+                             object_category=object_category)
         
     def addSynonym(
             self, class_id, synonym, synonym_type=None,
@@ -248,7 +264,7 @@ class Model():
         """
         self.graph.addTriple(
             node_id, self.globaltt['clique_leader'], True, object_is_literal=True,
-            literal_type='xsd:boolean',subject_category=node_category)
+            literal_type='xsd:boolean', subject_category=node_category)
 
     def addBlankNodeAnnotation(self, node_id):
         """
@@ -279,4 +295,5 @@ class Model():
         :param sex:
         :return:
         """
-        self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex)
+        self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex,
+                             object_category=blv.BiologicalSex.value)

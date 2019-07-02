@@ -13,3 +13,5 @@ class BioLinkVocabulary(Enum):
     InformationContentEntity = "biolink:InformationContentEntity"
     Zygosity = "biolink:Zygosity"
     PhenotypicFeature = "biolink:PhenotypicFeature"
+    Publications = "biolink:Publications"
+    BiologicalSex = "biolink:BiologicalSex"

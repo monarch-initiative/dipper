@@ -808,13 +808,13 @@ SELECT  r._relationship_key as rel_key,
                 # TODO: VSLC label likely needs processing similar to
                 # the processing in the all_allele_view
                 # FIXME: handle null alleles
-                vslc_label = allele1+'/'
+                vslc_label = allele1 + '/'
                 if allele2_id is None:
                     if zygosity_id in [
-                            self.globaltt['hemizygous insertion-linked'],
-                            self.globaltt['hemizygous-x'],
-                            self.globaltt['hemizygous-y'],
-                            self.globaltt['hemizygous']]:
+                        self.globaltt['hemizygous insertion-linked'],
+                        self.globaltt['hemizygous-x'],
+                        self.globaltt['hemizygous-y'],
+                        self.globaltt['hemizygous']]:
                         vslc_label += '0'
                     elif zygosity_id == self.globaltt['heterozygous']:
                         vslc_label += '+'
@@ -854,14 +854,14 @@ SELECT  r._relationship_key as rel_key,
 
         # build the gvc and the genotype label
         for gt in geno_hash.keys():
-            if gt is None:   # not sure why, but sometimes this is the case
+            if gt is None:  # not sure why, but sometimes this is the case
                 continue
             vslcs = sorted(list(geno_hash[gt]))
             gvc_label = None
             if len(vslcs) > 1:
                 gvc_id = re.sub(r'_', '', ('-'.join(vslcs)))
                 gvc_id = re.sub(r':', '', gvc_id)
-                gvc_id = '_:'+gvc_id
+                gvc_id = '_:' + gvc_id
                 vslc_labels = []
                 for v in vslcs:
                     vslc_labels.append(self.label_hash[v])
@@ -899,9 +899,9 @@ SELECT  r._relationship_key as rel_key,
             else:
                 bkgd_label = 'n.s.'
             if gvc_label is not None:
-                genotype_label = gvc_label + ' ['+bkgd_label+']'
+                genotype_label = gvc_label + ' [' + bkgd_label + ']'
             else:
-                genotype_label = '['+bkgd_label+']'
+                genotype_label = '[' + bkgd_label + ']'
 
             model.addIndividualToGraph(gt, genotype_label,
                                        ind_category=blv.Genotype.value)
@@ -1061,7 +1061,8 @@ SELECT  r._relationship_key as rel_key,
                         assoc.set_subject(genotype_id)
                         assoc.set_object(accid)
                         assoc.set_relationship(self.globaltt['is model of'])
-                        assoc.add_association_to_graph()
+                        assoc.add_association_to_graph(
+                            subject_category=blv.Genotype.value)
                         assoc_id = assoc.get_association_id()
                 elif annot_type == 'MCV/Marker':
                     # marker category == type
@@ -1077,7 +1078,9 @@ SELECT  r._relationship_key as rel_key,
                     if term_id is not None and marker_id is not None:
                         # do something special for transgenics -
                         # make sure these are transgenic insertions
-                        model.addType(marker_id, term_id)
+                        model.addType(marker_id, term_id,
+                                      subject_category=
+                                      blv.InformationContentEntity.value)
                 elif annot_type == 'DO/Allele':  # allele/Disease
                     allele_id = self.idhash['allele'].get(object_key)
                     if allele_id is None:
@@ -1088,7 +1091,8 @@ SELECT  r._relationship_key as rel_key,
                         assoc.set_subject(allele_id)
                         assoc.set_object(accid)
                         assoc.set_relationship(self.globaltt['is model of'])
-                        assoc.add_association_to_graph()
+                        assoc.add_association_to_graph(
+                            subject_category=blv.SequenceVariant.value)
                         assoc_id = assoc.get_association_id()
 
                 if assoc_id is not None:
@@ -1289,7 +1293,7 @@ SELECT  r._relationship_key as rel_key,
                     # make the assumption that if it is a PMID, it is a journal
                     if re.match(r'PMID', pub_id):
                         reference.setType(self.globaltt['journal article'])
-                        model.makeLeader(pub_id)
+                        model.makeLeader(pub_id, node_category=blv.Publication.value)
                     reference.addRefToGraph()
 
                     model.addSameIndividual(jid, pub_id)
@@ -1425,8 +1429,8 @@ SELECT  r._relationship_key as rel_key,
                     # everything except for genes are modeled as individuals
 
                     if mapped_marker_type in [
-                            self.globaltt['gene'],
-                            self.globaltt['pseudogene']]:
+                        self.globaltt['gene'],
+                        self.globaltt['pseudogene']]:
                         model.addClassToGraph(
                             marker_id, symbol, mapped_marker_type, name)
                         model.addSynonym(
@@ -1620,7 +1624,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '1' and prefix_part != 'MGI:':
                         marker_id = accid
                     elif logicaldb_key == '60':
-                        marker_id = 'ENSEMBL:'+accid
+                        marker_id = 'ENSEMBL:' + accid
                     # TODO get non-preferred ids==deprecated?
 
                 if marker_id is not None:
@@ -1749,7 +1753,7 @@ SELECT  r._relationship_key as rel_key,
                     elif logicaldb_key == '38':  # MMRRC
                         strain_id = accid
                         if not re.match(r'MMRRC:', strain_id):
-                            strain_id = 'MMRRC:'+strain_id
+                            strain_id = 'MMRRC:' + strain_id
                     elif logicaldb_key == '37':  # EMMA
                         strain_id = re.sub(r'EM:', 'EMMA:', accid)
                     elif logicaldb_key == '90':  # APB
@@ -1764,7 +1768,7 @@ SELECT  r._relationship_key as rel_key,
                         model.addSynonym(mgiid, accid)
 
                     elif logicaldb_key == '54':  # NCIMR
-                        strain_id = 'NCIMR:'+accid
+                        strain_id = 'NCIMR:' + accid
                     # CMMR  not great - doesn't resolve well
                     # elif logicaldb_key == '71':
                     #     strain_id = 'CMMR:'+accid
@@ -1875,7 +1879,6 @@ SELECT  r._relationship_key as rel_key,
                 # make the chromsomome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
                 if version is not None and version != '' and version != '(null)':
-
                     # switch on maptype or mapkey
                     assembly = version
                     build_id = 'NCBIGenome:' + assembly
@@ -1955,7 +1958,7 @@ SELECT  r._relationship_key as rel_key,
                 # property_name,
                 gene_num = int(row[col.index('gene_num')])
 
-                if self.test_mode and allele_key not in self.test_keys.get('allele')\
+                if self.test_mode and allele_key not in self.test_keys.get('allele') \
                         and gene_num not in self.test_ids:
                     continue
 
@@ -2014,7 +2017,7 @@ SELECT  r._relationship_key as rel_key,
                     ):
                         notehash[object_key][notetype].append('')  # ??? I don't get it
 
-                notehash[object_key][notetype][int(sequencenum)-1] = note.strip()
+                notehash[object_key][notetype][int(sequencenum) - 1] = note.strip()
 
             # finish iteration over notes
 
@@ -2032,7 +2035,7 @@ SELECT  r._relationship_key as rel_key,
                     "found %d %s notes for %s",
                     len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
-                notes += ' ['+n+']'
+                notes += ' [' + n + ']'
                 model.addDescription(allele_id, notes)
 
             if not self.test_mode and limit is not None and line_counter > limit:
@@ -2113,7 +2116,7 @@ SELECT  r._relationship_key as rel_key,
 
         """
         # these are just blank nodes
-        iid = '_:mgi'+prefix+'key'+key
+        iid = '_:mgi' + prefix + 'key' + key
 
         return iid
 
