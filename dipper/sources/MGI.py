@@ -394,7 +394,9 @@ SELECT  r._relationship_key as rel_key,
                         # so we make one up, and add it to the hash
                         strain_id = self._makeInternalIdentifier('strain', strain_key)
                         self.idhash['strain'].update({strain_key: strain_id})
-                        model.addComment(strain_id, "strain_key:" + strain_key)
+                        model.addComment(strain_id, "strain_key:" + strain_key,
+                                         subject_category=
+                                         blv.PopulationOfIndividualOrganisms.value)
                     elif int(strain_key) < 0:
                         # these are ones that are unidentified/unknown.
                         # so add instances of each.
@@ -407,7 +409,9 @@ SELECT  r._relationship_key as rel_key,
                             strain_id,
                             "This genomic background is unknown.  " +
                             "This is a placeholder background for " +
-                            mgiid + ".")
+                            mgiid + ".",
+                            subject_category=
+                            blv.PopulationOfIndividualOrganisms.value)
                         background_type = self.globaltt[
                             'unspecified_genomic_background']
 
@@ -497,8 +501,8 @@ SELECT  r._relationship_key as rel_key,
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
             geno.addGenotype(gt, None)
             model.addComment(gt, self._makeInternalIdentifier(
-                'genotype', genotype.get('key')), subject_category=blv.genotype.value)
-            model.addSynonym(gt, label.strip())
+                'genotype', genotype.get('key')), subject_category=blv.Genotype.value)
+            model.addSynonym(gt, label.strip(), subject_category=blv.Genotype.value)
 
         return
 
@@ -564,7 +568,8 @@ SELECT  r._relationship_key as rel_key,
                     # TODO consider not adding the individuals in this one
                     model.addIndividualToGraph(
                         mgiid, short_description.strip(),
-                        altype, description.strip())
+                        altype, description.strip(),
+                        blv.SequenceVariant.value)
                     self.label_hash[mgiid] = short_description.strip()
 
                 # TODO deal with non-preferreds, are these deprecated?
@@ -669,8 +674,9 @@ SELECT  r._relationship_key as rel_key,
                     locus_rel = None
                     locus_type = None
 
-                model.addIndividualToGraph(allele_id, symbol, locus_type)
-                model.makeLeader(allele_id)
+                model.addIndividualToGraph(allele_id, symbol, locus_type,
+                                           blv.SequenceVariant.value)
+                model.makeLeader(allele_id, blv.SequenceVariant.value)
                 self.label_hash[allele_id] = symbol
                 self.idhash['seqalt'][allele_key] = iseqalt_id
 
@@ -679,11 +685,16 @@ SELECT  r._relationship_key as rel_key,
                 allele_label = self.label_hash.get(allele_id)
                 marker_label = self.label_hash.get(marker_id)
                 if allele_label is not None and allele_label == marker_label:
-                    model.addSameIndividual(allele_id, marker_id)
+                    model.addSameIndividual(allele_id, marker_id,
+                                            subject_category=
+                                            blv.SequenceVariant.value,
+                                            object_category=
+                                            blv.InformationContentEntity.value)
                     self.idhash['seqalt'][allele_key] = allele_id
                     model.addComment(
                         allele_id,
-                        self._makeInternalIdentifier('allele', allele_key))
+                        self._makeInternalIdentifier('allele', allele_key),
+                        blv.SequenceVariant.value)
                 elif marker_id is not None:
                     # marker_id will be none if the allele
                     # is not linked to a marker
@@ -716,7 +727,6 @@ SELECT  r._relationship_key as rel_key,
                     # as sequence alterations also removing the < and > from sa
                     sa_label = re.sub(r'[\<\>]', '', sa_label)
 
-                    # gu.addIndividualToGraph(graph,sa_id,sa_label,None,name)
                     geno.addSequenceAlteration(sa_id, sa_label, None, name)
                     self.label_hash[sa_id] = sa_label
 
@@ -724,7 +734,11 @@ SELECT  r._relationship_key as rel_key,
                     # scrub out if the strain is "not specified"
                     if strain_id is not None and \
                             strain_id not in ['MGI:4867032', 'MGI:5649511']:
-                        geno.addSequenceDerivesFrom(allele_id, strain_id)
+                        geno.addSequenceDerivesFrom(allele_id, strain_id,
+                                                    subject_category=
+                                                    blv.SequenceVariant.value,
+                                                    object_category=
+                                                    blv.PopulationOfIndividualOrganisms.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -819,7 +833,8 @@ SELECT  r._relationship_key as rel_key,
 
                 model.addIndividualToGraph(
                     ivslc_id, vslc_label,
-                    self.globaltt['variant single locus complement'])
+                    self.globaltt['variant single locus complement'],
+                    ind_category=blv.SequenceVariant.value)
                 self.label_hash[ivslc_id] = vslc_label
                 rel1 = rel2 = self.globaltt['has_variant_part']
                 if allele1_id in self.wildtype_alleles:
@@ -853,19 +868,25 @@ SELECT  r._relationship_key as rel_key,
                 gvc_label = '; '.join(vslc_labels)
 
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'],
+                    ind_category=blv.SequenceVariant.value)
                 self.label_hash[gvc_id] = gvc_label
                 for v in vslcs:
-                    geno.addParts(v, gvc_id, self.globaltt['has_variant_part'])
+                    geno.addParts(v, gvc_id, self.globaltt['has_variant_part'],
+                                  part_category=blv.SequenceVariant.value,
+                                  parent_category=blv.Genotype.value)
                     geno.addVSLCtoParent(v, gvc_id)
-                geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'])
+                geno.addParts(gvc_id, gt, self.globaltt['has_variant_part'],
+                              part_category=blv.SequenceVariant.value,
+                              parent_category=blv.Genotype.value)
             elif len(vslcs) == 1:
                 gvc_id = vslcs[0]
                 gvc_label = self.label_hash[gvc_id]
                 # type the VSLC as also a GVC
                 model.addIndividualToGraph(
-                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'])
-                geno.addVSLCtoParent(gvc_id, gt)
+                    gvc_id, gvc_label, self.globaltt['genomic_variation_complement'],
+                    ind_category=blv.SequenceVariant.value)
+                geno.addVSLCtoParent(gvc_id, gt, parent_category=blv.Genotype.value)
             else:
                 LOG.info("No VSLCs for %s", gt)
 
@@ -882,7 +903,8 @@ SELECT  r._relationship_key as rel_key,
             else:
                 genotype_label = '['+bkgd_label+']'
 
-            model.addIndividualToGraph(gt, genotype_label)
+            model.addIndividualToGraph(gt, genotype_label,
+                                       ind_category=blv.Genotype.value)
             self.label_hash[gt] = genotype_label
 
         return
@@ -943,7 +965,8 @@ SELECT  r._relationship_key as rel_key,
                         # transgenic_insertion, instead of plain old insertion
                         seq_alt_type_id = self.globaltt["transgenic_insertion"]
 
-                model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id)
+                model.addIndividualToGraph(iseqalt_id, None, seq_alt_type_id,
+                                           ind_category=blv.SequenceVariant.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1008,7 +1031,8 @@ SELECT  r._relationship_key as rel_key,
 
                     # We expect the label for the phenotype
                     # to be taken care of elsewhere
-                    model.addClassToGraph(accid, None)
+                    model.addClassToGraph(accid, None,
+                                          class_category=blv.PhenotypicFeature.value)
 
                     genotype_id = self.idhash['genotype'].get(object_key)
                     if genotype_id is None:

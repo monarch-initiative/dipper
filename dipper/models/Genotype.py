@@ -52,7 +52,7 @@ class Genotype():
 
         self.model.addIndividualToGraph(
             genotype_id, genotype_label, genotype_type, genotype_description,
-            ind_category=blv.genotype.value
+            ind_category=blv.Genotype.value
         )
         return
 
@@ -120,9 +120,12 @@ class Genotype():
 
         return
 
-    def addSequenceDerivesFrom(self, child_id, parent_id):
+    def addSequenceDerivesFrom(self, child_id, parent_id,
+                               subject_category=None,
+                               object_category=None):
         self.graph.addTriple(
-            child_id, self.globaltt['sequence_derives_from'], parent_id)
+            child_id, self.globaltt['sequence_derives_from'], parent_id,
+            subject_category=subject_category, object_category=object_category)
 
         return
 
@@ -141,7 +144,9 @@ class Genotype():
         """
         if rel_id is None:
             rel_id = self.globaltt["is_allele_of"]
-        self.graph.addTriple(allele_id, rel_id, gene_id)
+        self.graph.addTriple(allele_id, rel_id, gene_id,
+                             subject_category=blv.SequenceVariant.value,
+                             object_category=blv.Gene.value)
         return
 
     def addAffectedLocus(
@@ -227,9 +232,13 @@ class Genotype():
         # vslc has parts allele1/allele2
 
         if allele1_id is not None:
-            self.addParts(allele1_id, vslc_id, allele1_rel)
+            self.addParts(allele1_id, vslc_id, allele1_rel,
+                          part_category=blv.SequenceVariant.value,
+                          parent_category=blv.SequenceVariant.value)
         if allele2_id is not None and allele2_id.strip() != '':
-            self.addParts(allele2_id, vslc_id, allele2_rel)
+            self.addParts(allele2_id, vslc_id, allele2_rel,
+                          part_category=blv.SequenceVariant.value,
+                          parent_category=blv.SequenceVariant.value)
 
         # figure out zygosity if it's not supplied
         if zygosity_id is None:
@@ -239,25 +248,30 @@ class Genotype():
                 zygosity_id = self.globaltt['heterozygous']
 
         if zygosity_id is not None:
-            self.graph.addTriple(vslc_id, self.globaltt['has_zygosity'], zygosity_id)
+            self.graph.addTriple(vslc_id, self.globaltt['has_zygosity'], zygosity_id,
+                                 subject_category=blv.SequenceVariant.value,
+                                 object_category=blv.Zygosity.value)
 
         return
 
-    def addVSLCtoParent(self, vslc_id, parent_id):
+    def addVSLCtoParent(self, vslc_id, parent_id, parent_category=None):
         """
         The VSLC can either be added to a genotype or to a GVC.
         The vslc is added as a part of the parent.
         :param vslc_id:
         :param parent_id:
+        :param parent_category: a biolink category for parent
         :return:
         """
 
-        self.addParts(vslc_id, parent_id, self.globaltt['has_variant_part'])
+        self.addParts(vslc_id, parent_id, self.globaltt['has_variant_part'],
+                      part_category=blv.SequenceVariant.value,
+                      parent_category=parent_category)
 
         return
 
     def addParts(self, part_id, parent_id, part_relationship=None,
-                 subject_category=None, object_category=None):
+                 part_category=None, parent_category=None):
         """
         This will add a has_part (or subproperty) relationship between
         a parent_id and the supplied part.
@@ -266,8 +280,8 @@ class Genotype():
         :param part_id:
         :param parent_id:
         :param part_relationship:
-        :param subject_category: a biolink vocab curie
-        :param object_category: a biolink vocab curie
+        :param part_category: a biolink vocab curie
+        :param parent_category: a biolink vocab curie
         :return:
 
         """
@@ -282,8 +296,8 @@ class Genotype():
             part_relationship = self.globaltt['has_part']
 
         self.graph.addTriple(parent_id, part_relationship, part_id,
-                             subject_category=subject_category,
-                             object_category=object_category)
+                             subject_category=parent_category,
+                             object_category=part_category)
 
         return
 
@@ -292,12 +306,15 @@ class Genotype():
         if sa_type is None:
             sa_type = self.globaltt['sequence_alteration']
 
-        self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description)
+        self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description,
+                                        blv.SequenceVariant)
 
         return
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
-        self.addParts(sa_id, vl_id, self.globaltt['has_variant_part'])
+        self.addParts(sa_id, vl_id, self.globaltt['has_variant_part'],
+                      part_category=blv.SequenceVariant.value,
+                      parent_category=blv.Gene)  # can't find a locus blv entity
         return
 
     def addGenomicBackground(
@@ -317,11 +334,11 @@ class Genotype():
             background_type = self.globaltt['genomic_background']
         self.model.addType(background_id, background_type,
                            subject_category=
-                           blv.population_of_individual_organisms.value)
+                           blv.PopulationOfIndividualOrganisms.value)
         self.addParts(
             background_id, genotype_id, self.globaltt['has_reference_part'],
-            subject_category=blv.population_of_individual_organisms.value,
-            object_category=blv.genotype.value
+            part_category=blv.PopulationOfIndividualOrganisms.value,
+            parent_category=blv.Genotype.value
         )
 
         return

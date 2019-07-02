@@ -2,10 +2,14 @@ from enum import Enum
 
 
 class BioLinkVocabulary(Enum):
-    category = "biolink:category" # this is a node property, not a class
-    publication = "biolink:Publication"
-    disease = "biolink:Disease"
-    gene = "biolink:Gene"
-    genotype = "biolink:Genotype"
-    namedThing = "biolink:NamedThing"
-    population_of_individual_organisms = "biolink:PopulationOfIndividualOrganisms"
+    category = "biolink:category"  # this is a node property, not a slot
+    Publication = "biolink:Publication"
+    Disease = "biolink:Disease"
+    Gene = "biolink:Gene"
+    Genotype = "biolink:Genotype"
+    NamedThing = "biolink:NamedThing"
+    PopulationOfIndividualOrganisms = "biolink:PopulationOfIndividualOrganisms"
+    SequenceVariant = "biolink:SequenceVariant"  # synonym for allele
+    InformationContentEntity = "biolink:InformationContentEntity"
+    Zygosity = "biolink:Zygosity"
+    PhenotypicFeature = "biolink:PhenotypicFeature"

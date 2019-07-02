@@ -22,9 +22,9 @@ class GenotypeTestCase(unittest.TestCase):
         self.genotype = Genotype(self.graph)
         self.cutil = CurieUtil(self.curie_map)
         self.test_cat_pred = self.cutil.get_uri(blv.category.value)
-        self.test_cat_genotype_category = self.cutil.get_uri(blv.genotype.value)
+        self.test_cat_genotype_category = self.cutil.get_uri(blv.Genotype.value)
         self.test_cat_background_category = self.cutil.get_uri(
-            blv.population_of_individual_organisms.value)
+            blv.PopulationOfIndividualOrganisms.value)
 
     def tearDown(self):
         self.genotype = None
@@ -39,7 +39,23 @@ class GenotypeTestCase(unittest.TestCase):
             (URIRef(cutil.get_uri(gid)), RDFS['label'],
              Literal(label)) in self.genotype.graph)
 
-    def test_addGenomicBackgroundToGenotype(self):
+    def test_addGenomicBackgroundToGenotype_adds_genotype(self):
+        """
+         test that addGenomicBackgroundToGenotype() correctly assigns
+         subject/object category
+         """
+        genotype_id = "GENO:0000002"
+        background_id = "GENO:0000002" # no idea what a good example background ID is
+        self.genotype.addGenomicBackgroundToGenotype(
+            background_id=background_id, genotype_id=genotype_id)
+
+        geno_triples = list(self.graph.triples((
+                            URIRef(self.cutil.get_uri(genotype_id)),
+                            URIRef(self.test_cat_pred),
+                            URIRef(self.test_cat_genotype_category))))
+
+
+    def test_addGenomicBackgroundToGenotype_adds_categories(self):
         """
          test that addGenomicBackgroundToGenotype() correctly assigns
          subject/object category
@@ -68,6 +84,24 @@ class GenotypeTestCase(unittest.TestCase):
                          URIRef(self.test_cat_background_category),
                          "addTriples() didn't assign the right background category")
 
+    def test_addParts(self):
+        """
+        """
+        if part_relationship is None:
+            part_relationship = self.globaltt['has_part']
+        # Fail loudly if parent or child identifiers are None
+        if parent_id is None:
+            raise TypeError('Attempt to pass None as parent')
+        elif part_id is None:
+            raise TypeError('Attempt to pass None as child')
+        elif part_relationship is None:
+            part_relationship = self.globaltt['has_part']
+
+        self.graph.addTriple(parent_id, part_relationship, part_id,
+                             subject_category=subject_category,
+                             object_category=object_category)
+
+        return
 
 if __name__ == '__main__':
     unittest.main()

@@ -340,7 +340,7 @@ class OMIM(OMIMSource):
             #  G_omim is subclass_of  gene
             model.addClassToGraph(
                 omim_curie, nodelabel, self.globaltt['gene'], newlabel,
-                subject_category=blv.gene.value)
+                subject_category=blv.Gene.value)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -652,8 +652,8 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph(s_category=blv.gene.value,
-                                       o_category=blv.disease.value)
+        assoc.add_association_to_graph(s_category=blv.Gene.value,
+                                       o_category=blv.Disease.value)
 
     @staticmethod
     def _get_description(entry):
@@ -718,7 +718,7 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id,
-                                            subject_category=blv.publication.value)
+                                            subject_category=blv.Publication.value)
                                             
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
@@ -891,8 +891,8 @@ class OMIM(OMIMSource):
             series_id = 'OMIMPS:' + ser
             model.addClassToGraph(series_id, None)
             model.addSubClass(omim_curie, series_id,
-                              subject_category=blv.disease.value,
-                              object_category=blv.disease.value)
+                              subject_category=blv.Disease.value,
+                              object_category=blv.Disease.value)
 
     @staticmethod
     def _get_mappedids(entry, graph):
@@ -1012,8 +1012,8 @@ class OMIM(OMIMSource):
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id,
-                                subject_category=blv.disease.value,
-                                object_category=blv.publication.value)
+                                subject_category=blv.Disease.value,
+                                object_category=blv.Publication.value)
 
         return ref_to_pmid
 

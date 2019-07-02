@@ -40,8 +40,7 @@ class Model():
 
     def addClassToGraph(
             self, class_id, label=None, class_type=None, description=None,
-            subject_category=None, object_category=None
-    ):
+            class_category=None):
         """
         Any node added to the graph will get at least 3 triples:
         *(node, type, owl:Class) and
@@ -54,8 +53,7 @@ class Model():
         :param label:
         :param class_type:
         :param description:
-        :param subject_category:
-        :param object_category:
+        :param class_category: a biolink category for class
         :return:
 
         """
@@ -63,22 +61,20 @@ class Model():
             raise ValueError("class_id is None")
 
         self.graph.addTriple(
-            class_id, self.globaltt['type'], self.globaltt['class'])
+            class_id, self.globaltt['type'], self.globaltt['class'],
+            subject_category=class_category)
         if label is not None:
             self.graph.addTriple(
                 class_id, self.globaltt['label'], label, object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type,
-                                 subject_category=subject_category,
-                                 object_category=object_category)
+            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type)
         if description is not None:
             self.graph.addTriple(
-                class_id, self.globaltt['description'], description,
-                object_is_literal=True)
+                class_id, self.globaltt['description'], description)
 
     def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None,
-                             ind_category=None # blv category for ind_id
+                             ind_category=None  # blv category for ind_id
                              ):
         if label is not None:
             self.graph.addTriple(
@@ -182,7 +178,8 @@ class Model():
                              parent_id, subject_category=subject_category, object_category=object_category)
         
     def addSynonym(
-            self, class_id, synonym, synonym_type=None):
+            self, class_id, synonym, synonym_type=None,
+            subject_category=None, object_category=None):
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
@@ -190,16 +187,18 @@ class Model():
         :param cid: class id
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
+        :param subject_category:
+        :param object_category:
         :return:
 
         """
-
         if synonym_type is None:
             synonym_type = self.globaltt['has_exact_synonym']
 
         if synonym is not None:
             self.graph.addTriple(
-                class_id, synonym_type, synonym, object_is_literal=True)
+                class_id, synonym_type, synonym, object_is_literal=True,
+                subject_category=subject_category, object_category=object_category)
 
     def addDefinition(self, class_id, definition):
         self.graph.addTriple(
@@ -221,10 +220,10 @@ class Model():
             object_is_literal=True, subject_category=subject_category
         )
 
-    def addDescription(self, subject_id, description):
+    def addDescription(self, subject_id, description, subject_category=None):
         self.graph.addTriple(
             subject_id, self.globaltt['description'], description.strip(),
-            object_is_literal=True)
+            object_is_literal=True, subject_category=subject_category)
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
@@ -238,17 +237,18 @@ class Model():
             ontology_id, self.globaltt['version_info'],
             version_info, object_is_literal=True)
 
-    def makeLeader(self, node_id):
+    def makeLeader(self, node_id, node_category):
         """
         Add an annotation property to the given ```node_id```
         to be the clique_leader.
         This is a monarchism.
         :param node_id:
+        :param node_category: a biolink category for node_id
         :return:
         """
         self.graph.addTriple(
             node_id, self.globaltt['clique_leader'], True, object_is_literal=True,
-            literal_type='xsd:boolean')
+            literal_type='xsd:boolean',subject_category=node_category)
 
     def addBlankNodeAnnotation(self, node_id):
         """
