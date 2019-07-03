@@ -1369,7 +1369,7 @@ SELECT  r._relationship_key as rel_key,
                     model.addIndividualToGraph(strain_id, strain, sp,
                                                ind_category=
                                                blv.PopulationOfIndividualOrganisms.value,
-                                               ind_type_category=blv.OrganismTaxon)
+                                               ind_type_category=blv.OrganismTaxon.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
