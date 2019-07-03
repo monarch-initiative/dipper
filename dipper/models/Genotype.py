@@ -307,14 +307,14 @@ class Genotype():
             sa_type = self.globaltt['sequence_alteration']
 
         self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description,
-                                        blv.SequenceVariant)
+                                        blv.SequenceVariant.value)
 
         return
 
     def addSequenceAlterationToVariantLocus(self, sa_id, vl_id):
         self.addParts(sa_id, vl_id, self.globaltt['has_variant_part'],
                       part_category=blv.SequenceVariant.value,
-                      parent_category=blv.Gene)  # can't find a locus blv entity
+                      parent_category=blv.Gene.value)  # can't find a locus blv entity
         return
 
     def addGenomicBackground(
