@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class BioLinkVocabulary(Enum):
-    category = "biolink:category"  # this is a node property, not a slot
+    category = "biolink:category"  # this is a node property, not a class
     Publication = "biolink:Publication"
     Disease = "biolink:Disease"
     Gene = "biolink:Gene"

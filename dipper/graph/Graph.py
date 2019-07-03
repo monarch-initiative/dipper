@@ -24,8 +24,8 @@ class Graph(metaclass=ABCMeta):
             subject_id, 
             predicate_id, 
             object_id, 
-            object_is_literal, 
-            literal_type, 
+            object_is_literal=False,
+            literal_type=None,
             subject_category=None, 
             object_category=None):
         pass
