@@ -46,7 +46,7 @@ class Model():
 
     def addClassToGraph(
             self, class_id, label=None, class_type=None, description=None,
-            class_category=None):
+            class_category=None, class_type_category=None):
         """
         Any node added to the graph will get at least 3 triples:
         *(node, type, owl:Class) and
@@ -59,7 +59,8 @@ class Model():
         :param label:
         :param class_type:
         :param description:
-        :param class_category: a biolink category for class
+        :param class_category: a biolink category CURIE for class
+        :param class_type_category: a biolink category CURIE for class type
         :return:
 
         """
@@ -74,21 +75,22 @@ class Model():
                 class_id, self.globaltt['label'], label, object_is_literal=True)
 
         if class_type is not None:
-            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type)
+            self.graph.addTriple(class_id, self.globaltt['subclass_of'], class_type,
+                                 object_category=class_type_category)
         if description is not None:
             self.graph.addTriple(
                 class_id, self.globaltt['description'], description)
 
     def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None,
-                             ind_category=None  # blv category for ind_id
-                             ):
+                             ind_category=None,  # blv category for ind_id
+                             ind_type_category=None):
         if label is not None:
             self.graph.addTriple(
                 ind_id, self.globaltt['label'], label, object_is_literal=True)
         if ind_type is not None:
             self.graph.addTriple(
                 ind_id, self.globaltt['type'], ind_type, object_is_literal=False,
-                subject_category=ind_category)
+                subject_category=ind_category, object_category=ind_type_category)
         else:
             self.graph.addTriple(
                 ind_id, self.globaltt['type'], self.globaltt['named_individual'],
@@ -195,7 +197,7 @@ class Model():
         
     def addSynonym(
             self, class_id, synonym, synonym_type=None,
-            subject_category=None, object_category=None):
+            class_category=None, synonym_type_category=None):
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
@@ -203,8 +205,8 @@ class Model():
         :param cid: class id
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
-        :param subject_category:
-        :param object_category:
+        :param class_category: biolink category CURIE for class_id
+        :param synonym_type_category = biolink category CURIE for synonym_type
         :return:
 
         """
@@ -214,7 +216,8 @@ class Model():
         if synonym is not None:
             self.graph.addTriple(
                 class_id, synonym_type, synonym, object_is_literal=True,
-                subject_category=subject_category, object_category=object_category)
+                subject_category=class_category,
+                object_category=synonym_type_category)
 
     def addDefinition(self, class_id, definition):
         self.graph.addTriple(
@@ -259,7 +262,7 @@ class Model():
         to be the clique_leader.
         This is a monarchism.
         :param node_id:
-        :param node_category: a biolink category for node_id
+        :param node_category: a biolink category CURIE for node_id
         :return:
         """
         self.graph.addTriple(

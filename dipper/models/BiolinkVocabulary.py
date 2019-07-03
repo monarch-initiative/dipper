@@ -15,3 +15,5 @@ class BioLinkVocabulary(Enum):
     PhenotypicFeature = "biolink:PhenotypicFeature"
     Publications = "biolink:Publications"
     BiologicalSex = "biolink:BiologicalSex"
+    OrganismTaxon = "biolink:OrganismTaxon"
+    MolecularEntity = "biolink:MolecularEntity"

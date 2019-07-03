@@ -116,7 +116,8 @@ class Feature():
         return strand_id
 
     def addFeatureToGraph(
-            self, add_region=True, region_id=None, feature_as_class=False):
+            self, add_region=True, region_id=None, feature_as_class=False,
+            feature_category=None):
         """
         We make the assumption here that all features are instances.
         The features are located on a region,
@@ -139,15 +140,17 @@ class Feature():
         faldo:reference reference_id
 
         :param graph:
-
+        :param feature_category: a biolink category CURIE for feature
         """
 
         if feature_as_class:
             self.model.addClassToGraph(
-                self.fid, self.label, self.ftype, self.description)
+                self.fid, self.label, self.ftype, self.description,
+                class_category=feature_category)
         else:
             self.model.addIndividualToGraph(
-                self.fid, self.label, self.ftype, self.description)
+                self.fid, self.label, self.ftype, self.description,
+                class_category=feature_category)
 
         if self.start is None and self.stop is None:
             add_region = False

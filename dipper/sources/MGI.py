@@ -502,7 +502,7 @@ SELECT  r._relationship_key as rel_key,
             geno.addGenotype(gt, None)
             model.addComment(gt, self._makeInternalIdentifier(
                 'genotype', genotype.get('key')), subject_category=blv.Genotype.value)
-            model.addSynonym(gt, label.strip(), subject_category=blv.Genotype.value)
+            model.addSynonym(gt, label.strip(), class_category=blv.Genotype.value)
 
         return
 
@@ -735,9 +735,9 @@ SELECT  r._relationship_key as rel_key,
                     if strain_id is not None and \
                             strain_id not in ['MGI:4867032', 'MGI:5649511']:
                         geno.addSequenceDerivesFrom(allele_id, strain_id,
-                                                    subject_category=
+                                                    child_category=
                                                     blv.SequenceVariant.value,
-                                                    object_category=
+                                                    parent_category=
                                                     blv.PopulationOfIndividualOrganisms.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
@@ -1296,7 +1296,9 @@ SELECT  r._relationship_key as rel_key,
                         model.makeLeader(pub_id, node_category=blv.Publication.value)
                     reference.addRefToGraph()
 
-                    model.addSameIndividual(jid, pub_id)
+                    model.addSameIndividual(jid, pub_id,
+                                            subject_category=blv.Publication.value,
+                                            object_category=blv.Publication.value)
                 else:
                     LOG.warning(
                         "Publication from (%s) not mapped for %s",
@@ -1360,9 +1362,14 @@ SELECT  r._relationship_key as rel_key,
                         LOG.warning("defaulting to Mus Genus")
                         sp = self.globaltt['Mus']
 
-                    model.addClassToGraph(sp, None)
-                    geno.addTaxon(sp, strain_id)
-                    model.addIndividualToGraph(strain_id, strain, sp)
+                    model.addClassToGraph(sp, None,
+                                          class_category=blv.OrganismTaxon.value)
+                    geno.addTaxon(sp, strain_id, genopart_category=
+                                  blv.PopulationOfIndividualOrganisms.value)
+                    model.addIndividualToGraph(strain_id, strain, sp,
+                                               ind_category=
+                                               blv.PopulationOfIndividualOrganisms.value,
+                                               ind_type_category=blv.OrganismTaxon)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1432,15 +1439,20 @@ SELECT  r._relationship_key as rel_key,
                         self.globaltt['gene'],
                         self.globaltt['pseudogene']]:
                         model.addClassToGraph(
-                            marker_id, symbol, mapped_marker_type, name)
+                            marker_id, symbol, mapped_marker_type, name,
+                            class_category=blv.InformationContentEntity.value,
+                            class_type_category=blv.Gene.value)
                         model.addSynonym(
-                            marker_id, name, self.globaltt['has_exact_synonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym'],
+                            class_category=blv.InformationContentEntity.value)
                         self.markers['classes'].append(marker_id)
                     else:
                         model.addIndividualToGraph(
-                            marker_id, symbol, mapped_marker_type, name)
+                            marker_id, symbol, mapped_marker_type, name,
+                            ind_category=blv.InformationContentEntity.value)
                         model.addSynonym(
-                            marker_id, name, self.globaltt['has_exact_synonym'])
+                            marker_id, name, self.globaltt['has_exact_synonym'],
+                            class_category=blv.InformationContentEntity.value)
                         self.markers['indiv'].append(marker_id)
 
                     self.label_hash[marker_id] = symbol
@@ -1450,11 +1462,13 @@ SELECT  r._relationship_key as rel_key,
                         latin_name = 'Mus musculus'
                     taxon_id = self.resolve(
                         latin_name, default=self.globaltt['Mus musculus'])
-                    geno.addTaxon(taxon_id, marker_id)
+                    geno.addTaxon(taxon_id, marker_id,
+                                  genopart_category=blv.InformationContentEntity.value)
 
                     # make MGI the leader for mouse genes.
                     if taxon_id == self.globaltt['Mus musculus']:
-                        model.makeLeader(marker_id)
+                        model.makeLeader(marker_id, node_category=
+                        blv.InformationContentEntity.value)
 
                     if not self.test_mode and limit is not None \
                             and line_counter > limit:
@@ -1629,11 +1643,15 @@ SELECT  r._relationship_key as rel_key,
 
                 if marker_id is not None:
                     if mgiid in self.markers['classes']:
-                        model.addClassToGraph(marker_id, None)
+                        model.addClassToGraph(marker_id, None,
+                                              class_category=
+                                              blv.InformationContentEntity.value)
                         model.addEquivalentClass(mgiid, marker_id)
                     elif mgiid in self.markers['indiv']:
                         model.addIndividualToGraph(marker_id, None)
-                        model.addSameIndividual(mgiid, marker_id)
+                        model.addSameIndividual(mgiid, marker_id,
+                                                object_category=
+                                                blv.InformationContentEntity.value)
                     else:
                         LOG.error("mgiid not in class or indiv hash %s", mgiid)
 
@@ -1687,7 +1705,9 @@ SELECT  r._relationship_key as rel_key,
                 # get the hashmap of the identifiers
                 if logicaldb_key == '1' and prefixpart == 'MGI:' and preferred == '1':
                     self.idhash['strain'][object_key] = accid
-                    model.addIndividualToGraph(accid, None, tax_id)
+                    model.addIndividualToGraph(accid, None, tax_id,
+                                               ind_type_category=
+                                               blv.OrganismTaxon.value)
 
         # The following are the stock centers for the strains
         # (asterisk indicates complete)
@@ -1788,16 +1808,22 @@ SELECT  r._relationship_key as rel_key,
 
                 # TODO make these strains, rather than instance of taxon?
                 if strain_id is not None:
-                    model.addIndividualToGraph(strain_id, None, tax_id)
+                    model.addIndividualToGraph(strain_id, None, tax_id,
+                                               ind_category=
+                                               blv.PopulationOfIndividualOrganisms.value,
+                                               ind_type_category=
+                                               blv.OrganismTaxon.value)
                     if deprecated:
                         model.addDeprecatedIndividual(strain_id, [mgiid])
                         model.addSynonym(mgiid, accid)
                     else:
                         model.addSameIndividual(mgiid, strain_id)
                     if re.match(r'MMRRC', strain_id):
-                        model.makeLeader(strain_id)
+                        model.makeLeader(strain_id, node_category=
+                                         blv.PopulationOfIndividualOrganisms.value)
                     if comment is not None:
-                        model.addComment(strain_id, comment)
+                        model.addComment(strain_id, comment,
+                                         blv.PopulationOfIndividualOrganisms.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1841,7 +1867,9 @@ SELECT  r._relationship_key as rel_key,
                 # we have captured through processing
 
                 if annot_id is not None:
-                    model.addDescription(annot_id, note.strip())
+                    model.addDescription(annot_id, note.strip()
+                                # TODO: add subject_category=blv.[category for annot_id]
+                                         )
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -1876,7 +1904,7 @@ SELECT  r._relationship_key as rel_key,
                     if int(marker_key) not in self.test_keys.get('marker'):
                         continue
 
-                # make the chromsomome, and the build-instance
+                # make the chromosome, and the build-instance
                 chrom_id = makeChromID(chromosome, 'NCBITaxon:10090', 'CHR')
                 if version is not None and version != '' and version != '(null)':
                     # switch on maptype or mapkey
@@ -1911,7 +1939,9 @@ SELECT  r._relationship_key as rel_key,
                     add_as_class = False
                     if gene_id in self.markers['classes']:
                         add_as_class = True
-                    feature.addFeatureToGraph(True, None, add_as_class)
+                    feature.addFeatureToGraph(True, None, add_as_class,
+                                              feature_category=
+                                              blv.InformationContentEntity.value)
 
                 else:
                     LOG.warning('marker key %s not in idhash', str(marker_key))
@@ -1968,7 +1998,8 @@ SELECT  r._relationship_key as rel_key,
                 seqalt_id = self.idhash['seqalt'].get(allele_key)
                 if seqalt_id is None:
                     seqalt_id = allele_id
-                geno.addSequenceDerivesFrom(seqalt_id, gene_id)
+                geno.addSequenceDerivesFrom(seqalt_id, gene_id,
+                                            parent_category=blv.Gene.value)
 
                 if not self.test_mode and limit is not None and \
                         filereader.line_num > limit:
@@ -2036,7 +2067,8 @@ SELECT  r._relationship_key as rel_key,
                     len(notehash[allele_key]), n, allele_id)
                 notes = ''.join(notehash[allele_key][n])
                 notes += ' [' + n + ']'
-                model.addDescription(allele_id, notes)
+                model.addDescription(allele_id, notes,
+                                     subject_category=blv.SequenceVariant.value)
 
             if not self.test_mode and limit is not None and line_counter > limit:
                 break
@@ -2086,7 +2118,9 @@ SELECT  r._relationship_key as rel_key,
                 if strain_id is not None and genotype_id is not None:
                     self.strain_to_genotype_map[strain_id] = genotype_id
 
-                graph.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id)
+                graph.addTriple(strain_id, self.globaltt['has_genotype'], genotype_id,
+                                subject_category=blv.PopulationOfIndividualOrganisms.value,
+                                object_category=blv.Genotype.value)
                 # TODO
                 # verify if this should be contingent on the exactness or not
                 # if qualifier == 'Exact':

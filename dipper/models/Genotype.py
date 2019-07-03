@@ -121,11 +121,11 @@ class Genotype():
         return
 
     def addSequenceDerivesFrom(self, child_id, parent_id,
-                               subject_category=None,
-                               object_category=None):
+                               child_category=None,
+                               parent_category=None):
         self.graph.addTriple(
             child_id, self.globaltt['sequence_derives_from'], parent_id,
-            subject_category=subject_category, object_category=object_category)
+            subject_category=child_category, object_category=parent_category)
 
         return
 
@@ -343,7 +343,7 @@ class Genotype():
 
         return
 
-    def addTaxon(self, taxon_id, genopart_id):
+    def addTaxon(self, taxon_id, genopart_id, genopart_category=None):
         """
         The supplied geno part will have the specified taxon added with
         RO:in_taxon relation.
@@ -352,12 +352,14 @@ class Genotype():
         regulatory element, or sequence alteration).
         :param taxon_id:
         :param genopart_id:
-
+        :param genopart_category: a biolink term for genopart_id
         :return:
 
         """
         self.graph.addTriple(
-            genopart_id, self.globaltt['in taxon'], taxon_id)
+            genopart_id, self.globaltt['in taxon'], taxon_id,
+            subject_category=genopart_category,
+            object_category=blv.OrganismTaxon.value)
 
         return
 
@@ -559,7 +561,8 @@ class Genotype():
         chr_id = makeChromID(str(chr_num), reference_id, 'MONARCH')
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
-        self.model.addIndividualToGraph(chr_id, chr_label, self.globaltt['chromosome'])
+        self.model.addIndividualToGraph(chr_id, chr_label, self.globaltt['chromosome'],
+                                        ind_category=blv.MolecularEntity.value)
         if chr_type is not None:
             self.model.addType(chr_id, chr_type)
 
