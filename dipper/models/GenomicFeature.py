@@ -139,7 +139,9 @@ class Feature():
         faldo:position Integer(numeric position)
         faldo:reference reference_id
 
-        :param graph:
+        :param add_region [True]
+        :param region_id [None]
+        :param feature_as_class [False]
         :param feature_category: a biolink category CURIE for feature
         """
 
