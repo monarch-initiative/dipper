@@ -150,7 +150,7 @@ class Feature():
         else:
             self.model.addIndividualToGraph(
                 self.fid, self.label, self.ftype, self.description,
-                class_category=feature_category)
+                ind_category=feature_category)
 
         if self.start is None and self.stop is None:
             add_region = False
