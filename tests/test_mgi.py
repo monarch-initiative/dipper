@@ -46,7 +46,10 @@ class EvidenceTestCase(unittest.TestCase):
             dc:source J:74619 ;
             :has_sex_specificity PATO:0000384 .
 
-        J:74619 a IAO:0000310 .
+        PATO:0000384 biolink:category biolink:BiologicalSex .
+
+        J:74619 a IAO:0000310 ;
+            biolink:category biolink:Publication .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.mgi.graph))

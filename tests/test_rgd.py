@@ -58,6 +58,7 @@ class RGDTestCase(unittest.TestCase):
     
     RGD:2535 OBO:RO_0002200 MP:0003340 .
         RGDRef:1581841 a IAO:0000311 ;
+        biolink:category biolink:Publication ;
         owl:sameAs PMID:12799311 .
         """
         # dbg

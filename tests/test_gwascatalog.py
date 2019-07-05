@@ -188,7 +188,8 @@ class TestGwasSNPModel(unittest.TestCase):
     dbSNP:rs1491921 RO:0003304 EFO:0003949,
             EFO:0006995 .
 
-    PMID:25918132 a OBO:IAO_0000013 .
+    PMID:25918132 a OBO:IAO_0000013 ;
+        biolink:category biolink:Publication .
         """.format(description)
 
         # dbg
@@ -256,6 +257,8 @@ class TestGwasHaplotypeModel(unittest.TestCase):
             self.test_data['allele_freq'], self.test_data['mapped_gene'], so_ontology)
 
         triples = """
+NCBITaxon:9606 biolink:category biolink:OrganismTaxon .
+
 :haplotype_bb627b1f64039b0f751a a SO:0001024 ;
     rdfs:label "rs1329573-?; rs7020413-?; rs3824344-?; rs3758171-?" ;
     GENO:0000382 dbSNP:rs1329573,

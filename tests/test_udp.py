@@ -146,6 +146,7 @@ class UDPTestCase(unittest.TestCase):
             rdfs:label "hg19chr1(CLK2):g.155230432G>A" ;
             GENO:0000418 HGNC:2069 ;
             RO:0002162 NCBITaxon:9606 ;
+            biolink:category biolink:SequenceVariant ;
             owl:sameAs dbSNP:rs11557757 .
 
         <https://monarchinitiative.org/.well-known/genid/ba5f377fc8c95d4a6d7a> a GENO:0000000 ;

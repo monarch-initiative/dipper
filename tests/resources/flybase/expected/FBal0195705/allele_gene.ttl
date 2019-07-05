@@ -6,3 +6,5 @@ FlyBase:FBal0195705 a GENO:0000512 ;
 FlyBase:FBgn0033159 a owl:Class ;
     rdfs:label "Dscam1" ;
     rdfs:subClassOf SO:0000704 .
+
+OBO:NCBITaxon_7227 biolink:category biolink:OrganismTaxon .

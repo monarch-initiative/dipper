@@ -51,9 +51,12 @@ class CTDTestCase(unittest.TestCase):
                 rdfs:label "Nicotine" ;
                 RO:0002606 OMIM:188890 .
                 
-            PMID:12345 a IAO:0000013 .
-            PMID:56789 a IAO:0000013 .
-            
+            PMID:12345 a IAO:0000013 ;
+                biolink:category biolink:Publication .
+
+            PMID:56789 a IAO:0000013 ;
+                biolink:category biolink:Publication .
+
             OMIM:188890 a owl:Class .
         """
         # test exact contents of graph
