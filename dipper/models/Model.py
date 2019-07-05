@@ -256,7 +256,7 @@ class Model():
             ontology_id, self.globaltt['version_info'],
             version_info, object_is_literal=True)
 
-    def makeLeader(self, node_id, node_category):
+    def makeLeader(self, node_id, node_category=None):
         """
         Add an annotation property to the given ```node_id```
         to be the clique_leader.
