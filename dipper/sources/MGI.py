@@ -252,7 +252,7 @@ class MGI(PostgreSQLSource):
         (unique keys by type to MGI id).  These include allele, marker (gene),
         publication, strain, genotype, annotation (association),
         and descriptive notes.
-        :param limit: Only parse this many lines of each table
+        :param limit: Only parse this many rows in each table
         :return:
 
         """
@@ -492,17 +492,16 @@ SELECT  r._relationship_key as rel_key,
                     break
 
         # now, loop through the hash and add the genotypes as individuals
-        # we add the mgi genotype as a synonym
-        # (we generate our own label later)
+        # we add the mgi genotype as a label
+        # (we generate our own label later and add as a synonym)
         geno = Genotype(graph)
         for gt in geno_hash:
             genotype = geno_hash.get(gt)
             gvc = sorted(genotype.get('vslcs'))
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
-            geno.addGenotype(gt, None)
             model.addComment(gt, self._makeInternalIdentifier(
                 'genotype', genotype.get('key')), subject_category=blv.Genotype.value)
-            model.addSynonym(gt, label.strip(), class_category=blv.Genotype.value)
+            geno.addGenotype(gt, label.strip(), class_category=blv.Genotype.value)
 
         return
 
@@ -897,14 +896,15 @@ SELECT  r._relationship_key as rel_key,
                 if bkgd_label is None:
                     bkgd_label = bkgd_id  # just in case
             else:
-                bkgd_label = 'n.s.'
+                bkgd_label = 'unspecified background'
             if gvc_label is not None:
                 genotype_label = gvc_label + ' [' + bkgd_label + ']'
             else:
                 genotype_label = '[' + bkgd_label + ']'
 
-            model.addIndividualToGraph(gt, genotype_label,
-                                       ind_category=blv.Genotype.value)
+            model.addSynonym(gt, genotype_label,
+                             ind_category=blv.Genotype.value)
+
             self.label_hash[gt] = genotype_label
 
         return

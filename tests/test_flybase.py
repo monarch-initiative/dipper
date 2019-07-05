@@ -12,7 +12,6 @@ logging.getLogger().setLevel(logging.WARN)
 LOG = logging.getLogger(__name__)
 
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'resources/flybase')
-NT_PATH = TEST_PATH + "/nt/"
 DOT_PATH = TEST_PATH + "/dot/"
 RAW_PATH = TEST_PATH + "/input/"
 TTL_PATH = TEST_PATH + "/expected/"
@@ -20,8 +19,10 @@ TTL_PATH = TEST_PATH + "/expected/"
 # Alleles
 ALLELES = [
     'FBal0195705',
-    'FBal0256668'
+    'FBal0263199'
 ]
+
+FOREIGN_ALLELE = 'FBal0256668'
 
 
 class FlyBaseTestCase(unittest.TestCase):
@@ -147,6 +148,21 @@ class FlyBaseTestCase(unittest.TestCase):
                 reference_ttl = TTL_PATH + allele + '/' + 'gene_xref.ttl'
                 self.assertTrue(TestUtils.test_graph_equality(
                     reference_ttl, self.flybase.graph))
+
+    def test_foreign_transgene(self):
+        """
+        Test that foreign transgene is not added to the graph
+        calls _process_allele_phenotype,
+              _process_disease_model,
+              _process_allele_gene,
+        after which the graph should still be empty
+        """
+        self.flybase.rawdir = RAW_PATH + '/' + FOREIGN_ALLELE
+        self.flybase._process_allele_phenotype(limit=None)
+        self.flybase._process_disease_model(limit=None)
+        self.flybase._process_allele_gene(limit=None)
+
+        self.assertEqual(list(self.flybase.graph), [])
 
 
 if __name__ == '__main__':

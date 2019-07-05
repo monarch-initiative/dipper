@@ -1,2 +1,0 @@
-Directory to store ntriple files outputted by test_clinvar.py
-They are useful in debugging failed tests but do not need to be committed

@@ -4,7 +4,7 @@
 'BNODE': 'https://monarchinitiative.org/.well-known/genid/'         # local RDF Skolemized Blank Node
 
 'MonarchData': 'https://data.monarchinitiative.org/ttl/'            # Bleeding edge RDF data
-'MonarchArchive': 'https://archive.monarchinitiative.org/201906/'   # Release RDF data
+'MonarchArchive': 'https://archive.monarchinitiative.org/201907/'   # Release RDF data
 
 'biolink': 'http://w3id.org/biolink/vocab/'                         # Biolink model
 
@@ -113,6 +113,7 @@
 'MPD-assay': 'https://phenome.jax.org/db/qp?rtn=views/catlines&keymeas='  #
 'PMID': 'http://www.ncbi.nlm.nih.gov/pubmed/'                       # PubMed Identifier
 'PMCID': 'http://www.ncbi.nlm.nih.gov/pmc/'                         # PubMed Central Identifier
+'AspGD_REF': 'http://www.aspergillusgenome.org/cgi-bin/reference/reference.pl?dbid=' # Aspergillus DB citation
 
 'AQTLPub': 'https://www.animalgenome.org/cgi-bin/QTLdb/BT/qabstract?PUBMED_ID=' # Animal Quantitative Trait Locus Publication
 'GO_REF': 'http://www.geneontology.org/cgi-bin/references.cgi#GO_REF:'          # GO Reference Collection
@@ -146,7 +147,6 @@
 'OMIA-breed': 'https://monarchinitiative.org/model/OMIA-breed:'         # Local IRI for Online Inheritance In Animal breeds
 'UCSC': 'ftp://hgdownload.cse.ucsc.edu/goldenPath/'                     # University of California, Santa Cruz golden path
 'UCSCBuild': 'http://genome.ucsc.edu/cgi-bin/hgGateway?db='             # University of California, Santa Cruz genome build
-
 # homology
 'HOMOLOGENE': 'http://www.ncbi.nlm.nih.gov/homologene/'                 # Putative Homology Groups
 'KEGG-ko': 'http://www.kegg.jp/dbget-bin/www_bget?ko:'                  # Kyoto Encyclopedia of Genes and Genomes (KEGG Orthology)
@@ -177,6 +177,7 @@
 'SMPDB': 'http://smpdb.ca/view/'                                        # Small Molecule Pathway Database
 
 # genes (and RNAs and transcripts)
+'AspGD': 'http://www.aspergillusgenome.org/cgi-bin/locus.pl?dbid='              # Aspergillus Genome Database
 'BIOGRID': 'http://thebiogrid.org/'                                             # Biological General Repository for Interaction Datasets
 'CCDS': 'http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA='    # Consensus CDS (CoDing Sequence)
 'CGNC': 'http://birdgenenames.org/cgnc/GeneReport?id='                          # Chicken Gene Nomenclature Consortium

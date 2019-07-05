@@ -1,0 +1,41 @@
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NM_000182.4:c.2146+1G>A" .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/oban/association> .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://purl.org/oban/association_has_object> <http://omim.org/entry/609016> .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000001> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://purl.obolibrary.org/obo/GENO_0000841> <http://omim.org/entry/609016> .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://www.w3.org/2000/01/rdf-schema#label> "b0c2b8f4b93e10f01eba_assertion" .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://purl.obolibrary.org/obo/SEPIO_0000018> <http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> .
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> <http://www.w3.org/2000/01/rdf-schema#label> "Counsyl" .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://purl.obolibrary.org/obo/SEPIO_0000007> <https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000002.12:g.26191482C>T" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://purl.obolibrary.org/obo/RO_0002162> <http://purl.obolibrary.org/obo/NCBITaxon_9606> .
+<https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025> <http://www.w3.org/2000/01/rdf-schema#label> "Counsyl Autosomal Recessive and X-Linked Classification Criteria (2018)" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NG_007121.1:g.58139G>A" .
+<https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f> <http://www.w3.org/2000/01/rdf-schema#label> "b0c2b8f4b93e10f01eba_evidence" .
+<https://data.monarchinitiative.org/ttl/RCV000175394.nt> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://purl.obolibrary.org/obo/SEPIO_0000111> <https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f> .
+<https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000067> .
+<https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/ECO_0000000> .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://www.w3.org/2000/01/rdf-schema#label> "ClinVarAssertion_1540968" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://purl.obolibrary.org/obo/BFO_0000050> <https://www.ncbi.nlm.nih.gov/gene/150946> .
+<https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036> <http://www.w3.org/2000/01/rdf-schema#label> "clinical testing" .
+<https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SEPIO_0000037> .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://purl.obolibrary.org/obo/SEPIO_0000015> <https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://purl.org/dc/elements/1.1/identifier> "SCV000790664.1" .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.obolibrary.org/obo/SO_0001483> .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://purl.org/oban/association_has_predicate> <http://purl.obolibrary.org/obo/GENO_0000841> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.w3.org/2002/07/owl#sameAs> <http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs=794727219> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.w3.org/2000/01/rdf-schema#label> "NM_000182.4(HADHA):c.2146+1G>A" .
+<http://www.ncbi.nlm.nih.gov/clinvar/submitters/320494> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/organization> .
+<http://omim.org/entry/609016> <http://www.w3.org/2000/01/rdf-schema#label> "Long-chain 3-hydroxyacyl-CoA dehydrogenase deficiency" .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://www.geneontology.org/formats/oboInOwl#hasdbxref> <http://www.ncbi.nlm.nih.gov/clinvar/RCV000175394> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://purl.obolibrary.org/obo/GENO_0000418> <https://www.ncbi.nlm.nih.gov/gene/3030> .
+<http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym> "NC_000002.11:g.26414351C>T" .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://purl.obolibrary.org/obo/SEPIO_0000041> <https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025> .
+<https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025> <http://purl.obolibrary.org/obo/ERO_0000480> "https://submit.ncbi.nlm.nih.gov/ft/byid/3ys2zqtz/counsyl_autosomal_recessive_and_x-linked_classification_criteria_2018_.pdf" .
+<https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036> <http://www.w3.org/2000/01/rdf-schema#label> "_:bec67224cccaa828d90fSEPIO:0000067" .
+<https://monarchinitiative.org/MONARCH_b0c2b8f4b93e10f01eba> <http://purl.org/oban/association_has_subject> <http://www.ncbi.nlm.nih.gov/clinvar/variation/192079> .
+<https://data.monarchinitiative.org/ttl/RCV000175394.nt> <http://www.w3.org/2002/07/owl#versionInfo> "2019-06-03" .
+<https://monarchinitiative.org/.well-known/genid/bec67224cccaa828d90f> <http://purl.obolibrary.org/obo/SEPIO_0000085> <https://monarchinitiative.org/.well-known/genid/bfcd925176aeb5112036> .
+<https://monarchinitiative.org/.well-known/genid/bc99926ac85cd459a025> <http://www.w3.org/2000/01/rdf-schema#label> "Counsyl Autosomal Recessive and X-Linked Classification Criteria (2018)_assertionmethod" .
+<https://monarchinitiative.org/.well-known/genid/b13b11feeac6001ef4e1> <http://purl.obolibrary.org/obo/SEPIO_0000021> "2017-04-04" .

@@ -207,10 +207,11 @@ class HGNC(OMIMSource):
 
                 if locus_type == 'withdrawn':
                     model.addDeprecatedClass(hgnc_id)
-                elif locus_type == 'region':  # results in '@' appended to gene symbol
+                elif symbol[-1] == '@':  # 10)  region (HOX), RNA cluster, gene (PCDH)
                     continue
+
                 else:
-                    gene_type_id = self.resolve(locus_type, False)  # withdrawn -> None?
+                    gene_type_id = self.resolve(locus_type, mandatory=False)
                     if gene_type_id != locus_type:
                         model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
                     model.makeLeader(hgnc_id)

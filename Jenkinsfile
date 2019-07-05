@@ -127,7 +127,7 @@ pipeline {
                         dir('./build-flybase-rdf') {
                             git(
                                 url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: '41a5e2d'
+                                branch: 'master'
                             )
                             sh '''
                                 virtualenv -p /usr/bin/python3 venv
@@ -305,7 +305,8 @@ pipeline {
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources go --taxon 7955,9606,10090,6239,7227,10116,559292,4896,4932
+                                venv/bin/python dipper-etl.py --sources go --taxon \
+                                    10090,10116,4896,5052,559292,5782,6239,7227,7955,9031,9606,9615,9823,9913
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }
@@ -540,7 +541,7 @@ pipeline {
                                 virtualenv -p /usr/bin/python3 venv
                                 venv/bin/pip install -r requirements.txt
                                 venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources ncbigene --taxon 28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,4932,9685,559292
+                                venv/bin/python dipper-etl.py --sources ncbigene --taxon 28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
                                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
                             '''
                         }

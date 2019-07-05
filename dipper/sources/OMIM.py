@@ -176,8 +176,9 @@ class OMIM(OMIMSource):
         # maybe if exists raw/omim/_<iso-date>.json use that
 
         # in the meanwhile, to bypass (in case of emergencies)
-        # with open('raw/omim/_2019-05-01.json', 'r') as cachefile:
-        #     reponse_batches = json.load(cachefile)
+        # cache_date = '2019-06-27'
+        # with open('raw/omim/_' + cache_date + '.json', 'r') as cachefile:
+        #    reponse_batches = json.load(cachefile)
         if True:  # False:
 
             acc = 0  # for counting
@@ -337,7 +338,7 @@ class OMIM(OMIMSource):
             omimtype = self.globaltt['gene']
             if abbrev is not None:
                 nodelabel = abbrev
-            #  G_omim is subclass_of  gene
+            # omim is subclass_of gene (provide type term)
             model.addClassToGraph(
                 omim_curie, nodelabel, self.globaltt['gene'], newlabel,
                 class_category=blv.Gene.value)
@@ -458,11 +459,11 @@ class OMIM(OMIMSource):
             if ent['entry']['status'] in ['moved', 'removed']:
                 LOG.warning('UNEXPECTED! not expecting obsolete record', omim_curie)
 
-            self._get_phenotypicseries_parents(ent['entry'], graph)
-            self._get_mappedids(ent['entry'], graph)
-            self._get_mapped_gene_ids(ent['entry'], graph)
-            self._get_pubs(ent['entry'], graph)
-            self._get_process_allelic_variants(ent['entry'], graph)
+        self._get_phenotypicseries_parents(ent['entry'], graph)
+        self._get_mappedids(ent['entry'], graph)
+        self._get_mapped_gene_ids(ent['entry'], graph)
+        self._get_pubs(ent['entry'], graph)
+        self._get_process_allelic_variants(ent['entry'], graph)
 
     def _process_morbidmap(self, limit):
         """
@@ -865,34 +866,41 @@ class OMIM(OMIMSource):
         :param entry:
         :return:
         """
+
         model = Model(graph)
         omim_num = str(entry['mimNumber'])
         omim_curie = 'OMIM:' + omim_num
         # the phenotypic series mappings
         serieslist = []
-        if 'phenotypicSeriesExists' in entry and entry['phenotypicSeriesExists']:
-            if 'phenotypeMapList' in entry:
-                phenolist = entry['phenotypeMapList']
-                for phl in phenolist:
-                    if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
-                        pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
-                        for pns in pns_lst.split(','):
-                            serieslist.append(pns)
-            if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
-                phenolist = entry['geneMap']['phenotypeMapList']
-                for phl in phenolist:
-                    if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
-                        pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
-                        for pns in pns_lst.split(','):
-                            serieslist.append(pns)
 
-        # add this entry as a subclass of the series entry
-        for ser in serieslist:
-            series_id = 'OMIMPS:' + ser
-            model.addClassToGraph(series_id, None)
-            model.addSubClass(omim_curie, series_id,
+        if 'phenotypeMapList' in entry:
+            phenolist = entry['phenotypeMapList']
+            for phl in phenolist:
+                if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
+                    pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
+                    for pns in pns_lst.split(','):
+                        serieslist.append(pns)
+        if 'geneMap' in entry and 'phenotypeMapList' in entry['geneMap']:
+            phenolist = entry['geneMap']['phenotypeMapList']
+            for phl in phenolist:
+                if 'phenotypicSeriesNumber' in phl['phenotypeMap']:
+                    pns_lst = phl['phenotypeMap']['phenotypicSeriesNumber']
+                    for pns in pns_lst.split(','):
+                        serieslist.append(pns)
+
+        # add this omim entry as a subclass of the series entry
+        if serieslist:
+            LOG.info(
+                '%s is awarded %i optional PS superclasses!',
+                omim_curie, len(serieslist))
+        for phser in set(serieslist):
+            series_curie = 'OMIMPS:' + phser
+            model.addClassToGraph(series_curie, None)
+            model.addSubClass(omim_curie, series_curie,
                               subject_category=blv.Disease.value,
                               object_category=blv.Disease.value)
+            model.addSubClass(omim_curie, series_curie)
+
 
     @staticmethod
     def _get_mappedids(entry, graph):
@@ -944,7 +952,6 @@ class OMIM(OMIMSource):
                         self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                     for ncbi in gene_ids:
                         model.addEquivalentClass(omim_curie, 'NCBIGene:' + str(ncbi))
-
         return gene_ids
 
     def _get_alt_labels(self, titles):

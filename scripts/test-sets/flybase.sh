@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-
+#
 # Generates test set files needed for dipper tests in tests/resources/flybase/input
-# Requires dipper for fetching,
+# If no raw dir is supplied, requires dipper on venv for fetching,
+# source venv/bin/activate
 # cd /path/to/local/dipper
 # python install setup.py
 #
 # Usage:
-# flybase.sh /path/to/venv
-# mv ./raw/flybase/FBal* ../../tests/resources/flybase/input/
+# flybase.sh /path/to/raw/ /path/to/venv
+# mv ./FBal* /path/to/tests/resources/flybase/input/
 #
 # Fetches all flybase files and creates a raw/flybase directory relative
 # to where the script is run, then greps out the lines we need for testing
@@ -15,44 +16,45 @@
 #
 # Alleles:
 # http://flybase.org/reports/FBal0195705, standard allele, fly gene
+# http://flybase.org/reports/FBal0263199, autism model
 # http://flybase.org/reports/FBal0256668:
-#      humana allele, human transgene, 1 phenotype, 1 disease model
+#      human allele, human transgene, 1 phenotype, 1 disease model
 #
-# Genes:
-# FBgn0033159
-# FBgn0250787
-
-# Potential alleles of interest:
-# http://flybase.org/reports/FBal0190789,FBgn0084473 transgene, only phenotype manifests in
+set -e
 
 test_set_1=(
     'FBal0195705'
     'FBgn0033159'
 )
 
+# Transgene, should be filtered out of ingest
 test_set_2=(
     'FBal0256668'
     'FBgn0250787'
 )
 
+test_set_3=(
+    'FBal0263199'
+    'FBgn0028734'
+)
+
 counter=1
-max_test_sets=2
+max_test_sets=3
 
 PTH=`pwd`
-# Default looks back two directories for a venv
-VENV=${1:-"${PTH}/../../venv"}
+RAWDIR=${1:-"${PTH}/raw/flybase"}
+# Default looks back two directories
+VENV=${2:-"${PTH}/../../venv"}
 
-source ${VENV}/bin/activate
-
-dipper-etl.py --sources flybase --fetch_only
-
-cd raw/flybase
+if [[ -z "$1" ]]; then
+    source ${VENV}/bin/activate
+    dipper-etl.py --sources flybase --fetch_only
+fi
 
 # Strip all fields from fbrf_pmid_pmcid_doi_fb except 1,2
-zcat fbrf_pmid_pmcid_doi_fb.tsv.gz | head -4 > fbrf_pmid_pmcid_doi_fb.tsv
-zcat fbrf_pmid_pmcid_doi_fb.tsv.gz | tail -n+4 | cut -f1,2 >> fbrf_pmid_pmcid_doi_fb.tsv
-rm fbrf_pmid_pmcid_doi_fb.tsv.gz
-gzip fbrf_pmid_pmcid_doi_fb.tsv
+zcat $RAWDIR/fbrf_pmid_pmcid_doi_fb.tsv.gz | head -4 > fbrf_pmid_pmcid_doi_fb.tmp
+zcat $RAWDIR/fbrf_pmid_pmcid_doi_fb.tsv.gz | tail -n+4 | cut -f1,2 >> fbrf_pmid_pmcid_doi_fb.tmp
+gzip fbrf_pmid_pmcid_doi_fb.tmp
 
 while [[ ${counter} -le ${max_test_sets} ]]
 do
@@ -61,28 +63,35 @@ do
     allele_id=${test_set_var[0]}
     gene_id=${test_set_var[1]}
 
-    mkdir ${allele_id} && cd ${allele_id}
-    cp ../fbrf_pmid_pmcid_doi_fb.tsv.gz ./
-    cp ../species.ab.gz ./
+    outdir=$allele_id
+
+    mkdir ${outdir}
+    cp fbrf_pmid_pmcid_doi_fb.tmp.gz ${outdir}/fbrf_pmid_pmcid_doi_fb.tsv.gz
+    cp $RAWDIR/species.ab.gz ${outdir}
 
     # Allele to gene file
-    zcat ../fbal_to_fbgn_fb.tsv.gz | head -2 > fbal_to_fbgn_fb.tsv
-    zgrep ${allele_id} ../fbal_to_fbgn_fb.tsv.gz >> fbal_to_fbgn_fb.tsv
-    gzip fbal_to_fbgn_fb.tsv
+    outfile=${outdir}/fbal_to_fbgn_fb.tsv
+    zcat $RAWDIR/fbal_to_fbgn_fb.tsv.gz | head -2 > ${outfile}
+    zgrep ${allele_id} $RAWDIR/fbal_to_fbgn_fb.tsv.gz >> ${outfile}
+    gzip ${outfile}
 
     # Gene xref file
-    head -1 ../gene_xref.tsv > gene_xref.tsv
-    grep ${gene_id} ../gene_xref.tsv >> gene_xref.tsv
+    outfile=${outdir}/gene_xref.tsv
+    head -1 $RAWDIR/gene_xref.tsv > ${outfile}
+    grep ${gene_id} $RAWDIR/gene_xref.tsv >> ${outfile}
 
     # Allele phenotype file
-    head -1 ../allele_phenotype.tsv > allele_phenotype.tsv
-    grep "^${allele_id}" ../allele_phenotype.tsv >> allele_phenotype.tsv
+    outfile=${outdir}/allele_phenotype.tsv
+    head -1 $RAWDIR/allele_phenotype.tsv > ${outfile}
+    grep "^${allele_id}" $RAWDIR/allele_phenotype.tsv >> ${outfile}
 
     # Model of disease
-    zcat ../disease_model_annotations.tsv.gz | head -5 > disease_model_annotations.tsv
-    zgrep -P "\t${allele_id}\t" ../disease_model_annotations.tsv.gz >> disease_model_annotations.tsv
-    gzip disease_model_annotations.tsv
+    outfile=${outdir}/disease_model_annotations.tsv
+    zcat $RAWDIR/disease_model_annotations.tsv.gz | head -5 > ${outfile}
+    zgrep -P "\t${allele_id}\t" $RAWDIR/disease_model_annotations.tsv.gz >> ${outfile}
+    gzip ${outfile}
 
-    cd ..
     counter=$[$counter+1]
 done
+
+rm fbrf_pmid_pmcid_doi_fb.tmp.gz
