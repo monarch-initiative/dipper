@@ -87,7 +87,8 @@ class Assoc:
             return
 
         self.graph.addTriple(self.sub, self.rel, self.obj,
-                             subject_category=subject_category, object_category=object_category)
+                             subject_category=subject_category,
+                             object_category=object_category)
 
         if self.assoc_id is None:
             self.set_association_id()

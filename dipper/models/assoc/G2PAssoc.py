@@ -63,7 +63,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, subject_category=None, object_category=None):
         """
         Overrides  Association by including bnode support
 
@@ -74,10 +74,16 @@ class G2PAssoc(Assoc):
 
         currently hardcoded to map the annotation to the monarch namespace
         :param g:
+        :param subject_category: a biolink category CURIE for self.sub (passed to
+        Assoc.add_association_to_graph)
+        :param object_category: a biolink category CURIE for self.obj (passed to
+        Assoc.add_association_to_graph)
         :return:
         """
 
-        Assoc.add_association_to_graph(self)
+        Assoc.add_association_to_graph(self,
+                                       subject_category=subject_category,
+                                       object_category=object_category)
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:

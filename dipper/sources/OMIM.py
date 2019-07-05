@@ -340,7 +340,7 @@ class OMIM(OMIMSource):
             #  G_omim is subclass_of  gene
             model.addClassToGraph(
                 omim_curie, nodelabel, self.globaltt['gene'], newlabel,
-                subject_category=blv.Gene.value)
+                class_category=blv.Gene.value)
         else:
             # omim is NOT subclass_of D|P|or ?...
             model.addClassToGraph(omim_curie, newlabel)
@@ -652,8 +652,8 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph(s_category=blv.Gene.value,
-                                       o_category=blv.Disease.value)
+        assoc.add_association_to_graph(subject_category=blv.Gene.value,
+                                       object_category=blv.Disease.value)
 
     @staticmethod
     def _get_description(entry):
