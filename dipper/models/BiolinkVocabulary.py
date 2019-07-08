@@ -17,3 +17,5 @@ class BioLinkVocabulary(Enum):
     BiologicalSex = "biolink:BiologicalSex"
     OrganismTaxon = "biolink:OrganismTaxon"
     MolecularEntity = "biolink:MolecularEntity"
+    Case = "biolink:Case"
+    OntologyClass = "biolink:OntologyClass"

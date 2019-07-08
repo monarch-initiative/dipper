@@ -135,12 +135,14 @@ class Model():
 
     def addPerson(self, person_id, person_label=None):
         self.graph.addTriple(
-            person_id, self.globaltt['type'], self.globaltt['person'])
+            person_id, self.globaltt['type'], self.globaltt['person'],
+            subject_category=blv.Case.value)
         if person_label is not None:
             self.graph.addTriple(
                 person_id, self.globaltt['label'], person_label, object_is_literal=True)
 
-    def addDeprecatedClass(self, old_id, new_ids=None):
+    def addDeprecatedClass(self, old_id, new_ids=None,
+                           old_id_category=None, new_ids_category=None):
         """
         Will mark the oldid as a deprecated class.
         if one newid is supplied, it will mark it as replaced by.
@@ -148,15 +150,18 @@ class Model():
         :param old_id: str - the class id to deprecate
         :param new_ids: list - the class list that is
                        the replacement(s) of the old class.  Not required.
+        :param old_id_category - a biolink category CURIE for old id
+        :param new_ids_category - a biolink category CURIE for new ids
         :return: None
 
         """
         self.graph.addTriple(
-            old_id, self.globaltt['type'], self.globaltt['class'])
+            old_id, self.globaltt['type'], self.globaltt['class'],
+            subject_category=old_id_category)
 
-        self._addReplacementIds(old_id, new_ids)
+        self._addReplacementIds(old_id, new_ids, new_ids_category=new_ids_category)
 
-    def _addReplacementIds(self, old_id, new_ids):
+    def _addReplacementIds(self, old_id, new_ids, new_ids_category=None):
 
         self.graph.addTriple(
             old_id, self.globaltt['deprecated'], True, object_is_literal=True,
@@ -167,12 +172,15 @@ class Model():
                 self.graph.addTriple(old_id, self.globaltt['term replaced by'], new_ids)
             elif len(new_ids) == 1:
                 self.graph.addTriple(
-                    old_id, self.globaltt['term replaced by'], new_ids[0])
+                    old_id, self.globaltt['term replaced by'], new_ids[0],
+                    object_category=new_ids_category)
             elif new_ids:
                 for new_id in new_ids:
-                    self.graph.addTriple(old_id, self.globaltt['consider'], new_id)
+                    self.graph.addTriple(old_id, self.globaltt['consider'], new_id,
+                                         object_category=new_ids_category)
 
-    def addDeprecatedIndividual(self, old_id, new_ids=None):
+    def addDeprecatedIndividual(self, old_id, new_ids=None,
+                                old_id_category=None, new_ids_category=None):
         """
         Will mark the oldid as a deprecated individual.
         if one newid is supplied, it will mark it as replaced by.
@@ -181,13 +189,16 @@ class Model():
         :param oldid: the individual id to deprecate
         :param newids: the individual idlist that is the replacement(s) of
                        the old individual.  Not required.
+        :param old_id_category - a biolink category CURIE for old id
+        :param new_ids_category - a biolink category CURIE for new ids
         :return:
 
         """
         self.graph.addTriple(
-            old_id, self.globaltt['type'], self.globaltt['named_individual'])
+            old_id, self.globaltt['type'], self.globaltt['named_individual'],
+            subject_category=old_id_category)
 
-        self._addReplacementIds(old_id, new_ids)
+        self._addReplacementIds(old_id, new_ids, new_ids_category=new_ids_category)
 
     def addSubClass(self, child_id, parent_id, subject_category=None,
                     object_category=None):
@@ -246,10 +257,12 @@ class Model():
 
     def addOntologyDeclaration(self, ontology_id):
         self.graph.addTriple(
-            ontology_id, self.globaltt['type'], self.globaltt['ontology'])
+            ontology_id, self.globaltt['type'], self.globaltt['ontology'],
+            subject_category=blv.OntologyClass.value)
 
     def addOWLVersionIRI(self, ontology_id, version_iri):
-        self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri)
+        self.graph.addTriple(ontology_id, self.globaltt['version_iri'], version_iri,
+                             subject_category=blv.OntologyClass.value)
 
     def addOWLVersionInfo(self, ontology_id, version_info):
         self.graph.addTriple(
