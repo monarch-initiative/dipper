@@ -91,6 +91,7 @@ class UDPTestCase(unittest.TestCase):
         triples = """
         :patient_1 a foaf:Person ;
             rdfs:label "patient_1" ;
+            biolink:category biolink:Case ;
             RO:0002200 DOID:4,
               HP:000001 .
         """
