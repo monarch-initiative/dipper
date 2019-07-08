@@ -501,7 +501,7 @@ SELECT  r._relationship_key as rel_key,
             label = '; '.join(gvc) + ' [' + genotype.get('subtype') + ']'
             model.addComment(gt, self._makeInternalIdentifier(
                 'genotype', genotype.get('key')), subject_category=blv.Genotype.value)
-            geno.addGenotype(gt, label.strip(), class_category=blv.Genotype.value)
+            geno.addGenotype(gt, label.strip())
 
         return
 
@@ -903,7 +903,7 @@ SELECT  r._relationship_key as rel_key,
                 genotype_label = '[' + bkgd_label + ']'
 
             model.addSynonym(gt, genotype_label,
-                             ind_category=blv.Genotype.value)
+                             class_category=blv.Genotype.value)
 
             self.label_hash[gt] = genotype_label
 
