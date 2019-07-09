@@ -5,6 +5,7 @@ import logging
 from dipper.sources.Source import Source
 from dipper.models.assoc.OrthologyAssoc import OrthologyAssoc
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nicole'
 
@@ -269,16 +270,21 @@ class Panther(Source):
 
                     # add genes to graph;
                     # assume labels will be taken care of elsewhere
-                    model.addClassToGraph(gene_a, None)
-                    model.addClassToGraph(gene_b, None)
+                    model.addClassToGraph(gene_a, None, class_category=blv.Gene.value)
+                    model.addClassToGraph(gene_b, None, class_category=blv.Gene.value)
 
                     # might as well add the taxon info for completeness
                     graph.addTriple(
-                        gene_a, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_a)
+                        gene_a, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_a,
+                        subject_category=blv.Gene.value,
+                        object_category=blv.OrganismTaxon.value)
                     graph.addTriple(
-                        gene_b, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_b)
+                        gene_b, self.globaltt['in taxon'], 'NCBITaxon:' + taxon_b,
+                        subject_category=blv.Gene.value,
+                        object_category=blv.OrganismTaxon.value)
 
-                    assoc.add_association_to_graph()
+                    assoc.add_association_to_graph(subject_category=blv.Gene.value,
+                                                   object_category=blv.Gene.value)
 
                     # note this is incomplete...
                     # it won't construct the full family hierarchy,

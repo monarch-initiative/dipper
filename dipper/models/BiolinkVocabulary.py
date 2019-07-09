@@ -19,3 +19,4 @@ class BioLinkVocabulary(Enum):
     MolecularEntity = "biolink:MolecularEntity"
     Case = "biolink:Case"
     OntologyClass = "biolink:OntologyClass"
+    GeneFamily = "biolink:GeneFamily"

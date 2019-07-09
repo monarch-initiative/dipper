@@ -1,6 +1,6 @@
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Family import Family
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -43,10 +43,15 @@ class OrthologyAssoc(Assoc):
 
         # make the assumption that the genes
         # have already been added as classes previously
-        self.model.addIndividualToGraph(family_id, None, gene_family)
+        self.model.addIndividualToGraph(family_id, None, gene_family,
+                                        ind_category=blv.GeneFamily.value)
 
         # add each gene to the family
-        family.addMember(family_id, self.sub)
-        family.addMember(family_id, self.obj)
+        family.addMember(family_id, self.sub,
+                         group_category=blv.GeneFamily.value,
+                         member_category=blv.Gene.value)
+        family.addMember(family_id, self.obj,
+                         group_category=blv.GeneFamily.value,
+                         member_category=blv.Gene.value)
 
         return
