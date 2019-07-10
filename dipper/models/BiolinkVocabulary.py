@@ -41,3 +41,4 @@ class BioLinkVocabulary(Enum):
     LifeStage = "biolink:LifeStage"
     Environment = "biolink:Environment"
     EvidenceType = "biolink:EvidenceType"
+    AnatomicalEntity = "biolink:AnatomicalEntity"
