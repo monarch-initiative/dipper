@@ -42,3 +42,6 @@ class BioLinkVocabulary(Enum):
     Environment = "biolink:Environment"
     EvidenceType = "biolink:EvidenceType"
     AnatomicalEntity = "biolink:AnatomicalEntity"
+    Provider = "biolink:Provider"
+    Procedure = "biolink:Procedure"
+    Association = "biolink:Association"
