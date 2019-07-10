@@ -190,6 +190,13 @@ class TestGwasSNPModel(unittest.TestCase):
 
     PMID:25918132 a OBO:IAO_0000013 ;
         biolink:category biolink:Publication .
+
+    ECO:0000213 biolink:category biolink:EvidenceType .
+    EFO:0003949 biolink:category biolink:PhenotypicFeature .
+    EFO:0006995 biolink:category biolink:PhenotypicFeature .
+    dbSNP:rs1491921 biolink:category biolink:Genotype .
+    PMID:25918132 biolink:category biolink:EvidenceType .
+        
         """.format(description)
 
         # dbg
@@ -335,6 +342,14 @@ dbSNP:rs7020413 a SO:0000694,
     rdfs:label "GRCh38chr9-37002118";
     faldo:position 37002118 ;
     faldo:reference CHR:GRCh38chr9 .
+
+HGNC:8619 biolink:category biolink:Gene .
+dbSNP:rs1329573 biolink:category biolink:SequenceVariant .
+dbSNP:rs3758171 biolink:category biolink:SequenceVariant .
+dbSNP:rs3824344 biolink:category biolink:SequenceVariant .
+dbSNP:rs7020413 biolink:category biolink:SequenceVariant .
+:haplotype_bb627b1f64039b0f751a biolink:category biolink:SequenceVariant .
+
         """
 
         # dbg

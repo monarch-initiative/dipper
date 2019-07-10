@@ -44,6 +44,8 @@ class ReactomeTestCase(unittest.TestCase):
             rdfs:label "Scavenging by Class A Receptors" ;
             rdfs:subClassOf GO:0009987,
                 PW:0000001 .
+                
+        ECO:0000501 biolink:category biolink:EvidenceType .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             triples, reactome.graph))

@@ -54,6 +54,11 @@ ORPHA:268061 a owl:Class .
 
 ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
+    
+ECO:0000322 biolink:category biolink:EvidenceType .
+HGNC:30497 biolink:category biolink:Genotype .
+ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))
@@ -80,6 +85,11 @@ ORPHA:268061 RO:0004012 ORPHA:938475 ;
 
 ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
+    
+ECO:0000322 biolink:category biolink:EvidenceType .
+ORPHA:268061 biolink:category biolink:Genotype .
+ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+    
         """
         self.assertTrue(
             self.test_util.test_graph_equality(expected_triples, self.orphanet.graph))
@@ -106,6 +116,11 @@ ORPHA:268061 RO:0004015 ORPHA:938475 ;
 
 ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
+    
+ECO:0000322 biolink:category biolink:EvidenceType .
+ORPHA:268061 biolink:category biolink:Genotype .
+ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))

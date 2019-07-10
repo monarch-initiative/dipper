@@ -60,6 +60,9 @@ class RGDTestCase(unittest.TestCase):
         RGDRef:1581841 a IAO:0000311 ;
         biolink:category biolink:Publication ;
         owl:sameAs PMID:12799311 .
+        
+    ECO:0005611 biolink:category biolink:EvidenceType .
+    RGDRef:1581841 biolink:category biolink:EvidenceType .
         """
         # dbg
         logger.debug("Reference graph: %s",

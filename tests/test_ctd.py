@@ -58,6 +58,13 @@ class CTDTestCase(unittest.TestCase):
                 biolink:category biolink:Publication .
 
             OMIM:188890 a owl:Class .
+          
+            ECO:0000033 biolink:category biolink:EvidenceType .
+            PMID:12345 biolink:category biolink:EvidenceType .
+            PMID:56789 biolink:category biolink:EvidenceType .
+            OMIM:188890 biolink:category biolink:PhenotypicFeature .
+            MESH:D009538 biolink:category biolink:Genotype . 
+
         """
         # test exact contents of graph
         self.assertTrue(self.test_util.test_graph_equality(
