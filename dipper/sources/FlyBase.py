@@ -711,7 +711,8 @@ class FlyBase(PostgreSQLSource):
                     # amelorates, exacerbates, and DOES NOT *
                     continue
 
-                assoc = G2PAssoc(graph, self.name, allele_curie, doid_id, relation)
+                assoc = G2PAssoc(graph, self.name, allele_curie, doid_id, relation,
+                                 phenotype_category=blv.Disease.value)
                 if flybase_ref != '':
                     ref_curie = None
                     try:
