@@ -37,7 +37,7 @@ class Model():
         self.graph.addTriple(
             subject_id, self.globaltt['type'], subject_type,
             subject_category=subject_category,
-            object_category=subject_type_category_category)
+            object_category=subject_type_category)
 
     def addLabel(self, subject_id, label, **args):
         self.graph.addTriple(

@@ -321,9 +321,7 @@ class FlyBase(PostgreSQLSource):
                     phenotype_curie,
                     term_ids[1:]
                 ))
-                assoc.add_association_to_graph(
-                    subject_category=blv.SequenceVariant.value,
-                    object_category=blv.PhenotypicFeature.value)
+                assoc.add_association_to_graph()
                 assoc_id = assoc.get_association_id()
 
                 # add the rest as qualifiers
