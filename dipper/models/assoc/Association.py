@@ -3,6 +3,7 @@ import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
 from dipper.utils.GraphUtils import GraphUtils
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -18,7 +19,8 @@ class Assoc:
 
     """
 
-    def __init__(self, graph, definedby, sub=None, obj=None, pred=None):
+    def __init__(self, graph, definedby, sub=None, obj=None, pred=None,
+                 subject_category=None, object_category=None):
         if isinstance(graph, Graph):
             self.graph = graph
         else:
@@ -32,6 +34,8 @@ class Assoc:
         self.sub = sub
         self.obj = obj
         self.rel = pred
+        self.subject_category = subject_category
+        self.object_category = object_category
         self.assoc_id = None
 
         self.description = None
@@ -86,6 +90,11 @@ class Assoc:
         if not self._is_valid():
             return
 
+        if subject_category is None:
+            subject_category = self.subject_category
+        if object_category is None:
+            object_category = self.object_category
+
         self.graph.addTriple(self.sub, self.rel, self.obj,
                              subject_category=subject_category,
                              object_category=object_category)
@@ -109,17 +118,20 @@ class Assoc:
 
         if self.evidence is not None and len(self.evidence) > 0:
             for evi in self.evidence:
-                self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi)
+                self.graph.addTriple(self.assoc_id, self.globaltt['has evidence'], evi,
+                                     object_category=blv.EvidenceType.value)
 
         if self.source is not None and len(self.source) > 0:
             for src in self.source:
                 # TODO assume that the source is a publication? use Reference class
-                self.graph.addTriple(self.assoc_id, self.globaltt['source'], src)
+                self.graph.addTriple(self.assoc_id, self.globaltt['source'], src,
+                                     object_category=blv.EvidenceType.value)
 
         if self.provenance is not None and len(self.provenance) > 0:
             for prov in self.provenance:
                 self.graph.addTriple(
-                    self.assoc_id, self.globaltt['has_provenance'], prov)
+                    self.assoc_id, self.globaltt['has_provenance'], prov,
+                    object_category=blv.EvidenceType.value)
 
         if self.date is not None and len(self.date) > 0:
             for dat in self.date:

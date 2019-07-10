@@ -25,20 +25,19 @@ class Model():
 
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=False,
-            literal_type=None, **args
-    ):
+            literal_type=None,
+            subject_category=None, object_category=None):
         self.graph.addTriple(
-            subject_id, predicate_id, obj, object_is_literal, literal_type, **args)
+            subject_id, predicate_id, obj, object_is_literal, literal_type,
+            subject_category=subject_category, object_category=object_category)
 
     def addType(self, subject_id, subject_type,
                 subject_category=None,
-                object_category=None,
-                **args):
+                subject_type_category=None):
         self.graph.addTriple(
             subject_id, self.globaltt['type'], subject_type,
             subject_category=subject_category,
-            object_category=object_category,
-            **args)
+            object_category=subject_type_category_category)
 
     def addLabel(self, subject_id, label, **args):
         self.graph.addTriple(

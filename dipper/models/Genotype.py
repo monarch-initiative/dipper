@@ -75,7 +75,8 @@ class Genotype():
         if allele_type is None:
             allele_type = self.globaltt['allele']  # TODO is this a good idea?
         self.model.addIndividualToGraph(
-            allele_id, allele_label, allele_type, allele_description)
+            allele_id, allele_label, allele_type, allele_description,
+            ind_category=blv.SequenceVariant.value)
 
         return
 
@@ -85,23 +86,37 @@ class Genotype():
         ''' genes are classes '''
         if gene_type is None:
             gene_type = self.globaltt['gene']
-        self.model.addClassToGraph(gene_id, gene_label, gene_type, gene_description)
+        self.model.addClassToGraph(gene_id, gene_label, gene_type, gene_description,
+                                   class_category=blv.Gene.value)
 
         return
 
     def addConstruct(
             self, construct_id, construct_label, construct_type=None,
-            construct_description=None
-    ):
+            construct_description=None,
+            construct_category=None, construct_type_category=None):
+        """
+        :param construct_id:
+        :param construct_label:
+        :param construct_type:
+        :param construct_description:
+        :param construct_category: a biolink category CURIE for construct_id
+        :param construct_type_category: a biolink category CURIE for construct_type
+        :return:
+
+        """
         # TODO add base type for construct
         # if (constrcut_type is None):
         #    constrcut_type=self.construct_base_type
         self.model.addIndividualToGraph(construct_id, construct_label,
-                                        construct_type, construct_description)
+                                        construct_type, construct_description,
+                                        ind_category=construct_category,
+                                        ind_type_category=construct_type_category)
 
         return
 
-    def addDerivesFrom(self, child_id, parent_id):
+    def addDerivesFrom(self, child_id, parent_id,
+                       child_category=None, parent_category=None):
         """
         We add a derives_from relationship between the child and parent id.
         Examples of uses include between:
@@ -165,11 +180,14 @@ class Genotype():
         """
         if rel_id is None:
             rel_id = self.globaltt['has_affected_feature']
-        self.graph.addTriple(allele_id, rel_id, gene_id)
+        self.graph.addTriple(allele_id, rel_id, gene_id,
+                             subject_category=blv.SequenceVariant.value,
+                             object_category=blv.Gene.value)
         return
 
     def addGeneProduct(
-            self, sequence_id, product_id, product_label=None, product_type=None):
+            self, sequence_id, product_id, product_label=None, product_type=None,
+            sequence_category=blv.Gene.value, product_category=None):
         """
         Add gene/variant/allele has_gene_product relationship
         Can be used to either describe a gene to transcript relationship
@@ -178,14 +196,18 @@ class Genotype():
         :param product_id:
         :param product_label:
         :param product_type:
+        :param sequence_category: a biolink category CURIE for sequence_id [blv.Gene.value]
+        :param product_category: a biolink category CURIE for product_id
         :return:
 
         """
         if product_label is not None and product_type is not None:
             self.model.addIndividualToGraph(
-                product_id, product_label, product_type)
+                product_id, product_label, product_type,
+                ind_category=product_category)
         self.graph.addTriple(
-            sequence_id, self.globaltt['has gene product'], product_id)
+            sequence_id, self.globaltt['has gene product'], product_id,
+            subject_category=sequence_category, object_category=product_category)
 
         return
 
@@ -206,7 +228,9 @@ class Genotype():
             polypeptide_id, polypeptide_label, polypeptide_type)
         if transcript_id is not None:
             self.graph.addTriple(
-                transcript_id, self.globaltt['translates_to'], polypeptide_id)
+                transcript_id, self.globaltt['translates_to'], polypeptide_id,
+                subject_category=blv.Transcript.value,
+                object_category=blv.Protein.value)
 
         return
 
@@ -307,7 +331,7 @@ class Genotype():
             sa_type = self.globaltt['sequence_alteration']
 
         self.model.addIndividualToGraph(sa_id, sa_label, sa_type, sa_description,
-                                        blv.SequenceVariant.value)
+                                        ind_category=blv.SequenceVariant.value)
 
         return
 
@@ -324,7 +348,8 @@ class Genotype():
             background_type = self.globaltt['genomic_background']
         self.model.addIndividualToGraph(
             background_id, background_label, background_type,
-            background_description)
+            background_description,
+            ind_category=blv.PopulationOfIndividualOrganisms.value)
 
         return
 
@@ -364,10 +389,20 @@ class Genotype():
         return
 
     def addGeneTargetingReagentToGenotype(self, reagent_id, genotype_id):
-        # for example, add a morphant reagent thingy to the genotype,
-        # assuming it's a extrinsic_genotype
+
+        """
+        Add genotype has_variant_part reagent_id. For example, add a morphant
+        reagent thingy to the genotype, assuming it's a extrinsic_genotype
+        Also a triple to assign biolink categories to genotype and reagent.
+        :param reagent_id
+        :param genotype_id
+        :return:
+
+        """
         self.graph.addTriple(
-            genotype_id, self.globaltt['has_variant_part'], reagent_id)
+            genotype_id, self.globaltt['has_variant_part'], reagent_id,
+            subject_category=blv.Genotype.value,
+            object_category=blv.ChemicalSubstance.value)
 
         return
 
@@ -389,7 +424,9 @@ class Genotype():
         self.model.addIndividualToGraph(
             reagent_id, reagent_label, reagent_type, description)
 
-        self.graph.addTriple(reagent_id, self.globaltt['targets_gene'], gene_id)
+        self.graph.addTriple(reagent_id, self.globaltt['targets_gene'], gene_id,
+                             subject_category=blv.ChemicalSubstance.value,
+                             object_category=blv.Gene.value)
 
         return
 
@@ -429,10 +466,13 @@ class Genotype():
         if gene_id is not None:
             self.graph.addTriple(
                 targeted_gene_id, self.globaltt['is_expression_variant_of'],
-                gene_id)
+                gene_id, subject_category=blv.Gene.value,
+                object_category=blv.Gene.value)
 
         self.graph.addTriple(
-            targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id)
+            targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id,
+            subject_category=blv.Gene.value,
+            object_category=blv.ChemicalSubstance.value)
 
         return
 
@@ -441,18 +481,23 @@ class Genotype():
         if tgs_type is None:
             tgs_type = self.globaltt['targeted_gene_subregion']
 
-        self.model.addIndividualToGraph(tgs_id, tgs_label, tgs_type, tgs_description)
+        self.model.addIndividualToGraph(tgs_id, tgs_label, tgs_type, tgs_description,
+                                        ind_category=
+                                        blv.GenomicSequenceLocalization.value)
 
     def addMemberOfPopulation(self, member_id, population_id):
         self.graph.addTriple(
-            population_id, self.globaltt['has_member_with_allelotype'], member_id)
+            population_id, self.globaltt['has_member_with_allelotype'], member_id,
+            subject_category=blv.PopulationOfIndividualOrganisms.value,
+            object_category=blv.IndividualOrganism.value)
         return
 
     def addTargetedGeneComplement(
             self, tgc_id, tgc_label, tgc_type=None, tgc_description=None):
         if tgc_type is None:
             tgc_type = self.globaltt['targeted_gene_complement']
-        self.model.addIndividualToGraph(tgc_id, tgc_label, tgc_type, tgc_description)
+        self.model.addIndividualToGraph(tgc_id, tgc_label, tgc_type, tgc_description,
+                                        ind_id=blv.GeneGrouping.value)
 
         return
 
@@ -474,18 +519,22 @@ class Genotype():
 
         genome_label = taxon_label + ' genome'
         genome_id = self.makeGenomeID(taxon_id)
-        self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'])
+        self.model.addClassToGraph(genome_id, genome_label, self.globaltt['genome'],
+                                   class_category=blv.Genome.value)
 
         return
 
     def addReferenceGenome(self, build_id, build_label, taxon_id):
         genome_id = self.makeGenomeID(taxon_id)
         self.model.addIndividualToGraph(
-            build_id, build_label, self.globaltt['reference_genome'])
-        self.model.addType(build_id, genome_id)
+            build_id, build_label, self.globaltt['reference_genome'],
+            blv.GenomeBuild.value)
+        self.model.addType(build_id, genome_id,
+                           subject_type=blv.GenomeBuild.value,
+                           subject_type_category=blv.Genome.value)
         if re.match(r'[0-9]+', taxon_id):
             taxon_id = 'NCBITaxon:' + taxon_id
-        self.addTaxon(taxon_id, build_id)
+        self.addTaxon(taxon_id, build_id, genopart_category=blv.GenomeBuild.value)
 
         return
 
@@ -514,8 +563,10 @@ class Genotype():
         else:
             chr_label = makeChromLabel(chrom)
         genome_id = self.makeGenomeID(tax_id)
-        self.model.addClassToGraph(chr_id, chr_label, self.globaltt['chromosome'])
-        self.addTaxon(tax_id, genome_id)  # add the taxon to the genome
+        self.model.addClassToGraph(chr_id, chr_label, self.globaltt['chromosome'],
+                                   class_category=blv.GenomicEntity.value)
+        self.addTaxon(tax_id, genome_id,
+                      genopart_category=blv.Genome.value)  # add the taxon to the genome
 
         if build_id is not None:
             # the build-specific chromosome
@@ -525,12 +576,18 @@ class Genotype():
             chrinbuild_label = makeChromLabel(chrom, build_label)
             # add the build-specific chromosome as an instance of the chr class
 
-            self.model.addIndividualToGraph(chrinbuild_id, chrinbuild_label, chr_id)
+            self.model.addIndividualToGraph(chrinbuild_id, chrinbuild_label, chr_id,
+                                            ind_category=blv.GenomicEntity.value,
+                                            ind_type_category=blv.GenomicEntity.value)
 
             # add the build-specific chromosome
             # as a member of the build (both ways)
-            family.addMember(build_id, chrinbuild_id)
-            family.addMemberOf(chrinbuild_id, build_id)
+            family.addMember(build_id, chrinbuild_id,
+                             group_category=blv.GenomeBuild.value,
+                             member_category=blv.GenomicEntity.value)
+            family.addMemberOf(chrinbuild_id, build_id,
+                               member_category=blv.GenomicEntity.value,
+                               group_category=blv.GenomeBuild.value)
 
         return
 
@@ -540,7 +597,8 @@ class Genotype():
         chrom_class_id = makeChromID(chrom_num, taxon, 'CHR')
         chrom_class_label = makeChromLabel(chrom_num, taxon_label)
         self.model.addClassToGraph(
-            chrom_class_id, chrom_class_label, self.globaltt['chromosome'])
+            chrom_class_id, chrom_class_label, self.globaltt['chromosome'],
+            class_category=blv.GenomicEntity.value)
 
         return
 
@@ -562,14 +620,19 @@ class Genotype():
         chr_label = makeChromLabel(str(chr_num), reference_label)
 
         self.model.addIndividualToGraph(chr_id, chr_label, self.globaltt['chromosome'],
-                                        ind_category=blv.MolecularEntity.value)
+                                        ind_category=blv.GenomicEntity.value)
         if chr_type is not None:
-            self.model.addType(chr_id, chr_type)
+            self.model.addType(chr_id, chr_type,
+                               subject_category=blv.GenomicEntity.value)
 
         # add the build-specific chromosome
         # as a member of the build  (both ways)
-        family.addMember(reference_id, chr_id)
-        family.addMemberOf(chr_id, reference_id)   # usage dependent, todo: ommit
+        family.addMember(reference_id, chr_id,
+                         group_category=blv.GenomeBuild.value,
+                         member_category=blv.GenomicEntity.value)
+        family.addMemberOf(chr_id, reference_id,
+                           member_category=blv.GenomicEntity.value,
+                           group_category=blv.GenomeBuild.value) # usage dependent,todo:omit
 
         return
 
@@ -613,7 +676,11 @@ class Genotype():
         animal_id = '_:'+animal_id
 
         animal_label = ' '.join((genotype_label, taxon_label))
-        self.model.addIndividualToGraph(animal_id, animal_label, taxon_id)
+        self.model.addIndividualToGraph(animal_id, animal_label, taxon_id,
+                                        ind_category=blv.IndividualOrganism.value,
+                                        ind_type_category=blv.OrganismTaxon.value)
         self.graph.addTriple(
-            animal_id, self.globaltt['has_genotype'], genotype_id)
+            animal_id, self.globaltt['has_genotype'], genotype_id,
+            subject_category=blv.IndividualOrganism.value,
+            object_category=blv.Genotype.value)
         return animal_id

@@ -2,6 +2,7 @@ import logging
 import re
 
 from dipper.models.assoc.Association import Assoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -22,7 +23,9 @@ class G2PAssoc(Assoc):
 
     """
 
-    def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None):
+    def __init__(self, graph, definedby, entity_id, phenotype_id, rel=None,
+                 entity_category=blv.Genotype.value,
+                 phenotype_category=blv.PhenotypicFeature.value):
         super().__init__(graph, definedby)
         self.entity_id = entity_id
         self.phenotype_id = phenotype_id
@@ -38,6 +41,9 @@ class G2PAssoc(Assoc):
         self.set_subject(entity_id)
         self.set_object(phenotype_id)
         self.set_relationship(rel)
+
+        self.entity_category = entity_category
+        self.phenotype_category = phenotype_category
 
         return
 
@@ -63,7 +69,7 @@ class G2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self, subject_category=None, object_category=None):
+    def add_association_to_graph(self, entity_category=None, phenotype_category=None):
         """
         Overrides  Association by including bnode support
 
@@ -74,16 +80,19 @@ class G2PAssoc(Assoc):
 
         currently hardcoded to map the annotation to the monarch namespace
         :param g:
-        :param subject_category: a biolink category CURIE for self.sub (passed to
-        Assoc.add_association_to_graph)
-        :param object_category: a biolink category CURIE for self.obj (passed to
-        Assoc.add_association_to_graph)
+        :param entity_category: a biolink category CURIE for self.sub
+        :param phenotype_category: a biolink category CURIE for self.obj
         :return:
         """
 
+        if entity_category is None:
+            entity_category = self.entity_category
+        if phenotype_category is None:
+            phenotype_category = self.phenotype_category
+
         Assoc.add_association_to_graph(self,
-                                       subject_category=subject_category,
-                                       object_category=object_category)
+                                       subject_category=entity_category,
+                                       object_category=phenotype_category)
 
         # make a blank stage
         if self.start_stage_id or self.end_stage_id is not None:
@@ -91,21 +100,28 @@ class G2PAssoc(Assoc):
                                          str(self.end_stage_id)))
             stage_process_id = '_:'+re.sub(r':', '', stage_process_id)
             self.model.addIndividualToGraph(
-                stage_process_id, None, self.globaltt['developmental_process'])
+                stage_process_id, None, self.globaltt['developmental_process'],
+                ind_category=blv.BiologicalProcess.value)
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['starts during'], self.start_stage_id)
+                stage_process_id, self.globaltt['starts during'], self.start_stage_id,
+                subject_category=blv.BiologicalProcess.value,
+                object_category=blv.LifeStage.value)
 
             self.graph.addTriple(
-                stage_process_id, self.globaltt['ends during'], self.end_stage_id)
+                stage_process_id, self.globaltt['ends during'], self.end_stage_id,
+                subject_category=blv.BiologicalProcess.value,
+                object_category=blv.LifeStage.value)
 
             self.stage_process_id = stage_process_id
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id)
+                self.assoc_id, self.globaltt['has_qualifier'], self.stage_process_id,
+                object_category=blv.BiologicalProcess.value)
 
         if self.environment_id is not None:
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id)
+                self.assoc_id, self.globaltt['has_qualifier'], self.environment_id,
+                object_category=blv.Environment.value)
         return
 
     def make_g2p_id(self):

@@ -38,7 +38,7 @@ class StreamedGraph(DipperGraph):
     def addTriple(
             self, subject_id, predicate_id, obj, object_is_literal=None,
             literal_type=None):
-        # trying making infrence on type of object if none is supplied
+        # trying making inference on type of object if none is supplied
         if object_is_literal is None:
             if self.curie_regexp.match(obj) or\
                     obj.split(':')[0].lower() in ('http', 'https', 'ftp'):

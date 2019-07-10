@@ -1,5 +1,13 @@
 from enum import Enum
 
+"""
+This is a class to support categorizing everything we ingest using biolink 
+categories.
+
+If you need to add an Enum for something that isn't already here,
+consult this YAML file:
+https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml
+"""
 
 class BioLinkVocabulary(Enum):
     category = "biolink:category"  # this is a node property, not a class
@@ -17,6 +25,19 @@ class BioLinkVocabulary(Enum):
     BiologicalSex = "biolink:BiologicalSex"
     OrganismTaxon = "biolink:OrganismTaxon"
     MolecularEntity = "biolink:MolecularEntity"
+    GenomicEntity = "biolink:GenomicEntity"  # we are using this for chromosome
     Case = "biolink:Case"
     OntologyClass = "biolink:OntologyClass"
     GeneFamily = "biolink:GeneFamily"
+    Transcript = "biolink:Transcript"
+    Protein = "biolink:Protein"
+    ChemicalSubstance = "biolink:ChemicalSubstance"
+    GenomicSequenceLocalization = "biolink:GenomicSequenceLocalization"
+    IndividualOrganism = "biolink:IndividualOrganism"
+    GeneGrouping = "biolink:GeneGrouping"
+    Genome = "biolink:Genome"
+    GenomeBuild = "biolink:GenomeBuild"
+    BiologicalProcess = "biolink:BiologicalProcess"
+    LifeStage = "biolink:LifeStage"
+    Environment = "biolink:Environment"
+    EvidenceType = "biolink:EvidenceType"

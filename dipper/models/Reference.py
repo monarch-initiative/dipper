@@ -98,7 +98,9 @@ class Reference:
     def addTitle(self, subject_id, title):
         if title is not None and title != '':
             self.graph.addTriple(
-                subject_id, self.globaltt['title (dce)'], title, object_is_literal=True)
+                subject_id, self.globaltt['title (dce)'], title,
+                object_is_literal=True,
+                subject_category=blv.InformationContentEntity.value)
         return
 
     def addRefToGraph(self):

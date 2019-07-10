@@ -11,7 +11,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -293,7 +293,8 @@ class FlyBase(PostgreSQLSource):
                     if prefix == 'GO':
                         phenotype_curie = prefix + ':' + reference + 'PHENOTYPE'
                         phenotype_label = term_labels[0] + ' phenotype'
-                        model.addClassToGraph(phenotype_curie, phenotype_label)
+                        model.addClassToGraph(phenotype_curie, phenotype_label,
+                                              blv.PhenotypicFeature.value)
                     else:
                         phenotype_curie = 'OBO:' + prefix + reference + 'PHENOTYPE'
                 else:
@@ -320,7 +321,9 @@ class FlyBase(PostgreSQLSource):
                     phenotype_curie,
                     term_ids[1:]
                 ))
-                assoc.add_association_to_graph()
+                assoc.add_association_to_graph(
+                    subject_category=blv.SequenceVariant.value,
+                    object_category=blv.PhenotypicFeature.value)
                 assoc_id = assoc.get_association_id()
 
                 # add the rest as qualifiers
@@ -343,7 +346,9 @@ class FlyBase(PostgreSQLSource):
                         continue
 
                     self.graph.addTriple(
-                        assoc_id, self.globaltt['has_qualifier'], term_curie)
+                        assoc_id, self.globaltt['has_qualifier'], term_curie,
+                        subject_category=blv.InformationContentEntity.value,
+                        object_category=blv.InformationContentEntity.value)
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -520,7 +525,9 @@ class FlyBase(PostgreSQLSource):
                     xref_prefix = 'HGNC'
                 xref_curie = xref_prefix + ':' + xref_id
 
-                model.addEquivalentClass(gene_curie, xref_curie)
+                model.addEquivalentClass(gene_curie, xref_curie,
+                                         subject_category=blv.Gene.value,
+                                         object_category=blv.Gene.value)
 
                 if limit is not None and reader.line_num > limit:
                     break
@@ -571,7 +578,8 @@ class FlyBase(PostgreSQLSource):
                     try:
                         if species_map[allele_prefix[0]][0] == 'drosophilid':
                             geno.addAllele(allele_curie, allele_label)
-                            geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie)
+                            geno.addTaxon(species_map[allele_prefix[0]][1], allele_curie,
+                                          genopart_category=blv.SequenceVariant.value)
                         else:
                             # If it's a foreign transgenic allele, skip
                             continue
@@ -582,7 +590,8 @@ class FlyBase(PostgreSQLSource):
                 elif not allele_prefix:
                     geno.addAllele(allele_curie, allele_label)
                     geno.addTaxon(self.globaltt['Drosophila melanogaster'],
-                                  allele_curie)
+                                  allele_curie,
+                                  genopart_category=blv.SequenceVariant.value)
                 else:
                     raise ValueError("Did not correctly parse allele label {}"
                                      .format(allele_label))
@@ -591,7 +600,8 @@ class FlyBase(PostgreSQLSource):
 
                 if len(gene_prefix) == 1:
                     try:
-                        geno.addTaxon(species_map[gene_prefix[0]][1], gene_curie)
+                        geno.addTaxon(species_map[gene_prefix[0]][1], gene_curie,
+                                      genopart_category=blv.Gene.value)
 
                         if species_map[gene_prefix[0]][0] == 'drosophilid':
                             geno.addGene(gene_curie, gene_label)
@@ -606,7 +616,8 @@ class FlyBase(PostgreSQLSource):
                 elif not gene_prefix:
                     geno.addGene(gene_curie, gene_label)
                     geno.addTaxon(self.globaltt['Drosophila melanogaster'],
-                                  allele_curie)
+                                  allele_curie,
+                                  genopart_category=blv.SequenceVariant.value)
                 else:
                     raise ValueError("Did not correct parse gene label {}"
                                      .format(gene_label))

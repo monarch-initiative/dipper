@@ -3,6 +3,7 @@ from datetime import datetime
 from dipper.graph.RDFGraph import RDFGraph
 from dipper.graph.StreamedGraph import StreamedGraph
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -184,7 +185,8 @@ class Dataset:
 
     def setFileAccessUrl(self, url, is_object_literal=False):
         self.graph.addTriple(
-            self.identifier, 'dcat:accessURL', url, is_object_literal)
+            self.identifier, 'dcat:accessURL', url, is_object_literal,
+            subject_category=blv.InformationContentEntity.value)
 
     def getGraph(self):
         return self.graph

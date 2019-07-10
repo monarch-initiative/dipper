@@ -28,7 +28,7 @@ class Family():
         return
 
     def addMemberOf(self, member_id, group_id,
-                    group_category=None, member_category=None):
+                    member_category=None, group_category=None):
         self.graph.addTriple(member_id, self.globaltt['member of'], group_id,
                              subject_category=group_category,
                              object_category=member_category)
