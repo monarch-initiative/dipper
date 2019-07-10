@@ -17,7 +17,7 @@ from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.utils.GraphUtils import GraphUtils
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 # get gene annotation from current.geneontology.com,
@@ -325,28 +325,37 @@ class GeneOntology(Source):
                         gene_num not in self.test_ids:
                     continue
 
-                model.addClassToGraph(gene_id, gene_symbol)
+                model.addClassToGraph(gene_id, gene_symbol,
+                                      class_category=blv.Gene.value)
                 if gene_name != '':
-                    model.addDescription(gene_id, gene_name)
+                    model.addDescription(gene_id, gene_name,
+                                         subject_category=blv.Gene.value)
                 if gene_synonym != '':
                     for syn in re.split(r'\|', gene_synonym):
                         syn = syn.strip()
                         if syn[:10] == 'UniProtKB:':
                             model.addTriple(
-                                gene_id, self.globaltt['has gene product'], syn)
+                                gene_id, self.globaltt['has gene product'], syn,
+                                subject_category=blv.Gene.value,
+                                object_category=blv.Gene.value)
                         elif re.fullmatch(graph.curie_regexp, syn) is not None:
                             LOG.warning(
                                 'possible curie "%s" as a literal synomym for %s',
                                 syn, gene_id)
-                            model.addSynonym(gene_id, syn)
+                            model.addSynonym(gene_id, syn,
+                                             class_category=blv.Gene.value,
+                                             synonym_type_category=blv.Gene.value)
                         else:
-                            model.addSynonym(gene_id, syn)
+                            model.addSynonym(gene_id, syn,
+                                             class_category=blv.Gene.value)
 
                 for txid in taxon.split('|'):
                     tax_curie = re.sub(r'taxon:', 'NCBITaxon:', txid)
-                    geno.addTaxon(tax_curie, gene_id)
+                    geno.addTaxon(tax_curie, gene_id, genopart_category=blv.Gene.value)
 
-                assoc = Assoc(graph, self.name)
+                assoc = Assoc(graph, self.name,
+                              subject_category=blv.Gene.value,
+                              object_category=blv.OntologyClass.value)
                 assoc.set_subject(gene_id)
                 assoc.set_object(go_id)
 
