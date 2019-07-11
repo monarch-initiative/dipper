@@ -9,6 +9,7 @@ from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Reference import Reference
 from dipper.models.GenomicFeature import Feature, makeChromID
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 #       https://www.animalgenome.org/tmp/QTL_EquCab2.0.gff.txt.gz'
 # mapDwnLd36738TDWS.txt.gz
@@ -327,7 +328,9 @@ class AnimalQTLdb(Source):
                 trait_id = ':'.join((aql_curie, trait_id.strip()))
 
                 # Add QTL to graph
-                feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'])
+                feature = Feature(graph, qtl_id, qtl_symbol, self.globaltt['QTL'],
+                                  feature_category=
+                                  blv.GenomicSequenceLocalization.value)
                 feature.addTaxonToFeature(taxon_curie)
 
                 # deal with the chromosome
@@ -386,8 +389,12 @@ class AnimalQTLdb(Source):
 
                     model.addIndividualToGraph(
                         dbsnp_id, None,
-                        self.globaltt['sequence_alteration'])
-                    model.addXref(qtl_id, dbsnp_id)
+                        self.globaltt['sequence_alteration'],
+                        ind_category=blv.SequenceVariant.value)
+
+                    model.addXref(qtl_id, dbsnp_id,
+                                  class_category=blv.SequenceVariant.value,
+                                  xref_category=blv.SequenceVariant.value)
 
                 gene_id = gene_id.replace('uncharacterized ', '').strip()
                 if gene_id is not None and gene_id != '' and gene_id != '.'\
@@ -427,7 +434,8 @@ class AnimalQTLdb(Source):
                             geno.addAffectedLocus(vl_id, gene_id)
 
                 # add the trait
-                model.addClassToGraph(trait_id, trait_name)
+                model.addClassToGraph(trait_id, trait_name,
+                                      class_category=blv.PhenotypicFeature.value)
 
                 # Add publication
                 reference = None
@@ -571,8 +579,10 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 # make association between QTL and trait based on taxon
 
                 qtl_id = common_name + 'QTL:' + str(qtl_num)
-                model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'])
-                geno.addTaxon(taxon_curie, qtl_id)
+                model.addIndividualToGraph(qtl_id, None, self.globaltt['QTL'],
+                                           ind_category=blv.SequenceVariant.value)
+                geno.addTaxon(taxon_curie, qtl_id,
+                              genopart_category=blv.SequenceVariant.value)
 
                 #
                 trait_id = 'AQTLTrait:' + attribute_dict.get('trait_ID')
@@ -615,7 +625,8 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
                 chrom_in_build_id = makeChromID(chromosome, build_id, 'MONARCH')
                 geno.addChromosomeInstance(
                     chromosome, build_id, build_label, chrom_id)
-                qtl_feature = Feature(graph, qtl_id, None, self.globaltt['QTL'])
+                qtl_feature = Feature(graph, qtl_id, None, self.globaltt['QTL'],
+                                      feature_category=blv.SequenceVariant.value)
                 if start_bp == '':
                     start_bp = None
                 qtl_feature.addFeatureStartLocation(
@@ -671,17 +682,27 @@ Variance="2.94";Dominance_Effect="-0.002";Additive_Effect="0.01
 
                 ato_label = re.sub(r'.*\]\s*', '', ato_column)
 
-                model.addClassToGraph(ato_id, ato_label.strip())
+                model.addClassToGraph(ato_id, ato_label.strip(),
+                                      class_category=blv.OntologyClass.value)
 
                 if re.match(r'VT:.*', vto_id):
-                    model.addClassToGraph(vto_id, None)
-                    model.addEquivalentClass(ato_id, vto_id)
+                    model.addClassToGraph(vto_id, None,
+                                          class_category=blv.OntologyClass.value)
+                    model.addEquivalentClass(ato_id, vto_id,
+                                             subject_category=blv.OntologyClass.value,
+                                             object_category=blv.OntologyClass.value)
                 if re.match(r'LPT:.*', pto_id):
-                    model.addClassToGraph(pto_id, None)
-                    model.addXref(ato_id, pto_id)
+                    model.addClassToGraph(pto_id, None,
+                                          class_category=blv.OntologyClass.value)
+                    model.addXref(ato_id, pto_id,
+                                  class_category=blv.OntologyClass.value,
+                                  xref_category=blv.OntologyClass.value)
                 if re.match(r'CMO:.*', cmo_id):
-                    model.addClassToGraph(cmo_id, None)
-                    model.addXref(ato_id, cmo_id)
+                    model.addClassToGraph(cmo_id, None,
+                                          class_category=blv.OntologyClass.value)
+                    model.addXref(ato_id, cmo_id,
+                                  class_category=blv.OntologyClass.value,
+                                  xref_category=blv.OntologyClass.value)
 
         LOG.info("Done with trait mappings")
         return

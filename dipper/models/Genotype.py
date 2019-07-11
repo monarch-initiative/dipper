@@ -530,7 +530,7 @@ class Genotype():
             build_id, build_label, self.globaltt['reference_genome'],
             blv.GenomeBuild.value)
         self.model.addType(build_id, genome_id,
-                           subject_type=blv.GenomeBuild.value,
+                           subject_category=blv.GenomeBuild.value,
                            subject_type_category=blv.Genome.value)
         if re.match(r'[0-9]+', taxon_id):
             taxon_id = 'NCBITaxon:' + taxon_id
