@@ -207,7 +207,7 @@ class Model():
         
     def addSynonym(
             self, class_id, synonym, synonym_type=None,
-            class_category=None, synonym_type_category=None):
+            class_category=None, synonym_category=None):
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
@@ -216,7 +216,7 @@ class Model():
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :param class_category: biolink category CURIE for class_id
-        :param synonym_type_category = biolink category CURIE for synonym_type
+        :param synonym_category = biolink category CURIE for synonym
         :return:
 
         """
@@ -227,7 +227,7 @@ class Model():
             self.graph.addTriple(
                 class_id, synonym_type, synonym, object_is_literal=True,
                 subject_category=class_category,
-                object_category=synonym_type_category)
+                object_category=synonym_category)
 
     def addDefinition(self, class_id, definition):
         self.graph.addTriple(

@@ -136,7 +136,7 @@ class Genotype():
         return
 
     def addSequenceDerivesFrom(self, child_id, parent_id,
-                               child_category=None,
+                               child_category=blv.GenomicSequenceLocalization.value,
                                parent_category=None):
         self.graph.addTriple(
             child_id, self.globaltt['sequence_derives_from'], parent_id,
@@ -304,8 +304,8 @@ class Genotype():
         :param part_id:
         :param parent_id:
         :param part_relationship:
-        :param part_category: a biolink vocab curie
-        :param parent_category: a biolink vocab curie
+        :param part_category: a biolink vocab curie for part_id
+        :param parent_category: a biolink vocab curie for parent_id
         :return:
 
         """

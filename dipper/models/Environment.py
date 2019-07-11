@@ -1,5 +1,6 @@
 import logging
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
@@ -34,30 +35,41 @@ class Environment():
             env_type = self.globaltt['environmental_system']
 
         self.model.addIndividualToGraph(
-            env_id, env_label, env_type, env_description)
+            env_id, env_label, env_type, env_description,
+            ind_category=blv.Environment.value)
 
         return
 
     def addEnvironmentalCondition(
-            self, cond_id, cond_label, cond_type=None, cond_description=None):
+            self, cond_id, cond_label, cond_type=None, cond_description=None,
+            condition_category=blv.Environment.value):
         if cond_type is None:
             cond_type = self.globaltt['environmental_condition']
 
         self.model.addIndividualToGraph(
-            cond_id, cond_label, cond_type, cond_description)
+            cond_id, cond_label, cond_type, cond_description,
+            ind_category=condition_category)
 
         return
 
-    def addComponentToEnvironment(self, env_id, component_id):
+    def addComponentToEnvironment(self, env_id, component_id,
+                                  environment_category=blv.Environment.value,
+                                  component_category=None):
 
-        self.graph.addTriple(env_id, self.globaltt['has_part'], component_id)
+        self.graph.addTriple(env_id, self.globaltt['has_part'], component_id,
+                             subject_category=environment_category,
+                             object_category=component_category)
 
         return
 
-    def addComponentAttributes(self, component_id, entity_id, value=None, unit=None):
+    def addComponentAttributes(self, component_id, entity_id, value=None, unit=None,
+                               component_category=None,
+                               entity_category=None):
 
         self.graph.addTriple(
-            component_id, self.globaltt['has_part'], entity_id)
+            component_id, self.globaltt['has_part'], entity_id,
+            subject_category=component_category,
+            object_category=entity_category)
         # TODO add value and units
 
         return

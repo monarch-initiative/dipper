@@ -7,7 +7,8 @@ __author__ = 'nlw'
 
 class OrthologyAssoc(Assoc):
 
-    def __init__(self, graph, definedby, gene1, gene2, rel=None):
+    def __init__(self, graph, definedby, gene1, gene2, rel=None,
+                 subject_category=blv.Gene.value, object_category=blv.Gene.value):
         super().__init__(graph, definedby)
         self.globaltt = graph.globaltt
         self.globaltcid = graph.globaltcid
@@ -18,6 +19,8 @@ class OrthologyAssoc(Assoc):
 
         self.set_subject(gene1)
         self.set_object(gene2)
+        self.subject_category = subject_category
+        self.object_category = object_category
         self.set_relationship(rel)
         return
 
@@ -33,7 +36,8 @@ class OrthologyAssoc(Assoc):
         <family_id> a EDAM-DATA:gene_family
         <family_id> RO:has_member <gene1>
         <family_id> RO:has_member <gene2>
-
+        <gene1> biolink:category <subject_category>
+        <gene2> biolink:category <object_category>
         :param family_id:
         :param g: the graph to modify
         :return:
@@ -49,9 +53,9 @@ class OrthologyAssoc(Assoc):
         # add each gene to the family
         family.addMember(family_id, self.sub,
                          group_category=blv.GeneFamily.value,
-                         member_category=blv.Gene.value)
+                         member_category=self.subject_category)
         family.addMember(family_id, self.obj,
                          group_category=blv.GeneFamily.value,
-                         member_category=blv.Gene.value)
+                         member_category=self.object_category)
 
         return
