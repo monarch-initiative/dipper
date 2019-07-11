@@ -45,3 +45,4 @@ class BioLinkVocabulary(Enum):
     Provider = "biolink:Provider"
     Procedure = "biolink:Procedure"
     Association = "biolink:Association"
+    GeneProduct = "biolink:GeneProduct"

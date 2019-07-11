@@ -211,8 +211,8 @@ class Model():
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
-        :param g:
-        :param cid: class id
+        :param self:
+        :param class_id: class id
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :param class_category: biolink category CURIE for class_id
@@ -233,17 +233,20 @@ class Model():
         self.graph.addTriple(
             class_id, self.globaltt['definition'], definition, object_is_literal=True)
 
-    def addXref(self, class_id, xref_id, xref_as_literal=False):
+    def addXref(self, class_id, xref_id, xref_as_literal=False,
+                class_category=None, xref_category=None):
         self.graph.addTriple(
             class_id, self.globaltt['database_cross_reference'], xref_id,
+            subject_category=class_category, object_category=xref_category,
             object_is_literal=xref_as_literal)
 
-    def addDepiction(self, subject_id, image_url):
+    def addDepiction(self, subject_id, image_url, subject_category=None,
+                     object_category=blv.InformationContentEntity.value):
         self.graph.addTriple(
-            subject_id, self.globaltt['depiction'], image_url, object_is_literal=False)
+            subject_id, self.globaltt['depiction'], image_url, object_is_literal=False,
+            subject_category=subject_category, object_category=object_category)
 
-    def addComment(self, subject_id, comment,
-                   subject_category=None):
+    def addComment(self, subject_id, comment, subject_category=None):
         self.graph.addTriple(
             subject_id, self.globaltt['comment'], comment.strip(),
             object_is_literal=True, subject_category=subject_category
