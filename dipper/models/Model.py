@@ -78,7 +78,8 @@ class Model():
                                  object_category=class_type_category)
         if description is not None:
             self.graph.addTriple(
-                class_id, self.globaltt['description'], description)
+                class_id, self.globaltt['description'], description,
+                object_is_literal=True)
 
     def addIndividualToGraph(self, ind_id, label, ind_type=None, description=None,
                              ind_category=None,  # blv category for ind_id
