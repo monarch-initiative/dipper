@@ -46,6 +46,8 @@ class ReactomeTestCase(unittest.TestCase):
                 PW:0000001 .
                 
         ECO:0000501 biolink:category biolink:EvidenceType .
+        REACT:R-BTA-3000480 biolink:category biolink:Pathway .
+        ENSEMBL:ENSBTAP00000013354 biolink:category biolink:Gene .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             triples, reactome.graph))
