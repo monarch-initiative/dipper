@@ -5,6 +5,7 @@ from intermine.webservice import Service
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.sources.Source import Source
 from dipper.models.Reference import Reference
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -63,7 +64,8 @@ class MGISlim(Source):
                 mgi_curie = row["subject.primaryIdentifier"]
                 mp_curie = row["ontologyTerm.identifier"]
                 pub_curie = "PMID:{0}".format(row["evidence.publications.pubMedId"])
-                assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie)
+                assoc = G2PAssoc(self.graph, self.name, mgi_curie, mp_curie,
+                                 entity_category=blv.Gene.value)
                 if row["evidence.publications.pubMedId"]:
                     reference = Reference(
                         self.graph, pub_curie, self.globaltt['journal article'])
