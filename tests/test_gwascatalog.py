@@ -88,6 +88,11 @@ class TestGwasSNPModel(unittest.TestCase):
         rdfs:label 'GRCh38chr5-21259029' ;
         faldo:position 21259029 ;
         faldo:reference OBO:CHR_GRCh38chr5 .
+
+    OBO:NCBITaxon_9606 biolink:category biolink:OrganismTaxon . 
+    dbSNP:rs1491921 biolink:category biolink:SequenceVariant .
+    <https://monarchinitiative.org/.well-known/genid/bed3341497b6bee94927> biolink:category biolink:GenomicSequenceLocalization .
+    <https://monarchinitiative.org/.well-known/genid/bee62aebc378782c23ad> biolink:category biolink:GenomicSequenceLocalization .
 """
         # dbg
         LOG.debug(
@@ -113,6 +118,10 @@ class TestGwasSNPModel(unittest.TestCase):
         triples = """
         dbSNP:rs1491921 OBO:RO_0002528 ENSEMBL:107986180 ;
             OBO:RO_0002529 ENSEMBL:107986179 .
+            
+        ENSEMBL:107986180 biolink:category biolink:Gene .
+        ENSEMBL:107986179 biolink:category biolink:Gene .
+        dbSNP:rs1491921 biolink:category biolink:SequenceVariant .
         """
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
@@ -139,6 +148,9 @@ class TestGwasSNPModel(unittest.TestCase):
             owl:deprecated true .
 
         dbSNP:rs12345 MONARCH:cliqueLeader true .
+        
+        dbSNP:rs12345 biolink:category biolink:SequenceVariant .
+        dbSNP:rs1491921 biolink:category biolink:SequenceVariant .
         """
         self.assertTrue(self.test_util.test_graph_equality(triples, self.source.graph))
 
@@ -349,7 +361,14 @@ dbSNP:rs3758171 biolink:category biolink:SequenceVariant .
 dbSNP:rs3824344 biolink:category biolink:SequenceVariant .
 dbSNP:rs7020413 biolink:category biolink:SequenceVariant .
 :haplotype_bb627b1f64039b0f751a biolink:category biolink:SequenceVariant .
-
+<https://monarchinitiative.org/.well-known/genid/b096a3e94e32fe23374a>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/b21985847fe0774084eb>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/b25a2da36647bdd71be3>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/b3fad5df82cdfb283329>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/b55051762f8d5a3dbeb5>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/b5d61dbc7958a979d046>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/bb870c3d7606a3e0fc3c>  biolink:category biolink:GenomicSequenceLocalization .
+<https://monarchinitiative.org/.well-known/genid/bbb252d9b6cd02e9880a>  biolink:category biolink:GenomicSequenceLocalization .
         """
 
         # dbg
