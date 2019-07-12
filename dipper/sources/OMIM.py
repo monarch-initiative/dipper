@@ -897,8 +897,8 @@ class OMIM(OMIMSource):
             series_curie = 'OMIMPS:' + phser
             model.addClassToGraph(series_curie, None)
             model.addSubClass(omim_curie, series_curie,
-                              subject_category=blv.Disease.value,
-                              object_category=blv.Disease.value)
+                              child_category=blv.Disease.value,
+                              parent_category=blv.Disease.value)
             model.addSubClass(omim_curie, series_curie)
 
 
