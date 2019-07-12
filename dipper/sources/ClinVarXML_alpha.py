@@ -121,6 +121,13 @@ def make_spo(sub, prd, obj,
 
     # object is a curie or bnode or literal [string|number]
 
+    if sub is None:
+        LOG.error("make_spo() was passed sub of None!")
+        return ""
+    if obj is None:
+        LOG.error("make_spo() was passed obj of None")
+        return ""
+
     objcuri = None
     match = re.match(CURIERE, obj)
     if match is not None:
