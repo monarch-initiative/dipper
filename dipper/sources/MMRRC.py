@@ -397,7 +397,7 @@ class MMRRC(Source):
                     geno.addGenotype(genotype_id, genotype_label)
                     graph.addTriple(
                         s, self.globaltt['has_genotype'], genotype_id,
-                        subject_category=blv.PhenotypicFeature.value,
+                        subject_category=blv.PopulationOfIndividualOrganisms.value,
                         object_category=blv.Genotype.value)
                 else:
                     # LOG.debug(
