@@ -127,6 +127,16 @@ class EvidenceProvenanceTestCase(unittest.TestCase):
 <https://monarchinitiative.org/.well-known/genid/b41ad2bfd375c9de8888> a STATO:0000085 ;
     RO:0002353 <https://monarchinitiative.org/.well-known/genid/study> ;
     STATO:0000129 "8.885439E-007" .
+    
+ECO:0000015 biolink:category biolink:EvidenceType .
+OBI:0000175 biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/b216606de82749b03956> biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/b41ad2bfd375c9de8888> biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/b97a98087df7a99d8a38> biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/study> biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/study> biolink:category biolink:InformationContentEntity .
+<https://monarchinitiative.org/MONARCH_test_association> biolink:category biolink:Association .
+    
         """
 
         self.assertTrue(self.test_util.test_graph_equality(
@@ -186,6 +196,17 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
 
 <https://www.mousephenotype.org/impress/protocol/175/15> a owl:NamedIndividual ;
     rdfs:label "X-ray" .
+    
+OBO:STATO_0000076 biolink:category biolink:EvidenceType .
+<http://www.sanger.ac.uk/> biolink:category biolink:Provider .
+<http://www.sanger.ac.uk/science/data/mouse-genomes-project> biolink:category biolink:Provider .
+<https://monarchinitiative.org/.well-known/genid/b0b26361b8687b5ad9ef> biolink:category biolink:PopulationOfIndividualOrganisms .
+<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> biolink:category biolink:EvidenceType .
+<https://monarchinitiative.org/.well-known/genid/bdd05a8ca155ddaf415e> biolink:category biolink:InformationContentEntity .
+<https://www.mousephenotype.org/impress/parameterontologies/1867/91> biolink:category biolink:EvidenceType .
+<https://www.mousephenotype.org/impress/parameterontologies/1867/91> biolink:category biolink:InformationContentEntity .
+<https://www.mousephenotype.org/impress/procedures/15> biolink:category biolink:EvidenceType .
+<https://www.mousephenotype.org/impress/protocol/175/15> biolink:category biolink:EvidenceType .
 """
 
         # dbg
@@ -215,6 +236,13 @@ IMPRESS-procedure:15 a owl:NamedIndividual ;
 
     <https://www.mousephenotype.org/> a foaf:organization ;
         rdfs:label "International Mouse Phenotyping Consortium" .
+
+SEPIO:0000001 biolink:category biolink:InformationContentEntity .
+<https://monarchinitiative.org/.well-known/genid/bf92df374a884963e805> biolink:category biolink:InformationContentEntity .
+<https://monarchinitiative.org/.well-known/genid/evidence> biolink:category biolink:EvidenceType .
+MONARCH:test_association biolink:category biolink:Association .
+<https://www.mousephenotype.org/> biolink:category biolink:Provider .
+
 
         """
         # dbg

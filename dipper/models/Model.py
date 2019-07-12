@@ -297,7 +297,8 @@ class Model():
             node_id, self.globaltt['is_anonymous'], True, object_is_literal=True,
             literal_type='xsd:boolean')
 
-    def _addSexSpecificity(self, subject_id, sex):
+    def _addSexSpecificity(self, subject_id, sex,
+                           subject_category=None):
         """
         Add sex specificity to a subject (eg association node)
 
@@ -311,8 +312,10 @@ class Model():
         Note this class is probably not the right place for this
         method, but putting here until a better home is found
         :param subject_id:
+        :param subject_category: a biolink category CURIE for subject_id
         :param sex:
         :return:
         """
         self.graph.addTriple(subject_id, self.globaltt['has_sex_specificty'], sex,
+                             subject_category=subject_category,
                              object_category=blv.BiologicalSex.value)

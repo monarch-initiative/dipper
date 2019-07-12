@@ -1,6 +1,7 @@
 import logging
 from dipper.models.Model import Model
 from dipper.graph.Graph import Graph
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 # note currently no log issued
@@ -33,24 +34,33 @@ class Provenance:
     def add_date_created(self, prov_type, date):
         self.graph.addTriple(
             object_is_literal=True, subject_id=prov_type,
-            predicate_id=self.globaltt['created_on'], obj=date)
+            predicate_id=self.globaltt['created_on'], obj=date,
+            subject_category=blv.EvidenceType.value)
         return
 
-    def add_study_parts(self, study, study_parts):
+    def add_study_parts(self, study, study_parts,
+                        study_category=blv.EvidenceType.value,
+                        study_parts_category=None):
         for part in study_parts:
             self.graph.addTriple(
-                study, self.globaltt['has_part'], part)
+                study, self.globaltt['has_part'], part,
+                subject_category=study_category,
+                object_category=study_parts_category)
         return
 
     def add_study_to_measurements(self, study, measurements):
         for measurement in measurements:
             self.graph.addTriple(
-                measurement, self.globaltt['output_of'], study)
+                measurement, self.globaltt['output_of'], study,
+                subject_category=blv.EvidenceType.value,
+                object_category=blv.EvidenceType.value)
         return
 
     def add_study_measure(self, study, measure):
         self.graph.addTriple(
-            study, self.globaltt['measures_parameter'], measure)
+            study, self.globaltt['measures_parameter'], measure,
+            subject_category=blv.EvidenceType.value,
+            object_category=blv.EvidenceType.value)
         return
 
     def add_assertion(self, assertion, agent, agent_label, date=None):
@@ -62,9 +72,11 @@ class Provenance:
         :param date:
         :return: None
         """
-        self.model.addIndividualToGraph(assertion, None, self.globaltt['assertion'])
+        self.model.addIndividualToGraph(assertion, None, self.globaltt['assertion'],
+                                        ind_category=blv.InformationContentEntity.value)
 
-        self.add_agent_to_graph(agent, agent_label, self.globaltt['organization'])
+        self.add_agent_to_graph(agent, agent_label, self.globaltt['organization'],
+                                agent_category=blv.Provider.value)
 
         self.graph.addTriple(
             assertion, self.globaltt['created_by'], agent)
@@ -76,12 +88,14 @@ class Provenance:
         return
 
     def add_agent_to_graph(
-            self, agent_id, agent_label, agent_type=None, agent_description=None):
+            self, agent_id, agent_label, agent_type=None, agent_description=None,
+            agent_category=None):
 
         if agent_type is None:
             agent_type = self.globaltt['organization']
         self.model.addIndividualToGraph(
-            agent_id, agent_label, agent_type, agent_description)
+            agent_id, agent_label, agent_type, agent_description,
+            ind_category=agent_category)
 
         return
 
@@ -90,6 +104,7 @@ class Provenance:
         if assay_type is None:
             assay_type = self.globaltt['assay']
         self.model.addIndividualToGraph(
-            assay_id, assay_label, assay_type, assay_description)
+            assay_id, assay_label, assay_type, assay_description,
+            ind_category=blv.EvidenceType.value)
 
         return
