@@ -200,11 +200,11 @@ class Model():
 
         self._addReplacementIds(old_id, new_ids, new_ids_category=new_ids_category)
 
-    def addSubClass(self, child_id, parent_id, subject_category=None,
-                    object_category=None):
+    def addSubClass(self, child_id, parent_id, child_category=None,
+                    parent_category=None):
         self.graph.addTriple(child_id, self.globaltt['subclass_of'], parent_id,
-                             subject_category=subject_category,
-                             object_category=object_category)
+                             subject_category=child_category,
+                             object_category=parent_category)
         
     def addSynonym(
             self, class_id, synonym, synonym_type=None,
