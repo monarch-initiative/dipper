@@ -46,3 +46,4 @@ class BioLinkVocabulary(Enum):
     Procedure = "biolink:Procedure"
     Association = "biolink:Association"
     GeneProduct = "biolink:GeneProduct"
+    Pathway = "biolink:Pathway"

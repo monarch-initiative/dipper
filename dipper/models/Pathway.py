@@ -1,6 +1,7 @@
 import logging
 import re
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper.graph.Graph import Graph
 
 __author__ = 'nlw'
@@ -42,8 +43,10 @@ class Pathway():
         if pathway_type is None:
             pathway_type = self.globaltt['cellular_process']
         self.model.addClassToGraph(
-            pathway_id, pathway_label, pathway_type, pathway_description)
-        self.model.addSubClass(pathway_id, self.globaltt['pathway'])
+            pathway_id, pathway_label, pathway_type, pathway_description,
+            class_category=blv.Pathway.value)
+        self.model.addSubClass(pathway_id, self.globaltt['pathway'],
+                               child_category=blv.Pathway.value)
 
         return
 
@@ -63,14 +66,18 @@ class Pathway():
 
         gene_product = '_:'+re.sub(r':', '', gene_id) + 'product'
         self.model.addIndividualToGraph(
-            gene_product, None, self.globaltt['gene_product'])
+            gene_product, None, self.globaltt['gene_product'],
+            ind_category=blv.GeneProduct.value)
         self.graph.addTriple(
-            gene_id, self.globaltt['has gene product'], gene_product)
+            gene_id, self.globaltt['has gene product'], gene_product,
+            subject_category=blv.Gene.value,object_category=blv.GeneProduct.value)
         self.addComponentToPathway(gene_product, pathway_id)
 
         return
 
-    def addComponentToPathway(self, component_id, pathway_id):
+    def addComponentToPathway(self, component_id, pathway_id,
+                              component_category=None,
+                              pathway_category=blv.Pathway.value):
         """
         This can be used directly when the component is directly involved in
         the pathway.  If a transforming event is performed on the component
@@ -80,6 +87,8 @@ class Pathway():
         :param component_id:
         :return:
         """
-        self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id)
+        self.graph.addTriple(component_id, self.globaltt['involved in'], pathway_id,
+                             subject_category=component_category,
+                             object_category=pathway_category)
 
         return

@@ -3,7 +3,7 @@ import csv
 from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Pathway import Pathway
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -106,9 +106,12 @@ class Reactome(Source):
         gene_curie = "{}:{}".format(component_prefix, component.strip())
         eco_curie = eco_map[go_ecode]
         pathway.addPathway(pathway_curie, pathway_label)
-        pathway.addComponentToPathway(gene_curie, pathway_curie)
+        pathway.addComponentToPathway(gene_curie, pathway_curie,
+                                      component_category=blv.Gene.value)
 
-        association = Assoc(self.graph, self.name)
+        association = Assoc(self.graph, self.name,
+                            subject_category=blv.Gene.value,
+                            object_category=blv.Pathway.value)
         association.sub = gene_curie
         association.rel = self.globaltt['involved in']
         association.obj = pathway_curie
