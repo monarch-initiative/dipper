@@ -278,18 +278,21 @@ class Genotype():
 
         return
 
-    def addVSLCtoParent(self, vslc_id, parent_id, parent_category=None):
+    def addVSLCtoParent(self, vslc_id, parent_id,
+                        part_category=blv.SequenceVariant.value,
+                        parent_category=None):
         """
         The VSLC can either be added to a genotype or to a GVC.
         The vslc is added as a part of the parent.
         :param vslc_id:
         :param parent_id:
-        :param parent_category: a biolink category for parent
+        :param part_category: a biolink category CURIE for part
+        :param parent_category: a biolink category CURIE for parent
         :return:
         """
 
         self.addParts(vslc_id, parent_id, self.globaltt['has_variant_part'],
-                      part_category=blv.SequenceVariant.value,
+                      part_category=part_category,
                       parent_category=parent_category)
 
         return
