@@ -20,6 +20,7 @@ pipeline {
         ).trim()
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
+        DIPPER = 'venv/bin/python dipper-etl.py'
     }
 
     options {
@@ -28,6 +29,31 @@ pipeline {
 
     stages {
 
+        stage('Build dipper package') {
+            steps {
+                git(
+                    url: 'https://github.com/monarch-initiative/dipper.git',
+                    branch: 'master'
+                )
+                dir('./config') {
+                    git(
+                        url: 'https://github.com/monarch-initiative/configs.git',
+                        credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
+                        branch: 'master'
+                    )
+                    sh '''
+                        cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
+                        virtualenv -p /usr/bin/python3 venv
+                        venv/bin/pip install -r requirements.txt
+                        venv/bin/pip install -r requirements/all-sources.txt
+                        
+                        # Clean up previous runs
+                        sudo rm -rf ./out/
+                        sudo rm -rf ./raw/
+                    '''
+                }
+            }
+        }
         stage('Generate monarch owl and rdf') {
             steps {
                 parallel(
@@ -43,240 +69,90 @@ pipeline {
                                 # Hack to resolve https://github.com/monarch-initiative/monarch-ontology/issues/16
                                 sed -i "/owl#ReflexiveProperty/d" ./monarch-merged.owl
 
-                                # Hack to normalize omim IRIs
+                                # Hack to normalize omim and hgnc IRIs
                                 # https://github.com/monarch-initiative/dipper/issues/700
                                 sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIMPS_/http:\\/\\/www.omim.org\\/phenotypicSeries\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/purl.obolibrary.org\\/obo\\/OMIM_/http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
                                 sed -i 's/http:\\/\\/identifiers.org\\/omim\\//http:\\/\\/omim.org\\/entry\\//' ./monarch-merged.owl
+                                sed -i 's/http:\\/\\/identifiers.org\\/hgnc\\//http:\\/\\/www.genenames.org\\/cgi-bin\\/gene_symbol_report?hgnc_id=/' ./monarch-merged.owl
 
                                 scp monarch-merged.owl monarch@$MONARCH_DATA_FS:/var/www/data/owl/
                             """
                         }
                     },
                     "ETL StringDb": {
-                        dir('./build-stringdb-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources stringdb --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
-                                head -1000 ./out/string.ttl > ./out/string_test.ttl
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources stringdb --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
+                            head -1000 ./out/string.ttl > ./out/string_test.ttl
+                        '''
                     },
                     "ETL Panther": {
-                        dir('./build-panther-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources panther --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources panther --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615
+                        '''
                     },
                     "ETL AnimalQTLdb": {
-                        dir('./build-animalqtldb-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources animalqtldb
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources animalqtldb
+                        '''
                     },
                     "ETL Bgee": {
-                        dir('./build-bgee-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
+                        sh '''
+                            # Test run
+                            $DIPPER --sources bgee --limit 1 --taxon 9606 --version bgee_v13_2
+                            mv ./out/bgee.ttl ./out/bgee_test.ttl
 
-                                # Test run
-                                venv/bin/python dipper-etl.py --sources bgee --limit 1 --taxon 9606 --version bgee_v13_2
-                                mv ./out/bgee.ttl ./out/bgee_test.ttl
+                            $DIPPER --sources bgee --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
 
-                                venv/bin/python dipper-etl.py --sources bgee --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
-
-                                echo "check statement count and if well-formed?"
-                                rapper -i turtle -c ./out/bgee.ttl
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                            echo "check statement count and if well-formed?"
+                            rapper -i turtle -c ./out/bgee.ttl
+                        '''
                     },
                     "ETL FlyBase": {
-                        dir('./build-flybase-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources flybase --dest_fmt nt
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources flybase --dest_fmt nt
+                        '''
                     },
                     "ETL Biogrid": {
-                        dir('./build-biogrid-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources biogrid --taxon 9606,10090,7955,7227,6239
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources biogrid --taxon 9606,10090,7955,7227,6239
+                        '''
                     },
                     "ETL ClinVar": {
-                        dir('./build-clinvar-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
+                        sh '''
+                            mkdir -p out
+                            mkdir -p raw && cd raw
+                            mkdir -p clinvarxml_alpha && cd clinvarxml_alpha
+                            wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
+                            wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
+                            cd ../..
 
-                                mkdir -p out
-                                mkdir -p raw && cd raw
-                                mkdir -p clinvarxml_alpha && cd clinvarxml_alpha
-                                wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz
-                                wget -q --timestamping ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id
-                                cd ../..
-
-                                export PYTHONPATH=.:$PYTHONPATH
-                                venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                            export PYTHONPATH=.:$PYTHONPATH
+                            venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
+                        '''
                     },
                     "ETL Coriell": {
-                        dir('./build-coriell-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-coriell-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources coriell
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources coriell
+                        '''
                     },
                     "ETL CTD": {
-                        dir('./build-ctd-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources ctd
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources ctd
+                        '''
                     },
                     "ETL Ensembl": {
-                        dir('./build-ensembl-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources ensembl --taxon 9606,10090,7955,7227,6239
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources ensembl --taxon 9606,10090,7955,7227,6239
+                        '''
                     },
                     "ETL Elements of Morphology": {
-                        dir('./build-eom-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-eom-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources eom
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources eom
+                        '''
                     },
                     "ETL Gene Reviews": {
-                        dir('./build-genereviews-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-genereviews-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                            '''
-                        }
-
-                        dir('./build-genereviews-rdf/data-boutique') {
+                        dir('./data-boutique') {
                             git(
                                 url: 'https://github.com/monarch-initiative/data-boutique.git',
                                 credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
@@ -285,196 +161,58 @@ pipeline {
                             sh '''
                                 cd .. && mkdir -p raw/genereviews/books
                                 cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources genereviews
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
+                                $DIPPER --sources genereviews
                             '''
                         }
                     },
                     "ETL Gene Ontology Associations": {
-                        dir('./build-goa-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources go --taxon \
-                                    10090,10116,4896,5052,559292,5782,6239,7227,7955,9031,9606,9615,9823,9913
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources go --taxon \
+                                10090,10116,4896,5052,559292,5782,6239,7227,7955,9031,9606,9615,9823,9913
+                        '''
                     },
                     "ETL GWAS Catalog": {
-                        dir('./build-gwascatalog-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources gwascatalog --skip_tests
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources gwascatalog --skip_tests   
+                        '''
                     },
                     "ETL HGNC": {
-                        dir('./build-hgnc-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-hgnc-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources hgnc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources hgnc
+                        '''
                     },
                     "ETL HPO Annotations": {
-                        dir('./build-hpoa-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-hpoa-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources hpoa
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources hpoa  
+                        '''
                     },
                     "ETL IMPC": {
-                        dir('./build-impc-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources impc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources impc
+                        '''
                     },
                     "ETL KEGG": {
-                        dir('./build-kegg-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-kegg-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources kegg
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources kegg      
+                        '''
                     },
                     "ETL MGI Slim": {
-                        dir('./build-mgislim-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources mgi-slim
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources mgi-slim
+                        '''
                     },
                     "ETL MGI": {
-                        dir('./build-mgi-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-mgi-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources mgi --skip_tests
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources mgi --skip_tests
+                        '''
                     },
                     "ETL MMRRC": {
-                        dir('./build-mmrrc-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources mmrrc
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources mmrrc      
+                        '''
                     },
                     "ETL Monarch Boutique": {
-                        dir('./build-monarch-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-monarch-rdf/data-boutique') {
+                        dir('./data-boutique-b') {
                             git(
                                 url: 'https://github.com/monarch-initiative/data-boutique.git',
                                 credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
@@ -482,234 +220,102 @@ pipeline {
                             )
                             sh '''
                                 cd .. && mkdir -p raw/monarch
-                                cp -r data-boutique/OMIA-disease-phenotype ./raw/monarch/
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources monarch --skip_tests
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
+                                cp -r data-boutique-b/OMIA-disease-phenotype ./raw/monarch/
+                                $DIPPER --sources monarch --skip_tests
                             '''
                         }
                     },
                     "ETL monochrom": {
-                        dir('./build-monochrom-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources monochrom
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources monochrom          
+                        '''
                     },
                     "ETL MPD": {
-                        dir('./build-mpd-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources mpd --skip_tests
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources mpd --skip_tests    
+                        '''
                     },
                     "ETL NCBI Gene": {
-                        dir('./build-ncbigene-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-ncbigene-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources ncbigene --taxon 28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh ''' 
+                            $DIPPER --sources ncbigene --taxon \
+                            28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
+                        '''
                     },
                     "ETL OMIM": {
-                        dir('./build-omim-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                        }
-                        dir('./build-omim-rdf/config') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/configs.git',
-                                credentialsId: '3ca28d15-5fa8-46b1-a2ac-a5a483694f5b',
-                                branch: 'master'
-                            )
-                            sh '''
-                                cd .. && cp config/Dipper/conf.yaml ./dipper/conf.yaml
-
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources omim -q
-
-                                scp ./out/omim.ttl monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                                scp ./out/omim_dataset.ttl monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources omim -q
+                        '''
                     },
                     "ETL Orphanet": {
-                        dir('./build-orphanet-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources orphanet
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''    
+                            $DIPPER --sources orphanet        
+                        '''
                     },
                     "ETL Reactome": {
-                        dir('./build-reactome-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources reactome
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources reactome     
+                        '''
                     },
                     "ETL Wormbase": {
-                        dir('./build-wormbase-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources wormbase --dest_fmt nt
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources wormbase --dest_fmt nt       
+                        '''
                     },
                     "ETL ZFIN Slim": {
-                        dir('./build-zfinslim-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources zfinslim
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources zfinslim
+                        '''
                     },
                     "ETL ZFIN": {
-                        dir('./build-zfin-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources zfin
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources zfin
+                        '''
                     },
                     "ETL RGD": {
-                        dir('./build-rgd-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources rgd
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources rgd   
+                        '''
                     },
                     "ETL SGD": {
-                        dir('./build-sgd-rdf') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources sgd
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources sgd
+                        '''
                     },
                     "ETL MyChem Info": {
-                        dir('./build-mychem-rdf/') {
-                            git(
-                                url: 'https://github.com/monarch-initiative/dipper.git',
-                                branch: 'master'
-                            )
-                            sh '''
-                                virtualenv -p /usr/bin/python3 venv
-                                venv/bin/pip install -r requirements.txt
-                                venv/bin/pip install -r requirements/all-sources.txt
-                                venv/bin/python dipper-etl.py --sources mychem
-
-                                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                            '''
-                        }
+                        sh '''
+                            $DIPPER --sources mychem
+                        '''
+                    },
+                    "ETL OMIA": {
+                        sh '''
+                            $DIPPER --sources omia
+                        '''
+                    },
+                    "ETL UCSCBands": {
+                        sh '''
+                            $DIPPER --sources ucscbands
+                        '''
                     },
                 )
             }
         }
+        stage('Move files to monarch data') {
+            steps {
+                sh '''
+                    scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
+                    // TODO move raw data somewhere internally
+                '''
+            }
+
+        }
     }
-    /*
+
     post {
-        success {
-        }
-        changed {
-        }
         failure {
+            // Still copy files
+            sh '''
+                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
+            '''
         }
-    }*/
+    }
 }
