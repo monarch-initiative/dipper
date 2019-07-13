@@ -299,20 +299,11 @@ pipeline {
                 )
             }
         }
-        stage('Move files to monarch data') {
-            steps {
-                sh '''
-                    scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
-                    // TODO move raw data somewhere internally
-                '''
-            }
-
-        }
     }
 
     post {
-        failure {
-            // Still copy files
+        always {
+            // Copy files
             sh '''
                 scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
             '''
