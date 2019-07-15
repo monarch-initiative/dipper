@@ -11,12 +11,12 @@ pipeline {
         // Pin dates and day to beginning of run.
         START_DATE = sh(
             script: 'date +%Y-%m-%d',
-            returnStdout: 'true'
+            returnStdout: true
         ).trim()
 
         START_DAY = sh(
             script: 'date +%A',
-            returnStdout: 'true'
+            returnStdout: true
         ).trim()
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
