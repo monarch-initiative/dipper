@@ -30,6 +30,7 @@
 # FIXME - should get integrated into Upheno
 
 'BFO': 'http://purl.obolibrary.org/obo/BFO_'                        # Basic Formal Ontology
+'COHD': 'http://purl.obolibrary.org/obo/COHD_'                      # Columbia Open Health Data
 'CHEBI': 'http://purl.obolibrary.org/obo/CHEBI_'                    # Chemicals of Biological Interest
 'CHR': 'http://purl.obolibrary.org/obo/CHR_'                        # Chromosome Ontology
 'CL': 'http://purl.obolibrary.org/obo/CL_'                          # Cell Ontology (cell types)
@@ -48,10 +49,12 @@
 'FBbt': 'http://purl.obolibrary.org/obo/FBbt_'                      # FlyBase anatomy
 'FBdv': 'http://purl.obolibrary.org/obo/FBdv_'                      # Flybase developmental stages
 # till we get a purl? `FBgn': 'http://flybase.org/reports/'         # flybase gene?
+'GARD': 'http://purl.obolibrary.org/obo/GARD_'                      # Genetic and Rare Diseases (GARD) Information Center
 'GENO': 'http://purl.obolibrary.org/obo/GENO_'                      # Genotype Partonomy Ontology
 'GO': 'http://purl.obolibrary.org/obo/GO_'                          # Gene Ontology
 'HP': 'http://purl.obolibrary.org/obo/HP_'                          # Human Phenotype Ontology
 'IAO': 'http://purl.obolibrary.org/obo/IAO_'                        # Information Artifact Ontology
+'ICD9': 'http://purl.obolibrary.org/obo/ICD9_'                      # International Classification of Disease 9th Rev
 'KEGG-ds': 'http://purl.obolibrary.org/KEGG-ds_'                    # Kyoto Encyclopedia of Genes and Genomes Disease Ontology
 'LPT': 'http://purl.obolibrary.org/obo/LPT_'                        # Livestock Phenotypic Trait Ontology
 'MA': 'http://purl.obolibrary.org/obo/MA_'                          # Mouse Anatomy Ontology
@@ -75,6 +78,7 @@
 'PR': 'http://purl.obolibrary.org/obo/PR_'                          # Protein ontology
 'PW': 'http://purl.obolibrary.org/obo/PW_'                          # PathWay ontology
 'RO': 'http://purl.obolibrary.org/obo/RO_'                          # Relationship Ontology
+'SCTID': 'http://purl.obolibrary.org/obo/SCTID_'                    # SNOMED
 'SIO': 'http://semanticscience.org/resource/SIO_'                   # SemanticScience Integrated Ontology (information artifacts)
 'SNOMED': 'http://purl.obolibrary.org/obo/SNOMED_'                  # Diseases and Phenotypes
 'SO': 'http://purl.obolibrary.org/obo/SO_'                          # Sequence Ontology
