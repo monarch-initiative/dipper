@@ -93,7 +93,7 @@ def main():
         default=False)
     #
     parser.add_argument(
-        '-t', '--taxon', type=str, default='9606',
+        '-t', '--taxon', type=str, default='9606',    # sources need their own defaults
         help='Constrain Source to supplied taxon identifier(s).\n'
         'Please enter comma delimited NCBITaxon numbers:\n'
         'Implemented taxa per source\n'
@@ -119,8 +119,7 @@ def main():
         tax_ids = [t for t in args.taxon.split(',') if t.isdigit()]
 
     taxa_supported = [  # these are not taxa, janky approach
-        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee',
-        'Ensembl', 'StringDB']
+        'Panther', 'NCBIGene', 'BioGrid', 'UCSCBands', 'GeneOntology', 'Bgee','StringDB']
 
     formats_supported = [
         'turtle', 'ttl',
