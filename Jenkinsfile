@@ -383,9 +383,9 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            SOURCE=mgi_slim
+                            SOURCE=mgi-slim
                             $DIPPER --sources $SOURCE
-                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
+                            scp ./out/mgi_slim.ttl ./out/mgi_slim_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
                     }
                 }
