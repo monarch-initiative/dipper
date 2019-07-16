@@ -60,7 +60,7 @@ class Ensembl(Source):
             "external_gene_name",
             "description",
             "gene_biotype",
-            "entrezgene",
+            "entrezgene_id",
             "ensembl_peptide_id",
             "uniprotswissprot",     # not in all queries
             "hgnc_id",              # not in all queries (human only)
