@@ -232,9 +232,11 @@ class Model():
                 subject_category=class_category,
                 object_category=synonym_category)
 
-    def addDefinition(self, class_id, definition):
+    def addDefinition(self, class_id, definition,
+                      class_category=None):
         self.graph.addTriple(
-            class_id, self.globaltt['definition'], definition, object_is_literal=True)
+            class_id, self.globaltt['definition'], definition, object_is_literal=True,
+            subject_category=class_category)
 
     def addXref(self, class_id, xref_id, xref_as_literal=False,
                 class_category=None, xref_category=None):
