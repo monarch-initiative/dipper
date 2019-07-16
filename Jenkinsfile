@@ -603,6 +603,7 @@ pipeline {
                     }
                     steps {
                         sh '''
+                            SOURCE=sgd
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
