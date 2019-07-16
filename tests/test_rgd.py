@@ -63,6 +63,8 @@ class RGDTestCase(unittest.TestCase):
         
     ECO:0005611 biolink:category biolink:EvidenceType .
     RGDRef:1581841 biolink:category biolink:EvidenceType .
+    
+    MONARCH:b4650e8c3d865f11a1a5 biolink:category biolink:Association .
         """
         # dbg
         logger.debug("Reference graph: %s",

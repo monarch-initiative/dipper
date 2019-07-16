@@ -101,3 +101,14 @@ FlyBase:FBal0195705 RO:0002200 OBO:FBbt00005837PHENOTYPE,
         FBcv:0000682,
         GO:0030424PHENOTYPE ;
     biolink:category biolink:Genotype .
+
+MONARCH:b0ac0e667b65c8ef13d0 biolink:category biolink:Association .
+MONARCH:b2e5e3c43998e3b6e9e8 biolink:category biolink:Association .
+MONARCH:b45ce44256c8a1807c99 biolink:category biolink:Association .
+MONARCH:b4ed07746b7007319213 biolink:category biolink:Association .
+MONARCH:b6146f17aa3153099bbe biolink:category biolink:Association .
+MONARCH:ba25ff82dce0e8292ee6 biolink:category biolink:Association .
+MONARCH:bb4250edee7fe624bd61 biolink:category biolink:Association .
+MONARCH:bc8f62666ba428b2fe69 biolink:category biolink:Association .
+MONARCH:bcd4c71a9891ba353df5 biolink:category biolink:Association .
+

@@ -208,6 +208,9 @@ class TestGwasSNPModel(unittest.TestCase):
     EFO:0006995 biolink:category biolink:PhenotypicFeature .
     dbSNP:rs1491921 biolink:category biolink:Genotype .
     PMID:25918132 biolink:category biolink:EvidenceType .
+
+    MONARCH:bffc7a930c08cc8fe931 biolink:category biolink:Association .
+    MONARCH:bff9b97458d67ed7f517 biolink:category biolink:Association .
         
         """.format(description)
 

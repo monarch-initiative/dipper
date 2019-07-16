@@ -59,6 +59,7 @@ ECO:0000322 biolink:category biolink:EvidenceType .
 HGNC:30497 biolink:category biolink:Genotype .
 ORPHA:938475 biolink:category biolink:PhenotypicFeature .
 
+MONARCH:ba2ac5d2153c70e2bb98 biolink:category biolink:Association .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))
@@ -90,6 +91,7 @@ ECO:0000322 biolink:category biolink:EvidenceType .
 ORPHA:268061 biolink:category biolink:Genotype .
 ORPHA:938475 biolink:category biolink:PhenotypicFeature .
     
+MONARCH:b9ad1b0c562ad4db3f1e biolink:category biolink:Association .
         """
         self.assertTrue(
             self.test_util.test_graph_equality(expected_triples, self.orphanet.graph))
@@ -121,6 +123,7 @@ ECO:0000322 biolink:category biolink:EvidenceType .
 ORPHA:268061 biolink:category biolink:Genotype .
 ORPHA:938475 biolink:category biolink:PhenotypicFeature .
 
+MONARCH:bdbeb077e365ddedda20 biolink:category biolink:Association .
         """
         self.assertTrue(self.test_util.test_graph_equality(
             expected_triples, self.orphanet.graph))

@@ -64,6 +64,8 @@ class CTDTestCase(unittest.TestCase):
             PMID:56789 biolink:category biolink:EvidenceType .
             OMIM:188890 biolink:category biolink:Disease .
             MESH:D009538 biolink:category biolink:ChemicalSubstance .
+            
+            MONARCH:b6c289df47cb72653f79 biolink:category biolink:Association .
         """
         # test exact contents of graph
         self.assertTrue(self.test_util.test_graph_equality(
