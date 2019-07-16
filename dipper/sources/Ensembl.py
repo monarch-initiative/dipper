@@ -7,7 +7,7 @@ import xml.etree.ElementTree as etree
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
 from dipper.models.Genotype import Genotype
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 ENS_URL = 'uswest.ensembl.org'    # 'www.ensembl.org'
@@ -303,24 +303,37 @@ class Ensembl(Source):
                     gene_type_id = self.globaltt['polypeptide']
 
                 model.addClassToGraph(
-                    gene_id, external_gene_name, gene_type_id, description)
-                model.addIndividualToGraph(peptide_curie, None, gene_type_id)
-                model.addIndividualToGraph(uniprot_curie, None, gene_type_id)
+                    gene_id, external_gene_name, gene_type_id, description,
+                    class_category=blv.Gene.value)
+                model.addIndividualToGraph(peptide_curie, None, gene_type_id,
+                                           ind_category=blv.Protein.value)
+                model.addIndividualToGraph(uniprot_curie, None, gene_type_id,
+                                           ind_category=blv.Protein.value)
 
                 if entrezgene != '':
                     if taxid == '9606':
                         # Use HGNC for eq in human data
-                        model.addXref(gene_id, entrez_curie)
+                        model.addXref(gene_id, entrez_curie,
+                                      class_category=blv.Gene.value,
+                                      xref_category=blv.Gene.value)
                     else:
-                        model.addEquivalentClass(gene_id, entrez_curie)
+                        model.addEquivalentClass(gene_id, entrez_curie,
+                                                 subject_category=blv.Gene.value,
+                                                 object_category=blv.Gene.value)
                 if hgnc_id is not None and hgnc_id != '':
-                    model.addEquivalentClass(gene_id, hgnc_id)
+                    model.addEquivalentClass(gene_id, hgnc_id,
+                                             subject_category=blv.Gene.value,
+                                             object_category=blv.Gene.value)
                 geno.addTaxon('NCBITaxon:'+taxid, gene_id)
                 if ensembl_peptide_id != '':
-                    geno.addGeneProduct(gene_id, peptide_curie)
+                    geno.addGeneProduct(gene_id, peptide_curie,
+                                        product_category=blv.Protein.value)
                     if uniprotswissprot != '':
-                        geno.addGeneProduct(gene_id, uniprot_curie)
-                        model.addXref(peptide_curie, uniprot_curie)
+                        geno.addGeneProduct(gene_id, uniprot_curie,
+                                            product_category=blv.Protein.value)
+                        model.addXref(peptide_curie, uniprot_curie,
+                                      class_category=blv.Protein.value,
+                                      xref_category=blv.Protein.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
