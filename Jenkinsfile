@@ -2,10 +2,10 @@ pipeline {
 
     agent any
 
-    triggers {
-        // Run every Monday at 5pm
+    /*triggers {
+         Run every Monday at 5pm
         cron('H 17 * * 1')
-    }
+    }*/
 
     environment {
         // Pin dates and day to beginning of run.
@@ -21,6 +21,8 @@ pipeline {
 
         MONARCH_DATA_FS = 'monarch-ttl-prod'
         DIPPER = 'venv/bin/python dipper-etl.py'
+        // https://issues.jenkins-ci.org/browse/JENKINS-47881
+        DATA_DEST = "${env.RELEASE ? '/var/www/data/ttl/' : '/var/www/data/dev/'}"
     }
 
     options {
@@ -31,10 +33,6 @@ pipeline {
 
         stage('Build dipper package') {
             steps {
-                git(
-                    url: 'https://github.com/monarch-initiative/dipper.git',
-                    branch: 'master'
-                )
                 dir('./config') {
                     git(
                         url: 'https://github.com/monarch-initiative/configs.git',
@@ -46,7 +44,7 @@ pipeline {
                         virtualenv -p /usr/bin/python3 venv
                         venv/bin/pip install -r requirements.txt
                         venv/bin/pip install -r requirements/all-sources.txt
-                        
+
                         # Clean up previous runs
                         sudo rm -rf ./out/
                         sudo rm -rf ./raw/
@@ -55,9 +53,15 @@ pipeline {
             }
         }
         stage('Generate monarch owl and rdf') {
+            parallel {
+                stage("Generate monarch merged owl file") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MONARCH_OWL != null }
+                        }
+                    }
             steps {
-                parallel(
-                    "Generate monarch merged owl file": {
                         dir('./create-monarch-owl') {
                             sh """
                                 wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
@@ -79,46 +83,110 @@ pipeline {
                                 scp monarch-merged.owl monarch@$MONARCH_DATA_FS:/var/www/data/owl/
                             """
                         }
-                    },
-                    "ETL StringDb": {
+                    }
+                }
+                stage("ETL StringDb") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.STRING_DB != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources stringdb --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
-                            head -1000 ./out/string.ttl > ./out/string_test.ttl
+                            SOURCE=stringdb
+                            $DIPPER --sources $SOURCE --taxon 6239,9606,10090,7955,7227,10116 --version 11.0
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Panther": {
+                    }
+                }
+                stage("ETL Panther") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.PANTHER != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources panther --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615
+                            SOURCE=panther
+                            $DIPPER --sources $SOURCE --taxon 9913,6239,9031,7955,7227,9796,9606,10090,9823,10116,8364,9615 --dest_fmt nt
+                            scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL AnimalQTLdb": {
+                    }
+                }
+                stage("ETL AnimalQTLdb") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.ANIMALQTLDB != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources animalqtldb
+                            SOURCE=animalqtldb
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Bgee": {
+                    }
+                }
+                stage("ETL Bgee") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.BGEE != null }
+                        }
+                    }
+                    steps {
                         sh '''
                             # Test run
-                            $DIPPER --sources bgee --limit 1 --taxon 9606 --version bgee_v13_2
-                            mv ./out/bgee.ttl ./out/bgee_test.ttl
-
-                            $DIPPER --sources bgee --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
+                            SOURCE=bgee
+                            $DIPPER --sources $SOURCE --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
 
                             echo "check statement count and if well-formed?"
                             rapper -i turtle -c ./out/bgee.ttl
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL FlyBase": {
+                    }
+                }
+                stage("ETL FlyBase") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.FLYBASE != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources flybase --dest_fmt nt
+                            SOURCE=flybase
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Biogrid": {
+                    }
+                }
+                stage("ETL Biogrid") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.BIOGRID != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources biogrid --taxon 9606,10090,7955,7227,6239
+                            SOURCE=biogrid
+                            $DIPPER --sources $SOURCE --taxon 9606,10090,7955,7227,6239
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL ClinVar": {
+                    }
+                }
+                stage("ETL ClinVar") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.CLINVAR != null }
+                        }
+                    }
+                    steps {
                         sh '''
                             mkdir -p out
                             mkdir -p raw && cd raw
@@ -129,29 +197,78 @@ pipeline {
 
                             export PYTHONPATH=.:$PYTHONPATH
                             venv/bin/python ./dipper/sources/ClinVarXML_alpha.py
+                            scp ./out/clinvarxml_alpha.nt monarch@$MONARCH_DATA_FS:${DATA_DEST}/clinvar.nt
                         '''
-                    },
-                    "ETL Coriell": {
+                    }
+                }
+                stage("ETL Coriell") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.CORIELL != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources coriell
+                            SOURCE=coriell
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL CTD": {
+                    }
+                }
+                stage("ETL CTD") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.CTD != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources ctd
+                            SOURCE=ctd
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Ensembl": {
+                    }
+                }
+                stage("ETL Ensembl") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.ENSEMBL != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources ensembl --taxon 9606,10090,7955,7227,6239
+                            SOURCE=ensembl
+                            $DIPPER --sources $SOURCE --taxon 9606,10090,7955,7227,6239
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Elements of Morphology": {
+                    }
+                }
+                stage("ETL Elements of Morphology") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.EOM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources eom
+                            SOURCE=eom
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Gene Reviews": {
+                    }
+                }
+                stage("ETL Gene Reviews") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.GENE_REVIEWS != null }
+                        }
+                    }
+                    steps {
                         dir('./data-boutique') {
                             git(
                                 url: 'https://github.com/monarch-initiative/data-boutique.git',
@@ -159,59 +276,159 @@ pipeline {
                                 branch: 'master'
                             )
                             sh '''
+                                SOURCE=genereviews
                                 cd .. && mkdir -p raw/genereviews/books
                                 cp ./data-boutique/GeneReviewsBooks/* ./raw/genereviews/books/
                                 $DIPPER --sources genereviews
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                             '''
                         }
-                    },
-                    "ETL Gene Ontology Associations": {
+                    }
+                }
+                stage("ETL Gene Ontology Associations") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.GO != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources go --taxon \
+                            SOURCE=go
+                            $DIPPER --sources $SOURCE --taxon \
                                 10090,10116,4896,5052,559292,5782,6239,7227,7955,9031,9606,9615,9823,9913
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL GWAS Catalog": {
+                    }
+                }
+                stage("ETL GWAS Catalog") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.GWASCATALOG != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources gwascatalog --skip_tests   
+                            SOURCE=gwascatalog
+                            $DIPPER --sources $SOURCE --skip_tests
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL HGNC": {
+                    }
+                }
+                stage("ETL HGNC") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.HGNC != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources hgnc
+                            SOURCE=hgnc
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL HPO Annotations": {
+                    }
+                }
+                stage("ETL HPO Annotations") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.HPOA != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources hpoa  
+                            SOURCE=hpoa
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL IMPC": {
+                    }
+                }
+                stage("ETL IMPC") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.IMPC != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources impc
+                            SOURCE=impc
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL KEGG": {
+                    }
+                }
+                stage("ETL KEGG") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.KEGG != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources kegg      
+                            SOURCE=kegg
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL MGI Slim": {
+                    }
+                }
+                stage("ETL MGI Slim") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MGI_SLIM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources mgi-slim
+                            SOURCE=mgi-slim
+                            $DIPPER --sources $SOURCE
+                            scp ./out/mgi_slim.ttl ./out/mgi_slim_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL MGI": {
+                    }
+                }
+                stage("ETL MGI") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MGI != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources mgi --skip_tests
+                            SOURCE=mgi
+                            $DIPPER --sources $SOURCE --skip_tests
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL MMRRC": {
+                    }
+                }
+                stage("ETL MMRRC") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MMRRC != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources mmrrc      
+                            SOURCE=mmrrc
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Monarch Boutique": {
+                    }
+                }
+                stage("ETL Monarch Boutique") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MONARCH != null }
+                        }
+                    }
+                    steps {
                         dir('./data-boutique-b') {
                             git(
                                 url: 'https://github.com/monarch-initiative/data-boutique.git',
@@ -219,94 +436,228 @@ pipeline {
                                 branch: 'master'
                             )
                             sh '''
+                                SOURCE=monarch
                                 cd .. && mkdir -p raw/monarch
                                 cp -r data-boutique-b/OMIA-disease-phenotype ./raw/monarch/
-                                $DIPPER --sources monarch --skip_tests
+                                $DIPPER --sources $SOURCE --skip_tests
+                                scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                             '''
                         }
-                    },
-                    "ETL monochrom": {
+                    }
+                }
+                stage("ETL monochrom") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MONOCHROM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources monochrom          
+                            SOURCE=monochrom
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL MPD": {
+                    }
+                }
+                stage("ETL MPD") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MPD != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources mpd --skip_tests    
+                            SOURCE=mpd
+                            $DIPPER --sources $SOURCE --skip_tests
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL NCBI Gene": {
-                        sh ''' 
-                            $DIPPER --sources ncbigene --taxon \
+                    }
+                }
+                stage("ETL NCBI Gene") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.NCBIGENE != null }
+                        }
+                    }
+                    steps {
+                        sh '''
+                            SOURCE=ncbigene
+                            $DIPPER --sources $SOURCE --taxon \
                             28377,3702,9913,6239,9615,9031,7955,44689,7227,9796,9606,9544,13616,10090,9258,9598,9823,10116,4896,31033,8364,9685,559292
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL OMIM": {
+                    }
+                }
+                stage("ETL OMIM") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.OMIM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources omim -q
+                            SOURCE=omim
+                            $DIPPER --sources $SOURCE -q
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Orphanet": {
-                        sh '''    
-                            $DIPPER --sources orphanet        
-                        '''
-                    },
-                    "ETL Reactome": {
+                    }
+                }
+                stage("ETL Orphanet") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.ORPHANET != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources reactome     
+                            SOURCE=orphanet
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL Wormbase": {
+                    }
+                }
+                stage("ETL Reactome") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.REACTOME != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources wormbase --dest_fmt nt       
+                            SOURCE=reactome
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL ZFIN Slim": {
+                    }
+                }
+                stage("ETL Wormbase") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.WORMBASE != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources zfinslim
+                            SOURCE=wormbase
+                            $DIPPER --sources $SOURCE --dest_fmt nt
+                            scp ./out/${SOURCE}.nt ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL ZFIN": {
+                    }
+                }
+                stage("ETL ZFIN Slim") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.ZFINSLIM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources zfin
+                            SOURCE=zfinslim
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL RGD": {
+                    }
+                }
+                stage("ETL ZFIN") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.ZFIN != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources rgd   
+                            SOURCE=zfin
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL SGD": {
+                    }
+                }
+                stage("ETL RGD") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.RGD != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources sgd
+                            SOURCE=rgd
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL MyChem Info": {
+                    }
+                }
+                stage("ETL SGD") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.SGD != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources mychem
+                            SOURCE=sgd
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL OMIA": {
+                    }
+                }
+                stage("ETL MyChem Info") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.MYCHEM != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources omia
+                            SOURCE=mychem
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                    "ETL UCSCBands": {
+                    }
+                }
+                stage("ETL OMIA") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.OMIA != null }
+                        }
+                    }
+                    steps {
                         sh '''
-                            $DIPPER --sources ucscbands
+                            SOURCE=omia
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-                    },
-                )
             }
         }
+                stage("ETL UCSCBands") {
+                    when {
+                        anyOf {
+                            expression { env.RUN_ALL != null }
+                            expression { env.UCSCBANDS != null }
     }
 
-    post {
-        always {
-            // Copy files
+                    }
+                    steps {
             sh '''
-                scp ./out/* monarch@$MONARCH_DATA_FS:/var/www/data/ttl/
+                            SOURCE=ucscbands
+                            $DIPPER --sources $SOURCE
+                            scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
             '''
+                    }
+                }
+            }
         }
     }
 }
