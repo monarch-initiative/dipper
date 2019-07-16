@@ -273,7 +273,7 @@ class Ensembl(Source):
             filereader = csv.reader(csvfile, delimiter='\t')
             for row in filereader:
                 if len(row) < 4:
-                    LOG.warning("Too few columns in: " + row)
+                    LOG.warning("Too few columns in: " + str(row))
                     raise ValueError("Data error for file %s", raw)
                 (ensembl_gene_id, external_gene_name, description, gene_biotype,
                  entrezgene, ensembl_peptide_id, uniprotswissprot) = row[0:7]
