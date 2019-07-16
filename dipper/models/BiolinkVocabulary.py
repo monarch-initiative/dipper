@@ -47,3 +47,4 @@ class BioLinkVocabulary(Enum):
     Association = "biolink:Association"
     GeneProduct = "biolink:GeneProduct"
     Pathway = "biolink:Pathway"
+    FrequencyValue = "biolink:FrequencyValue"

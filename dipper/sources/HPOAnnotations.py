@@ -13,6 +13,7 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.D2PAssoc import D2PAssoc
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from dipper import config
 
 LOG = logging.getLogger(__name__)
@@ -235,11 +236,15 @@ class HPOAnnotations(Source):
                 # LOG.info(
                 #    'adding <%s>-to-<%s> because <%s>', disease_id, pheno_id, eco_id)
 
-                model.addClassToGraph(disease_id)
-                model.addClassToGraph(pheno_id)
-                model.addClassToGraph(eco_id)
+                model.addClassToGraph(disease_id,
+                                      class_category=blv.Disease.value)
+                model.addClassToGraph(pheno_id,
+                                      class_category=blv.PhenotypicFeature.value)
+                model.addClassToGraph(eco_id,
+                                      class_category=blv.EvidenceType.value)
                 if onset is not None and onset != '':
-                    model.addClassToGraph(onset)
+                    model.addClassToGraph(onset,
+                                          class_category=blv.LifeStage.value)
 
                 if asp in ('P', 'M'):  # phenotype? abnormality or mortality
                     assoc = D2PAssoc(  # default rel=self.globaltt['has phenotype']
@@ -257,7 +262,9 @@ class HPOAnnotations(Source):
                     self.graph.addTriple(
                         assoc.get_association_id(),
                         self.globaltt['has_sex_specificty'],
-                        self.globaltt[sex])
+                        self.globaltt[sex],
+                        subject_categeory=blv.Association.value,
+                        object_category=blv.BiologicalSex.value)
 
                 # Publication
                 # cut -f 5 phenotype.hpoa | grep ";" | tr ';' '\n' | cut -f1 -d ':' |\

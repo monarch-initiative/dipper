@@ -1,4 +1,5 @@
 from dipper.models.assoc.Association import Assoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'nlw'
 
@@ -63,14 +64,20 @@ class D2PAssoc(Assoc):
         # add the basic association nodes
         # if rel == self.globaltt[['has disposition']:
 
-        Assoc.add_association_to_graph(self)
+        Assoc.add_association_to_graph(self,
+                                       subject_category=blv.Disease.value,
+                                       object_category=blv.PhenotypicFeature.value)
         # anticipating trouble with onsets ranges that look like curies
         if self.onset is not None and self.onset != '':
-            self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset)
+            self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset,
+                                 subject_category=blv.Association.value,
+                                 object_category=blv.LifeStage.value)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
-                self.assoc_id, self.globaltt['frequency'], self.frequency)
+                self.assoc_id, self.globaltt['frequency'], self.frequency,
+                subject_category=blv.Association.value,
+                object_category=blv.FrequencyValue.value)
 
         return
 
