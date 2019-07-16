@@ -24,8 +24,6 @@
         write the test set back to the raw directory
     ./scripts/ClinVarXML_Subset.sh | gzip > raw/clinvarxml_alpha/ClinVarTestSet.xml.gz
 
-    parsing a test set  (producing plain blank nodes)
-    ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt -s False
 
     parsing a test set  (Skolemizing blank nodes  i.e. for Protege)
     ./dipper/sources/ClinVarXML_alpha.py -f ClinVarTestSet.xml.gz -o ClinVarTestSet_`datestamp`.nt
@@ -61,6 +59,8 @@ RPATH = '/' + '/'.join(IPATH[1:-3])
 GLOBAL_TT_PATH = RPATH + '/translationtable/GLOBAL_TERMS.yaml'
 LOCAL_TT_PATH = RPATH + '/translationtable/' + INAME + '.yaml'
 
+CV_FTP = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar'
+
 # Global translation table
 # Translate labels found in ontologies
 # to the terms they are for
@@ -74,10 +74,6 @@ with open(GLOBAL_TT_PATH) as fh:
 LOCALTT = {}
 with open(LOCAL_TT_PATH) as fh:
     LOCALTT = yaml.safe_load(fh)
-
-
-#with open(os.path.join(os.path.dirname(__file__), '../curie_map.yaml'), 'r') as fh:
-#    CURIEMAP = yaml.safe_load(fh)
 
 CURIEMAP = curie_map.get()
 CURIEMAP['_'] = 'https://monarchinitiative.org/.well-known/genid/'
@@ -114,7 +110,8 @@ def make_spo(sub, prd, obj):
     objt = ''
     subjt = ''
 
-    # object is a curie or bnode or literal [string|number]
+    # object is a curie or bnode or literal [string|number] NOT None.
+    assert (obj is not None), '"None" object for subject ' + sub + ' & pred ' + prd
 
     objcuri = None
     match = re.match(CURIERE, obj)
@@ -362,7 +359,6 @@ def allele_to_triples(allele, triples) -> None:
     if allele.label is not None:
         write_spo(allele.id, 'rdfs:label', allele.label, triples)
 
-
     # <ClinVarVariant:rcv_variant_id><OWL:sameAs><dbSNP:rs>
     for dbsnp_id in allele.dbsnps:
         # sameAs or hasdbxref?
@@ -486,11 +482,11 @@ def parse():
     files = {
         'f1': {
             'file': 'ClinVarFullRelease_00-latest.xml.gz',
-            'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/xml/ClinVarFullRelease_00-latest.xml.gz'
+            'url': CV_FTP + '/xml/ClinVarFullRelease_00-latest.xml.gz'
         },
         'f2': {
             'file': 'gene_condition_source_id',
-            'url': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id'
+            'url': CV_FTP + 'gene_condition_source_id'
         }
     }
 
@@ -594,7 +590,6 @@ def parse():
             else:
                 g2pmap[row[0]] = [row[3]]
 
-
     # Override default global translation table
     if args.globaltt:
         with open(args.globaltt) as globaltt_fh:
@@ -612,7 +607,6 @@ def parse():
     if args.skolemize is False:
         global CURIEMAP
         CURIEMAP['_'] = '_:'
-
 
     # Seed releasetriple to avoid union with the empty set
     # <MonarchData: + args.output> <a> <owl:Ontology>
@@ -672,7 +666,8 @@ def parse():
             # <MeasureSet  ID="123456" Type="Haplotype">
             # <Measure     ID="46900"  Type="single nucleotide variant">
 
-            # As of 04/2019 Measure is no longer a direct child of ReferenceClinVarAssertion
+            # As of 04/2019
+            # Measure is no longer a direct child of ReferenceClinVarAssertion
             # Unless a MeasureSet Type="Variant", both the MeasureSet ID and Measure IDs
             # will be resolvable, eg:
             # https://www.ncbi.nlm.nih.gov/clinvar/variation/431733/
@@ -695,11 +690,13 @@ def parse():
                 RCV_GenotypeSet = RCVAssertion.find('./GenotypeSet')
                 genovar = Genotype(
                     id="ClinVarVariant:" + RCV_GenotypeSet.get('ID'),
-                    label=RCV_GenotypeSet.find('./Name/ElementValue[@Type="Preferred"]').text,
+                    label=RCV_GenotypeSet.find(
+                        './Name/ElementValue[@Type="Preferred"]').text,
                     variant_type=RCV_GenotypeSet.get('Type')
                 )
                 for RCV_MeasureSet in RCV_GenotypeSet.findall('./MeasureSet'):
-                    genovar.variants.append(process_measure_set(RCV_MeasureSet, rcv_acc))
+                    genovar.variants.append(
+                        process_measure_set(RCV_MeasureSet, rcv_acc))
             else:
                 genovar = process_measure_set(RCV_MeasureSet, rcv_acc)
 
@@ -766,7 +763,7 @@ def parse():
                         break
 
                     if rcv_disease_db is None and has_medgen_id:
-                        rcv_disease_db = 'MedGen' # RCV_TraitXRef.get('DB')
+                        rcv_disease_db = 'MedGen'  # RCV_TraitXRef.get('DB')
                     if rcv_disease_id is None and has_medgen_id:
                         rcv_disease_id = medgen_id
 
@@ -794,9 +791,10 @@ def parse():
             # check that no members of rcv.genovar are none
             # and that at least one condition has an id and db
             if [1 for member in vars(rcv.genovar) if member is None] \
-                    or not [1 for condition in rcv.conditions
-                            if condition.id is not None
-                            and condition.database is not None]:
+                    or not [
+                        1 for condition in rcv.conditions
+                        if condition.id is not None and
+                        condition.database is not None]:
                 LOG.info('%s is under specified. SKIPPING', rcv_acc)
                 rjct_cnt += 1
                 # Write this Clinvar set out so we can know what we are missing
@@ -864,17 +862,21 @@ def parse():
                     scv_acc = ClinVarAccession.get('Acc')
                     scv_accver = ClinVarAccession.get('Version')
                     scv_orgid = ClinVarAccession.get('OrgID')
-                    #scv_updated = ClinVarAccession.get('DateUpdated')  # not used
+                    # scv_updated = ClinVarAccession.get('DateUpdated')  # not used
                     SCV_SubmissionID = SCV_Assertion.find('./ClinVarSubmissionID')
                     if SCV_SubmissionID is not None:
                         scv_submitter = SCV_SubmissionID.get('submitter')
 
                     # blank node identifiers
                     _evidence_id = '_:' + digest_id(monarch_id + '_evidence')
-                    write_spo(_evidence_id, 'rdfs:label', monarch_id + '_evidence', rcvtriples)
+                    write_spo(
+                        _evidence_id, 'rdfs:label', monarch_id + '_evidence',
+                        rcvtriples)
 
                     _assertion_id = '_:' + digest_id(monarch_id + '_assertion')
-                    write_spo(_assertion_id, 'rdfs:label', monarch_id + '_assertion', rcvtriples)
+                    write_spo(
+                        _assertion_id, 'rdfs:label', monarch_id + '_assertion',
+                        rcvtriples)
 
                     #                   TRIPLES
                     # <monarch_assoc><rdf:type><OBAN:association>  .
@@ -883,14 +885,20 @@ def parse():
                     #   <OBAN:association_has_subject>
                     #       <ClinVarVariant:rcv_variant_id>
                     write_spo(
-                        monarch_assoc, 'OBAN:association_has_subject', rcv.genovar.id, rcvtriples)
+                        monarch_assoc, 'OBAN:association_has_subject', rcv.genovar.id,
+                        rcvtriples)
                     # <ClinVarVariant:rcv_variant_id><rdfs:label><rcv.variant.label>  .
 
                     # <monarch_assoc><OBAN:association_has_object><rcv_disease_curi>  .
                     write_spo(
-                        monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie, rcvtriples)
-                        # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
-                    write_spo(rcv_disease_curie, 'rdfs:label', condition.label, rcvtriples)
+                        monarch_assoc, 'OBAN:association_has_object', rcv_disease_curie,
+                        rcvtriples)
+                    # <rcv_disease_curi><rdfs:label><rcv_disease_label>  .
+                    # medgen might not have a disease label
+                    if condition.label is not None:
+                        write_spo(
+                            rcv_disease_curie, 'rdfs:label', condition.label,
+                            rcvtriples)
 
                     # <monarch_assoc><SEPIO:0000007><:_evidence_id>  .
                     write_spo(
@@ -906,21 +914,27 @@ def parse():
                         rcvtriples)
 
                     # <:_evidence_id><rdf:type><ECO:0000000> .
-                    write_spo(_evidence_id, 'rdf:type', GLOBALTT['evidence'], rcvtriples)
+                    write_spo(
+                        _evidence_id, 'rdf:type', GLOBALTT['evidence'], rcvtriples)
 
                     # <:_assertion_id><rdf:type><SEPIO:0000001> .
-                    write_spo(_assertion_id, 'rdf:type', GLOBALTT['assertion'], rcvtriples)
+                    write_spo(
+                        _assertion_id, 'rdf:type', GLOBALTT['assertion'], rcvtriples)
                     # <:_assertion_id><rdfs:label><'assertion'>  .
-                    write_spo(_assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id, rcvtriples)
+                    write_spo(
+                        _assertion_id, 'rdfs:label', 'ClinVarAssertion_' + scv_id,
+                        rcvtriples)
 
                     # <:_assertion_id><SEPIO_0000111><:_evidence_id>
                     write_spo(
                         _assertion_id,
-                        GLOBALTT['is_assertion_supported_by_evidence'], _evidence_id, rcvtriples)
+                        GLOBALTT['is_assertion_supported_by_evidence'], _evidence_id,
+                        rcvtriples)
 
                     # <:_assertion_id><dc:identifier><scv_acc + '.' + scv_accver>
                     write_spo(
-                        _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver, rcvtriples)
+                        _assertion_id, 'dc:identifier', scv_acc + '.' + scv_accver,
+                        rcvtriples)
                     # <:_assertion_id><SEPIO:0000018><ClinVarSubmitters:scv_orgid>  .
                     write_spo(
                         _assertion_id,
@@ -935,11 +949,13 @@ def parse():
                         rcvtriples)
                     # <ClinVarSubmitters:scv_orgid><rdfs:label><scv_submitter>  .
                     write_spo(
-                        'ClinVarSubmitters:' + scv_orgid, 'rdfs:label', scv_submitter, rcvtriples)
+                        'ClinVarSubmitters:' + scv_orgid, 'rdfs:label', scv_submitter,
+                        rcvtriples)
                     ################################################################
                     ClinicalSignificance = SCV_Assertion.find('./ClinicalSignificance')
                     if ClinicalSignificance is not None:
-                        scv_eval_date = str(ClinicalSignificance.get('DateLastEvaluated'))
+                        scv_eval_date = str(
+                            ClinicalSignificance.get('DateLastEvaluated'))
 
                     # bummer. cannot specify xpath parent '..' targeting above .find()
                     for SCV_AttributeSet in SCV_Assertion.findall('./AttributeSet'):
@@ -990,7 +1006,8 @@ def parse():
 
                             # <_assertion_method_id><rdfs:label><scv_assert_method>
                             write_spo(
-                                _assertion_method_id, 'rdfs:label', scv_assert_method, rcvtriples)
+                                _assertion_method_id, 'rdfs:label', scv_assert_method,
+                                rcvtriples)
 
                             # <_assertion_method_id><ERO:0000480><scv_citation_url>
                             if SCV_Citation is not None:
@@ -1022,7 +1039,9 @@ def parse():
                             'PMID:' + scv_citation_id,
                             rcvtriples)
                         # <:monarch_assoc><dc:source><PMID:scv_citation_id>
-                        write_spo(monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id, rcvtriples)
+                        write_spo(
+                            monarch_assoc, 'dc:source', 'PMID:' + scv_citation_id,
+                            rcvtriples)
 
                         # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                         write_spo(
@@ -1036,8 +1055,9 @@ def parse():
                     if SCV_Description is not None:
                         scv_significance = SCV_Description.text.strip()
                         scv_geno = resolve(scv_significance)
+                        unkwn = 'has_uncertain_significance_for_condition'
                         if scv_geno is not None and \
-                                LOCALTT[scv_significance] != 'has_uncertain_significance_for_condition' and\
+                                LOCALTT[scv_significance] != unkwn and \
                                 scv_significance != 'protective':
                             # we have the association's (SCV) pathnogicty call
                             # and its significance is explicit
@@ -1055,7 +1075,8 @@ def parse():
                                 scv_geno,
                                 rcvtriples)
                             # <rcv_variant_id><scv_geno><rcv_disease_db:rcv_disease_id>
-                            write_spo(genovar.id, scv_geno, rcv_disease_curie, rcvtriples)
+                            write_spo(
+                                genovar.id, scv_geno, rcv_disease_curie, rcvtriples)
                             # <monarch_assoc><oboInOwl:hasdbxref><ClinVar:rcv_acc>  .
                             write_spo(
                                 monarch_assoc,
@@ -1093,7 +1114,8 @@ def parse():
                                     # <PMID:scv_citation_id><rdf:type><IAO:0000013>
                                     write_spo(
                                         'PMID:' + scv_citation_id.text,
-                                        'rdf:type', GLOBALTT['journal article'], rcvtriples)
+                                        'rdf:type', GLOBALTT['journal article'],
+                                        rcvtriples)
 
                                     # <:monarch_assoc><dc:source><PMID:scv_citation_id>
                                     write_spo(
@@ -1139,7 +1161,8 @@ def parse():
                                 scv_evidence_type = resolve(SCV_OIMT.text.strip())
                                 if scv_evidence_type is None:
                                     LOG.warning(
-                                        'No mapping for scv_evidence_type: %s', SCV_OIMT.text)
+                                        'No mapping for scv_evidence_type: %s',
+                                        SCV_OIMT.text)
                                     continue
                                 # blank node
                                 _provenance_id = '_:' + digest_id(
@@ -1160,11 +1183,13 @@ def parse():
 
                                 # <_:provenance_id><rdf:type><scv_evidence_type>
                                 write_spo(
-                                    _provenance_id, 'rdf:type', scv_evidence_type, rcvtriples)
+                                    _provenance_id, 'rdf:type', scv_evidence_type,
+                                    rcvtriples)
 
                                 # <_:provenance_id><rdfs:label><SCV_OIMT.text>
                                 write_spo(
-                                    _provenance_id, 'rdfs:label', SCV_OIMT.text, rcvtriples)
+                                    _provenance_id, 'rdfs:label', SCV_OIMT.text,
+                                    rcvtriples)
                     # End of a SCV (a.k.a. MONARCH association)
             # End of the ClinVarSet.
             # output triples that only are known after processing sibbling records
@@ -1196,6 +1221,11 @@ def parse():
     outtmp.close()
     reject.close()
     os.replace(outfile, output)
+
+    # If the intermediate file is there it is because of a problem to fix elsewhere
+    # try:
+    #    os.remove(outfile)
+    # except FileNotFoundError:
 
 
 if __name__ == "__main__":
