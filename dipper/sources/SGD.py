@@ -5,6 +5,7 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.Association import Assoc
 from dipper.models.Model import Model
 from dipper.models.Reference import Reference
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 from ontobio.ontol_factory import OntologyFactory
 
 
@@ -141,12 +142,16 @@ class SGD(Source):
                 record['pheno_obj']['quality']['apo_id'].replace(':', '_')
             )
             g2p_assoc = Assoc(
-                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation,
+                subject_category=blv.Gene.value,
+                object_category=blv.PhenotypicFeature.value)
         else:
             pheno_label = record['pheno_obj']['entity']['term']
             pheno_id = record['pheno_obj']['entity']['apo_id']
             g2p_assoc = Assoc(
-                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation)
+                self.graph, self.name, sub=gene, obj=pheno_id, pred=relation,
+                subject_category=blv.Gene.value,
+                object_category=blv.PhenotypicFeature.value)
             assoc_id = g2p_assoc.make_association_id(
                 'yeastgenome.org', gene, relation, pheno_id)
             g2p_assoc.set_association_id(assoc_id=assoc_id)
@@ -154,20 +159,25 @@ class SGD(Source):
         # add to graph to mint assoc id
         g2p_assoc.add_association_to_graph()
 
-        model.addLabel(subject_id=gene, label=record['Gene Name'])
+        model.addLabel(subject_id=gene, label=record['Gene Name'],
+                       subject_category=blv.Gene.value)
 
         # add the association triple
-        model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id)
+        model.addTriple(subject_id=gene, predicate_id=relation, obj=pheno_id,
+                        subject_category=blv.Gene.value,
+                        object_category=blv.PhenotypicFeature.value)
 
         model.addTriple(
             subject_id=pheno_id,
             predicate_id=self.globaltt['subclass_of'],
-            obj=self.globaltt['phenotype'])
+            obj=self.globaltt['phenotype'],
+            subject_category=blv.PhenotypicFeature.value)
 
         # label nodes
         # pheno label
 
-        model.addLabel(subject_id=pheno_id, label=pheno_label)
+        model.addLabel(subject_id=pheno_id, label=pheno_label,
+                       subject_category=blv.PhenotypicFeature.value)
 
         g2p_assoc.description = self._make_description(record)
 
@@ -189,12 +199,14 @@ class SGD(Source):
         if len(references) > 1:
             # create equivalent source for any other refs in list
             for ref in references[1:]:
-                model.addSameIndividual(sub=references[0], obj=ref)
+                model.addSameIndividual(sub=references[0], obj=ref,
+                                        subject_category=blv.Publication.value)
 
         # add experiment type as evidence
         for exp_type in record['experiment_type']:
             g2p_assoc.add_evidence(exp_type['id'])
-            model.addLabel(subject_id=exp_type['id'], label=exp_type['term'])
+            model.addLabel(subject_id=exp_type['id'], label=exp_type['term'],
+                           subject_category=blv.EvidenceType.value)
 
         try:
             g2p_assoc.add_association_to_graph()
