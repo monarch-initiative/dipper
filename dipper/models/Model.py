@@ -39,9 +39,11 @@ class Model():
             subject_category=subject_category,
             object_category=subject_type_category)
 
-    def addLabel(self, subject_id, label, **args):
+    def addLabel(self, subject_id, label,
+                 subject_category=None, **args):
         self.graph.addTriple(
-            subject_id, self.globaltt['label'], label, object_is_literal=True, **args)
+            subject_id, self.globaltt['label'], label, object_is_literal=True,
+            subject_category=subject_category, **args)
 
     def addClassToGraph(
             self, class_id, label=None, class_type=None, description=None,
