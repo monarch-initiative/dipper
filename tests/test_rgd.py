@@ -65,6 +65,9 @@ class RGDTestCase(unittest.TestCase):
     RGDRef:1581841 biolink:category biolink:EvidenceType .
     
     MONARCH:b4650e8c3d865f11a1a5 biolink:category biolink:Association .
+    MP:0003340 biolink:category biolink:PhenotypicFeature .
+    RGD:2535 biolink:category biolink:Gene .
+    PMID:12799311 biolink:category biolink:Publication .
         """
         # dbg
         logger.debug("Reference graph: %s",
