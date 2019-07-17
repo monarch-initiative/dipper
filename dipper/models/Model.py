@@ -224,7 +224,8 @@ class Model():
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :param class_category: biolink category CURIE for class_id
-        (no biolink category is possible for synonym, since this is a literal)
+        (no biolink category is possible for synonym, since this is added to the triple
+        as a literal)
         :return:
 
         """
