@@ -282,10 +282,10 @@ class Ensembl(Source):
                 entrezgene = row[col.index('entrezgene_id')].strip()
                 ensembl_peptide_id = row[col.index('ensembl_peptide_id')].strip()
                 uniprotswissprot = row[col.index('uniprotswissprot')].strip()
-                hgnc_id = None
+                hgnc_curie = None
                 # in the case of human genes, we also get the hgnc id,
                 if taxid == '9606' and 'hgnc_id' in col:
-                    hgnc_id = row[col.index('hgnc_id')].strip()
+                    hgnc_curie = row[col.index('hgnc_id')].strip()
 
                 if self.test_mode and entrezgene != '' and \
                         entrezgene not in self.gene_ids:
@@ -311,8 +311,8 @@ class Ensembl(Source):
                     else:
                         model.addEquivalentClass(gene_id, entrez_curie)
 
-                if hgnc_id is not None and hgnc_id != '':
-                    model.addEquivalentClass(gene_id, 'HGNC:' + hgnc_id)
+                if hgnc_curie is not None and hgnc_curie != '':
+                    model.addEquivalentClass(gene_id, hgnc_curie)
                 geno.addTaxon('NCBITaxon:' + taxid, gene_id)
                 if ensembl_peptide_id != '':
                     peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
