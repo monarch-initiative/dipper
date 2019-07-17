@@ -320,6 +320,8 @@ class GeneReviews(OMIMSource):
 
             # figure out if the book is there; if so, process, otherwise skip
             book_dir = '/'.join((self.rawdir, 'books'))
+            if not os.path.exists(book_dir):
+                os.mkdir(book_dir)
             book_files = os.listdir(book_dir)
             if ''.join((nbk, '.html')) not in book_files:
                 # LOG.warning("No book found locally for %s; skipping", nbk)
