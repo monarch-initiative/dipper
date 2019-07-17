@@ -19,7 +19,9 @@ class D2PAssoc(Assoc):
             self, graph, definedby, disease_id, phenotype_id,
             onset=None,
             frequency=None,
-            rel=None
+            rel=None,
+            disease_category=blv.Disease.value,
+            phenotype_category=blv.PhenotypicFeature.value
     ):
         super().__init__(graph, definedby)
 
@@ -34,8 +36,10 @@ class D2PAssoc(Assoc):
         self.phenotype_id = phenotype_id
 
         self.set_subject(disease_id)
+        self.disease_category = disease_category
         self.set_relationship(rel)
         self.set_object(phenotype_id)
+        self.phenotype_category = phenotype_category
 
         return
 
@@ -48,7 +52,7 @@ class D2PAssoc(Assoc):
 
         return
 
-    def add_association_to_graph(self):
+    def add_association_to_graph(self, disease_category=None, phenotype_category=None):
         """
         The reified relationship between a disease and a phenotype is decorated
         with some provenance information.
@@ -56,28 +60,36 @@ class D2PAssoc(Assoc):
         are classes.
 
         :param g:
-
+        :param disease_category: a biolink category CURIE for disease_id (defaults to
+        biolink:Disease via the constructor)
+        :param phenotype_category: a biolink category CURIE for phenotype_id (defaults
+        to biolink:PhenotypicFeature via the constructor)
         :return:
 
         """
+
+        if disease_category is not None:
+            self.disease_category = disease_category
+        if phenotype_category is not None:
+            self.phenotype_category = phenotype_category
 
         # add the basic association nodes
         # if rel == self.globaltt[['has disposition']:
 
         Assoc.add_association_to_graph(self,
-                                       subject_category=blv.Disease.value,
-                                       object_category=blv.PhenotypicFeature.value)
+                                       subject_category=self.disease_category,
+                                       object_category=self.phenotype_category)
         # anticipating trouble with onsets ranges that look like curies
         if self.onset is not None and self.onset != '':
             self.graph.addTriple(self.assoc_id, self.globaltt['onset'], self.onset,
-                                 subject_category=blv.Association.value,
-                                 object_category=blv.LifeStage.value)
+                                 subject_category=self.disease_category,
+                                 object_category=self.phenotype_category)
 
         if self.frequency is not None and self.frequency != '':
             self.graph.addTriple(
                 self.assoc_id, self.globaltt['frequency'], self.frequency,
-                subject_category=blv.Association.value,
-                object_category=blv.FrequencyValue.value)
+                subject_category=self.disease_category,
+                object_category=self.phenotype_category)
 
         return
 

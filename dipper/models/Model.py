@@ -117,8 +117,10 @@ class Model():
                              object_category=object_category,
                              **args)
 
-    def addOWLPropertyClassRestriction(self, class_id, property_id, property_value):
-
+    def addOWLPropertyClassRestriction(self, class_id, property_id, property_value,
+                                       class_category=None,
+                                       property_id_category=None,
+                                       property_value_category=None):
         # make a blank node to hold the property restrictions
         # scrub the colons, they will make the ttl parsers choke
         bnode = '_:'+re.sub(
@@ -127,11 +129,14 @@ class Model():
         self.graph.addTriple(
             bnode, self.globaltt['type'], self.globaltt['restriction'])
         self.graph.addTriple(
-            bnode, self.globaltt['on_property'], property_id)
+            bnode, self.globaltt['on_property'], property_id,
+            object_category=property_id_category)
         self.graph.addTriple(
-            bnode, self.globaltt['some_values_from'], property_value)
+            bnode, self.globaltt['some_values_from'], property_value,
+            object_category=property_value_category)
         self.graph.addTriple(
-            class_id, self.globaltt['subclass_of'], bnode)
+            class_id, self.globaltt['subclass_of'], bnode,
+            subject_category=class_category)
 
         return
 
@@ -210,7 +215,7 @@ class Model():
         
     def addSynonym(
             self, class_id, synonym, synonym_type=None,
-            class_category=None, synonym_category=None):
+            class_category=None):
         """
         Add the synonym as a property of the class cid.
         Assume it is an exact synonym, unless otherwise specified
@@ -219,7 +224,7 @@ class Model():
         :param synonym: the literal synonym label
         :param synonym_type: the CURIE of the synonym type (not the URI)
         :param class_category: biolink category CURIE for class_id
-        :param synonym_category = biolink category CURIE for synonym
+        (no biolink category is possible for synonym, since this is a literal)
         :return:
 
         """
@@ -229,8 +234,7 @@ class Model():
         if synonym is not None:
             self.graph.addTriple(
                 class_id, synonym_type, synonym, object_is_literal=True,
-                subject_category=class_category,
-                object_category=synonym_category)
+                subject_category=class_category)
 
     def addDefinition(self, class_id, definition,
                       class_category=None):
