@@ -55,9 +55,12 @@ ORPHA:268061 a owl:Class .
 ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
     
+ENSEMBL:ENSG00000166813 biolink:category biolink:Gene .
 ECO:0000322 biolink:category biolink:EvidenceType .
 HGNC:30497 biolink:category biolink:Genotype .
-ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+HGNC:30497 biolink:category biolink:Gene .
+ORPHA:268061 biolink:category biolink:Gene .
+ORPHA:938475 biolink:category biolink:Disease .
 
 MONARCH:ba2ac5d2153c70e2bb98 biolink:category biolink:Association .
         """
@@ -88,8 +91,9 @@ ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
     
 ECO:0000322 biolink:category biolink:EvidenceType .
+ORPHA:268061 biolink:category biolink:Gene .
 ORPHA:268061 biolink:category biolink:Genotype .
-ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+ORPHA:938475 biolink:category biolink:Disease .
     
 MONARCH:b9ad1b0c562ad4db3f1e biolink:category biolink:Association .
         """
@@ -120,8 +124,9 @@ ORPHA:938475 a owl:Class ;
     rdfs:label "too much unit testing disorder" .
     
 ECO:0000322 biolink:category biolink:EvidenceType .
+ORPHA:268061 biolink:category biolink:Gene .
 ORPHA:268061 biolink:category biolink:Genotype .
-ORPHA:938475 biolink:category biolink:PhenotypicFeature .
+ORPHA:938475 biolink:category biolink:Disease .
 
 MONARCH:bdbeb077e365ddedda20 biolink:category biolink:Association .
         """
