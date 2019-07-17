@@ -4,6 +4,7 @@ from dipper.sources.Source import Source
 from dipper.models.assoc.G2PAssoc import G2PAssoc
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -97,7 +98,8 @@ class Orphanet(Source):
                 disorder_label = elem.find('Name').text
 
                 # assuming that these are in the ontology (...any particular one?)
-                model.addClassToGraph(disorder_id, disorder_label)
+                model.addClassToGraph(disorder_id, disorder_label,
+                                      class_category=blv.Disease.value)
                 assoc_list = elem.find('DisorderGeneAssociationList')
                 expected_genes = assoc_list.get('count')
                 LOG.info(
@@ -125,7 +127,8 @@ class Orphanet(Source):
                                 pfx = self.localtt[pfx]
                             gene_curie = pfx + ':' + gene_set[pfx]
                             gene_set.pop(pfx)
-                            model.addClassToGraph(gene_curie, None)
+                            model.addClassToGraph(gene_curie, None,
+                                                  class_category=blv.Gene.value)
                             break
 
                     # TEC have reservations w.r.t aggerator links being gene classes
@@ -137,8 +140,11 @@ class Orphanet(Source):
                         dbxref = prefix + ':' + lclid
 
                         if gene_curie != dbxref:
-                            model.addClassToGraph(dbxref, None)
-                            model.addEquivalentClass(gene_curie, dbxref)
+                            model.addClassToGraph(dbxref, None,
+                                                  class_category=blv.Gene.value)
+                            model.addEquivalentClass(gene_curie, dbxref,
+                                                     subject_category=blv.Gene.value,
+                                                     object_category=blv.Gene.value)
 
                     # TEC. would prefer this not happen here. let HGNC handle it
                     # except there are some w/o explicit external links ...
@@ -148,7 +154,8 @@ class Orphanet(Source):
                     syn_list = gene.find('./SynonymList')
                     if int(syn_list.get('count')) > 0:
                         for syn in syn_list.findall('./Synonym'):
-                            model.addSynonym(gene_curie, syn.text)
+                            model.addSynonym(gene_curie, syn.text,
+                                             class_category=blv.Gene.value)
 
                     dg_label = assoc.find('./DisorderGeneAssociationType/Name').text
 
@@ -159,7 +166,9 @@ class Orphanet(Source):
 
                     rel_id = self.resolve(dg_label)
                     
-                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie, disorder_id, rel_id)
+                    g2p_assoc = G2PAssoc(self.graph, self.name, gene_curie,
+                                         disorder_id, rel_id,
+                                         phenotype_category=blv.Disease.value)
                     g2p_assoc.add_evidence(eco_id)
                     g2p_assoc.add_association_to_graph()
 
