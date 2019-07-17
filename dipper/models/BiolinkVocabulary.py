@@ -41,6 +41,7 @@ class BioLinkVocabulary(Enum):
     LifeStage = "biolink:LifeStage"
     Environment = "biolink:Environment"
     EvidenceType = "biolink:EvidenceType"
+    # AnatomicalEntity is a subcellular location, cell type or gross anatomical part
     AnatomicalEntity = "biolink:AnatomicalEntity"
     Provider = "biolink:Provider"
     Procedure = "biolink:Procedure"
@@ -48,3 +49,4 @@ class BioLinkVocabulary(Enum):
     GeneProduct = "biolink:GeneProduct"
     Pathway = "biolink:Pathway"
     FrequencyValue = "biolink:FrequencyValue"
+    CellLine = "biolink:CellLine"

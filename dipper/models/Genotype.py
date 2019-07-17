@@ -131,7 +131,8 @@ class Genotype():
         """
 
         self.graph.addTriple(
-            child_id, self.globaltt['derives_from'], parent_id)
+            child_id, self.globaltt['derives_from'], parent_id,
+            subject_category=child_category, object_category=parent_category)
 
         return
 
