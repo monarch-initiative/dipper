@@ -436,7 +436,7 @@ pipeline {
                             sh '''
                                 SOURCE=monarch
                                 cd .. && mkdir -p raw/monarch
-                                cp -r data-boutique/OMIA-disease-phenotype ./raw/monarch/
+                                cp -r data-boutique-b/OMIA-disease-phenotype ./raw/monarch/
                                 $DIPPER --sources $SOURCE --skip_tests
                                 scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                             '''
