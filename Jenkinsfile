@@ -4,7 +4,8 @@ pipeline {
 
     /*triggers {
          Run every Monday at 5pm
-        cron('H 17 * * 1')
+         cron('H 17 * * 1')
+
     }*/
 
     environment {
@@ -30,7 +31,6 @@ pipeline {
     }
 
     stages {
-
         stage('Build dipper package') {
             steps {
                 dir('./config') {
@@ -61,7 +61,8 @@ pipeline {
                             expression { env.MONARCH_OWL != null }
                         }
                     }
-            steps {
+                    steps {
+
                         dir('./create-monarch-owl') {
                             sh """
                                 wget http://build.berkeleybop.org/job/owltools/lastSuccessfulBuild/artifact/OWLTools-Runner/target/owltools
@@ -139,7 +140,6 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            # Test run
                             SOURCE=bgee
                             $DIPPER --sources $SOURCE --limit 20 --taxon 9606,10090,7227,6239,7955,10116 # --version bgee_v13_2
 
@@ -515,7 +515,7 @@ pipeline {
                     }
                     steps {
                         sh '''
-                            SOURCE=orphanet
+                            SOURCE=orphanet 
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
@@ -639,22 +639,21 @@ pipeline {
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
                         '''
-            }
-        }
+                    }
+                }
                 stage("ETL UCSCBands") {
                     when {
                         anyOf {
                             expression { env.RUN_ALL != null }
                             expression { env.UCSCBANDS != null }
-    }
-
+                        }
                     }
                     steps {
-            sh '''
+                        sh '''
                             SOURCE=ucscbands
                             $DIPPER --sources $SOURCE
                             scp ./out/${SOURCE}.ttl ./out/${SOURCE}_dataset.ttl monarch@$MONARCH_DATA_FS:$DATA_DEST
-            '''
+                        '''
                     }
                 }
             }

@@ -26,9 +26,9 @@
 "9685": "fcatus_gene_ensembl"
 
 # have not checked if Ensembl is still sending these keys
-# or if theu have updated to match SO
-"ncRNA": "ncRNA_gene"           # TODO make term request for "asRNA"
-"asRNA": "ncRNA_gene"
+# or if they have updated to match SO
+"ncRNA": "ncRNA_gene"
+"asRNA": "ncRNA_gene"           # TODO make term request for "asRNA"
 "Mt_rRNA": "mt_rRNA"            # was rRNA_gene
 "Mt_tRNA": "mt_tRNA"
 "lincRNA": "lincRNA_gene"
@@ -45,3 +45,4 @@
 "piRNA": "piRNA_gene"
 "scRNA": "scRNA_gene"
 "tRNA": "tRNA_gene"
+"IG_LV_gene": "immunoglobulin_gene"  # SO:0002126 may be more (or too) specific
