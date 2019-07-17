@@ -6,7 +6,7 @@ from dipper.sources.OMIMSource import OMIMSource
 from dipper.models.Genotype import Genotype
 from dipper.models.Model import Model
 from dipper.models.GenomicFeature import Feature, makeChromID
-
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -206,21 +206,28 @@ class HGNC(OMIMSource):
                     name = None
 
                 if locus_type == 'withdrawn':
-                    model.addDeprecatedClass(hgnc_id)
+                    model.addDeprecatedClass(hgnc_id,
+                                             old_id_category=blv.Gene.value)
                 elif symbol[-1] == '@':  # 10)  region (HOX), RNA cluster, gene (PCDH)
                     continue
 
                 else:
                     gene_type_id = self.resolve(locus_type, mandatory=False)
                     if gene_type_id != locus_type:
-                        model.addClassToGraph(hgnc_id, symbol, gene_type_id, name)
-                    model.makeLeader(hgnc_id)
+                        model.addClassToGraph(hgnc_id, symbol, gene_type_id, name,
+                                              class_category=blv.Gene.value)
+                    model.makeLeader(hgnc_id,
+                                     node_category=blv.Gene.value)
 
                 if entrez_id != '':
-                    model.addEquivalentClass(hgnc_id, 'NCBIGene:' + entrez_id)
+                    model.addEquivalentClass(hgnc_id, 'NCBIGene:' + entrez_id,
+                                             subject_category=blv.Gene.value,
+                                             object_category=blv.Gene.value)
 
                 if ensembl_gene_id != '':
-                    model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id)
+                    model.addEquivalentClass(hgnc_id, 'ENSEMBL:' + ensembl_gene_id,
+                                             subject_category=blv.Gene.value,
+                                             object_category=blv.Gene.value)
 
                 for omim_id in omim_ids.split('|'):
                     if omim_id in self.omim_replaced:
@@ -232,14 +239,19 @@ class HGNC(OMIMSource):
 
                     if omim_id in self.omim_type and \
                             self.omim_type[omim_id] == self.globaltt['gene']:
-                        model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id)
+                        model.addEquivalentClass(hgnc_id, 'OMIM:' + omim_id,
+                                                 subject_category=blv.Gene.value,
+                                                 object_category=blv.Gene.value)
 
-                geno.addTaxon(self.hs_txid, hgnc_id)
+                geno.addTaxon(self.hs_txid, hgnc_id,
+                              genopart_category=blv.Gene.value)
 
                 # add pubs as "is about"
                 for pubmed_id in pubmed_ids.split('|'):
                     graph.addTriple(
-                        'PMID:' + pubmed_id, self.globaltt['is_about'], hgnc_id)
+                        'PMID:' + pubmed_id, self.globaltt['is_about'], hgnc_id,
+                        subject_category=blv.Publication.value,
+                        object_category=blv.Gene.value)
 
                 # add chr location
                 # sometimes two are listed, like: 10p11.2 or 17q25
@@ -253,7 +265,8 @@ class HGNC(OMIMSource):
                     chrom = chr_match.group(1)
                     chrom_id = makeChromID(chrom, self.hs_txid, 'CHR')
                     band_match = band_pattern.search(location)
-                    feat = Feature(graph, hgnc_id, None, None)
+                    feat = Feature(graph, hgnc_id, None, None,
+                                   feature_category=blv.Gene.value)
                     if band_match is not None and band_match.groups():
                         band = band_match.group(1)
                         band = chrom + band
@@ -261,10 +274,13 @@ class HGNC(OMIMSource):
                         # as a feature but assume that the band is created
                         # as a class with properties elsewhere in Monochrom
                         band_id = makeChromID(band, self.hs_txid, 'CHR')
-                        model.addClassToGraph(band_id, None)
+                        model.addClassToGraph(band_id, None,
+                                              class_category=
+                                              blv.GenomicSequenceLocalization.value)
                         feat.addSubsequenceOfFeature(band_id)
                     else:
-                        model.addClassToGraph(chrom_id, None)
+                        model.addClassToGraph(chrom_id, None,
+                                              blv.GenomicEntity.value)
                         feat.addSubsequenceOfFeature(chrom_id)
 
                 if not self.test_mode and limit is not None and \
