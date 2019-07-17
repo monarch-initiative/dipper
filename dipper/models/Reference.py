@@ -89,11 +89,14 @@ class Reference:
         self.short_citation = citation
         return
 
-    def addPage(self, subject_id, page_url):
+    def addPage(self, subject_id, page_url,
+                subject_category=None,
+                page_category=blv.InformationContentEntity.value):
         self.graph.addTriple(
             subject_id, self.globaltt['page'],   # foaf:page  not  <sio:web page>
             page_url, object_is_literal=False,    # URL is not a literal
-            subject_category=blv.InformationContentEntity.value)
+            subject_category=subject_category,
+            object_category=page_category)
         return
 
     def addTitle(self, subject_id, title):
