@@ -417,7 +417,7 @@ class Monochrom(Source):
         return test_suite
 
 
-def getChrPartTypeByNotation(notation, graph=None):
+def getChrPartTypeByNotation(notation, graph):
     """
     This method will figure out the kind of feature that a given band
     is based on pattern matching to standard karyotype notation.
