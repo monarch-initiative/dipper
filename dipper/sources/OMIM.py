@@ -720,15 +720,22 @@ class OMIM(OMIMSource):
                         for ref in publist[al_id]:
                             pmid = ref_to_pmid[int(ref)]
                             graph.addTriple(pmid, self.globaltt['is_about'], al_id,
-                                            subject_category=blv.Publication.value)
+                                            subject_category=blv.Publication.value,
+                                            object_category=blv.SequenceVariant.value)
                                             
                         # look up the pubmed id in the list of references
                         if 'dbSnps' in alv['allelicVariant']:
                             dbsnp_ids = re.split(r',', alv['allelicVariant']['dbSnps'])
                             for dnum in dbsnp_ids:
                                 did = 'dbSNP:'+dnum.strip()
-                                model.addIndividualToGraph(did, None)
-                                model.addSameIndividual(al_id, did)
+                                model.addIndividualToGraph(did, None,
+                                                           ind_category=
+                                                           blv.SequenceVariant.value)
+                                model.addSameIndividual(al_id, did,
+                                                        subject_category=
+                                                        blv.SequenceVariant.value,
+                                                        object_category=
+                                                        blv.SequenceVariant.value)
 
                         # Note that RCVs are variant to disease associations
                         # in ClinVar, rather than variant entries
@@ -753,7 +760,11 @@ class OMIM(OMIMSource):
                         if 'movedTo' in alv['allelicVariant']:
                             moved_id = 'OMIM:' + alv['allelicVariant']['movedTo']
                             moved_ids = [moved_id]
-                        model.addDeprecatedIndividual(al_id, moved_ids)
+                        model.addDeprecatedIndividual(al_id, moved_ids,
+                                                      old_id_category=
+                                                      blv.SequenceVariant.value,
+                                                      new_ids_category=
+                                                      blv.SequenceVariant.value)
                     else:
                         LOG.error(
                             'Uncaught alleleic variant status %s',
@@ -855,7 +866,8 @@ class OMIM(OMIMSource):
                 ps_label = row[col.index('Phenotypic Series Title')].strip()
                 ps_num = row[col.index('Phenotypic Series number')].strip()
                 omimps_curie = 'OMIMPS:' + ps_num
-                model.addClassToGraph(omimps_curie, ps_label)
+                model.addClassToGraph(omimps_curie, ps_label,
+                                      class_category=blv.Disease.value)
 
                 if not self.test_mode and limit is not None and line_counter > limit:
                     break
@@ -896,12 +908,11 @@ class OMIM(OMIMSource):
                 omim_curie, len(serieslist))
         for phser in set(serieslist):
             series_curie = 'OMIMPS:' + phser
-            model.addClassToGraph(series_curie, None)
+            model.addClassToGraph(series_curie, None,
+                                  class_category=blv.Disease.value)
             model.addSubClass(omim_curie, series_curie,
                               child_category=blv.Disease.value,
                               parent_category=blv.Disease.value)
-            model.addSubClass(omim_curie, series_curie)
-
 
     @staticmethod
     def _get_mappedids(entry, graph):
