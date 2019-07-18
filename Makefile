@@ -5,7 +5,7 @@
 DIPPER_BIN = ./dipper-etl.py --debug
 TEST = python3 -m unittest
 
-all: test prefix_equivalents dot_to_svg
+all: test prefix_equivalents
 
 ###
 ### Tests
