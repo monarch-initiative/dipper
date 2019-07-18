@@ -157,7 +157,7 @@ class Ensembl(Source):
 
     def fetch_protein_gene_map(self, taxon_id):
         """
-        Fetch a list of proteins for a species in biomart
+        Fetch a mapping of ensembl_gene to proteins for a species in biomart
         :param taxid:
         :return: dict
         """
@@ -165,27 +165,37 @@ class Ensembl(Source):
         protein_dict = dict()
         col = ['ensembl_gene_id', 'ensembl_peptide_id']
         col_exp = [
-            self.columns['bmq_headers'][col.index('ensembl_gene_id')],
-            self.columns['bmq_headers'][col.index('ensembl_peptide_id')],
+            self.columns['bmq_headers'][
+                self.columns['bmq_attributes'].index('ensembl_gene_id')],
+            self.columns[
+                'bmq_headers'][
+                    self.columns['bmq_attributes'].index('ensembl_peptide_id')],
         ]
         raw_query = self._build_biomart_gene_query(taxon_id, col)
-
         params = urllib.parse.urlencode({'query': raw_query})
 
         conn = http.client.HTTPConnection(ENS_URL)
         conn.request("GET", '/biomart/martservice?' + params)
         response = conn.getresponse()
-        row = next(response).rstrip().split('\t')
+        line = next(response).decode('utf-8').rstrip()
+        row = line.split('\t')
+
+        line_num = 1
         if not self.check_fileheader(col_exp, row):
             pass  #
 
         for line in response:
             line = line.decode('utf-8').rstrip()
             row = line.split('\t')
-            protein_dict[
-                row[col.index('ensembl_peptide_id')]] = [
-                    row[col.index('ensembl_gene_id')]
-                ]
+            line_num += 1
+            if len(row) != len(col):
+                # LOG.warning('line %i is: %s', line_num, row)
+                pass
+            else:
+                # string-test seems to expect the value as a list
+                # protein_dict[row[1]] = [row[0]]
+                protein_dict[row[col.index('ensembl_peptide_id')]] = row[
+                    col.index('ensembl_gene_id')]
 
         conn.close()
         LOG.info(
@@ -230,6 +240,8 @@ class Ensembl(Source):
 
         if taxid != '9606' and 'hgnc_id' in cols_to_fetch:
             cols_to_fetch.remove('hgnc_id')
+
+        LOG.info('Fetching columns', cols_to_fetch)
 
         query_attributes = {
             "virtualSchemaName": "default", "formatter": "TSV", "header": "1",
@@ -314,7 +326,7 @@ class Ensembl(Source):
                 if hgnc_curie is not None and hgnc_curie != '':
                     model.addEquivalentClass(gene_id, hgnc_curie)
                 geno.addTaxon('NCBITaxon:' + taxid, gene_id)
-                if ensembl_peptide_id != '':
+                if ensembl_peptide_id is not None and ensembl_peptide_id != '':
                     peptide_curie = 'ENSEMBL:{}'.format(ensembl_peptide_id)
                     model.addIndividualToGraph(peptide_curie, None, gene_type_id)
                     geno.addGeneProduct(gene_id, peptide_curie)
