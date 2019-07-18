@@ -373,7 +373,7 @@ class UCSCBands(Source):
                 # TODO PYLINT Consider using enumerate
                 # instead of iterating with range and len
                 for i in range(len(parents)):
-                    rti = getChrPartTypeByNotation(parents[i])
+                    rti = getChrPartTypeByNotation(parents[i], self.graph)
 
                     pnum = chrom_num+parents[i]
                     sta = int(start)
