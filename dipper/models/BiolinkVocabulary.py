@@ -50,3 +50,4 @@ class BioLinkVocabulary(Enum):
     Pathway = "biolink:Pathway"
     FrequencyValue = "biolink:FrequencyValue"
     CellLine = "biolink:CellLine"
+    NoncodingRnaProduct = "biolink:NoncodingRnaProduct"

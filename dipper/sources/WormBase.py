@@ -11,6 +11,7 @@ from dipper.models.GenomicFeature import makeChromID, Feature
 from dipper.models.Reference import Reference
 from dipper.models.Model import Model
 from dipper.models.assoc.InteractionAssoc import InteractionAssoc
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 LOG = logging.getLogger(__name__)
 
@@ -239,12 +240,15 @@ class WormBase(Source):
                 if gene_symbol == '':
                     gene_symbol = None
                 model.addClassToGraph(
-                    gene_id, gene_symbol, self.globaltt['gene'])
+                    gene_id, gene_symbol, self.globaltt['gene'],
+                    class_category=blv.Gene.value)
                 if live == 'Dead':
-                    model.addDeprecatedClass(gene_id)
-                geno.addTaxon(taxon_id, gene_id)
+                    model.addDeprecatedClass(gene_id,
+                                             old_id_category=blv.Gene.value)
+                geno.addTaxon(taxon_id, gene_id, genopart_category=blv.Gene.value)
                 if gene_synonym != '' and gene_synonym is not None:
-                    model.addSynonym(gene_id, gene_synonym)
+                    model.addSynonym(gene_id, gene_synonym,
+                                     class_category=blv.Gene.value)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -276,7 +280,8 @@ class WormBase(Source):
                 gene_id = 'WormBase:'+gene_num
 
                 if concise_description != 'none available':
-                    model.addDefinition(gene_id, concise_description)
+                    model.addDefinition(gene_id, concise_description,
+                                        class_category=blv.Gene.value)
 
                 # remove the description if it's identical to the concise
                 descs = {
@@ -390,11 +395,14 @@ class WormBase(Source):
 
                             model.addIndividualToGraph(
                                 allele_id, None,
-                                self.globaltt['reagent_targeted_gene'])
+                                self.globaltt['reagent_targeted_gene'],
+                                ind_category=blv.SequenceVariant.value)
 
                             self.graph.addTriple(
                                 allele_id, self.globaltt['is_expression_variant_of'],
-                                gene_id)
+                                gene_id,
+                                subject_category=blv.SequenceVariant.value,
+                                object_category=blv.Gene.value)
 
                         elif re.search(r'WBVar', allele_id):
                             # this may become deprecated by using wormmine
@@ -416,7 +424,8 @@ class WormBase(Source):
                             LOG.warning(
                                 "Some kind of allele I don't recognize: %s", allele_num)
                             continue
-                        assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
+                        assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id,
+                                         entity_category=blv.SequenceVariant.value)
 
                         if eco_id is not None:
                             assoc.add_evidence(eco_id)
@@ -484,7 +493,8 @@ class WormBase(Source):
 
                     rnai_id = 'WormBase:'+rnai_num
                     geno.addGeneTargetingReagent(
-                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id)
+                        rnai_id, None, self.globaltt['RNAi_reagent'], gene_id,
+                        reagent_category=blv.NoncodingRnaProduct.value)
 
                     # make the "allele" of the gene
                     # that is targeted by the reagent
@@ -492,9 +502,11 @@ class WormBase(Source):
                         gene_num, rnai_num)
                     allele_label = gene_alt_symbol+'<'+rnai_num+'>'
                     geno.addReagentTargetedGene(
-                        rnai_id, gene_id, allele_id, allele_label)
+                        rnai_id, gene_id, allele_id, allele_label,
+                        reagent_category=blv.NoncodingRnaProduct.value)
 
-                    assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id)
+                    assoc = G2PAssoc(graph, self.name, allele_id, phenotype_id,
+                                     entity_category=blv.SequenceVariant.value)
                     assoc.add_source('WormBase:'+ref_num)
                     # eco_id = 'ECO:0000019'  # RNAi evidence  # TODO unused
                     assoc.add_association_to_graph()
@@ -544,7 +556,9 @@ class WormBase(Source):
 
                 if xref_id is not None:
                     reference.addRefToGraph()
-                    model.addSameIndividual(ref_id, xref_id)
+                    model.addSameIndividual(ref_id, xref_id,
+                                            subject_category=blv.Publication.value,
+                                            object_category=blv.Publication.value)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -670,7 +684,9 @@ class WormBase(Source):
                 other_name = attribute_dict.get('other_name')
                 for n in [alias, other_name]:
                     if n is not None:
-                        model.addSynonym(fid, other_name)
+                        model.addSynonym(fid, other_name,
+                                         class_category=
+                                         blv.GenomicSequenceLocalization.value)
 
                 if feature_type_label == 'gene':
                     ftype_id = self.resolve(biotype)
@@ -680,7 +696,9 @@ class WormBase(Source):
                 chr_id = makeChromID(chrom, build_id, 'CHR')
                 geno.addChromosomeInstance(chrom, build_id, build_num)
 
-                feature = Feature(graph, fid, flabel, ftype_id)
+                feature = Feature(graph, fid, flabel, ftype_id,
+                                  feature_category=
+                                  blv.GenomicSequenceLocalization.value)
                 feature.addFeatureStartLocation(start, chr_id, strand)
                 feature.addFeatureEndLocation(start, chr_id, strand)
 
@@ -691,7 +709,9 @@ class WormBase(Source):
                 feature.addFeatureToGraph(True, None, feature_is_class)
 
                 if note is not None:
-                    model.addDescription(fid, note)
+                    model.addDescription(fid, note,
+                                         subject_category=
+                                         blv.GenomicSequenceLocalization.value)
 
                 if limit is not None and line_counter > limit:
                     break
@@ -733,7 +753,8 @@ class WormBase(Source):
 
                 assoc = G2PAssoc(
                     graph, self.name, gene_id,
-                    disease_id, self.globaltt['is model of'])
+                    disease_id, self.globaltt['is model of'],
+                    phenotype_category=blv.Disease.value)
                 ref = re.sub(r'WB_REF:', 'WormBase:', ref)
                 if ref != '':
                     assoc.add_source(ref)
@@ -813,10 +834,13 @@ class WormBase(Source):
                 assoc = InteractionAssoc(
                     graph, self.name, gene_a_id, gene_b_id, interaction_type_id)
                 assoc.set_association_id(interaction_id)
-                assoc.add_association_to_graph()
+                assoc.add_association_to_graph(
+                    subject_category=blv.Gene.value,
+                    object_category=blv.Gene.value)
                 assoc_id = assoc.get_association_id()
                 # citation is not a pmid or WBref - get this some other way
-                model.addDescription(assoc_id, summary)
+                model.addDescription(assoc_id, summary,
+                                     subject_category=blv.Association.value)
 
                 if limit is not None and line_counter > limit:
                     break

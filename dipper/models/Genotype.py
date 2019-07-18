@@ -412,7 +412,7 @@ class Genotype():
 
     def addGeneTargetingReagent(
             self, reagent_id, reagent_label, reagent_type, gene_id,
-            description=None):
+            description=None, reagent_category=blv.ChemicalSubstance.value):
         """
         Here, a gene-targeting reagent is added.
         The actual targets of this reagent should be added separately.
@@ -429,14 +429,15 @@ class Genotype():
             reagent_id, reagent_label, reagent_type, description)
 
         self.graph.addTriple(reagent_id, self.globaltt['targets_gene'], gene_id,
-                             subject_category=blv.ChemicalSubstance.value,
+                             subject_category=reagent_category,
                              object_category=blv.Gene.value)
 
         return
 
     def addReagentTargetedGene(
             self, reagent_id, gene_id, targeted_gene_id=None,
-            targeted_gene_label=None, description=None):
+            targeted_gene_label=None, description=None,
+            reagent_category=blv.ChemicalSubstance.value):
         """
         This will create the instance of a gene that is targeted by a molecular
         reagent (such as a morpholino or rnai).
@@ -454,6 +455,7 @@ class Genotype():
         :param reagent_id:
         :param gene_id:
         :param targeted_gene_id:
+        :param reagent_category: a biolink category CURIE for reagent_id
         :return:
 
         """
@@ -476,7 +478,7 @@ class Genotype():
         self.graph.addTriple(
             targeted_gene_id, self.globaltt['is_targeted_by'], reagent_id,
             subject_category=blv.Gene.value,
-            object_category=blv.ChemicalSubstance.value)
+            object_category=reagent_category)
 
         return
 
