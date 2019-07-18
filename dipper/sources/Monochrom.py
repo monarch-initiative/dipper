@@ -148,12 +148,9 @@ class Monochrom(Source):
 
         self._check_tax_ids()
 
-        return
-
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
 
@@ -171,8 +168,6 @@ class Monochrom(Source):
         # using the full graph as the test here
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
-
-        return
 
     def _get_chrbands(self, limit, taxon):
         """
@@ -328,8 +323,6 @@ class Monochrom(Source):
                     break
 
         # TODO figure out the staining intensities for the encompassing bands
-
-        return
 
     def make_parent_bands(self, band, child_bands):
         """

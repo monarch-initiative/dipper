@@ -177,12 +177,9 @@ class UCSCBands(Source):
         # data-source specific warnings
         # (will be removed when issues are cleared)
 
-        return
-
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
 
@@ -202,8 +199,6 @@ class UCSCBands(Source):
         # using the full graph as the test here
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
-
-        return
 
     def _get_chrbands(self, limit, taxon):
         """
@@ -457,8 +452,6 @@ class UCSCBands(Source):
             # to come when we merge in ZFIN.py
             bfeature.addFeatureToGraph(False)
 
-        return
-
     def _create_genome_builds(self):
         """
         Various resources will map variations to either UCSC (hg*)
@@ -499,8 +492,6 @@ class UCSCBands(Source):
                 geno.addReferenceGenome(ucsc_id, ucsc_label, tax_id)
                 geno.addReferenceGenome(mapped_id, mapped_label, tax_id)
                 model.addSameIndividual(ucsc_id, mapped_id)
-
-        return
 
     def _check_tax_ids(self):
         for taxon in self.tax_ids:
