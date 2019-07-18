@@ -67,7 +67,7 @@ class OMIM(OMIMSource):
         },
         'phenotypicSeries': {
             'file': 'phenotypic_series_title_all.txt',
-            'url': 'https://omim.org/phenotypicSeriesTitle/all?format=tsv',
+            'url': 'https://omim.org/phenotypicSeriesTitles/all?format=tsv',
             'headers': {'User-Agent': USER_AGENT},
             'clean': OMIMURL,
             'columns': [  # expected
