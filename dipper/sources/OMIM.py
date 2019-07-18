@@ -647,6 +647,7 @@ class OMIM(OMIMSource):
         # Note: this is actually a G2D association;
         # see https://github.com/monarch-initiative/dipper/issues/748
         assoc = G2PAssoc(graph, self.name, gene_id, disorder_id, rel_id,
+                         entity_category=blv.Gene.value,
                          phenotype_category=blv.Disease.value)
 
         if phene_key is not None:
@@ -654,8 +655,7 @@ class OMIM(OMIMSource):
             if evidence != phene_key:
                 assoc.add_evidence(evidence)  # evidence is Found
 
-        assoc.add_association_to_graph(subject_category=blv.Gene.value,
-                                       object_category=blv.Disease.value)
+        assoc.add_association_to_graph()
 
     @staticmethod
     def _get_description(entry):
