@@ -334,14 +334,14 @@ class Monochrom(Source):
         :return:
 
         """
-        m = re.match(r'([pq][A-H\d]+(?:\.\d+)?)', band)
+        mch = re.match(r'([pq][A-H\d]+(?:\.\d+)?)', band)
         if len(band) > 0:
-            if m:
-                p = str(band[0:len(band)-1])
-                p = re.sub(r'\.$', '', p)
-                if p is not None:
-                    child_bands.add(p)
-                    self.make_parent_bands(p, child_bands)
+            if mch:
+                prnt = str(band[0:len(band)-1])
+                prnt = re.sub(r'\.$', '', prnt)
+                if prnt is not None:
+                    child_bands.add(prnt)
+                    self.make_parent_bands(prnt, child_bands)
         else:
             child_bands = set()
         return child_bands

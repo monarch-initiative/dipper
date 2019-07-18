@@ -237,8 +237,8 @@ class UCSCBands(Source):
 
         # process the bands
         col = ['scaffold', 'start', 'stop', 'band_num', 'rtype']
-        with gzip.open(myfile, 'rb') as f:
-            for line in f:
+        with gzip.open(myfile, 'rb') as binreader:
+            for line in binreader:
                 line_counter += 1
                 # skip comments
                 line = line.decode().strip()
@@ -363,17 +363,17 @@ class UCSCBands(Source):
                     if len(parents) > 0:
                         mybands[chrom_num + band_num]['parent'] = chrom_num + parents[0]
 
-                # loop through the parents and add them to the hash
+                # loop through the parents and add them to the dict
                 # add the parents to the graph, in hierarchical order
                 # TODO PYLINT Consider using enumerate
                 # instead of iterating with range and len
                 for i in range(len(parents)):
                     rti = getChrPartTypeByNotation(parents[i], self.graph)
 
-                    pnum = chrom_num+parents[i]
+                    pnum = chrom_num + parents[i]
                     sta = int(start)
                     sto = int(stop)
-                    if pnum not in mybands.keys():
+                    if pnum is not None and pnum not in mybands.keys():
                         # add the parental band to the hash
                         bnd = {
                             'min': min(sta, sto),
@@ -384,7 +384,7 @@ class UCSCBands(Source):
                             'stain': None,
                             'type': rti}
                         mybands[pnum] = bnd
-                    else:
+                    elif pnum is not None:
                         # band already in the hash means it's a grouping band
                         # need to update the min/max coords
                         bnd = mybands.get(pnum)
@@ -396,7 +396,8 @@ class UCSCBands(Source):
                         chrom = mybands.get(chrom_num)
                         chrom['max'] = max(sta, sto, chrom['max'])
                         mybands[chrom_num] = chrom
-
+                    else:
+                        LOG.error("pnum is None")
                     # add the parent relationships to each
                     if i < len(parents) - 1:
                         mybands[pnum]['parent'] = chrom_num+parents[i+1]
@@ -405,7 +406,7 @@ class UCSCBands(Source):
                         # as attached to the chromosome
                         mybands[pnum]['parent'] = chrom_num
 
-        f.close()  # end looping through file
+        binreader.close()  # end looping through file
 
         # loop through the hash and add the bands to the graph
         for bnd in mybands.keys():
@@ -469,22 +470,22 @@ class UCSCBands(Source):
         geno = Genotype(graph)
         model = Model(graph)
         LOG.info("Adding equivalent assembly identifiers")
-        for sp in self.species:
-            tax_id = self.globaltt[sp]
+        for spc in self.species:
+            tax_id = self.globaltt[spc]
             txid_num = tax_id.split(':')[1]
             for key in self.files[txid_num]['assembly']:
                 ucsc_id = key
                 try:
                     ucsc_label = ucsc_id.split(':')[1]
                 except IndexError:
-                    LOG.error('%s Assembly id:  "%s" is problematic', sp, key)
+                    LOG.error('%s Assembly id:  "%s" is problematic', spc, key)
                     continue
                 if key in self.localtt:
                     mapped_id = self.localtt[key]
                 else:
                     LOG.error(
                         '%s Assembly id:  "%s" is not in local translation table',
-                        sp, key)
+                        spc, key)
 
                 mapped_label = mapped_id.split(':')[1]
 
