@@ -3,6 +3,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
 from dipper.sources.Source import Source
 from dipper.models.Model import Model
+from dipper.models.BiolinkVocabulary import BioLinkVocabulary as blv
 
 __author__ = 'timputman'
 
@@ -116,16 +117,21 @@ class MyChem(Source):
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=target['action'],
-                    obj=target['uniprot'])
+                    obj=target['uniprot'],
+                    subject_category=blv.ChemicalSubstance.value,
+                    object_category=blv.Protein.value)
                 model.addLabel(subject_id=target['uniprot'], label=target['name'])
                 model.addTriple(
                     subject_id=target['uniprot'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['polypeptide'])
+                    obj=self.globaltt['polypeptide'],
+                    subject_category=blv.Protein.value)
                 model.addTriple(
                     subject_id=package['drugbank_id'],
                     predicate_id=self.globaltt['equivalent_class'],
-                    obj=package['unii'])
+                    obj=package['unii'],
+                    subject_category=blv.ChemicalSubstance.value,
+                    object_category=blv.ChemicalSubstance.value)
                 model.addTriple(
                     subject_id=target['action'],
                     predicate_id=self.globaltt['subPropertyOf'],
@@ -133,44 +139,56 @@ class MyChem(Source):
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['molecular entity'])
+                    obj=self.globaltt['molecular entity'],
+                    subject_category=blv.ChemicalSubstance.value)
         if source == 'drugcentral':
             for indication in package['indications']:
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=self.globaltt['is substance that treats'],
-                    obj=indication['snomed_id'])
+                    obj=indication['snomed_id'],
+                    subject_category=blv.ChemicalSubstance.value,
+                    object_category=blv.Disease.value)
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['molecular entity'])
+                    obj=self.globaltt['molecular entity'],
+                    subject_category=blv.ChemicalSubstance.value)
                 model.addTriple(
                     subject_id=indication['snomed_id'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['disease'])
+                    obj=self.globaltt['disease'],
+                    subject_category=blv.Disease.value)
                 model.addLabel(
-                    subject_id=indication['snomed_id'], label=indication['snomed_name'])
+                    subject_id=indication['snomed_id'], label=indication['snomed_name'],
+                    subject_category=blv.Disease.value)
             for interaction in package['interactions']:
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=self.globaltt['molecularly_interacts_with'],
-                    obj=interaction['uniprot'])
+                    obj=interaction['uniprot'],
+                    subject_category=blv.ChemicalSubstance.value,
+                    object_category=blv.Protein.value)
                 # model.addLabel(
                 #    subject_id=interaction['uniprot'],
                 #    label='Protein_{}'.format(interaction['uniprot']))
                 model.addLabel(
-                    subject_id=interaction['uniprot'], label=interaction['target_name'])
+                    subject_id=interaction['uniprot'], label=interaction['target_name'],
+                    subject_category=blv.Protein.value)
                 model.addTriple(
                     subject_id=package['unii'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['molecular entity'])
+                    obj=self.globaltt['molecular entity'],
+                    subject_category=blv.ChemicalSubstance.value)
                 model.addDescription(
                     subject_id=interaction['uniprot'],
-                    description=interaction['target_class'])
+                    description=interaction['target_class'],
+                    subject_category=blv.Protein.value)
                 model.addTriple(
                     subject_id=interaction['uniprot'],
                     predicate_id=self.globaltt['subclass_of'],
-                    obj=self.globaltt['polypeptide'])
+                    obj=self.globaltt['polypeptide'],
+                    subject_category=blv.Protein.value)
         return
 
     def fetch_from_mychem(self):
