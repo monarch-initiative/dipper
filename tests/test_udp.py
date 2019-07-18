@@ -154,6 +154,9 @@ class UDPTestCase(unittest.TestCase):
             rdfs:label "patient_1 genotype" ;
             GENO:0000382 <https://monarchinitiative.org/.well-known/genid/b41e8da0787b45e24c4f> ;
             biolink:category biolink:Genotype .
+            
+        NCBITaxon:9606 biolink:category biolink:OrganismTaxon .
+        :patient_1 biolink:category biolink:Case .
         """
 
         self.assertTrue(self.test_util.test_graph_equality(triples, udp.graph))
