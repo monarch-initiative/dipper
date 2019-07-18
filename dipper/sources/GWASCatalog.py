@@ -316,6 +316,11 @@ class GWASCatalog(Source):
         chrom_positions = re.split(r';\s?', chrom_pos)
         context_list = re.split(r';\s?', context)
         mapped_genes = re.split(r';\s?', mapped_gene)
+
+        # Not having four "PAX5" as a list might be better, but it breaks unit tests
+        # mapped_genes = list(set(mapped_genes)) # make uniq
+        # snp_labels = list(set(snp_labels)) # make uniq
+
         snp_curies = list()
 
         for snp in snp_labels:
