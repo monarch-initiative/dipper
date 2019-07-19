@@ -1005,6 +1005,9 @@ class OMIM(OMIMSource):
 
         ref_to_pmid = {}
         entry_num = entry['mimNumber']
+
+        self.populate_omim_type()  # in order to check type of OMIM record below
+
         if 'referenceList' in entry:
             reflist = entry['referenceList']
             for rlst in reflist:
@@ -1034,10 +1037,7 @@ class OMIM(OMIMSource):
                 ref.addRefToGraph()
                 ref_to_pmid[rlst['reference']['referenceNumber']] = pub_id
 
-                if "prefix" in entry:
-                    omim_id_category = omim_prefix_2_biolink_category(entry["prefix"])
-                else:
-                    omim_id_category = None
+                omim_id_category = self._omim_type_2_biolink_category(entry_num)
 
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
@@ -1046,6 +1046,25 @@ class OMIM(OMIMSource):
                                 object_category=blv.Publication.value)
 
         return ref_to_pmid
+
+    def _omim_type_2_biolink_category(self, entry_num):
+        if entry_num in self.omim_type:
+            if self.omim_type[entry_num] in [
+                self.globaltt['gene'],
+                self.globaltt['has_affected_feature']
+            ]:
+                omim_id_category = blv.Gene.value
+            elif self.omim_type[entry_num] in [
+                self.globaltt['phenotype'],
+                self.globaltt['heritable_phenotypic_marker']
+            ]:
+                omim_id_category = blv.PhenotypicFeature.value
+            else:
+                omim_id_category = None
+        else:
+            omim_id_category = None
+
+        return omim_id_category
 
     # def getTestSuite(self):
     #   ''' this should find a home under /test , if it is needed'''
@@ -1065,48 +1084,5 @@ def get_omim_id_from_entry(entry):
     return omimid
 
 
-def omim_prefix_2_biolink_category(prefix):
-    # https://www.omim.org/help/faq#1_3
-    # What do the symbols preceding a MIM number represent?
-    # An asterisk (*) before an entry number indicates a gene.
 
-    # A number symbol (#) before an entry number indicates that it is a descriptive
-    # entry, usually of a phenotype, and does not represent a unique locus. The reason
-    # for the use of the number symbol is given in the first paragraph of he entry.
-    # Discussion of any gene(s) related to the phenotype resides in another entry(ies)
-    # as described in the first paragraph.
-
-    # A plus sign (+) before an entry number indicates that the entry contains the
-    # description of a gene of known sequence and a phenotype.
-
-    # A percent sign (%) before an entry number indicates that the entry describes a
-    # confirmed mendelian phenotype or phenotypic locus for which the underlying
-    # molecular
-    # basis is not known.
-
-    # No symbol before an entry number generally indicates a description of a phenotype
-    # for which the mendelian basis, although suspected, has not been clearly
-    # established
-    # or that the separateness of this phenotype from that in another entry is unclear.
-
-    # A caret (^) before an entry number means the entry no longer exists because it
-    # was removed from the database or moved to another entry as indicated.
-    # See also the description of symbols used in the disorder column of the OMIM Gene
-    # Map and Morbid Map.
-
-    prefix = str(prefix.strip())
-    if prefix == "*":
-        return blv.Gene.value
-    elif prefix == "#":
-        return blv.PhenotypicFeature.value
-    elif prefix == "+":
-        return blv.Gene.value
-    elif prefix == "%":
-        return blv.PhenotypicFeature.value
-    elif prefix == "":
-        return blv.PhenotypicFeature.value
-    elif prefix == "^":
-        return None
-    else:
-        return None
 
