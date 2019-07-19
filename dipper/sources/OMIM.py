@@ -938,15 +938,19 @@ class OMIM(OMIMSource):
                     orpha_label = orphdis[2].strip()
                     orpha_curie = 'ORPHA:' + orpha_num
                     orpha_mappings.append(orpha_curie)
-                    model.addClassToGraph(orpha_curie, orpha_label)
-                    model.addXref(omim_curie, orpha_curie)
+                    model.addClassToGraph(orpha_curie, orpha_label,
+                                          class_category=blv.Disease.value)
+                    model.addXref(omim_curie, orpha_curie,
+                                  class_category=blv.Disease.value,
+                                  xref_category=blv.Disease.value)
 
             if 'umlsIDs' in links:
                 umls_mappings = links['umlsIDs'].split(',')
                 for umls in umls_mappings:
                     umls_curie = 'UMLS:' + umls
                     model.addClassToGraph(umls_curie, None)
-                    model.addXref(omim_curie, umls_curie)
+                    model.addXref(omim_curie, umls_curie,
+                                  class_category=blv.Disease.value)
 
     def _get_mapped_gene_ids(self, entry, graph):
         gene_ids = []
@@ -963,7 +967,9 @@ class OMIM(OMIMSource):
                 if omimtype in [
                         self.globaltt['gene'], self.globaltt['has_affected_feature']]:
                     for ncbi in gene_ids:
-                        model.addEquivalentClass(omim_curie, 'NCBIGene:' + str(ncbi))
+                        model.addEquivalentClass(omim_curie, 'NCBIGene:' + str(ncbi),
+                                                 subject_category=blv.Gene.value,
+                                                 object_category=blv.Gene.value)
         return gene_ids
 
     def _get_alt_labels(self, titles):
@@ -1028,10 +1034,15 @@ class OMIM(OMIMSource):
                 ref.addRefToGraph()
                 ref_to_pmid[rlst['reference']['referenceNumber']] = pub_id
 
+                if "prefix" in entry:
+                    omim_type = get_omim_record_2_biolink_category(entry["prefix"])
+                else:
+                    omim_type = None
+
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id,
-                                subject_category=blv.Disease.value,
+                                subject_category=omim_type,
                                 object_category=blv.Publication.value)
 
         return ref_to_pmid
@@ -1052,3 +1063,50 @@ def get_omim_id_from_entry(entry):
     else:
         omimid = None
     return omimid
+
+
+def get_omim_record_2_biolink_category(prefix):
+    # https://www.omim.org/help/faq#1_3
+    # What do the symbols preceding a MIM number represent?
+    # An asterisk (*) before an entry number indicates a gene.
+
+    # A number symbol (#) before an entry number indicates that it is a descriptive
+    # entry, usually of a phenotype, and does not represent a unique locus. The reason
+    # for the use of the number symbol is given in the first paragraph of he entry.
+    # Discussion of any gene(s) related to the phenotype resides in another entry(ies)
+    # as described in the first paragraph.
+
+    # A plus sign (+) before an entry number indicates that the entry contains the
+    # description of a gene of known sequence and a phenotype.
+
+    # A percent sign (%) before an entry number indicates that the entry describes a
+    # confirmed mendelian phenotype or phenotypic locus for which the underlying
+    # molecular
+    # basis is not known.
+
+    # No symbol before an entry number generally indicates a description of a phenotype
+    # for which the mendelian basis, although suspected, has not been clearly
+    # established
+    # or that the separateness of this phenotype from that in another entry is unclear.
+
+    # A caret (^) before an entry number means the entry no longer exists because it
+    # was removed from the database or moved to another entry as indicated.
+    # See also the description of symbols used in the disorder column of the OMIM Gene
+    # Map and Morbid Map.
+
+    prefix = str(prefix.strip())
+    if prefix == "*":
+        return blv.Gene.value
+    elif prefix == "#":
+        return blv.PhenotypicFeature.value
+    elif prefix == "+":
+        return blv.Gene.value
+    elif prefix == "%":
+        return blv.PhenotypicFeature.value
+    elif prefix == "":
+        return blv.PhenotypicFeature.value
+    elif prefix == "^":
+        return None
+    else:
+        return None
+
