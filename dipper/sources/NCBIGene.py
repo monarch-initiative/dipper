@@ -266,7 +266,7 @@ class NCBIGene(OMIMSource):
                     # so we will not add the leader designation here.
                 else:
                     model.addIndividualToGraph(gene_id, label, gene_type_id, desc,
-                                               ind_category=blv.Gene.value)
+                                               ind_category=blv.GenomicEntity.value)
                     # in this case, they aren't genes.
                     # so we want someone else to be the leader
 
