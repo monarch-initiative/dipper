@@ -105,7 +105,13 @@ BEGIN{
 	# exceptions
 	prefix["BNODE"]="BNODE"  # is a fixed point
 	prefix["https://monarchinitiative.org/.well-known/genid"]="BNODE"
-	prefix["https_archive_monarchinitiative_org_"]="MonarchArchive"
+	prefix["https://archive.monarchinitiative.org/"]="MonarchArchive"
+	############################################################
+	# not expected to be added to curie map
+	# in HPOA
+	prefix["http://www.ncbi.nlm.nih.gov/bookshelf/br.fcgi?book=gene&part="]="NCBIBook"
+	prefix["http://www.ncbi.nlm.nih.gov/books/NBK"]="NCBINBK"
+
 	############################################################
 	# Often re-visit whether these exceptions are still necessary
 	# they may have been moved into the curie prefix mapping file
@@ -114,7 +120,7 @@ BEGIN{
 
 	# in mgi
 	prefix["https://www.mousephenotype.org"]="IMPC"
-	# in IMPC (not httpS)
+	# in IMPC (not httpS  --- hmm all three IRI exist)
 	prefix["http://www.mousephenotype.org"]="IMPC"
 	# note in curie_map IMPC is:
 	# http://www.mousephenotype.org/data/genes/
@@ -124,19 +130,14 @@ BEGIN{
 	# note in curie_map WormBase is
 	# 'https://www.wormbase.org/get?name='
 
-	# in GWAScatalog
-	prefix["http://www.ncbi.nlm.nih.gov/SNP/"]="dbSNP"
-	# note in curie_map dbSNP is
-	# 'http://www.ncbi.nlm.nih.gov/projects/SNP/snp_ref.cgi?rs='
-
-	# Ensembl  transient
-	prefix["http://identifiers.org/ensembl/"]="ENSEMBL"
-	# various, transient
+	# various, transient?
     prefix["http://www.ncbi.nlm.nih.gov/gene/"]="NCBIGene"
+    prefix["http://www.ncbi.nlm.nih.gov/genome/"]="NCBIGenome"
+    prefix["http://www.ncbi.nlm.nih.gov/assembly?term="]="NCBIAssembly"
 	# kegg
-	prefix["http://identifiers.org/ec-code/"]="EC"
-	# ensembl
-	prefix["http://identifiers.org/hgnc/HGNC:"]="HGNC"
+	prefix["http://www.genome.jp/kegg/pathway/map/map"]="KEGG-img"
+	# in EOM
+	prefix['https://elementsofmorphology.nih.gov/images/terms/']="EOM_IMG"
 
 	# playing with the idea of a LOCAL identifier
     # not the same as a bnode in that tools won't rewrite identifier
