@@ -2797,13 +2797,6 @@ class ZFIN(Source):
         targeted_gene_id = '_:' + targeted_gene_id
         return targeted_gene_id
 
-    def getTestSuite(self):
-        import unittest
-        from tests.test_zfin import ZFINTestCase
-
-        test_suite = unittest.TestLoader().loadTestsFromTestCase(ZFINTestCase)
-
-        return test_suite
 
     # #### SOME OLD (COBLO?) CODE #####
 
