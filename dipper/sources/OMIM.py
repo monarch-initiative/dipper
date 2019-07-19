@@ -1035,14 +1035,14 @@ class OMIM(OMIMSource):
                 ref_to_pmid[rlst['reference']['referenceNumber']] = pub_id
 
                 if "prefix" in entry:
-                    omim_type = get_omim_record_2_biolink_category(entry["prefix"])
+                    omim_id_category = omim_prefix_2_biolink_category(entry["prefix"])
                 else:
-                    omim_type = None
+                    omim_id_category = None
 
                 # add is_about for the pub
                 omim_id = 'OMIM:' + str(entry_num)
                 graph.addTriple(omim_id, self.globaltt['mentions'], pub_id,
-                                subject_category=omim_type,
+                                subject_category=omim_id_category,
                                 object_category=blv.Publication.value)
 
         return ref_to_pmid
@@ -1065,7 +1065,7 @@ def get_omim_id_from_entry(entry):
     return omimid
 
 
-def get_omim_record_2_biolink_category(prefix):
+def omim_prefix_2_biolink_category(prefix):
     # https://www.omim.org/help/faq#1_3
     # What do the symbols preceding a MIM number represent?
     # An asterisk (*) before an entry number indicates a gene.
