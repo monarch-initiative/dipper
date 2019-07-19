@@ -41,13 +41,16 @@ class StringTestFakeData(unittest.TestCase):
 
         ensembl = Ensembl('rdf_graph', True)
         prot_map = ensembl.fetch_protein_gene_map('9606')
-        for key in prot_map.keys():
-            for i, gene in enumerate(prot_map[key]):
-                prot_map[key][i] = "ENSEMBL:{}".format(gene)
 
-        print(
-            "Finished fetching ENSP IDs, fetched {} proteins"
-            .format(len(prot_map.keys())))
+        [prot_map.update({k: ['ENSEMBL:' + prot_map[k]]}) for k in prot_map.keys()]
+
+        print("Finished fetching ENSP IDs, fetched {} proteins".format(len(prot_map)))
+
+        # just looking
+        # for key in prot_map:
+        #    if string_db.graph.curie_regexp.match(prot_map[key]) is None:
+        #        print("INVALID curie for %s from %s", prot_map[key], key)
+
         dataframe = pd.DataFrame(data=self.test_set_1, columns=self.columns)
 
         string_db._process_protein_links(dataframe, prot_map, '9606')

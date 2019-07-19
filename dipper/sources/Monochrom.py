@@ -148,12 +148,9 @@ class Monochrom(Source):
 
         self._check_tax_ids()
 
-        return
-
     def fetch(self, is_dl_forced=False):
 
         self.get_files(is_dl_forced)
-        return
 
     def parse(self, limit=None):
 
@@ -171,8 +168,6 @@ class Monochrom(Source):
         # using the full graph as the test here
         self.testgraph = self.graph
         LOG.info("Done parsing files.")
-
-        return
 
     def _get_chrbands(self, limit, taxon):
         """
@@ -359,8 +354,6 @@ class Monochrom(Source):
 
         # TODO figure out the staining intensities for the encompassing bands
 
-        return
-
     def make_parent_bands(self, band, child_bands):
         """
         this will determine the grouping bands that it belongs to, recursively
@@ -371,14 +364,14 @@ class Monochrom(Source):
         :return:
 
         """
-        m = re.match(r'([pq][A-H\d]+(?:\.\d+)?)', band)
+        mch = re.match(r'([pq][A-H\d]+(?:\.\d+)?)', band)
         if len(band) > 0:
-            if m:
-                p = str(band[0:len(band)-1])
-                p = re.sub(r'\.$', '', p)
-                if p is not None:
-                    child_bands.add(p)
-                    self.make_parent_bands(p, child_bands)
+            if mch:
+                prnt = str(band[0:len(band)-1])
+                prnt = re.sub(r'\.$', '', prnt)
+                if prnt is not None:
+                    child_bands.add(prnt)
+                    self.make_parent_bands(prnt, child_bands)
         else:
             child_bands = set()
         return child_bands
